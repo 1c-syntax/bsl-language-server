@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -30,6 +31,7 @@ import com.github._1c_syntax.utils.StringInterner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.springframework.context.event.EventListener;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -58,8 +60,8 @@ public class DiagnosticInfo {
   private final DiagnosticMetadata diagnosticMetadata;
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
-  private final Optional<Map<String, Object>> metadataOverride;
-  private final org.eclipse.lsp4j.DiagnosticSeverity cachedLSPSeverity;
+  private Optional<DiagnosticMetadata> metadataOverride;
+  private org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
 
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
@@ -75,9 +77,71 @@ public class DiagnosticInfo {
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
     
     // Get metadata override from configuration if exists
+    loadMetadataOverride();
+    lspSeverity = computeLSPSeverity();
+  }
+  
+  @EventListener
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    // Reload metadata override and recalculate LSP severity when configuration changes
+    loadMetadataOverride();
+    lspSeverity = computeLSPSeverity();
+  }
+  
+  private void loadMetadataOverride() {
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
-    metadataOverride = Optional.ofNullable(diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue()));
-    cachedLSPSeverity = computeLSPSeverity();
+    var metadataMap = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
+    
+    if (metadataMap == null) {
+      metadataOverride = Optional.empty();
+      return;
+    }
+    
+    // Create DiagnosticMetadata instance from map using geantyref TypeFactory
+    try {
+      var annotationParams = new java.util.HashMap<String, Object>();
+      
+      // Copy all values from map, using defaults from diagnosticMetadata for missing values
+      if (metadataMap.containsKey("type")) {
+        annotationParams.put("type", metadataMap.get("type"));
+      }
+      if (metadataMap.containsKey("severity")) {
+        annotationParams.put("severity", metadataMap.get("severity"));
+      }
+      if (metadataMap.containsKey("scope")) {
+        annotationParams.put("scope", metadataMap.get("scope"));
+      }
+      if (metadataMap.containsKey("modules")) {
+        annotationParams.put("modules", metadataMap.get("modules"));
+      }
+      if (metadataMap.containsKey("minutesToFix")) {
+        annotationParams.put("minutesToFix", metadataMap.get("minutesToFix"));
+      }
+      if (metadataMap.containsKey("activatedByDefault")) {
+        annotationParams.put("activatedByDefault", metadataMap.get("activatedByDefault"));
+      }
+      if (metadataMap.containsKey("compatibilityMode")) {
+        annotationParams.put("compatibilityMode", metadataMap.get("compatibilityMode"));
+      }
+      if (metadataMap.containsKey("tags")) {
+        annotationParams.put("tags", metadataMap.get("tags"));
+      }
+      if (metadataMap.containsKey("canLocateOnProject")) {
+        annotationParams.put("canLocateOnProject", metadataMap.get("canLocateOnProject"));
+      }
+      if (metadataMap.containsKey("extraMinForComplexity")) {
+        annotationParams.put("extraMinForComplexity", metadataMap.get("extraMinForComplexity"));
+      }
+      if (metadataMap.containsKey("lspSeverity")) {
+        annotationParams.put("lspSeverity", metadataMap.get("lspSeverity"));
+      }
+      
+      var overrideAnnotation = io.leangen.geantyref.TypeFactory.annotation(DiagnosticMetadata.class, annotationParams);
+      metadataOverride = Optional.of(overrideAnnotation);
+    } catch (Exception e) {
+      LOGGER.error("Failed to create DiagnosticMetadata from configuration", e);
+      metadataOverride = Optional.empty();
+    }
   }
 
   public DiagnosticCode getCode() {
@@ -143,104 +207,90 @@ public class DiagnosticInfo {
 
   public DiagnosticType getType() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable(map.get("type")))
-      .map(value -> value instanceof DiagnosticType ? (DiagnosticType) value : DiagnosticType.valueOf(value.toString()))
+      .map(DiagnosticMetadata::type)
       .orElseGet(diagnosticMetadata::type);
   }
 
   public DiagnosticSeverity getSeverity() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable(map.get("severity")))
-      .map(value -> value instanceof DiagnosticSeverity ? (DiagnosticSeverity) value : DiagnosticSeverity.valueOf(value.toString()))
+      .map(DiagnosticMetadata::severity)
       .orElseGet(diagnosticMetadata::severity);
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
-    return cachedLSPSeverity;
+    return lspSeverity;
   }
   
   private org.eclipse.lsp4j.DiagnosticSeverity computeLSPSeverity() {
-    org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
+    org.eclipse.lsp4j.DiagnosticSeverity result;
     
     // First check if lspSeverity is explicitly set in metadata override from config
-    var lspSeverityFromConfig = metadataOverride
-      .flatMap(map -> Optional.ofNullable(map.get("lspSeverity")))
-      .filter(value -> !value.toString().isEmpty())
-      .map(value -> parseLSPSeverity(value.toString()));
+    var lspSeverityFromOverride = metadataOverride
+      .map(DiagnosticMetadata::lspSeverity)
+      .filter(severity -> severity != org.eclipse.lsp4j.DiagnosticSeverity.Hint || diagnosticMetadata.lspSeverity() != org.eclipse.lsp4j.DiagnosticSeverity.Hint);
     
-    if (lspSeverityFromConfig.isPresent()) {
-      lspSeverity = lspSeverityFromConfig.get();
+    if (lspSeverityFromOverride.isPresent() && lspSeverityFromOverride.get() != org.eclipse.lsp4j.DiagnosticSeverity.Hint) {
+      result = lspSeverityFromOverride.get();
     } else {
       // Check if lspSeverity is explicitly set in annotation
       var lspSeverityFromAnnotation = diagnosticMetadata.lspSeverity();
-      if (lspSeverityFromAnnotation != null && !lspSeverityFromAnnotation.isEmpty()) {
-        lspSeverity = parseLSPSeverity(lspSeverityFromAnnotation);
+      if (lspSeverityFromAnnotation != org.eclipse.lsp4j.DiagnosticSeverity.Hint) {
+        result = lspSeverityFromAnnotation;
       } else {
         // Calculate based on type and severity (original logic)
         var type = getType();
         if (type == DiagnosticType.CODE_SMELL) {
-          lspSeverity = severityToLSPSeverityMap.get(getSeverity());
+          result = severityToLSPSeverityMap.get(getSeverity());
         } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
-          lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+          result = org.eclipse.lsp4j.DiagnosticSeverity.Warning;
         } else {
-          lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Error;
+          result = org.eclipse.lsp4j.DiagnosticSeverity.Error;
         }
       }
     }
     
     // Apply minimum severity override if configured
     var overrideMinimum = configuration.getDiagnosticsOptions().getOverrideMinimumLSPDiagnosticLevel();
-    if (overrideMinimum != null && lspSeverity.getValue() > overrideMinimum.getValue()) {
-      lspSeverity = overrideMinimum;
+    if (overrideMinimum != null && result.getValue() > overrideMinimum.getValue()) {
+      result = overrideMinimum;
     }
     
-    return lspSeverity;
-  }
-  
-  private org.eclipse.lsp4j.DiagnosticSeverity parseLSPSeverity(String value) {
-    return switch (value) {
-      case "Error" -> org.eclipse.lsp4j.DiagnosticSeverity.Error;
-      case "Warning" -> org.eclipse.lsp4j.DiagnosticSeverity.Warning;
-      case "Information" -> org.eclipse.lsp4j.DiagnosticSeverity.Information;
-      case "Hint" -> org.eclipse.lsp4j.DiagnosticSeverity.Hint;
-      default -> throw new IllegalArgumentException("Invalid LSP severity value: " + value);
-    };
+    return result;
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((DiagnosticCompatibilityMode) map.get("compatibilityMode")))
+      .map(DiagnosticMetadata::compatibilityMode)
       .orElseGet(diagnosticMetadata::compatibilityMode);
   }
 
   public DiagnosticScope getScope() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((DiagnosticScope) map.get("scope")))
+      .map(DiagnosticMetadata::scope)
       .orElseGet(diagnosticMetadata::scope);
   }
 
   public ModuleType[] getModules() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((ModuleType[]) map.get("modules")))
+      .map(DiagnosticMetadata::modules)
       .orElseGet(diagnosticMetadata::modules);
   }
 
   public int getMinutesToFix() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((Integer) map.get("minutesToFix")))
+      .map(DiagnosticMetadata::minutesToFix)
       .orElseGet(diagnosticMetadata::minutesToFix);
   }
 
   public boolean isActivatedByDefault() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((Boolean) map.get("activatedByDefault")))
+      .map(DiagnosticMetadata::activatedByDefault)
       .orElseGet(diagnosticMetadata::activatedByDefault);
   }
 
   public List<DiagnosticTag> getTags() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((DiagnosticTag[]) map.get("tags")))
-      .map(tags -> new ArrayList<>(Arrays.asList(tags)))
+      .map(metadata -> new ArrayList<>(Arrays.asList(metadata.tags())))
       .orElseGet(() -> new ArrayList<>(Arrays.asList(diagnosticMetadata.tags())));
   }
 
@@ -261,13 +311,13 @@ public class DiagnosticInfo {
 
   public boolean canLocateOnProject() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((Boolean) map.get("canLocateOnProject")))
+      .map(DiagnosticMetadata::canLocateOnProject)
       .orElseGet(diagnosticMetadata::canLocateOnProject);
   }
 
   public double getExtraMinForComplexity() {
     return metadataOverride
-      .flatMap(map -> Optional.ofNullable((Double) map.get("extraMinForComplexity")))
+      .map(DiagnosticMetadata::extraMinForComplexity)
       .orElseGet(diagnosticMetadata::extraMinForComplexity);
   }
 

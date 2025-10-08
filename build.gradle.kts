@@ -136,6 +136,7 @@ dependencies {
     
     // COMPILE
     compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.6")
+    implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // TEST
 

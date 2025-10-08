@@ -90,8 +90,8 @@ public @interface DiagnosticMetadata {
   double extraMinForComplexity() default 0;
 
   /**
-   * LSP-уровень серьезности диагностики (Error, Warning, Information, Hint).
+   * LSP-уровень серьезности диагностики.
    * Если не указан, рассчитывается автоматически на основе type и severity.
    */
-  String lspSeverity() default "";
+  org.eclipse.lsp4j.DiagnosticSeverity lspSeverity() default org.eclipse.lsp4j.DiagnosticSeverity.Hint;
 }
