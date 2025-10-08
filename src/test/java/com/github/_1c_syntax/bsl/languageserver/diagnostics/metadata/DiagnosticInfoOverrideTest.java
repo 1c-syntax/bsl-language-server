@@ -53,11 +53,18 @@ class DiagnosticInfoOverrideTest {
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
     configuration.update(configurationFile);
 
-    // when - Create diagnostic info for a diagnostic with MINOR severity
-    // MINOR severity normally maps to Information LSP severity
-    var diagnosticInfo = new DiagnosticInfo(LineLengthDiagnostic.class, configuration, stringInterner);
+    // when - Create diagnostic info for EmptyCodeBlock with MAJOR severity (CODE_SMELL type)
+    // MAJOR severity normally maps to Warning LSP severity
+    // But we override the type to ERROR in config, so it would normally be Error
+    // However, we test with a diagnostic that doesn't have explicit lspSeverity override
+    // Let's use MagicNumberDiagnostic which has MINOR severity and is not in config
+    var diagnosticInfo = new DiagnosticInfo(
+      com.github._1c_syntax.bsl.languageserver.diagnostics.MagicNumberDiagnostic.class,
+      configuration,
+      stringInterner
+    );
 
-    // then - With override to Warning, it should be at least Warning
+    // then - With override to Warning, MINOR (Information) should be raised to Warning
     assertThat(configuration.getDiagnosticsOptions().getOverrideMinimumLSPDiagnosticLevel())
       .isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
     assertThat(diagnosticInfo.getLSPSeverity())
@@ -116,5 +123,19 @@ class DiagnosticInfoOverrideTest {
     assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);
     assertThat(diagnosticInfo.getType()).isEqualTo(DiagnosticType.CODE_SMELL);
     assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+  }
+
+  @Test
+  void testMetadataOverrideLspSeverity() {
+    // given
+    File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
+    configuration.update(configurationFile);
+
+    // when - Create diagnostic info for LineLength which has lspSeverity="Error" in config
+    var diagnosticInfo = new DiagnosticInfo(LineLengthDiagnostic.class, configuration, stringInterner);
+
+    // then - Should use the explicit lspSeverity from config (Error)
+    // This overrides both the default calculation and overrideMinimumLSPDiagnosticLevel
+    assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
   }
 }

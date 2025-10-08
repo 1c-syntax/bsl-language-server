@@ -160,15 +160,32 @@ public class DiagnosticInfo {
   }
   
   private org.eclipse.lsp4j.DiagnosticSeverity computeLSPSeverity() {
-    var type = getType();
     org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
     
-    if (type == DiagnosticType.CODE_SMELL) {
-      lspSeverity = severityToLSPSeverityMap.get(getSeverity());
-    } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
-      lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+    // First check if lspSeverity is explicitly set in metadata override from config
+    var lspSeverityFromConfig = metadataOverride
+      .flatMap(map -> Optional.ofNullable(map.get("lspSeverity")))
+      .filter(value -> !value.toString().isEmpty())
+      .map(value -> parseLSPSeverity(value.toString()));
+    
+    if (lspSeverityFromConfig.isPresent()) {
+      lspSeverity = lspSeverityFromConfig.get();
     } else {
-      lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Error;
+      // Check if lspSeverity is explicitly set in annotation
+      var lspSeverityFromAnnotation = diagnosticMetadata.lspSeverity();
+      if (lspSeverityFromAnnotation != null && !lspSeverityFromAnnotation.isEmpty()) {
+        lspSeverity = parseLSPSeverity(lspSeverityFromAnnotation);
+      } else {
+        // Calculate based on type and severity (original logic)
+        var type = getType();
+        if (type == DiagnosticType.CODE_SMELL) {
+          lspSeverity = severityToLSPSeverityMap.get(getSeverity());
+        } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
+          lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+        } else {
+          lspSeverity = org.eclipse.lsp4j.DiagnosticSeverity.Error;
+        }
+      }
     }
     
     // Apply minimum severity override if configured
@@ -178,6 +195,16 @@ public class DiagnosticInfo {
     }
     
     return lspSeverity;
+  }
+  
+  private org.eclipse.lsp4j.DiagnosticSeverity parseLSPSeverity(String value) {
+    return switch (value) {
+      case "Error" -> org.eclipse.lsp4j.DiagnosticSeverity.Error;
+      case "Warning" -> org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+      case "Information" -> org.eclipse.lsp4j.DiagnosticSeverity.Information;
+      case "Hint" -> org.eclipse.lsp4j.DiagnosticSeverity.Hint;
+      default -> throw new IllegalArgumentException("Invalid LSP severity value: " + value);
+    };
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {

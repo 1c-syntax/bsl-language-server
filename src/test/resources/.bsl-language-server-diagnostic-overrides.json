@@ -7,7 +7,8 @@
         "type": "ERROR"
       },
       "LineLength": {
-        "minutesToFix": 10
+        "minutesToFix": 10,
+        "lspSeverity": "Error"
       }
     },
     "parameters": {

@@ -88,4 +88,10 @@ public @interface DiagnosticMetadata {
    * Надбавка ко времени исправления замечания за повышенную сложность
    */
   double extraMinForComplexity() default 0;
+
+  /**
+   * LSP-уровень серьезности диагностики (Error, Warning, Information, Hint).
+   * Если не указан, рассчитывается автоматически на основе type и severity.
+   */
+  String lspSeverity() default "";
 }
