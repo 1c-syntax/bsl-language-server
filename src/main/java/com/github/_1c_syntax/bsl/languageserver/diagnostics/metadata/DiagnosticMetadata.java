@@ -93,5 +93,6 @@ public @interface DiagnosticMetadata {
    * LSP-уровень серьезности диагностики.
    * Если не указан, рассчитывается автоматически на основе type и severity.
    */
-  org.eclipse.lsp4j.DiagnosticSeverity lspSeverity() default org.eclipse.lsp4j.DiagnosticSeverity.Hint;
+  @jakarta.annotation.Nullable
+  org.eclipse.lsp4j.DiagnosticSeverity lspSeverity();
 }

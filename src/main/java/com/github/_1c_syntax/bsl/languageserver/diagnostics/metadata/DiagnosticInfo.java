@@ -134,6 +134,8 @@ public class DiagnosticInfo {
       }
       if (metadataMap.containsKey("lspSeverity")) {
         annotationParams.put("lspSeverity", metadataMap.get("lspSeverity"));
+      } else {
+        annotationParams.put("lspSeverity", null);
       }
       
       var overrideAnnotation = io.leangen.geantyref.TypeFactory.annotation(DiagnosticMetadata.class, annotationParams);
@@ -226,15 +228,14 @@ public class DiagnosticInfo {
     
     // First check if lspSeverity is explicitly set in metadata override from config
     var lspSeverityFromOverride = metadataOverride
-      .map(DiagnosticMetadata::lspSeverity)
-      .filter(severity -> severity != org.eclipse.lsp4j.DiagnosticSeverity.Hint || diagnosticMetadata.lspSeverity() != org.eclipse.lsp4j.DiagnosticSeverity.Hint);
+      .map(DiagnosticMetadata::lspSeverity);
     
-    if (lspSeverityFromOverride.isPresent() && lspSeverityFromOverride.get() != org.eclipse.lsp4j.DiagnosticSeverity.Hint) {
+    if (lspSeverityFromOverride.isPresent() && lspSeverityFromOverride.get() != null) {
       result = lspSeverityFromOverride.get();
     } else {
       // Check if lspSeverity is explicitly set in annotation
       var lspSeverityFromAnnotation = diagnosticMetadata.lspSeverity();
-      if (lspSeverityFromAnnotation != org.eclipse.lsp4j.DiagnosticSeverity.Hint) {
+      if (lspSeverityFromAnnotation != null) {
         result = lspSeverityFromAnnotation;
       } else {
         // Calculate based on type and severity (original logic)
