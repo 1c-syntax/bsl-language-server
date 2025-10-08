@@ -77,9 +77,7 @@ public class DiagnosticInfo {
     // Get metadata override from configuration if exists
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
     metadataOverride = Optional.ofNullable(diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue()));
-    
-    // Cache LSP severity calculation
-    cachedLSPSeverity = calculateLSPSeverity();
+    cachedLSPSeverity = computeLSPSeverity();
   }
 
   public DiagnosticCode getCode() {
@@ -161,7 +159,7 @@ public class DiagnosticInfo {
     return cachedLSPSeverity;
   }
   
-  private org.eclipse.lsp4j.DiagnosticSeverity calculateLSPSeverity() {
+  private org.eclipse.lsp4j.DiagnosticSeverity computeLSPSeverity() {
     var type = getType();
     org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
     
