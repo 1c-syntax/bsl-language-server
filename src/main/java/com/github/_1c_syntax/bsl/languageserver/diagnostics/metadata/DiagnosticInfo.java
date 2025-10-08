@@ -77,73 +77,22 @@ public class DiagnosticInfo {
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
     
     // Get metadata override from configuration if exists
-    loadMetadataOverride();
+    metadataOverride = computeMetadataOverride();
     lspSeverity = computeLSPSeverity();
   }
   
   @EventListener
   public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
     // Reload metadata override and recalculate LSP severity when configuration changes
-    loadMetadataOverride();
+    metadataOverride = computeMetadataOverride();
     lspSeverity = computeLSPSeverity();
   }
   
-  private void loadMetadataOverride() {
+  private Optional<DiagnosticMetadata> computeMetadataOverride() {
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
-    var metadataMap = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
+    var metadataFromConfig = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
     
-    if (metadataMap == null) {
-      metadataOverride = Optional.empty();
-      return;
-    }
-    
-    // Create DiagnosticMetadata instance from map using geantyref TypeFactory
-    try {
-      var annotationParams = new java.util.HashMap<String, Object>();
-      
-      // Copy all values from map, using defaults from diagnosticMetadata for missing values
-      if (metadataMap.containsKey("type")) {
-        annotationParams.put("type", metadataMap.get("type"));
-      }
-      if (metadataMap.containsKey("severity")) {
-        annotationParams.put("severity", metadataMap.get("severity"));
-      }
-      if (metadataMap.containsKey("scope")) {
-        annotationParams.put("scope", metadataMap.get("scope"));
-      }
-      if (metadataMap.containsKey("modules")) {
-        annotationParams.put("modules", metadataMap.get("modules"));
-      }
-      if (metadataMap.containsKey("minutesToFix")) {
-        annotationParams.put("minutesToFix", metadataMap.get("minutesToFix"));
-      }
-      if (metadataMap.containsKey("activatedByDefault")) {
-        annotationParams.put("activatedByDefault", metadataMap.get("activatedByDefault"));
-      }
-      if (metadataMap.containsKey("compatibilityMode")) {
-        annotationParams.put("compatibilityMode", metadataMap.get("compatibilityMode"));
-      }
-      if (metadataMap.containsKey("tags")) {
-        annotationParams.put("tags", metadataMap.get("tags"));
-      }
-      if (metadataMap.containsKey("canLocateOnProject")) {
-        annotationParams.put("canLocateOnProject", metadataMap.get("canLocateOnProject"));
-      }
-      if (metadataMap.containsKey("extraMinForComplexity")) {
-        annotationParams.put("extraMinForComplexity", metadataMap.get("extraMinForComplexity"));
-      }
-      if (metadataMap.containsKey("lspSeverity")) {
-        annotationParams.put("lspSeverity", metadataMap.get("lspSeverity"));
-      } else {
-        annotationParams.put("lspSeverity", null);
-      }
-      
-      var overrideAnnotation = io.leangen.geantyref.TypeFactory.annotation(DiagnosticMetadata.class, annotationParams);
-      metadataOverride = Optional.of(overrideAnnotation);
-    } catch (Exception e) {
-      LOGGER.error("Failed to create DiagnosticMetadata from configuration", e);
-      metadataOverride = Optional.empty();
-    }
+    return Optional.ofNullable(metadataFromConfig);
   }
 
   public DiagnosticCode getCode() {
