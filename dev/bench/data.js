@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1759819117982,
+  "lastUpdate": 1760423956181,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -29915,6 +29915,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.106692012902619",
             "extra": "mean: 84.44941250483195 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "57dfab54e6bf75051499081c3c325bb434171daa",
+          "message": "Merge pull request #3529 from 1c-syntax/copilot/fix-code-escaping-issue\n\nFix diagnostic ignorance for comments after last code token and comment-only files",
+          "timestamp": "2025-10-14T08:30:03+02:00",
+          "tree_id": "46151432684ff3496936f6ed3e7ad873214caecb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/57dfab54e6bf75051499081c3c325bb434171daa"
+        },
+        "date": 1760423951045,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 84.09976434707642,
+            "unit": "sec",
+            "range": "stddev: 1.9303784004495537",
+            "extra": "mean: 84.09976434707642 sec\nrounds: 3"
           }
         ]
       }
