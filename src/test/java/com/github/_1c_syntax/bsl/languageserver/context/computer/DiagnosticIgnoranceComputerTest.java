@@ -114,6 +114,27 @@ class DiagnosticIgnoranceComputerTest {
 
   }
 
+  @Test
+  void testDiagnosticIgnoranceIssue() {
+
+    // given
+    String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerIssueTest.bsl";
+    final var documentContext = getDocumentContextFromFile(filePath);
+
+    List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
+    ignoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 2));
+    ignoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 18));
+
+    // when
+    Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer =
+      new DiagnosticIgnoranceComputer(documentContext);
+    DiagnosticIgnoranceComputer.Data data = diagnosticIgnoranceComputer.compute();
+
+    // then
+    assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
+
+  }
+
   private static Diagnostic createDiagnostic(String code, int line) {
     Diagnostic diagnostic = new Diagnostic();
     diagnostic.setCode(code);
