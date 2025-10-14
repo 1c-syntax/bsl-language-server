@@ -153,7 +153,10 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
     }
 
-    int lastTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
+    int lastCodeTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
+    int lastCommentLine = comments.isEmpty() ? lastCodeTokenLine : comments.get(comments.size() - 1).getLine();
+    int lastTokenLine = Math.max(lastCodeTokenLine, lastCommentLine);
+    
     ignoranceStack.forEach((DiagnosticCode diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
       ignoreRangeStarts.forEach(ignoreRangeStart -> addIgnoredRange(diagnosticKey, ignoreRangeStart, lastTokenLine))
     );
