@@ -86,11 +86,13 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     ignoranceStack.clear();
 
     List<Token> codeTokens = documentContext.getTokensFromDefaultChannel();
-    if (codeTokens.isEmpty()) {
+    List<Token> comments = documentContext.getComments();
+
+    if (codeTokens.isEmpty() && comments.isEmpty()) {
       return new Data(diagnosticIgnorance);
     }
 
-    computeCommentsIgnorance(codeTokens);
+    computeCommentsIgnorance(codeTokens, comments);
     computeExtensionIgnorance();
 
     return new Data(diagnosticIgnorance);
@@ -136,10 +138,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   }
 
-  private void computeCommentsIgnorance(List<Token> codeTokens) {
+  private void computeCommentsIgnorance(List<Token> codeTokens, List<Token> comments) {
     Set<Integer> codeLines = codeTokens.stream().map(Token::getLine).collect(Collectors.toSet());
-
-    List<Token> comments = documentContext.getComments();
 
     for (Token comment : comments) {
 
@@ -153,9 +153,15 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
     }
 
-    int lastCodeTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
-    int lastCommentLine = comments.isEmpty() ? lastCodeTokenLine : comments.get(comments.size() - 1).getLine();
-    int lastTokenLine = Math.max(lastCodeTokenLine, lastCommentLine);
+    int lastTokenLine;
+    if (codeTokens.isEmpty()) {
+      // File contains only comments
+      lastTokenLine = comments.isEmpty() ? 0 : comments.get(comments.size() - 1).getLine();
+    } else {
+      int lastCodeTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
+      int lastCommentLine = comments.isEmpty() ? lastCodeTokenLine : comments.get(comments.size() - 1).getLine();
+      lastTokenLine = Math.max(lastCodeTokenLine, lastCommentLine);
+    }
     
     ignoranceStack.forEach((DiagnosticCode diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
       ignoreRangeStarts.forEach(ignoreRangeStart -> addIgnoredRange(diagnosticKey, ignoreRangeStart, lastTokenLine))
