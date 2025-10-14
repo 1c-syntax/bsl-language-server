@@ -226,8 +226,8 @@ public class SemanticTokensProvider {
     addAnnotationsFromAst(entries, documentContext);
     addPreprocessorFromAst(entries, documentContext);
 
-    // 3.1) Same-file method call occurrences as Method tokens
-    addLocalMethodCallTokens(entries, documentContext);
+    // 3.1) Method call occurrences as Method tokens
+    addMethodCallTokens(entries, documentContext);
 
     // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
     List<Token> tokens = documentContext.getTokensFromDefaultChannel();
@@ -503,18 +503,16 @@ public class SemanticTokensProvider {
     return data;
   }
 
-  private void addLocalMethodCallTokens(List<TokenEntry> entries, DocumentContext documentContext) {
+  private void addMethodCallTokens(List<TokenEntry> entries, DocumentContext documentContext) {
     for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
       if (!reference.isSourceDefinedSymbolReference()) {
         continue;
       }
 
       reference.getSourceDefinedSymbol()
-        .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getOwner().equals(documentContext))
         .ifPresent(symbol -> addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Method));
     }
   }
 
-  private record TokenEntry(int line, int start, int length, int type, int modifiers) {
-  }
+  private record TokenEntry(int line, int start, int length, int type, int modifiers) {}
 }
