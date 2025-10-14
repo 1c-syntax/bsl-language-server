@@ -159,7 +159,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       lastTokenLine = comments.isEmpty() ? 0 : comments.get(comments.size() - 1).getLine();
     } else {
       int lastCodeTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
-      int lastCommentLine = comments.isEmpty() ? lastCodeTokenLine : comments.get(comments.size() - 1).getLine();
+      int lastCommentLine = comments.isEmpty() ? 0 : comments.get(comments.size() - 1).getLine();
       lastTokenLine = Math.max(lastCodeTokenLine, lastCommentLine);
     }
     
