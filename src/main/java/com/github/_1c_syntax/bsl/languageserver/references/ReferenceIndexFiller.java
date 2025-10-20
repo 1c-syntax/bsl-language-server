@@ -45,11 +45,9 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -190,7 +188,7 @@ public class ReferenceIndexFiller {
     private void checkCall(String mdoRef, Token methodName) {
       var methodNameText = Strings.trimQuotes(methodName.getText());
       final var configuration = documentContext.getServerContext().getConfiguration();
-      Map<ModuleType, URI> modules = configuration.mdoModuleTypes(mdoRef);
+      var modules = configuration.mdoModuleTypes(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
           || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {

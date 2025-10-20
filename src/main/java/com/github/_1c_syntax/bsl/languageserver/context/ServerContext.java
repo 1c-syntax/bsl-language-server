@@ -289,7 +289,7 @@ public class ServerContext {
 
     CF configuration;
     try {
-      configuration = (CF) executorService.submit(() -> MDClasses.createConfiguration(configurationRoot)).get();
+      configuration = (CF) executorService.submit(() -> MDClasses.createSolution(configurationRoot)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = (CF) MDClasses.createConfiguration();
