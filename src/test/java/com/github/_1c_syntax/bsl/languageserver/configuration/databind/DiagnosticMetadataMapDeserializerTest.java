@@ -21,11 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,17 +44,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Test to ensure DiagnosticMetadataMapDeserializer handles all DiagnosticMetadata annotation fields
  */
+
 class DiagnosticMetadataMapDeserializerTest {
 
   /**
    * This test validates that all enum/array fields in DiagnosticMetadata annotation
    * are handled in DiagnosticMetadataMapDeserializer.convertStringToEnum/convertStringArrayToEnumArray.
-   * 
+   * <p/>
    * If you add a new enum field to DiagnosticMetadata, you must:
    * 1. Add corresponding convertStringToEnum call in DiagnosticMetadataMapDeserializer
    * 2. Update the expectedHandledFields set in this test
-   * 
-   * String fields (like lspSeverity) don't need conversion and are excluded from this check.
+   * <p/>
+   * Primitive fields (like lspSeverity) don't need conversion and are excluded from this check.
    */
   @Test
   void testAllEnumFieldsAreHandledInDeserializer() {
@@ -132,5 +143,123 @@ class DiagnosticMetadataMapDeserializerTest {
         - If it's a String or primitive that doesn't need conversion, add it to excludedFields
         """)
       .isEmpty();
+  }
+
+  /**
+   * Test deserialization of enum arrays (tags and modules) from JSON configuration
+   */
+  @Test
+  void testEnumArrayDeserialization() throws Exception {
+    // given
+    String json = """
+      {
+        "EmptyCodeBlock": {
+          "type": "ERROR",
+          "severity": "BLOCKER",
+          "scope": "BSL",
+          "compatibilityMode": "UNDEFINED",
+          "tags": ["ERROR", "BADPRACTICE"],
+          "modules": ["CommonModule", "FormModule"]
+        }
+      }
+      """;
+
+    // when
+    Map<String, DiagnosticMetadata> result = deserializeMetadata(json);
+
+    // then
+    assertThat(result).containsKey("EmptyCodeBlock");
+    
+    DiagnosticMetadata metadata = result.get("EmptyCodeBlock");
+    assertThat(metadata.type()).isEqualTo(DiagnosticType.ERROR);
+    assertThat(metadata.severity()).isEqualTo(DiagnosticSeverity.BLOCKER);
+    assertThat(metadata.scope()).isEqualTo(DiagnosticScope.BSL);
+    assertThat(metadata.compatibilityMode()).isEqualTo(DiagnosticCompatibilityMode.UNDEFINED);
+    
+    // Verify enum arrays are properly deserialized
+    assertThat(metadata.tags())
+      .hasSize(2)
+      .containsExactlyInAnyOrder(DiagnosticTag.ERROR, DiagnosticTag.BADPRACTICE);
+    
+    assertThat(metadata.modules())
+      .hasSize(2)
+      .containsExactlyInAnyOrder(ModuleType.CommonModule, ModuleType.FormModule);
+  }
+
+  /**
+   * Test deserialization with empty enum arrays
+   */
+  @Test
+  void testEmptyEnumArrayDeserialization() throws Exception {
+    // given
+    String json = """
+      {
+        "TestDiagnostic": {
+          "tags": [],
+          "modules": []
+        }
+      }
+      """;
+
+    // when
+    Map<String, DiagnosticMetadata> result = deserializeMetadata(json);
+
+    // then
+    assertThat(result).containsKey("TestDiagnostic");
+    
+    DiagnosticMetadata metadata = result.get("TestDiagnostic");
+    
+    // Empty arrays should be preserved (not null)
+    assertThat(metadata.tags()).isEmpty();
+    assertThat(metadata.modules()).isEmpty();
+  }
+
+  /**
+   * Test deserialization with partial enum arrays (only tags)
+   */
+  @Test
+  void testPartialEnumArrayDeserialization() throws Exception {
+    // given
+    String json = """
+      {
+        "TestDiagnostic": {
+          "tags": ["DESIGN", "UNPREDICTABLE"]
+        }
+      }
+      """;
+
+    // when
+    Map<String, DiagnosticMetadata> result = deserializeMetadata(json);
+
+    // then
+    assertThat(result).containsKey("TestDiagnostic");
+    
+    DiagnosticMetadata metadata = result.get("TestDiagnostic");
+    
+    // tags should be set
+    assertThat(metadata.tags())
+      .hasSize(2)
+      .containsExactlyInAnyOrder(DiagnosticTag.DESIGN, DiagnosticTag.UNPREDICTABLE);
+    
+    // modules should use annotation default value (empty array)
+    assertThat(metadata.modules()).isEmpty();
+  }
+
+  private Map<String, DiagnosticMetadata> deserializeMetadata(String json) throws Exception {
+    var mapper = new ObjectMapper();
+    mapper.registerModule(new ParameterNamesModule());
+
+    String wrappedJson = "{\"metadata\": " + json + "}";
+    TestWrapper wrapper = mapper.readValue(wrappedJson, TestWrapper.class);
+
+    return wrapper.metadata;
+  }
+
+  /**
+   * Wrapper class to test deserialization with the @JsonDeserialize annotation.
+   */
+  private static class TestWrapper {
+    @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
+    public Map<String, DiagnosticMetadata> metadata;
   }
 }
