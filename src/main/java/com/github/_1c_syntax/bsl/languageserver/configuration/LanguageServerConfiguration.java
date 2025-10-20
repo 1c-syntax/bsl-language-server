@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.formating.Formatti
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.utils.Absolute;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -51,13 +50,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
@@ -75,8 +68,6 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LanguageServerConfiguration {
-
-  private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
   private Language language = Language.DEFAULT_LANGUAGE;
 
@@ -116,14 +107,14 @@ public class LanguageServerConfiguration {
   private File configurationFile;
 
   @Value("${app.configuration.path:.bsl-language-server.json}")
-  @Getter(value=AccessLevel.NONE)
-  @Setter(value=AccessLevel.NONE)
+  @Getter(value = AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
   @JsonIgnore
   private String configurationFilePath;
 
   @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
-  @Getter(value=AccessLevel.NONE)
-  @Setter(value=AccessLevel.NONE)
+  @Getter(value = AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
   @JsonIgnore
   private String globalConfigPath;
 
@@ -164,43 +155,7 @@ public class LanguageServerConfiguration {
       }
     }
 
-    if (rootPath != null) {
-      var fileConfiguration = getConfigurationFile(rootPath);
-      if (fileConfiguration != null) {
-        if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
-          rootPath = Optional.of(fileConfiguration.toPath())
-            .map(Path::getParent)
-            .map(Path::getParent)
-            .map(Path::getParent)
-            .orElse(null);
-        } else {
-          rootPath = Optional.of(fileConfiguration.toPath())
-            .map(Path::getParent)
-            .orElse(null);
-        }
-      }
-    }
-
     return rootPath;
-  }
-
-  @SuppressFBWarnings(
-    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-    justification = "False positive"
-  )
-  private static File getConfigurationFile(Path rootPath) {
-    File configurationFile = null;
-    List<Path> listPath = new ArrayList<>();
-    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
-      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.toList();
-    } catch (IOException e) {
-      LOGGER.error("Error on read configuration file", e);
-    }
-    if (!listPath.isEmpty()) {
-      configurationFile = listPath.get(0).toFile();
-    }
-    return configurationFile;
   }
 
   private void loadConfigurationFile(File configurationFile) {

@@ -21,7 +21,7 @@ plugins {
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.20.0"
-    id("org.sonarqube") version "6.3.1.5724"
+    id("org.sonarqube") version "7.0.0.6105"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.3"
 }
@@ -89,9 +89,9 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
     }
     api("io.github.1c-syntax", "utils", "0.6.3")
-    api("io.github.1c-syntax", "mdclasses", "0.16.0.14-SNAPSHOT")
-    api("io.github.1c-syntax", "bsl-common-library", "0.9.0.17-SNAPSHOT")
-    api("io.github.1c-syntax", "supportconf", "0.14.3")
+    api("io.github.1c-syntax", "mdclasses", "0.16.0.23-SNAPSHOT")
+    api("io.github.1c-syntax", "bsl-common-library", "0.9.0.21-SNAPSHOT")
+    api("io.github.1c-syntax", "supportconf", "0.15.0.7-SNAPSHOT")
     api("io.github.1c-syntax", "bsl-parser-core", "0.3.1")
 
     // JLanguageTool
@@ -120,6 +120,7 @@ dependencies {
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
     implementation("org.jgrapht", "jgrapht-core", "1.5.2")
@@ -135,8 +136,7 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.6")
-    implementation("io.leangen.geantyref:geantyref:2.0.1")
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.8")
 
     // TEST
 
