@@ -26,7 +26,13 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,9 +61,7 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
     Map<String, DiagnosticMetadata> result = new HashMap<>();
     ObjectMapper mapper = (ObjectMapper) p.getCodec();
 
-    var fields = node.fields();
-    while (fields.hasNext()) {
-      var entry = fields.next();
+    for (var entry : node.properties()) {
       String diagnosticCode = entry.getKey();
       JsonNode valueNode = entry.getValue();
 
@@ -66,6 +70,16 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
           // Convert JSON object to Map
           @SuppressWarnings("unchecked")
           Map<String, Object> annotationParams = mapper.convertValue(valueNode, Map.class);
+          
+          // Convert string enum values to proper types
+          // IMPORTANT: When adding a new enum or array field to DiagnosticMetadata annotation,
+          // add corresponding conversion here and update DiagnosticMetadataMapDeserializerTest
+          convertStringToEnum(annotationParams, "type", DiagnosticType.class);
+          convertStringToEnum(annotationParams, "severity", DiagnosticSeverity.class);
+          convertStringToEnum(annotationParams, "scope", DiagnosticScope.class);
+          convertStringToEnum(annotationParams, "compatibilityMode", DiagnosticCompatibilityMode.class);
+          convertStringArrayToEnumArray(annotationParams, "tags", DiagnosticTag.class);
+          convertStringArrayToEnumArray(annotationParams, "modules", ModuleType.class);
           
           // Create DiagnosticMetadata instance using TypeFactory
           DiagnosticMetadata metadata = TypeFactory.annotation(DiagnosticMetadata.class, annotationParams);
@@ -77,5 +91,32 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
     }
 
     return result;
+  }
+  
+  private <E extends Enum<E>> void convertStringToEnum(Map<String, Object> params, String key, Class<E> enumClass) {
+    if (params.containsKey(key) && params.get(key) instanceof String) {
+      params.put(key, Enum.valueOf(enumClass, (String) params.get(key)));
+    }
+  }
+  
+  private <E extends Enum<E>> void convertStringArrayToEnumArray(
+    Map<String, Object> params,
+    String key,
+    Class<E> enumClass
+  ) {
+    if (params.containsKey(key) && params.get(key) instanceof Iterable) {
+      @SuppressWarnings("unchecked")
+      var list = (Iterable<Object>) params.get(key);
+      var array = java.lang.reflect.Array.newInstance(enumClass, ((java.util.Collection<?>) list).size());
+      int i = 0;
+      for (Object item : list) {
+        if (item instanceof String) {
+          java.lang.reflect.Array.set(array, i++, Enum.valueOf(enumClass, (String) item));
+        } else {
+          java.lang.reflect.Array.set(array, i++, item);
+        }
+      }
+      params.put(key, array);
+    }
   }
 }

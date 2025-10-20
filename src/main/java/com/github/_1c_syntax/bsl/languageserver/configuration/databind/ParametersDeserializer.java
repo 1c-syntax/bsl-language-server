@@ -58,8 +58,7 @@ public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<
     var mapper = new ObjectMapper();
     Map<String, Either<Boolean, Map<String, Object>>> parametersMap = new HashMap<>();
 
-    Iterator<Map.Entry<String, JsonNode>> parametersNodes = parameters.fields();
-    parametersNodes.forEachRemaining((Map.Entry<String, JsonNode> entry) -> {
+    for (var entry : parameters.properties()) {
       JsonNode parameterConfig = entry.getValue();
       if (parameterConfig.isBoolean()) {
         parametersMap.put(entry.getKey(), Either.forLeft(parameterConfig.asBoolean()));
@@ -67,7 +66,7 @@ public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<
         Map<String, Object> parameterConfiguration = getParameterConfiguration(mapper, entry.getValue());
         parametersMap.put(entry.getKey(), Either.forRight(parameterConfiguration));
       }
-    });
+    }
 
     return parametersMap;
   }

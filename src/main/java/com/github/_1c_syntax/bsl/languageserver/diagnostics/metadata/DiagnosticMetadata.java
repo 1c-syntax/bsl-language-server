@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.types.ModuleType;
-import jakarta.annotation.Nullable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -33,6 +32,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Metadata annotation for BSL diagnostics.
+ * <p>
+ * IMPORTANT: When adding new enum or array fields to this annotation,
+ * you must also update:
+ * <ul>
+ *   <li>{@link com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataMapDeserializer} - add conversion for the new field</li>
+ *   <li>{@code DiagnosticMetadataMapDeserializerTest} - update expectedHandledFields set</li>
+ * </ul>
+ * Otherwise, configuration file deserialization will fail.
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -92,8 +102,8 @@ public @interface DiagnosticMetadata {
 
   /**
    * LSP-уровень серьезности диагностики.
-   * Если не указан, рассчитывается автоматически на основе type и severity.
+   * Если не указан (пустая строка), рассчитывается автоматически на основе type и severity.
+   * Возможные значения: "Error", "Warning", "Information", "Hint"
    */
-  @Nullable
-  org.eclipse.lsp4j.DiagnosticSeverity lspSeverity();
+  String lspSeverity() default "";
 }
