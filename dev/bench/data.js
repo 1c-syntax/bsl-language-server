@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760983277385,
+  "lastUpdate": 1761027924255,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30101,6 +30101,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6749698044350608",
             "extra": "mean: 83.47244946161906 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5d0215281027bb897ad7f33284e4748b29a79be2",
+          "message": "Merge pull request #3526 from 1c-syntax/copilot/add-diagnostic-level-options\n\nAdd configuration options for overriding diagnostic severity levels and metadata",
+          "timestamp": "2025-10-21T07:43:56+02:00",
+          "tree_id": "b1686c96ee7ab8f9faaa244d1b15b74193bb862f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5d0215281027bb897ad7f33284e4748b29a79be2"
+        },
+        "date": 1761027920179,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 85.38996481895447,
+            "unit": "sec",
+            "range": "stddev: 0.6914239966127912",
+            "extra": "mean: 85.38996481895447 sec\nrounds: 3"
           }
         ]
       }
