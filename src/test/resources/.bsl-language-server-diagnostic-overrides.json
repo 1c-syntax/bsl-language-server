@@ -1,0 +1,20 @@
+{
+  "diagnostics": {
+    "overrideMinimumLSPDiagnosticLevel": "Warning",
+    "metadata": {
+      "EmptyCodeBlock": {
+        "severity": "BLOCKER",
+        "type": "ERROR"
+      },
+      "LineLength": {
+        "minutesToFix": 10,
+        "lspSeverity": "Error"
+      }
+    },
+    "parameters": {
+      "LineLength": {
+        "maxLineLength": 100
+      }
+    }
+  }
+}
