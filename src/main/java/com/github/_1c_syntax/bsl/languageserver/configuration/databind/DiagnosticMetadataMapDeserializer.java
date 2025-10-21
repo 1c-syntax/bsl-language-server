@@ -37,6 +37,7 @@ import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,7 +71,7 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
           // Convert JSON object to Map
           @SuppressWarnings("unchecked")
           Map<String, Object> annotationParams = mapper.convertValue(valueNode, Map.class);
-          
+
           // Convert string enum values to proper types
           // IMPORTANT: When adding a new enum or array field to DiagnosticMetadata annotation,
           // add corresponding conversion here and update DiagnosticMetadataMapDeserializerTest
@@ -80,7 +81,7 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
           convertStringToEnum(annotationParams, "compatibilityMode", DiagnosticCompatibilityMode.class);
           convertStringArrayToEnumArray(annotationParams, "tags", DiagnosticTag.class);
           convertStringArrayToEnumArray(annotationParams, "modules", ModuleType.class);
-          
+
           // Create DiagnosticMetadata instance using TypeFactory
           DiagnosticMetadata metadata = TypeFactory.annotation(DiagnosticMetadata.class, annotationParams);
           result.put(diagnosticCode, metadata);
@@ -93,13 +94,13 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
     return result;
   }
   
-  private <E extends Enum<E>> void convertStringToEnum(Map<String, Object> params, String key, Class<E> enumClass) {
-    if (params.containsKey(key) && params.get(key) instanceof String) {
-      params.put(key, Enum.valueOf(enumClass, (String) params.get(key)));
+  private static <E extends Enum<E>> void convertStringToEnum(Map<String, Object> params, String key, Class<E> enumClass) {
+    if (params.containsKey(key) && params.get(key) instanceof String value) {
+      params.put(key, Enum.valueOf(enumClass, value));
     }
   }
   
-  private <E extends Enum<E>> void convertStringArrayToEnumArray(
+  private static <E extends Enum<E>> void convertStringArrayToEnumArray(
     Map<String, Object> params,
     String key,
     Class<E> enumClass
@@ -107,14 +108,15 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
     if (params.containsKey(key) && params.get(key) instanceof Iterable) {
       @SuppressWarnings("unchecked")
       var list = (Iterable<Object>) params.get(key);
-      var array = java.lang.reflect.Array.newInstance(enumClass, ((java.util.Collection<?>) list).size());
-      int i = 0;
+      var array = java.lang.reflect.Array.newInstance(enumClass, ((Collection<?>) list).size());
+      var i = 0;
       for (Object item : list) {
-        if (item instanceof String) {
-          java.lang.reflect.Array.set(array, i++, Enum.valueOf(enumClass, (String) item));
+        if (item instanceof String stringItem) {
+          java.lang.reflect.Array.set(array, i, Enum.valueOf(enumClass, stringItem));
         } else {
-          java.lang.reflect.Array.set(array, i++, item);
+          java.lang.reflect.Array.set(array, i, item);
         }
+        i++;
       }
       params.put(key, array);
     }

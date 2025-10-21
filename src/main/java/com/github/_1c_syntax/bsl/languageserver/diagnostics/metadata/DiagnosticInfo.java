@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -32,7 +31,6 @@ import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.springframework.context.event.EventListener;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -84,10 +82,8 @@ public class DiagnosticInfo {
     metadataOverride = computeMetadataOverride();
     lspSeverity = computeLSPSeverity();
   }
-  
-  @EventListener
-  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
-    // Reload metadata override and recalculate LSP severity when configuration changes
+
+  public void refresh() {
     metadataOverride = computeMetadataOverride();
     lspSeverity = computeLSPSeverity();
   }
