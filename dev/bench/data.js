@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761048138403,
+  "lastUpdate": 1761060470627,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30163,6 +30163,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.233903141882367",
             "extra": "mean: 85.21871153513591 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bb7196c2b6e7c75f42c72f04c9e75c5faf388891",
+          "message": "Merge pull request #3538 from johnnyshut/feature/3497\n\nfix: Исправлено ложное срабатывание при проверке областей в модуле менеджера приложения.",
+          "timestamp": "2025-10-21T17:05:09+02:00",
+          "tree_id": "641fa05e561e99e51ca8e342fcb3aa3009f64120",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bb7196c2b6e7c75f42c72f04c9e75c5faf388891"
+        },
+        "date": 1761060464759,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 83.29956754048665,
+            "unit": "sec",
+            "range": "stddev: 0.8963249968205083",
+            "extra": "mean: 83.29956754048665 sec\nrounds: 3"
           }
         ]
       }
