@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
+import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
@@ -77,6 +78,11 @@ public class ServerContext {
 
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
+
+  private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
+    .skipDataCompositionSchema(true)
+    .skipXdtoPackage(true)
+    .build();
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -289,7 +295,8 @@ public class ServerContext {
 
     CF configuration;
     try {
-      configuration = (CF) executorService.submit(() -> MDClasses.createSolution(configurationRoot)).get();
+      configuration = (CF) executorService.submit(
+        () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = (CF) MDClasses.createConfiguration();
