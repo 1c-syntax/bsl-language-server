@@ -54,8 +54,19 @@ class RegionsTest {
 
     // Then
     assertThat(result).isNotEmpty();
-    // Проверяем, что все области содержат PRIVATE_REGION_NAME
-    assertThat(result).hasSizeGreaterThan(0);
+    // Проверяем, что паттерны соответствуют ожидаемым областям для FormModule
+    assertThat(result.stream()
+      .anyMatch(p -> p.matcher(Keywords.VARIABLES_REGION.getRu()).matches() || p.matcher(Keywords.VARIABLES_REGION.getEn()).matches()))
+      .isTrue(); // ОписаниеПеременных
+    assertThat(result.stream()
+      .anyMatch(p -> p.matcher(Keywords.FORM_EVENT_HANDLERS_REGION.getRu()).matches() || p.matcher(Keywords.FORM_EVENT_HANDLERS_REGION.getEn()).matches()))
+      .isTrue(); // ОбработчикиСобытийФормы
+    assertThat(result.stream()
+      .anyMatch(p -> p.matcher(Keywords.INITIALIZE_REGION.getRu()).matches() || p.matcher(Keywords.INITIALIZE_REGION.getEn()).matches()))
+      .isTrue(); // Инициализация
+    assertThat(result.stream()
+      .anyMatch(p -> p.matcher(Keywords.PRIVATE_REGION.getRu()).matches() || p.matcher(Keywords.PRIVATE_REGION.getEn()).matches()))
+      .isTrue(); // СлужебныеПроцедурыИФункции
   }
 
   @Test
