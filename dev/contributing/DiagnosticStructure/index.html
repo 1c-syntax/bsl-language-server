@@ -1423,7 +1423,8 @@
 <li>Активность правила по-умолчанию <code>activatedByDefault</code> (по умолчанию <code>Истина</code>). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.</li>
 <li>Режим совместимости <code>compatibilityMode</code>, по которому фильтруются диагностики при использовании метаданных. По умолчанию <code>UNDEFINED</code>.</li>
 <li>Список типов модулей <code>modules</code> для возможности ограничить анализируемую диагностикой область</li>
-<li>Признак возможности установить замечания на весь проект <code>canLocateOnProject</code>. Используется для диагностик не связанных с модулем исходного кода. На данный момент опция воспринимается только SonarQube, остальные инструменты игнорируют.
+<li>Признак возможности установить замечания на весь проект <code>canLocateOnProject</code>. Используется для диагностик не связанных с модулем исходного кода. На данный момент опция воспринимается только SonarQube, остальные инструменты игнорируют.</li>
+<li>Уровень серьезности LSP <code>lspSeverity</code> (по умолчанию пустая строка). Позволяет явно управлять уровнем серьезности LSP для диагностики. При установке это значение имеет приоритет над расчетным уровнем серьезности LSP. Поддерживаемые значения: <code>Error</code>, <code>Warning</code>, <code>Information</code>, <code>Hint</code>. Этот параметр также может быть переопределен в конфигурационном файле.
 Последние два могут быть опущены.</li>
 </ul>
 <p>Пример аннотации</p>
@@ -1441,7 +1442,8 @@
 <span class="w">    </span><span class="n">ModuleType</span><span class="p">.</span><span class="na">CommonModule</span><span class="w">            </span><span class="c1">// Анализируются только общие модули</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="n">canLocateOnProject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span><span class="c1">// Замечание будет размещено только в привязке к модулю</span>
-<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">            </span><span class="c1">// За каждую дополнительную позицию замечания (`DiagnosticRelatedInformation`) будет добавлено по одной минуте</span>
+<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">           </span><span class="c1">// За каждую дополнительную позицию замечания (`DiagnosticRelatedInformation`) будет добавлено по одной минуте</span>
+<span class="w">  </span><span class="n">lspSeverity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Warning&quot;</span><span class="w">              </span><span class="c1">// Явный уровень серьезности LSP (Error, Warning, Information, Hint)</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Класс должен реализовывать интерфейс <code>BSLDiagnostic</code>. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих <code>BSLDiagnostic</code>:</p>

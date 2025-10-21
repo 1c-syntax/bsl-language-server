@@ -1405,6 +1405,16 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td style="text-align: left;">Parameter is a collection of diagnostics parameters. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is diagnostic key<br/></em> <em>object value</em> - if is boolean, then interpreted as diagnostic off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type <code>json-object</code>, collection of diagnostic parameters.<br/><br/>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page.</td>
 </tr>
 <tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>overrideMinimumLSPDiagnosticLevel</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">This parameter allows setting a minimum severity level for LSP diagnostics. If the diagnostic severity is lower than specified, it will be raised to the specified level. Possible values:<br/><em> <code>Error</code> - error<br/></em> <code>Warning</code> - warning<br/><em> <code>Information</code> - information<br/></em> <code>Hint</code> - hint<br/><br/>By default, the parameter is not set and diagnostic levels are used according to their definition.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>metadata</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Parameter is a collection of diagnostic metadata overrides. Collection items are json-objects with the following structure:<br/><em> </em>object key<em> - string, is diagnostic key<br/></em> <em>object value</em> - json-object with diagnostic parameters to override. You can override: <code>type</code>, <code>severity</code>, <code>scope</code>, <code>modules</code>, <code>minutesToFix</code>, <code>activatedByDefault</code>, <code>compatibilityMode</code>, <code>tags</code>, <code>canLocateOnProject</code>, <code>extraMinForComplexity</code>, <code>lspSeverity</code>.<br/><br/>Values from configuration file override those defined in source code. The <code>lspSeverity</code> parameter allows explicitly setting LSP severity level (<code>Error</code>, <code>Warning</code>, <code>Information</code>, <code>Hint</code>), if not specified - calculated automatically.</td>
+</tr>
+<tr>
 <td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>subsystemsFilter</code></td>
 <td style="text-align: center;"><code>JSON-Object</code></td>
 <td style="text-align: left;">Filter by configuration subsystems</td>
@@ -1499,17 +1509,26 @@ The created file must be specified using the key <code>--configuration</code> <e
 <li>Enables the calculation of diagnostics in continuous mode (<code>computeTrigger = onType</code>)</li>
 <li>Diagnostics are calculated only for the objects of the "StandardSubsystems" subsystem, with the exception of "ReportVariants" and "
   ObjectVersioning"</li>
+<li>Sets the minimum diagnostic severity level to <code>Warning</code></li>
+<li>Overrides the diagnostic type <code>EmptyCodeBlock</code> to <code>ERROR</code> and severity to <code>BLOCKER</code></li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;computeTrigger&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;onType&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;overrideMinimumLSPDiagnosticLevel&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Warning&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;parameters&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">&quot;LineLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="nt">&quot;maxLineLength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">140</span>
 <span class="w">      </span><span class="p">},</span>
 <span class="w">      </span><span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;EmptyCodeBlock&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;severity&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BLOCKER&quot;</span>
+<span class="w">      </span><span class="p">}</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="nt">&quot;subsystemsFilter&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="nt">&quot;include&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -1523,6 +1542,9 @@ The created file must be specified using the key <code>--configuration</code> <e
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+  }
+}
+```</p>
 
 
 

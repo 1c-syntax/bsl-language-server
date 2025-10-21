@@ -1423,7 +1423,8 @@ To create necessary files in right places, should run command <code>gradlew newD
 <li>Default diagnostic active <code>activatedByDefault</code> (default <code>True</code>). When developing experimental, controversial, or not applicable in most projects, it is worth turning off diagnostics by default, the activation will be performed by the end user of the solution.</li>
 <li>Compatibility mode <code>compatibilityMode</code>, by which diagnostics are filtered when using metadata. The default is <code>UNDEFINED</code>.</li>
 <li>List of module types <code>modules</code> for the ability to limit the area analyzed by diagnostics</li>
-<li>Sign of the ability to set issues on the entire project <code>canLocateOnProject</code>. Used for diagnostics not related to the source code module. At the moment, the option is accepted only by SonarQube, other tools ignore it.
+<li>Sign of the ability to set issues on the entire project <code>canLocateOnProject</code>. Used for diagnostics not related to the source code module. At the moment, the option is accepted only by SonarQube, other tools ignore it.</li>
+<li>LSP severity level <code>lspSeverity</code> (by default empty string). Allows explicit control over the LSP severity level for the diagnostic. When set, this value takes priority over the calculated LSP severity. Supported values: <code>Error</code>, <code>Warning</code>, <code>Information</code>, <code>Hint</code>. This parameter can also be overridden in the configuration file.
 The last two can be omitted.</li>
 </ul>
 <p>Annotation example</p>
@@ -1441,7 +1442,8 @@ The last two can be omitted.</li>
 <span class="w">    </span><span class="n">ModuleType</span><span class="p">.</span><span class="na">CommonModule</span><span class="w">       </span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="n">canLocateOnProject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span>
-<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="c1">// For each additional note position (`DiagnosticRelatedInformation`) one minute will be added</span>
+<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">  </span><span class="c1">// For each additional note position (`DiagnosticRelatedInformation`) one minute will be added</span>
+<span class="w">  </span><span class="n">lspSeverity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Warning&quot;</span><span class="w">     </span><span class="c1">// Explicit LSP severity level (Error, Warning, Information, Hint)</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Class should implement the interface <code>BSLDiagnostic</code>. If diagnostic bases on AST, that class should extends at one of classes, that implement <code>BSLDiagnostic</code> below:</p>
