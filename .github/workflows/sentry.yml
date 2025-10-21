@@ -24,7 +24,7 @@ jobs:
           cache: gradle
       - name: Get version from Gradle
         id: get_version
-        run: echo "RELEASE_VERSION=$(./gradlew version -q)" >> $GITHUB_ENV
+        run: echo "RELEASE_VERSION=$(./gradlew version --console plain -q)" >> $GITHUB_ENV
       - name: Get Sentry environment from project version 
         id: get_env
         run: |
