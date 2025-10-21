@@ -107,6 +107,7 @@ public class Regions {
         standardRegions.add(PUBLIC_REGION_NAME);
         standardRegions.add(EVENT_HANDLERS_REGION_NAME);
         standardRegions.add(INTERNAL_REGION_NAME);
+        standardRegions.add(INITIALIZE_REGION_NAME);
         break;
       default:
         // для Unknown ничего
@@ -191,6 +192,7 @@ public class Regions {
     regionsName.add(Keywords.PUBLIC_REGION.get(language));
     regionsName.add(Keywords.EVENT_HANDLERS_REGION.get(language));
     regionsName.add(Keywords.INTERNAL_REGION.get(language));
+    regionsName.add(Keywords.INITIALIZE_REGION.get(language));
   }
 
   private static void addExternalConnectionRegionsNames(Set<String> regionsName, ScriptVariant language) {
