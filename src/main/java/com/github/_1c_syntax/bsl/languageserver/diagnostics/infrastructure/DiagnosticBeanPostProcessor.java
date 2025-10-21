@@ -24,19 +24,26 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final LanguageServerConfiguration configuration;
   private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
+  @Lazy
+  private final Resources resources;
+  private final DiagnosticParameterValidator parameterValidator;
 
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -65,7 +72,17 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
       configuration.getDiagnosticsOptions().getParameters().get(diagnostic.getInfo().getCode().getStringValue());
 
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-      diagnostic.configure(diagnosticConfiguration.getRight());
+      try {
+        // Validate configuration against JSON schema if available
+        var diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
+        parameterValidator.validateDiagnosticConfiguration(diagnosticCode, diagnosticConfiguration.getRight());
+        
+        diagnostic.configure(diagnosticConfiguration.getRight());
+      } catch (Exception e) {
+        var errorMessage = resources.getResourceString(getClass(), "diagnosticConfigurationError", 
+                                                     diagnostic.getInfo().getCode().getStringValue(), e.getMessage());
+        LOGGER.warn(errorMessage, e);
+      }
     }
 
     return diagnostic;
