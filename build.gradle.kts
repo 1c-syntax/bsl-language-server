@@ -42,8 +42,7 @@ gitVersioning.apply {
         }
 
         branch("develop") {
-            version = "\${describe.tag.version.major}." +
-                    "\${describe.tag.version.minor.next}.0." +
+            version = "\${describe.tag.version}." +
                     "\${describe.distance}-SNAPSHOT\${dirty}"
         }
 
@@ -88,10 +87,10 @@ dependencies {
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
     }
-    api("io.github.1c-syntax", "utils", "0.6.3")
-    api("io.github.1c-syntax", "mdclasses", "0.16.0.24-SNAPSHOT")
-    api("io.github.1c-syntax", "bsl-common-library", "0.9.0.21-SNAPSHOT")
-    api("io.github.1c-syntax", "supportconf", "0.15.0.7-SNAPSHOT")
+    api("io.github.1c-syntax", "utils", "0.6.4")
+    api("io.github.1c-syntax", "mdclasses", "0.16.0")
+    api("io.github.1c-syntax", "bsl-common-library", "0.9.0")
+    api("io.github.1c-syntax", "supportconf", "0.15.0")
     api("io.github.1c-syntax", "bsl-parser-core", "0.3.1")
 
     // JLanguageTool
