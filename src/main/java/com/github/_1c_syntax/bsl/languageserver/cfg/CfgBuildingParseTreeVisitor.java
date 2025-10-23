@@ -136,6 +136,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
     var truePart = blocks.leaveBlock();
 
+    graph.addVertex(truePart.begin());
     graph.addEdge(conditionStatement, truePart.begin(), CfgEdgeType.TRUE_BRANCH);
     currentLevelBlock.getBuildParts().push(truePart.end());
     currentLevelBlock.getBuildParts().push(conditionStatement);
@@ -198,9 +199,12 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     // тело true
     blocks.enterBlock();
-    ctx.codeBlock().accept(this);
+    if (ctx.codeBlock() != null) {
+      ctx.codeBlock().accept(this);
+    }
     var truePart = blocks.leaveBlock();
 
+    graph.addVertex(truePart.begin());
     graph.addEdge(condition, truePart.begin(), CfgEdgeType.TRUE_BRANCH);
     blocks.getCurrentBlock().getBuildParts().push(truePart.end());
     blocks.getCurrentBlock().getBuildParts().push(condition);
@@ -218,11 +222,14 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitElseBranch(BSLParser.ElseBranchContext ctx) {
     blocks.enterBlock();
-    ctx.codeBlock().accept(this);
+    if (ctx.codeBlock() != null) {
+      ctx.codeBlock().accept(this);
+    }
     var block = blocks.leaveBlock();
 
     // на стеке находится условие
     var condition = blocks.getCurrentBlock().getBuildParts().pop();
+    graph.addVertex(block.begin());
     graph.addEdge(condition, block.begin(), CfgEdgeType.FALSE_BRANCH);
     blocks.getCurrentBlock().getBuildParts().push(block.end());
 
