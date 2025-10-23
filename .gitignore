@@ -83,3 +83,4 @@ bsl-language-server_*.zip
 *.log
 *.hprof
 /.idea/material_theme_project_new.xml
+.bsl-ls-cache/
