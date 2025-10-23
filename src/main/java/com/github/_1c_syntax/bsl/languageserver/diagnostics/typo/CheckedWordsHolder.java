@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Component for managing persistent cache of checked words for typo diagnostic.
- * Uses Spring Cache with EhCache for persistence and Caffeine for fast in-memory access.
+ * Uses Spring Cache with EhCache for persistent disk storage.
  */
 @Component
 public class CheckedWordsHolder {
@@ -39,7 +39,7 @@ public class CheckedWordsHolder {
    * @param word the word to get status for
    * @return WordStatus indicating if the word has an error, no error, or is missing from cache
    */
-  @Cacheable(value = "typoCache", key = "#lang + ':' + #word")
+  @Cacheable(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
   public WordStatus getWordStatus(String lang, String word) {
     return WordStatus.MISSING;
   }
@@ -52,7 +52,7 @@ public class CheckedWordsHolder {
    * @param hasError true if the word has a typo, false otherwise
    * @return the stored WordStatus
    */
-  @CachePut(value = "typoCache", key = "#lang + ':' + #word")
+  @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
   public WordStatus putWordStatus(String lang, String word, boolean hasError) {
     return hasError ? WordStatus.HAS_ERROR : WordStatus.NO_ERROR;
   }

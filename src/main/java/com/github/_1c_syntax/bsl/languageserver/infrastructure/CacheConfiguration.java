@@ -22,45 +22,40 @@
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
+import org.ehcache.config.units.EntryUnit;
+import org.ehcache.config.units.MemoryUnit;
+import org.ehcache.jsr107.Eh107Configuration;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.cache.jcache.JCacheCacheManager;
-import org.springframework.cache.support.CompositeCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import javax.cache.Caching;
-import java.util.List;
+import java.nio.file.Paths;
 
 /**
- * Spring-конфигурация кэширования с композитным кэшем (Caffeine + EhCache).
+ * Spring-конфигурация кэширования.
+ * <p>
+ * Для typoCache используется EhCache с персистентным хранилищем на диске.
+ * Для остальных кэшей (например, code lens) используется Caffeine с хранением в памяти.
  */
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
 
   /**
-   * Composite cache manager using Caffeine for fast in-memory access
-   * and EhCache for persistent disk-backed storage.
+   * Primary cache manager using Caffeine for in-memory caching.
+   * Used for all caches except typoCache.
    */
   @Bean
   @Primary
-  public CacheManager cacheManager(
-    CacheManager caffeineCacheManager,
-    CacheManager ehCacheCacheManager
-  ) {
-    var compositeCacheManager = new CompositeCacheManager(
-      caffeineCacheManager,
-      ehCacheCacheManager
-    );
-    compositeCacheManager.setFallbackToNoOpCache(false);
-    return compositeCacheManager;
-  }
-
-  @Bean
-  public CacheManager caffeineCacheManager(Caffeine<Object, Object> caffeine) {
+  public CacheManager cacheManager(Caffeine<Object, Object> caffeine) {
     var caffeineCacheManager = new CaffeineCacheManager();
     caffeineCacheManager.setCaffeine(caffeine);
     return caffeineCacheManager;
@@ -72,19 +67,96 @@ public class CacheConfiguration {
       .maximumSize(10_000);
   }
 
-  @Bean
-  public CacheManager ehCacheCacheManager() {
-    try {
-      // Use EhCache with configuration from ehcache.xml in classpath
-      var cachingProvider = Caching.getCachingProvider("org.ehcache.jsr107.EhcacheCachingProvider");
-      var jsr107Manager = cachingProvider.getCacheManager(
-        getClass().getResource("/ehcache.xml").toURI(),
-        getClass().getClassLoader()
-      );
-      
-      return new JCacheCacheManager(jsr107Manager);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to initialize EhCache", e);
+  // Static holder for EhCache manager to ensure single instance across multiple Spring contexts
+  private static org.ehcache.CacheManager EHCACHE_MANAGER = null;
+  private static final Object LOCK = new Object();
+
+  /**
+   * Dedicated EhCache manager for typoCache with persistent disk storage.
+   * Configured programmatically without XML.
+   */
+  @Bean(destroyMethod = "")  // Disable default destroy method
+  public CacheManager typoCacheManager() {
+    synchronized (LOCK) {
+      if (EHCACHE_MANAGER == null || EHCACHE_MANAGER.getStatus() != org.ehcache.Status.AVAILABLE) {
+        // Cache directory in current working directory  
+        var cacheDir = Paths.get(System.getProperty("user.dir"), ".bsl-ls-cache");
+        
+        // Configure EhCache cache with disk persistence
+        var cacheConfig = CacheConfigurationBuilder
+          .newCacheConfigurationBuilder(
+            String.class,
+            WordStatus.class,
+            ResourcePoolsBuilder.newResourcePoolsBuilder()
+              .heap(1000, EntryUnit.ENTRIES)
+              .disk(50, MemoryUnit.MB, true)
+          )
+          .build();
+
+        // Build native EhCache manager with persistence
+        EHCACHE_MANAGER = CacheManagerBuilder.newCacheManagerBuilder()
+          .with(CacheManagerBuilder.persistence(cacheDir.toFile()))
+          .withCache("typoCache", cacheConfig)
+          .build(true);
+      }
     }
+
+    var nativeCache = EHCACHE_MANAGER.getCache("typoCache", String.class, WordStatus.class);
+    
+    // Wrap the native cache with a custom Spring CacheManager
+    var simpleCacheManager = new org.springframework.cache.support.SimpleCacheManager();
+    simpleCacheManager.setCaches(java.util.List.of(
+      new org.springframework.cache.support.AbstractValueAdaptingCache(false) {
+        @Override
+        protected Object lookup(Object key) {
+          return nativeCache.get((String) key);
+        }
+
+        @Override
+        public String getName() {
+          return "typoCache";
+        }
+
+        @Override
+        public Object getNativeCache() {
+          return nativeCache;
+        }
+
+        @Override
+        public <T> T get(Object key, java.util.concurrent.Callable<T> valueLoader) {
+          var value = nativeCache.get((String) key);
+          if (value != null) {
+            return (T) value;
+          }
+          try {
+            T newValue = valueLoader.call();
+            if (newValue != null) {
+              nativeCache.put((String) key, (WordStatus) newValue);
+            }
+            return newValue;
+          } catch (Exception e) {
+            throw new org.springframework.cache.Cache.ValueRetrievalException(key, valueLoader, e);
+          }
+        }
+
+        @Override
+        public void put(Object key, Object value) {
+          nativeCache.put((String) key, (WordStatus) value);
+        }
+
+        @Override
+        public void evict(Object key) {
+          nativeCache.remove((String) key);
+        }
+
+        @Override
+        public void clear() {
+          nativeCache.clear();
+        }
+      }
+    ));
+    simpleCacheManager.afterPropertiesSet();
+    
+    return simpleCacheManager;
   }
 }
