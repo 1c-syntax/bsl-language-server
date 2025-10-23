@@ -45,7 +45,7 @@ class ControlFlowGraphBuilderTest {
   @Test
   void linearBlockCanBeBuilt() {
 
-    var code = "А = 1; Б = 2; В = 3;";
+    var code = "А = 1; Б = 2.; В = 3;";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
