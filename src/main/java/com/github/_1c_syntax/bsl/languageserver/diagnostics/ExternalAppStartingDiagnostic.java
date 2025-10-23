@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.VULNERABILITY,
+  type = DiagnosticType.SECURITY_HOTSPOT,
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 5,
   tags = {
