@@ -67,41 +67,36 @@ public class CacheConfiguration {
       .maximumSize(10_000);
   }
 
-  // Static holder for EhCache manager to ensure single instance across multiple Spring contexts
-  private static org.ehcache.CacheManager EHCACHE_MANAGER = null;
-  private static final Object LOCK = new Object();
-
   /**
    * Dedicated EhCache manager for typoCache with persistent disk storage.
    * Configured programmatically without XML.
    */
-  @Bean(destroyMethod = "")  // Disable default destroy method
-  public CacheManager typoCacheManager() {
-    synchronized (LOCK) {
-      if (EHCACHE_MANAGER == null || EHCACHE_MANAGER.getStatus() != org.ehcache.Status.AVAILABLE) {
-        // Cache directory in current working directory  
-        var cacheDir = Paths.get(System.getProperty("user.dir"), ".bsl-ls-cache");
-        
-        // Configure EhCache cache with disk persistence
-        var cacheConfig = CacheConfigurationBuilder
-          .newCacheConfigurationBuilder(
-            String.class,
-            WordStatus.class,
-            ResourcePoolsBuilder.newResourcePoolsBuilder()
-              .heap(1000, EntryUnit.ENTRIES)
-              .disk(50, MemoryUnit.MB, true)
-          )
-          .build();
+  @Bean(destroyMethod = "close")
+  public org.ehcache.CacheManager ehcacheManager() {
+    // Cache directory in current working directory  
+    var cacheDir = Paths.get(System.getProperty("user.dir"), ".bsl-ls-cache");
+    
+    // Configure EhCache cache with disk persistence
+    var cacheConfig = CacheConfigurationBuilder
+      .newCacheConfigurationBuilder(
+        String.class,
+        WordStatus.class,
+        ResourcePoolsBuilder.newResourcePoolsBuilder()
+          .heap(1000, EntryUnit.ENTRIES)
+          .disk(50, MemoryUnit.MB, true)
+      )
+      .build();
 
-        // Build native EhCache manager with persistence
-        EHCACHE_MANAGER = CacheManagerBuilder.newCacheManagerBuilder()
-          .with(CacheManagerBuilder.persistence(cacheDir.toFile()))
-          .withCache("typoCache", cacheConfig)
-          .build(true);
-      }
-    }
+    // Build native EhCache manager with persistence
+    return CacheManagerBuilder.newCacheManagerBuilder()
+      .with(CacheManagerBuilder.persistence(cacheDir.toFile()))
+      .withCache("typoCache", cacheConfig)
+      .build(true);
+  }
 
-    var nativeCache = EHCACHE_MANAGER.getCache("typoCache", String.class, WordStatus.class);
+  @Bean
+  public CacheManager typoCacheManager(org.ehcache.CacheManager ehcacheManager) {
+    var nativeCache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
     
     // Wrap the native cache with a custom Spring CacheManager
     var simpleCacheManager = new org.springframework.cache.support.SimpleCacheManager();
