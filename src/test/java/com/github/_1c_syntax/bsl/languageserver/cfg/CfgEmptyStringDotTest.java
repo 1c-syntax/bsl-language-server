@@ -99,4 +99,34 @@ class CfgEmptyStringDotTest {
     assertThat(graph.getEntryPoint()).isNotNull();
     assertThat(graph.getExitPoint()).isNotNull();
   }
+
+  @Test
+  void testOriginalIssueCase() {
+    // This is the exact code from the issue report
+    var code = """
+      Процедура Тест()
+      
+      Если Товар.ТаможеннаяСтоимость = "". Тогда
+      
+      КонецЕсли;
+      
+      КонецПроцедуры
+      """;
+
+    var dContext = TestUtils.getDocumentContext(code);
+    var parseTree = dContext.getAst().subs().sub(0).procedure().subCodeBlock().codeBlock();
+    
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    builder.produceLoopIterations(false);
+    builder.determineAdjacentDeadCode(false);
+
+    // This should not crash (was crashing before the fix)
+    var graph = builder.buildGraph(parseTree);
+    
+    // Basic validation that the graph was created
+    assertThat(graph).isNotNull();
+    assertThat(graph.getEntryPoint()).isNotNull();
+    assertThat(graph.getExitPoint()).isNotNull();
+  }
 }
