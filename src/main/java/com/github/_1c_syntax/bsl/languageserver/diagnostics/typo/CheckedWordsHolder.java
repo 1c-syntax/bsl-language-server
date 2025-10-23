@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -30,7 +32,10 @@ import org.springframework.stereotype.Component;
  * Uses Spring Cache with EhCache for persistent disk storage.
  */
 @Component
+@RequiredArgsConstructor
 public class CheckedWordsHolder {
+
+  private final ObjectProvider<CheckedWordsHolder> selfProvider;
 
   /**
    * Get the status of a word from cache.
@@ -55,5 +60,20 @@ public class CheckedWordsHolder {
   @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
   public WordStatus putWordStatus(String lang, String word, boolean hasError) {
     return hasError ? WordStatus.HAS_ERROR : WordStatus.NO_ERROR;
+  }
+
+  /**
+   * Store the status of a word in the cache only if it's not already present.
+   * Behaves like Map.putIfAbsent().
+   *
+   * @param lang language code ("en" or "ru")
+   * @param word the word to store status for
+   * @param hasError true if the word has a typo, false otherwise
+   */
+  public void putWordStatusIfAbsent(String lang, String word, boolean hasError) {
+    CheckedWordsHolder self = selfProvider.getObject();
+    if (self.getWordStatus(lang, word) == WordStatus.MISSING) {
+      self.putWordStatus(lang, word, hasError);
+    }
   }
 }

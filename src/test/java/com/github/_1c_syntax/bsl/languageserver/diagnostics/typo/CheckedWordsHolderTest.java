@@ -115,4 +115,24 @@ class CheckedWordsHolderTest {
     assertThat(beforePut).isEqualTo(WordStatus.MISSING);
     assertThat(afterPut).isEqualTo(WordStatus.HAS_ERROR);
   }
+
+  @Test
+  void testPutIfAbsent() {
+    // Test that putIfAbsent behaves like Map.putIfAbsent
+    String lang = "en";
+    String word1 = "putifabsent1" + System.nanoTime();
+    String word2 = "putifabsent2" + System.nanoTime();
+
+    // Put word with HAS_ERROR
+    checkedWordsHolder.putWordStatus(lang, word1, true);
+    assertThat(checkedWordsHolder.getWordStatus(lang, word1)).isEqualTo(WordStatus.HAS_ERROR);
+
+    // Try to put with NO_ERROR using putIfAbsent - should not change
+    checkedWordsHolder.putWordStatusIfAbsent(lang, word1, false);
+    assertThat(checkedWordsHolder.getWordStatus(lang, word1)).isEqualTo(WordStatus.HAS_ERROR);
+
+    // For a new word, putIfAbsent should work
+    checkedWordsHolder.putWordStatusIfAbsent(lang, word2, false);
+    assertThat(checkedWordsHolder.getWordStatus(lang, word2)).isEqualTo(WordStatus.NO_ERROR);
+  }
 }

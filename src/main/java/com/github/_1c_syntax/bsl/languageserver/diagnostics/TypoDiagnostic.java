@@ -194,18 +194,13 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       releaseLanguageTool(lang, languageTool);
     }
 
-    // Collect words with errors
-    var wordsWithErrors = matches.stream()
+    // check words and mark matched as checked
+    matches.stream()
       .map(ruleMatch -> ruleMatch.getSentence().getTokens()[1].getToken())
-      .collect(java.util.stream.Collectors.toSet());
-    
-    // Mark words with errors
-    wordsWithErrors.forEach(word -> checkedWordsHolder.putWordStatus(lang, word, true));
+      .forEach(word -> checkedWordsHolder.putWordStatus(lang, word, true));
 
-    // Mark unmatched words without errors as checked
-    uncheckedWords.stream()
-      .filter(word -> !wordsWithErrors.contains(word))
-      .forEach(word -> checkedWordsHolder.putWordStatus(lang, word, false));
+    // mark unmatched words without errors as checked
+    uncheckedWords.forEach(word -> checkedWordsHolder.putWordStatusIfAbsent(lang, word, false));
 
     fireDiagnosticOnCheckedWordsWithErrors(tokensMap);
   }
