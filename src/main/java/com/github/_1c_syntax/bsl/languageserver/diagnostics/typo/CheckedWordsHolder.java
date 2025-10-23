@@ -63,7 +63,7 @@ public class CheckedWordsHolder {
   @PostConstruct
   public void loadCache() {
     if (!Files.exists(cacheFilePath)) {
-      LOGGER.info("Cache file not found at {}, starting with empty cache", cacheFilePath);
+      LOGGER.debug("Cache file not found at {}, starting with empty cache", cacheFilePath);
       return;
     }
 
@@ -79,7 +79,7 @@ public class CheckedWordsHolder {
         }
       });
       
-      LOGGER.info("Loaded typo cache from {} with {} languages", 
+      LOGGER.debug("Loaded typo cache from {} with {} languages", 
         cacheFilePath, loadedCache.size());
     } catch (IOException e) {
       LOGGER.error("Failed to load typo cache from {}: {}", cacheFilePath, e.getMessage());
@@ -93,7 +93,7 @@ public class CheckedWordsHolder {
   public void saveCache() {
     try {
       objectMapper.writeValue(cacheFilePath.toFile(), checkedWords);
-      LOGGER.info("Saved typo cache to {}", cacheFilePath);
+      LOGGER.debug("Saved typo cache to {}", cacheFilePath);
     } catch (IOException e) {
       LOGGER.error("Failed to save typo cache to {}: {}", cacheFilePath, e.getMessage());
     }

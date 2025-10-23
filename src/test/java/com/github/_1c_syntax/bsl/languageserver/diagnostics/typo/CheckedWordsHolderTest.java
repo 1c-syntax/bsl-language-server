@@ -37,7 +37,7 @@ class CheckedWordsHolderTest {
   void testContainsWord() {
     // given
     String lang = "en";
-    String word = "testword";
+    String word = "testword" + System.nanoTime(); // Make unique
 
     // when - word not yet added
     boolean containsBefore = checkedWordsHolder.containsWord(lang, word);
@@ -57,8 +57,8 @@ class CheckedWordsHolderTest {
   void testPutAndGetWordStatus() {
     // given
     String lang = "ru";
-    String wordWithError = "ошибк";
-    String wordWithoutError = "правильно";
+    String wordWithError = "ошибк" + System.nanoTime();
+    String wordWithoutError = "правильно" + System.nanoTime();
 
     // when
     checkedWordsHolder.putWordStatus(lang, wordWithError, true);
@@ -73,7 +73,7 @@ class CheckedWordsHolderTest {
   void testGetWordStatusNotFound() {
     // given
     String lang = "en";
-    String unknownWord = "unknownword123";
+    String unknownWord = "unknownword" + System.nanoTime();
 
     // when
     Boolean status = checkedWordsHolder.getWordStatus(lang, unknownWord);
@@ -85,7 +85,7 @@ class CheckedWordsHolderTest {
   @Test
   void testLanguageSeparation() {
     // given
-    String word = "test";
+    String word = "test" + System.nanoTime();
 
     // when
     checkedWordsHolder.putWordStatus("en", word, true);
@@ -101,7 +101,7 @@ class CheckedWordsHolderTest {
     // Test that Spring Cache annotations work
     // given
     String lang = "en";
-    String word = "cachetest";
+    String word = "cachetest" + System.nanoTime();
 
     // when - first call should cache the result
     checkedWordsHolder.putWordStatus(lang, word, true);
