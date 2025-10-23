@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.CheckedWordsHolder;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPool;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -166,7 +167,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     // build string of unchecked words
     Set<String> uncheckedWords = tokensMap.keySet().stream()
-      .filter(word -> !checkedWordsHolder.containsWord(lang, word))
+      .filter(word -> checkedWordsHolder.getWordStatus(lang, word) == WordStatus.MISSING)
       .collect(Collectors.toSet());
 
     if (uncheckedWords.isEmpty()) {
@@ -200,7 +201,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     // mark unmatched words without errors as checked
     uncheckedWords.stream()
-      .filter(word -> !checkedWordsHolder.containsWord(lang, word))
+      .filter(word -> checkedWordsHolder.getWordStatus(lang, word) == WordStatus.MISSING)
       .forEach(word -> checkedWordsHolder.putWordStatus(lang, word, false));
 
     fireDiagnosticOnCheckedWordsWithErrors(tokensMap);
@@ -212,7 +213,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     String lang = info.getResourceString("diagnosticLanguage");
 
     tokensMap.entrySet().stream()
-      .filter(entry -> Boolean.TRUE.equals(checkedWordsHolder.getWordStatus(lang, entry.getKey())))
+      .filter(entry -> checkedWordsHolder.getWordStatus(lang, entry.getKey()) == WordStatus.HAS_ERROR)
       .forEach((Map.Entry<String, List<Token>> entry) -> {
         String word = entry.getKey();
         List<Token> tokens = entry.getValue();

@@ -21,128 +21,39 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * Component for managing persistent cache of checked words for typo diagnostic.
- * Stores spell-checking results in memory and persists them to a JSON file.
+ * Uses Spring Cache with EhCache for persistence and Caffeine for fast in-memory access.
  */
 @Component
-@Slf4j
 public class CheckedWordsHolder {
-  private static final String CACHE_FILE_NAME = ".bsl-ls-typo-cache.json";
-  
-  private final Map<String, Map<String, Boolean>> checkedWords = Map.of(
-    "en", new ConcurrentHashMap<>(),
-    "ru", new ConcurrentHashMap<>()
-  );
-  
-  private final ObjectMapper objectMapper = new ObjectMapper();
-  private final Path cacheFilePath;
-
-  public CheckedWordsHolder() {
-    this.cacheFilePath = Paths.get(System.getProperty("user.home"), CACHE_FILE_NAME);
-  }
 
   /**
-   * Load cache from file on component initialization.
-   */
-  @PostConstruct
-  public void loadCache() {
-    if (!Files.exists(cacheFilePath)) {
-      LOGGER.debug("Cache file not found at {}, starting with empty cache", cacheFilePath);
-      return;
-    }
-
-    try {
-      @SuppressWarnings("unchecked")
-      Map<String, Map<String, Boolean>> loadedCache = 
-        objectMapper.readValue(cacheFilePath.toFile(), Map.class);
-      
-      loadedCache.forEach((lang, words) -> {
-        Map<String, Boolean> langMap = checkedWords.get(lang);
-        if (langMap != null) {
-          langMap.putAll(words);
-        }
-      });
-      
-      LOGGER.debug("Loaded typo cache from {} with {} languages", 
-        cacheFilePath, loadedCache.size());
-    } catch (IOException e) {
-      LOGGER.error("Failed to load typo cache from {}: {}", cacheFilePath, e.getMessage());
-    }
-  }
-
-  /**
-   * Save cache to file on component destruction.
-   */
-  @PreDestroy
-  public void saveCache() {
-    try {
-      objectMapper.writeValue(cacheFilePath.toFile(), checkedWords);
-      LOGGER.debug("Saved typo cache to {}", cacheFilePath);
-    } catch (IOException e) {
-      LOGGER.error("Failed to save typo cache to {}: {}", cacheFilePath, e.getMessage());
-    }
-  }
-
-  /**
-   * Check if a word has been checked for a specific language.
-   *
-   * @param lang language code ("en" or "ru")
-   * @param word the word to check
-   * @return true if the word has been checked
-   */
-  public boolean containsWord(String lang, String word) {
-    Map<String, Boolean> langMap = checkedWords.get(lang);
-    return langMap != null && langMap.containsKey(word);
-  }
-
-  /**
-   * Get the status of a word (whether it has a typo) from cache.
-   * Uses Spring Cache to provide additional in-memory caching.
+   * Get the status of a word from cache.
    *
    * @param lang language code ("en" or "ru")
    * @param word the word to get status for
-   * @return true if the word has a typo, false otherwise, null if not checked
+   * @return WordStatus indicating if the word has an error, no error, or is missing from cache
    */
   @Cacheable(value = "typoCache", key = "#lang + ':' + #word")
-  public Boolean getWordStatus(String lang, String word) {
-    Map<String, Boolean> langMap = checkedWords.get(lang);
-    if (langMap == null) {
-      return null;
-    }
-    return langMap.get(word);
+  public WordStatus getWordStatus(String lang, String word) {
+    return WordStatus.MISSING;
   }
 
   /**
-   * Store the status of a word (whether it has a typo).
-   * Uses Spring Cache to update the cache with the result.
+   * Store the status of a word in the cache.
    *
    * @param lang language code ("en" or "ru")
    * @param word the word to store status for
    * @param hasError true if the word has a typo, false otherwise
-   * @return the stored status value
+   * @return the stored WordStatus
    */
   @CachePut(value = "typoCache", key = "#lang + ':' + #word")
-  public Boolean putWordStatus(String lang, String word, boolean hasError) {
-    Map<String, Boolean> langMap = checkedWords.get(lang);
-    if (langMap != null) {
-      langMap.put(word, hasError);
-    }
-    return hasError;
+  public WordStatus putWordStatus(String lang, String word, boolean hasError) {
+    return hasError ? WordStatus.HAS_ERROR : WordStatus.NO_ERROR;
   }
 }

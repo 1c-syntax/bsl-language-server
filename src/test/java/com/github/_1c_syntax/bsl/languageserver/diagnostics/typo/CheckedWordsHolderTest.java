@@ -34,26 +34,6 @@ class CheckedWordsHolderTest {
   private CheckedWordsHolder checkedWordsHolder;
 
   @Test
-  void testContainsWord() {
-    // given
-    String lang = "en";
-    String word = "testword" + System.nanoTime(); // Make unique
-
-    // when - word not yet added
-    boolean containsBefore = checkedWordsHolder.containsWord(lang, word);
-
-    // then
-    assertThat(containsBefore).isFalse();
-
-    // when - add word
-    checkedWordsHolder.putWordStatus(lang, word, true);
-    boolean containsAfter = checkedWordsHolder.containsWord(lang, word);
-
-    // then
-    assertThat(containsAfter).isTrue();
-  }
-
-  @Test
   void testPutAndGetWordStatus() {
     // given
     String lang = "ru";
@@ -65,8 +45,8 @@ class CheckedWordsHolderTest {
     checkedWordsHolder.putWordStatus(lang, wordWithoutError, false);
 
     // then
-    assertThat(checkedWordsHolder.getWordStatus(lang, wordWithError)).isTrue();
-    assertThat(checkedWordsHolder.getWordStatus(lang, wordWithoutError)).isFalse();
+    assertThat(checkedWordsHolder.getWordStatus(lang, wordWithError)).isEqualTo(WordStatus.HAS_ERROR);
+    assertThat(checkedWordsHolder.getWordStatus(lang, wordWithoutError)).isEqualTo(WordStatus.NO_ERROR);
   }
 
   @Test
@@ -76,10 +56,10 @@ class CheckedWordsHolderTest {
     String unknownWord = "unknownword" + System.nanoTime();
 
     // when
-    Boolean status = checkedWordsHolder.getWordStatus(lang, unknownWord);
+    WordStatus status = checkedWordsHolder.getWordStatus(lang, unknownWord);
 
     // then
-    assertThat(status).isNull();
+    assertThat(status).isEqualTo(WordStatus.MISSING);
   }
 
   @Test
@@ -92,8 +72,8 @@ class CheckedWordsHolderTest {
     checkedWordsHolder.putWordStatus("ru", word, false);
 
     // then
-    assertThat(checkedWordsHolder.getWordStatus("en", word)).isTrue();
-    assertThat(checkedWordsHolder.getWordStatus("ru", word)).isFalse();
+    assertThat(checkedWordsHolder.getWordStatus("en", word)).isEqualTo(WordStatus.HAS_ERROR);
+    assertThat(checkedWordsHolder.getWordStatus("ru", word)).isEqualTo(WordStatus.NO_ERROR);
   }
 
   @Test
@@ -105,11 +85,11 @@ class CheckedWordsHolderTest {
 
     // when - first call should cache the result
     checkedWordsHolder.putWordStatus(lang, word, true);
-    Boolean firstGet = checkedWordsHolder.getWordStatus(lang, word);
-    Boolean secondGet = checkedWordsHolder.getWordStatus(lang, word);
+    WordStatus firstGet = checkedWordsHolder.getWordStatus(lang, word);
+    WordStatus secondGet = checkedWordsHolder.getWordStatus(lang, word);
 
     // then - both calls should return the same result
-    assertThat(firstGet).isTrue();
-    assertThat(secondGet).isTrue();
+    assertThat(firstGet).isEqualTo(WordStatus.HAS_ERROR);
+    assertThat(secondGet).isEqualTo(WordStatus.HAS_ERROR);
   }
 }
