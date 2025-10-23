@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761151458725,
+  "lastUpdate": 1761200647061,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30256,6 +30256,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4047988754405074",
             "extra": "mean: 85.30483690897624 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b71a91d2c10f9a7d79f41eb357b05c118404a458",
+          "message": "Merge pull request #3547 from 1c-syntax/copilot/modify-external-app-vulnerability\n\nChange ExternalAppStarting diagnostic type from VULNERABILITY to SECURITY_HOTSPOT",
+          "timestamp": "2025-10-23T08:04:27+02:00",
+          "tree_id": "806a9253f1ab0d43d9cf2526c9807357bd90fab6",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b71a91d2c10f9a7d79f41eb357b05c118404a458"
+        },
+        "date": 1761200641388,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 86.18733763694763,
+            "unit": "sec",
+            "range": "stddev: 1.0187916249245965",
+            "extra": "mean: 86.18733763694763 sec\nrounds: 3"
           }
         ]
       }
