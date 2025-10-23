@@ -81,7 +81,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.26.1") {
+    api("io.github.1c-syntax", "bsl-parser", "0.26.2") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
