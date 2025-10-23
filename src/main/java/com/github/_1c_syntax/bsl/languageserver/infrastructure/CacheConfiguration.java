@@ -74,7 +74,7 @@ public class CacheConfiguration {
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager() {
     // Cache directory in current working directory  
-    var cacheDir = Paths.get(System.getProperty("user.dir"), ".bsl-ls-cache");
+    var cacheDir = java.nio.file.Path.of(".", ".bsl-ls-cache");
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder
