@@ -25,17 +25,42 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.jcache.JCacheCacheManager;
+import org.springframework.cache.support.CompositeCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import javax.cache.Caching;
+import java.util.List;
 
 /**
- * Spring-конфигурация кэширования.
+ * Spring-конфигурация кэширования с композитным кэшем (Caffeine + EhCache).
  */
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
+
+  /**
+   * Composite cache manager using Caffeine for fast in-memory access
+   * and EhCache for persistent disk-backed storage.
+   */
   @Bean
-  public CacheManager cacheManager(Caffeine<Object, Object> caffeine) {
+  @Primary
+  public CacheManager cacheManager(
+    CacheManager caffeineCacheManager,
+    CacheManager ehCacheCacheManager
+  ) {
+    var compositeCacheManager = new CompositeCacheManager(
+      caffeineCacheManager,
+      ehCacheCacheManager
+    );
+    compositeCacheManager.setFallbackToNoOpCache(false);
+    return compositeCacheManager;
+  }
+
+  @Bean
+  public CacheManager caffeineCacheManager(Caffeine<Object, Object> caffeine) {
     var caffeineCacheManager = new CaffeineCacheManager();
     caffeineCacheManager.setCaffeine(caffeine);
     return caffeineCacheManager;
@@ -45,5 +70,21 @@ public class CacheConfiguration {
   public Caffeine<Object, Object> caffeineConfig() {
     return Caffeine.newBuilder()
       .maximumSize(10_000);
+  }
+
+  @Bean
+  public CacheManager ehCacheCacheManager() {
+    try {
+      // Use EhCache with configuration from ehcache.xml in classpath
+      var cachingProvider = Caching.getCachingProvider("org.ehcache.jsr107.EhcacheCachingProvider");
+      var jsr107Manager = cachingProvider.getCacheManager(
+        getClass().getResource("/ehcache.xml").toURI(),
+        getClass().getClassLoader()
+      );
+      
+      return new JCacheCacheManager(jsr107Manager);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to initialize EhCache", e);
+    }
   }
 }

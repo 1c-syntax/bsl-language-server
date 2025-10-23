@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
+import java.io.Serializable;
+
 /**
  * Status of a word's spell check result.
  */
-public enum WordStatus {
+public enum WordStatus implements Serializable {
   /**
    * Word has a spelling error.
    */
