@@ -83,13 +83,13 @@ class CheckedWordsHolderTest {
     String lang = "en";
     String word = "cachetest" + System.nanoTime();
 
-    // when - first call should cache the result
+    // when - first check MISSING, then put, then get
+    WordStatus beforePut = checkedWordsHolder.getWordStatus(lang, word);
     checkedWordsHolder.putWordStatus(lang, word, true);
-    WordStatus firstGet = checkedWordsHolder.getWordStatus(lang, word);
-    WordStatus secondGet = checkedWordsHolder.getWordStatus(lang, word);
+    WordStatus afterPut = checkedWordsHolder.getWordStatus(lang, word);
 
-    // then - both calls should return the same result
-    assertThat(firstGet).isEqualTo(WordStatus.HAS_ERROR);
-    assertThat(secondGet).isEqualTo(WordStatus.HAS_ERROR);
+    // then
+    assertThat(beforePut).isEqualTo(WordStatus.MISSING);
+    assertThat(afterPut).isEqualTo(WordStatus.HAS_ERROR);
   }
 }

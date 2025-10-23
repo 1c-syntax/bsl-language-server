@@ -82,7 +82,7 @@ public class CacheConfiguration {
         String.class,
         WordStatus.class,
         ResourcePoolsBuilder.newResourcePoolsBuilder()
-          .heap(1000, EntryUnit.ENTRIES)
+          .heap(100_000, EntryUnit.ENTRIES)
           .disk(50, MemoryUnit.MB, true)
       )
       .build();
