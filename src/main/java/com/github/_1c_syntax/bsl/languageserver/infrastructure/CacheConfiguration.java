@@ -36,8 +36,12 @@ import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.cache.support.AbstractValueAdaptingCache;
+import org.springframework.cache.support.SimpleCacheManager;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Spring-конфигурация кэширования.
@@ -63,8 +67,7 @@ public class CacheConfiguration {
 
   @Bean
   public Caffeine<Object, Object> caffeineConfig() {
-    return Caffeine.newBuilder()
-      .maximumSize(10_000);
+    return Caffeine.newBuilder();
   }
 
   /**
@@ -74,7 +77,7 @@ public class CacheConfiguration {
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager() {
     // Cache directory in current working directory  
-    var cacheDir = java.nio.file.Path.of(".", ".bsl-ls-cache");
+    var cacheDir = Path.of(".", ".bsl-ls-cache");
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder
@@ -99,9 +102,9 @@ public class CacheConfiguration {
     var nativeCache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
     
     // Wrap the native cache with a custom Spring CacheManager
-    var simpleCacheManager = new org.springframework.cache.support.SimpleCacheManager();
-    simpleCacheManager.setCaches(java.util.List.of(
-      new org.springframework.cache.support.AbstractValueAdaptingCache(false) {
+    var simpleCacheManager = new SimpleCacheManager();
+    simpleCacheManager.setCaches(List.of(
+      new AbstractValueAdaptingCache(false) {
         @Override
         protected Object lookup(Object key) {
           return nativeCache.get((String) key);
@@ -118,7 +121,7 @@ public class CacheConfiguration {
         }
 
         @Override
-        public <T> T get(Object key, java.util.concurrent.Callable<T> valueLoader) {
+        public <T> T get(Object key, Callable<T> valueLoader) {
           var value = nativeCache.get((String) key);
           if (value != null) {
             return (T) value;
