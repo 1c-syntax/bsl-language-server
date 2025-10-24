@@ -141,25 +141,6 @@ public class ServerCallsInFormEventsDiagnostic extends AbstractListenerDiagnosti
   }
 
   /**
-   * Обрабатывает вход в вызов локального метода.
-   * 
-   * Проверяет, вызывается ли серверная процедура из событий ПриАктивизацииСтроки
-   * или НачалоВыбора, и добавляет диагностическое сообщение при обнаружении нарушения.
-   * 
-   * @param ctx контекст вызова локального метода
-   */
-  @Override
-  public void enterMethodCall(BSLParser.MethodCallContext ctx) {
-    if (isInForbiddenEvent) {
-      var methodName = ctx.methodName().getText();
-      if (methodName != null && isServerMethod(methodName)) {
-        diagnosticStorage.addDiagnostic(ctx,
-          info.getMessage("message", methodName));
-      }
-    }
-  }
-
-  /**
    * Проверяет, является ли метод серверным.
    * 
    * Метод считается серверным, если он имеет директиву компиляции &НаСервере
