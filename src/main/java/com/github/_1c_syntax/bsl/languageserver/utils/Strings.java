@@ -23,11 +23,22 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import lombok.experimental.UtilityClass;
 
+/**
+ * Утилитный класс для работы со строками.
+ * <p>
+ * Предоставляет методы для обработки строк, используемых в BSL.
+ */
 @UtilityClass
 public class Strings {
 
   private static final int MIN_TEXT_SIZE = 2;
 
+  /**
+   * Удалить кавычки из строки и обрезать пробелы.
+   *
+   * @param text Текст для обработки
+   * @return Текст без кавычек и пробелов
+   */
   public static String trimQuotes(String text) {
     return trimLastQuote(trimFirstQuote(text)).strip();
   }
