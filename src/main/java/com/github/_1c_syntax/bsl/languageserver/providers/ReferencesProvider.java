@@ -48,6 +48,13 @@ public class ReferencesProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
+  /**
+   * Получить список всех ссылок на символ.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список местоположений ссылок на символ
+   */
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
     var position = params.getPosition();
 

@@ -56,6 +56,12 @@ public final class DocumentSymbolProvider {
     VariableKind.GLOBAL
   );
 
+  /**
+   * Получить иерархическую структуру символов документа.
+   *
+   * @param documentContext Контекст документа
+   * @return Список символов верхнего уровня документа
+   */
   public List<DocumentSymbol> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
       .filter(DocumentSymbolProvider::isSupported)

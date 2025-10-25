@@ -43,6 +43,12 @@ import java.util.stream.Collectors;
 public class DocumentLinkProvider {
   private final Collection<DocumentLinkSupplier> suppliers;
 
+  /**
+   * Получить список ссылок на внешние источники информации из документа.
+   *
+   * @param documentContext Контекст документа
+   * @return Список ссылок на документацию, справку и другие ресурсы
+   */
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
     return suppliers.stream()
       .map(supplier -> supplier.getDocumentLinks(documentContext))

@@ -72,6 +72,13 @@ public class CallHierarchyProvider {
     .comparing(CallHierarchyItem::getDetail)
     .thenComparing(CallHierarchyItem::getSelectionRange, Ranges::compare);
 
+  /**
+   * Подготовить элементы иерархии вызовов для указанной позиции в документе.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список элементов иерархии вызовов
+   */
   public List<CallHierarchyItem> prepareCallHierarchy(
     DocumentContext documentContext,
     CallHierarchyPrepareParams params
@@ -85,6 +92,13 @@ public class CallHierarchyProvider {
       .orElse(Collections.emptyList());
   }
 
+  /**
+   * Получить входящие вызовы для элемента иерархии.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список входящих вызовов
+   */
   public List<CallHierarchyIncomingCall> incomingCalls(
     DocumentContext documentContext,
     CallHierarchyIncomingCallsParams params
@@ -110,6 +124,13 @@ public class CallHierarchyProvider {
       .toList();
   }
 
+  /**
+   * Получить исходящие вызовы для элемента иерархии.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список исходящих вызовов
+   */
   public List<CallHierarchyOutgoingCall> outgoingCalls(
     DocumentContext documentContext,
     CallHierarchyOutgoingCallsParams params

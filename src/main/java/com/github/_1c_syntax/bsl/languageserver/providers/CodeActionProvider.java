@@ -55,6 +55,15 @@ public final class CodeActionProvider {
 
   private final List<CodeActionSupplier> codeActionSuppliers;
 
+  /**
+   * Создать Code Actions для списка исправлений.
+   *
+   * @param textEdits Список текстовых изменений
+   * @param title Название действия
+   * @param uri URI документа
+   * @param diagnostics Список диагностик, которые исправляет это действие
+   * @return Список Code Actions
+   */
   public static List<CodeAction> createCodeActions(
     List<TextEdit> textEdits,
     String title,
@@ -88,6 +97,13 @@ public final class CodeActionProvider {
 
   }
 
+  /**
+   * Получить список доступных Code Actions для указанного диапазона.
+   *
+   * @param params Параметры запроса
+   * @param documentContext Контекст документа
+   * @return Список Code Actions или команд
+   */
   public List<Either<Command, CodeAction>> getCodeActions(
     CodeActionParams params,
     DocumentContext documentContext

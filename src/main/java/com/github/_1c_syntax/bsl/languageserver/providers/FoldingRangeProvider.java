@@ -44,6 +44,12 @@ public final class FoldingRangeProvider {
 
   private final List<FoldingRangeSupplier> foldingRangeSuppliers;
 
+  /**
+   * Получить список сворачиваемых областей в документе.
+   *
+   * @param documentContext Контекст документа
+   * @return Список областей, которые можно свернуть
+   */
   public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
     return foldingRangeSuppliers.stream()
       .map(foldingRangeSupplier -> foldingRangeSupplier.getFoldingRanges(documentContext))

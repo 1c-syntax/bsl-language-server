@@ -47,6 +47,13 @@ public class DefinitionProvider {
 
   private final ReferenceResolver referenceResolver;
 
+  /**
+   * Получить местоположение определения символа.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список ссылок на определение символа
+   */
   public List<LocationLink> getDefinition(DocumentContext documentContext, DefinitionParams params) {
     Position position = params.getPosition();
 
