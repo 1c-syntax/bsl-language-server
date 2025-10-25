@@ -47,10 +47,20 @@ public final class DiagnosticProvider {
 
   private final LanguageClientHolder clientHolder;
 
+  /**
+   * Вычислить и опубликовать диагностики для документа.
+   *
+   * @param documentContext Контекст документа
+   */
   public void computeAndPublishDiagnostics(DocumentContext documentContext) {
     publishDiagnostics(documentContext, documentContext::getDiagnostics);
   }
 
+  /**
+   * Опубликовать пустой список диагностик для документа.
+   *
+   * @param documentContext Контекст документа
+   */
   public void publishEmptyDiagnosticList(DocumentContext documentContext) {
     publishDiagnostics(documentContext, Collections::emptyList);
   }

@@ -62,18 +62,42 @@ public class Methods {
     }
   }
 
+  /**
+   * Получить имя метода из контекста глобального вызова метода.
+   *
+   * @param ctx Контекст глобального вызова метода
+   * @return Токен с именем метода
+   */
   public static Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
     return Optional.of(ctx.methodName().getStart());
   }
 
+  /**
+   * Получить имя метода из контекста вызова метода через точку.
+   *
+   * @param ctx Контекст вызова метода через точку (accessCall)
+   * @return Токен с именем метода
+   */
   public static Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
     return Optional.of(ctx.methodCall().methodName().getStart());
   }
 
+  /**
+   * Получить имя метода из контекста сложного идентификатора.
+   *
+   * @param ctx Контекст сложного идентификатора
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
     return getMethodName(ctx.modifier());
   }
 
+  /**
+   * Получить имя метода из списка модификаторов.
+   *
+   * @param modifiers Список модификаторов
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
     return modifiers.stream()
       .map(BSLParser.ModifierContext::accessCall)
@@ -83,6 +107,12 @@ public class Methods {
       .orElse(Optional.empty());
   }
 
+  /**
+   * Получить имя метода из контекста параметра вызова (для NotifyDescription).
+   *
+   * @param callParamContext Контекст параметра вызова
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.CallParamContext callParamContext) {
     return NotifyDescription.getFirstMember(callParamContext)
       .map(BSLParser.MemberContext::constValue)
@@ -90,12 +120,24 @@ public class Methods {
       .map(BSLParser.StringContext::getStart);
   }
 
+  /**
+   * Получить имя метода из контекста левого значения (lValue).
+   *
+   * @param lValueContext Контекст левого значения
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.LValueContext lValueContext) {
     return Optional.ofNullable(lValueContext.acceptor())
       .map(BSLParser.AcceptorContext::modifier)
       .flatMap(Methods::getMethodName);
   }
 
+  /**
+   * Получить конструктор класса OScript (ПриСозданииОбъекта/OnObjectCreate).
+   *
+   * @param symbolTree Дерево символов документа
+   * @return Символ метода-конструктора, если найден
+   */
   public static Optional<MethodSymbol> getOscriptClassConstructor(SymbolTree symbolTree) {
     return symbolTree.getMethodSymbol("ПриСозданииОбъекта")
       .or(() -> symbolTree.getMethodSymbol("OnObjectCreate"));

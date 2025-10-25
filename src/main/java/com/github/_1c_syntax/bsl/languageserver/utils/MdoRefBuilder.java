@@ -64,6 +64,12 @@ public class MdoRefBuilder {
     }
   }
 
+  /**
+   * Получить ссылку на объект метаданных для документа.
+   *
+   * @param documentContext Контекст документа
+   * @return Строковая ссылка на MDO документа
+   */
   public static String getMdoRef(DocumentContext documentContext) {
     var mdoRef = documentContext.getMdObject()
       .map(MD::getMdoReference)
@@ -72,10 +78,25 @@ public class MdoRefBuilder {
     return stringInterner.intern(mdoRef);
   }
 
+  /**
+   * Получить ссылку на объект метаданных из контекста сложного идентификатора.
+   *
+   * @param documentContext Контекст документа
+   * @param complexIdentifier Контекст сложного идентификатора
+   * @return Строковая ссылка на MDO
+   */
   public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
     return getMdoRef(documentContext, complexIdentifier.IDENTIFIER(), complexIdentifier.modifier());
   }
 
+  /**
+   * Получить ссылку на объект метаданных из идентификатора и модификаторов.
+   *
+   * @param documentContext Контекст документа
+   * @param identifier Терминальный узел с идентификатором
+   * @param modifiers Список модификаторов
+   * @return Строковая ссылка на MDO
+   */
   public String getMdoRef(
     DocumentContext documentContext,
     @Nullable
