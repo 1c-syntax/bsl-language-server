@@ -59,6 +59,11 @@ public class LanguageClientHolder implements LanguageClientAware {
     return client != null;
   }
 
+  /**
+   * Выполнить действие с клиентом, если он подключен.
+   *
+   * @param consumer Действие для выполнения с подключенным клиентом
+   */
   public void execIfConnected(Consumer<LanguageClient> consumer) {
     getClient().ifPresent(consumer);
   }
