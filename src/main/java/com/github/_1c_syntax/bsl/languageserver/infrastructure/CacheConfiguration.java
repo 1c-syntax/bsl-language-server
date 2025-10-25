@@ -55,8 +55,10 @@ import java.util.concurrent.Callable;
 public class CacheConfiguration {
 
   /**
-   * Primary cache manager using Caffeine for in-memory caching.
-   * Used for all caches except typoCache.
+   * Основной менеджер кэша, использующий Caffeine для кэширования в памяти.
+   * <p>
+   * Помечен как {@code @Primary}, поэтому используется для всех кэшей по умолчанию,
+   * если не указан явно другой менеджер кэша (например, {@code typoCacheManager} для typoCache).
    */
   @Bean
   @Primary
@@ -72,8 +74,10 @@ public class CacheConfiguration {
   }
 
   /**
-   * Dedicated EhCache manager for typoCache with persistent disk storage.
-   * Configured programmatically without XML.
+   * Выделенный менеджер EhCache для typoCache с персистентным хранением на диске.
+   * <p>
+   * Настроен программно, без использования XML-конфигурации.
+   * При закрытии Spring-контекста вызывается метод {@code close()} для корректного завершения работы кэша.
    */
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager(
