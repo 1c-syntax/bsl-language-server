@@ -76,8 +76,10 @@ public class CacheConfiguration {
    */
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager() {
-    // Cache directory in current working directory
-    var cacheDir = Path.of(".", ".bsl-ls-cache");
+    // Cache directory - use temp for tests, fixed for production
+    var cacheDir = System.getProperty("bsl.ehcache.dir") != null
+      ? Path.of(System.getProperty("bsl.ehcache.dir"), String.valueOf(System.identityHashCode(this)))
+      : Path.of(".", ".bsl-ls-cache");
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder
