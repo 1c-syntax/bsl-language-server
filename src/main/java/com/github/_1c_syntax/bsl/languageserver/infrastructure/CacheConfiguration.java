@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.cache.support.AbstractValueAdaptingCache;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -121,6 +122,7 @@ public class CacheConfiguration {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public <T> T get(Object key, Callable<T> valueLoader) {
           var value = nativeCache.get((String) key);
           if (value != null) {
