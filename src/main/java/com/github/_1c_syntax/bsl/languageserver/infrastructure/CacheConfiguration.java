@@ -30,6 +30,7 @@ import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.units.MemoryUnit;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
+import org.springframework.cache.Cache.ValueRetrievalException;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -135,7 +136,7 @@ public class CacheConfiguration {
             }
             return newValue;
           } catch (Exception e) {
-            throw new org.springframework.cache.Cache.ValueRetrievalException(key, valueLoader, e);
+            throw new ValueRetrievalException(key, valueLoader, e);
           }
         }
 
