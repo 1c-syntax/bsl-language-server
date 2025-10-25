@@ -131,7 +131,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     // тело true
     blocks.enterBlock();
-    if (ctx.ifBranch().codeBlock() != null) {
+    if (ctx.ifBranch().codeBlock() != null && !Trees.nodeContainsErrors(ctx.ifBranch())) {
       ctx.ifBranch().codeBlock().accept(this);
     }
     var truePart = blocks.leaveBlock();
@@ -199,7 +199,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     // тело true
     blocks.enterBlock();
-    if (ctx.codeBlock() != null) {
+    if (ctx.codeBlock() != null && !Trees.nodeContainsErrors(ctx)) {
       ctx.codeBlock().accept(this);
     }
     var truePart = blocks.leaveBlock();
@@ -222,7 +222,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitElseBranch(BSLParser.ElseBranchContext ctx) {
     blocks.enterBlock();
-    if (ctx.codeBlock() != null) {
+    if (ctx.codeBlock() != null && !Trees.nodeContainsErrors(ctx)) {
       ctx.codeBlock().accept(this);
     }
     var block = blocks.leaveBlock();
