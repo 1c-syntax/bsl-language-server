@@ -75,7 +75,7 @@ public class CacheConfiguration {
    */
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager(
-    @Value("${bsl.typo.cache.dir}") String cacheDirPath
+    @Value("${app.cache.path}") String cacheDirPath
   ) {
     var cacheDir = Path.of(cacheDirPath);
     
