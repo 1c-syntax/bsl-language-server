@@ -45,6 +45,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * Утилитный класс для работы с синтаксическими деревьями ANTLR.
+ * <p>
+ * Предоставляет методы для навигации, поиска и анализа узлов
+ * в дереве разбора BSL-кода.
+ */
 @UtilityClass
 public final class Trees {
 
@@ -65,10 +71,23 @@ public final class Trees {
    * Обертки Trees
    */
 
+  /**
+   * Найти все узлы указанного правила в дереве.
+   *
+   * @param t Дерево разбора
+   * @param ruleIndex Индекс правила для поиска
+   * @return Коллекция найденных узлов
+   */
   public static Collection<ParseTree> findAllRuleNodes(ParseTree t, int ruleIndex) {
     return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
   }
 
+  /**
+   * Получить список дочерних узлов.
+   *
+   * @param t Узел дерева
+   * @return Список дочерних узлов
+   */
   public static List<Tree> getChildren(Tree t) {
     return org.antlr.v4.runtime.tree.Trees.getChildren(t);
   }
@@ -112,10 +131,23 @@ public final class Trees {
     }
   }
 
+  /**
+   * Найти все узлы указанного типа токена в дереве.
+   *
+   * @param t Дерево разбора
+   * @param ttype Тип токена для поиска
+   * @return Коллекция найденных узлов
+   */
   public static Collection<ParseTree> findAllTokenNodes(ParseTree t, int ttype) {
     return org.antlr.v4.runtime.tree.Trees.findAllTokenNodes(t, ttype);
   }
 
+  /**
+   * Получить список всех потомков узла (плоский список).
+   *
+   * @param t Узел дерева
+   * @return Список всех потомков
+   */
   public static List<ParseTree> getDescendants(ParseTree t) {
     List<ParseTree> nodes = new ArrayList<>(t.getChildCount());
     flatten(t, nodes);
