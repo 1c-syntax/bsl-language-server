@@ -202,6 +202,14 @@ tasks.test {
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}")
+
+    // Cleanup test cache directories after tests complete
+    doLast {
+        val tmpDir = File(System.getProperty("java.io.tmpdir"))
+        tmpDir.listFiles()?.filter { it.name.startsWith("bsl-ls-cache-") }?.forEach { cacheDir ->
+            cacheDir.deleteRecursively()
+        }
+    }
 }
 
 tasks.check {
