@@ -28,16 +28,15 @@ import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.units.MemoryUnit;
-import org.ehcache.jsr107.Eh107Configuration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
-import org.springframework.cache.jcache.JCacheCacheManager;
+import org.springframework.cache.support.AbstractValueAdaptingCache;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.cache.support.AbstractValueAdaptingCache;
-import org.springframework.cache.support.SimpleCacheManager;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -75,11 +74,10 @@ public class CacheConfiguration {
    * Configured programmatically without XML.
    */
   @Bean(destroyMethod = "close")
-  public org.ehcache.CacheManager ehcacheManager() {
-    // Cache directory - use temp for tests, fixed for production
-    var cacheDir = System.getProperty("bsl.ehcache.dir") != null
-      ? Path.of(System.getProperty("bsl.ehcache.dir"), String.valueOf(System.identityHashCode(this)))
-      : Path.of(".", ".bsl-ls-cache");
+  public org.ehcache.CacheManager ehcacheManager(
+    @Value("${bsl.typo.cache.dir}") String cacheDirPath
+  ) {
+    var cacheDir = Path.of(cacheDirPath);
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder

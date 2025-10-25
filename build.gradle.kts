@@ -202,9 +202,6 @@ tasks.test {
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}")
-    
-    // Use temp directory for EhCache in tests (subdirs created per Spring context to avoid locking)
-    systemProperty("bsl.ehcache.dir", "${layout.buildDirectory.get()}/tmp/ehcache")
 }
 
 tasks.check {
