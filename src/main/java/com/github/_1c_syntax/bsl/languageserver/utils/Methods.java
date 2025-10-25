@@ -31,9 +31,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Утилитный класс для работы с методами в контексте AST.
+ * <p>
+ * Предоставляет методы для извлечения информации о вызовах методов
+ * из различных контекстов синтаксического дерева.
+ */
 @UtilityClass
 public class Methods {
 
+  /**
+   * Получить имя метода из контекста вызова.
+   *
+   * @param ctx Контекст вызова метода
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
     var modifiers = ctx.modifier();
     Optional<Token> methodName;

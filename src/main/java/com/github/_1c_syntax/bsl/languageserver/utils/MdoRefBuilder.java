@@ -38,11 +38,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Утилитный класс для построения ссылок на объекты метаданных (MDO).
+ * <p>
+ * Используется для создания строковых идентификаторов объектов конфигурации 1С,
+ * которые применяются при разрешении ссылок между модулями.
+ */
 @UtilityClass
 public class MdoRefBuilder {
 
   private final StringInterner stringInterner = new StringInterner();
 
+  /**
+   * Получить ссылку на объект метаданных для вызова метода.
+   *
+   * @param documentContext Контекст документа
+   * @param callStatement Контекст вызова метода
+   * @return Строковая ссылка на MDO
+   */
   public String getMdoRef(DocumentContext documentContext, BSLParser.CallStatementContext callStatement) {
     if (callStatement.globalMethodCall() != null) {
       return getMdoRef(documentContext);

@@ -38,10 +38,23 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
+/**
+ * Вспомогательный класс для работы с диагностиками.
+ * <p>
+ * Предоставляет утилитные методы для сравнения узлов AST,
+ * конфигурирования диагностик и работы с их параметрами.
+ */
 @Slf4j
 @UtilityClass
 public final class DiagnosticHelper {
 
+  /**
+   * Проверить равенство двух узлов синтаксического дерева.
+   *
+   * @param leftNode Первый узел для сравнения
+   * @param rightNode Второй узел для сравнения
+   * @return true, если узлы эквивалентны
+   */
   public static boolean equalNodes(Tree leftNode, Tree rightNode) {
 
     if (leftNode.getChildCount() != rightNode.getChildCount()
