@@ -35,6 +35,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для получения структуры символов документа.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/documentSymbol}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol">Document Symbols Request specification</a>
+ */
 @Component
 public final class DocumentSymbolProvider {
 

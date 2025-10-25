@@ -32,6 +32,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Провайдер для публикации диагностических сообщений.
+ * <p>
+ * Отвечает за публикацию диагностик с использованием {@code textDocument/publishDiagnostics}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">PublishDiagnostics Notification specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public final class DiagnosticProvider {

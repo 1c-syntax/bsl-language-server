@@ -31,6 +31,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для предоставления информации о сворачиваемых областях кода.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/foldingRange}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange">Folding Range specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public final class FoldingRangeProvider {

@@ -51,6 +51,16 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toCollection;
 
+/**
+ * Провайдер для построения иерархии вызовов методов и функций.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/prepareCallHierarchy},
+ * {@code callHierarchy/incomingCalls} и {@code callHierarchy/outgoingCalls}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy">Call Hierarchy Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_incomingCalls">Call Hierarchy Incoming Calls specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_outgoingCalls">Call Hierarchy Outgoing Calls specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class CallHierarchyProvider {

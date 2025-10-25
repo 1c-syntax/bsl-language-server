@@ -34,6 +34,13 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Провайдер для перехода к определению символа.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/definition}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition">Go to Definition specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class DefinitionProvider {

@@ -42,6 +42,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для предоставления code actions (быстрых исправлений и рефакторингов).
+ * <p>
+ * Обрабатывает запросы {@code textDocument/codeAction}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction">Code Action Request specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public final class CodeActionProvider {

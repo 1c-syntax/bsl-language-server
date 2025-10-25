@@ -34,6 +34,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для поиска всех ссылок на символ.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/references}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references">Find References specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class ReferencesProvider {

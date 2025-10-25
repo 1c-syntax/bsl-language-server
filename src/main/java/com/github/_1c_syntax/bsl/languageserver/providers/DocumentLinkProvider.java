@@ -32,7 +32,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Класс-провайдер для формирования списка ссылок на внешние источники информации.
+ * Провайдер для формирования списка ссылок на внешние источники информации.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/documentLink}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink">Document Link Request specification</a>
  */
 @Component
 @RequiredArgsConstructor
