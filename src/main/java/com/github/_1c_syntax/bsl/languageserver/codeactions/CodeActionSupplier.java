@@ -27,6 +27,19 @@ import org.eclipse.lsp4j.CodeActionParams;
 
 import java.util.List;
 
+/**
+ * Интерфейс для поставщиков code actions (быстрых исправлений).
+ * <p>
+ * Реализации предоставляют конкретные типы code actions для различных ситуаций:
+ * быстрые исправления диагностик, рефакторинги, генерация кода и т.д.
+ */
 public interface CodeActionSupplier {
+  /**
+   * Получить список code actions для указанного диапазона в документе.
+   *
+   * @param params Параметры запроса code action
+   * @param documentContext Контекст документа
+   * @return Список доступных code actions
+   */
   List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext);
 }
