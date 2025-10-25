@@ -2,7 +2,6 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <include resource="language-client-aware-appender.xml" />
-    <logger name="org.ehcache" level="WARN"/>
     <root level="INFO">
         <appender-ref ref="LANGUAGE_CLIENT_AWARE" />
     </root>

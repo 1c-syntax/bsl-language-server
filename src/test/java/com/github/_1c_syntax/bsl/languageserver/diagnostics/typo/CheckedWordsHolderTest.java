@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,13 +36,23 @@ import java.util.Comparator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@DirtiesContext
 class CheckedWordsHolderTest {
 
   @Autowired
   private CheckedWordsHolder checkedWordsHolder;
 
   @BeforeAll
-  static void cleanupCache() throws IOException {
+  static void cleanupCacheBefore() throws IOException {
+    cleanupCacheDirectory();
+  }
+
+  @AfterAll
+  static void cleanupCacheAfter() throws IOException {
+    cleanupCacheDirectory();
+  }
+
+  private static void cleanupCacheDirectory() throws IOException {
     var cacheDir = Path.of(".", ".bsl-ls-cache");
     if (Files.exists(cacheDir)) {
       try (var stream = Files.walk(cacheDir)) {

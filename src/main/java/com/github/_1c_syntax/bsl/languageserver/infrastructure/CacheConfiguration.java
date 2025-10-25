@@ -77,8 +77,7 @@ public class CacheConfiguration {
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager() {
     // Cache directory in current working directory
-    // Add unique identifier to prevent file locking conflicts when multiple Spring contexts exist
-    var cacheDir = Path.of(".", ".bsl-ls-cache", String.valueOf(System.identityHashCode(this)));
+    var cacheDir = Path.of(".", ".bsl-ls-cache");
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder
