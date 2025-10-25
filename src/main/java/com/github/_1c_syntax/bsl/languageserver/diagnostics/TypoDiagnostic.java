@@ -200,7 +200,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .forEach(word -> checkedWordsHolder.putWordStatus(lang, word, true));
 
     // mark unmatched words without errors as checked
-    uncheckedWords.forEach(word -> checkedWordsHolder.putWordStatusIfAbsent(lang, word, false));
+    uncheckedWords.stream()
+      .filter(word -> checkedWordsHolder.getWordStatus(lang, word) == WordStatus.MISSING)
+      .forEach(word -> checkedWordsHolder.putWordStatus(lang, word, false));
 
     fireDiagnosticOnCheckedWordsWithErrors(tokensMap);
   }
