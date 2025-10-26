@@ -25,10 +25,22 @@ import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Детектор на основе регулярных выражений.
+ * <p>
+ * Подсчитывает количество совпадений с заданными регулярными выражениями,
+ * характерными для кода BSL.
+ */
 public class PatternDetector extends AbstractDetector {
 
   private final Pattern patterns;
 
+  /**
+   * Создать детектор на основе паттернов.
+   *
+   * @param probability Вероятность обнаружения
+   * @param stringPatterns Массив строковых представлений регулярных выражений
+   */
   public PatternDetector(double probability, String... stringPatterns) {
     super(probability);
     StringJoiner stringJoiner = new StringJoiner("|");

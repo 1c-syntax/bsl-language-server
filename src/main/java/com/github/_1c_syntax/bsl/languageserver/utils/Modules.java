@@ -27,6 +27,11 @@ import lombok.experimental.UtilityClass;
 
 import java.util.regex.Pattern;
 
+/**
+ * Утилитный класс для работы с модулями BSL.
+ * <p>
+ * Предоставляет методы для анализа конструкций, специфичных для модулей.
+ */
 @UtilityClass
 public class Modules {
 
@@ -34,6 +39,12 @@ public class Modules {
     "ЭтотОбъект|ThisObject"
   );
 
+  /**
+   * Проверить, является ли идентификатор ссылкой на "ЭтотОбъект" (ThisObject).
+   *
+   * @param complexIdentifier Сложный идентификатор для проверки
+   * @return true, если идентификатор представляет ЭтотОбъект/ThisObject
+   */
   public static boolean isThisObject(BSLParser.ComplexIdentifierContext complexIdentifier) {
     final var identifier = complexIdentifier.IDENTIFIER();
     if (identifier == null){

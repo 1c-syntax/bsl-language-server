@@ -21,9 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
+/**
+ * Абстрактный детектор для распознавания кода.
+ * <p>
+ * Базовый класс для различных детекторов, определяющих
+ * вероятность того, что строка является кодом BSL.
+ */
 public abstract class AbstractDetector {
   private final double probability;
 
+  /**
+   * Создать детектор с заданной вероятностью.
+   *
+   * @param probability Вероятность обнаружения (от 0 до 1)
+   */
   public AbstractDetector(double probability) {
     if (probability < 0 || probability > 1) {
       throw new IllegalArgumentException("probability should be between [0 .. 1]");
@@ -31,8 +42,20 @@ public abstract class AbstractDetector {
     this.probability = probability;
   }
 
+  /**
+   * Сканировать строку на предмет совпадений.
+   *
+   * @param line Строка для сканирования
+   * @return Количество найденных совпадений
+   */
   abstract int scan(String line);
 
+  /**
+   * Определить вероятность того, что строка является кодом.
+   *
+   * @param line Строка для анализа
+   * @return Вероятность (от 0 до 1)
+   */
   final double detect(String line) {
     int matchers = scan(line);
     if (matchers == 0) {
