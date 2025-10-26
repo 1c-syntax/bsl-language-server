@@ -21,9 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+/**
+ * Тип диагностики.
+ * <p>
+ * Определяет категорию проблемы, обнаруженной диагностикой:
+ * ошибка, code smell, уязвимость или точка повышенного внимания безопасности.
+ */
 public enum DiagnosticType {
+  /** Ошибка в коде, которая может привести к сбою или некорректной работе */
   ERROR,
+  /** Проблема качества кода (code smell), требующая рефакторинга */
   CODE_SMELL,
+  /** Уязвимость безопасности */
   VULNERABILITY,
+  /** Точка повышенного внимания безопасности (security hotspot) */
   SECURITY_HOTSPOT
 }

@@ -35,7 +35,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Выполнение и агрегация замеров времени выполнения переданных операций.
+ * Сборщик и агрегатор замеров производительности операций.
+ * <p>
+ * Выполняет замеры времени выполнения операций и агрегирует результаты
+ * для анализа производительности различных компонентов language server.
  */
 @Component
 @ConditionalOnMeasuresEnabled

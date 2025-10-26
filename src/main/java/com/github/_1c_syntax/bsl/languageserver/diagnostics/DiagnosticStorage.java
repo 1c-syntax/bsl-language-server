@@ -40,6 +40,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider.SOURCE;
 
+/**
+ * Хранилище диагностик для одного анализатора.
+ * <p>
+ * Потокобезопасное хранилище для накопления диагностик в процессе анализа.
+ * Предоставляет методы добавления диагностик с различными источниками данных:
+ * узлы AST, токены, символы, диапазоны.
+ */
 public class DiagnosticStorage {
 
   private final BSLDiagnostic diagnostic;
