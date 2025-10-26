@@ -26,7 +26,9 @@ import lombok.ToString;
 import lombok.Value;
 
 /**
- * Ветка тернарного оператора
+ * Узел тернарного оператора в дереве выражений.
+ * <p>
+ * Представляет тернарный оператор (троичное выражение): ?(условие, истина, ложь).
  */
 @Value(staticConstructor = "create")
 @EqualsAndHashCode(callSuper = true)

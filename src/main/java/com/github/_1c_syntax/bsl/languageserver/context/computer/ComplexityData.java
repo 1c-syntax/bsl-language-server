@@ -28,13 +28,34 @@ import lombok.Value;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Данные о сложности кода.
+ * <p>
+ * Содержит значения когнитивной или цикломатической сложности
+ * для файла в целом и для каждого метода отдельно.
+ */
 @Value
 @AllArgsConstructor
 public class ComplexityData {
+  /**
+   * Сложность всего файла.
+   */
   int fileComplexity;
+  /**
+   * Сложность блока кода файла (без учета сложности вложенных методов).
+   */
   int fileCodeBlockComplexity;
+  /**
+   * Вторичные локации для блоков, увеличивающих сложность файла.
+   */
   List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
 
+  /**
+   * Карта сложности методов (метод -> сложность).
+   */
   Map<MethodSymbol, Integer> methodsComplexity;
+  /**
+   * Карта вторичных локаций для методов (метод -> список локаций).
+   */
   Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
 }

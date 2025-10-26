@@ -25,9 +25,21 @@ import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
+/**
+ * Вторичная локация для отображения сложности.
+ * <p>
+ * Содержит диапазон и сообщение для блока кода,
+ * увеличивающего сложность метода или файла.
+ */
 @Value
 @AllArgsConstructor
 public class ComplexitySecondaryLocation {
+  /**
+   * Диапазон в коде.
+   */
   Range range;
+  /**
+   * Сообщение о вкладе в сложность.
+   */
   String message;
 }

@@ -37,6 +37,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Поставщик code action для исправления всех однотипных замечаний.
+ * <p>
+ * Создает code action, применяющую быстрое исправление
+ * ко всем вхождениям диагностики в файле.
+ */
 @Component
 public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
 

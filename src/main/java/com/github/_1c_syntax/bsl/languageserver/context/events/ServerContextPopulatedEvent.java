@@ -24,6 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.context.events;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Событие завершения заполнения контекста сервера.
+ * <p>
+ * Публикуется после того, как все документы проекта загружены
+ * и проиндексированы в {@link ServerContext}.
+ */
 public class ServerContextPopulatedEvent extends ApplicationEvent {
 
   private static final long serialVersionUID = -4485675935728156708L;

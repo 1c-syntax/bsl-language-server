@@ -49,6 +49,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для форматирования исходного кода.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/formatting} и {@code textDocument/rangeFormatting}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting">Document Formatting Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">Document Range Formatting Request specification</a>
+ */
 @Component
 public final class FormatProvider {
 

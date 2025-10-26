@@ -75,6 +75,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 
+/**
+ * Основной класс BSL Language Server.
+ * <p>
+ * Реализует интерфейс {@link LanguageServer} из LSP4J и обеспечивает
+ * обработку запросов инициализации, настройку возможностей сервера
+ * и координацию работы сервисов документов и рабочей области.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor

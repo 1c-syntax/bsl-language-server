@@ -38,6 +38,12 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+/**
+ * Вычислитель диагностик для документа.
+ * <p>
+ * Абстрактный класс, обеспечивающий параллельное вычисление диагностик
+ * всеми зарегистрированными анализаторами с обработкой ошибок.
+ */
 @Component
 @Slf4j
 public abstract class DiagnosticComputer {
@@ -55,6 +61,12 @@ public abstract class DiagnosticComputer {
     executorService.shutdown();
   }
 
+  /**
+   * Вычислить все диагностики для документа.
+   *
+   * @param documentContext Контекст документа для анализа
+   * @return Список найденных диагностик
+   */
   public List<Diagnostic> compute(DocumentContext documentContext) {
     return CompletableFuture
       .supplyAsync(() -> internalCompute(documentContext), executorService)

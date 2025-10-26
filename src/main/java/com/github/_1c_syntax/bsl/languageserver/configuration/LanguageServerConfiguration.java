@@ -131,14 +131,29 @@ public class LanguageServerConfiguration {
     }
   }
 
+  /**
+   * Обновить конфигурацию из файла.
+   *
+   * @param configurationFile Файл с конфигурацией
+   */
   public void update(File configurationFile) {
     loadConfigurationFile(configurationFile);
   }
 
+  /**
+   * Сбросить конфигурацию к значениям по умолчанию.
+   */
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
   }
 
+  /**
+   * Получить корневой каталог конфигурации с учётом настроек.
+   *
+   * @param configuration Конфигурация language server
+   * @param srcDir Директория исходных файлов
+   * @return Корневой каталог для анализа
+   */
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;

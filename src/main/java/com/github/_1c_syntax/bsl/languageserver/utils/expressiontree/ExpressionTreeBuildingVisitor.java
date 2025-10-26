@@ -37,7 +37,10 @@ import java.util.Objects;
 
 
 /**
- * Посетитель AST, который находит выражения и преобразует их в Expression Tree
+ * Построитель дерева выражений из AST.
+ * <p>
+ * Посетитель AST, который находит выражения BSL и преобразует их в Expression Tree
+ * для упрощенного анализа структуры выражений в диагностиках.
  */
 public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 

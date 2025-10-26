@@ -52,6 +52,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Вычислитель символов методов и функций.
+ * <p>
+ * Анализирует AST и создает символы для всех методов и функций модуля,
+ * включая информацию о параметрах, аннотациях и описаниях.
+ */
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {

@@ -21,10 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+/**
+ * Важность (серьёзность) диагностики.
+ * <p>
+ * Определяет уровень критичности проблемы от информационного (INFO)
+ * до блокирующего (BLOCKER).
+ */
 public enum DiagnosticSeverity {
+  /** Информационное сообщение */
   INFO,
+  /** Незначительная проблема */
   MINOR,
+  /** Существенная проблема */
   MAJOR,
+  /** Критическая проблема */
   CRITICAL,
+  /** Блокирующая проблема */
   BLOCKER
 }

@@ -104,6 +104,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Сервис обработки запросов, связанных с текстовым документом.
+ * <p>
+ * Реализует интерфейс {@link TextDocumentService} из LSP4J и обрабатывает
+ * все запросы, связанные с открытием, изменением, закрытием документов,
+ * а также предоставляет функции навигации, редактирования и анализа кода.
+ */
 @Component
 @RequiredArgsConstructor
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {

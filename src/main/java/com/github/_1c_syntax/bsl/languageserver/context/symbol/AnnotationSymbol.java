@@ -36,6 +36,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Символ аннотации.
+ * <p>
+ * Представляет компиляторную аннотацию или директиву препроцессора
+ * с параметрами, применяемую к методу или модулю.
+ */
 @Value
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

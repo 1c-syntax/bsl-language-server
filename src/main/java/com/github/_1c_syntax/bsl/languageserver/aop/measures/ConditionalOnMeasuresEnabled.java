@@ -28,6 +28,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Аннотация условной активации при включенных замерах производительности.
+ * <p>
+ * Компоненты и методы с этой аннотацией активируются только если
+ * в конфигурации установлено {@code app.measures.enabled=true}.
+ */
 @ConditionalOnProperty(prefix = "app.measures", name = "enabled", havingValue = "true")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})

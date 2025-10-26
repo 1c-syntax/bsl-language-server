@@ -78,6 +78,13 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
+/**
+ * Контекст документа - содержит полную информацию об анализируемом файле.
+ * <p>
+ * Управляет синтаксическим деревом, токенизацией, символьной таблицей,
+ * метриками сложности, диагностиками и другими аспектами анализа кода BSL.
+ * Является центральным объектом для работы с отдельным файлом модуля.
+ */
 @Component
 @Scope("prototype")
 @RequiredArgsConstructor

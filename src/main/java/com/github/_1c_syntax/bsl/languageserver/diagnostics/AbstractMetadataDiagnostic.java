@@ -58,10 +58,18 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    */
   private Range diagnosticRange;
 
+  /**
+   * Конструктор с указанием типов объектов метаданных для проверки.
+   *
+   * @param types Список типов объектов метаданных для анализа
+   */
   protected AbstractMetadataDiagnostic(List<MDOType> types) {
     filterMdoTypes = new ArrayList<>(types);
   }
 
+  /**
+   * Конструктор по умолчанию. Проверяются основные типы объектов метаданных.
+   */
   protected AbstractMetadataDiagnostic() {
     filterMdoTypes = List.of(
       MDOType.ACCOUNTING_REGISTER,
@@ -94,15 +102,30 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
     }
   }
 
+  /**
+   * Вычислить диапазон для размещения замечания.
+   *
+   * @return {@code true} если диапазон успешно вычислен и не пуст
+   */
   protected boolean computeDiagnosticRange() {
     diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
     return !Ranges.isEmpty(diagnosticRange);
   }
 
+  /**
+   * Добавить замечание диагностики.
+   *
+   * @param message Сообщение об ошибке
+   */
   protected void addDiagnostic(String message) {
     diagnosticStorage.addDiagnostic(diagnosticRange, message);
   }
 
+  /**
+   * Проверить объект метаданных.
+   *
+   * @param mdo Объект метаданных для анализа
+   */
   protected abstract void checkMetadata(MD mdo);
 
   private void checkMetadataWithModules() {

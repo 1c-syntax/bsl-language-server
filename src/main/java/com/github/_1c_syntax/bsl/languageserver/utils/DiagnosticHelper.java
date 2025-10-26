@@ -38,10 +38,23 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
+/**
+ * Вспомогательный класс для работы с диагностиками.
+ * <p>
+ * Предоставляет утилитные методы для сравнения узлов AST,
+ * конфигурирования диагностик и работы с их параметрами.
+ */
 @Slf4j
 @UtilityClass
 public final class DiagnosticHelper {
 
+  /**
+   * Проверить равенство двух узлов синтаксического дерева.
+   *
+   * @param leftNode Первый узел для сравнения
+   * @param rightNode Второй узел для сравнения
+   * @return true, если узлы эквивалентны
+   */
   public static boolean equalNodes(Tree leftNode, Tree rightNode) {
 
     if (leftNode.getChildCount() != rightNode.getChildCount()
@@ -72,27 +85,63 @@ public final class DiagnosticHelper {
     return true;
   }
 
+  /**
+   * Проверить, является ли узел типом "Структура".
+   *
+   * @param tnc Узел дерева разбора
+   * @return true, если узел представляет тип Структура/Structure
+   */
   public static boolean isStructureType(ParseTree tnc) {
     return "Структура".equalsIgnoreCase(tnc.getText()) || "Structure".equalsIgnoreCase(tnc.getText());
   }
 
+  /**
+   * Проверить, является ли узел типом "ФиксированнаяСтруктура".
+   *
+   * @param tnc Узел дерева разбора
+   * @return true, если узел представляет тип ФиксированнаяСтруктура/FixedStructure
+   */
   public static boolean isFixedStructureType(ParseTree tnc) {
     return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
   }
 
+  /**
+   * Проверить, является ли узел типом "WSОпределения".
+   *
+   * @param tnc Узел дерева разбора
+   * @return true, если узел представляет тип WSОпределения/WSDefinitions
+   */
   public static boolean isWSDefinitionsType(ParseTree tnc) {
     return "WSОпределения".equalsIgnoreCase(tnc.getText()) || "WSDefinitions".equalsIgnoreCase(tnc.getText());
   }
 
+  /**
+   * Проверить, является ли узел типом "FTPСоединение".
+   *
+   * @param tnc Узел дерева разбора
+   * @return true, если узел представляет тип FTPСоединение/FTPConnection
+   */
   public static boolean isFTPConnectionType(ParseTree tnc) {
     return "FTPСоединение".equalsIgnoreCase(tnc.getText()) || "FTPConnection".equalsIgnoreCase(tnc.getText());
   }
 
+  /**
+   * Проверить, является ли узел типом "ИнтернетПочтовыйПрофиль".
+   *
+   * @param tnc Узел дерева разбора
+   * @return true, если узел представляет тип ИнтернетПочтовыйПрофиль/InternetMailProfile
+   */
   public static boolean isInternetMailProfileType(ParseTree tnc) {
     return "ИнтернетПочтовыйПрофиль".equalsIgnoreCase(tnc.getText())
       || "InternetMailProfile".equalsIgnoreCase(tnc.getText());
   }
 
+  /**
+   * Настроить параметры диагностики из конфигурации.
+   *
+   * @param diagnostic Диагностика для настройки
+   * @param configuration Карта конфигурации с параметрами
+   */
   public static void configureDiagnostic(BSLDiagnostic diagnostic, Map<String, Object> configuration) {
     if (configuration == null || configuration.isEmpty()) {
       return;
@@ -119,6 +168,13 @@ public final class DiagnosticHelper {
       });
   }
 
+  /**
+   * Настроить параметры диагностики с фильтрацией по именам параметров.
+   *
+   * @param diagnostic Диагностика для настройки
+   * @param configuration Карта конфигурации с параметрами
+   * @param filter Список имён параметров для применения
+   */
   public static void configureDiagnostic(BSLDiagnostic diagnostic,
                                          Map<String, Object> configuration,
                                          String... filter) {

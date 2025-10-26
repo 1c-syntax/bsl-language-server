@@ -42,6 +42,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Символ метода или функции.
+ * <p>
+ * Представляет метод или функцию в модуле BSL с информацией о параметрах,
+ * аннотациях, экспортности и вложенных элементах.
+ */
 @Value
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

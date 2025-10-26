@@ -19,16 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
-
 /**
- * Узел пропущенного аргумента вызова в дереве выражений.
+ * Утилиты для работы со специфическими конструкциями языка BSL.
  * <p>
- * Представляет пропущенный параметр при вызове метода: МояФункция(1,,3) - второй параметр пропущен.
+ * Пакет содержит вспомогательные классы для работы с конструкторами объектов 1С и другими специфическими элементами языка.
  */
-public class SkippedCallArgumentNode extends BslExpression {
+@DefaultAnnotation(NonNull.class)
+package com.github._1c_syntax.bsl.languageserver.utils.bsl;
 
-  protected SkippedCallArgumentNode() {
-    super(ExpressionNodeType.SKIPPED_CALL_ARG);
-  }
-}
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;

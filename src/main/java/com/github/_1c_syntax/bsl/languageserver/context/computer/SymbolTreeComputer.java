@@ -35,6 +35,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Вычислитель дерева символов документа.
+ * <p>
+ * Создаёт иерархическую структуру символов документа (модуль, методы, регионы, переменные),
+ * правильно расставляя родительско-дочерние связи между символами.
+ */
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   private final DocumentContext documentContext;

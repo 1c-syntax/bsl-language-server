@@ -49,6 +49,13 @@ import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Command;
 
+/**
+ * Главный класс-лаунчер BSL Language Server.
+ * <p>
+ * Точка входа в приложение, обрабатывает аргументы командной строки
+ * и запускает соответствующие команды (lsp, analyze, format и т.д.).
+ * Интегрирован с Spring Boot для управления зависимостями и конфигурацией.
+ */
 @Command(
   name = "bsl-language-server",
   subcommands = {

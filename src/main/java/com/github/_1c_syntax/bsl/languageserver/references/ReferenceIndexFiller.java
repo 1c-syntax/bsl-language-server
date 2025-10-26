@@ -54,6 +54,12 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Заполнитель индекса ссылок.
+ * <p>
+ * Обрабатывает события изменения контекста документов
+ * и обновляет индекс ссылок на символы.
+ */
 @Component
 @RequiredArgsConstructor
 public class ReferenceIndexFiller {
