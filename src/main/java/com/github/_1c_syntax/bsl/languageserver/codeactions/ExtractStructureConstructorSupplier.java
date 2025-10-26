@@ -48,6 +48,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+/**
+ * Поставщик code action для извлечения конструктора структуры.
+ * <p>
+ * Преобразует явную инициализацию полей структуры
+ * в вызов конструктора с параметрами.
+ */
 @Component
 @RequiredArgsConstructor
 public class ExtractStructureConstructorSupplier implements CodeActionSupplier {

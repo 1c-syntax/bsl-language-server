@@ -27,11 +27,23 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Опции форматирования кода BSL.
+ * <p>
+ * Настройки, определяющие правила форматирования кода
+ * при использовании провайдера форматирования.
+ */
 @Data
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FormattingOptions {
+  /**
+   * Использовать верхний регистр для ключевых слов И/ИЛИ/НЕ.
+   */
   private boolean useUpperCaseForOrNotAndKeywords = true;
+  /**
+   * Использовать форматирование ключевых слов.
+   */
   private boolean useKeywordsFormatting = true;
 }
