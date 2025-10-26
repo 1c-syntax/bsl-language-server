@@ -51,6 +51,12 @@ import java.util.Optional;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 // idea from https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html
+/**
+ * Вычислитель цикломатической сложности кода.
+ * <p>
+ * Вычисляет метрику цикломатической сложности (Cyclomatic Complexity)
+ * для файла и каждого метода с указанием вторичных локаций.
+ */
 @Component
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor

@@ -50,6 +50,12 @@ import java.util.stream.Collectors;
 
 import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
 
+/**
+ * Вычислитель информации об игнорировании диагностик.
+ * <p>
+ * Анализирует комментарии в коде для определения,
+ * какие диагностики должны быть отключены для конкретных строк.
+ */
 public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnoranceComputer.Data> {
 
   private static final DiagnosticCode ALL_DIAGNOSTICS_KEY = new DiagnosticCode("all");

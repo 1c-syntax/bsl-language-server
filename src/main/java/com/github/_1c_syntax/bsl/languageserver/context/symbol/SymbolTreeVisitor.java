@@ -21,12 +21,38 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+/**
+ * Посетитель дерева символов.
+ * <p>
+ * Интерфейс для обхода иерархии символов модуля с использованием паттерна Visitor.
+ * Позволяет обрабатывать различные типы символов (модуль, регионы, методы, переменные).
+ */
 public interface SymbolTreeVisitor {
+  /**
+   * Посетить символ модуля.
+   *
+   * @param module Символ модуля
+   */
   void visitModule(ModuleSymbol module);
 
+  /**
+   * Посетить символ региона/области.
+   *
+   * @param region Символ региона
+   */
   void visitRegion(RegionSymbol region);
 
+  /**
+   * Посетить символ метода.
+   *
+   * @param method Символ метода
+   */
   void visitMethod(MethodSymbol method);
 
+  /**
+   * Посетить символ переменной.
+   *
+   * @param variable Символ переменной
+   */
   void visitVariable(VariableSymbol variable);
 }

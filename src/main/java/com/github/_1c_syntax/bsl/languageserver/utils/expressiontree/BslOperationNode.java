@@ -27,6 +27,12 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+/**
+ * Узел операции в дереве выражений BSL.
+ * <p>
+ * Базовый класс для представления бинарных, унарных и тернарных операций
+ * с указанием типа операции и оператора.
+ */
 @Value
 @NonFinal
 @EqualsAndHashCode(callSuper = true)

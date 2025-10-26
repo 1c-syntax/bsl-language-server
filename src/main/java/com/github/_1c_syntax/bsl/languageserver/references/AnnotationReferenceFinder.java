@@ -48,6 +48,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Поиск ссылок на методы из аннотаций.
+ * <p>
+ * Обрабатывает аннотации (например, &НаКлиенте, &НаСервере)
+ * и находит ссылки на методы, указанные в них.
+ */
 @Component
 @RequiredArgsConstructor
 public class AnnotationReferenceFinder implements ReferenceFinder {
