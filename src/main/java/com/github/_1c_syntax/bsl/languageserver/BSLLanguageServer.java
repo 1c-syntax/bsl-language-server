@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
@@ -130,6 +131,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setRenameProvider(getRenameProvider(params));
     capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
+    capabilities.setDiagnosticProvider(getDiagnosticProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -335,6 +337,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     inlayHintOptions.setResolveProvider(Boolean.FALSE);
     inlayHintOptions.setWorkDoneProgress(Boolean.FALSE);
     return inlayHintOptions;
+  }
+
+  private static DiagnosticRegistrationOptions getDiagnosticProvider() {
+    var diagnosticOptions = new DiagnosticRegistrationOptions();
+    diagnosticOptions.setWorkDoneProgress(Boolean.FALSE);
+    diagnosticOptions.setInterFileDependencies(Boolean.FALSE);
+    diagnosticOptions.setWorkspaceDiagnostics(Boolean.FALSE);
+    return diagnosticOptions;
   }
 
   private ExecuteCommandOptions getExecuteCommandProvider() {
