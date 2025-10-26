@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761359525042,
+  "lastUpdate": 1761499229760,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30411,6 +30411,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.45574003091422943",
             "extra": "mean: 85.55755090713501 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c091897fb864d122655ac4670b8081601c9cd89d",
+          "message": "Merge pull request #3554 from 1c-syntax/copilot/add-javadoc-to-packages\n\nДобавлена Javadoc документация для пакетов, провайдеров и ключевых классов",
+          "timestamp": "2025-10-26T18:01:26+01:00",
+          "tree_id": "cdc3065636aef335081a25d8e1aadaa1f4b20210",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c091897fb864d122655ac4670b8081601c9cd89d"
+        },
+        "date": 1761499223852,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 85.18458724021912,
+            "unit": "sec",
+            "range": "stddev: 0.9032741555533953",
+            "extra": "mean: 85.18458724021912 sec\nrounds: 3"
           }
         ]
       }
