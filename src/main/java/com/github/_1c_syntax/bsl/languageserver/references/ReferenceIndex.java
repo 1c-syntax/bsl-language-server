@@ -50,6 +50,12 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Индекс ссылок на символы в проекте.
+ * <p>
+ * Управляет индексацией и поиском ссылок на символы (методы, переменные)
+ * во всех документах workspace.
+ */
 @Component
 @RequiredArgsConstructor
 public class ReferenceIndex {

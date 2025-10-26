@@ -24,6 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.context.events;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Событие изменения содержимого контекста документа.
+ * <p>
+ * Публикуется при изменении текста документа
+ * и необходимости пересчета контекстной информации.
+ */
 public class DocumentContextContentChangedEvent extends ApplicationEvent {
 
   private static final long serialVersionUID = 3091414460731918073L;
