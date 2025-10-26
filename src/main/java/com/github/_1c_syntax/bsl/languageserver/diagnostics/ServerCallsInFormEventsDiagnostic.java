@@ -135,7 +135,7 @@ public class ServerCallsInFormEventsDiagnostic extends AbstractListenerDiagnosti
       var methodName = ctx.methodName().getText();
       if (methodName != null && isServerMethod(methodName)) {
         diagnosticStorage.addDiagnostic(ctx,
-          info.getMessage("message", methodName));
+          info.getMessage(methodName));
       }
     }
   }
