@@ -32,6 +32,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Агрегатор репортеров результатов анализа.
+ * <p>
+ * Управляет вызовом всех зарегистрированных репортеров
+ * для формирования отчетов о результатах анализа.
+ */
 @Component
 @RequiredArgsConstructor
 public class ReportersAggregator {
@@ -45,10 +51,21 @@ public class ReportersAggregator {
   // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.
   private List<DiagnosticReporter> filteredReporters;
 
+  /**
+   * Сформировать отчеты с использованием всех активных репортеров.
+   *
+   * @param analysisInfo Информация о результатах анализа
+   * @param outputDir Директория для сохранения отчетов
+   */
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
     filteredReporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo, outputDir));
   }
 
+  /**
+   * Получить список ключей всех доступных репортеров.
+   *
+   * @return Список ключей репортеров
+   */
   public List<String> reporterKeys() {
     return reporters.stream()
       .map(DiagnosticReporter::key)

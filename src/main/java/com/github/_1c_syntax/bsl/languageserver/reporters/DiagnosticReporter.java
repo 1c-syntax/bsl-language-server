@@ -25,8 +25,25 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 
 import java.nio.file.Path;
 
+/**
+ * Интерфейс для репортеров результатов анализа.
+ * <p>
+ * Репортеры формируют отчеты о найденных диагностиках в различных форматах
+ * (JSON, JUnit XML, консольный вывод и т.д.).
+ */
 public interface DiagnosticReporter {
+  /**
+   * Получить ключ (идентификатор) репортера.
+   *
+   * @return Уникальный ключ репортера
+   */
   String key();
 
+  /**
+   * Сформировать отчет о результатах анализа.
+   *
+   * @param analysisInfo Информация о результатах анализа
+   * @param outputDir Директория для сохранения отчета
+   */
   void report(AnalysisInfo analysisInfo, Path outputDir);
 }
