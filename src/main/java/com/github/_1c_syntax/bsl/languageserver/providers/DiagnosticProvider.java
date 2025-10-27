@@ -28,10 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticWorkspaceCapabilities;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -102,12 +105,9 @@ public final class DiagnosticProvider {
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
     clientSupportsRefresh = clientCapabilitiesHolder.getCapabilities()
-      .map(capabilities -> capabilities.getWorkspace())
-      .filter(workspace -> workspace != null)
-      .map(workspace -> workspace.getDiagnostics())
-      .filter(diagnostics -> diagnostics != null)
-      .map(diagnostics -> diagnostics.getRefreshSupport())
-      .filter(refreshSupport -> refreshSupport != null)
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getDiagnostics)
+      .map(DiagnosticWorkspaceCapabilities::getRefreshSupport)
       .orElse(false);
   }
 

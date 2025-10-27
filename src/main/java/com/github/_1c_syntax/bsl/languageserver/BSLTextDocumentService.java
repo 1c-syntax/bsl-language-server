@@ -53,6 +53,7 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -93,6 +94,7 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -528,10 +530,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    */
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
-    var capabilities = event.getParams().getCapabilities();
-    if (capabilities != null && capabilities.getTextDocument() != null) {
-      clientSupportsPullDiagnostics = capabilities.getTextDocument().getDiagnostic() != null;
-    }
+    clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getDiagnostic)
+      .isPresent();
   }
 
   private void validate(DocumentContext documentContext) {
