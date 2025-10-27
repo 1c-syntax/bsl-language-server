@@ -474,7 +474,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var documentContext = context.getDocument(params.getTextDocument().getUri());
     
     return CompletableFuture.supplyAsync(
-      () -> diagnosticProvider.getDiagnosticReport(documentContext),
+      () -> diagnosticProvider.getDiagnostic(documentContext),
       executorService
     );
   }
