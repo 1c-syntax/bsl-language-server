@@ -342,7 +342,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private static DiagnosticRegistrationOptions getDiagnosticProvider() {
     var diagnosticOptions = new DiagnosticRegistrationOptions();
     diagnosticOptions.setWorkDoneProgress(Boolean.FALSE);
-    diagnosticOptions.setInterFileDependencies(Boolean.FALSE);
+    diagnosticOptions.setInterFileDependencies(Boolean.TRUE);
     diagnosticOptions.setWorkspaceDiagnostics(Boolean.FALSE);
     return diagnosticOptions;
   }
