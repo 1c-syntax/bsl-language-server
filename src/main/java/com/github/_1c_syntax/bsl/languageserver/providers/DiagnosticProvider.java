@@ -67,10 +67,6 @@ public final class DiagnosticProvider {
    * @return Отчет с диагностиками
    */
   public DocumentDiagnosticReport getDiagnostic(DocumentContext documentContext) {
-    if (documentContext == null) {
-      return new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(Collections.emptyList()));
-    }
-
     var diagnostics = documentContext.getDiagnostics();
     var report = new RelatedFullDocumentDiagnosticReport(diagnostics);
     return new DocumentDiagnosticReport(report);
