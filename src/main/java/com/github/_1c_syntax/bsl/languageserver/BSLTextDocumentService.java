@@ -138,6 +138,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
+  
+  private Boolean clientSupportsPullDiagnostics;
 
   @PreDestroy
   private void onDestroy() {
@@ -523,10 +525,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   private boolean clientSupportsPullDiagnostics() {
-    return clientCapabilitiesHolder.getCapabilities()
-      .map(capabilities -> capabilities.getTextDocument())
-      .map(textDocument -> textDocument.getDiagnostic())
-      .isPresent();
+    if (clientSupportsPullDiagnostics == null) {
+      clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
+        .map(capabilities -> capabilities.getTextDocument())
+        .map(textDocument -> textDocument.getDiagnostic())
+        .isPresent();
+    }
+    return clientSupportsPullDiagnostics;
   }
 
 }
