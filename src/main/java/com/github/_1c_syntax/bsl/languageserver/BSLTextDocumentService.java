@@ -141,7 +141,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
   
-  private Boolean clientSupportsPullDiagnostics;
+  private boolean clientSupportsPullDiagnostics;
 
   @PreDestroy
   private void onDestroy() {
@@ -534,14 +534,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   private void validate(DocumentContext documentContext) {
-    if (clientSupportsPullDiagnostics()) {
+    if (clientSupportsPullDiagnostics) {
       return;
     }
     diagnosticProvider.computeAndPublishDiagnostics(documentContext);
   }
 
   private boolean clientSupportsPullDiagnostics() {
-    return clientSupportsPullDiagnostics != null && clientSupportsPullDiagnostics;
+    return clientSupportsPullDiagnostics;
   }
 
 }
