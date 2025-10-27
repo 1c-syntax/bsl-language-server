@@ -22,19 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticWorkspaceCapabilities;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
+import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 class DiagnosticProviderTest {
@@ -124,5 +131,53 @@ class DiagnosticProviderTest {
     assertThat(firstDiagnostic.getRange()).isNotNull();
     assertThat(firstDiagnostic.getMessage()).isNotNull();
     assertThat(firstDiagnostic.getSource()).isEqualTo(DiagnosticProvider.SOURCE);
+  }
+
+  @Test
+  void testHandleInitializeEvent() {
+    // given
+    var languageServer = mock(LanguageServer.class);
+    var params = new InitializeParams();
+    var capabilities = new ClientCapabilities();
+    var workspace = new WorkspaceClientCapabilities();
+    var diagnostics = new DiagnosticWorkspaceCapabilities();
+    diagnostics.setRefreshSupport(true);
+    workspace.setDiagnostics(diagnostics);
+    capabilities.setWorkspace(workspace);
+    params.setCapabilities(capabilities);
+    
+    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+
+    // when-then
+    assertThatCode(() -> diagnosticProvider.handleInitializeEvent(event))
+      .doesNotThrowAnyException();
+  }
+
+  @Test
+  void testHandleInitializeEventWithoutDiagnosticsCapabilities() {
+    // given
+    var languageServer = mock(LanguageServer.class);
+    var params = new InitializeParams();
+    var capabilities = new ClientCapabilities();
+    var workspace = new WorkspaceClientCapabilities();
+    capabilities.setWorkspace(workspace);
+    params.setCapabilities(capabilities);
+    
+    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+
+    // when-then
+    assertThatCode(() -> diagnosticProvider.handleInitializeEvent(event))
+      .doesNotThrowAnyException();
+  }
+
+  @Test
+  void testHandleConfigurationChangedEvent() {
+    // given
+    var configuration = mock(LanguageServerConfiguration.class);
+    var event = new LanguageServerConfigurationChangedEvent(configuration);
+
+    // when-then
+    assertThatCode(() -> diagnosticProvider.handleConfigurationChangedEvent(event))
+      .doesNotThrowAnyException();
   }
 }
