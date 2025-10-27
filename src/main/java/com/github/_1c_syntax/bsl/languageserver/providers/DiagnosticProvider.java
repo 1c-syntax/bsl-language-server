@@ -103,8 +103,11 @@ public final class DiagnosticProvider {
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
     clientSupportsRefresh = clientCapabilitiesHolder.getCapabilities()
       .map(capabilities -> capabilities.getWorkspace())
+      .filter(workspace -> workspace != null)
       .map(workspace -> workspace.getDiagnostics())
+      .filter(diagnostics -> diagnostics != null)
       .map(diagnostics -> diagnostics.getRefreshSupport())
+      .filter(refreshSupport -> refreshSupport != null)
       .orElse(false);
   }
 

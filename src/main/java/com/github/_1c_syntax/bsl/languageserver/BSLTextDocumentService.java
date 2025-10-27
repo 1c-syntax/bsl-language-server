@@ -528,9 +528,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    */
   @EventListener
   public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
-    clientSupportsPullDiagnostics = event.getParams().getCapabilities()
-      .getTextDocument()
-      .getDiagnostic() != null;
+    var capabilities = event.getParams().getCapabilities();
+    if (capabilities != null && capabilities.getTextDocument() != null) {
+      clientSupportsPullDiagnostics = capabilities.getTextDocument().getDiagnostic() != null;
+    }
   }
 
   private void validate(DocumentContext documentContext) {
