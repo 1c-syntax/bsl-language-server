@@ -45,7 +45,7 @@ jobs:
               run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v5
               with:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
