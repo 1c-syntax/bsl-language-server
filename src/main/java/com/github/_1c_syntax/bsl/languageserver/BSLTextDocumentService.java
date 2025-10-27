@@ -540,8 +540,4 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     diagnosticProvider.computeAndPublishDiagnostics(documentContext);
   }
 
-  private boolean clientSupportsPullDiagnostics() {
-    return clientSupportsPullDiagnostics;
-  }
-
 }
