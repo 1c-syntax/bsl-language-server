@@ -134,6 +134,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
   private final InlayHintProvider inlayHintProvider;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
 
@@ -509,7 +510,17 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   private void validate(DocumentContext documentContext) {
+    if (clientSupportsPullDiagnostics()) {
+      return;
+    }
     diagnosticProvider.computeAndPublishDiagnostics(documentContext);
+  }
+
+  private boolean clientSupportsPullDiagnostics() {
+    return clientCapabilitiesHolder.getCapabilities()
+      .map(capabilities -> capabilities.getTextDocument())
+      .map(textDocument -> textDocument.getDiagnostic())
+      .isPresent();
   }
 
 }

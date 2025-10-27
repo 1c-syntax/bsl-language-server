@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
@@ -51,29 +50,13 @@ public final class DiagnosticProvider {
   public static final String SOURCE = "bsl-language-server";
 
   private final LanguageClientHolder clientHolder;
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   /**
    * Вычислить и опубликовать диагностики для документа.
-   * <p>
-   * Если клиент поддерживает pull-модель диагностик, публикация не выполняется.
    *
    * @param documentContext Контекст документа
    */
   public void computeAndPublishDiagnostics(DocumentContext documentContext) {
-    computeAndPublishDiagnostics(documentContext, false);
-  }
-
-  /**
-   * Вычислить и опубликовать диагностики для документа.
-   *
-   * @param documentContext Контекст документа
-   * @param force Принудительная публикация диагностик (игнорирует поддержку pull-модели клиентом)
-   */
-  public void computeAndPublishDiagnostics(DocumentContext documentContext, boolean force) {
-    if (!force && clientSupportsPullDiagnostics()) {
-      return;
-    }
     publishDiagnostics(documentContext, documentContext::getDiagnostics);
   }
 
@@ -100,18 +83,6 @@ public final class DiagnosticProvider {
    */
   public void publishEmptyDiagnosticList(DocumentContext documentContext) {
     publishDiagnostics(documentContext, Collections::emptyList);
-  }
-
-  /**
-   * Проверить, поддерживает ли клиент pull-модель диагностик.
-   *
-   * @return true, если клиент поддерживает pull-модель диагностик
-   */
-  private boolean clientSupportsPullDiagnostics() {
-    return clientCapabilitiesHolder.getCapabilities()
-      .map(capabilities -> capabilities.getTextDocument())
-      .map(textDocument -> textDocument.getDiagnostic())
-      .isPresent();
   }
 
   private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {
