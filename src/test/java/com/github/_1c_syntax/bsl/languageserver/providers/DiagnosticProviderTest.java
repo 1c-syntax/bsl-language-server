@@ -21,16 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DocumentDiagnosticReport;
+import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 
 @SpringBootTest
 class DiagnosticProviderTest {
@@ -38,18 +42,87 @@ class DiagnosticProviderTest {
   @Autowired
   private DiagnosticProvider diagnosticProvider;
 
-  @Test
-  void testComputeDiagnostics() {
-    // given
-    // TODO: это тест на новый getDiagnostics, а не на DiagnosticProvider
+  @Autowired
+  private LanguageClientHolder languageClientHolder;
 
+  @Test
+  void testComputeAndPublishDiagnostics() {
+    // given
+    final DocumentContext documentContext
+      = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
+
+    // when-then
+    assertThatCode(() -> diagnosticProvider.computeAndPublishDiagnostics(documentContext))
+      .doesNotThrowAnyException();
+  }
+
+  @Test
+  void testPublishEmptyDiagnosticList() {
+    // given
+    final DocumentContext documentContext
+      = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
+
+    // when-then
+    assertThatCode(() -> diagnosticProvider.publishEmptyDiagnosticList(documentContext))
+      .doesNotThrowAnyException();
+  }
+
+  @Test
+  void testGetDiagnostic() {
+    // given
     final DocumentContext documentContext
       = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
 
     // when
-    final List<Diagnostic> diagnostics = documentContext.getDiagnostics();
+    final DocumentDiagnosticReport report = diagnosticProvider.getDiagnostic(documentContext);
 
     // then
-    assertThat(diagnostics.size()).isPositive();
+    assertThat(report).isNotNull();
+    assertThat(report.getLeft()).isNotNull();
+    assertThat(report.getLeft()).isInstanceOf(RelatedFullDocumentDiagnosticReport.class);
+    
+    RelatedFullDocumentDiagnosticReport fullReport = report.getLeft();
+    assertThat(fullReport.getItems()).isNotNull();
+    assertThat(fullReport.getItems()).isNotEmpty();
+  }
+
+  @Test
+  void testGetDiagnosticWithNoDiagnostics() {
+    // given
+    final DocumentContext documentContext
+      = TestUtils.getDocumentContext("");
+
+    // when
+    final DocumentDiagnosticReport report = diagnosticProvider.getDiagnostic(documentContext);
+
+    // then
+    assertThat(report).isNotNull();
+    assertThat(report.getLeft()).isNotNull();
+    assertThat(report.getLeft()).isInstanceOf(RelatedFullDocumentDiagnosticReport.class);
+    
+    RelatedFullDocumentDiagnosticReport fullReport = report.getLeft();
+    assertThat(fullReport.getItems()).isNotNull();
+    assertThat(fullReport.getItems()).isEmpty();
+  }
+
+  @Test
+  void testGetDiagnosticReportStructure() {
+    // given
+    final DocumentContext documentContext
+      = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
+
+    // when
+    final DocumentDiagnosticReport report = diagnosticProvider.getDiagnostic(documentContext);
+
+    // then
+    RelatedFullDocumentDiagnosticReport fullReport = report.getLeft();
+    assertThat(fullReport.getKind()).isEqualTo("full");
+    assertThat(fullReport.getItems()).hasSizeGreaterThan(0);
+    
+    // Verify diagnostics have required fields
+    Diagnostic firstDiagnostic = fullReport.getItems().get(0);
+    assertThat(firstDiagnostic.getRange()).isNotNull();
+    assertThat(firstDiagnostic.getMessage()).isNotNull();
+    assertThat(firstDiagnostic.getSource()).isEqualTo(DiagnosticProvider.SOURCE);
   }
 }

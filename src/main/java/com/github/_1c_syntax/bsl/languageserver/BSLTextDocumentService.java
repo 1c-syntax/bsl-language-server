@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
@@ -97,6 +98,7 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
@@ -517,6 +519,20 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     context.clear();
   }
 
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Проверяет поддержку клиентом pull-модели диагностик.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
+    clientSupportsPullDiagnostics = event.getParams().getCapabilities()
+      .getTextDocument()
+      .getDiagnostic() != null;
+  }
+
   private void validate(DocumentContext documentContext) {
     if (clientSupportsPullDiagnostics()) {
       return;
@@ -525,13 +541,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   private boolean clientSupportsPullDiagnostics() {
-    if (clientSupportsPullDiagnostics == null) {
-      clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
-        .map(capabilities -> capabilities.getTextDocument())
-        .map(textDocument -> textDocument.getDiagnostic())
-        .isPresent();
-    }
-    return clientSupportsPullDiagnostics;
+    return clientSupportsPullDiagnostics != null && clientSupportsPullDiagnostics;
   }
 
 }
