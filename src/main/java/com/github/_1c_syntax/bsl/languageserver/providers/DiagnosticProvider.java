@@ -21,13 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -37,12 +42,15 @@ import java.util.function.Supplier;
 /**
  * Провайдер для диагностических сообщений.
  * <p>
- * Отвечает за публикацию диагностик с использованием {@code textDocument/publishDiagnostics}
- * и предоставление диагностик по запросу {@code textDocument/diagnostic}.
+ * Отвечает за публикацию диагностик с использованием {@code textDocument/publishDiagnostics},
+ * предоставление диагностик по запросу {@code textDocument/diagnostic}
+ * и уведомление об обновлении диагностик через {@code workspace/diagnostic/refresh}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">PublishDiagnostics Notification specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_diagnostic">Diagnostic Pull Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#diagnostic_refresh">Diagnostic Refresh Request specification</a>
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public final class DiagnosticProvider {
@@ -50,6 +58,9 @@ public final class DiagnosticProvider {
   public static final String SOURCE = "bsl-language-server";
 
   private final LanguageClientHolder clientHolder;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  
+  private boolean clientSupportsRefresh;
 
   /**
    * Вычислить и опубликовать диагностики для документа.
@@ -79,6 +90,39 @@ public final class DiagnosticProvider {
    */
   public void publishEmptyDiagnosticList(DocumentContext documentContext) {
     publishDiagnostics(documentContext, Collections::emptyList);
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Проверяет поддержку клиентом workspace/diagnostic/refresh.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
+    clientSupportsRefresh = clientCapabilitiesHolder.getCapabilities()
+      .map(capabilities -> capabilities.getWorkspace())
+      .map(workspace -> workspace.getDiagnostics())
+      .map(diagnostics -> diagnostics.getRefreshSupport())
+      .orElse(false);
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Отправляет клиенту запрос на обновление диагностик при изменении конфигурации.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleConfigurationChangedEvent(LanguageServerConfigurationChangedEvent event) {
+    if (clientSupportsRefresh) {
+      clientHolder.execIfConnected(languageClient -> {
+        LOGGER.debug("Requesting diagnostic refresh from client");
+        languageClient.refreshDiagnostics();
+      });
+    }
   }
 
   private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {
