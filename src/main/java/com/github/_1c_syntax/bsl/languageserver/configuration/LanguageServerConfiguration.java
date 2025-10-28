@@ -121,13 +121,16 @@ public class LanguageServerConfiguration {
 
   @PostConstruct
   private void init() {
-    if (configurationFilePath != null && !configurationFilePath.isEmpty()) {
-      configurationFile = new File(configurationFilePath);
-      if (configurationFile.exists()) {
-        loadConfigurationFile(configurationFile);
-        return;
-      }
+    // Always set configurationFile, even if path is empty, to avoid NPE in other code
+    configurationFile = new File(configurationFilePath != null && !configurationFilePath.isEmpty() 
+      ? configurationFilePath 
+      : ".bsl-language-server.json");
+    
+    if (configurationFile.exists()) {
+      loadConfigurationFile(configurationFile);
+      return;
     }
+    
     if (globalConfigPath != null && !globalConfigPath.isEmpty()) {
       var configuration = new File(globalConfigPath);
       if (configuration.exists()) {
