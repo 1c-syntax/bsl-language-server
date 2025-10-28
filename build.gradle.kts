@@ -7,7 +7,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("org.cadixdev.licenser") version "0.6.1"
+    id("cloud.rio.license") version "0.18.0"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.0.0"
     id("io.freefair.javadoc-links") version "9.0.0"
@@ -207,12 +207,12 @@ tasks.check {
     mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
-tasks.checkLicenseMain {
+tasks.named("licenseMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
 
-tasks.updateLicenseMain {
+tasks.named("licenseFormatMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
@@ -267,11 +267,13 @@ tasks.javadoc {
 }
 
 license {
-    header(rootProject.file("license/HEADER.txt"))
-    newLine(false)
+    header = rootProject.file("license/HEADER.txt")
+    skipExistingHeaders = true
+    strictCheck = false
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
+    mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.json")
