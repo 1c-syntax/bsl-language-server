@@ -105,7 +105,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   }
 
   @Override
-  @EqualsAndHashCode.Include
   public abstract Range getVariableNameRange();
 
   @Override

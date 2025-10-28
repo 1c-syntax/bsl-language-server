@@ -53,9 +53,12 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
   short endCharacter;
 
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   short variableNameLine;
+  @EqualsAndHashCode.Include
   @Getter(AccessLevel.NONE)
   short variableNameStartCharacter;
+  @EqualsAndHashCode.Include
   @Getter(AccessLevel.NONE)
   short variableNameEndCharacter;
 
@@ -92,7 +95,6 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
   }
 
   @Override
-  @EqualsAndHashCode.Include
   public Range getVariableNameRange() {
     return Ranges.create(
       variableNameLine,

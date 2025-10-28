@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,7 +58,7 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @EqualsAndHashCode.Include
   String name;
 
-  @Builder.Default
+  @Default
   SymbolKind symbolKind = SymbolKind.Method;
 
   @EqualsAndHashCode.Include
@@ -73,19 +74,22 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   int endCharacter;
 
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int subNameLine;
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int subNameStartCharacter;
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int subNameEndCharacter;
 
   @Getter
   @Setter
-  @Builder.Default
+  @Default
   @NonFinal
   Optional<SourceDefinedSymbol> parent = Optional.empty();
 
-  @Builder.Default
+  @Default
   List<SourceDefinedSymbol> children = new ArrayList<>();
 
   boolean function;
@@ -94,12 +98,12 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
 
   boolean deprecated;
 
-  @Builder.Default
+  @Default
   List<ParameterDefinition> parameters = Collections.emptyList();
 
-  @Builder.Default
+  @Default
   Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
-  @Builder.Default
+  @Default
   List<Annotation> annotations = Collections.emptyList();
 
   @Override
@@ -107,7 +111,6 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
     return Ranges.create(startLine, startCharacter, endLine, endCharacter);
   }
 
-  @EqualsAndHashCode.Include
   public Range getSubNameRange() {
     return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
   }
