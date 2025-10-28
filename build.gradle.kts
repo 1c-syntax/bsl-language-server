@@ -269,7 +269,7 @@ tasks.javadoc {
 license {
     header = rootProject.file("license/HEADER.txt")
     skipExistingHeaders = true
-    strictCheck = false
+    strictCheck = true
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
