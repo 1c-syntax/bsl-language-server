@@ -95,10 +95,10 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
 
   private static InlayHint toInlayHint(ComplexitySecondaryLocation complexitySecondaryLocation) {
     var inlayHint = new InlayHint();
-    inlayHint.setPosition(complexitySecondaryLocation.getRange().getStart());
+    inlayHint.setPosition(complexitySecondaryLocation.range().getStart());
     inlayHint.setPaddingRight(Boolean.TRUE);
     inlayHint.setKind(InlayHintKind.Parameter);
-    inlayHint.setLabel(complexitySecondaryLocation.getMessage());
+    inlayHint.setLabel(complexitySecondaryLocation.message());
     return inlayHint;
   }
 

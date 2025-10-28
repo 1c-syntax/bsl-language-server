@@ -78,6 +78,13 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
+/**
+ * Контекст документа - содержит полную информацию об анализируемом файле.
+ * <p>
+ * Управляет синтаксическим деревом, токенизацией, символьной таблицей,
+ * метриками сложности, диагностиками и другими аспектами анализа кода BSL.
+ * Является центральным объектом для работы с отдельным файлом модуля.
+ */
 @Component
 @Scope("prototype")
 @RequiredArgsConstructor
@@ -419,8 +426,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
     metricsTemp.setStatements(statements);
 
-    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
-    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().getFileComplexity());
+    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().fileComplexity());
+    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().fileComplexity());
 
     return metricsTemp;
   }

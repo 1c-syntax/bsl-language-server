@@ -45,8 +45,10 @@ jobs:
         git remote add upstream ${{ github.event.repository.clone_url }}
         git fetch upstream
         git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
-        git checkout ${{ github.event.workflow_run.head_branch }}
+        git checkout $HEAD_BRANCH
         git clean -ffdx && git reset --hard HEAD
+      env:
+        HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
     - name: Set up JDK 17
       uses: actions/setup-java@v5
       with:
@@ -61,7 +63,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: SonarCloud Scan on push
       if: github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.event.repository.full_name
-      run: ./gradlew check sonar -Dsonar.scm.revision=${{ github.event.workflow_run.head_sha }} -Dsonar.branch.name=${{ github.event.workflow_run.head_branch }}
+      run: ./gradlew check sonar -Dsonar.scm.revision=$HEAD_SHA -Dsonar.branch.name=$HEAD_BRANCH
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}

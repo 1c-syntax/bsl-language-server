@@ -21,10 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
+/**
+ * Детектор окончания строки заданными символами.
+ * <p>
+ * Проверяет, заканчивается ли строка одним из указанных символов
+ * (например, точкой с запятой).
+ */
 public class EndWithDetector extends AbstractDetector {
 
   private final char[] endOfLines;
 
+  /**
+   * Создать детектор окончаний строк.
+   *
+   * @param probability Вероятность обнаружения
+   * @param endOfLines Массив символов-окончаний
+   */
   public EndWithDetector(double probability, char... endOfLines) {
     super(probability);
     this.endOfLines = endOfLines.clone();

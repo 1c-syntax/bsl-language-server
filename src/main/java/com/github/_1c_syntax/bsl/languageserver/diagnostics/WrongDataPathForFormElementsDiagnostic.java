@@ -63,7 +63,7 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private static boolean wrongDataPath(FormItem formItem) {
-    return formItem.getDataPath().segments().startsWith("~");
+    return formItem.getDataPath().startsWith("~");
   }
 
   private static boolean haveFormModules(Form form) {

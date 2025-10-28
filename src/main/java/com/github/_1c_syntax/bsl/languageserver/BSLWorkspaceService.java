@@ -44,6 +44,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Сервис обработки запросов, связанных с рабочей областью.
+ * <p>
+ * Реализует интерфейс {@link WorkspaceService} из LSP4J и обрабатывает
+ * запросы на уровне всей рабочей области (поиск символов, изменение конфигурации,
+ * выполнение команд и мониторинг изменений файлов).
+ */
 @Component
 @RequiredArgsConstructor
 public class BSLWorkspaceService implements WorkspaceService {

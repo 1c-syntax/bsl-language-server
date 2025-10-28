@@ -57,6 +57,12 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * Контекст сервера - центральное хранилище информации о рабочей области.
+ * <p>
+ * Управляет коллекцией всех документов проекта, метаданными конфигурации 1С,
+ * обеспечивает доступ к контекстам отдельных документов и их синхронизацию.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor

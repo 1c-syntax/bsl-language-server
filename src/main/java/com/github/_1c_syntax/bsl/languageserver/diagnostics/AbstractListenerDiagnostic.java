@@ -33,10 +33,21 @@ import java.util.List;
 
 public abstract class AbstractListenerDiagnostic extends BSLParserBaseListener implements BSLDiagnostic {
 
+  /**
+   * Метаинформация о диагностике.
+   */
   @Getter
   @Setter
   protected DiagnosticInfo info;
+
+  /**
+   * Хранилище для регистрации замечаний диагностики.
+   */
   protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+
+  /**
+   * Контекст анализируемого документа.
+   */
   protected DocumentContext documentContext;
 
   @Override

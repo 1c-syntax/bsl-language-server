@@ -33,6 +33,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Поставщик code actions для быстрых исправлений диагностик.
+ * <p>
+ * Преобразует диагностики, поддерживающие QuickFixProvider,
+ * в code actions для применения исправлений.
+ */
 @Component
 public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
 

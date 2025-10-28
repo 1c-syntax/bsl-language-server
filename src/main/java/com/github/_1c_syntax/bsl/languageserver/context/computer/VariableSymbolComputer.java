@@ -51,6 +51,12 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Вычислитель символов переменных.
+ * <p>
+ * Анализирует AST и создает символы для всех переменных в модуле:
+ * параметров, локальных переменных, переменных уровня модуля.
+ */
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;

@@ -21,10 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
+/**
+ * Распознаватель кода BSL.
+ * <p>
+ * Определяет, является ли строка кода BSL-кодом,
+ * используя набор детекторов и порог вероятности.
+ */
 public class CodeRecognizer {
   private final LanguageFootprint language;
   private final double threshold;
 
+  /**
+   * Создать распознаватель кода.
+   *
+   * @param threshold Порог вероятности для распознавания (от 0 до 1)
+   * @param language Отпечаток языка с набором детекторов
+   */
   public CodeRecognizer(double threshold, LanguageFootprint language) {
     this.language = language;
     this.threshold = threshold;
@@ -38,6 +50,12 @@ public class CodeRecognizer {
     return probability;
   }
 
+  /**
+   * Проверить, соответствует ли строка условию распознавания как код BSL.
+   *
+   * @param line Строка для проверки
+   * @return true, если строка распознана как код BSL
+   */
   public final boolean meetsCondition(String line) {
     return recognition(line) - threshold > 0;
   }

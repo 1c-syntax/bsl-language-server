@@ -21,7 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+/**
+ * Тип файла исходного кода.
+ */
 public enum FileType {
+  /**
+   * Файл BSL (встроенный язык 1С:Предприятие).
+   */
   BSL,
+  /**
+   * Файл OScript (OneScript).
+   */
   OS
 }

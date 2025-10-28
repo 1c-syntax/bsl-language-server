@@ -264,7 +264,6 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private Stream<SDBLParser.ColumnContext> getOverused(List<SDBLParser.ColumnContext> columnsCollection) {
     return columnsCollection.stream()
-      .map(SDBLParser.ColumnContext.class::cast)
       .filter(column -> column.getChildCount() >= COUNT_OF_TABLE_DOT_REF)
       .filter(this::isOveruse);
   }

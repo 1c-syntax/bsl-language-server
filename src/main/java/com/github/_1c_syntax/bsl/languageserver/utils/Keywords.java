@@ -23,6 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.types.MultiName;
 
+/**
+ * Класс-справочник ключевых слов языка BSL.
+ * <p>
+ * Содержит константы с мультиязычными названиями ключевых слов
+ * (русский и английский варианты) для использования в анализаторах.
+ */
 public final class Keywords {
   public static final MultiName THEN = MultiName.create("Then", "Тогда");
   public static final MultiName THEN_UP = MultiName.create("THEN", "ТОГДА");

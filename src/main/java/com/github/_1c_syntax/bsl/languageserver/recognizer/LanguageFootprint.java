@@ -23,6 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.recognizer;
 
 import java.util.Set;
 
+/**
+ * Интерфейс отпечатка языка для распознавания кода.
+ * <p>
+ * Определяет набор детекторов для конкретного языка программирования.
+ */
 public interface LanguageFootprint {
+  /**
+   * Получить набор детекторов языка.
+   *
+   * @return Набор детекторов
+   */
   Set<AbstractDetector> getDetectors();
 }

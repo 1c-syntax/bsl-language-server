@@ -32,6 +32,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Провайдер для публикации диагностических сообщений.
+ * <p>
+ * Отвечает за публикацию диагностик с использованием {@code textDocument/publishDiagnostics}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">PublishDiagnostics Notification specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public final class DiagnosticProvider {
@@ -40,10 +47,20 @@ public final class DiagnosticProvider {
 
   private final LanguageClientHolder clientHolder;
 
+  /**
+   * Вычислить и опубликовать диагностики для документа.
+   *
+   * @param documentContext Контекст документа
+   */
   public void computeAndPublishDiagnostics(DocumentContext documentContext) {
     publishDiagnostics(documentContext, documentContext::getDiagnostics);
   }
 
+  /**
+   * Опубликовать пустой список диагностик для документа.
+   *
+   * @param documentContext Контекст документа
+   */
   public void publishEmptyDiagnosticList(DocumentContext documentContext) {
     publishDiagnostics(documentContext, Collections::emptyList);
   }

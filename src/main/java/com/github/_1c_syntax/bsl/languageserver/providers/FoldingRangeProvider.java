@@ -31,12 +31,25 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для предоставления информации о сворачиваемых областях кода.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/foldingRange}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange">Folding Range specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public final class FoldingRangeProvider {
 
   private final List<FoldingRangeSupplier> foldingRangeSuppliers;
 
+  /**
+   * Получить список сворачиваемых областей в документе.
+   *
+   * @param documentContext Контекст документа
+   * @return Список областей, которые можно свернуть
+   */
   public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
     return foldingRangeSuppliers.stream()
       .map(foldingRangeSupplier -> foldingRangeSupplier.getFoldingRanges(documentContext))

@@ -37,6 +37,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Абстрактный поставщик быстрых исправлений.
+ * <p>
+ * Базовый класс для реализации поставщиков quick fix,
+ * предоставляющий общую функциональность для создания code actions.
+ */
 @RequiredArgsConstructor
 public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
 

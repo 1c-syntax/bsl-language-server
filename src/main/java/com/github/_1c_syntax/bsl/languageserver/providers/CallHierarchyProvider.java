@@ -51,6 +51,16 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toCollection;
 
+/**
+ * Провайдер для построения иерархии вызовов методов и функций.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/prepareCallHierarchy},
+ * {@code callHierarchy/incomingCalls} и {@code callHierarchy/outgoingCalls}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy">Call Hierarchy Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_incomingCalls">Call Hierarchy Incoming Calls specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_outgoingCalls">Call Hierarchy Outgoing Calls specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class CallHierarchyProvider {
@@ -62,6 +72,13 @@ public class CallHierarchyProvider {
     .comparing(CallHierarchyItem::getDetail)
     .thenComparing(CallHierarchyItem::getSelectionRange, Ranges::compare);
 
+  /**
+   * Подготовить элементы иерархии вызовов для указанной позиции в документе.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список элементов иерархии вызовов
+   */
   public List<CallHierarchyItem> prepareCallHierarchy(
     DocumentContext documentContext,
     CallHierarchyPrepareParams params
@@ -75,6 +92,13 @@ public class CallHierarchyProvider {
       .orElse(Collections.emptyList());
   }
 
+  /**
+   * Получить входящие вызовы для элемента иерархии.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список входящих вызовов
+   */
   public List<CallHierarchyIncomingCall> incomingCalls(
     DocumentContext documentContext,
     CallHierarchyIncomingCallsParams params
@@ -100,6 +124,13 @@ public class CallHierarchyProvider {
       .toList();
   }
 
+  /**
+   * Получить исходящие вызовы для элемента иерархии.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список исходящих вызовов
+   */
   public List<CallHierarchyOutgoingCall> outgoingCalls(
     DocumentContext documentContext,
     CallHierarchyOutgoingCallsParams params

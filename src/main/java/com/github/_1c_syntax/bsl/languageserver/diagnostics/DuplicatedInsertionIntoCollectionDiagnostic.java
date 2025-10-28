@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -91,15 +90,9 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private List<CallParamContext> blockCallParams;
   private List<String> firstParamInnerIdentifiers;
 
-  @Value
-  private static class GroupingData {
-    BSLParser.CallStatementContext callStatement;
-    String collectionName;
-    String collectionNameWithDot;
-    String methodName;
-    String firstParamName;
-    String firstParamNameWithDot;
-    CallParamContext firstParamContext;
+  private record GroupingData(BSLParser.CallStatementContext callStatement, String collectionName,
+                              String collectionNameWithDot, String methodName, String firstParamName,
+                              String firstParamNameWithDot, CallParamContext firstParamContext) {
   }
 
   @Override
@@ -184,13 +177,13 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private Stream<List<GroupingData>> explorePossibleDuplicateStatements(List<GroupingData> statements) {
     final var mapOfMapsByIdentifier = statements.stream()
       .collect(Collectors.groupingBy(
-        GroupingData::getCollectionName,
+        GroupingData::collectionName,
         CaseInsensitiveMap::new,
         Collectors.groupingBy(
-          GroupingData::getMethodName,
+          GroupingData::methodName,
           CaseInsensitiveMap::new,
           Collectors.groupingBy(
-            GroupingData::getFirstParamName,
+            GroupingData::firstParamName,
             CaseInsensitiveMap::new,
             Collectors.mapping(groupingData -> groupingData, Collectors.toList()))
         )
@@ -309,7 +302,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private void fireIssue(List<GroupingData> duplicates) {
     final var dataForIssue = duplicates.get(1);
     final var relatedInformationList = duplicates.stream()
-      .map(GroupingData::getCallStatement)
+      .map(GroupingData::callStatement)
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
         Ranges.create(context),
@@ -323,7 +316,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (blockAssignments == null) {
       blockAssignments = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_assignment).stream()
         .map(AssignmentContext.class::cast)
-        .collect(Collectors.toUnmodifiableList());
+        .toList();
     }
     return blockAssignments;
   }
@@ -332,7 +325,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (blockBreakers == null) {
       blockBreakers = Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES).stream()
         .map(BSLParserRuleContext.class::cast)
-        .collect(Collectors.toUnmodifiableList());
+        .toList();
     }
     return blockBreakers;
   }
@@ -341,7 +334,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (blockCallParams == null) {
       blockCallParams = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_callParam).stream()
         .map(CallParamContext.class::cast)
-        .collect(Collectors.toUnmodifiableList());
+        .toList();
     }
     return blockCallParams;
   }

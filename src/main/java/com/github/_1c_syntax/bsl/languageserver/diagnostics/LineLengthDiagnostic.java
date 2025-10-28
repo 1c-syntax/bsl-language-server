@@ -42,8 +42,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
@@ -105,7 +103,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
         .map(MethodSymbol::getDescription)
         .flatMap(Optional::stream)
         .map(MethodDescription::getRange)
-        .collect(Collectors.toList());
+        .collect(Collectors.toList()); // список должен остаться модифицируемым!
 
       documentContext.getComments().stream()
         .filter(token -> !descriptionContainToken(descriptionRanges, token))
@@ -138,10 +136,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   private boolean shouldIncludeComment(Token comment, Set<Integer> linesWithCode) {
     // If excludeTrailingComments is enabled and this comment is on a line with code,
     // then it's a trailing comment and should be excluded
-    if (excludeTrailingComments && linesWithCode.contains(comment.getLine() - 1)) {
-      return false;
-    }
-    return true;
+    return !excludeTrailingComments || !linesWithCode.contains(comment.getLine() - 1);
   }
 
   private void putInCollection(Token token) {

@@ -50,6 +50,12 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Индекс ссылок на символы в проекте.
+ * <p>
+ * Управляет индексацией и поиском ссылок на символы (методы, переменные)
+ * во всех документах workspace.
+ */
 @Component
 @RequiredArgsConstructor
 public class ReferenceIndex {
@@ -103,7 +109,7 @@ public class ReferenceIndex {
    */
   public Optional<Reference> getReference(URI uri, Position position) {
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .filter(symbolOccurrence -> Ranges.containsPosition(symbolOccurrence.getLocation().getRange(), position))
+      .filter(symbolOccurrence -> Ranges.containsPosition(symbolOccurrence.location().getRange(), position))
       .findAny()
       .flatMap(this::buildReference);
   }
@@ -131,7 +137,7 @@ public class ReferenceIndex {
   public List<Reference> getReferencesFrom(URI uri, SymbolKind kind) {
 
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .filter(s -> s.getSymbol().getSymbolKind() == kind)
+      .filter(s -> s.symbol().symbolKind() == kind)
       .map(this::buildReference)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
@@ -238,11 +244,11 @@ public class ReferenceIndex {
     SymbolOccurrence symbolOccurrence
   ) {
 
-    var uri = symbolOccurrence.getLocation().getUri();
-    var range = symbolOccurrence.getLocation().getRange();
-    var occurrenceType = symbolOccurrence.getOccurrenceType();
+    var uri = symbolOccurrence.location().getUri();
+    var range = symbolOccurrence.location().getRange();
+    var occurrenceType = symbolOccurrence.occurrenceType();
 
-    return getSourceDefinedSymbol(symbolOccurrence.getSymbol())
+    return getSourceDefinedSymbol(symbolOccurrence.symbol())
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
         return new Reference(from, symbol, uri, range, occurrenceType);
@@ -251,14 +257,14 @@ public class ReferenceIndex {
   }
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(Symbol symbolEntity) {
-    String mdoRef = symbolEntity.getMdoRef();
-    ModuleType moduleType = symbolEntity.getModuleType();
-    String symbolName = symbolEntity.getSymbolName();
+    String mdoRef = symbolEntity.mdoRef();
+    ModuleType moduleType = symbolEntity.moduleType();
+    String symbolName = symbolEntity.symbolName();
 
-    if (symbolEntity.getSymbolKind() == SymbolKind.Variable) {
+    if (symbolEntity.symbolKind() == SymbolKind.Variable) {
       return serverContext.getDocument(mdoRef, moduleType)
         .map(DocumentContext::getSymbolTree)
-        .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.getScopeName())
+        .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.scopeName())
         .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
         .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
     }
@@ -270,8 +276,8 @@ public class ReferenceIndex {
 
   private SourceDefinedSymbol getFromSymbol(SymbolOccurrence symbolOccurrence) {
 
-    var uri = symbolOccurrence.getLocation().getUri();
-    var position = symbolOccurrence.getLocation().getRange().getStart();
+    var uri = symbolOccurrence.location().getUri();
+    var position = symbolOccurrence.location().getRange().getStart();
 
     Optional<SymbolTree> symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
       .map(DocumentContext::getSymbolTree);

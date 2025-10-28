@@ -12,8 +12,23 @@ jobs:
     if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'translations_') == false || github.event_name == 'push'
     steps:
       - run: echo 'Open the Golden Gate'
+  
+  check-pr-exists:
+    runs-on: ubuntu-latest
+    outputs:
+      has_pr: ${{ steps.check.outputs.has_pr }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check if PR exists for this branch
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          result=$(.github/scripts/check-pr-exists.sh "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.repository }}")
+          echo "has_pr=$result" >> $GITHUB_OUTPUT
   build:
-    needs: gatekeeper
+    needs: [gatekeeper, check-pr-exists]
+    if: needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     runs-on: ubuntu-latest
     steps:
     - name: Save PR number to file
@@ -21,7 +36,7 @@ jobs:
       run: echo ${{ github.event.number }} > PR_NUMBER.txt
     - name: Archive PR number
       if: github.event_name == 'pull_request'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: PR_NUMBER
         path: PR_NUMBER.txt

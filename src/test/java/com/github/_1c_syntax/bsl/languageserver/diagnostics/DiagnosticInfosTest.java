@@ -61,35 +61,29 @@ class DiagnosticInfosTest {
 
   @Test
   void testAddDiagnosticsHaveDiagnosticName() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(diagnosticInfo.getName()).isNotEmpty()))
-      .doesNotThrowAnyException();
+    assertThat(diagnosticInfos)
+      .allSatisfy((key, diagnosticInfo) -> assertThat(diagnosticInfo.getName()).isNotEmpty());
   }
 
   @Test
   void testAllDiagnosticsHaveDiagnosticMessage() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(diagnosticInfo.getMessage()).isNotEmpty()))
-      .doesNotThrowAnyException();
+    assertThat(diagnosticInfos)
+      .allSatisfy((key, diagnosticInfo) -> assertThat(diagnosticInfo.getMessage()).isNotEmpty());
   }
 
   @Test
   void testAllDiagnosticsHaveDescriptionResource() {
-    assertThat(diagnosticInfos).allSatisfy((key, diagnosticInfo) -> {
-      assertThat(diagnosticInfo.getDescription()).isNotEmpty();
-    });
+    assertThat(diagnosticInfos)
+      .allSatisfy((key, diagnosticInfo) -> assertThat(diagnosticInfo.getDescription()).isNotEmpty());
   }
 
   @Test
   void testAllDiagnosticsHaveTags() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(
-      !diagnosticInfo.getTags().isEmpty()
-        && diagnosticInfo.getTags().size() <= 3)
-      .isTrue()))
-      .doesNotThrowAnyException();
+    assertThat(diagnosticInfos)
+      .allSatisfy((key, diagnosticInfo) ->
+        assertThat(!diagnosticInfo.getTags().isEmpty() && diagnosticInfo.getTags().size() <= 3)
+          .isTrue());
   }
-
 
   @Test
   void TestAllParametersHaveResourcesEN() {

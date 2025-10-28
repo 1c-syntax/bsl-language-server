@@ -54,6 +54,13 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 
 // Based on Cognitive Complexity white-paper, version 1.4.
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
+/**
+ * Вычислитель когнитивной сложности кода.
+ * <p>
+ * Вычисляет метрику когнитивной сложности (Cognitive Complexity)
+ * для файла и каждого метода с указанием вторичных локаций.
+ * Основан на методике SonarSource.
+ */
 @Component
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor

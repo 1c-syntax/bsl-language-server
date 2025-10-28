@@ -52,7 +52,11 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   private static final String TITLE_KEY = "title";
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
+  /**
+   * Конфигурация language server.
+   */
   protected final LanguageServerConfiguration configuration;
+
   private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
   @Override
@@ -129,6 +133,13 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
      */
     String methodName;
 
+    /**
+     * Конструктор для данных линз сложности.
+     *
+     * @param uri URI документа
+     * @param id Идентификатор поставщика линз
+     * @param methodName Имя метода
+     */
     @ConstructorProperties({"uri", "id", "methodName"})
     public ComplexityCodeLensData(URI uri, String id, String methodName) {
       super(uri, id);

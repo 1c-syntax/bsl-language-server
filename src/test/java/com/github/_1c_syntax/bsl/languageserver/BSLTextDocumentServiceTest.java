@@ -141,7 +141,7 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void testRename() throws ExecutionException, InterruptedException, IOException {
+  void testRename() {
     var params = new RenameParams();
     params.setTextDocument(getTextDocumentIdentifier());
     params.setPosition(new Position(0, 16));
@@ -152,7 +152,7 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void testRenamePrepare() throws ExecutionException, InterruptedException, IOException {
+  void testRenamePrepare() {
     var params = new PrepareRenameParams();
     params.setTextDocument(getTextDocumentIdentifier());
     params.setPosition(new Position(0, 16));

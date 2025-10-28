@@ -26,7 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import java.util.List;
 
 /**
- * Стандартный алгоритм сравнения выражений. Сравнивает выражения на идентичность.
+ * Стандартный алгоритм сравнения узлов дерева выражений.
+ * <p>
+ * Сравнивает выражения на структурную идентичность:
+ * типы узлов, операторы, значения литералов, имена идентификаторов.
  */
 public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 

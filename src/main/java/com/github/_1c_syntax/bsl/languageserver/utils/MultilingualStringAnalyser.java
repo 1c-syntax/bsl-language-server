@@ -33,6 +33,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Анализатор многоязычных строк НСтр (NStr).
+ * <p>
+ * Проверяет наличие всех объявленных языков в многоязычных строках
+ * и анализирует использование в шаблонах.
+ */
 public final class MultilingualStringAnalyser {
 
   private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
@@ -63,6 +69,11 @@ public final class MultilingualStringAnalyser {
   private final Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
+  /**
+   * Создать анализатор многоязычных строк.
+   *
+   * @param declaredLanguages Строка с объявленными языками через запятую
+   */
   public MultilingualStringAnalyser(String declaredLanguages) {
 
     Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
@@ -109,6 +120,12 @@ public final class MultilingualStringAnalyser {
     return null;
   }
 
+  /**
+   * Разобрать вызов метода НСтр/NStr.
+   *
+   * @param ctx Контекст вызова глобального метода
+   * @return true, если это вызов НСтр/NStr и он успешно разобран
+   */
   public boolean parse(BSLParser.GlobalMethodCallContext ctx) {
     expandedMultilingualString.clear();
     missingLanguages.clear();
@@ -155,14 +172,29 @@ public final class MultilingualStringAnalyser {
     }
   }
 
+  /**
+   * Проверить, что не все объявленные языки присутствуют в строке.
+   *
+   * @return true, если какие-то языки отсутствуют
+   */
   public boolean hasNotAllDeclaredLanguages() {
     return !missingLanguages.isEmpty();
   }
 
+  /**
+   * Получить список отсутствующих языков.
+   *
+   * @return Строковое представление списка отсутствующих языков
+   */
   public String getMissingLanguages() {
     return missingLanguages.toString();
   }
 
+  /**
+   * Проверить, используется ли строка в родительском шаблоне.
+   *
+   * @return true, если строка используется в шаблоне
+   */
   public boolean isParentTemplate() {
     return isParentTemplate || istVariableUsingInTemplate();
   }
