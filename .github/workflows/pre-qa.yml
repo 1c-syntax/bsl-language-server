@@ -24,11 +24,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event_name }}" == "push" ]; then
-            prs=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state open --json number --jq 'length')
-            if [ "$prs" -gt 0 ]; then
-              echo "has_pr=true" >> $GITHUB_OUTPUT
-            else
+            # Always run workflows for master and develop branches
+            if [ "${{ github.ref_name }}" == "master" ] || [ "${{ github.ref_name }}" == "develop" ]; then
               echo "has_pr=false" >> $GITHUB_OUTPUT
+            else
+              prs=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state open --json number --jq 'length')
+              if [ "$prs" -gt 0 ]; then
+                echo "has_pr=true" >> $GITHUB_OUTPUT
+              else
+                echo "has_pr=false" >> $GITHUB_OUTPUT
+              fi
             fi
           else
             echo "has_pr=false" >> $GITHUB_OUTPUT
