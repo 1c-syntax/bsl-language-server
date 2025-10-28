@@ -121,14 +121,18 @@ public class LanguageServerConfiguration {
 
   @PostConstruct
   private void init() {
-    configurationFile = new File(configurationFilePath);
-    if (configurationFile.exists()) {
-      loadConfigurationFile(configurationFile);
-      return;
+    if (configurationFilePath != null && !configurationFilePath.isEmpty()) {
+      configurationFile = new File(configurationFilePath);
+      if (configurationFile.exists()) {
+        loadConfigurationFile(configurationFile);
+        return;
+      }
     }
-    var configuration = new File(globalConfigPath);
-    if (configuration.exists()) {
-      loadConfigurationFile(configuration);
+    if (globalConfigPath != null && !globalConfigPath.isEmpty()) {
+      var configuration = new File(globalConfigPath);
+      if (configuration.exists()) {
+        loadConfigurationFile(configuration);
+      }
     }
   }
 
