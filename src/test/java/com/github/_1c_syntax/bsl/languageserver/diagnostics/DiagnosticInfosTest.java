@@ -79,19 +79,11 @@ class DiagnosticInfosTest {
 
   @Test
   void testAllDiagnosticsHaveTags() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(
-      !diagnosticInfo.getTags().isEmpty()
-        && diagnosticInfo.getTags().size() <= 3)
-      .isTrue()))
-      .doesNotThrowAnyException();
-
     assertThat(diagnosticInfos)
       .allSatisfy((key, diagnosticInfo) ->
         assertThat(!diagnosticInfo.getTags().isEmpty() && diagnosticInfo.getTags().size() <= 3)
           .isTrue());
   }
-
 
   @Test
   void TestAllParametersHaveResourcesEN() {
