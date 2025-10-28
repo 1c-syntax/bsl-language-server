@@ -105,9 +105,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   }
 
   @Override
-  public abstract Range getVariableNameRange();
-
-  @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitVariable(this);
   }
