@@ -138,7 +138,6 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
     }
 
     return java.util.Comparator.comparing(MethodSymbol::getName)
-      .thenComparing(MethodSymbol::getSymbolKind)
       .thenComparing(MethodSymbol::getOwner)
       .thenComparingInt(m -> m.subNameLine)
       .thenComparingInt(m -> m.subNameStartCharacter)
