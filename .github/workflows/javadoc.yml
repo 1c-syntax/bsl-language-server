@@ -18,26 +18,14 @@ jobs:
     outputs:
       has_pr: ${{ steps.check.outputs.has_pr }}
     steps:
+      - uses: actions/checkout@v5
       - name: Check if PR exists for this branch
         id: check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" == "push" ]; then
-            # Always run workflows for master and develop branches
-            if [ "${{ github.ref_name }}" == "master" ] || [ "${{ github.ref_name }}" == "develop" ]; then
-              echo "has_pr=false" >> $GITHUB_OUTPUT
-            else
-              prs=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state open --json number --jq 'length')
-              if [ "$prs" -gt 0 ]; then
-                echo "has_pr=true" >> $GITHUB_OUTPUT
-              else
-                echo "has_pr=false" >> $GITHUB_OUTPUT
-              fi
-            fi
-          else
-            echo "has_pr=false" >> $GITHUB_OUTPUT
-          fi
+          result=$(.github/scripts/check-pr-exists.sh "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.repository }}")
+          echo "has_pr=$result" >> $GITHUB_OUTPUT
 
   build:
     needs: [gatekeeper, check-pr-exists]
