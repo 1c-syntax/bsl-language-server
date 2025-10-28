@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761641624881,
+  "lastUpdate": 1761644889524,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30504,6 +30504,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8969188399514745",
             "extra": "mean: 86.05866599082947 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4848d79b43c0417afa67d2d328bcc25ba8df77a9",
+          "message": "Merge pull request #3555 from 1c-syntax/feature/optimizedMem\n\nОптимизация хранения + некоторые фиксы сонара",
+          "timestamp": "2025-10-28T09:33:20+01:00",
+          "tree_id": "e67050e9937ff64ec8dac80aaa0a1b51481fe4a1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4848d79b43c0417afa67d2d328bcc25ba8df77a9"
+        },
+        "date": 1761644885090,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.5588747660319,
+            "unit": "sec",
+            "range": "stddev: 0.20595384588817842",
+            "extra": "mean: 87.5588747660319 sec\nrounds: 3"
           }
         ]
       }
