@@ -6,18 +6,36 @@ on:
       - "translations_*"
   pull_request:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   gatekeeper:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'translations_') == false || github.event_name == 'push'
     steps:
       - run: echo 'Open the Golden Gate'
+  
+  check-pr-exists:
+    runs-on: ubuntu-latest
+    outputs:
+      has_pr: ${{ steps.check.outputs.has_pr }}
+    steps:
+      - name: Check if PR exists for this branch
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            prs=$(gh pr list --repo ${{ github.repository }} --head ${{ github.ref_name }} --state open --json number --jq 'length')
+            if [ "$prs" -gt 0 ]; then
+              echo "has_pr=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_pr=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "has_pr=false" >> $GITHUB_OUTPUT
+          fi
   build:
-    needs: gatekeeper
+    needs: [gatekeeper, check-pr-exists]
+    if: needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
