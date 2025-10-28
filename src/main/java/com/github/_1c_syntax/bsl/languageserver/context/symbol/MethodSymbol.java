@@ -63,20 +63,20 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @EqualsAndHashCode.Include
   DocumentContext owner;
 
-  @Getter(AccessLevel.PRIVATE)
+  @Getter(AccessLevel.NONE)
   int startLine;
-  @Getter(AccessLevel.PRIVATE)
+  @Getter(AccessLevel.NONE)
   int startCharacter;
-  @Getter(AccessLevel.PRIVATE)
+  @Getter(AccessLevel.NONE)
   int endLine;
-  @Getter(AccessLevel.PRIVATE)
+  @Getter(AccessLevel.NONE)
   int endCharacter;
 
-  @Getter(AccessLevel.PRIVATE)
+  @Getter(AccessLevel.NONE)
   int subNameLine;
-  @Getter(AccessLevel.PRIVATE)
+  @Getter(AccessLevel.NONE)
   int subNameStartCharacter;
-  @Getter(AccessLevel.PRIVATE)
+  @Getter(AccessLevel.NONE)
   int subNameEndCharacter;
 
   @Getter
@@ -137,13 +137,9 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
     return java.util.Comparator.comparing(MethodSymbol::getName)
       .thenComparing(MethodSymbol::getSymbolKind)
       .thenComparing(MethodSymbol::getOwner)
-      .thenComparing(MethodSymbol::getStartLine)
-      .thenComparing(MethodSymbol::getStartCharacter)
-      .thenComparing(MethodSymbol::getEndLine)
-      .thenComparing(MethodSymbol::getEndCharacter)
-      .thenComparing(MethodSymbol::getSubNameLine)
-      .thenComparing(MethodSymbol::getSubNameStartCharacter)
-      .thenComparing(MethodSymbol::getSubNameEndCharacter)
+      .thenComparingInt(m -> m.subNameLine)
+      .thenComparingInt(m -> m.subNameStartCharacter)
+      .thenComparingInt(m -> m.subNameEndCharacter)
       .compare(this, other);
   }
 

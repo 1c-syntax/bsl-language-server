@@ -76,7 +76,6 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .forEach(variableSymbolReferenceListTriple -> fireIssue(variableSymbolReferenceListTriple.getLeft(),
         variableSymbolReferenceListTriple.getMiddle(),
         variableSymbolReferenceListTriple.getRight()));
-
   }
 
   private static Stream<Pair<MethodSymbol, ParameterDefinition>> getParametersByValue(MethodSymbol methodSymbol) {
@@ -136,10 +135,8 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     if (references.size() > 1) {
       var refContextInsideDefAssign = getRefContextInsideDefAssign(firstDefIntoAssign, references.get(1));
       if (refContextInsideDefAssign.isPresent()) {
-        boolean isSelfAssign = refContextInsideDefAssign
-          .map(RewriteMethodParameterDiagnostic::isVarNameOnlyIntoExpression)
-          .get();
-        if (isSelfAssign && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN) {
+        if (isVarNameOnlyIntoExpression(refContextInsideDefAssign.get())
+          && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN) {
           return isOverwrited(references.subList(COUNT_OF_PAIR_FOR_SELF_ASSIGN, references.size()));
         }
         return Optional.empty();
