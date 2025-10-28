@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761588016300,
+  "lastUpdate": 1761641624881,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30473,6 +30473,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.611118887201255",
             "extra": "mean: 85.69626386960347 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "198982749+Copilot@users.noreply.github.com",
+            "name": "Copilot",
+            "username": "Copilot"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "05d55f2fa8d130e0fa77074dab47ea29e6253d1a",
+          "message": "Skip push workflows when PR exists for branch (except master/develop) (#3564)\n\n* Initial plan\n\n* Add concurrency groups to workflows to prevent duplicate runs\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Add concurrency to javadoc and codesee workflows\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Revert concurrency approach and add PR existence check instead\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Ensure master and develop branches always execute workflows\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Refactor: Extract check-pr-exists logic to reusable script\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>",
+          "timestamp": "2025-10-28T08:43:57+01:00",
+          "tree_id": "ca883b8b042fc6b276c977d9e1c4940501af5b15",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/05d55f2fa8d130e0fa77074dab47ea29e6253d1a"
+        },
+        "date": 1761641617907,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 86.05866599082947,
+            "unit": "sec",
+            "range": "stddev: 0.8969188399514745",
+            "extra": "mean: 86.05866599082947 sec\nrounds: 3"
           }
         ]
       }
