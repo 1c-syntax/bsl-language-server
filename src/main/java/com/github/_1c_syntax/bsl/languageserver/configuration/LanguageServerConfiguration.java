@@ -50,6 +50,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
@@ -184,8 +185,8 @@ public class LanguageServerConfiguration {
       .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
       .build();
 
-    try {
-      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    try (var inputStream = Files.newInputStream(configurationFile.toPath())) {
+      configuration = mapper.readValue(inputStream, LanguageServerConfiguration.class);
     } catch (IOException e) {
       LOGGER.error("Can't deserialize configuration file", e);
       return;
