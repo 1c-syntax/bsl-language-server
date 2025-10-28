@@ -67,7 +67,7 @@ class CognitiveComplexityCodeLensSupplierTest {
     );
 
     // then
-    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
+    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData().methodsComplexity();
 
     MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
     MethodSymbol secondMethod = documentContext.getSymbolTree().getMethods().get(1);

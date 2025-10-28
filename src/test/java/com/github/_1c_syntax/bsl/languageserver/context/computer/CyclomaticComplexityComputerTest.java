@@ -49,7 +49,7 @@ class CyclomaticComplexityComputerTest {
     // when
     Computer<ComplexityData> cyclomaticComplexityComputer = computerObjectProvider.getObject(documentContext);
     ComplexityData data = cyclomaticComplexityComputer.compute();
-    final Map<MethodSymbol, Integer> methodsComplexity = data.getMethodsComplexity();
+    final Map<MethodSymbol, Integer> methodsComplexity = data.methodsComplexity();
 
     //then
     MethodSymbol example1 = documentContext.getSymbolTree().getMethods().get(0);

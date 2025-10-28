@@ -22,50 +22,34 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.AllArgsConstructor;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Builder;
-import lombok.Value;
 
 /**
  * Обращение к символу в файле.
+ *
+ * @param occurrenceType Тип обращения к символу.
+ * @param symbol         Символ, к которому происходит обращение.
+ * @param location       Месторасположение обращения к символу.
  */
-@Value
-@AllArgsConstructor
 @Builder
-public class SymbolOccurrence implements Comparable<SymbolOccurrence> {
-
-  /**
-   * Тип обращения к символу.
-   */
-  OccurrenceType occurrenceType;
-
-  /**
-   * Символ, к которому происходит обращение.
-   */
-  Symbol symbol;
-
-  /**
-   * Месторасположение обращения к символу.
-   */
-  Location location;
+public record SymbolOccurrence(
+  OccurrenceType occurrenceType,
+  Symbol symbol,
+  Location location
+) implements Comparable<SymbolOccurrence> {
 
   @Override
-  public int compareTo(SymbolOccurrence o) {
-    if (this.equals(o)) {
-      return 0;
+  public int compareTo(@Nullable SymbolOccurrence other) {
+    if (other == null) {
+      return 1;
     }
-    final var uriCompare = location.getUri().compareTo(o.location.getUri());
-    if (uriCompare != 0) {
-      return uriCompare;
-    }
-    final var rangesCompare = Ranges.compare(location.getRange(), o.location.getRange());
-    if (rangesCompare != 0) {
-      return rangesCompare;
-    }
-    final var occurrenceCompare = occurrenceType.compareTo(o.occurrenceType);
-    if (occurrenceCompare != 0) {
-      return occurrenceCompare;
-    }
-    return symbol.compareTo(o.symbol);
+
+    return java.util.Comparator
+      .comparing(SymbolOccurrence::location, java.util.Comparator.comparing(Location::getUri)
+        .thenComparing((l1, l2) -> Ranges.compare(l1.getRange(), l2.getRange())))
+      .thenComparing(SymbolOccurrence::occurrenceType)
+      .thenComparing(SymbolOccurrence::symbol)
+      .compare(this, other);
   }
 }

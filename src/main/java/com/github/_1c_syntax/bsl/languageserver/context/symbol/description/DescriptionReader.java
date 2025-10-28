@@ -126,7 +126,7 @@ public class DescriptionReader {
       }
     }
 
-    return fakeParam.makeParameterDescription().getTypes();
+    return fakeParam.makeParameterDescription().types();
   }
 
   /**

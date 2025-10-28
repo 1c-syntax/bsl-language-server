@@ -128,25 +128,24 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   }
 
   private Optional<Reference> isOverwrited(List<Reference> references) {
-    if (!references.isEmpty()) {
-      final var firstDefIntoAssign = references.get(0);
-      if (firstDefIntoAssign.getOccurrenceType() == OccurrenceType.DEFINITION) {
-        if (references.size() == 1) {
-          return Optional.of(firstDefIntoAssign);
-        }
-        var refContextInsideDefAssign = getRefContextInsideDefAssign(firstDefIntoAssign, references.get(1));
-        if (refContextInsideDefAssign.isEmpty()) {
-          return Optional.of(firstDefIntoAssign);
-        }
-        var isSelfAssign = Boolean.TRUE.equals(refContextInsideDefAssign
+    if (references.isEmpty() || references.get(0).getOccurrenceType() != OccurrenceType.DEFINITION) {
+      return Optional.empty();
+    }
+
+    final var firstDefIntoAssign = references.get(0);
+    if (references.size() > 1) {
+      var refContextInsideDefAssign = getRefContextInsideDefAssign(firstDefIntoAssign, references.get(1));
+      if (refContextInsideDefAssign.isPresent()) {
+        boolean isSelfAssign = refContextInsideDefAssign
           .map(RewriteMethodParameterDiagnostic::isVarNameOnlyIntoExpression)
-          .orElseThrow());
+          .get();
         if (isSelfAssign && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN) {
           return isOverwrited(references.subList(COUNT_OF_PAIR_FOR_SELF_ASSIGN, references.size()));
         }
+        return Optional.empty();
       }
     }
-    return Optional.empty();
+    return Optional.of(firstDefIntoAssign);
   }
 
   private Optional<RuleNode> getRefContextInsideDefAssign(Reference defRef, Reference nextRef) {
@@ -161,8 +160,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
 
     return assignment.flatMap(assignContext ->
         Trees.findTerminalNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
-      .map(TerminalNode::getParent)
-      .map(RuleNode.class::cast);
+      .map(TerminalNode::getParent);
   }
 
   private static boolean isVarNameOnlyIntoExpression(RuleNode refContext) {

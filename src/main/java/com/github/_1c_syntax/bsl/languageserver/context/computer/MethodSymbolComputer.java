@@ -324,7 +324,7 @@ public final class MethodSymbolComputer
     return description.map(MethodDescription::getParameters)
       .stream()
       .flatMap(Collection::stream)
-      .filter(parameterDescription -> parameterDescription.getName().equalsIgnoreCase(parameterName))
+      .filter(parameterDescription -> parameterDescription.name().equalsIgnoreCase(parameterName))
       .findFirst();
 
   }

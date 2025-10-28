@@ -142,7 +142,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       .flatMap(vertex -> vertex.getAst().stream())
       .sorted(Comparator.comparingInt(bslParserRuleContext -> bslParserRuleContext.getStart().getLine()))
       .map(Ranges::create)
-      .collect(Collectors.toList());
+      .toList();
 
 
     var newRanges = new ArrayList<Range>();
@@ -155,7 +155,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
           break;
         }
       }
-      if(!alreadyDetected) {
+      if (!alreadyDetected) {
         newRanges.add(range);
       }
     }

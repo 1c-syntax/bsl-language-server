@@ -75,9 +75,8 @@ class DiagnosticInfosTest {
 
   @Test
   void testAllDiagnosticsHaveDescriptionResource() {
-    assertThat(diagnosticInfos).allSatisfy((key, diagnosticInfo) -> {
-      assertThat(diagnosticInfo.getDescription()).isNotEmpty();
-    });
+    assertThat(diagnosticInfos)
+      .allSatisfy((key, diagnosticInfo) -> assertThat(diagnosticInfo.getDescription()).isNotEmpty());
   }
 
   @Test

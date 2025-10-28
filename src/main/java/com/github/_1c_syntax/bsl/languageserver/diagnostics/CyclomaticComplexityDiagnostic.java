@@ -71,14 +71,14 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
     List<ComplexitySecondaryLocation> secondaryLocations =
-      documentContext.getCyclomaticComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
+      documentContext.getCyclomaticComplexityData().methodsComplexitySecondaryLocations().get(methodSymbol);
 
     secondaryLocations.stream()
       .map((ComplexitySecondaryLocation secondaryLocation) ->
         RelatedInformation.create(
           documentContext.getUri(),
-          secondaryLocation.getRange(),
-          secondaryLocation.getMessage()
+          secondaryLocation.range(),
+          secondaryLocation.message()
         )
       )
       .collect(Collectors.toCollection(() -> relatedInformation));
@@ -90,7 +90,7 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> optionalMethodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
-      Integer methodComplexity = documentContext.getCyclomaticComplexityData().getMethodsComplexity().get(methodSymbol);
+      Integer methodComplexity = documentContext.getCyclomaticComplexityData().methodsComplexity().get(methodSymbol);
 
       if (methodComplexity > complexityThreshold) {
         diagnosticStorage.addDiagnostic(
@@ -123,7 +123,7 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    Integer fileCodeBlockComplexity = documentContext.getCyclomaticComplexityData().getFileCodeBlockComplexity();
+    Integer fileCodeBlockComplexity = documentContext.getCyclomaticComplexityData().fileCodeBlockComplexity();
 
     if (fileCodeBlockComplexity > complexityThreshold) {
 
@@ -136,14 +136,14 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
       ));
 
       List<ComplexitySecondaryLocation> secondaryLocations =
-        documentContext.getCyclomaticComplexityData().getFileBlockComplexitySecondaryLocations();
+        documentContext.getCyclomaticComplexityData().fileBlockComplexitySecondaryLocations();
 
       secondaryLocations.stream()
         .map((ComplexitySecondaryLocation secondaryLocation) ->
           RelatedInformation.create(
             documentContext.getUri(),
-            secondaryLocation.getRange(),
-            secondaryLocation.getMessage()
+            secondaryLocation.range(),
+            secondaryLocation.message()
           )
         )
         .collect(Collectors.toCollection(() -> relatedInformation));

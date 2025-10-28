@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -52,7 +53,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
+public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable, Comparable<MethodSymbol> {
   @EqualsAndHashCode.Include
   String name;
 
@@ -62,20 +63,20 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @EqualsAndHashCode.Include
   DocumentContext owner;
 
-  @Getter(AccessLevel.NONE)
+  @Getter(AccessLevel.PRIVATE)
   int startLine;
-  @Getter(AccessLevel.NONE)
+  @Getter(AccessLevel.PRIVATE)
   int startCharacter;
-  @Getter(AccessLevel.NONE)
+  @Getter(AccessLevel.PRIVATE)
   int endLine;
-  @Getter(AccessLevel.NONE)
+  @Getter(AccessLevel.PRIVATE)
   int endCharacter;
 
-  @Getter(AccessLevel.NONE)
+  @Getter(AccessLevel.PRIVATE)
   int subNameLine;
-  @Getter(AccessLevel.NONE)
+  @Getter(AccessLevel.PRIVATE)
   int subNameStartCharacter;
-  @Getter(AccessLevel.NONE)
+  @Getter(AccessLevel.PRIVATE)
   int subNameEndCharacter;
 
   @Getter
@@ -125,6 +126,25 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @Override
   public Range getSelectionRange() {
     return getSubNameRange();
+  }
+
+  @Override
+  public int compareTo(@Nullable MethodSymbol other) {
+    if (other == null) {
+      return 1;
+    }
+
+    return java.util.Comparator.comparing(MethodSymbol::getName)
+      .thenComparing(MethodSymbol::getSymbolKind)
+      .thenComparing(MethodSymbol::getOwner)
+      .thenComparing(MethodSymbol::getStartLine)
+      .thenComparing(MethodSymbol::getStartCharacter)
+      .thenComparing(MethodSymbol::getEndLine)
+      .thenComparing(MethodSymbol::getEndCharacter)
+      .thenComparing(MethodSymbol::getSubNameLine)
+      .thenComparing(MethodSymbol::getSubNameStartCharacter)
+      .thenComparing(MethodSymbol::getSubNameEndCharacter)
+      .compare(this, other);
   }
 
   public static MethodSymbolBuilder builder() {

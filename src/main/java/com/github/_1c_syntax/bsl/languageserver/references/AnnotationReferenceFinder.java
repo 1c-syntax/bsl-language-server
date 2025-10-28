@@ -224,6 +224,6 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
   }
 
   private static String getAnnotationName(Annotation annotation) {
-    return annotation.getParameters().get(0).getValue();
+    return annotation.getParameters().get(0).value();
   }
 }

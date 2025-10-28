@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import lombok.AllArgsConstructor;
-import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
 /**
@@ -30,16 +28,9 @@ import org.eclipse.lsp4j.Range;
  * <p>
  * Содержит диапазон и сообщение для блока кода,
  * увеличивающего сложность метода или файла.
+ *
+ * @param range    Диапазон в коде
+ * @param message  Сообщение о вкладе в сложность
  */
-@Value
-@AllArgsConstructor
-public class ComplexitySecondaryLocation {
-  /**
-   * Диапазон в коде.
-   */
-  Range range;
-  /**
-   * Сообщение о вкладе в сложность.
-   */
-  String message;
+public record ComplexitySecondaryLocation(Range range, String message) {
 }
