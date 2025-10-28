@@ -394,7 +394,7 @@ public final class Trees {
     List<ParserRuleContext> nodes = new ArrayList<>();
 
     if (t instanceof ParserRuleContext parserRuleContext && indexes.contains(parserRuleContext.getRuleIndex())) {
-      nodes.add((ParserRuleContext) t);
+      nodes.add(parserRuleContext);
     }
 
     IntStream.range(0, t.getChildCount())

@@ -34,7 +34,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -77,7 +76,8 @@ public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<
   ) {
     Map<String, Object> parameterConfiguration;
     try {
-      JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {});
+      JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {
+      });
       parameterConfiguration = mapper.readValue(mapper.treeAsTokens(parameterConfig), type);
     } catch (IOException e) {
       LOGGER.error("Can't deserialize parameter configuration", e);

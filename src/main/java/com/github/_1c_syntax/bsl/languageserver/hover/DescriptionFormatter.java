@@ -239,7 +239,7 @@ public class DescriptionFormatter {
       parameter.append(parameterName);
 
       var parameterTypes = parameterDefinition.getDescription()
-        .map(ParameterDescription::getTypes)
+        .map(ParameterDescription::types)
         .map(DescriptionFormatter::getTypes)
         .orElse("");
 
@@ -280,7 +280,7 @@ public class DescriptionFormatter {
 
   private static String getTypes(List<TypeDescription> typeDescriptions) {
     return typeDescriptions.stream()
-      .map(TypeDescription::getName)
+      .map(TypeDescription::name)
       .flatMap(parameterType -> Stream.of(parameterType.split(",")))
       .map(String::trim)
       .collect(Collectors.joining(" | "));
@@ -288,15 +288,15 @@ public class DescriptionFormatter {
 
   public String parameterToString(ParameterDescription parameterDescription, int level) {
     var result = new StringJoiner("  \n"); // два пробела
-    Map<String, String> typesMap = typesToMap(parameterDescription.getTypes(), level);
+    Map<String, String> typesMap = typesToMap(parameterDescription.types(), level);
     var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
 
     if (typesMap.size() == 1) {
       result.add(String.format(parameterTemplate,
-        parameterDescription.getName(),
+        parameterDescription.name(),
         typesMapToString(typesMap, 0)));
     } else {
-      result.add(String.format(parameterTemplate, parameterDescription.getName(), ""));
+      result.add(String.format(parameterTemplate, parameterDescription.name(), ""));
       result.add(typesMapToString(typesMap, level + 1));
     }
     return result.toString();
@@ -323,9 +323,9 @@ public class DescriptionFormatter {
       var typeDescription = typeToString(type, level);
       String typeName;
       if (type.isHyperlink()) {
-        typeName = String.format("[%s](%s)", type.getName(), type.getLink());
+        typeName = String.format("[%s](%s)", type.name(), type.link());
       } else {
-        typeName = String.format("`%s`", type.getName());
+        typeName = String.format("`%s`", type.name());
       }
 
       types.merge(typeDescription, typeName, (oldValue, newValue) -> String.format("%s | %s", oldValue, newValue));
@@ -348,17 +348,17 @@ public class DescriptionFormatter {
 
   private String typeToString(TypeDescription type, int level) {
     var result = new StringJoiner("  \n"); // два пробела
-    var description = type.getDescription().replace("\n", "<br>" + "&nbsp;&nbsp;".repeat(level + 1));
+    var description = type.description().replace("\n", "<br>" + "&nbsp;&nbsp;".repeat(level + 1));
 
     if (!description.isBlank()) {
       description = "- " + description;
     }
-    if (!type.getParameters().isEmpty()) {
+    if (!type.parameters().isEmpty()) {
       description += ":";
     }
 
     result.add(description);
-    type.getParameters().forEach((ParameterDescription parameter) ->
+    type.parameters().forEach((ParameterDescription parameter) ->
       result.add(parameterToString(parameter, level + 1)));
     return result.toString();
   }

@@ -26,6 +26,8 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.ApplicationEvent;
 
+import java.io.Serial;
+
 /**
  * Описание события получения языковым сервером запроса initialize.
  * <p>
@@ -33,6 +35,7 @@ import org.springframework.context.ApplicationEvent;
  */
 public class LanguageServerInitializeRequestReceivedEvent extends ApplicationEvent {
 
+  @Serial
   private static final long serialVersionUID = 7153531865051478056L;
 
   /**

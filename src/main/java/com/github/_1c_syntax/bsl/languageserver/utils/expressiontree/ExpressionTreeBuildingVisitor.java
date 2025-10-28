@@ -178,9 +178,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
       var token = terminalNode.getSymbol().getType();
 
       // ручная диспетчеризация
-      switch (token) {
-        case BSLLexer.LPAREN -> visitParenthesis(ctx.expression(), ctx.modifier());
-        default -> operands.push(new ErrorExpressionNode(dispatchChild));
+      if (token == BSLLexer.LPAREN) {
+        visitParenthesis(ctx.expression(), ctx.modifier());
+      } else {
+        operands.push(new ErrorExpressionNode(dispatchChild));
       }
     } else {
       dispatchChild.accept(this);

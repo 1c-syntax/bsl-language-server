@@ -46,6 +46,6 @@ public class CyclomaticComplexityInlayHintSupplier extends AbstractComplexityInl
   ) {
     return documentContext
       .getCyclomaticComplexityData()
-      .getMethodsComplexitySecondaryLocations();
+      .methodsComplexitySecondaryLocations();
   }
 }

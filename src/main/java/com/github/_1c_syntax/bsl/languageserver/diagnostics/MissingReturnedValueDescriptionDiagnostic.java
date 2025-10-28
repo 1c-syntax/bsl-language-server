@@ -101,8 +101,8 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
     // тип возвращаемого значения должен иметь описание или быть сложным
     var typesWithoutDescription = returnedValueDescription.stream()
       .filter((TypeDescription typeDescription) ->
-        typeDescription.getDescription().isEmpty() && typeDescription.getParameters().isEmpty())
-      .map(TypeDescription::getName)
+        typeDescription.description().isEmpty() && typeDescription.parameters().isEmpty())
+      .map(TypeDescription::name)
       .collect(Collectors.joining(", "));
     if (!typesWithoutDescription.isEmpty()) {
       diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(),

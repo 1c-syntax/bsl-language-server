@@ -66,7 +66,7 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  void testParseError() throws Exception {
+  void testParseError() {
     // given
     String[] args = new String[]{"--error"};
 

@@ -426,8 +426,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
     metricsTemp.setStatements(statements);
 
-    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
-    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().getFileComplexity());
+    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().fileComplexity());
+    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().fileComplexity());
 
     return metricsTemp;
   }

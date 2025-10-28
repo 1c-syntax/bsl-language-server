@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Command;
 
@@ -134,7 +133,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
       var parseResult = cmd.parseArgs(args);
       var unmatchedArgs = parseResult.unmatched().stream()
         .filter(s -> allowedAdditionalArgs.stream().noneMatch(pattern -> pattern.matcher(s).matches()))
-        .collect(Collectors.toList());
+        .toList();
 
       if (!unmatchedArgs.isEmpty()) {
         unmatchedArgs.forEach(s -> cmd.getErr().println("Unknown option: '" + s + "'"));

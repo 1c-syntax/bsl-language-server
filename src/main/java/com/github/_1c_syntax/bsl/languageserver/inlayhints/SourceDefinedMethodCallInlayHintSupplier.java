@@ -68,14 +68,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
-
-//    var ast = documentContext.getAst();
-//    Trees.findAllRuleNodes(
-//      ast,
-//      BSLParser.RULE_methodCall,
-//      BSLParser.RULE_globalMethodCall
-//    );
-
     return referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
       .filter(reference -> Ranges.containsPosition(range, reference.getSelectionRange().getStart()))
       .filter(Reference::isSourceDefinedSymbolReference)
@@ -83,7 +75,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       .flatMap(Collection::stream)
       .toList();
   }
-
 
   private List<InlayHint> toInlayHints(Reference reference) {
 

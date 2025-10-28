@@ -33,9 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -72,10 +70,10 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   @Override
   protected void check() {
     calcIssues()
-      .forEach(paramReference -> paramReference.getParameterDefinitions().forEach(parameterDefinition ->
+      .forEach(paramReference -> paramReference.parameterDefinitions().forEach(parameterDefinition ->
         diagnosticStorage.addDiagnostic(parameterDefinition.getRange(),
-          info.getMessage(parameterDefinition.getName(), paramReference.getMethodSymbol().getName()),
-          getRelatedInformation(paramReference.getReferences())))
+          info.getMessage(parameterDefinition.getName(), paramReference.methodSymbol().getName()),
+          getRelatedInformation(paramReference.references())))
       );
   }
 
@@ -170,11 +168,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
       .collect(Collectors.toList());
   }
 
-  @Value
-  @AllArgsConstructor
-  private static class ParamReference {
-    MethodSymbol methodSymbol;
-    List<ParameterDefinition> parameterDefinitions;
-    List<Reference> references;
+  private record ParamReference(MethodSymbol methodSymbol, List<ParameterDefinition> parameterDefinitions,
+                                List<Reference> references) {
   }
 }
