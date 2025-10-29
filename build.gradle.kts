@@ -7,13 +7,13 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("org.cadixdev.licenser") version "0.6.1"
+    id("cloud.rio.license") version "0.18.0"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.0.0"
     id("io.freefair.javadoc-links") version "9.0.0"
     id("io.freefair.javadoc-utf-8") version "9.0.0"
     id("io.freefair.aspectj.post-compile-weaving") version "9.0.0"
-    id("io.freefair.maven-central.validate-poms") version "9.0.0"
+    // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
     id("org.springframework.boot") version "3.5.7"
     id("io.spring.dependency-management") version "1.1.7"
@@ -207,12 +207,12 @@ tasks.check {
     mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
-tasks.checkLicenseMain {
+tasks.named("licenseMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
 
-tasks.updateLicenseMain {
+tasks.named("licenseFormatMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
@@ -267,11 +267,13 @@ tasks.javadoc {
 }
 
 license {
-    header(rootProject.file("license/HEADER.txt"))
-    newLine(false)
+    header = rootProject.file("license/HEADER.txt")
+    skipExistingHeaders = false
+    strictCheck = true
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
+    mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.json")

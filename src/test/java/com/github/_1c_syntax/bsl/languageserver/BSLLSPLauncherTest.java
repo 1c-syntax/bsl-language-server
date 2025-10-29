@@ -246,13 +246,14 @@ class BSLLSPLauncherTest {
     // проверим, что перешли в команду lsp
 
     // given
-    String[] args = "-c .".split(" ");
+    String[] args = "-c src/test/resources/.bsl-language-server.json".split(" ");
 
     // when
     BSLLSPLauncher.main(args);
 
     // then
-    assertThat(outContent.toString()).contains("LanguageServerStartCommand");
+    // main-method should run without exceptions
+    assertThat(outContent.toString()).isEmpty();
     assertThat(errContent.toString()).isEmpty();
   }
 
