@@ -87,7 +87,7 @@ public class WebsocketCommand implements Callable<Integer> {
 
   public Integer call() {
     var configurationFile = new File(configurationOption);
-    if (configurationFile.exists()) {
+    if (configurationFile.exists() && !configurationFile.isDirectory()) {
       configuration.update(configurationFile);
     }
 
