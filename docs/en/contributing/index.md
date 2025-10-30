@@ -9,6 +9,8 @@ This section contains articles containing information for developers of diagnost
     - [Quick start](FastStart.md)
     - [Style guide](StyleGuide.md)
     - [JavaDoc](../javadoc/index.html)
+- Build and Deployment
+    - [AOT Compilation and Native Images](AotAndNative.md)
 - Diagnostics development
     - [Diagnostic development workflow](DiagnosticDevWorkFlow.md)
     - [Diagnostic development example](DiagnosticExample.md)

@@ -9,6 +9,8 @@
     - [Быстрый старт](FastStart.md)
     - [Руководство по стилю](StyleGuide.md)
     - [JavaDoc](../javadoc/index.html)
+- Сборка и развертывание
+    - [AOT-компиляция и нативные образы](AotAndNative.md)
 - Разработка диагностик
     - [Процесс (workflow) разработки диагностики](DiagnosticDevWorkFlow.md)
     - [Пример разработки диагностики](DiagnosticExample.md)
