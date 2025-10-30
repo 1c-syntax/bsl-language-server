@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761842514337,
+  "lastUpdate": 1761846857843,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30690,6 +30690,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2603438855731777",
             "extra": "mean: 87.9302773475647 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3a67285060a5b0b4ad6b8d4f651d07972437ae79",
+          "message": "Merge pull request #3573 from 1c-syntax/copilot/fix-unicode-encoding-error\n\nFix UnicodeEncodeError in verify-archive-size.py on Windows runners",
+          "timestamp": "2025-10-30T17:54:31+01:00",
+          "tree_id": "2f277a9ddbadb2854ccb8517246e5e0580cbf354",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3a67285060a5b0b4ad6b8d4f651d07972437ae79"
+        },
+        "date": 1761846853706,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.18246134122212,
+            "unit": "sec",
+            "range": "stddev: 0.9818829635335031",
+            "extra": "mean: 87.18246134122212 sec\nrounds: 3"
           }
         ]
       }
