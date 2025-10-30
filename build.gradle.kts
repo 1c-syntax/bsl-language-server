@@ -96,9 +96,17 @@ dependencies {
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
         exclude("commons-logging", "commons-logging")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
     }
-    implementation("org.languagetool", "language-en", languageToolVersion)
-    implementation("org.languagetool", "language-ru", languageToolVersion)
+    implementation("org.languagetool", "language-en", languageToolVersion){
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
+    }
+    implementation("org.languagetool", "language-ru", languageToolVersion){
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
+    }
 
     // AOP
     implementation("org.aspectj", "aspectjrt", "1.9.22.1")
@@ -176,7 +184,6 @@ tasks.bootJar {
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     archiveClassifier.set("exec")
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.named("sourcesJar") {
