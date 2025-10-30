@@ -48,26 +48,7 @@ jobs:
               run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
 
             - name: Verify archive size
-              shell: bash
-              run: |
-                ARCHIVE_FILE="bsl-language-server_${{ matrix.prefix }}.zip"
-                if [ ! -f "$ARCHIVE_FILE" ]; then
-                  echo "Error: Archive file $ARCHIVE_FILE not found"
-                  exit 1
-                fi
-                
-                FILE_SIZE=$(stat -c%s "$ARCHIVE_FILE" 2>/dev/null || stat -f%z "$ARCHIVE_FILE" 2>/dev/null)
-                MIN_SIZE=1048576  # 1 MB in bytes
-                
-                echo "Archive size: $FILE_SIZE bytes"
-                echo "Minimum required size: $MIN_SIZE bytes (1 MB)"
-                
-                if [ "$FILE_SIZE" -lt "$MIN_SIZE" ]; then
-                  echo "Error: Archive size is less than 1 MB"
-                  exit 1
-                fi
-                
-                echo "✓ Archive size validation passed"
+              run: python .github/scripts/verify-archive-size.py bsl-language-server_${{ matrix.prefix }}.zip
 
 
                   
