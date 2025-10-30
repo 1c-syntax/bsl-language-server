@@ -44,6 +44,9 @@ jobs:
             - name: Build jpackage application image
               run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
 
+            - name: Verify archive size
+              run: python .github/scripts/verify-archive-size.py bsl-language-server_${{ matrix.prefix }}.zip
+
             - name: Upload artifact
               uses: actions/upload-artifact@v5
               with:
