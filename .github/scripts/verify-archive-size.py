@@ -40,10 +40,23 @@ def verify_archive_size(archive_path, min_size_mb=1):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python verify-archive-size.py <archive_file> [min_size_mb]")
+        print("  archive_file: Path to the archive file to verify")
+        print("  min_size_mb: Minimum size in megabytes (integer, default: 1)")
         sys.exit(1)
     
     archive_file = sys.argv[1]
-    min_size = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    
+    # Parse min_size with error handling
+    min_size = 1  # default
+    if len(sys.argv) > 2:
+        try:
+            min_size = int(sys.argv[2])
+            if min_size <= 0:
+                print("Error: min_size_mb must be a positive integer")
+                sys.exit(1)
+        except ValueError:
+            print(f"Error: Invalid min_size_mb '{sys.argv[2]}'. Must be an integer.")
+            sys.exit(1)
     
     exit_code = verify_archive_size(archive_file, min_size)
     sys.exit(exit_code)
