@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761712600665,
+  "lastUpdate": 1761836361375,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30566,6 +30566,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0715014512132854",
             "extra": "mean: 88.27870138486226 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aa37116f6b432c027b362a26351293a74c9b7308",
+          "message": "Merge pull request #3567 from 1c-syntax/copilot/fix-linux-image-build-jdk25",
+          "timestamp": "2025-10-30T14:56:55+01:00",
+          "tree_id": "9ce736e5aaabd05bbe866f8067883d2b907a4070",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/aa37116f6b432c027b362a26351293a74c9b7308"
+        },
+        "date": 1761836355448,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.24082279205322,
+            "unit": "sec",
+            "range": "stddev: 1.6429974175913886",
+            "extra": "mean: 90.24082279205322 sec\nrounds: 3"
           }
         ]
       }
