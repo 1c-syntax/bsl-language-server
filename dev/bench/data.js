@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761846857843,
+  "lastUpdate": 1761848115377,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30721,6 +30721,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9818829635335031",
             "extra": "mean: 87.18246134122212 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "907a58264f86a9074667ee4d4c244cbade73fdfd",
+          "message": "Merge pull request #3572 from 1c-syntax/copilot/replace-temurin-with-corretto\n\nReplace Temurin with Amazon Corretto in GitHub Actions workflows",
+          "timestamp": "2025-10-30T17:54:51+01:00",
+          "tree_id": "7979e963c53ebc3bd4ada0508650bc85468f42ca",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/907a58264f86a9074667ee4d4c244cbade73fdfd"
+        },
+        "date": 1761848110050,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.03265810012817,
+            "unit": "sec",
+            "range": "stddev: 0.4276518853002315",
+            "extra": "mean: 87.03265810012817 sec\nrounds: 3"
           }
         ]
       }
