@@ -24,8 +24,6 @@ def build_image(base_dir, image_prefix, executable_file):
     cmd_args.append('app-image')
     cmd_args.append('--java-options')
     cmd_args.append('-Xmx4g')
-    cmd_args.append('--jlink-options')
-    cmd_args.append('--ignore-signing-information')
 
     cmd = ' '.join(cmd_args)
     os.system(cmd)
