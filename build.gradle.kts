@@ -60,7 +60,7 @@ gitProperties {
     customProperty("git.build.time", buildTime())
 }
 
-val languageToolVersion = "6.5"
+val languageToolVersion = "6.6"
 
 dependencies {
 
@@ -176,6 +176,7 @@ tasks.bootJar {
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     archiveClassifier.set("exec")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.named("sourcesJar") {
@@ -199,10 +200,7 @@ tasks.test {
     }
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
-    jvmArgs(
-        "-javaagent:${jmockitPath}",
-        "-Djdk.xml.totalEntitySizeLimit=0"
-    )
+    jvmArgs("-javaagent:${jmockitPath}")
 }
 
 tasks.check {
