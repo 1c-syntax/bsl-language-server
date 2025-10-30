@@ -1,5 +1,10 @@
 import os
 import sys
+import io
+
+# Ensure UTF-8 encoding for stdout on Windows to handle Unicode characters
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 def verify_archive_size(archive_path, min_size_mb=1):
