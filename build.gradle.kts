@@ -17,6 +17,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.53.0"
     id("org.springframework.boot") version "3.5.7"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.graalvm.buildtools.native") version "0.11.1"
     id("io.sentry.jvm.gradle") version "5.12.1"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
@@ -110,6 +111,7 @@ dependencies {
 
     // AOP
     implementation("org.aspectj", "aspectjrt", "1.9.22.1")
+    implementation("org.aspectj", "aspectjweaver", "1.9.22.1")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.18.0")
@@ -218,11 +220,21 @@ tasks.check {
 tasks.named("licenseMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
+    mustRunAfter(tasks.processAot)
 }
 
 tasks.named("licenseFormatMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
+    mustRunAfter(tasks.processAot)
+}
+
+tasks.named("licenseAot") {
+    enabled = false
+}
+
+tasks.named("licenseAotTest") {
+    enabled = false
 }
 
 tasks.jacocoTestReport {
@@ -234,6 +246,23 @@ tasks.jacocoTestReport {
 
 jmh {
     jmhVersion = "1.37"
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("bsl-language-server")
+            mainClass.set("com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher")
+            buildArgs.addAll(
+                "--verbose",
+                "--no-fallback",
+                "-H:+ReportExceptionStackTraces"
+            )
+        }
+    }
+    metadataRepository {
+        enabled.set(true)
+    }
 }
 
 tasks.processResources {
@@ -291,6 +320,9 @@ license {
     exclude("**/*.java.orig")
     exclude("**/*.impl")
     exclude("**/*.mockito.plugins.MockMaker")
+    // Exclude AOT generated sources
+    exclude("build/generated/aotSources/**")
+    exclude("**/aotSources/**")
 }
 
 sonarqube {
