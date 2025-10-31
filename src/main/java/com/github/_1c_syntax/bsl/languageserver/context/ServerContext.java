@@ -304,10 +304,10 @@ public class ServerContext {
       configuration = (CF) executorService.submit(
         () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
-      LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
+      LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
     } catch (InterruptedException e) {
-      LOGGER.error("Can't parse configuration metadata. Interrupted exception.", e);
+      LOGGER.error("Can't parse configuration metadata. Interrupted exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
       Thread.currentThread().interrupt();
     } finally {
