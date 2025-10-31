@@ -20,7 +20,7 @@ plugins {
     id("io.sentry.jvm.gradle") version "5.12.1"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
-    id("org.jreleaser") version "1.20.0"
+    id("org.jreleaser") version "1.21.0"
     id("org.sonarqube") version "7.0.1.6134"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.3"
