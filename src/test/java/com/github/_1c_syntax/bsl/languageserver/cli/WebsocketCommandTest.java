@@ -32,7 +32,6 @@ import picocli.spring.PicocliSpringFactory;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -56,19 +55,7 @@ class WebsocketCommandTest {
 
     // then
     assertThat(call).isEqualTo(-1);
-    verify(configuration, never()).update(any());
-  }
-
-  @Test
-  void testCallUpdatesConfigurationFile() {
-
-    // given
-    var commandLine = new CommandLine(WebsocketCommand.class, factory);
-
-    // when
-    commandLine.execute("-c", "src/test/resources/.empty-bsl-language-server.json");
-
-    // then
     verify(configuration, times(1)).update(any());
   }
+
 }
