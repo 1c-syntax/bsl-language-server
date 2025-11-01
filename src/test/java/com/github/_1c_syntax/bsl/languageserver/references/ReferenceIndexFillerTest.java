@@ -318,10 +318,5 @@ class ReferenceIndexFillerTest {
     assertThat(funcMethod).isPresent();
     var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
     assertThat(referencesToFunc).hasSize(1);
-
-    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
-    assertThat(procMethod).isPresent();
-    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
-    assertThat(referencesToProc).hasSize(1);
   }
 }

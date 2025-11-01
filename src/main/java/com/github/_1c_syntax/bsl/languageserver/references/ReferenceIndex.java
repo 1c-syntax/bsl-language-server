@@ -199,6 +199,35 @@ public class ReferenceIndex {
   }
 
   /**
+   * Добавить ссылку на модуль в индекс.
+   *
+   * @param uri        URI документа, откуда произошло обращение к модулю.
+   * @param mdoRef     Ссылка на объект-метаданных модуля (например, CommonModule.ОбщийМодуль1).
+   * @param moduleType Тип модуля (например, {@link ModuleType#CommonModule}).
+   * @param range      Диапазон, в котором происходит обращение к модулю.
+   */
+  public void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+    var symbol = Symbol.builder()
+      .mdoRef(mdoRef)
+      .moduleType(moduleType)
+      .scopeName("")
+      .symbolKind(SymbolKind.Module)
+      .symbolName("")
+      .build()
+      .intern();
+
+    var location = new Location(uri, range);
+    var symbolOccurrence = SymbolOccurrence.builder()
+      .occurrenceType(OccurrenceType.REFERENCE)
+      .symbol(symbol)
+      .location(location)
+      .build();
+
+    symbolOccurrenceRepository.save(symbolOccurrence);
+    locationRepository.updateLocation(symbolOccurrence);
+  }
+
+  /**
    * Добавить обращение к переменной в индекс.
    *
    * @param uri          URI документа, откуда произошел вызов.
@@ -267,6 +296,12 @@ public class ReferenceIndex {
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.scopeName())
         .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
         .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
+    }
+
+    if (symbolEntity.symbolKind() == SymbolKind.Module) {
+      return serverContext.getDocument(mdoRef, moduleType)
+        .map(DocumentContext::getSymbolTree)
+        .map(SymbolTree::getModule);
     }
 
     return serverContext.getDocument(mdoRef, moduleType)

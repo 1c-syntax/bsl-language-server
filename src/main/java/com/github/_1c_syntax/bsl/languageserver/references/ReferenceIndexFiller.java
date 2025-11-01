@@ -317,6 +317,14 @@ public class ReferenceIndexFiller {
             .ifPresent(commonModule -> {
               var mdoRef = commonModule.getMdoReference().getMdoRef();
               variableToCommonModuleMap.put(variableName.toLowerCase(Locale.ENGLISH), mdoRef);
+              
+              // Добавляем ссылку на модуль в индекс
+              index.addModuleReference(
+                documentContext.getUri(),
+                mdoRef,
+                ModuleType.CommonModule,
+                Ranges.create(expression)
+              );
             });
         }
       }

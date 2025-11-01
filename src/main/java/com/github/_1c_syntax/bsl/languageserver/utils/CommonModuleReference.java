@@ -63,10 +63,19 @@ public class CommonModuleReference {
     }
 
     // В выражении могут быть один или несколько members
-    // Для простого вызова ОбщийМодуль("Name") - один member с complexIdentifier
+    // Для простого вызова ОбщийМодуль("Name") - один member с globalMethodCall
     // Для ОбщегоНазначения.ОбщийМодуль("Name") - один member с complexIdentifier и modifier
     
     for (var member : members) {
+      // Случай 1: globalMethodCall - ОбщийМодуль("Name")
+      if (member.IDENTIFIER() != null) {
+        var identifier = member.IDENTIFIER().getText();
+        if (COMMON_MODULE_METHOD.matcher(identifier).matches()) {
+          return true;
+        }
+      }
+      
+      // Случай 2: complexIdentifier с модификаторами
       var complexId = member.complexIdentifier();
       if (complexId != null) {
         // Проверяем базовый идентификатор
@@ -74,12 +83,12 @@ public class CommonModuleReference {
         if (identifier != null) {
           var idText = identifier.getText();
           
-          // Случай 1: ОбщийМодуль("Name")
+          // Случай 2a: ОбщийМодуль с доп. модификаторами
           if (COMMON_MODULE_METHOD.matcher(idText).matches()) {
             return true;
           }
           
-          // Случай 2: ОбщегоНазначения.ОбщийМодуль("Name")
+          // Случай 2b: ОбщегоНазначения.ОбщийМодуль("Name")
           if (COMMON_USE_MODULE.matcher(idText).matches()) {
             // Проверяем, есть ли вызов ОбщийМодуль в модификаторах
             for (var modifier : complexId.modifier()) {
@@ -112,18 +121,29 @@ public class CommonModuleReference {
     }
 
     for (var member : members) {
+      // Случай 1: globalMethodCall или просто IDENTIFIER с вызовом - ОбщийМодуль("Name")
+      if (member.IDENTIFIER() != null) {
+        var identifier = member.IDENTIFIER().getText();
+        if (COMMON_MODULE_METHOD.matcher(identifier).matches()) {
+          // Параметры должны быть где-то рядом, но нужно проверить структуру
+          // На самом деле, для globalMethodCall member имеет другую структуру
+          // Попробуем через complexIdentifier с пустыми модификаторами
+        }
+      }
+      
+      // Случай 2: complexIdentifier
       var complexId = member.complexIdentifier();
       if (complexId != null) {
         var identifier = complexId.IDENTIFIER();
         if (identifier != null) {
           var idText = identifier.getText();
           
-          // Случай 1: ОбщийМодуль("Name") - параметры в модификаторах
+          // Случай 2a: ОбщийМодуль("Name") - параметры в модификаторах
           if (COMMON_MODULE_METHOD.matcher(idText).matches()) {
             return extractModuleNameFromModifiers(complexId.modifier());
           }
           
-          // Случай 2: ОбщегоНазначения.ОбщийМодуль("Name")
+          // Случай 2b: ОбщегоНазначения.ОбщийМодуль("Name")
           if (COMMON_USE_MODULE.matcher(idText).matches()) {
             for (var modifier : complexId.modifier()) {
               var moduleName = extractModuleNameFromModifier(modifier);
@@ -131,6 +151,15 @@ public class CommonModuleReference {
                 return moduleName;
               }
             }
+          }
+        }
+        
+        // Случай 2c: globalMethodCall внутри complexIdentifier
+        var globalMethodCall = complexId.globalMethodCall();
+        if (globalMethodCall != null && globalMethodCall.methodName() != null) {
+          var methodName = globalMethodCall.methodName().IDENTIFIER();
+          if (methodName != null && COMMON_MODULE_METHOD.matcher(methodName.getText()).matches()) {
+            return extractParameterFromDoCall(globalMethodCall.doCall());
           }
         }
       }
