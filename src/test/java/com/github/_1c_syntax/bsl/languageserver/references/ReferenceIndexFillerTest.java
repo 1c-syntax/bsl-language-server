@@ -328,4 +328,88 @@ class ReferenceIndexFillerTest {
     // Должно быть 2 вызова: в assignment и в условии
     assertThat(referencesToFuncFromTest).hasSize(2);
   }
+
+  @Test
+  void testCommonModuleVariableReassignment() throws IOException {
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleReassignment.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // В первой процедуре должна быть только одна ссылка на НеУстаревшаяПроцедура
+    // (до переназначения переменной на Неопределено)
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
+    // Должно быть 2 вызова: по одному из каждой процедуры (до переназначения)
+    assertThat(referencesToProcFromTest).hasSize(2);
+
+    // НеУстаревшаяФункция не должна индексироваться после переназначения на Неопределено
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
+    // Не должно быть ссылок, так как вызов после переназначения на Неопределено
+    assertThat(referencesToFuncFromTest).hasSize(0);
+  }
+
+  @Test
+  void testCommonModuleVariableIsolationBetweenMethods() throws IOException {
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleIsolation.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // В первой процедуре должна быть ссылка на НеУстаревшаяПроцедура
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
+    assertThat(referencesToProcFromTest).hasSize(1);
+
+    // Во второй процедуре НЕ должно быть ссылки на НеУстаревшаяФункция
+    // так как переменная Модуль там имеет другое значение (Неопределено)
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
+    assertThat(referencesToFuncFromTest).hasSize(0);
+  }
 }

@@ -288,6 +288,9 @@ public class ReferenceIndexFiller {
     @Override
     public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
       currentScope = documentContext.getSymbolTree().getModule();
+      
+      // Очищаем карту при входе в новый метод, так как локальные переменные изолированы
+      variableToCommonModuleMap.clear();
 
       if (!Trees.nodeContainsErrors(ctx)) {
         documentContext
@@ -308,24 +311,29 @@ public class ReferenceIndexFiller {
       var expression = ctx.expression();
 
       if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
+        var variableKey = lValue.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH);
         if (CommonModuleReference.isCommonModuleExpression(expression)) {
-          var variableName = lValue.IDENTIFIER().getText();
-          CommonModuleReference.extractCommonModuleName(expression)
+          var commonModuleOpt = CommonModuleReference.extractCommonModuleName(expression)
             .flatMap(moduleName -> documentContext.getServerContext()
               .getConfiguration()
-              .findCommonModule(moduleName))
-            .ifPresent(commonModule -> {
-              var mdoRef = commonModule.getMdoReference().getMdoRef();
-              variableToCommonModuleMap.put(variableName.toLowerCase(Locale.ENGLISH), mdoRef);
-              
-              // Добавляем ссылку на модуль в индекс
-              index.addModuleReference(
-                documentContext.getUri(),
-                mdoRef,
-                ModuleType.CommonModule,
-                Ranges.create(expression)
-              );
-            });
+              .findCommonModule(moduleName));
+          if (commonModuleOpt.isPresent()) {
+            var mdoRef = commonModuleOpt.get().getMdoReference().getMdoRef();
+            variableToCommonModuleMap.put(variableKey, mdoRef);
+
+            index.addModuleReference(
+              documentContext.getUri(),
+              mdoRef,
+              ModuleType.CommonModule,
+              Ranges.create(expression)
+            );
+          } else {
+            // Модуль не найден - удаляем старый mapping если был
+            variableToCommonModuleMap.remove(variableKey);
+          }
+        } else {
+          // Переменная переназначена на что-то другое - очищаем mapping
+          variableToCommonModuleMap.remove(variableKey);
         }
       }
 
