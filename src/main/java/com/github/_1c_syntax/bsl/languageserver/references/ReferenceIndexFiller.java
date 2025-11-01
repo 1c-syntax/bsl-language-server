@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.NotifyDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -430,6 +431,11 @@ public class ReferenceIndexFiller {
         processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
       }
       
+      // Check if this is a manager module reference (e.g., Справочники.ИмяСправочника.Метод())
+      if (!isInsideCallStatement) {
+        processManagerModuleReference(ctx);
+      }
+      
       findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(
             s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
@@ -546,6 +552,113 @@ public class ReferenceIndexFiller {
             documentContext.getUri(),
             mdoRef,
             ModuleType.CommonModule,
+            methodNameToken.getText(),
+            Ranges.create(methodNameToken)
+          );
+        }
+      }
+    }
+    
+    /**
+     * Обрабатывает обращение к модулю менеджера (например, Справочники.ИмяСправочника.Метод()).
+     * Находит и индексирует вызовы методов менеджера объектов метаданных.
+     */
+    private void processManagerModuleReference(BSLParser.ComplexIdentifierContext ctx) {
+      // Проверяем, является ли это обращением к модулю менеджера
+      var parentCtx = Trees.getRootParent(ctx, BSLParser.RULE_expression);
+      if (!(parentCtx instanceof BSLParser.ExpressionContext expressionCtx)) {
+        return;
+      }
+      
+      var managerInfo = CommonModuleReference.extractManagerModuleInfo(expressionCtx);
+      if (managerInfo.isEmpty()) {
+        return;
+      }
+      
+      var info = managerInfo.get();
+      var configuration = documentContext.getServerContext().getConfiguration();
+      
+      // Ищем объект метаданных по типу менеджера и имени
+      var mdoRef = findManagerModuleMdoRef(configuration, info.managerType(), info.objectName());
+      if (mdoRef.isEmpty()) {
+        return;
+      }
+      
+      // Обрабатываем вызовы методов на модуле менеджера
+      // Модификаторы после первого (имени объекта) могут содержать вызовы методов
+      var modifiers = ctx.modifier();
+      if (modifiers.size() > 1) {
+        // Пропускаем первый модификатор (имя объекта), обрабатываем остальные
+        for (int i = 1; i < modifiers.size(); i++) {
+          var modifier = modifiers.get(i);
+          var accessCall = modifier.accessCall();
+          if (accessCall != null) {
+            processManagerModuleAccessCall(accessCall, mdoRef.get());
+          }
+        }
+      }
+    }
+    
+    /**
+     * Находит mdoRef для модуля менеджера по типу и имени объекта.
+     */
+    private Optional<String> findManagerModuleMdoRef(
+      CF configuration,
+      String managerType,
+      String objectName
+    ) {
+      // Преобразуем тип менеджера в тип объекта метаданных
+      var mdoTypeName = mapManagerTypeToMdoType(managerType);
+      if (mdoTypeName.isEmpty()) {
+        return Optional.empty();
+      }
+      
+      // Формируем mdoRef в формате "ТипОбъекта.ИмяОбъекта"
+      var mdoRef = mdoTypeName.get() + "." + objectName;
+      
+      // Проверяем, что такой объект существует в конфигурации
+      var child = configuration.findChild(mdoRef);
+      if (child.isPresent()) {
+        return Optional.of(mdoRef);
+      }
+      
+      return Optional.empty();
+    }
+    
+    /**
+     * Преобразует тип менеджера в тип объекта метаданных.
+     */
+    private Optional<String> mapManagerTypeToMdoType(String managerType) {
+      var lowerType = managerType.toLowerCase(Locale.ENGLISH);
+      return switch (lowerType) {
+        case "справочники", "catalogs" -> Optional.of("Catalog");
+        case "документы", "documents" -> Optional.of("Document");
+        case "регистрысведений", "informationregisters" -> Optional.of("InformationRegister");
+        case "регистрынакопления", "accumulationregisters" -> Optional.of("AccumulationRegister");
+        case "регистрыбухгалтерии", "accountingregisters" -> Optional.of("AccountingRegister");
+        case "регистрырасчета", "calculationregisters" -> Optional.of("CalculationRegister");
+        case "планывидовхарактеристик", "chartsofcharacteristictypes" -> Optional.of("ChartOfCharacteristicTypes");
+        case "планысчетов", "chartsofaccounts" -> Optional.of("ChartOfAccounts");
+        case "планывидоврасчета", "chartsofcalculationtypes" -> Optional.of("ChartOfCalculationTypes");
+        case "планыобмена", "exchangeplans" -> Optional.of("ExchangePlan");
+        case "бизнеспроцессы", "businessprocesses" -> Optional.of("BusinessProcess");
+        case "задачи", "tasks" -> Optional.of("Task");
+        default -> Optional.empty();
+      };
+    }
+    
+    /**
+     * Обрабатывает вызов метода на модуле менеджера.
+     */
+    private void processManagerModuleAccessCall(BSLParser.AccessCallContext accessCall, String mdoRef) {
+      var methodCall = accessCall.methodCall();
+      if (methodCall != null && methodCall.methodName() != null) {
+        var methodNameToken = methodCall.methodName().IDENTIFIER();
+        if (methodNameToken != null) {
+          index.addMethodCall(
+            documentContext.getUri(),
+            mdoRef,
+            ModuleType.ManagerModule,
             methodNameToken.getText(),
             Ranges.create(methodNameToken)
           );

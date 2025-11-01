@@ -29,10 +29,11 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Утилитный класс для работы с вызовами ОбщийМодуль.
+ * Утилитный класс для работы с вызовами ОбщийМодуль и ссылками на модули менеджеров.
  * <p>
  * Предоставляет методы для анализа конструкций получения ссылки на общий модуль
- * через ОбщегоНазначения.ОбщийМодуль("ИмяМодуля") или ОбщийМодуль("ИмяМодуля")
+ * через ОбщегоНазначения.ОбщийМодуль("ИмяМодуля"), ОбщегоНазначенияКлиент.ОбщийМодуль("ИмяМодуля")
+ * и других вариантов, а также для работы с модулями менеджеров (Справочники.Имя, Документы.Имя и т.д.)
  */
 @UtilityClass
 public class CommonModuleReference {
@@ -40,14 +41,28 @@ public class CommonModuleReference {
   private static final Pattern COMMON_MODULE_METHOD = CaseInsensitivePattern.compile(
     "^(ОбщийМодуль|CommonModule)$");
   
+  // Поддержка различных вариантов общих модулей для получения ссылок
   private static final Pattern COMMON_USE_MODULE = CaseInsensitivePattern.compile(
-    "^(ОбщегоНазначения|CommonUse)$");
+    "^(ОбщегоНазначения|ОбщегоНазначенияКлиент|ОбщегоНазначенияСервер|" +
+    "ОбщегоНазначенияКлиентСервер|ОбщегоНазначенияПовтИсп|" +
+    "CommonUse|CommonUseClient|CommonUseServer|CommonUseClientServer)$");
+
+  // Паттерн для модулей менеджеров (Справочники, Документы, РегистрыСведений и т.д.)
+  private static final Pattern MANAGER_MODULE_TYPES = CaseInsensitivePattern.compile(
+    "^(Справочники|Документы|РегистрыСведений|РегистрыНакопления|РегистрыБухгалтерии|" +
+    "РегистрыРасчета|ПланыВидовХарактеристик|ПланыСчетов|ПланыВидовРасчета|" +
+    "ПланыОбмена|БизнесПроцессы|Задачи|ПланыОбмена|" +
+    "Catalogs|Documents|InformationRegisters|AccumulationRegisters|AccountingRegisters|" +
+    "CalculationRegisters|ChartsOfCharacteristicTypes|ChartsOfAccounts|ChartsOfCalculationTypes|" +
+    "ExchangePlans|BusinessProcesses|Tasks)$");
 
   /**
    * Проверить, является ли expression вызовом получения ссылки на общий модуль.
    * Распознает паттерны:
    * - ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")
+   * - ОбщегоНазначенияКлиент.ОбщийМодуль("ИмяМодуля")
    * - ОбщийМодуль("ИмяМодуля")
+   * И другие варианты общих модулей
    *
    * @param expression Контекст выражения
    * @return true, если это вызов ОбщийМодуль
@@ -240,5 +255,90 @@ public class CommonModuleReference {
     var firstParam = params.get(0);
     return Optional.ofNullable(firstParam.getText())
       .map(Strings::trimQuotes);
+  }
+
+  /**
+   * Проверить, является ли expression обращением к модулю менеджера.
+   * Распознает паттерны типа: Справочники.ИмяСправочника, Документы.ИмяДокумента и т.д.
+   *
+   * @param expression Контекст выражения
+   * @return true, если это обращение к модулю менеджера
+   */
+  public static boolean isManagerModuleExpression(BSLParser.ExpressionContext expression) {
+    if (expression == null) {
+      return false;
+    }
+
+    var members = expression.member();
+    if (members.isEmpty()) {
+      return false;
+    }
+
+    for (var member : members) {
+      var complexId = member.complexIdentifier();
+      if (complexId != null) {
+        var identifier = complexId.IDENTIFIER();
+        if (identifier != null) {
+          var idText = identifier.getText();
+          // Проверяем, является ли это типом модуля менеджера (Справочники, Документы и т.д.)
+          if (MANAGER_MODULE_TYPES.matcher(idText).matches()) {
+            // Должен быть хотя бы один модификатор (имя объекта)
+            return !complexId.modifier().isEmpty();
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Извлечь информацию о модуле менеджера из expression.
+   * 
+   * @param expression Контекст выражения
+   * @return Пара (тип менеджера, имя объекта), например ("Справочники", "Номенклатура")
+   */
+  public static Optional<ManagerModuleInfo> extractManagerModuleInfo(BSLParser.ExpressionContext expression) {
+    if (expression == null) {
+      return Optional.empty();
+    }
+
+    var members = expression.member();
+    if (members.isEmpty()) {
+      return Optional.empty();
+    }
+
+    for (var member : members) {
+      var complexId = member.complexIdentifier();
+      if (complexId != null) {
+        var identifier = complexId.IDENTIFIER();
+        if (identifier != null) {
+          var managerType = identifier.getText();
+          if (MANAGER_MODULE_TYPES.matcher(managerType).matches()) {
+            // Ищем имя объекта в первом модификаторе
+            var modifiers = complexId.modifier();
+            if (!modifiers.isEmpty()) {
+              var firstModifier = modifiers.get(0);
+              if (firstModifier.accessProperty() != null && 
+                  firstModifier.accessProperty().IDENTIFIER() != null) {
+                var objectName = firstModifier.accessProperty().IDENTIFIER().getText();
+                return Optional.of(new ManagerModuleInfo(managerType, objectName));
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  /**
+   * Информация о модуле менеджера.
+   *
+   * @param managerType Тип менеджера (Справочники, Документы и т.д.)
+   * @param objectName Имя объекта метаданных
+   */
+  public record ManagerModuleInfo(String managerType, String objectName) {
   }
 }
