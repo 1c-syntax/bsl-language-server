@@ -138,7 +138,7 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.4.0-jre")
+            strictly("33.4.8-jre")
        }
     }
     
