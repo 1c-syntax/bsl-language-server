@@ -286,4 +286,42 @@ class ReferenceIndexFillerTest {
     // then
     assertThat(referencesTo).hasSize(1);
   }
+
+  @Test
+  void testFindCommonModuleVariableReferences() throws IOException {
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Check that methods from common module are referenced
+    var testMethod = commonModuleContext.getSymbolTree().getMethodSymbol("Тест");
+    assertThat(testMethod).isPresent();
+    var referencesToTest = referenceIndex.getReferencesTo(testMethod.get());
+    assertThat(referencesToTest).hasSize(1);
+
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    assertThat(referencesToFunc).hasSize(1);
+
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    assertThat(referencesToProc).hasSize(1);
+  }
 }

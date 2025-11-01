@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.CommonModuleReference;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Modules;
@@ -47,7 +48,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -263,6 +267,7 @@ public class ReferenceIndexFiller {
 
     private final DocumentContext documentContext;
     private SourceDefinedSymbol currentScope;
+    private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
 
     @Override
     public BSLParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
@@ -297,6 +302,29 @@ public class ReferenceIndexFiller {
     }
 
     @Override
+    public BSLParserRuleContext visitAssignment(BSLParser.AssignmentContext ctx) {
+      // Detect pattern: Variable = ОбщегоНазначения.ОбщийМодуль("ModuleName") or Variable = ОбщийМодуль("ModuleName")
+      var lValue = ctx.lValue();
+      var expression = ctx.expression();
+
+      if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
+        if (CommonModuleReference.isCommonModuleExpression(expression)) {
+          var variableName = lValue.IDENTIFIER().getText();
+          CommonModuleReference.extractCommonModuleName(expression)
+            .flatMap(moduleName -> documentContext.getServerContext()
+              .getConfiguration()
+              .findCommonModule(moduleName))
+            .ifPresent(commonModule -> {
+              var mdoRef = commonModule.getMdoReference().getMdoRef();
+              variableToCommonModuleMap.put(variableName.toLowerCase(Locale.ENGLISH), mdoRef);
+            });
+        }
+      }
+
+      return super.visitAssignment(ctx);
+    }
+
+    @Override
     public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitLValue(ctx);
@@ -323,6 +351,14 @@ public class ReferenceIndexFiller {
       }
 
       var variableName = ctx.IDENTIFIER().getText();
+      
+      // Check if variable references a common module
+      var commonModuleMdoRef = variableToCommonModuleMap.get(variableName.toLowerCase(Locale.ENGLISH));
+      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty()) {
+        // Process method calls on the common module variable
+        processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
+      }
+      
       findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(
             s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
@@ -338,6 +374,14 @@ public class ReferenceIndexFiller {
       }
 
       var variableName = ctx.IDENTIFIER().getText();
+      
+      // Check if variable references a common module
+      var commonModuleMdoRef = variableToCommonModuleMap.get(variableName.toLowerCase(Locale.ENGLISH));
+      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty()) {
+        // Process method calls on the common module variable
+        processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
+      }
+      
       findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(
             s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
@@ -434,6 +478,27 @@ public class ReferenceIndexFiller {
         range,
         !usage
       );
+    }
+
+    private void processCommonModuleMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String mdoRef) {
+      for (var modifier : modifiers) {
+        var accessCall = modifier.accessCall();
+        if (accessCall != null) {
+          var methodCall = accessCall.methodCall();
+          if (methodCall != null && methodCall.methodName() != null) {
+            var methodNameToken = methodCall.methodName().IDENTIFIER();
+            if (methodNameToken != null) {
+              index.addMethodCall(
+                documentContext.getUri(),
+                mdoRef,
+                ModuleType.CommonModule,
+                methodNameToken.getText(),
+                Ranges.create(methodNameToken)
+              );
+            }
+          }
+        }
+      }
     }
   }
 }
