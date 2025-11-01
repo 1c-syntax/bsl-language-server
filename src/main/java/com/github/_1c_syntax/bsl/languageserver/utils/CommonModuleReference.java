@@ -121,17 +121,7 @@ public class CommonModuleReference {
     }
 
     for (var member : members) {
-      // Случай 1: globalMethodCall или просто IDENTIFIER с вызовом - ОбщийМодуль("Name")
-      if (member.IDENTIFIER() != null) {
-        var identifier = member.IDENTIFIER().getText();
-        if (COMMON_MODULE_METHOD.matcher(identifier).matches()) {
-          // Параметры должны быть где-то рядом, но нужно проверить структуру
-          // На самом деле, для globalMethodCall member имеет другую структуру
-          // Попробуем через complexIdentifier с пустыми модификаторами
-        }
-      }
-      
-      // Случай 2: complexIdentifier
+      // Случай 1: complexIdentifier
       var complexId = member.complexIdentifier();
       if (complexId != null) {
         var identifier = complexId.IDENTIFIER();
