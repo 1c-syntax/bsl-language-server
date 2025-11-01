@@ -289,8 +289,9 @@ public class ReferenceIndexFiller {
     public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
       currentScope = documentContext.getSymbolTree().getModule();
       
-      // Очищаем карту при входе в новый метод, так как локальные переменные изолированы
-      variableToCommonModuleMap.clear();
+      // При входе в новый метод очищаем mappings только для локальных переменных.
+      // Модульные переменные должны сохраняться между методами.
+      clearLocalVariableMappings();
 
       if (!Trees.nodeContainsErrors(ctx)) {
         documentContext
@@ -302,6 +303,22 @@ public class ReferenceIndexFiller {
       var result = super.visitSub(ctx);
       currentScope = documentContext.getSymbolTree().getModule();
       return result;
+    }
+
+    /**
+     * Очищает mappings для локальных переменных, сохраняя модульные.
+     */
+    private void clearLocalVariableMappings() {
+      var moduleSymbolTree = documentContext.getSymbolTree();
+      var module = moduleSymbolTree.getModule();
+      
+      // Оставляем только те mappings, которые соответствуют модульным переменным
+      variableToCommonModuleMap.keySet().removeIf(variableKey -> {
+        // Ищем переменную на уровне модуля
+        var moduleVariable = moduleSymbolTree.getVariableSymbol(variableKey, module);
+        // Если переменной нет на уровне модуля - это локальная переменная, удаляем mapping
+        return moduleVariable.isEmpty();
+      });
     }
 
     @Override

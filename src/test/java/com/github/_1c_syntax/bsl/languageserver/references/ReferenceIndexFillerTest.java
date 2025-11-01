@@ -373,6 +373,47 @@ class ReferenceIndexFillerTest {
   }
 
   @Test
+  void testCommonModuleModuleLevelVariable() throws IOException {
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleLevel.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Модульная переменная МодульУровняМодуля используется в двух процедурах
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
+    // Должно быть 2 вызова: из ПерваяПроцедура и из ТретьяПроцедура
+    assertThat(referencesToProcFromTest).hasSize(2);
+
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
+    // Должна быть 1 ссылка из ВтораяПроцедура (модульная переменная)
+    assertThat(referencesToFuncFromTest).hasSize(1);
+  }
+
+  @Test
   void testCommonModuleVariableIsolationBetweenMethods() throws IOException {
     var path = Absolute.path("src/test/resources/metadata/designer");
     serverContext.setConfigurationRoot(path);
