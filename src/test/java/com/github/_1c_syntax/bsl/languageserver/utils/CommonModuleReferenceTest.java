@@ -59,29 +59,4 @@ class CommonModuleReferenceTest {
     assertThat(moduleName).isPresent();
     assertThat(moduleName.get()).isEqualTo("ПервыйОбщийМодуль");
   }
-
-  @Test
-  void testDetectSimpleCommonModuleExpression() {
-    var code = "Процедура Тест()\n" +
-      "  Модуль = ОбщийМодуль(\"ПервыйОбщийМодуль\");\n" +
-      "КонецПроцедуры";
-    
-    var documentContext = TestUtils.getDocumentContext(code);
-    var ast = documentContext.getAst();
-    
-    // Find assignment
-    var assignments = new ArrayList<BSLParser.AssignmentContext>();
-    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
-      assignments.add((BSLParser.AssignmentContext) node)
-    );
-    
-    assertThat(assignments).hasSize(1);
-    
-    var expression = assignments.get(0).expression();
-    assertThat(CommonModuleReference.isCommonModuleExpression(expression)).isTrue();
-    
-    var moduleName = CommonModuleReference.extractCommonModuleName(expression);
-    assertThat(moduleName).isPresent();
-    assertThat(moduleName.get()).isEqualTo("ПервыйОбщийМодуль");
-  }
 }

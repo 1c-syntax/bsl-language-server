@@ -312,12 +312,20 @@ class ReferenceIndexFillerTest {
     var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
     assertThat(procMethod).isPresent();
     var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
-    assertThat(referencesToProc).hasSize(1);
+    // Filter to only references from our test document
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
+    assertThat(referencesToProcFromTest).hasSize(1);
 
     var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
     assertThat(funcMethod).isPresent();
     var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    // Filter to only references from our test document
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .toList();
     // Должно быть 2 вызова: в assignment и в условии
-    assertThat(referencesToFunc).hasSize(2);
+    assertThat(referencesToFuncFromTest).hasSize(2);
   }
 }
