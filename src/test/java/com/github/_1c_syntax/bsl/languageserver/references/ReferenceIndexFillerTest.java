@@ -308,15 +308,16 @@ class ReferenceIndexFillerTest {
 
     referenceIndexFiller.fill(documentContext);
 
-    // Check that methods from common module are referenced
-    var testMethod = commonModuleContext.getSymbolTree().getMethodSymbol("Тест");
-    assertThat(testMethod).isPresent();
-    var referencesToTest = referenceIndex.getReferencesTo(testMethod.get());
-    assertThat(referencesToTest).hasSize(1);
+    // Check that exported methods from common module are referenced
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    assertThat(referencesToProc).hasSize(1);
 
     var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
     assertThat(funcMethod).isPresent();
     var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
-    assertThat(referencesToFunc).hasSize(1);
+    // Должно быть 2 вызова: в assignment и в условии
+    assertThat(referencesToFunc).hasSize(2);
   }
 }

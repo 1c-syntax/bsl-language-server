@@ -362,9 +362,16 @@ public class ReferenceIndexFiller {
       
       // Check if variable references a common module
       var commonModuleMdoRef = variableToCommonModuleMap.get(variableName.toLowerCase(Locale.ENGLISH));
-      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty()) {
+      
+      if (commonModuleMdoRef != null) {
         // Process method calls on the common module variable
-        processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
+        // Check both modifiers and accessCall
+        if (!ctx.modifier().isEmpty()) {
+          processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
+        }
+        if (ctx.accessCall() != null) {
+          processCommonModuleAccessCall(ctx.accessCall(), commonModuleMdoRef);
+        }
       }
       
       findVariableSymbol(variableName)
@@ -383,9 +390,17 @@ public class ReferenceIndexFiller {
 
       var variableName = ctx.IDENTIFIER().getText();
       
+      // Check if we are inside a callStatement - if so, skip processing here to avoid duplication
+      var parentCallStatement = Trees.getRootParent(ctx, BSLParser.RULE_callStatement);
+      var isInsideCallStatement = false;
+      if (parentCallStatement instanceof BSLParser.CallStatementContext callStmt) {
+        isInsideCallStatement = callStmt.IDENTIFIER() != null
+          && callStmt.IDENTIFIER().getText().equals(variableName);
+      }
+      
       // Check if variable references a common module
       var commonModuleMdoRef = variableToCommonModuleMap.get(variableName.toLowerCase(Locale.ENGLISH));
-      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty()) {
+      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty() && !isInsideCallStatement) {
         // Process method calls on the common module variable
         processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
       }
@@ -492,19 +507,23 @@ public class ReferenceIndexFiller {
       for (var modifier : modifiers) {
         var accessCall = modifier.accessCall();
         if (accessCall != null) {
-          var methodCall = accessCall.methodCall();
-          if (methodCall != null && methodCall.methodName() != null) {
-            var methodNameToken = methodCall.methodName().IDENTIFIER();
-            if (methodNameToken != null) {
-              index.addMethodCall(
-                documentContext.getUri(),
-                mdoRef,
-                ModuleType.CommonModule,
-                methodNameToken.getText(),
-                Ranges.create(methodNameToken)
-              );
-            }
-          }
+          processCommonModuleAccessCall(accessCall, mdoRef);
+        }
+      }
+    }
+    
+    private void processCommonModuleAccessCall(BSLParser.AccessCallContext accessCall, String mdoRef) {
+      var methodCall = accessCall.methodCall();
+      if (methodCall != null && methodCall.methodName() != null) {
+        var methodNameToken = methodCall.methodName().IDENTIFIER();
+        if (methodNameToken != null) {
+          index.addMethodCall(
+            documentContext.getUri(),
+            mdoRef,
+            ModuleType.CommonModule,
+            methodNameToken.getText(),
+            Ranges.create(methodNameToken)
+          );
         }
       }
     }
