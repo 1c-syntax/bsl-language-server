@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1761954157539,
+  "lastUpdate": 1761997471815,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -30876,6 +30876,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5312992257903552",
             "extra": "mean: 86.65966629981995 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "952e2e77f25ba42f821afc929877481e805ed272",
+          "message": "Merge pull request #3582 from 1c-syntax/feature/bumpGuava\n\nОбновление версии guava",
+          "timestamp": "2025-11-01T12:26:00+01:00",
+          "tree_id": "43c989fa58bd3dbcb61ee45e9b9174c1ad1b1d25",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/952e2e77f25ba42f821afc929877481e805ed272"
+        },
+        "date": 1761997466730,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.27488128344218,
+            "unit": "sec",
+            "range": "stddev: 1.1805324367755619",
+            "extra": "mean: 88.27488128344218 sec\nrounds: 3"
           }
         ]
       }
