@@ -107,58 +107,10 @@ public class CacheConfiguration {
   public CacheManager typoCacheManager(org.ehcache.CacheManager ehcacheManager) {
     var nativeCache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
     
-    // Wrap the native cache with a custom Spring CacheManager
+    // Wrap the native cache with EhCacheAdapter
     var simpleCacheManager = new SimpleCacheManager();
     simpleCacheManager.setCaches(List.of(
-      new AbstractValueAdaptingCache(false) {
-        @Override
-        protected Object lookup(Object key) {
-          return nativeCache.get((String) key);
-        }
-
-        @Override
-        public String getName() {
-          return "typoCache";
-        }
-
-        @Override
-        public Object getNativeCache() {
-          return nativeCache;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> T get(Object key, Callable<T> valueLoader) {
-          var value = nativeCache.get((String) key);
-          if (value != null) {
-            return (T) value;
-          }
-          try {
-            T newValue = valueLoader.call();
-            if (newValue != null) {
-              nativeCache.put((String) key, (WordStatus) newValue);
-            }
-            return newValue;
-          } catch (Exception e) {
-            throw new ValueRetrievalException(key, valueLoader, e);
-          }
-        }
-
-        @Override
-        public void put(Object key, Object value) {
-          nativeCache.put((String) key, (WordStatus) value);
-        }
-
-        @Override
-        public void evict(Object key) {
-          nativeCache.remove((String) key);
-        }
-
-        @Override
-        public void clear() {
-          nativeCache.clear();
-        }
-      }
+      new EhCacheAdapter<>(nativeCache, "typoCache")
     ));
     simpleCacheManager.afterPropertiesSet();
     
