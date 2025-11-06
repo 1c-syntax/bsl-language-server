@@ -40,7 +40,7 @@ class EhCacheAdapterTest {
 
   private CacheManager cacheManager;
   private Cache<String, String> nativeCache;
-  private EhCacheAdapter ehCacheAdapter;
+  private EhCacheAdapter<String, String> ehCacheAdapter;
 
   @BeforeEach
   void setUp() {
@@ -51,7 +51,7 @@ class EhCacheAdapterTest {
       .build(true);
 
     nativeCache = cacheManager.getCache("testCache", String.class, String.class);
-    ehCacheAdapter = new EhCacheAdapter<>(nativeCache);
+    ehCacheAdapter = new EhCacheAdapter<>(nativeCache, "testCache");
   }
 
   @AfterEach
