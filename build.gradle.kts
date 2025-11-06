@@ -7,20 +7,20 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("org.cadixdev.licenser") version "0.6.1"
+    id("cloud.rio.license") version "0.18.0"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.0.0"
     id("io.freefair.javadoc-links") version "9.0.0"
     id("io.freefair.javadoc-utf-8") version "9.0.0"
     id("io.freefair.aspectj.post-compile-weaving") version "9.0.0"
-    id("io.freefair.maven-central.validate-poms") version "9.0.0"
+    // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
     id("org.springframework.boot") version "3.5.7"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "5.12.1"
+    id("io.sentry.jvm.gradle") version "5.12.2"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
-    id("org.jreleaser") version "1.20.0"
+    id("org.jreleaser") version "1.21.0"
     id("org.sonarqube") version "7.0.1.6134"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.3"
@@ -60,7 +60,7 @@ gitProperties {
     customProperty("git.build.time", buildTime())
 }
 
-val languageToolVersion = "6.5"
+val languageToolVersion = "6.6"
 
 dependencies {
 
@@ -97,9 +97,17 @@ dependencies {
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
         exclude("commons-logging", "commons-logging")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
     }
-    implementation("org.languagetool", "language-en", languageToolVersion)
-    implementation("org.languagetool", "language-ru", languageToolVersion)
+    implementation("org.languagetool", "language-en", languageToolVersion){
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
+    }
+    implementation("org.languagetool", "language-ru", languageToolVersion){
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
+    }
 
     // AOP
     implementation("org.aspectj", "aspectjrt", "1.9.22.1")
@@ -131,7 +139,7 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.4.0-jre")
+            strictly("33.4.8-jre")
        }
     }
     
@@ -216,12 +224,12 @@ tasks.check {
     mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
-tasks.checkLicenseMain {
+tasks.named("licenseMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
 
-tasks.updateLicenseMain {
+tasks.named("licenseFormatMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
@@ -276,11 +284,13 @@ tasks.javadoc {
 }
 
 license {
-    header(rootProject.file("license/HEADER.txt"))
-    newLine(false)
+    header = rootProject.file("license/HEADER.txt")
+    skipExistingHeaders = false
+    strictCheck = true
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
+    mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.json")

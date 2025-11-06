@@ -156,9 +156,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     var configurationFile = new File(configurationOption);
-    if (configurationFile.exists()) {
-      configuration.update(configurationFile);
-    }
+    configuration.update(configurationFile);
 
     var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);

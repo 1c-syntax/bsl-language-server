@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: 21
-          distribution: 'temurin'
+          distribution: 'corretto'
           cache: gradle
       - name: Get version from Gradle
         id: get_version
