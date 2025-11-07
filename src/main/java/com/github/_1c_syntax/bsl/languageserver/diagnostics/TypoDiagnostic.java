@@ -27,13 +27,16 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.CheckedWordsHolder;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPool;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
@@ -49,7 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -63,20 +65,13 @@ import java.util.stream.Collectors;
   }
 )
 @Slf4j
+@RequiredArgsConstructor
 public class TypoDiagnostic extends AbstractDiagnostic {
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
   private static final Map<String, JLanguageToolPool> languageToolPoolMap = Map.of(
     "en", new JLanguageToolPool(Languages.getLanguageForShortCode("en-US")),
     "ru", new JLanguageToolPool(Languages.getLanguageForShortCode("ru"))
-  );
-
-  /**
-   * Карта, хранящая результат проверки слова (ошибка/нет ошибки) в разрезе языков.
-   */
-  private static final Map<String, Map<String, Boolean>> checkedWords = Map.of(
-    "en", new ConcurrentHashMap<>(),
-    "ru", new ConcurrentHashMap<>()
   );
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
@@ -99,6 +94,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   private static final int DEFAULT_MIN_WORD_LENGTH = 3;
   private static final String DEFAULT_USER_WORDS_TO_IGNORE = "";
+
+  private final CheckedWordsHolder checkedWordsHolder;
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -166,12 +163,11 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   protected void check() {
 
     String lang = info.getResourceString("diagnosticLanguage");
-    Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
     Map<String, List<Token>> tokensMap = getTokensMap(documentContext);
 
     // build string of unchecked words
     Set<String> uncheckedWords = tokensMap.keySet().stream()
-      .filter(word -> !checkedWordsForLang.containsKey(word))
+      .filter(word -> checkedWordsHolder.getWordStatus(lang, word) == WordStatus.MISSING)
       .collect(Collectors.toSet());
 
     if (uncheckedWords.isEmpty()) {
@@ -201,10 +197,12 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     // check words and mark matched as checked
     matches.stream()
       .map(ruleMatch -> ruleMatch.getSentence().getTokens()[1].getToken())
-      .forEach(word -> checkedWordsForLang.put(word, true));
+      .forEach(word -> checkedWordsHolder.markWordAsError(lang, word));
 
     // mark unmatched words without errors as checked
-    uncheckedWords.forEach(word -> checkedWordsForLang.putIfAbsent(word, false));
+    uncheckedWords.stream()
+      .filter(word -> checkedWordsHolder.getWordStatus(lang, word) == WordStatus.MISSING)
+      .forEach(word -> checkedWordsHolder.markWordAsNoError(lang, word));
 
     fireDiagnosticOnCheckedWordsWithErrors(tokensMap);
   }
@@ -213,10 +211,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     Map<String, List<Token>> tokensMap
   ) {
     String lang = info.getResourceString("diagnosticLanguage");
-    Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
 
     tokensMap.entrySet().stream()
-      .filter(entry -> checkedWordsForLang.getOrDefault(entry.getKey(), false))
+      .filter(entry -> checkedWordsHolder.getWordStatus(lang, entry.getKey()) == WordStatus.HAS_ERROR)
       .forEach((Map.Entry<String, List<Token>> entry) -> {
         String word = entry.getKey();
         List<Token> tokens = entry.getValue();

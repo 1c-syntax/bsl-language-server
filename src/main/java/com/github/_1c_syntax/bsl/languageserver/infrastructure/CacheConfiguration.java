@@ -22,19 +22,44 @@
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
+import org.ehcache.config.units.EntryUnit;
+import org.ehcache.config.units.MemoryUnit;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Spring-конфигурация кэширования.
+ * <p>
+ * Для typoCache используется EhCache с персистентным хранилищем на диске.
+ * Для остальных кэшей (например, code lens) используется Caffeine с хранением в памяти.
  */
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
+
+  private static final String TYPO_CACHE_NAME = "typoCache";
+
+  /**
+   * Основной менеджер кэша, использующий Caffeine для кэширования в памяти.
+   * <p>
+   * Помечен как {@code @Primary}, поэтому используется для всех кэшей по умолчанию,
+   * если не указан явно другой менеджер кэша (например, {@code typoCacheManager} для typoCache).
+   */
   @Bean
+  @Primary
   public CacheManager cacheManager(Caffeine<Object, Object> caffeine) {
     var caffeineCacheManager = new CaffeineCacheManager();
     caffeineCacheManager.setCaffeine(caffeine);
@@ -44,5 +69,49 @@ public class CacheConfiguration {
   @Bean
   public Caffeine<Object, Object> caffeineConfig() {
     return Caffeine.newBuilder();
+  }
+
+  /**
+   * Выделенный менеджер EhCache для typoCache с персистентным хранением на диске.
+   * <p>
+   * Настроен программно, без использования XML-конфигурации.
+   * При закрытии Spring-контекста вызывается метод {@code close()} для корректного завершения работы кэша.
+   */
+  @Bean(destroyMethod = "close")
+  public org.ehcache.CacheManager ehcacheManager(
+    @Value("${app.cache.path}") String cacheDirPath
+  ) {
+    var cacheDir = Path.of(cacheDirPath);
+    
+    // Configure EhCache cache with disk persistence
+    var cacheConfig = CacheConfigurationBuilder
+      .newCacheConfigurationBuilder(
+        String.class,
+        WordStatus.class,
+        ResourcePoolsBuilder.newResourcePoolsBuilder()
+          .heap(125_000, EntryUnit.ENTRIES)
+          .disk(50, MemoryUnit.MB, true)
+      )
+      .build();
+
+    // Build native EhCache manager with persistence
+    return CacheManagerBuilder.newCacheManagerBuilder()
+      .with(CacheManagerBuilder.persistence(cacheDir.toFile()))
+      .withCache(TYPO_CACHE_NAME, cacheConfig)
+      .build(true);
+  }
+
+  @Bean
+  public CacheManager typoCacheManager(org.ehcache.CacheManager ehcacheManager) {
+    var nativeCache = ehcacheManager.getCache(TYPO_CACHE_NAME, String.class, WordStatus.class);
+    
+    // Wrap the native cache with EhCacheAdapter
+    var simpleCacheManager = new SimpleCacheManager();
+    simpleCacheManager.setCaches(List.of(
+      new EhCacheAdapter<>(nativeCache, TYPO_CACHE_NAME)
+    ));
+    simpleCacheManager.afterPropertiesSet();
+    
+    return simpleCacheManager;
   }
 }
