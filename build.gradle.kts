@@ -212,9 +212,23 @@ tasks.test {
 
     // Cleanup test cache directories after tests complete
     doLast {
-        val tmpDir = File(System.getProperty("java.io.tmpdir"))
-        tmpDir.listFiles()?.filter { it.name.startsWith("bsl-ls-cache-") }?.forEach { cacheDir ->
-            cacheDir.deleteRecursively()
+        try {
+            val tmpDir = File(System.getProperty("java.io.tmpdir"))
+            // Use walkTopDown with maxDepth to avoid loading all temp files into memory
+            tmpDir.walkTopDown()
+                .maxDepth(1)  // Only look at direct children, not subdirectories
+                .filter { it.isDirectory && it.name.startsWith("bsl-ls-cache-") }
+                .forEach { cacheDir ->
+                    try {
+                        cacheDir.deleteRecursively()
+                        logger.info("Deleted test cache directory: ${cacheDir.name}")
+                    } catch (e: Exception) {
+                        logger.warn("Failed to delete test cache directory ${cacheDir.name}: ${e.message}")
+                    }
+                }
+        } catch (e: Exception) {
+            // Don't fail the build if cleanup fails
+            logger.warn("Failed to cleanup test cache directories: ${e.message}")
         }
     }
 }
