@@ -217,7 +217,7 @@ tasks.test {
             // Use walkTopDown with maxDepth to avoid loading all temp files into memory
             tmpDir.walkTopDown()
                 .maxDepth(1)  // Only look at direct children, not subdirectories
-                .drop(1)  // Skip the root temp directory itself
+                .drop(1)  // Skip the root temp directory itself (first element in the sequence)
                 .filter { it.isDirectory && it.name.startsWith("bsl-ls-cache-") }
                 .forEach { cacheDir ->
                     try {
