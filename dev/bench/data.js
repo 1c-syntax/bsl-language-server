@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762516184857,
+  "lastUpdate": 1762542629017,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31062,6 +31062,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9202210376637496",
             "extra": "mean: 87.60826444625854 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "94fbc581f6f19b5ab7a8a630c1471cc4ee0a04de",
+          "message": "Merge pull request #3541 from johnnyshut/feature/3473\n\nfeat: Добавлена новая диагностика `ServerCallsInFormEventsDiagnostic`",
+          "timestamp": "2025-11-07T19:51:18+01:00",
+          "tree_id": "aab56da7ad2cc0912b0ea94a948370c7c00d10db",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/94fbc581f6f19b5ab7a8a630c1471cc4ee0a04de"
+        },
+        "date": 1762542622347,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.13102746009827,
+            "unit": "sec",
+            "range": "stddev: 1.2813330439289887",
+            "extra": "mean: 87.13102746009827 sec\nrounds: 3"
           }
         ]
       }
