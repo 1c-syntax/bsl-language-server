@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762504481541,
+  "lastUpdate": 1762514806062,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31000,6 +31000,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8798138847209274",
             "extra": "mean: 87.6070122718811 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "124c3ca14c615d96cf61113ab982d4396dd7d660",
+          "message": "Merge pull request #3586 from 1c-syntax/copilot/fix-ci-oom-errors",
+          "timestamp": "2025-11-07T12:16:47+01:00",
+          "tree_id": "a3ab6eb2bc3070a47180c349229b6df2fe278994",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/124c3ca14c615d96cf61113ab982d4396dd7d660"
+        },
+        "date": 1762514801463,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.63737877209981,
+            "unit": "sec",
+            "range": "stddev: 0.5463392485495422",
+            "extra": "mean: 87.63737877209981 sec\nrounds: 3"
           }
         ]
       }
