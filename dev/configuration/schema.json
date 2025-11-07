@@ -413,6 +413,9 @@
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
                 },
+                "ServerCallsInFormEvents": {
+                    "$ref": "parameters-schema.json#/definitions/ServerCallsInFormEvents"
+                },
                 "ServerSideExportFormMethod": {
                     "$ref": "parameters-schema.json#/definitions/ServerSideExportFormMethod"
                 },

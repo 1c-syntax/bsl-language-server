@@ -1782,6 +1782,16 @@
             "title": "Statement should end with semicolon symbol \";\"",
             "$id": "#/definitions/SemicolonPresence"
         },
+        "ServerCallsInFormEvents": {
+            "description": "Server calls in form events",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Server calls in form events",
+            "$id": "#/definitions/ServerCallsInFormEvents"
+        },
         "ServerSideExportFormMethod": {
             "description": "Server-side export form method",
             "default": true,
