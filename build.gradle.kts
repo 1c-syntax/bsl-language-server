@@ -207,14 +207,32 @@ tasks.test {
         html.required.set(true)
     }
 
+    // Increase heap size to prevent OOM during test execution with EhCache
+    maxHeapSize = "2g"
+
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}")
 
     // Cleanup test cache directories after tests complete
     doLast {
-        val tmpDir = File(System.getProperty("java.io.tmpdir"))
-        tmpDir.listFiles()?.filter { it.name.startsWith("bsl-ls-cache-") }?.forEach { cacheDir ->
-            cacheDir.deleteRecursively()
+        try {
+            val tmpDir = File(System.getProperty("java.io.tmpdir"))
+            // Use walkTopDown with maxDepth to avoid loading all temp files into memory
+            tmpDir.walkTopDown()
+                .maxDepth(1)  // Only look at direct children, not subdirectories
+                .drop(1)  // Skip the root temp directory itself (first element in the sequence)
+                .filter { it.isDirectory && it.name.startsWith("bsl-ls-cache-") }
+                .forEach { cacheDir ->
+                    try {
+                        cacheDir.deleteRecursively()
+                        logger.info("Deleted test cache directory: ${cacheDir.name}")
+                    } catch (e: Exception) {
+                        logger.warn("Failed to delete test cache directory ${cacheDir.name}: ${e.message}")
+                    }
+                }
+        } catch (e: Exception) {
+            // Don't fail the build if cleanup fails
+            logger.warn("Failed to cleanup test cache directories: ${e.message}")
         }
     }
 }
