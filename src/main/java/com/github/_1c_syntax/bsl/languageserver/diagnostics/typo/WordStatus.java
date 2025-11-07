@@ -24,21 +24,21 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 import java.io.Serializable;
 
 /**
- * Status of a word's spell check result.
+ * Статус результата проверки орфографии слова.
  */
 public enum WordStatus implements Serializable {
   /**
-   * Word has a spelling error.
+   * Слово содержит орфографическую ошибку.
    */
   HAS_ERROR,
   
   /**
-   * Word is spelled correctly.
+   * Слово написано правильно.
    */
   NO_ERROR,
   
   /**
-   * Word has not been checked yet.
+   * Слово ещё не проверено.
    */
   MISSING
 }

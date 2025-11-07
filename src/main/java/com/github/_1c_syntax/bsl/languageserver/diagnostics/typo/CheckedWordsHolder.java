@@ -26,18 +26,18 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 /**
- * Component for managing persistent cache of checked words for typo diagnostic.
- * Uses Spring Cache with EhCache for persistent disk storage.
+ * Компонент для управления постоянным кэшем проверенных слов для диагностики опечаток.
+ * Использует Spring Cache с EhCache для хранения кэша на диске.
  */
 @Component
 public class CheckedWordsHolder {
 
   /**
-   * Get the status of a word from cache.
+   * Получает статус слова из кэша.
    *
-   * @param lang language code ("en" or "ru")
-   * @param word the word to get status for
-   * @return WordStatus indicating if the word has an error, no error, or is missing from cache
+   * @param lang код языка ("en" или "ru")
+   * @param word слово, статус которого запрашивается
+   * @return WordStatus, указывающий, есть ли у слова ошибка, отсутствует ли ошибка, или слово отсутствует в кэше
    */
   @Cacheable(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
   public WordStatus getWordStatus(String lang, String word) {
@@ -45,12 +45,12 @@ public class CheckedWordsHolder {
   }
 
   /**
-   * Store the status of a word in the cache.
+   * Сохраняет статус слова в кэше.
    *
-   * @param lang language code ("en" or "ru")
-   * @param word the word to store status for
-   * @param hasError true if the word has a typo, false otherwise
-   * @return the stored WordStatus
+   * @param lang код языка ("en" или "ru")
+   * @param word слово, статус которого сохраняется
+   * @param hasError true, если слово содержит опечатку, иначе false
+   * @return сохранённый WordStatus
    */
   @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
   public WordStatus putWordStatus(String lang, String word, boolean hasError) {
