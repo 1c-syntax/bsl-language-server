@@ -75,6 +75,7 @@ dependencies {
 
     // кэширование
     api("com.github.ben-manes.caffeine", "caffeine", "3.2.3")
+    api("org.ehcache:ehcache:3.10.8")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.24.0")
@@ -208,6 +209,14 @@ tasks.test {
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}")
+
+    // Cleanup test cache directories after tests complete
+    doLast {
+        val tmpDir = File(System.getProperty("java.io.tmpdir"))
+        tmpDir.listFiles()?.filter { it.name.startsWith("bsl-ls-cache-") }?.forEach { cacheDir ->
+            cacheDir.deleteRecursively()
+        }
+    }
 }
 
 tasks.check {
