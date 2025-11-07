@@ -45,15 +45,26 @@ public class CheckedWordsHolder {
   }
 
   /**
-   * Сохраняет статус слова в кэше.
+   * Помечает слово как содержащее ошибку в кэше.
    *
    * @param lang код языка ("en" или "ru")
-   * @param word слово, статус которого сохраняется
-   * @param hasError true, если слово содержит опечатку, иначе false
-   * @return сохранённый WordStatus
+   * @param word слово, которое помечается как содержащее ошибку
+   * @return сохранённый WordStatus, указывающий на наличие ошибки
    */
   @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
-  public WordStatus putWordStatus(String lang, String word, boolean hasError) {
-    return hasError ? WordStatus.HAS_ERROR : WordStatus.NO_ERROR;
+  public WordStatus markWordAsError(String lang, String word) {
+    return WordStatus.HAS_ERROR;
+  }
+
+  /**
+   * Помечает слово как не содержащее ошибку в кэше.
+   *
+   * @param lang код языка ("en" или "ru")
+   * @param word слово, которое помечается как не содержащее ошибку
+   * @return сохранённый WordStatus, указывающий на отсутствие ошибки
+   */
+  @CachePut(value = "typoCache", key = "#lang + ':' + #word", cacheManager = "typoCacheManager")
+  public WordStatus markWordAsNoError(String lang, String word) {
+    return WordStatus.NO_ERROR;
   }
 }

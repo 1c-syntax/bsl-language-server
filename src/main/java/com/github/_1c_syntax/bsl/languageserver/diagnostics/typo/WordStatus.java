@@ -21,12 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
-import java.io.Serializable;
-
 /**
  * Статус результата проверки орфографии слова.
  */
-public enum WordStatus implements Serializable {
+public enum WordStatus {
   /**
    * Слово содержит орфографическую ошибку.
    */

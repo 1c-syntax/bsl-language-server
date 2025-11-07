@@ -41,8 +41,8 @@ class CheckedWordsHolderTest {
     String wordWithoutError = "правильно" + System.nanoTime();
 
     // when
-    checkedWordsHolder.putWordStatus(lang, wordWithError, true);
-    checkedWordsHolder.putWordStatus(lang, wordWithoutError, false);
+    checkedWordsHolder.markWordAsError(lang, wordWithError);
+    checkedWordsHolder.markWordAsNoError(lang, wordWithoutError);
 
     // then
     assertThat(checkedWordsHolder.getWordStatus(lang, wordWithError)).isEqualTo(WordStatus.HAS_ERROR);
@@ -68,8 +68,8 @@ class CheckedWordsHolderTest {
     String word = "test" + System.nanoTime();
 
     // when
-    checkedWordsHolder.putWordStatus("en", word, true);
-    checkedWordsHolder.putWordStatus("ru", word, false);
+    checkedWordsHolder.markWordAsError("en", word);
+    checkedWordsHolder.markWordAsNoError("ru", word);
 
     // then
     assertThat(checkedWordsHolder.getWordStatus("en", word)).isEqualTo(WordStatus.HAS_ERROR);
@@ -85,7 +85,7 @@ class CheckedWordsHolderTest {
 
     // when - first check MISSING, then put, then get
     WordStatus beforePut = checkedWordsHolder.getWordStatus(lang, word);
-    checkedWordsHolder.putWordStatus(lang, word, true);
+    checkedWordsHolder.markWordAsError(lang, word);
     WordStatus afterPut = checkedWordsHolder.getWordStatus(lang, word);
 
     // then

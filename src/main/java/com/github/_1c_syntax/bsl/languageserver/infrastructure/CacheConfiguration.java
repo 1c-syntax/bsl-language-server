@@ -29,12 +29,9 @@ import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.units.MemoryUnit;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.Cache.ValueRetrievalException;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
-import org.springframework.cache.support.AbstractValueAdaptingCache;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +39,6 @@ import org.springframework.context.annotation.Primary;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Spring-конфигурация кэширования.
@@ -53,6 +49,8 @@ import java.util.concurrent.Callable;
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
+
+  private static final String TYPO_CACHE_NAME = "typoCache";
 
   /**
    * Основной менеджер кэша, использующий Caffeine для кэширования в памяти.
@@ -99,18 +97,18 @@ public class CacheConfiguration {
     // Build native EhCache manager with persistence
     return CacheManagerBuilder.newCacheManagerBuilder()
       .with(CacheManagerBuilder.persistence(cacheDir.toFile()))
-      .withCache("typoCache", cacheConfig)
+      .withCache(TYPO_CACHE_NAME, cacheConfig)
       .build(true);
   }
 
   @Bean
   public CacheManager typoCacheManager(org.ehcache.CacheManager ehcacheManager) {
-    var nativeCache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    var nativeCache = ehcacheManager.getCache(TYPO_CACHE_NAME, String.class, WordStatus.class);
     
     // Wrap the native cache with EhCacheAdapter
     var simpleCacheManager = new SimpleCacheManager();
     simpleCacheManager.setCaches(List.of(
-      new EhCacheAdapter<>(nativeCache, "typoCache")
+      new EhCacheAdapter<>(nativeCache, TYPO_CACHE_NAME)
     ));
     simpleCacheManager.afterPropertiesSet();
     

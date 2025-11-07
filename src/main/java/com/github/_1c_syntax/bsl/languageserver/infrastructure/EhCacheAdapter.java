@@ -62,7 +62,7 @@ public class EhCacheAdapter<K, V> extends AbstractValueAdaptingCache {
   @Override
   protected Object lookup(Object key) {
     @SuppressWarnings("unchecked")
-    K typedKey = (K) key;
+    var typedKey = (K) key;
     return nativeCache.get(typedKey);
   }
 
@@ -79,8 +79,8 @@ public class EhCacheAdapter<K, V> extends AbstractValueAdaptingCache {
   @Override
   @SuppressWarnings("unchecked")
   public <T> T get(Object key, Callable<T> valueLoader) {
-    K typedKey = (K) key;
-    V value = nativeCache.get(typedKey);
+    var typedKey = (K) key;
+    var value = nativeCache.get(typedKey);
     
     if (value != null) {
       return (T) value;
@@ -100,16 +100,16 @@ public class EhCacheAdapter<K, V> extends AbstractValueAdaptingCache {
   @Override
   public void put(Object key, Object value) {
     @SuppressWarnings("unchecked")
-    K typedKey = (K) key;
+    var typedKey = (K) key;
     @SuppressWarnings("unchecked")
-    V typedValue = (V) value;
+    var typedValue = (V) value;
     nativeCache.put(typedKey, typedValue);
   }
 
   @Override
   public void evict(Object key) {
     @SuppressWarnings("unchecked")
-    K typedKey = (K) key;
+    var typedKey = (K) key;
     nativeCache.remove(typedKey);
   }
 

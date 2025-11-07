@@ -34,6 +34,7 @@ import org.springframework.cache.Cache.ValueRetrievalException;
 import java.util.concurrent.Callable;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class EhCacheAdapterTest {
@@ -205,8 +206,9 @@ class EhCacheAdapterTest {
 
   @Test
   void testEvictNonExistingKey() {
-    // when / then - should not throw exception
-    ehCacheAdapter.evict("nonExistingKey");
+    assertThatNoException().isThrownBy(() ->
+      ehCacheAdapter.evict("nonExistingKey")
+    );
   }
 
   @Test

@@ -68,8 +68,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TypoDiagnostic extends AbstractDiagnostic {
 
-  private final CheckedWordsHolder checkedWordsHolder;
-
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
   private static final Map<String, JLanguageToolPool> languageToolPoolMap = Map.of(
     "en", new JLanguageToolPool(Languages.getLanguageForShortCode("en-US")),
@@ -96,6 +94,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   private static final int DEFAULT_MIN_WORD_LENGTH = 3;
   private static final String DEFAULT_USER_WORDS_TO_IGNORE = "";
+
+  private final CheckedWordsHolder checkedWordsHolder;
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -197,12 +197,12 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     // check words and mark matched as checked
     matches.stream()
       .map(ruleMatch -> ruleMatch.getSentence().getTokens()[1].getToken())
-      .forEach(word -> checkedWordsHolder.putWordStatus(lang, word, true));
+      .forEach(word -> checkedWordsHolder.markWordAsError(lang, word));
 
     // mark unmatched words without errors as checked
     uncheckedWords.stream()
       .filter(word -> checkedWordsHolder.getWordStatus(lang, word) == WordStatus.MISSING)
-      .forEach(word -> checkedWordsHolder.putWordStatus(lang, word, false));
+      .forEach(word -> checkedWordsHolder.markWordAsNoError(lang, word));
 
     fireDiagnosticOnCheckedWordsWithErrors(tokensMap);
   }
