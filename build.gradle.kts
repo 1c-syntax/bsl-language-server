@@ -60,7 +60,7 @@ gitProperties {
     customProperty("git.build.time", buildTime())
 }
 
-val languageToolVersion = "6.6"
+val languageToolVersion = "6.7"
 
 dependencies {
 
@@ -74,7 +74,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
-    api("com.github.ben-manes.caffeine", "caffeine", "3.2.0")
+    api("com.github.ben-manes.caffeine", "caffeine", "3.2.3")
     api("org.ehcache:ehcache:3.10.8")
 
     // lsp4j core
@@ -110,17 +110,17 @@ dependencies {
     }
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.22.1")
+    implementation("org.aspectj", "aspectjrt", "1.9.25")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.18.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.10.1"){
+    implementation("commons-io", "commons-io", "2.20.0")
+    implementation("commons-beanutils", "commons-beanutils", "1.11.0"){
         exclude("commons-logging", "commons-logging")
     }
-    implementation("commons-codec", "commons-codec", "1.16.0")
-    implementation("org.apache.commons", "commons-lang3", "3.17.0")
-    implementation("org.apache.commons", "commons-collections4", "4.4")
-    implementation("org.apache.commons", "commons-exec", "1.4.0")
+    implementation("commons-codec", "commons-codec", "1.20.0")
+    implementation("org.apache.commons", "commons-lang3", "3.19.0")
+    implementation("org.apache.commons", "commons-collections4", "4.5.0")
+    implementation("org.apache.commons", "commons-exec", "1.5.0")
 
     // progress bar
     implementation("me.tongfei", "progressbar", "0.10.1")
@@ -144,7 +144,7 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.8")
+    compileOnly("com.github.spotbugs", "spotbugs-annotations", "4.9.8")
 
     // TEST
 
@@ -154,7 +154,7 @@ dependencies {
     }
 
     // test utils
-    testImplementation("org.jmockit", "jmockit", "1.49")
+    testImplementation("org.jmockit", "jmockit", "1.50")
     testImplementation("org.awaitility", "awaitility", "4.3.0")
 }
 
