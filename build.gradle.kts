@@ -207,6 +207,9 @@ tasks.test {
         html.required.set(true)
     }
 
+    // Increase heap size to prevent OOM during test execution with EhCache
+    maxHeapSize = "2g"
+
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}")
 
