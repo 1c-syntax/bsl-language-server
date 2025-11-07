@@ -159,6 +159,7 @@ class EhCacheAdapterTest {
     assertThatThrownBy(() -> ehCacheAdapter.get("key3", valueLoader))
       .isInstanceOf(ValueRetrievalException.class)
       .hasCauseInstanceOf(RuntimeException.class)
+      .cause()
       .hasMessageContaining("Loader failed");
   }
 
@@ -185,11 +186,9 @@ class EhCacheAdapterTest {
 
   @Test
   void testPutNullValue() {
-    // when
-    ehCacheAdapter.put("key1", null);
-
-    // then
-    assertThat(nativeCache.get("key1")).isNull();
+    // when-then
+    assertThatThrownBy(() -> ehCacheAdapter.put("key1", null))
+      .isInstanceOf(NullPointerException.class);
   }
 
   @Test
