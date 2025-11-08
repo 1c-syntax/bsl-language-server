@@ -101,10 +101,12 @@ dependencies {
         exclude("com.sun.xml.bind", "jaxb-impl")
     }
     implementation("org.languagetool", "language-en", languageToolVersion){
+        exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
     }
     implementation("org.languagetool", "language-ru", languageToolVersion){
+        exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
     }
