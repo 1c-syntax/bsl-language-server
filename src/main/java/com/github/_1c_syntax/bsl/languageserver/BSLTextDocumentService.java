@@ -594,6 +594,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   /**
    * Вычисляет абсолютную позицию символа в тексте по номеру строки и позиции в строке.
+   * Использует indexOf для быстрого поиска переносов строк.
    *
    * @param content содержимое документа
    * @param line номер строки (0-based)
@@ -601,22 +602,43 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @return абсолютная позиция символа в тексте
    */
   private static int getOffset(String content, int line, int character) {
+    if (line == 0) {
+      return character;
+    }
+
     int offset = 0;
     int currentLine = 0;
-    int length = content.length();
+    int searchFrom = 0;
 
-    for (int i = 0; i < length && currentLine < line; i++) {
-      char c = content.charAt(i);
-      if (c == '\n') {
-        currentLine++;
-        offset = i + 1;
-      } else if (c == '\r') {
-        currentLine++;
-        // Handle \r\n as a single line ending
-        if (i + 1 < length && content.charAt(i + 1) == '\n') {
-          i++;
-        }
-        offset = i + 1;
+    while (currentLine < line) {
+      int nlPos = content.indexOf('\n', searchFrom);
+      int crPos = content.indexOf('\r', searchFrom);
+
+      if (nlPos == -1 && crPos == -1) {
+        // No more line breaks found
+        break;
+      }
+
+      int nextLineBreak;
+      if (nlPos == -1) {
+        nextLineBreak = crPos;
+      } else if (crPos == -1) {
+        nextLineBreak = nlPos;
+      } else {
+        nextLineBreak = Math.min(nlPos, crPos);
+      }
+
+      currentLine++;
+      
+      // Handle \r\n as a single line ending
+      if (content.charAt(nextLineBreak) == '\r' 
+          && nextLineBreak + 1 < content.length() 
+          && content.charAt(nextLineBreak + 1) == '\n') {
+        offset = nextLineBreak + 2;
+        searchFrom = nextLineBreak + 2;
+      } else {
+        offset = nextLineBreak + 1;
+        searchFrom = nextLineBreak + 1;
       }
     }
 
