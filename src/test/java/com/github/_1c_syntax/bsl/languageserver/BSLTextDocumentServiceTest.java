@@ -82,6 +82,78 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
+  void didChangeIncremental() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when - incremental change: insert text at position
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+
+    var range = Ranges.create(0, 0, 0, 0);
+    var changeEvent = new TextDocumentContentChangeEvent(range, "// Комментарий\n");
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    contentChanges.add(changeEvent);
+    params.setContentChanges(contentChanges);
+
+    // then - should not throw exception
+    textDocumentService.didChange(params);
+  }
+
+  @Test
+  void didChangeIncrementalMultipleChanges() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when - multiple incremental changes
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    
+    // First change: insert at beginning
+    var range1 = Ranges.create(0, 0, 0, 0);
+    contentChanges.add(new TextDocumentContentChangeEvent(range1, "// Comment 1\n"));
+    
+    // Second change: replace some text
+    var range2 = Ranges.create(1, 0, 1, 10);
+    contentChanges.add(new TextDocumentContentChangeEvent(range2, "Replaced"));
+
+    params.setContentChanges(contentChanges);
+
+    // then - should not throw exception
+    textDocumentService.didChange(params);
+  }
+
+  @Test
+  void didChangeIncrementalDelete() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when - incremental change: delete text
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+
+    var range = Ranges.create(0, 0, 0, 5);
+    var changeEvent = new TextDocumentContentChangeEvent(range, "");
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    contentChanges.add(changeEvent);
+    params.setContentChanges(contentChanges);
+
+    // then - should not throw exception
+    textDocumentService.didChange(params);
+  }
+
+  @Test
   void didClose() {
     DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
     params.setTextDocument(getTextDocumentIdentifier());

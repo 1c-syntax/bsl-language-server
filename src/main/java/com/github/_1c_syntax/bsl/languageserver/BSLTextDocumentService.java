@@ -72,6 +72,7 @@ import org.eclipse.lsp4j.DocumentDiagnosticParams;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentLink;
+import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.DocumentLinkParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -402,15 +403,16 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
 
-    // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
     var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
 
+    var newContent = applyTextDocumentChanges(documentContext.getContent(), params.getContentChanges());
+
     context.rebuildDocument(
       documentContext,
-      params.getContentChanges().get(0).getText(),
+      newContent,
       params.getTextDocument().getVersion()
     );
 
@@ -541,6 +543,83 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
     diagnosticProvider.computeAndPublishDiagnostics(documentContext);
+  }
+
+  /**
+   * Применяет список изменений текста к исходному содержимому документа.
+   * Поддерживает как полные обновления (без range), так и инкрементальные изменения (с range).
+   *
+   * @param content текущее содержимое документа
+   * @param changes список изменений для применения
+   * @return обновленное содержимое документа
+   */
+  private static String applyTextDocumentChanges(String content, List<TextDocumentContentChangeEvent> changes) {
+    var currentContent = content;
+    for (var change : changes) {
+      if (change.getRange() == null) {
+        // Full document update
+        currentContent = change.getText();
+      } else {
+        // Incremental update
+        currentContent = applyIncrementalChange(currentContent, change);
+      }
+    }
+    return currentContent;
+  }
+
+  /**
+   * Применяет одно инкрементальное изменение к содержимому документа.
+   *
+   * @param content текущее содержимое документа
+   * @param change изменение для применения
+   * @return обновленное содержимое документа
+   */
+  private static String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) {
+    var range = change.getRange();
+    var newText = change.getText();
+
+    var lines = content.split("\r?\n", -1);
+    
+    var startLine = range.getStart().getLine();
+    var startChar = range.getStart().getCharacter();
+    var endLine = range.getEnd().getLine();
+    var endChar = range.getEnd().getCharacter();
+
+    // Build the new content
+    var result = new StringBuilder();
+
+    // Add lines before the change
+    for (int i = 0; i < startLine; i++) {
+      result.append(lines[i]).append("\n");
+    }
+
+    // Add the part before the change on the start line
+    if (startLine < lines.length) {
+      var startLineText = lines[startLine];
+      if (startChar <= startLineText.length()) {
+        result.append(startLineText, 0, startChar);
+      } else {
+        result.append(startLineText);
+      }
+    }
+
+    // Add the new text
+    result.append(newText);
+
+    // Add the part after the change on the end line
+    if (endLine < lines.length) {
+      var endLineText = lines[endLine];
+      if (endChar <= endLineText.length()) {
+        result.append(endLineText.substring(endChar));
+      }
+    }
+
+    // Add lines after the change
+    for (int i = endLine + 1; i < lines.length; i++) {
+      result.append("\n").append(lines[i]);
+    }
+
+    return result.toString();
   }
 
 }

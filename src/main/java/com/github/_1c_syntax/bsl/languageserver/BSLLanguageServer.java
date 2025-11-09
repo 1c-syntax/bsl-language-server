@@ -197,7 +197,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
-    textDocumentSync.setChange(TextDocumentSyncKind.Full);
+    textDocumentSync.setChange(TextDocumentSyncKind.Incremental);
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
