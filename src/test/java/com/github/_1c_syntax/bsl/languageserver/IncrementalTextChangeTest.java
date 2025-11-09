@@ -170,6 +170,48 @@ class IncrementalTextChangeTest {
     assertThat(result).isEqualTo("Строка1\nСтрока2");
   }
 
+  @Test
+  void testPreserveWindowsLineEndings() throws Exception {
+    // given - document with Windows line endings
+    String content = "Строка1\r\nСтрока2\r\nСтрока3";
+    Range range = Ranges.create(1, 0, 1, 7);
+    var change = new TextDocumentContentChangeEvent(range, "Изменено");
+
+    // when
+    String result = applyIncrementalChange(content, change);
+
+    // then - Windows line endings should be preserved
+    assertThat(result).isEqualTo("Строка1\r\nИзменено\r\nСтрока3");
+  }
+
+  @Test
+  void testPreserveOldMacLineEndings() throws Exception {
+    // given - document with old Mac line endings
+    String content = "Строка1\rСтрока2\rСтрока3";
+    Range range = Ranges.create(1, 0, 1, 7);
+    var change = new TextDocumentContentChangeEvent(range, "Изменено");
+
+    // when
+    String result = applyIncrementalChange(content, change);
+
+    // then - old Mac line endings should be preserved
+    assertThat(result).isEqualTo("Строка1\rИзменено\rСтрока3");
+  }
+
+  @Test
+  void testPreserveMixedLineEndings() throws Exception {
+    // given - document with mixed line endings
+    String content = "Строка1\r\nСтрока2\nСтрока3\rСтрока4";
+    Range range = Ranges.create(2, 0, 2, 7);
+    var change = new TextDocumentContentChangeEvent(range, "Изменено");
+
+    // when
+    String result = applyIncrementalChange(content, change);
+
+    // then - all line endings should be preserved
+    assertThat(result).isEqualTo("Строка1\r\nСтрока2\nИзменено\rСтрока4");
+  }
+
   // Helper methods to call private methods via reflection
   private String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) 
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {

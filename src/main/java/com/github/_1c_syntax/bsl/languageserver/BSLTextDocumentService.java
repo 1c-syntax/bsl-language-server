@@ -569,6 +569,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   /**
    * Применяет одно инкрементальное изменение к содержимому документа.
+   * Использует прямую замену по позициям символов для оптимизации и сохранения оригинальных переносов строк.
    *
    * @param content текущее содержимое документа
    * @param change изменение для применения
@@ -578,49 +579,48 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var range = change.getRange();
     var newText = change.getText();
 
-    // Use the same pattern as DocumentContext.CONTENT_SPLIT_PATTERN for consistency
-    var lines = content.split("\r?\n|\r", -1);
-    
     var startLine = range.getStart().getLine();
     var startChar = range.getStart().getCharacter();
     var endLine = range.getEnd().getLine();
     var endChar = range.getEnd().getCharacter();
 
-    // Build the new content
-    var result = new StringBuilder();
+    // Convert line/character positions to absolute character offsets
+    int startOffset = getOffset(content, startLine, startChar);
+    int endOffset = getOffset(content, endLine, endChar);
 
-    // Add lines before the change
-    for (int i = 0; i < startLine; i++) {
-      result.append(lines[i]).append("\n");
-    }
+    // Perform direct string replacement to preserve original line endings
+    return content.substring(0, startOffset) + newText + content.substring(endOffset);
+  }
 
-    // Add the part before the change on the start line
-    if (startLine < lines.length) {
-      var startLineText = lines[startLine];
-      if (startChar <= startLineText.length()) {
-        result.append(startLineText, 0, startChar);
-      } else {
-        result.append(startLineText);
+  /**
+   * Вычисляет абсолютную позицию символа в тексте по номеру строки и позиции в строке.
+   *
+   * @param content содержимое документа
+   * @param line номер строки (0-based)
+   * @param character позиция символа в строке (0-based)
+   * @return абсолютная позиция символа в тексте
+   */
+  private static int getOffset(String content, int line, int character) {
+    int offset = 0;
+    int currentLine = 0;
+    int length = content.length();
+
+    for (int i = 0; i < length && currentLine < line; i++) {
+      char c = content.charAt(i);
+      if (c == '\n') {
+        currentLine++;
+        offset = i + 1;
+      } else if (c == '\r') {
+        currentLine++;
+        // Handle \r\n as a single line ending
+        if (i + 1 < length && content.charAt(i + 1) == '\n') {
+          i++;
+        }
+        offset = i + 1;
       }
     }
 
-    // Add the new text
-    result.append(newText);
-
-    // Add the part after the change on the end line
-    if (endLine < lines.length) {
-      var endLineText = lines[endLine];
-      if (endChar <= endLineText.length()) {
-        result.append(endLineText.substring(endChar));
-      }
-    }
-
-    // Add lines after the change
-    for (int i = endLine + 1; i < lines.length; i++) {
-      result.append("\n").append(lines[i]);
-    }
-
-    return result.toString();
+    return offset + character;
   }
 
 }
