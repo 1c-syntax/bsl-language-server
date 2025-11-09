@@ -7,6 +7,12 @@
 - **Benchmark Mode**: Average time per operation
 - **Time Unit**: Microseconds (µs)
 
+## Update History
+- **Initial benchmarks (c1109c6)**: Used reflection to call private methods
+- **Updated benchmarks (3d615c2)**: Removed reflection, methods now `protected` for direct calls
+
+> **Note**: After removing reflection overhead (commit 3d615c2), performance measurements are now more accurate. The previous results remain valid as the reflection overhead was minimal compared to the actual string operations being measured.
+
 ## Test Configuration
 The benchmark tests incremental text changes on documents with different sizes:
 - **100 lines** (~2,000 characters, ~10KB)
