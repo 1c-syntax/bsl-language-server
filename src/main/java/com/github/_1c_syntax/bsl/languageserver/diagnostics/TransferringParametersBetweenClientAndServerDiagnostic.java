@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -33,14 +34,20 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -62,8 +69,27 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
     CompilerDirectiveKind.AT_SERVER,
     CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
   );
+  private static final String DEFAULT_CACHED_VALUE_NAMES = "";
 
   private final ReferenceIndex referenceIndex;
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = DEFAULT_CACHED_VALUE_NAMES
+  )
+  private final List<String> cachedValueNames = new ArrayList<>();
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    this.cachedValueNames.clear();
+    var cachedValueNamesString =
+      (String) configuration.getOrDefault("cachedValueNames", DEFAULT_CACHED_VALUE_NAMES);
+    if (!cachedValueNamesString.isBlank()) {
+      Arrays.stream(cachedValueNamesString.split(","))
+        .map(String::trim)
+        .forEach(this.cachedValueNames::add);
+    }
+  }
 
   // Не учитываются вложенные вызовы. Только прямые - клиентский метод вызывает серверный метод напрямую
 
@@ -107,8 +133,47 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   private List<ParameterDefinition> calcNotAssignedParams(MethodSymbol method,
                                                           List<ParameterDefinition> parameterDefinitions) {
     return parameterDefinitions.stream()
+      .filter(parameterDefinition -> !isCachedValueParameter(parameterDefinition))
       .filter(parameterDefinition -> isAssignedParam(method, parameterDefinition))
       .toList();
+  }
+
+  private boolean isCachedValueParameter(ParameterDefinition parameterDefinition) {
+    if (cachedValueNames.isEmpty()) {
+      return false;
+    }
+    
+    var paramName = parameterDefinition.getName();
+    if (cachedValueNames.stream().noneMatch(name -> name.equalsIgnoreCase(paramName))) {
+      return false;
+    }
+    
+    // Check if module has a client variable with this name
+    return hasClientModuleVariable(paramName);
+  }
+
+  private boolean hasClientModuleVariable(String variableName) {
+    return Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_moduleVar).stream()
+      .filter(BSLParser.ModuleVarContext.class::isInstance)
+      .map(BSLParser.ModuleVarContext.class::cast)
+      .filter(ctx -> hasVariableWithName(ctx, variableName))
+      .anyMatch(this::hasClientCompilerDirective);
+  }
+
+  private boolean hasVariableWithName(BSLParser.ModuleVarContext ctx, String variableName) {
+    return Trees.findAllRuleNodes(ctx, BSLParser.RULE_moduleVarDeclaration).stream()
+      .filter(BSLParser.ModuleVarDeclarationContext.class::isInstance)
+      .map(BSLParser.ModuleVarDeclarationContext.class::cast)
+      .anyMatch(decl -> decl.var_name().getText().equalsIgnoreCase(variableName));
+  }
+
+  private boolean hasClientCompilerDirective(BSLParser.ModuleVarContext ctx) {
+    return ctx.compilerDirective().stream()
+      .map(BSLParser.CompilerDirectiveContext::getStop)
+      .map(Token::getType)
+      .map(CompilerDirectiveKind::of)
+      .flatMap(Optional::stream)
+      .anyMatch(directive -> directive == CompilerDirectiveKind.AT_CLIENT);
   }
 
   private boolean isAssignedParam(MethodSymbol method, ParameterDefinition parameterDefinition) {
