@@ -212,13 +212,9 @@ class IncrementalTextChangeTest {
     assertThat(result).isEqualTo("Строка1\r\nСтрока2\nИзменено\rСтрока4");
   }
 
-  // Helper methods to call private methods via reflection
-  private String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) 
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    Method method = BSLTextDocumentService.class.getDeclaredMethod(
-        "applyIncrementalChange", String.class, TextDocumentContentChangeEvent.class);
-    method.setAccessible(true);
-    return (String) method.invoke(null, content, change);
+  // Helper methods to call methods directly (now protected)
+  private String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) {
+    return BSLTextDocumentService.applyIncrementalChange(content, change);
   }
 
   private String applyTextDocumentChanges(String content, List<TextDocumentContentChangeEvent> changes) 

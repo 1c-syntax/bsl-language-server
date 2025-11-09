@@ -575,7 +575,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @param change изменение для применения
    * @return обновленное содержимое документа
    */
-  private static String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) {
+  protected static String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) {
     var range = change.getRange();
     var newText = change.getText();
 
@@ -601,7 +601,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @param character позиция символа в строке (0-based)
    * @return абсолютная позиция символа в тексте
    */
-  private static int getOffset(String content, int line, int character) {
+  protected static int getOffset(String content, int line, int character) {
     if (line == 0) {
       return character;
     }

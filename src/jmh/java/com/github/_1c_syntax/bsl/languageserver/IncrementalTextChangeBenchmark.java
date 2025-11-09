@@ -36,9 +36,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -96,39 +93,26 @@ public class IncrementalTextChangeBenchmark {
   }
 
   @Benchmark
-  public String benchmarkChangeAtStart() throws Exception {
-    return applyIncrementalChange(documentContent, changeAtStart);
+  public String benchmarkChangeAtStart() {
+    return BSLTextDocumentService.applyIncrementalChange(documentContent, changeAtStart);
   }
 
   @Benchmark
-  public String benchmarkChangeInMiddle() throws Exception {
-    return applyIncrementalChange(documentContent, changeInMiddle);
+  public String benchmarkChangeInMiddle() {
+    return BSLTextDocumentService.applyIncrementalChange(documentContent, changeInMiddle);
   }
 
   @Benchmark
-  public String benchmarkChangeAtEnd() throws Exception {
-    return applyIncrementalChange(documentContent, changeAtEnd);
+  public String benchmarkChangeAtEnd() {
+    return BSLTextDocumentService.applyIncrementalChange(documentContent, changeAtEnd);
   }
 
   @Benchmark
-  public String benchmarkMultipleChanges() throws Exception {
+  public String benchmarkMultipleChanges() {
     String result = documentContent;
-    result = applyIncrementalChange(result, changeAtStart);
-    result = applyIncrementalChange(result, changeInMiddle);
-    result = applyIncrementalChange(result, changeAtEnd);
+    result = BSLTextDocumentService.applyIncrementalChange(result, changeAtStart);
+    result = BSLTextDocumentService.applyIncrementalChange(result, changeInMiddle);
+    result = BSLTextDocumentService.applyIncrementalChange(result, changeAtEnd);
     return result;
-  }
-
-  /**
-   * Вызывает приватный метод applyIncrementalChange через рефлексию.
-   */
-  private String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) throws Exception {
-    Method method = BSLTextDocumentService.class.getDeclaredMethod(
-      "applyIncrementalChange",
-      String.class,
-      TextDocumentContentChangeEvent.class
-    );
-    method.setAccessible(true);
-    return (String) method.invoke(null, content, change);
   }
 }
