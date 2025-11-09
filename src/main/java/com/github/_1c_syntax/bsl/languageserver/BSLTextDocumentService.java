@@ -578,7 +578,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var range = change.getRange();
     var newText = change.getText();
 
-    var lines = content.split("\r?\n", -1);
+    // Use the same pattern as DocumentContext.CONTENT_SPLIT_PATTERN for consistency
+    var lines = content.split("\r?\n|\r", -1);
     
     var startLine = range.getStart().getLine();
     var startChar = range.getStart().getCharacter();
