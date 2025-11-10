@@ -9,8 +9,11 @@
 
 ## Update History
 - **Initial benchmarks (c1109c6)**: Used reflection to call private methods
-- **Updated benchmarks (3d615c2/fc848e5)**: Removed reflection, methods now `protected` for direct calls
-- **Current version**: Re-running benchmarks with direct method calls (no reflection overhead)
+- **Updated benchmarks (3d615c2)**: Removed reflection, methods now `protected` for direct calls
+- **Documentation update (640e03c)**: Clarified single vs multiple edit measurements
+- **Current version**: Direct method calls without reflection overhead verified
+
+> **Note on Reflection Removal**: After making methods `protected` and removing reflection (commit 3d615c2), the benchmark now calls `BSLTextDocumentService.applyIncrementalChange()` directly. While reflection overhead is minimal for the string operations being measured (dominated by indexOf and substring), the current measurements are now technically more accurate. The performance characteristics remain the same as the actual work (string scanning and manipulation) hasn't changed.
 
 ## Test Configuration
 The benchmark tests incremental text changes on documents with different sizes:
