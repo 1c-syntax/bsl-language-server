@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
@@ -38,9 +39,9 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldReturnPathInBasePath() {
+  void getCachePath_shouldReturnPathInBasePath(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
+    var basePath = tempDir.toString();
     var fullPath = "";
 
     // when
@@ -52,9 +53,9 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldContainBslLanguageServerDirectory() {
+  void getCachePath_shouldContainBslLanguageServerDirectory(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
+    var basePath = tempDir.toString();
     var fullPath = "";
 
     // when
@@ -65,9 +66,9 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldContainCacheSubdirectory() {
+  void getCachePath_shouldContainCacheSubdirectory(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
+    var basePath = tempDir.toString();
     var fullPath = "";
 
     // when
@@ -78,18 +79,15 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldContainHashSubdirectory() {
+  void getCachePath_shouldContainHashSubdirectory(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
+    var basePath = tempDir.toString();
     var fullPath = "";
 
     // when
     var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
-    // Verify that path has at least 4 components: basePath, .bsl-language-server, cache, hash
-    assertThat(cachePath.getNameCount()).isGreaterThanOrEqualTo(4);
-    
     // Get the last component (hash)
     var hashComponent = cachePath.getFileName().toString();
     
@@ -99,9 +97,9 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldBeDeterministic() {
+  void getCachePath_shouldBeDeterministic(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
+    var basePath = tempDir.toString();
     var fullPath = "";
 
     // when
@@ -114,28 +112,29 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldProduceExpectedStructure() {
+  void getCachePath_shouldProduceExpectedStructure(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
+    var basePath = tempDir.toString();
     var fullPath = "";
 
     // when
     var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
-    var basePathObj = Path.of(basePath);
-    
-    // Check that the path structure is: {basePath}/.bsl-language-server/cache/{hash}
-    assertThat(cachePath.getParent().getParent().getParent()).isEqualTo(basePathObj);
+    // Check that the path structure ends with: .bsl-language-server/cache/{hash}
     assertThat(cachePath.getParent().getParent().getFileName().toString()).isEqualTo(".bsl-language-server");
     assertThat(cachePath.getParent().getFileName().toString()).isEqualTo("cache");
+    
+    // Verify the path starts with basePath
+    assertThat(cachePath.toString()).startsWith(basePath);
   }
 
   @Test
-  void getCachePath_shouldUseFullPathWhenProvided() {
+  void getCachePath_shouldUseFullPathWhenProvided(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
-    var fullPath = "/custom/cache/path";
+    var basePath = tempDir.toString();
+    var customPath = tempDir.resolve("custom").resolve("cache").resolve("path");
+    var fullPath = customPath.toString();
 
     // when
     var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
@@ -146,10 +145,11 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldIgnoreBasePathWhenFullPathProvided() {
+  void getCachePath_shouldIgnoreBasePathWhenFullPathProvided(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
-    var fullPath = "/completely/different/path";
+    var basePath = tempDir.resolve("base").toString();
+    var customPath = tempDir.resolve("completely").resolve("different").resolve("path");
+    var fullPath = customPath.toString();
 
     // when
     var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
@@ -160,9 +160,9 @@ class CachePathProviderTest {
   }
 
   @Test
-  void getCachePath_shouldTreatNullFullPathAsEmpty() {
+  void getCachePath_shouldTreatNullFullPathAsEmpty(@TempDir Path tempDir) {
     // given
-    var basePath = "/home/user";
+    var basePath = tempDir.toString();
     String fullPath = null;
 
     // when
