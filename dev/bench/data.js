@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762800431017,
+  "lastUpdate": 1762967442838,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31155,6 +31155,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.1478960313999268",
             "extra": "mean: 87.79490963617961 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c55bb4eebb286fa05277cd01ba9fcf2496648951",
+          "message": "Merge pull request #3598 from 1c-syntax/copilot/add-minimum-lsp-diagnostic-level\n\nAdd minimumLSPDiagnosticLevel to filter diagnostics by LSP severity",
+          "timestamp": "2025-11-12T17:47:11+01:00",
+          "tree_id": "ef3f6dea411c4cf11bd057ac9afdb2b7047fb38f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c55bb4eebb286fa05277cd01ba9fcf2496648951"
+        },
+        "date": 1762967436930,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.04697895050049,
+            "unit": "sec",
+            "range": "stddev: 1.3975275463838825",
+            "extra": "mean: 89.04697895050049 sec\nrounds: 3"
           }
         ]
       }
