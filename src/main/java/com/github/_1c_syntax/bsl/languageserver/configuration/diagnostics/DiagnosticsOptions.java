@@ -55,6 +55,9 @@ public class DiagnosticsOptions {
   private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
 
   @Nullable
+  private org.eclipse.lsp4j.DiagnosticSeverity minimumLSPDiagnosticLevel;
+
+  @Nullable
   private org.eclipse.lsp4j.DiagnosticSeverity overrideMinimumLSPDiagnosticLevel;
 
   @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
