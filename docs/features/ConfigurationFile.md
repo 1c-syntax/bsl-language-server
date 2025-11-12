@@ -50,19 +50,43 @@ BSL Language Server предоставляет возможность измен
 https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
 ```
 
-## Пример
+## Примеры
 
-Ниже приведен пример настройки:
+### Пример 1: Использование minimumLSPDiagnosticLevel для фильтрации диагностик
+
+Этот пример демонстрирует фильтрацию диагностик по уровню серьезности LSP:
 
 * Устанавливает язык сообщений диагностик - английский;
 * Изменяет настройку диагностики [LineLength - Ограничение на длину строки](../diagnostics/LineLength.md), устанавливая
   предел длины строки в 140 символов;
 * Отключает диагностику [MethodSize - Ограничение на размер метода](../diagnostics/MethodSize.md).
+* Фильтрует диагностики, не запуская диагностики с уровнем серьезности ниже `Warning` (диагностики Information и Hint не будут запускаться)
+
+```json
+{
+  "$schema": "https://1c-syntax.github.io/bsl-language-server/configuration/schema.json",
+  "language": "en",
+  "diagnostics": {
+    "minimumLSPDiagnosticLevel": "Warning",
+    "parameters": {
+      "LineLength": {
+        "maxLineLength": 140
+      },
+      "MethodSize": false
+    }
+  }
+}
+```
+
+### Пример 2: Использование overrideMinimumLSPDiagnosticLevel для изменения серьезности
+
+Этот пример демонстрирует изменение отображаемого уровня серьезности диагностик:
+
+* Устанавливает язык сообщений диагностик - английский;
 * Включает расчет диагностик в непрерывном режиме (`computeTrigger = onType`)
 * Диагностики рассчитываются только по объектам подсистемы "СтандартныеПодсистемы" за исключением "ВариантыОтчетов" и "
   ВерсионированиеОбъектов"
-* Фильтрует диагностики, не запуская диагностики с уровнем серьезности ниже `Warning` (предупреждение)
-* Устанавливает минимальный уровень серьезности диагностик в `Warning` (предупреждение) для запускаемых диагностик
+* Повышает уровень серьезности до `Warning` для всех запускаемых диагностик (диагностики с Information или Hint будут отображаться как Warning)
 * Переопределяет тип диагностики `EmptyCodeBlock` на `ERROR` и серьезность на `BLOCKER`
 
 ```json
@@ -71,14 +95,7 @@ https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
   "language": "en",
   "diagnostics": {
     "computeTrigger": "onType",
-    "minimumLSPDiagnosticLevel": "Warning",
     "overrideMinimumLSPDiagnosticLevel": "Warning",
-    "parameters": {
-      "LineLength": {
-        "maxLineLength": 140
-      },
-      "MethodSize": false
-    },
     "metadata": {
       "EmptyCodeBlock": {
         "type": "ERROR",

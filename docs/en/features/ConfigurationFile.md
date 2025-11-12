@@ -46,19 +46,43 @@ You can use the following JSON schema to make it easier to compile and edit a co
 https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
 ```
 
-## Example
+## Examples
 
-Setting example:
+### Example 1: Using minimumLSPDiagnosticLevel to filter diagnostics
+
+This example demonstrates filtering diagnostics by LSP severity level:
 
 * Language of diagnostics messages - English;
 * Changes the diagnostic setting [LineLength - Line length limit](../diagnostics/LineLength.md) by setting
   line length limit of 140 characters;
 * Disable [MethodSize - Method size restriction diagnostic](../diagnostics/MethodSize.md).
+* Filters diagnostics, not running diagnostics with severity level below `Warning` (Information and Hint diagnostics will not run)
+
+```json
+{
+  "$schema": "https://1c-syntax.github.io/bsl-language-server/configuration/schema.json",
+  "language": "en",
+  "diagnostics": {
+    "minimumLSPDiagnosticLevel": "Warning",
+    "parameters": {
+      "LineLength": {
+        "maxLineLength": 140
+      },
+      "MethodSize": false
+    }
+  }
+}
+```
+
+### Example 2: Using overrideMinimumLSPDiagnosticLevel to adjust severity
+
+This example demonstrates adjusting diagnostic severity display:
+
+* Language of diagnostics messages - English;
 * Enables the calculation of diagnostics in continuous mode (`computeTrigger = onType`)
 * Diagnostics are calculated only for the objects of the "StandardSubsystems" subsystem, with the exception of "ReportVariants" and "
   ObjectVersioning"
-* Filters diagnostics, not running diagnostics with severity level below `Warning`
-* Sets the minimum diagnostic severity level to `Warning` for running diagnostics
+* Raises the severity level to `Warning` for all running diagnostics (diagnostics with Information or Hint will be displayed as Warning)
 * Overrides the diagnostic type `EmptyCodeBlock` to `ERROR` and severity to `BLOCKER`
 
 ```json
@@ -67,14 +91,7 @@ Setting example:
   "language": "en",
   "diagnostics": {
     "computeTrigger": "onType",
-    "minimumLSPDiagnosticLevel": "Warning",
     "overrideMinimumLSPDiagnosticLevel": "Warning",
-    "parameters": {
-      "LineLength": {
-        "maxLineLength": 140
-      },
-      "MethodSize": false
-    },
     "metadata": {
       "EmptyCodeBlock": {
         "type": "ERROR",
