@@ -61,9 +61,7 @@ public class DenyIncompleteValuesDiagnostic extends AbstractMetadataDiagnostic {
       var mdoRefLocal = getMdoRefLocal(mdo);
       register.getDimensions().stream()
         .filter(dimension -> !dimension.isDenyIncompleteValues())
-        .forEach((Dimension dimension) -> {
-          addDiagnostic(info.getMessage(dimension.getName(), mdoRefLocal));
-        });
+        .forEach((Dimension dimension) -> addDiagnostic(info.getMessage(dimension.getName(), mdoRefLocal)));
     }
   }
 }

@@ -227,7 +227,7 @@ public class DescriptionFormatter {
   public String getParametersSignatureDescription(MethodSymbol methodSymbol) {
     var parametersDescription = new StringJoiner(", ");
     methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
-      StringBuilder parameter = new StringBuilder();
+      var parameter = new StringBuilder();
       parameter.append(getAnnotationsDescriptionPart(parameterDefinition));
       var parameterName = parameterDefinition.getName();
 
