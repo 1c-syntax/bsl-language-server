@@ -37,7 +37,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -76,12 +75,17 @@ public class CacheConfiguration {
    * <p>
    * Настроен программно, без использования XML-конфигурации.
    * При закрытии Spring-контекста вызывается метод {@code close()} для корректного завершения работы кэша.
+   * <p>
+   * Кэш размещается в каталоге пользователя, что позволяет избежать захламления git-репозиториев.
+   * Путь можно переопределить через свойство {@code app.cache.fullPath}.
    */
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager(
-    @Value("${app.cache.path}") String cacheDirPath
+    CachePathProvider cachePathProvider,
+    @Value("${app.cache.basePath}") String basePath,
+    @Value("${app.cache.fullPath}") String fullPath
   ) {
-    var cacheDir = Path.of(cacheDirPath);
+    var cacheDir = cachePathProvider.getCachePath(basePath, fullPath);
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder
