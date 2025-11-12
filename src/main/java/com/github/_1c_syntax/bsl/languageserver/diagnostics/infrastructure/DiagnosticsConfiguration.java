@@ -75,6 +75,7 @@ public abstract class DiagnosticsConfiguration {
 
       return diagnosticInfos.stream()
         .filter(diagnosticInfo -> isEnabled(diagnosticInfo, diagnosticsOptions))
+        .filter(diagnosticInfo -> passedMinimumLSPDiagnosticLevel(diagnosticInfo, diagnosticsOptions))
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
@@ -219,6 +220,22 @@ public abstract class DiagnosticsConfiguration {
     }
 
     return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
+  }
+
+  private static boolean passedMinimumLSPDiagnosticLevel(
+    DiagnosticInfo diagnosticInfo,
+    DiagnosticsOptions diagnosticsOptions
+  ) {
+    var minimumLevel = diagnosticsOptions.getMinimumLSPDiagnosticLevel();
+    if (minimumLevel == null) {
+      return true;
+    }
+
+    var diagnosticLevel = diagnosticInfo.getLSPSeverity();
+    // LSP Severity: Error=1, Warning=2, Information=3, Hint=4
+    // Lower value = higher severity
+    // We want to skip diagnostics with severity higher than minimum (i.e., lower value)
+    return diagnosticLevel.getValue() <= minimumLevel.getValue();
   }
 
   private static List<String> getSubsystemNames(CF configuration, MD mdObject) {
