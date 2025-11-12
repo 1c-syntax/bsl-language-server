@@ -60,7 +60,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
   @Override
   protected void checkMetadata(MD mdo) {
     if (mdo.getName().length() > maxMetadataObjectNameLength) {
-      addAttributeDiagnostic(mdo);
+      addDiagnostic(info.getMessage(getMdoRefLocal(mdo), maxMetadataObjectNameLength));
     }
   }
 
@@ -75,11 +75,5 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
     } else {
       super.check();
     }
-  }
-
-  private void addAttributeDiagnostic(MD attribute) {
-    var mdoRef = attribute.getMdoReference().getMdoRef(
-      documentContext.getServerContext().getConfiguration().getScriptVariant());
-    addDiagnostic(info.getMessage(mdoRef, maxMetadataObjectNameLength));
   }
 }

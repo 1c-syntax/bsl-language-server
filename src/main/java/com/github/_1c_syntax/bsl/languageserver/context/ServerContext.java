@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -320,7 +319,7 @@ public class ServerContext {
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+    var mdoRef = documentContext.getMdoRef();
 
     mdoRefs.put(uri, mdoRef);
     documentsByMDORef.computeIfAbsent(

@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.NotifyDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -83,7 +84,7 @@ public class ReferenceIndexFiller {
 
   public void fill(DocumentContext documentContext) {
     index.clearReferences(documentContext.getUri());
-    BSLParser.FileContext documentContextAst = documentContext.getAst();
+    var documentContextAst = documentContext.getAst();
     new MethodSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
     new VariableSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
   }
@@ -113,7 +114,7 @@ public class ReferenceIndexFiller {
         return super.visitCallStatement(ctx);
       }
 
-      String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+      var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
         return super.visitCallStatement(ctx);
       }
@@ -136,7 +137,7 @@ public class ReferenceIndexFiller {
 
     @Override
     public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-      var mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+      var mdoRef = documentContext.getMdoRef();
       var moduleType = documentContext.getModuleType();
       var methodName = ctx.methodName().getStart();
       var methodNameText = methodName.getText();
@@ -214,7 +215,7 @@ public class ReferenceIndexFiller {
         return;
       }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
-        if (!mdoRef.equals(MdoRefBuilder.getMdoRef(documentContext))) {
+        if (!mdoRef.equals(documentContext.getMdoRef())) {
           checkCall(mdoRef, methodNameToken);
         }
 
@@ -238,7 +239,7 @@ public class ReferenceIndexFiller {
       return complexIdentifierContext1
         .filter(Predicate.not(Modules::isThisObject))
         .map(complexIdentifier -> MdoRefBuilder.getMdoRef(documentContext, complexIdentifier))
-        .orElse(MdoRefBuilder.getMdoRef(documentContext));
+        .orElse(documentContext.getMdoRef());
     }
 
     private Set<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
@@ -253,7 +254,7 @@ public class ReferenceIndexFiller {
         .map(configuration::findCommonModule)
         .filter(Optional::isPresent)
         .flatMap(Optional::stream)
-        .map(mdCommonModule -> mdCommonModule.getMdoReference().getMdoRef())
+        .map(MD::getMdoRef)
         .collect(Collectors.toSet());
     }
   }
@@ -427,7 +428,7 @@ public class ReferenceIndexFiller {
 
       index.addVariableUsage(
         documentContext.getUri(),
-        MdoRefBuilder.getMdoRef(documentContext),
+        documentContext.getMdoRef(),
         documentContext.getModuleType(),
         methodName,
         variableName,

@@ -107,6 +107,6 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private String getMdoRef(Form form) {
-    return form.getMdoReference().getMdoRef(documentContext.getServerContext().getConfiguration().getScriptVariant());
+    return documentContext.getServerContext().getConfiguration().getMdoRefLocal(form);
   }
 }
