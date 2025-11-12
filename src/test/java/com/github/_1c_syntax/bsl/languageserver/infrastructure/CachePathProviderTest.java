@@ -30,20 +30,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CachePathProviderTest {
 
   @Test
-  void getCachePath_shouldReturnPathInUserHome() {
+  void getCachePath_shouldReturnPathInBasePath() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "";
+
     // when
-    var cachePath = CachePathProvider.getCachePath();
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
 
     // then
-    var userHome = System.getProperty("user.home");
     assertThat(cachePath).isNotNull();
-    assertThat(cachePath.toString()).startsWith(userHome);
+    assertThat(cachePath.toString()).startsWith(basePath);
   }
 
   @Test
   void getCachePath_shouldContainBslLanguageServerDirectory() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "";
+
     // when
-    var cachePath = CachePathProvider.getCachePath();
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath.toString()).contains(".bsl-language-server");
@@ -51,8 +58,12 @@ class CachePathProviderTest {
 
   @Test
   void getCachePath_shouldContainCacheSubdirectory() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "";
+
     // when
-    var cachePath = CachePathProvider.getCachePath();
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath.toString()).contains("cache");
@@ -60,11 +71,15 @@ class CachePathProviderTest {
 
   @Test
   void getCachePath_shouldContainHashSubdirectory() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "";
+
     // when
-    var cachePath = CachePathProvider.getCachePath();
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
 
     // then
-    // Verify that path has at least 4 components: user.home, .bsl-language-server, cache, hash
+    // Verify that path has at least 4 components: basePath, .bsl-language-server, cache, hash
     assertThat(cachePath.getNameCount()).isGreaterThanOrEqualTo(4);
     
     // Get the last component (hash)
@@ -77,9 +92,13 @@ class CachePathProviderTest {
 
   @Test
   void getCachePath_shouldBeDeterministic() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "";
+
     // when
-    var cachePath1 = CachePathProvider.getCachePath();
-    var cachePath2 = CachePathProvider.getCachePath();
+    var cachePath1 = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath2 = CachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     // Same working directory should produce same cache path
@@ -88,15 +107,78 @@ class CachePathProviderTest {
 
   @Test
   void getCachePath_shouldProduceExpectedStructure() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "";
+
     // when
-    var cachePath = CachePathProvider.getCachePath();
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
 
     // then
-    var userHome = Path.of(System.getProperty("user.home"));
+    var basePathObj = Path.of(basePath);
     
-    // Check that the path structure is: {user.home}/.bsl-language-server/cache/{hash}
-    assertThat(cachePath.getParent().getParent().getParent()).isEqualTo(userHome);
+    // Check that the path structure is: {basePath}/.bsl-language-server/cache/{hash}
+    assertThat(cachePath.getParent().getParent().getParent()).isEqualTo(basePathObj);
     assertThat(cachePath.getParent().getParent().getFileName().toString()).isEqualTo(".bsl-language-server");
     assertThat(cachePath.getParent().getFileName().toString()).isEqualTo("cache");
+  }
+
+  @Test
+  void getCachePath_shouldUseFullPathWhenProvided() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "/custom/cache/path";
+
+    // when
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+
+    // then
+    assertThat(cachePath.toString()).isEqualTo(fullPath);
+    assertThat(cachePath.toString()).doesNotContain(".bsl-language-server");
+  }
+
+  @Test
+  void getCachePath_shouldIgnoreBasePathWhenFullPathProvided() {
+    // given
+    var basePath = "/home/user";
+    var fullPath = "/completely/different/path";
+
+    // when
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+
+    // then
+    assertThat(cachePath.toString()).isEqualTo(fullPath);
+    assertThat(cachePath.toString()).doesNotContain(basePath);
+  }
+
+  @Test
+  void getCachePath_shouldTreatNullFullPathAsEmpty() {
+    // given
+    var basePath = "/home/user";
+    String fullPath = null;
+
+    // when
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+
+    // then
+    // Should behave as if fullPath is empty - compute the path
+    assertThat(cachePath.toString()).startsWith(basePath);
+    assertThat(cachePath.toString()).contains(".bsl-language-server");
+  }
+
+  @Test
+  void getCachePath_withRealSystemProperties() {
+    // given
+    var basePath = System.getProperty("user.home");
+    var fullPath = "";
+
+    // when
+    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+
+    // then
+    assertThat(cachePath).isNotNull();
+    assertThat(cachePath.toString()).startsWith(basePath);
+    assertThat(cachePath.toString()).contains(".bsl-language-server");
+    assertThat(cachePath.toString()).contains("cache");
   }
 }

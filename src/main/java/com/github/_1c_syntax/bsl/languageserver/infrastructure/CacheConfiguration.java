@@ -28,6 +28,7 @@ import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.units.MemoryUnit;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -76,10 +77,14 @@ public class CacheConfiguration {
    * При закрытии Spring-контекста вызывается метод {@code close()} для корректного завершения работы кэша.
    * <p>
    * Кэш размещается в каталоге пользователя, что позволяет избежать захламления git-репозиториев.
+   * Путь можно переопределить через свойство {@code app.cache.fullPath}.
    */
   @Bean(destroyMethod = "close")
-  public org.ehcache.CacheManager ehcacheManager() {
-    var cacheDir = CachePathProvider.getCachePath();
+  public org.ehcache.CacheManager ehcacheManager(
+    @Value("${app.cache.basePath}") String basePath,
+    @Value("${app.cache.fullPath}") String fullPath
+  ) {
+    var cacheDir = CachePathProvider.getCachePath(basePath, fullPath);
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder

@@ -44,17 +44,23 @@ public class CachePathProvider {
   /**
    * Возвращает путь к каталогу персистентного кэша для текущей рабочей директории.
    * <p>
-   * Путь формируется по шаблону: {@code ${user.home}/.bsl-language-server/cache/<md5-hash>/}
+   * Если fullPath не пустой, возвращает его напрямую.
+   * Иначе формирует путь по шаблону: {@code ${basePath}/.bsl-language-server/cache/<md5-hash>/}
    * где md5-hash - это MD5-хэш абсолютного пути текущей рабочей директории.
    *
+   * @param basePath базовый путь к каталогу (обычно user.home)
+   * @param fullPath полный путь к каталогу кэша (если задан, используется напрямую)
    * @return путь к каталогу кэша
    */
-  public static Path getCachePath() {
-    var userHome = System.getProperty("user.home");
+  public static Path getCachePath(String basePath, String fullPath) {
+    if (fullPath != null && !fullPath.isEmpty()) {
+      return Path.of(fullPath);
+    }
+    
     var currentDir = System.getProperty("user.dir");
     var hash = computeHash(currentDir);
     
-    return Path.of(userHome, CACHE_BASE_DIR, CACHE_SUBDIR, hash);
+    return Path.of(basePath, CACHE_BASE_DIR, CACHE_SUBDIR, hash);
   }
 
   /**
