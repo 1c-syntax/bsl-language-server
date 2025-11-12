@@ -121,6 +121,10 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
     diagnosticStorage.addDiagnostic(diagnosticRange, message);
   }
 
+  protected String getMdoRefLocal(MD mdo) {
+    return documentContext.getServerContext().getConfiguration().getMdoRefLocal(mdo);
+  }
+
   /**
    * Проверить объект метаданных.
    *
