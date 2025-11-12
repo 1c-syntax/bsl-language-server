@@ -21,21 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import lombok.experimental.UtilityClass;
+import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 /**
- * Утилита для определения пути к персистентному кэшу ehcache.
+ * Компонент для определения пути к персистентному кэшу ehcache.
  * <p>
  * Кэш размещается в каталоге пользователя в подкаталоге, имя которого вычисляется
  * на основе MD5-хэша текущей рабочей директории. Это позволяет избежать конфликтов
  * при работе с разными проектами и не захламлять git-репозитории.
  */
-@UtilityClass
+@Component
 public class CachePathProvider {
 
   private static final String CACHE_BASE_DIR = ".bsl-language-server";
@@ -52,49 +53,27 @@ public class CachePathProvider {
    * @param fullPath полный путь к каталогу кэша (если задан, используется напрямую)
    * @return путь к каталогу кэша
    */
-  public static Path getCachePath(String basePath, String fullPath) {
+  public Path getCachePath(String basePath, String fullPath) {
     if (fullPath != null && !fullPath.isEmpty()) {
       return Path.of(fullPath);
     }
     
-    var currentDir = System.getProperty("user.dir");
-    var hash = computeHash(currentDir);
+    var currentDir = getCurrentDirectory();
+    var hash = md5Hex(currentDir);
     
     return Path.of(basePath, CACHE_BASE_DIR, CACHE_SUBDIR, hash);
   }
 
   /**
-   * Вычисляет MD5-хэш строки и возвращает его в виде шестнадцатеричного представления.
+   * Получает абсолютный путь к текущей рабочей директории.
    *
-   * @param input строка для хэширования
-   * @return MD5-хэш в виде hex-строки
+   * @return абсолютный путь к текущей директории
    */
-  private static String computeHash(String input) {
+  private String getCurrentDirectory() {
     try {
-      var digest = MessageDigest.getInstance("MD5");
-      var hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-      return bytesToHex(hashBytes);
-    } catch (NoSuchAlgorithmException e) {
-      // MD5 всегда доступен в стандартной JVM
-      throw new IllegalStateException("MD5 algorithm not available", e);
+      return Path.of(".").toRealPath().toString();
+    } catch (IOException e) {
+      throw new UncheckedIOException("Failed to resolve current directory", e);
     }
-  }
-
-  /**
-   * Конвертирует массив байтов в шестнадцатеричную строку.
-   *
-   * @param bytes массив байтов
-   * @return hex-строка
-   */
-  private static String bytesToHex(byte[] bytes) {
-    var hexString = new StringBuilder(2 * bytes.length);
-    for (byte b : bytes) {
-      var hex = Integer.toHexString(0xff & b);
-      if (hex.length() == 1) {
-        hexString.append('0');
-      }
-      hexString.append(hex);
-    }
-    return hexString.toString();
   }
 }

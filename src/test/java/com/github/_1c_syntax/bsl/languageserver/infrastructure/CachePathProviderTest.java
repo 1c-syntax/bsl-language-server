@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -29,6 +30,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CachePathProviderTest {
 
+  private CachePathProvider cachePathProvider;
+
+  @BeforeEach
+  void setUp() {
+    cachePathProvider = new CachePathProvider();
+  }
+
   @Test
   void getCachePath_shouldReturnPathInBasePath() {
     // given
@@ -36,7 +44,7 @@ class CachePathProviderTest {
     var fullPath = "";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath).isNotNull();
@@ -50,7 +58,7 @@ class CachePathProviderTest {
     var fullPath = "";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath.toString()).contains(".bsl-language-server");
@@ -63,7 +71,7 @@ class CachePathProviderTest {
     var fullPath = "";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath.toString()).contains("cache");
@@ -76,7 +84,7 @@ class CachePathProviderTest {
     var fullPath = "";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     // Verify that path has at least 4 components: basePath, .bsl-language-server, cache, hash
@@ -97,8 +105,8 @@ class CachePathProviderTest {
     var fullPath = "";
 
     // when
-    var cachePath1 = CachePathProvider.getCachePath(basePath, fullPath);
-    var cachePath2 = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath1 = cachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath2 = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     // Same working directory should produce same cache path
@@ -112,7 +120,7 @@ class CachePathProviderTest {
     var fullPath = "";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     var basePathObj = Path.of(basePath);
@@ -130,7 +138,7 @@ class CachePathProviderTest {
     var fullPath = "/custom/cache/path";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath.toString()).isEqualTo(fullPath);
@@ -144,7 +152,7 @@ class CachePathProviderTest {
     var fullPath = "/completely/different/path";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath.toString()).isEqualTo(fullPath);
@@ -158,7 +166,7 @@ class CachePathProviderTest {
     String fullPath = null;
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     // Should behave as if fullPath is empty - compute the path
@@ -173,7 +181,7 @@ class CachePathProviderTest {
     var fullPath = "";
 
     // when
-    var cachePath = CachePathProvider.getCachePath(basePath, fullPath);
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
     assertThat(cachePath).isNotNull();

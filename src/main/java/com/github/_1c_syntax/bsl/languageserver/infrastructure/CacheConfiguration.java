@@ -81,10 +81,11 @@ public class CacheConfiguration {
    */
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager(
+    CachePathProvider cachePathProvider,
     @Value("${app.cache.basePath}") String basePath,
     @Value("${app.cache.fullPath}") String fullPath
   ) {
-    var cacheDir = CachePathProvider.getCachePath(basePath, fullPath);
+    var cacheDir = cachePathProvider.getCachePath(basePath, fullPath);
     
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder
