@@ -33,6 +33,7 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiagnostic> {
 
@@ -244,22 +245,26 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     // The fix ensures we check token index bounds before accessing previous token.
     
     // Test various operators as the first token - should not throw IndexOutOfBoundsException
-    var documentContext = TestUtils.getDocumentContext("+ 5", context);
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
-    // No exception should be thrown
+    assertThatCode(() -> {
+      var documentContext = TestUtils.getDocumentContext("+ 5", context);
+      getDiagnostics(documentContext);
+    }).doesNotThrowAnyException();
     
-    documentContext = TestUtils.getDocumentContext("= 5", context);
-    diagnostics = getDiagnostics(documentContext);
-    // No exception should be thrown
+    assertThatCode(() -> {
+      var documentContext = TestUtils.getDocumentContext("= 5", context);
+      getDiagnostics(documentContext);
+    }).doesNotThrowAnyException();
     
-    documentContext = TestUtils.getDocumentContext("* 5", context);
-    diagnostics = getDiagnostics(documentContext);
-    // No exception should be thrown
+    assertThatCode(() -> {
+      var documentContext = TestUtils.getDocumentContext("* 5", context);
+      getDiagnostics(documentContext);
+    }).doesNotThrowAnyException();
     
     // Test unary operator detection with second token
     // The isUnaryChar method should check token at index 0
-    documentContext = TestUtils.getDocumentContext("(+5)", context);
-    diagnostics = getDiagnostics(documentContext);
-    // No exception should be thrown
+    assertThatCode(() -> {
+      var documentContext = TestUtils.getDocumentContext("(+5)", context);
+      getDiagnostics(documentContext);
+    }).doesNotThrowAnyException();
   }
 }
