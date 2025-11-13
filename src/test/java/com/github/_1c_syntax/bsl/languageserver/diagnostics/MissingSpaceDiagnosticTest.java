@@ -245,26 +245,22 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     // The fix ensures we check token index bounds before accessing previous token.
     
     // Test various operators as the first token - should not throw IndexOutOfBoundsException
-    assertThatCode(() -> {
-      var documentContext = TestUtils.getDocumentContext("+ 5", context);
-      getDiagnostics(documentContext);
-    }).doesNotThrowAnyException();
+    var documentContext1 = TestUtils.getDocumentContext("+ 5", context);
+    assertThatCode(() -> getDiagnostics(documentContext1))
+      .doesNotThrowAnyException();
     
-    assertThatCode(() -> {
-      var documentContext = TestUtils.getDocumentContext("= 5", context);
-      getDiagnostics(documentContext);
-    }).doesNotThrowAnyException();
+    var documentContext2 = TestUtils.getDocumentContext("= 5", context);
+    assertThatCode(() -> getDiagnostics(documentContext2))
+      .doesNotThrowAnyException();
     
-    assertThatCode(() -> {
-      var documentContext = TestUtils.getDocumentContext("* 5", context);
-      getDiagnostics(documentContext);
-    }).doesNotThrowAnyException();
+    var documentContext3 = TestUtils.getDocumentContext("* 5", context);
+    assertThatCode(() -> getDiagnostics(documentContext3))
+      .doesNotThrowAnyException();
     
     // Test unary operator detection with second token
     // The isUnaryChar method should check token at index 0
-    assertThatCode(() -> {
-      var documentContext = TestUtils.getDocumentContext("(+5)", context);
-      getDiagnostics(documentContext);
-    }).doesNotThrowAnyException();
+    var documentContext4 = TestUtils.getDocumentContext("(+5)", context);
+    assertThatCode(() -> getDiagnostics(documentContext4))
+      .doesNotThrowAnyException();
   }
 }
