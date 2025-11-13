@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762998703671,
+  "lastUpdate": 1763067858830,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31248,6 +31248,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.29028703719884624",
             "extra": "mean: 87.43392205238342 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2bf4763bef889db3e1ff31bda80fbdc29dbc6d29",
+          "message": "Merge pull request #3600 from 1c-syntax/copilot/fix-index-out-of-bounds-error\n\nFix IndexOutOfBoundsException in MissingSpaceDiagnostic bounds checking",
+          "timestamp": "2025-11-13T21:09:51+01:00",
+          "tree_id": "79199cf316971b74b05c2401d95691841467557b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2bf4763bef889db3e1ff31bda80fbdc29dbc6d29"
+        },
+        "date": 1763067853762,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.5097902615865,
+            "unit": "sec",
+            "range": "stddev: 0.858962016409059",
+            "extra": "mean: 88.5097902615865 sec\nrounds: 3"
           }
         ]
       }
