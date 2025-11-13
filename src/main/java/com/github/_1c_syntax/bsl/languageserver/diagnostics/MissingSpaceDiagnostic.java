@@ -277,7 +277,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     // Унарные + и -
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
     int currentIndex = t.getTokenIndex() - 1;
-    while (currentIndex > 0) {
+    while (currentIndex >= 0) {
 
       if (!StringUtils.isWhitespace(tokens.get(currentIndex).getText())) {
         return setUnary.contains(tokens.get(currentIndex).getText());

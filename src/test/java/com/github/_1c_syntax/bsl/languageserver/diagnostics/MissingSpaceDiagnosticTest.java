@@ -255,5 +255,11 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     documentContext = TestUtils.getDocumentContext("* 5", context);
     diagnostics = getDiagnostics(documentContext);
     // No exception should be thrown
+    
+    // Test unary operator detection with second token
+    // The isUnaryChar method should check token at index 0
+    documentContext = TestUtils.getDocumentContext("(+5)", context);
+    diagnostics = getDiagnostics(documentContext);
+    // No exception should be thrown
   }
 }
