@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762967442838,
+  "lastUpdate": 1762994536477,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31186,6 +31186,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3975275463838825",
             "extra": "mean: 89.04697895050049 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bd7a47834675e1f20f45f08825881c712c870b20",
+          "message": "Merge pull request #3456 from 1c-syntax/feature/optMdoRefBuilder\n\nОптимизировано (и местами исправлено) формирование ссылки на объекты MD",
+          "timestamp": "2025-11-12T19:21:04+01:00",
+          "tree_id": "de90fc881c92458a4ba7deb36e3c8d8032e890e2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bd7a47834675e1f20f45f08825881c712c870b20"
+        },
+        "date": 1762994531894,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.8363315264384,
+            "unit": "sec",
+            "range": "stddev: 1.6873987966647583",
+            "extra": "mean: 87.8363315264384 sec\nrounds: 3"
           }
         ]
       }
