@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1762994536477,
+  "lastUpdate": 1762998703671,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31217,6 +31217,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6873987966647583",
             "extra": "mean: 87.8363315264384 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "46688669d909e3b3d13afd723db27c818ddbdfde",
+          "message": "Merge pull request #3596 from 1c-syntax/copilot/move-ehcache-to-user-directory\n\nПереместить персистентный кэш ehcache в каталог пользователя",
+          "timestamp": "2025-11-12T19:41:03+01:00",
+          "tree_id": "2432c35f057166b0a45c8ad35dee9a5dc3ba306a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/46688669d909e3b3d13afd723db27c818ddbdfde"
+        },
+        "date": 1762998698779,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.43392205238342,
+            "unit": "sec",
+            "range": "stddev: 0.29028703719884624",
+            "extra": "mean: 87.43392205238342 sec\nrounds: 3"
           }
         ]
       }
