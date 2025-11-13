@@ -237,6 +237,9 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   }
 
   private static boolean noSpaceLeft(List<Token> tokens, Token t) {
+    if (t.getTokenIndex() == 0) {
+      return false;
+    }
     var previousToken = tokens.get(t.getTokenIndex() - 1);
     return previousToken.getType() != BSLParser.LPAREN
       && !StringUtils.isWhitespace(previousToken.getText());

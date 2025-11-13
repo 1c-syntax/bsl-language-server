@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -234,5 +235,25 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(57, 21, 23)
       .hasRange(57, 30, 35)
       .hasSize(19);
+  }
+
+  @Test
+  void testFirstTokenWithOperator() {
+    // Regression test for IndexOutOfBoundsException: Index -1 out of bounds
+    // This happens when the first token in the document requires space checking on the left.
+    // The fix ensures we check token index bounds before accessing previous token.
+    
+    // Test various operators as the first token - should not throw IndexOutOfBoundsException
+    var documentContext = TestUtils.getDocumentContext("+ 5", context);
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    // No exception should be thrown
+    
+    documentContext = TestUtils.getDocumentContext("= 5", context);
+    diagnostics = getDiagnostics(documentContext);
+    // No exception should be thrown
+    
+    documentContext = TestUtils.getDocumentContext("* 5", context);
+    diagnostics = getDiagnostics(documentContext);
+    // No exception should be thrown
   }
 }
