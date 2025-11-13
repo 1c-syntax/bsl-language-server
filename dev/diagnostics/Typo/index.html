@@ -1504,23 +1504,49 @@
 <p>Проверка орфографических ошибок осуществляется с помощью <a href="https://languagetool.org/ru/">LanguageTool</a>. Проверяемые строки разбиваются по camelCase 
 и проверяются на соответствие во встроенном словаре.</p>
 <h2 id="Кэш">Кэш<a class="headerlink" href="#Кэш" title="Permanent link">&para;</a></h2>
-<p>Диагностика использует персистентный кэш на диске (EhCache) для хранения информации об уже проверенных словах. Путь к каталогу кэша задаётся свойством <code>app.cache.path</code> в конфигурации приложения.</p>
+<p>Диагностика использует персистентный кэш на диске (EhCache) для хранения информации об уже проверенных словах. Путь к каталогу кэша настраивается с помощью свойств <code>app.cache.basePath</code> и <code>app.cache.fullPath</code> в конфигурации приложения.</p>
 <p>По умолчанию в приложении установлено:</p>
-<div class="highlight"><pre><span></span><code><span class="na">app.cache.path</span><span class="o">=</span><span class="s">.bsl-ls-cache</span>
+<div class="highlight"><pre><span></span><code><span class="na">app.cache.basePath</span><span class="o">=</span><span class="s">${user.home}</span>
+<span class="na">app.cache.fullPath</span><span class="o">=</span>
 </code></pre></div>
-<p>Это означает, что кэш будет создаваться в каталоге <code>.bsl-ls-cache</code> относительно рабочей директории приложения (можно переопределить через переменные окружения или аргументы командной строки).</p>
-<p>Рекомендации для CI: кэшируйте или переносите этот каталог между сборками, чтобы избежать повторной персистентной инвалидации и ускорить проверки. Ниже — примеры подходов для популярных CI-платформ.</p>
+<p>Это означает, что:
+- Кэш будет создаваться в каталоге пользователя (<code>${user.home}/.bsl-language-server/cache/&lt;hash&gt;/</code>)
+- <code>&lt;hash&gt;</code> — MD5-хэш абсолютного пути к текущей рабочей директории, что обеспечивает изоляцию кэша для разных workspace
+- Кэш не создается в рабочей директории проекта, не захламляя git-репозитории</p>
+<p>Для переопределения пути к кэшу можно использовать:
+- <code>app.cache.fullPath</code> — полный путь к каталогу кэша (если задан, используется напрямую)
+- <code>app.cache.basePath</code> — базовый путь для автоматического вычисления (по умолчанию <code>${user.home}</code>)</p>
+<p>Пример переопределения:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Задать явный путь к кэшу</span>
+<span class="na">app.cache.fullPath</span><span class="o">=</span><span class="s">/custom/cache/location</span>
+
+<span class="c1"># Или изменить только базовый путь</span>
+<span class="na">app.cache.basePath</span><span class="o">=</span><span class="s">/opt/bsl-ls</span>
+<span class="c1"># Результат: /opt/bsl-ls/.bsl-language-server/cache/&lt;hash&gt;/</span>
+</code></pre></div>
+<p>Рекомендации для CI: </p>
+<p><strong>Важно</strong>: С новой версией кэш по умолчанию хранится в каталоге пользователя с хэшем workspace. Для CI рекомендуется явно задать <code>app.cache.fullPath</code> для упрощения кэширования между сборками.</p>
 <ul>
 <li>GitHub Actions</li>
-<li>
-<p>Используйте <code>actions/cache</code> для сохранения каталога (<code>.bsl-ls-cache</code> или путь, заданный в <code>app.cache.path</code>) между прогоном сборок и тестов.</p>
-</li>
-<li>
-<p>GitLab CI</p>
-</li>
+<li>Задайте явный путь к кэшу в переменных окружения или конфигурации</li>
+<li>Используйте <code>actions/cache</code> для сохранения каталога между прогоном сборок и тестов</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Cache BSL LS Typo</span>
+<span class="w">  </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/cache@v3</span>
+<span class="w">  </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.bsl-ls-cache</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ runner.os }}-bsl-typo-${{ hashFiles(&#39;**/*.bsl&#39;) }}</span>
+<span class="w">    </span><span class="nt">restore-keys</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">${{ runner.os }}-bsl-typo-</span>
+</code></pre></div>
+<ul>
+<li>GitLab CI</li>
 <li>
 <p>В <code>.gitlab-ci.yml</code> используйте секцию <code>cache</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">cache</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="nt">variables</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">APP_CACHE_FULLPATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.bsl-ls-cache&quot;</span>
+
+<span class="nt">cache</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bsl-ls-typo-cache&quot;</span>
 <span class="w">  </span><span class="nt">paths</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.bsl-ls-cache/</span>
@@ -1533,6 +1559,7 @@
 <li>
 <p>Jenkins</p>
 </li>
+<li>Задайте переменную окружения <code>APP_CACHE_FULLPATH</code> для явного пути к кэшу</li>
 <li>В pipeline можно сохранить каталог кэша между сборками несколькими способами:<ul>
 <li>Использовать <code>stash</code>/<code>unstash</code> для передачи данных между этапами в одной сборке.</li>
 <li>Использовать плагин <code>Workspace Cleanup</code> и настроить сохранение workspace на агенте (если агенты постоянные) или архивировать артефакт с помощью <code>archiveArtifacts</code> и скачивать при следующих сборках.</li>
@@ -1541,7 +1568,8 @@
 </li>
 </ul>
 <p>Общие рекомендации:
-- Убедитесь, что путь, указанный в <code>app.cache.path</code>, доступен процессу сборки и имеет достаточные права.</p>
+- Для CI-окружений рекомендуется явно задать <code>app.cache.fullPath</code> (например, <code>.bsl-ls-cache</code> в workspace проекта) для упрощения кэширования
+- Убедитесь, что путь к кэшу доступен процессу сборки и имеет достаточные права.</p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 

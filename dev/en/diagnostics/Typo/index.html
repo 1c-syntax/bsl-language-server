@@ -1502,6 +1502,73 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 <p>Spell checking is done with <a href="https://languagetool.org/ru/">LanguageTool</a>. The strings are split into camelCase chunks and checked against a built-in dictionary.</p>
+<h2 id="Cache">Cache<a class="headerlink" href="#Cache" title="Permanent link">&para;</a></h2>
+<p>The diagnostic uses persistent disk cache (EhCache) to store information about already checked words. The cache directory path is configured using <code>app.cache.basePath</code> and <code>app.cache.fullPath</code> properties in the application configuration.</p>
+<p>By default, the application has:</p>
+<div class="highlight"><pre><span></span><code><span class="na">app.cache.basePath</span><span class="o">=</span><span class="s">${user.home}</span>
+<span class="na">app.cache.fullPath</span><span class="o">=</span>
+</code></pre></div>
+<p>This means that:
+- Cache will be created in the user directory (<code>${user.home}/.bsl-language-server/cache/&lt;hash&gt;/</code>)
+- <code>&lt;hash&gt;</code> is an MD5 hash of the absolute path to the current working directory, ensuring cache isolation for different workspaces
+- Cache is not created in the project's working directory, avoiding clutter in git repositories</p>
+<p>To override the cache path, you can use:
+- <code>app.cache.fullPath</code> — full path to cache directory (if set, used directly)
+- <code>app.cache.basePath</code> — base path for automatic calculation (defaults to <code>${user.home}</code>)</p>
+<p>Example override:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set explicit cache path</span>
+<span class="na">app.cache.fullPath</span><span class="o">=</span><span class="s">/custom/cache/location</span>
+
+<span class="c1"># Or change only the base path</span>
+<span class="na">app.cache.basePath</span><span class="o">=</span><span class="s">/opt/bsl-ls</span>
+<span class="c1"># Result: /opt/bsl-ls/.bsl-language-server/cache/&lt;hash&gt;/</span>
+</code></pre></div>
+<p>CI Recommendations:</p>
+<p><strong>Important</strong>: With the new version, cache is stored by default in the user directory with workspace hash. For CI, it's recommended to explicitly set <code>app.cache.fullPath</code> to simplify caching between builds.</p>
+<ul>
+<li>GitHub Actions</li>
+<li>Set explicit cache path in environment variables or configuration</li>
+<li>Use <code>actions/cache</code> to save the directory between build and test runs</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Cache BSL LS Typo</span>
+<span class="w">  </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/cache@v3</span>
+<span class="w">  </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.bsl-ls-cache</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ runner.os }}-bsl-typo-${{ hashFiles(&#39;**/*.bsl&#39;) }}</span>
+<span class="w">    </span><span class="nt">restore-keys</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">${{ runner.os }}-bsl-typo-</span>
+</code></pre></div>
+<ul>
+<li>GitLab CI</li>
+<li>
+<p>In <code>.gitlab-ci.yml</code> use the <code>cache</code> section:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">variables</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">APP_CACHE_FULLPATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.bsl-ls-cache&quot;</span>
+
+<span class="nt">cache</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bsl-ls-typo-cache&quot;</span>
+<span class="w">  </span><span class="nt">paths</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.bsl-ls-cache/</span>
+<span class="w">  </span><span class="nt">policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pull-push</span>
+</code></pre></div>
+</li>
+<li>
+<p>If needed, set a unique <code>key</code> for different branches/runners.</p>
+</li>
+<li>
+<p>Jenkins</p>
+</li>
+<li>Set environment variable <code>APP_CACHE_FULLPATH</code> for explicit cache path</li>
+<li>In pipeline, you can save the cache directory between builds in several ways:<ul>
+<li>Use <code>stash</code>/<code>unstash</code> to transfer data between stages in one build.</li>
+<li>Use the <code>Workspace Cleanup</code> plugin and configure workspace preservation on the agent (if agents are permanent) or archive the artifact using <code>archiveArtifacts</code> and download it in subsequent builds.</li>
+<li>For Jenkins with dynamic agents (e.g., Kubernetes), it's recommended to save cache in network storage or object storage (S3) and restore it at the beginning of the job.</li>
+</ul>
+</li>
+</ul>
+<p>General recommendations:
+- For CI environments, it's recommended to explicitly set <code>app.cache.fullPath</code> (e.g., <code>.bsl-ls-cache</code> in project workspace) to simplify caching
+- Ensure that the cache path is accessible to the build process and has sufficient permissions.</p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
