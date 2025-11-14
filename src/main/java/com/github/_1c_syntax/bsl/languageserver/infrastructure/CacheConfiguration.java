@@ -137,16 +137,12 @@ public class CacheConfiguration {
    * @return менеджер EhCache
    */
   private org.ehcache.CacheManager createEhcacheManager(java.nio.file.Path cacheDir) {
-    // Configure EhCache cache with disk persistence
-    var cacheConfig = CacheConfigurationBuilder
-      .newCacheConfigurationBuilder(
-        String.class,
-        WordStatus.class,
-        ResourcePoolsBuilder.newResourcePoolsBuilder()
-          .heap(125_000, EntryUnit.ENTRIES)
-          .disk(50, MemoryUnit.MB, true)
-      )
-      .build();
+    // Build resource pools with disk persistence
+    var resourcePools = ResourcePoolsBuilder.newResourcePoolsBuilder()
+      .heap(125_000, EntryUnit.ENTRIES)
+      .disk(50, MemoryUnit.MB, true);
+    
+    var cacheConfig = createTypoCacheConfig(resourcePools);
 
     // Build native EhCache manager with persistence
     return CacheManagerBuilder.newCacheManagerBuilder()
@@ -164,20 +160,34 @@ public class CacheConfiguration {
    * @return менеджер EhCache с in-memory хранилищем
    */
   private org.ehcache.CacheManager createInMemoryEhcacheManager() {
-    // Configure EhCache cache with heap-only storage
-    var cacheConfig = CacheConfigurationBuilder
-      .newCacheConfigurationBuilder(
-        String.class,
-        WordStatus.class,
-        ResourcePoolsBuilder.newResourcePoolsBuilder()
-          .heap(125_000, EntryUnit.ENTRIES)
-      )
-      .build();
+    // Build resource pools with heap-only storage
+    var resourcePools = ResourcePoolsBuilder.newResourcePoolsBuilder()
+      .heap(125_000, EntryUnit.ENTRIES);
+    
+    var cacheConfig = createTypoCacheConfig(resourcePools);
 
     // Build native EhCache manager without persistence
     return CacheManagerBuilder.newCacheManagerBuilder()
       .withCache(TYPO_CACHE_NAME, cacheConfig)
       .build(true);
+  }
+
+  /**
+   * Создаёт конфигурацию кэша для typoCache.
+   *
+   * @param resourcePoolsBuilder построитель пулов ресурсов (heap, disk и т.д.)
+   * @return конфигурация кэша
+   */
+  private org.ehcache.config.CacheConfiguration<String, WordStatus> createTypoCacheConfig(
+    ResourcePoolsBuilder resourcePoolsBuilder
+  ) {
+    return CacheConfigurationBuilder
+      .newCacheConfigurationBuilder(
+        String.class,
+        WordStatus.class,
+        resourcePoolsBuilder
+      )
+      .build();
   }
 
   @Bean
