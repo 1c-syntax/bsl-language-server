@@ -80,7 +80,8 @@ public class CacheConfiguration {
    * Путь можно переопределить через свойство {@code app.cache.fullPath}.
    * <p>
    * При запуске нескольких экземпляров в одной директории автоматически используются
-   * отдельные каталоги кэша с суффиксами @1, @2 и т.д.
+   * отдельные каталоги кэша с суффиксами @1, @2 и т.д. Если все каталоги заблокированы
+   * (более 10 экземпляров), автоматически используется кэш в памяти без персистентности.
    */
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager(
@@ -98,12 +99,14 @@ public class CacheConfiguration {
    * <p>
    * Пытается использовать основной путь (без суффикса), затем пути с суффиксами @1, @2 и т.д.
    * до максимального количества попыток.
+   * <p>
+   * Если все попытки исчерпаны (все каталоги заблокированы), автоматически создаётся
+   * кэш-менеджер с хранением только в памяти (без персистентности на диске).
    *
    * @param cachePathProvider провайдер путей к кэшу
    * @param basePath базовый путь
    * @param fullPath полный путь (если задан)
    * @return менеджер EhCache
-   * @throws RuntimeException если не удалось создать кэш ни с одним из путей
    */
   private org.ehcache.CacheManager createEhcacheManagerWithRetry(
     CachePathProvider cachePathProvider,
@@ -113,8 +116,6 @@ public class CacheConfiguration {
     // Maximum number of instances to try
     final int maxInstances = 10;
     
-    RuntimeException lastException = null;
-    
     for (int instanceNumber = 0; instanceNumber < maxInstances; instanceNumber++) {
       try {
         var cacheDir = cachePathProvider.getCachePath(basePath, fullPath, instanceNumber);
@@ -122,15 +123,11 @@ public class CacheConfiguration {
       } catch (org.ehcache.StateTransitionException e) {
         // This exception indicates the directory is locked
         // Try next instance number
-        lastException = e;
       }
     }
     
-    // If we exhausted all attempts, throw the last exception
-    throw new RuntimeException(
-      "Failed to create EhCache manager after " + maxInstances + " attempts", 
-      lastException
-    );
+    // If we exhausted all attempts, fall back to in-memory cache
+    return createInMemoryEhcacheManager();
   }
 
   /**
@@ -154,6 +151,31 @@ public class CacheConfiguration {
     // Build native EhCache manager with persistence
     return CacheManagerBuilder.newCacheManagerBuilder()
       .with(CacheManagerBuilder.persistence(cacheDir.toFile()))
+      .withCache(TYPO_CACHE_NAME, cacheConfig)
+      .build(true);
+  }
+
+  /**
+   * Создаёт менеджер EhCache с хранением только в памяти (без персистентности).
+   * <p>
+   * Используется как fallback, когда все доступные каталоги кэша заблокированы.
+   * Кэш будет очищен при перезапуске приложения.
+   *
+   * @return менеджер EhCache с in-memory хранилищем
+   */
+  private org.ehcache.CacheManager createInMemoryEhcacheManager() {
+    // Configure EhCache cache with heap-only storage
+    var cacheConfig = CacheConfigurationBuilder
+      .newCacheConfigurationBuilder(
+        String.class,
+        WordStatus.class,
+        ResourcePoolsBuilder.newResourcePoolsBuilder()
+          .heap(125_000, EntryUnit.ENTRIES)
+      )
+      .build();
+
+    // Build native EhCache manager without persistence
+    return CacheManagerBuilder.newCacheManagerBuilder()
       .withCache(TYPO_CACHE_NAME, cacheConfig)
       .build(true);
   }
