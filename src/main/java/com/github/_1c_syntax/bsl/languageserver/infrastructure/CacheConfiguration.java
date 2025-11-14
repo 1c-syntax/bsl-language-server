@@ -78,6 +78,9 @@ public class CacheConfiguration {
    * <p>
    * Кэш размещается в каталоге пользователя, что позволяет избежать захламления git-репозиториев.
    * Путь можно переопределить через свойство {@code app.cache.fullPath}.
+   * <p>
+   * При запуске нескольких экземпляров в одной директории автоматически используются
+   * отдельные каталоги кэша с суффиксами @1, @2 и т.д.
    */
   @Bean(destroyMethod = "close")
   public org.ehcache.CacheManager ehcacheManager(
@@ -85,8 +88,58 @@ public class CacheConfiguration {
     @Value("${app.cache.basePath}") String basePath,
     @Value("${app.cache.fullPath}") String fullPath
   ) {
-    var cacheDir = cachePathProvider.getCachePath(basePath, fullPath);
+    // Try to create cache manager with instance-numbered directories
+    // if the primary directory is locked
+    return createEhcacheManagerWithRetry(cachePathProvider, basePath, fullPath);
+  }
+
+  /**
+   * Создаёт менеджер EhCache, пробуя пути с разными номерами экземпляров при блокировке.
+   * <p>
+   * Пытается использовать основной путь (без суффикса), затем пути с суффиксами @1, @2 и т.д.
+   * до максимального количества попыток.
+   *
+   * @param cachePathProvider провайдер путей к кэшу
+   * @param basePath базовый путь
+   * @param fullPath полный путь (если задан)
+   * @return менеджер EhCache
+   * @throws RuntimeException если не удалось создать кэш ни с одним из путей
+   */
+  private org.ehcache.CacheManager createEhcacheManagerWithRetry(
+    CachePathProvider cachePathProvider,
+    String basePath,
+    String fullPath
+  ) {
+    // Maximum number of instances to try
+    final int maxInstances = 10;
     
+    RuntimeException lastException = null;
+    
+    for (int instanceNumber = 0; instanceNumber < maxInstances; instanceNumber++) {
+      try {
+        var cacheDir = cachePathProvider.getCachePath(basePath, fullPath, instanceNumber);
+        return createEhcacheManager(cacheDir);
+      } catch (org.ehcache.StateTransitionException e) {
+        // This exception indicates the directory is locked
+        // Try next instance number
+        lastException = e;
+      }
+    }
+    
+    // If we exhausted all attempts, throw the last exception
+    throw new RuntimeException(
+      "Failed to create EhCache manager after " + maxInstances + " attempts", 
+      lastException
+    );
+  }
+
+  /**
+   * Создаёт менеджер EhCache для указанного каталога.
+   *
+   * @param cacheDir каталог для персистентного хранилища
+   * @return менеджер EhCache
+   */
+  private org.ehcache.CacheManager createEhcacheManager(java.nio.file.Path cacheDir) {
     // Configure EhCache cache with disk persistence
     var cacheConfig = CacheConfigurationBuilder
       .newCacheConfigurationBuilder(

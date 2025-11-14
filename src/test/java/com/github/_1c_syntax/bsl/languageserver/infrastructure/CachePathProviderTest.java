@@ -189,4 +189,86 @@ class CachePathProviderTest {
     assertThat(cachePath.toString()).contains(".bsl-language-server");
     assertThat(cachePath.toString()).contains("cache");
   }
+
+  @Test
+  void getCachePath_withInstanceNumber_shouldAddSuffix(@TempDir Path tempDir) {
+    // given
+    var basePath = tempDir.toString();
+    var fullPath = "";
+
+    // when
+    var cachePath1 = cachePathProvider.getCachePath(basePath, fullPath, 1);
+    var cachePath2 = cachePathProvider.getCachePath(basePath, fullPath, 2);
+
+    // then
+    assertThat(cachePath1.getFileName().toString()).endsWith("@1");
+    assertThat(cachePath2.getFileName().toString()).endsWith("@2");
+  }
+
+  @Test
+  void getCachePath_withInstanceNumberZero_shouldNotAddSuffix(@TempDir Path tempDir) {
+    // given
+    var basePath = tempDir.toString();
+    var fullPath = "";
+
+    // when
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath, 0);
+
+    // then
+    var fileName = cachePath.getFileName().toString();
+    assertThat(fileName).doesNotContain("@");
+    assertThat(fileName).hasSize(32); // MD5 hash length
+  }
+
+  @Test
+  void getCachePath_instanceNumberedPaths_shouldBeDifferent(@TempDir Path tempDir) {
+    // given
+    var basePath = tempDir.toString();
+    var fullPath = "";
+
+    // when
+    var cachePath0 = cachePathProvider.getCachePath(basePath, fullPath, 0);
+    var cachePath1 = cachePathProvider.getCachePath(basePath, fullPath, 1);
+    var cachePath2 = cachePathProvider.getCachePath(basePath, fullPath, 2);
+
+    // then
+    assertThat(cachePath0).isNotEqualTo(cachePath1);
+    assertThat(cachePath0).isNotEqualTo(cachePath2);
+    assertThat(cachePath1).isNotEqualTo(cachePath2);
+  }
+
+  @Test
+  void getCachePath_withInstanceNumber_shouldShareParentDirectory(@TempDir Path tempDir) {
+    // given
+    var basePath = tempDir.toString();
+    var fullPath = "";
+
+    // when
+    var cachePath0 = cachePathProvider.getCachePath(basePath, fullPath, 0);
+    var cachePath1 = cachePathProvider.getCachePath(basePath, fullPath, 1);
+    var cachePath2 = cachePathProvider.getCachePath(basePath, fullPath, 2);
+
+    // then
+    // All instances should have the same parent (cache directory)
+    assertThat(cachePath0.getParent()).isEqualTo(cachePath1.getParent());
+    assertThat(cachePath0.getParent()).isEqualTo(cachePath2.getParent());
+  }
+
+  @Test
+  void getCachePath_withInstanceNumber_shouldIgnoreWhenFullPathProvided(@TempDir Path tempDir) {
+    // given
+    var basePath = tempDir.toString();
+    var customPath = tempDir.resolve("custom").resolve("cache").resolve("path");
+    var fullPath = customPath.toString();
+
+    // when
+    var cachePath0 = cachePathProvider.getCachePath(basePath, fullPath, 0);
+    var cachePath1 = cachePathProvider.getCachePath(basePath, fullPath, 1);
+
+    // then
+    // When fullPath is provided, instance number should be ignored
+    assertThat(cachePath0).isEqualTo(customPath);
+    assertThat(cachePath1).isEqualTo(customPath);
+    assertThat(cachePath0).isEqualTo(cachePath1);
+  }
 }
