@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.Optional;
 
@@ -38,7 +38,7 @@ public class WhileLoopVertex extends LoopVertex {
   }
 
   @Override
-  public Optional<BSLParserRuleContext> getAst() {
+  public Optional<ParserRuleContext> getAst() {
     return Optional.of(ast);
   }
 }

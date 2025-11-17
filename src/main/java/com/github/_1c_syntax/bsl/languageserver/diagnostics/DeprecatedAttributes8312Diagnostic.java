@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -286,7 +286,7 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     return super.visitComplexIdentifier(ctx);
   }
 
-  private void checkDeprecatedAttributes(BSLParserRuleContext ctx,
+  private void checkDeprecatedAttributes(ParserRuleContext ctx,
                                          Pattern objectNamePattern,
                                          Pattern deprecatedAttributesPattern) {
 

@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -84,12 +84,12 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     return ctx;
   }
 
-  private static boolean needCheck(BSLParserRuleContext declaration) {
+  private static boolean needCheck(ParserRuleContext declaration) {
     List<? extends BSLParser.ParamContext> params = getParams(declaration);
     return params.isEmpty() || !hasThisForm(params);
   }
 
-  private static List<? extends BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
+  private static List<? extends BSLParser.ParamContext> getParams(ParserRuleContext declaration) {
     BSLParser.ParamListContext paramList = declaration.getRuleContext(BSLParser.ParamListContext.class, 0);
     if (paramList == null) {
       return Collections.emptyList();

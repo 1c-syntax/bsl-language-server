@@ -27,13 +27,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.StringInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
@@ -240,7 +240,7 @@ public class CyclomaticComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof BSLParserRuleContext parserRule)) {
+      if (!(tree instanceof ParserRuleContext parserRule)) {
         continue;
       }
 

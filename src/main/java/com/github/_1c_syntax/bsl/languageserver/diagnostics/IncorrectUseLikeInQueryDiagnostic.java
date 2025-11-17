@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -54,7 +54,7 @@ public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagno
     return super.visitLikePredicate(ctx);
   }
 
-  private void checkRightStatement(BSLParserRuleContext ctx,
+  private void checkRightStatement(ParserRuleContext ctx,
                                    @Nullable TerminalNode like,
                                    List<? extends SDBLParser.ExpressionContext> expressions) {
 

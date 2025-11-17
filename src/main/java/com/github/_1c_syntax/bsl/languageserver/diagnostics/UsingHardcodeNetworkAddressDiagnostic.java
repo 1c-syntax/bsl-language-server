@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -145,18 +145,18 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
     }
   }
 
-  private boolean itVersionReturn(BSLParserRuleContext ctx) {
+  private boolean itVersionReturn(ParserRuleContext ctx) {
 
-    BSLParserRuleContext returnState = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_returnStatement);
+    ParserRuleContext returnState = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_returnStatement);
     if (returnState != null) {
       return skipStatement(returnState, BSLParser.RULE_function);
     }
     return false;
   }
 
-  private boolean skipStatement(BSLParserRuleContext ctx, int ruleStatement) {
+  private boolean skipStatement(ParserRuleContext ctx, int ruleStatement) {
 
-    BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, ruleStatement);
+    ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, ruleStatement);
     if (parent != null) {
       var matcher = searchWordsExclusion.matcher(parent.getText());
       return matcher.find();

@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -528,7 +528,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private static boolean isStatementLevelPreproc(BSLParserRuleContext ctx) {
+  private static boolean isStatementLevelPreproc(ParserRuleContext ctx) {
     return ctx.getParent().getParent().getRuleIndex() == BSLParser.RULE_statement;
   }
 

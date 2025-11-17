@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import lombok.RequiredArgsConstructor;

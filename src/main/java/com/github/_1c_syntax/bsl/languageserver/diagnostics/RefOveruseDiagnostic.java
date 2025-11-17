@@ -30,7 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
@@ -116,7 +116,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private Stream<SDBLParser.ColumnContext> checkQuery(SDBLParser.QueryContext ctx) {
     var columns = Trees.findAllTopLevelDescendantNodes(ctx, RULE_COLUMNS).stream()
       .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
-      .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
+      .filter(parserRuleContext -> Trees.getRootParent((ParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
         .getRuleIndex() == SDBLParser.RULE_query)
       .map(SDBLParser.ColumnContext.class::cast)
       .collect(Collectors.toList());

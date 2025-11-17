@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -151,9 +151,9 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
 
   private static Optional<BSLParser.ExpressionContext> getExpression(Optional<BSLParser.ConstValueContext> constValue) {
     return constValue
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context.getChildCount() == 1)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .map(BSLParser.ExpressionContext.class::cast);
@@ -164,9 +164,9 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean insideContext(Optional<BSLParser.ExpressionContext> expression,
-                                       Class<? extends BSLParserRuleContext> assignmentContextClass) {
+                                       Class<? extends ParserRuleContext> assignmentContextClass) {
     return expression
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(assignmentContextClass::isInstance)
       .isPresent();
   }
@@ -177,22 +177,22 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean insideAssignmentWithDateMethodForSimpleDate(Optional<BSLParser.ExpressionContext> expression) {
     return expression
-      .map(BSLParserRuleContext::getParent) // callParam
+      .map(ParserRuleContext::getParent) // callParam
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // callParamList
+      .map(ParserRuleContext::getParent) // callParamList
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // doCall
-      .map(BSLParserRuleContext::getParent) // globalCall - метод Дата(ХХХ)
+      .map(ParserRuleContext::getParent) // doCall
+      .map(ParserRuleContext::getParent) // globalCall - метод Дата(ХХХ)
       .filter(BSLParser.GlobalMethodCallContext.class::isInstance)
       .map(BSLParser.GlobalMethodCallContext.class::cast)
       .filter(context -> methodPattern.matcher(context.methodName().getText()).matches())
-      .map(BSLParserRuleContext::getParent) // complexId
+      .map(ParserRuleContext::getParent) // complexId
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // member
+      .map(ParserRuleContext::getParent) // member
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent) // expression
+      .map(ParserRuleContext::getParent) // expression
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .isPresent();
   }

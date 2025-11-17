@@ -34,7 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -147,7 +147,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
         && !(node instanceof TerminalNode))
       .findFirst()
       .ifPresent((Tree node) -> {
-          var ctxRange = Ranges.create((BSLParserRuleContext) node);
+          var ctxRange = Ranges.create((ParserRuleContext) node);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic(ctx);
@@ -179,7 +179,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private void addDiagnosticForFileCodeBlock(BSLParserRuleContext ctx) {
+  private void addDiagnosticForFileCodeBlock(ParserRuleContext ctx) {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
       .stream()
       .filter(node -> node.getParent().getParent() == ctx)

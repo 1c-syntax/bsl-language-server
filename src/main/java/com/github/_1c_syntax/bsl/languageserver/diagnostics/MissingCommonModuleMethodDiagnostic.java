@@ -30,10 +30,10 @@ import com.github._1c_syntax.bsl.languageserver.references.model.LocationReposit
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
@@ -54,7 +54,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
   private final LocationRepository locationRepository;
 
-  private static String getMethodNameByLocation(BSLParserRuleContext node, Range range) {
+  private static String getMethodNameByLocation(ParserRuleContext node, Range range) {
     return Trees.findTerminalNodeContainsPosition(node, range.getStart())
       .map(ParseTree::getText)
       .orElseThrow();

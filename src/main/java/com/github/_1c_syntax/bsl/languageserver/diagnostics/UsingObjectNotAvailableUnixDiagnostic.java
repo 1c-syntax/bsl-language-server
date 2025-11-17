@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -75,8 +75,8 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     return super.visitNewExpression(ctx);
   }
 
-  private static boolean isFindIfBranchWithLinuxCondition(BSLParserRuleContext element) {
-    BSLParserRuleContext ancestor = Trees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
+  private static boolean isFindIfBranchWithLinuxCondition(ParserRuleContext element) {
+    ParserRuleContext ancestor = Trees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
     if (ancestor == null) {
       return false;
     }

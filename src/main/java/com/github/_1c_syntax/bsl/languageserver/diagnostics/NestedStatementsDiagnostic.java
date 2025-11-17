@@ -30,7 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -121,12 +121,12 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     exitNode(ctx);
   }
 
-  private void enterNode(BSLParserRuleContext ctx) {
+  private void enterNode(ParserRuleContext ctx) {
     lastCtx = ctx;
     nestedParents.push(ctx);
   }
 
-  private void exitNode(BSLParserRuleContext ctx) {
+  private void exitNode(ParserRuleContext ctx) {
 
     if (ctx == lastCtx && nestedParents.size() > maxAllowedLevel) {
       addRelatedInformationDiagnostic(ctx);
@@ -134,7 +134,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     nestedParents.pop();
   }
 
-  private void addRelatedInformationDiagnostic(BSLParserRuleContext ctx) {
+  private void addRelatedInformationDiagnostic(ParserRuleContext ctx) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
     relatedInformation.add(
       RelatedInformation.create(
@@ -149,7 +149,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
       .map(expressionContext ->
         RelatedInformation.create(
           documentContext.getUri(),
-          Ranges.create(((BSLParserRuleContext) expressionContext).getStart()),
+          Ranges.create(((ParserRuleContext) expressionContext).getStart()),
           relatedMessage
         )
       )

@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
@@ -62,12 +62,12 @@ public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitTernaryOperator(ctx);
   }
 
-  private void findNestedTernaryOperator(BSLParserRuleContext ctx, int skip) {
+  private void findNestedTernaryOperator(ParserRuleContext ctx, int skip) {
     Collection<ParseTree> nestedTernaryOperators = Trees.findAllRuleNodes(ctx, BSLParser.RULE_ternaryOperator);
     if (nestedTernaryOperators.size() > skip) {
       nestedTernaryOperators.stream()
         .skip(skip)
-        .forEach(parseTree -> diagnosticStorage.addDiagnostic((BSLParserRuleContext) parseTree));
+        .forEach(parseTree -> diagnosticStorage.addDiagnostic((ParserRuleContext) parseTree));
     }
   }
 

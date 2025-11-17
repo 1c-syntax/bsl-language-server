@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -209,8 +209,8 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     }
     final var methodCalls = Trees.findAllRuleNodes(expression,
         List.of(BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall)).stream()
-      .filter(BSLParserRuleContext.class::isInstance)
-      .map(BSLParserRuleContext.class::cast)
+      .filter(ParserRuleContext.class::isInstance)
+      .map(ParserRuleContext.class::cast)
       .collect(Collectors.toList());
     if (!methodCalls.isEmpty()) {
       if (isErrorDescriptionCallCorrect(methodCalls)) {
@@ -224,7 +224,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     return isValidExpression(expression, codeBlock, checkPrevAssignment);
   }
 
-  private static boolean isErrorDescriptionCallCorrect(Collection<BSLParserRuleContext> calls) {
+  private static boolean isErrorDescriptionCallCorrect(Collection<ParserRuleContext> calls) {
     return calls.stream()
       .filter(context -> isAppropriateMethodName(context, PATTERN_DETAIL_ERROR_DESCRIPTION))
       .filter(context -> context instanceof BSLParser.GlobalMethodCallContext
@@ -233,7 +233,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean isAppropriateMethodName(
-    BSLParserRuleContext context,
+    ParserRuleContext context,
     Pattern patternDetailErrorDescription
   ) {
     BSLParser.MethodNameContext methodNameContext = context.getRuleContext(BSLParser.MethodNameContext.class, 0);
@@ -242,11 +242,11 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean isErrorProcessingCall(BSLParser.MethodCallContext methodCallContext) {
     return Optional.of(methodCallContext)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context instanceof BSLParser.AccessCallContext)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context instanceof BSLParser.ModifierContext)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context instanceof BSLParser.ComplexIdentifierContext)
       .map(BSLParser.ComplexIdentifierContext.class::cast)
       .map(BSLParser.ComplexIdentifierContext::IDENTIFIER)
@@ -254,19 +254,19 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private static boolean hasFirstDescendantGlobalCallWithPatternError(BSLParserRuleContext globalCallCtx) {
+  private static boolean hasFirstDescendantGlobalCallWithPatternError(ParserRuleContext globalCallCtx) {
     return Trees.findAllRuleNodes(globalCallCtx, BSLParser.RULE_globalMethodCall).stream()
       .map(BSLParser.GlobalMethodCallContext.class::cast)
       .anyMatch(context -> isAppropriateMethodName(context, PATTERN_ERROR_INFO));
   }
 
-  private static boolean hasSimpleErrorDescription(Collection<BSLParserRuleContext> globalCalls) {
+  private static boolean hasSimpleErrorDescription(Collection<ParserRuleContext> globalCalls) {
     return globalCalls.stream()
       .filter(context -> context instanceof BSLParser.GlobalMethodCallContext)
       .anyMatch(context -> isAppropriateMethodName(context, PATTERN_SIMPLE_ERROR_DESCRIPTION));
   }
 
-  private static boolean hasBriefErrorDescription(Collection<BSLParserRuleContext> calls) {
+  private static boolean hasBriefErrorDescription(Collection<ParserRuleContext> calls) {
     return calls.stream()
       .filter(context -> isAppropriateMethodName(context, PATTERN_BRIEF_ERROR_DESCRIPTION))
       .anyMatch(context -> context instanceof BSLParser.GlobalMethodCallContext
@@ -316,7 +316,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
       .filter(assignmentContext -> assignmentContext.lValue().getText().equalsIgnoreCase(varName));
   }
 
-  private static boolean isInsideExceptBlock(BSLParserRuleContext context) {
+  private static boolean isInsideExceptBlock(ParserRuleContext context) {
     return Trees.getRootParent(context, BSLParser.RULE_exceptCodeBlock) != null;
   }
 
