@@ -28,9 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;

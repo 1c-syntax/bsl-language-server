@@ -32,12 +32,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPo
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;

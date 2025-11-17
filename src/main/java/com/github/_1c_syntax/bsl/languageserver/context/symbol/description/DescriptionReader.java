@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
-import org.antlr.v4.runtime.ParserRuleContext;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Collections;

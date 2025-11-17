@@ -29,8 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -203,7 +203,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       if (assignment != null
         && ((BSLParser.AssignmentContext) assignment).expression().getChildCount() == 1
         && isNotEmptyStringByToken(assignment.getStop())) {
-        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, info.getMessage());
+        diagnosticStorage.addDiagnostic(assignment, info.getMessage());
       }
     }
   }
