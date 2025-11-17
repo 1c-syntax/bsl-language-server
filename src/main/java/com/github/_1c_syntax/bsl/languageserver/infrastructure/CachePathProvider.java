@@ -54,6 +54,29 @@ public class CachePathProvider {
    * @return путь к каталогу кэша
    */
   public Path getCachePath(String basePath, String fullPath) {
+    return getCachePath(basePath, fullPath, 0);
+  }
+
+  /**
+   * Возвращает путь к каталогу персистентного кэша для текущей рабочей директории с учётом номера экземпляра.
+   * <p>
+   * Если fullPath не пустой, возвращает его напрямую (instanceNumber игнорируется).
+   * Иначе формирует путь по шаблону:
+   * <ul>
+   *   <li>При instanceNumber = 0: {@code ${basePath}/.bsl-language-server/cache/<md5-hash>/}</li>
+   *   <li>При instanceNumber > 0: {@code ${basePath}/.bsl-language-server/cache/<md5-hash>@<instanceNumber>/}</li>
+   * </ul>
+   * где md5-hash - это MD5-хэш абсолютного пути текущей рабочей директории.
+   * <p>
+   * Суффикс с номером экземпляра позволяет нескольким экземплярам BSL LS работать в одной директории
+   * с отдельными персистентными кэшами.
+   *
+   * @param basePath базовый путь к каталогу (обычно user.home)
+   * @param fullPath полный путь к каталогу кэша (если задан, используется напрямую)
+   * @param instanceNumber номер экземпляра (0 для основного, 1+ для дополнительных)
+   * @return путь к каталогу кэша
+   */
+  public Path getCachePath(String basePath, String fullPath, int instanceNumber) {
     if (fullPath != null && !fullPath.isEmpty()) {
       return Path.of(fullPath);
     }
@@ -61,7 +84,10 @@ public class CachePathProvider {
     var currentDir = getCurrentDirectory();
     var hash = md5Hex(currentDir);
     
-    return Path.of(basePath, CACHE_BASE_DIR, CACHE_SUBDIR, hash);
+    // Add instance suffix for additional instances
+    var cacheDirName = instanceNumber > 0 ? hash + "@" + instanceNumber : hash;
+    
+    return Path.of(basePath, CACHE_BASE_DIR, CACHE_SUBDIR, cacheDirName);
   }
 
   /**
