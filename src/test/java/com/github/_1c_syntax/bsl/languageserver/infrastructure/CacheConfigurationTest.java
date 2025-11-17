@@ -32,8 +32,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +47,7 @@ class CacheConfigurationTest {
   private CacheConfiguration cacheConfiguration;
   private CacheManager ehcacheManager;
   private final List<CacheManager> additionalManagers = new ArrayList<>();
+  private final List<Path> tempDirectories = new ArrayList<>();
 
   @AfterEach
   void tearDown() {
@@ -56,6 +60,12 @@ class CacheConfigurationTest {
     // Close main manager
     closeManager(ehcacheManager);
     ehcacheManager = null;
+    
+    // Clean up temporary directories after closing all managers
+    for (Path tempDir : tempDirectories) {
+      deleteDirectorySilently(tempDir);
+    }
+    tempDirectories.clear();
   }
   
   private void closeManager(CacheManager manager) {
@@ -66,6 +76,42 @@ class CacheConfigurationTest {
         // Intentionally ignoring exceptions during test cleanup
         // to prevent masking the actual test failure
       }
+    }
+  }
+  
+  /**
+   * Рекурсивно удаляет директорию, игнорируя ошибки доступа к файлам.
+   * Используется для очистки временных директорий после закрытия EhCache менеджеров.
+   */
+  private static void deleteDirectorySilently(Path directory) {
+    if (directory == null || !Files.exists(directory)) {
+      return;
+    }
+    
+    try {
+      Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+          try {
+            Files.delete(file);
+          } catch (IOException e) {
+            // Ignore - file may be locked by EhCache
+          }
+          return FileVisitResult.CONTINUE;
+        }
+        
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+          try {
+            Files.delete(dir);
+          } catch (IOException e) {
+            // Ignore - directory may contain locked files
+          }
+          return FileVisitResult.CONTINUE;
+        }
+      });
+    } catch (IOException e) {
+      // Ignore - cleanup failure should not fail the test
     }
   }
 
@@ -96,6 +142,7 @@ class CacheConfigurationTest {
   @Test
   void testCreateEhcacheManagerWithRetry_FirstAttemptSucceeds(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) throws IOException {
     // given
+    tempDirectories.add(tempDir);
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
     // Create temp directory with prefix for build.gradle.kts cleanup
@@ -123,6 +170,7 @@ class CacheConfigurationTest {
   @Test
   void testCreateEhcacheManagerWithRetry_FallbackToInMemory(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) throws IOException {
     // given
+    tempDirectories.add(tempDir);
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
     // Create temp directory with prefix for build.gradle.kts cleanup
@@ -166,6 +214,7 @@ class CacheConfigurationTest {
   @Test
   void testCreateEhcacheManager_WithValidPath(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) throws IOException {
     // given
+    tempDirectories.add(tempDir);
     cacheConfiguration = new CacheConfiguration();
     // Create temp directory with prefix for build.gradle.kts cleanup
     var cachePath = Files.createTempDirectory(tempDir, "bsl-ls-cache-").resolve("cache");
