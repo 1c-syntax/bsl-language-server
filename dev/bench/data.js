@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1763067858830,
+  "lastUpdate": 1763416614225,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31279,6 +31279,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.858962016409059",
             "extra": "mean: 88.5097902615865 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "20351938ec40d15f349e9d6a463bc8ac1a1106be",
+          "message": "Merge pull request #3602 from 1c-syntax/copilot/fix-bsl-ls-instance-conflict\n\nПоддержка нескольких экземпляров BSL LS в одной директории с нумерованными каталогами кэша и fallback",
+          "timestamp": "2025-11-17T21:40:16+01:00",
+          "tree_id": "889c0d06f09129903d43aa52b7026c769e4937b4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/20351938ec40d15f349e9d6a463bc8ac1a1106be"
+        },
+        "date": 1763416610071,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.75081197420756,
+            "unit": "sec",
+            "range": "stddev: 1.7190905278054125",
+            "extra": "mean: 87.75081197420756 sec\nrounds: 3"
           }
         ]
       }
