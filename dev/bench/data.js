@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1763416614225,
+  "lastUpdate": 1763419411522,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31310,6 +31310,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7190905278054125",
             "extra": "mean: 87.75081197420756 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3baac67e2088294ce685c516116ab605899c4346",
+          "message": "Merge pull request #3557 from 1c-syntax/copilot/support-text-document-diagnostic\n\nAdd support for textDocument/diagnostic and workspace/diagnostic/refresh (LSP 3.17)",
+          "timestamp": "2025-11-17T21:53:42+01:00",
+          "tree_id": "0e4dd97ca692451b4cb1e3e6a4fb28625c4d20c3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3baac67e2088294ce685c516116ab605899c4346"
+        },
+        "date": 1763419405731,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.91556652386983,
+            "unit": "sec",
+            "range": "stddev: 2.54797067086431",
+            "extra": "mean: 87.91556652386983 sec\nrounds: 3"
           }
         ]
       }
