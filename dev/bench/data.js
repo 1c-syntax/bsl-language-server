@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1763419411522,
+  "lastUpdate": 1763422375228,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31341,6 +31341,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.54797067086431",
             "extra": "mean: 87.91556652386983 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "265bebd34b173b427ce75ce45fee4f47120700a3",
+          "message": "Merge pull request #3604 from johnnyshut/copilot/fix-bsl-ls-instance-conflict\n\nCopilot/fix bsl ls instance conflict",
+          "timestamp": "2025-11-17T22:00:39+01:00",
+          "tree_id": "cd4a7fe408a566bf6d8cd3dbeb01ba4bd17304fd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/265bebd34b173b427ce75ce45fee4f47120700a3"
+        },
+        "date": 1763422370309,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.83067067464192,
+            "unit": "sec",
+            "range": "stddev: 2.0487697406021943",
+            "extra": "mean: 88.83067067464192 sec\nrounds: 3"
           }
         ]
       }
