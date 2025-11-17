@@ -91,8 +91,9 @@ class CacheConfigurationTest {
         for (Path cachePath : cachePaths) {
           if (Files.exists(cachePath)) {
             // Try to check if we can list the directory (file locks released)
-            try {
-              Files.list(cachePath).close();
+            try (var stream = Files.list(cachePath)) {
+              // Just checking if we can list - consume the stream
+              stream.findFirst();
             } catch (IOException e) {
               return false;
             }
