@@ -1654,6 +1654,7 @@
     | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
     | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
     | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+    | <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_diagnostic_refresh">diagnostic/refresh</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | sent on configuration change |
     | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
     | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a> |   <img src="./assets/images/cross.svg" alt="no" width="20">  |                                                              |</p>
 <details>
@@ -1717,6 +1718,12 @@
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
 <td>tagSupport = true<br />versionSupport = true<br /><a href="diagnostics/">diagnostics</a></td>
 <td>yes</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_diagnostic">diagnostic</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>interFileDependencies = true<br />workspaceDiagnostics = false</td>
+<td>no</td>
 </tr>
 <tr>
 <td><a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/diagnostics/index.md">completion</a></td>
