@@ -140,12 +140,13 @@ class CacheConfigurationTest {
   }
 
   @Test
-  void testCreateEhcacheManagerWithRetry_FirstAttemptSucceeds(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) {
+  void testCreateEhcacheManagerWithRetry_FirstAttemptSucceeds(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) throws IOException {
     // given
     tempDirectories.add(tempDir);
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
-    var basePath = tempDir.toString();
+    // Create temp directory with prefix for build.gradle.kts cleanup
+    var basePath = Files.createTempDirectory(tempDir, "bsl-ls-cache-").toString();
     var fullPath = "";
 
     // when
@@ -172,7 +173,8 @@ class CacheConfigurationTest {
     tempDirectories.add(tempDir);
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
-    var basePath = tempDir.toString();
+    // Create temp directory with prefix for build.gradle.kts cleanup
+    var basePath = Files.createTempDirectory(tempDir, "bsl-ls-cache-").toString();
     var fullPath = "";
 
     // Create and lock all 10 cache directories to force fallback to in-memory
@@ -214,7 +216,8 @@ class CacheConfigurationTest {
     // given
     tempDirectories.add(tempDir);
     cacheConfiguration = new CacheConfiguration();
-    var cachePath = tempDir.resolve("cache");
+    // Create temp directory with prefix for build.gradle.kts cleanup
+    var cachePath = Files.createTempDirectory(tempDir, "bsl-ls-cache-").resolve("cache");
     Files.createDirectories(cachePath);
 
     // when
