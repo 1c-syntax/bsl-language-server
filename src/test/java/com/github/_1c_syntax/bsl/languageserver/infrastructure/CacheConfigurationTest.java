@@ -94,11 +94,12 @@ class CacheConfigurationTest {
   }
 
   @Test
-  void testCreateEhcacheManagerWithRetry_FirstAttemptSucceeds(@TempDir(cleanup = CleanupMode.ALWAYS) Path tempDir) {
+  void testCreateEhcacheManagerWithRetry_FirstAttemptSucceeds(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) throws IOException {
     // given
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
-    var basePath = tempDir.toString();
+    // Create temp directory with prefix for build.gradle.kts cleanup
+    var basePath = Files.createTempDirectory(tempDir, "bsl-ls-cache-").toString();
     var fullPath = "";
 
     // when
@@ -120,11 +121,12 @@ class CacheConfigurationTest {
   }
 
   @Test
-  void testCreateEhcacheManagerWithRetry_FallbackToInMemory(@TempDir(cleanup = CleanupMode.ALWAYS) Path tempDir) throws IOException {
+  void testCreateEhcacheManagerWithRetry_FallbackToInMemory(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) throws IOException {
     // given
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
-    var basePath = tempDir.toString();
+    // Create temp directory with prefix for build.gradle.kts cleanup
+    var basePath = Files.createTempDirectory(tempDir, "bsl-ls-cache-").toString();
     var fullPath = "";
 
     // Create and lock all 10 cache directories to force fallback to in-memory
@@ -162,10 +164,11 @@ class CacheConfigurationTest {
   }
 
   @Test
-  void testCreateEhcacheManager_WithValidPath(@TempDir(cleanup = CleanupMode.ALWAYS) Path tempDir) throws IOException {
+  void testCreateEhcacheManager_WithValidPath(@TempDir(cleanup = CleanupMode.NEVER) Path tempDir) throws IOException {
     // given
     cacheConfiguration = new CacheConfiguration();
-    var cachePath = tempDir.resolve("cache");
+    // Create temp directory with prefix for build.gradle.kts cleanup
+    var cachePath = Files.createTempDirectory(tempDir, "bsl-ls-cache-").resolve("cache");
     Files.createDirectories(cachePath);
 
     // when
