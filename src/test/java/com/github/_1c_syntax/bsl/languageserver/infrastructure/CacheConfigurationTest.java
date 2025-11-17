@@ -23,26 +23,55 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import org.ehcache.Cache;
+import org.ehcache.CacheManager;
+import org.ehcache.Status;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CacheConfigurationTest {
 
   private CacheConfiguration cacheConfiguration;
-  private org.ehcache.CacheManager ehcacheManager;
+  private CacheManager ehcacheManager;
+  private final List<CacheManager> additionalManagers = new ArrayList<>();
 
   @AfterEach
   void tearDown() {
-    if (ehcacheManager != null && ehcacheManager.getStatus() != org.ehcache.Status.UNINITIALIZED) {
-      ehcacheManager.close();
+    // Close additional managers first (in reverse order for better cleanup)
+    for (int i = additionalManagers.size() - 1; i >= 0; i--) {
+      closeManager(additionalManagers.get(i));
+    }
+    additionalManagers.clear();
+    
+    // Close main manager
+    closeManager(ehcacheManager);
+    ehcacheManager = null;
+    
+    // Give Windows time to release file locks
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+  
+  private void closeManager(CacheManager manager) {
+    if (manager != null && manager.getStatus() != Status.UNINITIALIZED) {
+      try {
+        manager.close();
+      } catch (Exception e) {
+        // Ignore cleanup errors
+      }
     }
   }
 
@@ -52,14 +81,14 @@ class CacheConfigurationTest {
     cacheConfiguration = new CacheConfiguration();
 
     // when
-    ehcacheManager = (org.ehcache.CacheManager) ReflectionTestUtils.invokeMethod(
+    ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
       "createInMemoryEhcacheManager"
     );
 
     // then
     assertThat(ehcacheManager).isNotNull();
-    assertThat(ehcacheManager.getStatus()).isEqualTo(org.ehcache.Status.AVAILABLE);
+    assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
 
     // Verify cache is created and accessible
     Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
@@ -71,47 +100,33 @@ class CacheConfigurationTest {
   }
 
   @Test
-  void testCreateEhcacheManagerWithRetry_FirstAttemptSucceeds(@TempDir(cleanup = org.junit.jupiter.api.io.CleanupMode.ALWAYS) Path tempDir) {
+  void testCreateEhcacheManagerWithRetry_FirstAttemptSucceeds(@TempDir(cleanup = CleanupMode.ALWAYS) Path tempDir) {
     // given
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
     var basePath = tempDir.toString();
     var fullPath = "";
 
-    try {
-      // when
-      ehcacheManager = (org.ehcache.CacheManager) ReflectionTestUtils.invokeMethod(
-        cacheConfiguration,
-        "createEhcacheManagerWithRetry",
-        cachePathProvider,
-        basePath,
-        fullPath
-      );
+    // when
+    ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
+      cacheConfiguration,
+      "createEhcacheManagerWithRetry",
+      cachePathProvider,
+      basePath,
+      fullPath
+    );
 
-      // then
-      assertThat(ehcacheManager).isNotNull();
-      assertThat(ehcacheManager.getStatus()).isEqualTo(org.ehcache.Status.AVAILABLE);
+    // then
+    assertThat(ehcacheManager).isNotNull();
+    assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
 
-      // Verify cache is created
-      Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
-      assertThat(cache).isNotNull();
-    } finally {
-      // Ensure cache is closed before cleanup
-      if (ehcacheManager != null && ehcacheManager.getStatus() != org.ehcache.Status.UNINITIALIZED) {
-        ehcacheManager.close();
-        ehcacheManager = null;
-        // Give Windows time to release file locks
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-      }
-    }
+    // Verify cache is created
+    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    assertThat(cache).isNotNull();
   }
 
   @Test
-  void testCreateEhcacheManagerWithRetry_FallbackToInMemory(@TempDir(cleanup = org.junit.jupiter.api.io.CleanupMode.ALWAYS) Path tempDir) throws IOException {
+  void testCreateEhcacheManagerWithRetry_FallbackToInMemory(@TempDir(cleanup = CleanupMode.ALWAYS) Path tempDir) throws IOException {
     // given
     cacheConfiguration = new CacheConfiguration();
     var cachePathProvider = new CachePathProvider();
@@ -119,98 +134,64 @@ class CacheConfigurationTest {
     var fullPath = "";
 
     // Create and lock all 10 cache directories to force fallback to in-memory
-    org.ehcache.CacheManager[] lockedManagers = new org.ehcache.CacheManager[10];
-    try {
-      for (int i = 0; i < 10; i++) {
-        var cachePath = cachePathProvider.getCachePath(basePath, fullPath, i);
-        Files.createDirectories(cachePath);
-        
-        lockedManagers[i] = (org.ehcache.CacheManager) ReflectionTestUtils.invokeMethod(
-          cacheConfiguration,
-          "createEhcacheManager",
-          cachePath
-        );
-      }
-
-      // when - all directories are locked, should fall back to in-memory
-      ehcacheManager = (org.ehcache.CacheManager) ReflectionTestUtils.invokeMethod(
-        cacheConfiguration,
-        "createEhcacheManagerWithRetry",
-        cachePathProvider,
-        basePath,
-        fullPath
-      );
-
-      // then
-      assertThat(ehcacheManager).isNotNull();
-      assertThat(ehcacheManager.getStatus()).isEqualTo(org.ehcache.Status.AVAILABLE);
-
-      // Verify cache is created and works
-      Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
-      assertThat(cache).isNotNull();
+    for (int i = 0; i < 10; i++) {
+      var cachePath = cachePathProvider.getCachePath(basePath, fullPath, i);
+      Files.createDirectories(cachePath);
       
-      cache.put("test", WordStatus.NO_ERROR);
-      assertThat(cache.get("test")).isEqualTo(WordStatus.NO_ERROR);
-
-    } finally {
-      // Clean up locked managers in reverse order to help with cleanup
-      for (int i = lockedManagers.length - 1; i >= 0; i--) {
-        if (lockedManagers[i] != null && lockedManagers[i].getStatus() != org.ehcache.Status.UNINITIALIZED) {
-          try {
-            lockedManagers[i].close();
-          } catch (Exception e) {
-            // Ignore cleanup errors
-          }
-        }
-      }
-      // Give Windows time to release file locks
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
+      CacheManager lockedManager = (CacheManager) ReflectionTestUtils.invokeMethod(
+        cacheConfiguration,
+        "createEhcacheManager",
+        cachePath
+      );
+      additionalManagers.add(lockedManager);
     }
+
+    // when - all directories are locked, should fall back to in-memory
+    ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
+      cacheConfiguration,
+      "createEhcacheManagerWithRetry",
+      cachePathProvider,
+      basePath,
+      fullPath
+    );
+
+    // then
+    assertThat(ehcacheManager).isNotNull();
+    assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
+
+    // Verify cache is created and works
+    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    assertThat(cache).isNotNull();
+    
+    cache.put("test", WordStatus.NO_ERROR);
+    assertThat(cache.get("test")).isEqualTo(WordStatus.NO_ERROR);
   }
 
   @Test
-  void testCreateEhcacheManager_WithValidPath(@TempDir(cleanup = org.junit.jupiter.api.io.CleanupMode.ALWAYS) Path tempDir) throws IOException {
+  void testCreateEhcacheManager_WithValidPath(@TempDir(cleanup = CleanupMode.ALWAYS) Path tempDir) throws IOException {
     // given
     cacheConfiguration = new CacheConfiguration();
     var cachePath = tempDir.resolve("cache");
     Files.createDirectories(cachePath);
 
-    try {
-      // when
-      ehcacheManager = (org.ehcache.CacheManager) ReflectionTestUtils.invokeMethod(
-        cacheConfiguration,
-        "createEhcacheManager",
-        cachePath
-      );
+    // when
+    ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
+      cacheConfiguration,
+      "createEhcacheManager",
+      cachePath
+    );
 
-      // then
-      assertThat(ehcacheManager).isNotNull();
-      assertThat(ehcacheManager.getStatus()).isEqualTo(org.ehcache.Status.AVAILABLE);
+    // then
+    assertThat(ehcacheManager).isNotNull();
+    assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
 
-      // Verify cache is created with persistence
-      Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
-      assertThat(cache).isNotNull();
+    // Verify cache is created with persistence
+    Cache<String, WordStatus> cache = ehcacheManager.getCache("typoCache", String.class, WordStatus.class);
+    assertThat(cache).isNotNull();
 
-      // Verify cache works
-      cache.put("persistentKey", WordStatus.HAS_ERROR);
-      assertThat(cache.get("persistentKey")).isEqualTo(WordStatus.HAS_ERROR);
-    } finally {
-      // Ensure cache is closed before cleanup
-      if (ehcacheManager != null && ehcacheManager.getStatus() != org.ehcache.Status.UNINITIALIZED) {
-        ehcacheManager.close();
-        ehcacheManager = null;
-        // Give Windows time to release file locks
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-      }
-    }
+    // Verify cache works
+    cache.put("persistentKey", WordStatus.HAS_ERROR);
+    assertThat(cache.get("persistentKey")).isEqualTo(WordStatus.HAS_ERROR);
   }
 
   @Test
@@ -219,7 +200,7 @@ class CacheConfigurationTest {
     cacheConfiguration = new CacheConfiguration();
 
     // when
-    ehcacheManager = (org.ehcache.CacheManager) ReflectionTestUtils.invokeMethod(
+    ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
       "createInMemoryEhcacheManager"
     );
@@ -235,7 +216,7 @@ class CacheConfigurationTest {
     // Close and recreate - data should be lost
     ehcacheManager.close();
 
-    ehcacheManager = (org.ehcache.CacheManager) ReflectionTestUtils.invokeMethod(
+    ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
       "createInMemoryEhcacheManager"
     );
