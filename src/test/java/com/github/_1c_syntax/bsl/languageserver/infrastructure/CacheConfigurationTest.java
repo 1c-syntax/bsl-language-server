@@ -81,20 +81,26 @@ class CacheConfigurationTest {
       return;
     }
     
-    // Wait until all cache paths can be accessed/deleted
-    // This ensures file locks are released on Windows
+    // Wait until all cache paths can be accessed and their contents deleted
+    // This ensures file locks are released on Windows before @TempDir cleanup
     Awaitility.await()
-      .atMost(Duration.ofSeconds(5))
-      .pollDelay(Duration.ofMillis(50))
-      .pollInterval(Duration.ofMillis(50))
+      .atMost(Duration.ofSeconds(10))
+      .pollDelay(Duration.ofMillis(100))
+      .pollInterval(Duration.ofMillis(100))
       .ignoreExceptions()
       .until(() -> {
         for (Path cachePath : cachePaths) {
           if (Files.exists(cachePath)) {
-            // Try to check if we can list the directory (file locks released)
-            try (var stream = Files.list(cachePath)) {
-              // Just checking if we can list - consume the stream
-              stream.findFirst();
+            // Try to delete all files in the cache directory to verify locks are released
+            try (var stream = Files.walk(cachePath)) {
+              var files = stream
+                .sorted((a, b) -> b.compareTo(a)) // Delete files before directories
+                .filter(path -> !path.equals(cachePath)) // Don't delete the cache directory itself
+                .toList();
+              
+              for (Path file : files) {
+                Files.deleteIfExists(file);
+              }
             } catch (IOException e) {
               return false;
             }
