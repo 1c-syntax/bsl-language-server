@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
+import org.awaitility.Awaitility;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.Status;
@@ -34,6 +35,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +46,7 @@ class CacheConfigurationTest {
   private CacheConfiguration cacheConfiguration;
   private CacheManager ehcacheManager;
   private final List<CacheManager> additionalManagers = new ArrayList<>();
+  private final List<Path> cachePaths = new ArrayList<>();
 
   @AfterEach
   void tearDown() {
@@ -57,12 +60,9 @@ class CacheConfigurationTest {
     closeManager(ehcacheManager);
     ehcacheManager = null;
     
-    // Give Windows time to release file locks
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    // Wait for file locks to be released on Windows
+    waitForFileLocksRelease();
+    cachePaths.clear();
   }
   
   private void closeManager(CacheManager manager) {
@@ -73,6 +73,33 @@ class CacheConfigurationTest {
         // Ignore cleanup errors
       }
     }
+  }
+  
+  private void waitForFileLocksRelease() {
+    if (cachePaths.isEmpty()) {
+      return;
+    }
+    
+    // Wait until all cache paths can be accessed/deleted
+    // This ensures file locks are released on Windows
+    Awaitility.await()
+      .atMost(Duration.ofSeconds(5))
+      .pollDelay(Duration.ofMillis(50))
+      .pollInterval(Duration.ofMillis(50))
+      .ignoreExceptions()
+      .until(() -> {
+        for (Path cachePath : cachePaths) {
+          if (Files.exists(cachePath)) {
+            // Try to check if we can list the directory (file locks released)
+            try {
+              Files.list(cachePath).close();
+            } catch (IOException e) {
+              return false;
+            }
+          }
+        }
+        return true;
+      });
   }
 
   @Test
@@ -107,6 +134,10 @@ class CacheConfigurationTest {
     var basePath = tempDir.toString();
     var fullPath = "";
 
+    // Track cache path for cleanup verification
+    var cachePath = cachePathProvider.getCachePath(basePath, fullPath, 0);
+    cachePaths.add(cachePath);
+
     // when
     ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
       cacheConfiguration,
@@ -137,6 +168,7 @@ class CacheConfigurationTest {
     for (int i = 0; i < 10; i++) {
       var cachePath = cachePathProvider.getCachePath(basePath, fullPath, i);
       Files.createDirectories(cachePath);
+      cachePaths.add(cachePath);
       
       CacheManager lockedManager = (CacheManager) ReflectionTestUtils.invokeMethod(
         cacheConfiguration,
@@ -173,6 +205,7 @@ class CacheConfigurationTest {
     cacheConfiguration = new CacheConfiguration();
     var cachePath = tempDir.resolve("cache");
     Files.createDirectories(cachePath);
+    cachePaths.add(cachePath);
 
     // when
     ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
