@@ -70,7 +70,8 @@ class CacheConfigurationTest {
       try {
         manager.close();
       } catch (Exception e) {
-        // Ignore cleanup errors
+        // Intentionally ignoring exceptions during test cleanup
+        // to prevent masking the actual test failure
       }
     }
   }

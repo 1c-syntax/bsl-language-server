@@ -94,6 +94,8 @@ public class CacheConfiguration {
     return createEhcacheManagerWithRetry(cachePathProvider, basePath, fullPath);
   }
 
+  private static final int MAX_CACHE_INSTANCES = 10;
+
   /**
    * Создаёт менеджер EhCache, пробуя пути с разными номерами экземпляров при блокировке.
    * <p>
@@ -113,16 +115,13 @@ public class CacheConfiguration {
     String basePath,
     String fullPath
   ) {
-    // Maximum number of instances to try
-    final int maxInstances = 10;
-    
-    for (int instanceNumber = 0; instanceNumber < maxInstances; instanceNumber++) {
+    for (int instanceNumber = 0; instanceNumber < MAX_CACHE_INSTANCES; instanceNumber++) {
       try {
         var cacheDir = cachePathProvider.getCachePath(basePath, fullPath, instanceNumber);
         return createEhcacheManager(cacheDir);
       } catch (org.ehcache.StateTransitionException e) {
-        // This exception indicates the directory is locked
-        // Try next instance number
+        // This exception indicates the directory is locked by another process
+        // Continue to try next instance number
       }
     }
     
