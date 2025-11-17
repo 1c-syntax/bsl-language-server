@@ -295,7 +295,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   protected void rebuild(String content, int version) {
-    computeLock.lock();
+    aquireLocks();
 
     try {
 
@@ -316,7 +316,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       symbolTree = computeSymbolTree();
 
     } finally {
-      computeLock.unlock();
+      releaseLocks();
     }
 
   }
@@ -331,7 +331,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   protected void clearSecondaryData() {
-    computeLock.lock();
+    aquireLocks();
 
     try {
 
@@ -348,20 +348,25 @@ public class DocumentContext implements Comparable<DocumentContext> {
         diagnosticIgnoranceData.clear();
       }
     } finally {
-      computeLock.unlock();
+      releaseLocks();
     }
   }
 
+  /**
+   * Убедитесь, что локи установлены корректно перед вызовом метода.
+   */
   private void clearDependantData() {
-    computeLock.lock();
-    diagnosticsLock.lock();
+    diagnostics.clear();
+  }
 
-    try {
-      diagnostics.clear();
-    } finally {
-      diagnosticsLock.unlock();
-      computeLock.unlock();
-    }
+  private void aquireLocks() {
+    diagnosticsLock.lock();
+    computeLock.lock();
+  }
+
+  private void releaseLocks() {
+    computeLock.unlock();
+    diagnosticsLock.unlock();
   }
 
   private static FileType computeFileType(URI uri) {

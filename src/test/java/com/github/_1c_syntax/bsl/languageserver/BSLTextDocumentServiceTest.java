@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentDiagnosticParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.RenameParams;
@@ -138,6 +139,35 @@ class BSLTextDocumentServiceTest {
 
     // then
     assertThat(diagnostics.getDiagnostics()).hasSize(2);
+  }
+
+  @Test
+  void testStandardDiagnosticUnknownFile() throws ExecutionException, InterruptedException {
+    // when
+    var params = new DocumentDiagnosticParams(getTextDocumentIdentifier());
+    var diagnosticReport = textDocumentService.diagnostic(params).get();
+
+    // then
+    assertThat(diagnosticReport).isNotNull();
+    assertThat(diagnosticReport.getLeft()).isNotNull();
+    assertThat(diagnosticReport.getLeft().getItems()).isEmpty();
+  }
+
+  @Test
+  void testStandardDiagnosticKnownFile() throws ExecutionException, InterruptedException, IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when
+    var params = new DocumentDiagnosticParams(getTextDocumentIdentifier());
+    var diagnosticReport = textDocumentService.diagnostic(params).get();
+
+    // then
+    assertThat(diagnosticReport).isNotNull();
+    assertThat(diagnosticReport.getLeft()).isNotNull();
+    assertThat(diagnosticReport.getLeft().getItems()).isNotEmpty();
   }
 
   @Test
