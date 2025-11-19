@@ -33,7 +33,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.antlr.v4.runtime.CommonToken;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
@@ -51,6 +50,7 @@ import java.util.Optional;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 // idea from https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html
+
 /**
  * Вычислитель цикломатической сложности кода.
  * <p>
@@ -240,13 +240,9 @@ public class CyclomaticComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof ParserRuleContext parserRule)) {
-        continue;
-      }
-
-      if (parserRule instanceof BSLParser.MemberContext memberContext) {
+      if (tree instanceof BSLParser.MemberContext memberContext) {
         flattenMember(result, memberContext);
-      } else if (parserRule instanceof BSLParser.OperationContext operationContext) {
+      } else if (tree instanceof BSLParser.OperationContext operationContext) {
         flattenOperation(result, operationContext);
       }
     }

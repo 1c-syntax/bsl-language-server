@@ -197,7 +197,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     var matcher = searchWords.matcher(getClearString(accessText));
     if (matcher.find()) {
       var assignment = Trees.getAncestorByRuleIndex(
-        ctx.getRuleContext(),
+        ctx,
         BSLParser.RULE_assignment
       );
       if (assignment != null
@@ -223,7 +223,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void addDiagnosticByAssignment(ParserRuleContext ctx, int type) {
-    ParserRuleContext assignment = Trees.getAncestorByRuleIndex(ctx.getRuleContext(), type);
+    var assignment = Trees.getAncestorByRuleIndex(ctx, type);
     if (assignment != null) {
       diagnosticStorage.addDiagnostic(assignment, info.getMessage());
     }

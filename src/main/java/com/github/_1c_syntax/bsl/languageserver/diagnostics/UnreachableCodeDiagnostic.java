@@ -140,7 +140,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       .filter(vertex -> vertex != graph.getEntryPoint() && vertex.getClass() != ExitVertex.class)
       .filter(vertex -> graph.inDegreeOf(vertex) == 0)
       .flatMap(vertex -> vertex.getAst().stream())
-      .sorted(Comparator.comparingInt(ParserRuleContext -> ParserRuleContext.getStart().getLine()))
+      .sorted(Comparator.comparingInt(ruleContext -> ruleContext.getStart().getLine()))
       .map(Ranges::create)
       .toList();
 

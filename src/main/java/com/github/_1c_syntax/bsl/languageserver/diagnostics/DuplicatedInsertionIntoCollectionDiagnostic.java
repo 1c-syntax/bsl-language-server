@@ -261,7 +261,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private boolean hasBreakersBetweenCalls(Range border) {
     return getBreakers().stream()
-      .filter(ParserRuleContext -> Ranges.containsRange(border, Ranges.create(ParserRuleContext)))
+      .filter(ruleContext -> Ranges.containsRange(border, Ranges.create(ruleContext)))
       .anyMatch(this::hasBreakerIntoCodeBlock);
   }
 

@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import java.util.ArrayDeque;
@@ -63,8 +62,8 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   )
   private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 
-  private ParseTree lastCtx;
-  private final Deque<ParseTree> nestedParents = new ArrayDeque<>();
+  private ParserRuleContext lastCtx;
+  private final Deque<ParserRuleContext> nestedParents = new ArrayDeque<>();
 
   @PostConstruct
   public void init() {
@@ -149,7 +148,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
       .map(expressionContext ->
         RelatedInformation.create(
           documentContext.getUri(),
-          Ranges.create(((ParserRuleContext) expressionContext).getStart()),
+          Ranges.create(expressionContext.getStart()),
           relatedMessage
         )
       )

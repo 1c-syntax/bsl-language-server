@@ -54,6 +54,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 
 // Based on Cognitive Complexity white-paper, version 1.4.
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
+
 /**
  * Вычислитель когнитивной сложности кода.
  * <p>
@@ -316,13 +317,9 @@ public class CognitiveComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof ParserRuleContext parserRule)) {
-        continue;
-      }
-
-      if (parserRule instanceof BSLParser.MemberContext memberContext) {
+      if (tree instanceof BSLParser.MemberContext memberContext) {
         flattenMember(result, memberContext);
-      } else if (parserRule instanceof BSLParser.OperationContext operationContext) {
+      } else if (tree instanceof BSLParser.OperationContext operationContext) {
         flattenOperation(result, operationContext);
       }
     }
