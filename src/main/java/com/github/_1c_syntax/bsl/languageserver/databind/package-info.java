@@ -23,8 +23,7 @@
  * Сериализация и десериализация различных классов проекта.
  * {@link com.github._1c_syntax.bsl.languageserver}.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.databind;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

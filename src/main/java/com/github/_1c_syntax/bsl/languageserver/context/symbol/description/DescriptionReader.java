@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -352,8 +352,8 @@ public class DescriptionReader {
       return new ParameterDescription(name.intern(), parameterTypes, "", false);
     }
 
-    private void addType(@Nullable BSLMethodDescriptionParser.TypeContext paramType,
-                         @Nullable BSLMethodDescriptionParser.TypeDescriptionContext paramDescription) {
+    private void addType(BSLMethodDescriptionParser.@Nullable TypeContext paramType,
+                         BSLMethodDescriptionParser.@Nullable TypeDescriptionContext paramDescription) {
       if (isEmpty() || paramType == null) {
         return;
       }
@@ -376,7 +376,7 @@ public class DescriptionReader {
       }
     }
 
-    private void addType(@Nullable BSLMethodDescriptionParser.TypeDescriptionContext descriptionContext,
+    private void addType(BSLMethodDescriptionParser.@Nullable TypeDescriptionContext descriptionContext,
                          String text,
                          boolean isHyperlink) {
       var newType = new TempParameterTypeData(text, level, isHyperlink);

@@ -25,7 +25,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.Setter;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;

@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -133,7 +133,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getComplexPathName(
     BSLParser.ComplexIdentifierContext ci,
-    @Nullable BSLParser.ModifierContext to
+    BSLParser.@Nullable ModifierContext to
   ) {
 
     return ci.modifier().stream()
@@ -214,7 +214,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(@Nullable BSLParser.CodeBlockContext ctx) {
+  private void visitDescendantCodeBlock(BSLParser.@Nullable CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()

@@ -32,7 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     }
   }
 
-  private static String getVariableName(@Nullable BSLParser.StatementContext statement) {
+  private static String getVariableName(BSLParser.@Nullable StatementContext statement) {
     var variableName = "";
     if (statement != null && statement.assignment() != null) {
       var lValueContext = statement.assignment().lValue();

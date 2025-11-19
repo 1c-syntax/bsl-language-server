@@ -144,7 +144,7 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs", "spotbugs-annotations", "4.9.8")
+    compileOnly("org.jspecify", "jspecify", "1.0.0")
 
     // TEST
 

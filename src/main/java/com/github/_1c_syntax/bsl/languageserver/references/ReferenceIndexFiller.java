@@ -36,7 +36,7 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -242,7 +242,7 @@ public class ReferenceIndexFiller {
         .orElse(documentContext.getMdoRef());
     }
 
-    private Set<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
+    private Set<String> calcParams(BSLParser.@Nullable ParamListContext paramList) {
       if (paramList == null) {
         return Collections.emptySet();
       }
