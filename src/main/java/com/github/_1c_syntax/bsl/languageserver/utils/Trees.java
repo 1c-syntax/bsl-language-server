@@ -60,7 +60,7 @@ public final class Trees {
     BSLParser.AMPERSAND
   );
 
-  /**
+  /*
    * Обертки Trees
    */
 

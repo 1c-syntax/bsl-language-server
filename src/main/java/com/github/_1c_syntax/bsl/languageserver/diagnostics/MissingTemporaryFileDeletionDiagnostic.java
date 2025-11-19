@@ -171,8 +171,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
   private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
 
-    BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
-      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+    BSLParser.AssignmentContext assignment = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment == null) {
       return null;

@@ -323,9 +323,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private List<ParserRuleContext> getBreakers() {
     if (blockBreakers == null) {
-      blockBreakers = Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES).stream()
-        .map(ParserRuleContext.class::cast)
-        .toList();
+      blockBreakers = List.copyOf(Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES));
     }
     return blockBreakers;
   }

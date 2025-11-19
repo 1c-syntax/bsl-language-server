@@ -36,7 +36,6 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 
@@ -116,7 +115,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private Stream<SDBLParser.ColumnContext> checkQuery(SDBLParser.QueryContext ctx) {
     var columns = Trees.findAllTopLevelDescendantNodes(ctx, RULE_COLUMNS).stream()
       .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
-      .filter(parserRuleContext -> Trees.getRootParent((ParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
+      .filter(parserRuleContext -> Trees.getRootParent(parserRuleContext, EXCLUDED_COLUMNS_ROOT)
         .getRuleIndex() == SDBLParser.RULE_query)
       .map(SDBLParser.ColumnContext.class::cast)
       .collect(Collectors.toList());

@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -207,11 +206,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     if (expression == null) {
       return true;
     }
-    final var methodCalls = Trees.findAllRuleNodes(expression,
-        List.of(BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall)).stream()
-      .filter(ParserRuleContext.class::isInstance)
-      .map(ParserRuleContext.class::cast)
-      .collect(Collectors.toList());
+    final var methodCalls = Trees.findAllRuleNodes(expression, List.of(BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall));
     if (!methodCalls.isEmpty()) {
       if (isErrorDescriptionCallCorrect(methodCalls)) {
         return true;

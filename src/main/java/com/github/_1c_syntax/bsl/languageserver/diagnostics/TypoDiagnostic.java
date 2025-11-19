@@ -37,7 +37,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
@@ -140,7 +139,6 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     Map<String, List<Token>> tokensMap = new HashMap<>();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
-      .map(ParserRuleContext.class::cast)
       .flatMap(ruleContext -> ruleContext.getTokens().stream())
       .filter(token -> tokenTypes.contains(token.getType()))
       .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
