@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.SDBLLexer;
-import com.github._1c_syntax.bsl.parser.Tokenizer;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.Tokenizer;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;

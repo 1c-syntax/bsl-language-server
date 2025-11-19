@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;

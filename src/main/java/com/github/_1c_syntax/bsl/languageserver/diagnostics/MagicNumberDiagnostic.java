@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -75,12 +75,12 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private static Optional<BSLParser.ExpressionContext> getExpression(BSLParserRuleContext ctx) {
+  private static Optional<BSLParser.ExpressionContext> getExpression(ParserRuleContext ctx) {
     return Optional.of(ctx)
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .map(BSLParser.ExpressionContext.class::cast);
   }
@@ -115,7 +115,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     return true;
   }
 
-  private boolean isWrongExpression(BSLParserRuleContext numericContextParent) {
+  private boolean isWrongExpression(ParserRuleContext numericContextParent) {
     return getExpression(numericContextParent)
       .filter((BSLParser.ExpressionContext expression) ->
         (!isNumericExpression(expression) || mayBeNumberAccess(expression) || insideCallParam(expression)))

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.Optional;
 
@@ -29,7 +29,7 @@ public abstract class CfgVertex {
 
   private boolean isConnected;
 
-  public Optional<BSLParserRuleContext> getAst() {
+  public Optional<ParserRuleContext> getAst() {
     return Optional.empty();
   }
 

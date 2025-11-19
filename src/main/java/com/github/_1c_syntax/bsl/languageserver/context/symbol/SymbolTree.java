@@ -24,9 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
 import lombok.Value;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -124,8 +124,8 @@ public class SymbolTree {
    * @param ctx узел дерева разбора документа.
    * @return найденный символ метода.
    */
-  public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
-    BSLParserRuleContext subNameNode;
+  public Optional<MethodSymbol> getMethodSymbol(ParserRuleContext ctx) {
+    ParserRuleContext subNameNode;
     if (Trees.nodeContainsErrors(ctx)) {
       subNameNode = ctx;
     } else if (ctx instanceof BSLParser.SubContext) {
@@ -163,9 +163,9 @@ public class SymbolTree {
    * @param ctx узел дерева разбора документа.
    * @return найденный символ переменной.
    */
-  public Optional<VariableSymbol> getVariableSymbol(BSLParserRuleContext ctx) {
+  public Optional<VariableSymbol> getVariableSymbol(ParserRuleContext ctx) {
 
-    BSLParserRuleContext varNameNode;
+    ParserRuleContext varNameNode;
 
     if (Trees.nodeContainsErrors(ctx)) {
       varNameNode = ctx;

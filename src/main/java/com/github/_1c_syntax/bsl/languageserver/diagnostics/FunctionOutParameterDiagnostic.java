@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
@@ -70,7 +70,7 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       .collect(
         Collectors.toMap(
           ParseTree::getText,
-          BSLParserRuleContext.class::cast,
+          ParserRuleContext.class::cast,
           (existing, replacement) -> existing,
           CaseInsensitiveMap::new)
       );

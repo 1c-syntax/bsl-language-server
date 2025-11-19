@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
@@ -233,8 +232,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     String variableName = null;
-    BSLParserRuleContext errorContext = null;
-    BSLParserRuleContext parent = ctx.getParent();
+    ParserRuleContext errorContext = null;
+    ParserRuleContext parent = ctx.getParent();
     if (parent instanceof BSLParser.CallStatementContext callStatementContext) {
       errorContext = parent;
       variableName = getVariableNameFromCallStatementContext(callStatementContext);
@@ -243,7 +242,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       variableName = getVariableNameFromModifierContext(callModifier);
     }
     Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
-    BSLParserRuleContext finalErrorContext = errorContext;
+    ParserRuleContext finalErrorContext = errorContext;
     if (finalErrorContext != null) {
       variableDefinition.ifPresent((VariableDefinition definition) -> {
 

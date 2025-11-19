@@ -30,8 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -75,7 +75,7 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
       .filter(BSLParser.TypeNameContext.class::isInstance)
       .map(BSLParser.TypeNameContext.class::cast)
       .filter(DiagnosticHelper::isStructureType)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .map(BSLParser.NewExpressionContext.class::cast)
       .map(BSLParser.NewExpressionContext::doCall);
 

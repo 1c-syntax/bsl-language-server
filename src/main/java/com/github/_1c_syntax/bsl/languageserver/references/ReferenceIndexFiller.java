@@ -35,10 +35,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -90,25 +90,25 @@ public class ReferenceIndexFiller {
   }
 
   @RequiredArgsConstructor
-  private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
+  private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
-    public BSLParserRuleContext visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
+    public ParserRuleContext visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
       commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
       return super.visitProcDeclaration(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
+    public ParserRuleContext visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
       commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
       return super.visitFuncDeclaration(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+    public ParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
       if (ctx.globalMethodCall() != null) {
         // see visitGlobalMethodCall
         return super.visitCallStatement(ctx);
@@ -125,7 +125,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
       var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
         return super.visitComplexIdentifier(ctx);
@@ -136,7 +136,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    public ParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
       var mdoRef = documentContext.getMdoRef();
       var moduleType = documentContext.getModuleType();
       var methodName = ctx.methodName().getStart();
@@ -149,7 +149,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
+    public ParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
         final var doCallContext = ctx.doCall();
         if (doCallContext == null) {
@@ -178,7 +178,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+    public ParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       final var identifier = ctx.IDENTIFIER();
       if (identifier != null) {
         final List<? extends BSLParser.ModifierContext> modifiers = Optional.ofNullable(ctx.acceptor())
@@ -260,13 +260,13 @@ public class ReferenceIndexFiller {
   }
 
   @RequiredArgsConstructor
-  private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
+  private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
     private SourceDefinedSymbol currentScope;
 
     @Override
-    public BSLParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
+    public ParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
       findVariableSymbol(ctx.var_name().getText()).ifPresent(s -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
@@ -282,7 +282,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
+    public ParserRuleContext visitSub(BSLParser.SubContext ctx) {
       currentScope = documentContext.getSymbolTree().getModule();
 
       if (!Trees.nodeContainsErrors(ctx)) {
@@ -298,7 +298,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+    public ParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitLValue(ctx);
       }
@@ -318,7 +318,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+    public ParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitCallStatement(ctx);
       }
@@ -333,7 +333,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitComplexIdentifier(ctx);
       }
@@ -348,7 +348,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitForStatement(BSLParser.ForStatementContext ctx) {
+    public ParserRuleContext visitForStatement(BSLParser.ForStatementContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitForStatement(ctx);
       }
@@ -368,7 +368,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    public ParserRuleContext visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitForEachStatement(ctx);
       }

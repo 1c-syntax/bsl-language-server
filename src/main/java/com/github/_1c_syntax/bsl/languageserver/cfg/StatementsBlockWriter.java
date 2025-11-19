@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -57,7 +57,7 @@ class StatementsBlockWriter {
       subgraphEnd = statements;
     }
 
-    public void add(BSLParserRuleContext statement) {
+    public void add(ParserRuleContext statement) {
       statements.addStatement(statement);
     }
 
@@ -136,7 +136,7 @@ class StatementsBlockWriter {
     return blocks.peek();
   }
 
-  public void addStatement(BSLParserRuleContext statement) {
+  public void addStatement(ParserRuleContext statement) {
     getCurrentBlock().add(statement);
   }
 

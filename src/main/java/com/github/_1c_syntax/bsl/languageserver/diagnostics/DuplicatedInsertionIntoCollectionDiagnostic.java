@@ -32,9 +32,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -86,7 +86,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private BSLParser.CodeBlockContext codeBlock;
   private Range blockRange;
   private List<AssignmentContext> blockAssignments;
-  private List<BSLParserRuleContext> blockBreakers;
+  private List<ParserRuleContext> blockBreakers;
   private List<CallParamContext> blockCallParams;
   private List<String> firstParamInnerIdentifiers;
 
@@ -261,11 +261,11 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private boolean hasBreakersBetweenCalls(Range border) {
     return getBreakers().stream()
-      .filter(bslParserRuleContext -> Ranges.containsRange(border, Ranges.create(bslParserRuleContext)))
+      .filter(ruleContext -> Ranges.containsRange(border, Ranges.create(ruleContext)))
       .anyMatch(this::hasBreakerIntoCodeBlock);
   }
 
-  private boolean hasBreakerIntoCodeBlock(BSLParserRuleContext breakerContext) {
+  private boolean hasBreakerIntoCodeBlock(ParserRuleContext breakerContext) {
     if (breakerContext.getRuleIndex() == BSLParser.RULE_returnStatement) {
       return true;
     }
@@ -295,7 +295,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       .map(BSLParser.MemberContext::complexIdentifier)
       .filter(Objects::nonNull)
       .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .anyMatch(identifier -> usedIdentifiers(identifier, groupingData));
   }
 
@@ -321,11 +321,9 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     return blockAssignments;
   }
 
-  private List<BSLParserRuleContext> getBreakers() {
+  private List<ParserRuleContext> getBreakers() {
     if (blockBreakers == null) {
-      blockBreakers = Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES).stream()
-        .map(BSLParserRuleContext.class::cast)
-        .toList();
+      blockBreakers = List.copyOf(Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES));
     }
     return blockBreakers;
   }
@@ -374,7 +372,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private static String getFullIdentifier(String firstIdentifier, List<? extends BSLParser.ModifierContext> modifiers) {
     return modifiers.stream()
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .reduce(firstIdentifier, (x, y) -> x.concat(".").concat(y))
       .replace("..", ".");
   }

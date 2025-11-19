@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPo
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -140,7 +139,6 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     Map<String, List<Token>> tokensMap = new HashMap<>();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
-      .map(BSLParserRuleContext.class::cast)
       .flatMap(ruleContext -> ruleContext.getTokens().stream())
       .filter(token -> tokenTypes.contains(token.getType()))
       .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
