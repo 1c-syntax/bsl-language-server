@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
@@ -69,13 +68,11 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment).stream()
       .filter(
         node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).lValue()
-          .getText())
+            .getText())
           .matches()
       )
-      .map(ParserRuleContext.class::cast)
       .filter(ident -> !rightPartIsValid((BSLParser.AssignmentContext) ident))
       .map(ParseTree::getParent)
-      .map(ParserRuleContext.class::cast)
       .forEach(diagnosticStorage::addDiagnostic);
 
     return ctx;
