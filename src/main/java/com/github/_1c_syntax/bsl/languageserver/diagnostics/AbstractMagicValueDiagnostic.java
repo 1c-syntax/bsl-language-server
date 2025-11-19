@@ -41,6 +41,10 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
     "вставить|insert"
   );
 
+  private static final int MAX_PARENT_TRAVERSAL_DEPTH_FOR_CALL_STATEMENT = 10;
+  private static final int MAX_PARENT_TRAVERSAL_DEPTH_FOR_VARIABLE_ASSIGNMENT = 50;
+  private static final int MAX_PARENT_TRAVERSAL_DEPTH_FOR_CALL_PARAM = 5;
+
   /**
    * Получить ExpressionContext из узла AST.
    * Работает для разных типов узлов (NumericContext, ConstValueContext и т.д.).
@@ -90,11 +94,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param expression выражение для проверки
    * @return true, если выражение находится внутри структуры или соответствия
    */
-  protected boolean insideStructureOrCorrespondence(BSLParser.ExpressionContext expression) {
-    if (expression == null) {
-      return false;
-    }
-    
+  protected boolean insideStructureOrCorrespondence(BSLParser.ExpressionContext expression) {    
     if (checkInsideStructureInsertOrAdd(expression)) {
       return true;
     }
@@ -170,7 +170,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    */
   private static Optional<BSLParser.CallStatementContext> findCallStatement(BSLParser.MethodCallContext methodCall) {
     var current = methodCall.getParent();
-    for (var i = 0; i < 10 && current != null; i++) {
+    for (var i = 0; i < MAX_PARENT_TRAVERSAL_DEPTH_FOR_CALL_STATEMENT && current != null; i++) {
       if (current instanceof BSLParser.CallStatementContext callStatementContext) {
         return Optional.of(callStatementContext);
       }
@@ -385,7 +385,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    */
   private static Optional<BSLParser.AssignmentContext> findVariableAssignment(BSLParserRuleContext startNode, String variableName) {
     var current = startNode.getParent();
-    for (var i = 0; i < 50 && current != null; i++) {
+    for (var i = 0; i < MAX_PARENT_TRAVERSAL_DEPTH_FOR_VARIABLE_ASSIGNMENT && current != null; i++) {
       if (current instanceof BSLParser.AssignmentContext assignmentContext
         && isAssignmentForVariable(assignmentContext, variableName)) {
         return Optional.of(assignmentContext);
@@ -523,7 +523,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    */
   private static Optional<BSLParser.CallParamContext> findCallParamContext(BSLParser.ExpressionContext expression) {
     var current = expression.getParent();
-    for (var i = 0; i < 5 && current != null; i++) {
+    for (var i = 0; i < MAX_PARENT_TRAVERSAL_DEPTH_FOR_CALL_PARAM && current != null; i++) {
       if (current instanceof BSLParser.CallParamContext paramContext) {
         return Optional.of(paramContext);
       }
@@ -626,7 +626,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return Optional.of(assignmentContext);
     }
     var current = parent;
-    for (var i = 0; i < 5 && current != null; i++) {
+    for (var i = 0; i < MAX_PARENT_TRAVERSAL_DEPTH_FOR_CALL_PARAM && current != null; i++) {
       if (current instanceof BSLParser.AssignmentContext assignmentContext2) {
         return Optional.of(assignmentContext2);
       }
