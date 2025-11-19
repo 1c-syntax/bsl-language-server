@@ -21,6 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.antlr.v4.runtime.tree.ParseTree;
+
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,13 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -45,7 +45,7 @@ import java.util.Optional;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
+public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
 
   private static final String DEFAULT_AUTHORIZED_NUMBERS = "-1,0,1";
   private static final boolean DEFAULT_ALLOW_MAGIC_NUMBER = true;
@@ -75,16 +75,6 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private static Optional<BSLParser.ExpressionContext> getExpression(BSLParserRuleContext ctx) {
-    return Optional.of(ctx)
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
-      .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
-      .filter(BSLParser.ExpressionContext.class::isInstance)
-      .map(BSLParser.ExpressionContext.class::cast);
-  }
-
   private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
     return (expression.getChildCount() <= 1);
   }
@@ -95,11 +85,20 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
-    String checked = ctx.getText();
+    var checked = ctx.getText();
 
     if (checked != null && isAllowed(checked)) {
-      final var parent = ctx.getParent();
-      if (parent.getParent() instanceof BSLParser.DefaultValueContext || isWrongExpression(parent)) {
+      var current = ctx.getParent();
+      var isDefaultValue = false;
+      while (current != null) {
+        if (current instanceof BSLParser.DefaultValueContext) {
+          isDefaultValue = true;
+          break;
+        }
+        current = current.getParent();
+      }
+      
+      if (!isDefaultValue && isWrongExpression(ctx, ctx.getParent())) {
         diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
     }
@@ -115,14 +114,35 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     return true;
   }
 
-  private boolean isWrongExpression(BSLParserRuleContext numericContextParent) {
-    return getExpression(numericContextParent)
-      .filter((BSLParser.ExpressionContext expression) ->
-        (!isNumericExpression(expression) || mayBeNumberAccess(expression) || insideCallParam(expression)))
+  private boolean isWrongExpression(BSLParser.NumericContext ctx, BSLParserRuleContext numericContextParent) {
+    if (mayBeNumberAccess(ctx)) {
+      return true;
+    }
+    
+    var expression = getExpression(numericContextParent);
+    if (expression.isPresent() && insideStructureOrCorrespondence(expression.get())) {
+      return false;
+    }
+    if (expression.isPresent() && insideReturnStatement(expression.get())) {
+      return true;
+    }
+    return expression
+      .filter((BSLParser.ExpressionContext expr) ->
+        (!isNumericExpression(expr) || insideCallParam(expr)))
       .isPresent();
   }
 
-  private boolean mayBeNumberAccess(BSLParser.ExpressionContext expression) {
-    return !allowMagicIndexes && expression.getParent() instanceof BSLParser.AccessIndexContext;
+  private boolean mayBeNumberAccess(BSLParser.NumericContext ctx) {
+    if (allowMagicIndexes) {
+      return false;
+    }
+    BSLParserRuleContext current = ctx.getParent();
+    while (current != null) {
+      if (current instanceof BSLParser.AccessIndexContext) {
+        return true;
+      }
+      current = current.getParent();
+    }
+    return false;
   }
 }
