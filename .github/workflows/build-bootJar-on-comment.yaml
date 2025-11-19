@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload JAR artifact
         id: upload_jar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           # имя артефакта; можешь поменять на что-то своё
           name: bootJar-${{ github.run_id }}
