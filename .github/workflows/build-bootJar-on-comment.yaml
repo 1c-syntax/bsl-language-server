@@ -47,7 +47,7 @@ jobs:
           fetch-tags: true
 
       - name: Set up JDK 17 (Corretto) with Gradle cache
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'corretto'
           java-version: '17'
