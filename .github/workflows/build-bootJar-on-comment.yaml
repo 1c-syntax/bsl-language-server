@@ -6,7 +6,8 @@ on:
 
 permissions:
   contents: read
-  issues: write       # писать комментарии в PR (issues API)
+  issues: write
+  pull-requests: write
   actions: read
 
 jobs:
