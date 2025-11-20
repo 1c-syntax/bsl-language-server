@@ -74,7 +74,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static final String GLOBAL_SCOPE = "GLOBAL_SCOPE";
   private static final String MODULE_SCOPE = "MODULE_SCOPE";
 
-  private VariableScope currentScope;
+  private VariableScope currentScope = new VariableScope();
 
   private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
     String result;
@@ -117,6 +117,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     return callStatement.IDENTIFIER().getText();
   }
 
+  @Nullable
   private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
     ParserRuleContext parent = modifier.getParent();
     if (parent instanceof BSLParser.ComplexIdentifierContext complexIdentifierContext) {
@@ -148,7 +149,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     currentScope = new VariableScope();
     currentScope.enterScope(GLOBAL_SCOPE);
     ParseTree result = super.visitFile(ctx);
-    currentScope = null;
+    currentScope.clear();
     return result;
   }
 
@@ -300,6 +301,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public static class VariableDefinition {
     private final String variableName;
     private final Set<String> types = new HashSet<>();
+
+    @Nullable
     private ParseTree firstDeclaration;
 
     VariableDefinition(String variableName) {
@@ -354,7 +357,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     public Optional<VariableDefinition> getVariableByName(@Nullable String variableName) {
-      return Optional.ofNullable(current().variables.get(variableName));
+      return current()
+        .map(scope -> scope.variables)
+        .map(variable -> variable.get(variableName));
     }
 
     public void addVariable(VariableDefinition variableDefinition) {
@@ -362,7 +367,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       if (flowType == null) {
         return;
       }
-      this.current().addVariable(variableDefinition, flowType == CodeFlowType.CYCLE);
+      this.current().ifPresent(scope -> scope.addVariable(variableDefinition, flowType == CodeFlowType.CYCLE));
     }
 
     public void enterScope(String name) {
@@ -380,8 +385,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       flowMode.pop();
     }
 
-    public Scope current() {
-      return this.peek();
+    public Optional<Scope> current() {
+      return Optional.ofNullable(this.peek());
     }
 
   }

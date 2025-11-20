@@ -83,11 +83,16 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private Pattern methodPattern = INSERT_ADD_METHOD_PATTERN;
 
   // ленивое вычисление всех полей, только в нужный момент
-  private BSLParser.CodeBlockContext codeBlock;
+  private BSLParser.CodeBlockContext codeBlock = new BSLParser.CodeBlockContext(null, 0);
+  @Nullable
   private Range blockRange;
+  @Nullable
   private List<AssignmentContext> blockAssignments;
+  @Nullable
   private List<ParserRuleContext> blockBreakers;
+  @Nullable
   private List<CallParamContext> blockCallParams;
+  @Nullable
   private List<String> firstParamInnerIdentifiers;
 
   private record GroupingData(BSLParser.CallStatementContext callStatement, String collectionName,
@@ -270,7 +275,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       return true;
     }
     final var rootParent = Trees.getRootParent(breakerContext, BREAKERS_ROOTS);
-    if (rootParent == null) {
+    if (rootParent == null || blockRange == null) {
       return true; // сюда должны попасть, только если модуль не по грамматике, но иначе ругань на возможный null
     }
     return !Ranges.containsRange(blockRange, Ranges.create(rootParent));
@@ -363,7 +368,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   }
 
   private void clearCodeBlockFields() {
-    codeBlock = null;
+    codeBlock = new BSLParser.CodeBlockContext(null, 0);
     blockRange = null;
     blockAssignments = null;
     blockBreakers = null;

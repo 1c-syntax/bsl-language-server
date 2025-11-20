@@ -297,7 +297,7 @@ public class DiagnosticInfo {
     return Optional.ofNullable(metadataFromConfig);
   }
 
-    private static org.eclipse.lsp4j.@Nullable DiagnosticSeverity parseLspSeverity(String severityString) {
+  private static org.eclipse.lsp4j.@Nullable DiagnosticSeverity parseLspSeverity(String severityString) {
     if (severityString == null || severityString.isEmpty()) {
       return null;
     }
