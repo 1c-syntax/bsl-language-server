@@ -22,14 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.EqualsAndHashCode;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
 public class PreprocessorConditionVertex extends BranchingVertex {
-  private final BSLParserRuleContext astNode;
+  private final ParserRuleContext astNode;
 
   PreprocessorConditionVertex(BSLParser.Preproc_ifContext ifClause) {
     astNode = ifClause;
@@ -40,7 +40,7 @@ public class PreprocessorConditionVertex extends BranchingVertex {
   }
 
   @Override
-  public Optional<BSLParserRuleContext> getAst() {
+  public Optional<ParserRuleContext> getAst() {
     return Optional.of(astNode);
   }
 }

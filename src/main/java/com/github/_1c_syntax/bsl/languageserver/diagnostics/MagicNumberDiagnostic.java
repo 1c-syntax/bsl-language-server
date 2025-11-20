@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -114,7 +114,7 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
     return true;
   }
 
-  private boolean isWrongExpression(BSLParser.NumericContext ctx, BSLParserRuleContext numericContextParent) {
+  private boolean isWrongExpression(BSLParser.NumericContext ctx, ParserRuleContext numericContextParent) {
     if (mayBeNumberAccess(ctx)) {
       return true;
     }
@@ -136,7 +136,7 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
     if (allowMagicIndexes) {
       return false;
     }
-    BSLParserRuleContext current = ctx.getParent();
+    ParserRuleContext current = ctx.getParent();
     while (current != null) {
       if (current instanceof BSLParser.AccessIndexContext) {
         return true;

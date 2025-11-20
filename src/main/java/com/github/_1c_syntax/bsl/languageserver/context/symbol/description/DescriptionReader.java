@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -223,7 +223,7 @@ public class DescriptionReader {
     return "";
   }
 
-  private String getDescriptionString(BSLParserRuleContext ctx) {
+  private String getDescriptionString(ParserRuleContext ctx) {
     var strings = new StringJoiner("");
     for (int i = 0; i < ctx.getChildCount(); i++) {
       var child = ctx.getChild(i);

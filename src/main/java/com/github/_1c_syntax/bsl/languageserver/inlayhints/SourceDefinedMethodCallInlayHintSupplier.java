@@ -31,8 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
@@ -184,7 +184,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   }
 
 
-  private static boolean isRightMethod(BSLParserRuleContext doCallParent, Reference reference) {
+  private static boolean isRightMethod(ParserRuleContext doCallParent, Reference reference) {
     var selectionRange = reference.getSelectionRange();
 
     if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {

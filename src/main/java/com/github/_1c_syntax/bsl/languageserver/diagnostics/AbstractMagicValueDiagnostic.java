@@ -24,11 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 /**
@@ -52,12 +53,12 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param ctx узел AST
    * @return Optional с ExpressionContext, если найден
    */
-  protected static Optional<BSLParser.ExpressionContext> getExpression(BSLParserRuleContext ctx) {
+  protected static Optional<BSLParser.ExpressionContext> getExpression(ParserRuleContext ctx) {
     return Optional.of(ctx)
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .map(BSLParser.ExpressionContext.class::cast);
   }
@@ -74,9 +75,9 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return Optional.empty();
     }
     return Optional.of(constValue)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context.getChildCount() == 1)
-      .map(BSLParserRuleContext::getParent)
+      .map(ParserRuleContext::getParent)
       .filter(context -> context.getChildCount() == 1)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .map(BSLParser.ExpressionContext.class::cast);
@@ -383,7 +384,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param variableName имя переменной
    * @return Optional с AssignmentContext или empty, если не найден
    */
-  private static Optional<BSLParser.AssignmentContext> findVariableAssignment(BSLParserRuleContext startNode, String variableName) {
+  private static Optional<BSLParser.AssignmentContext> findVariableAssignment(ParserRuleContext startNode, String variableName) {
     var current = startNode.getParent();
     for (var i = 0; i < MAX_PARENT_TRAVERSAL_DEPTH_FOR_VARIABLE_ASSIGNMENT && current != null; i++) {
       if (current instanceof BSLParser.AssignmentContext assignmentContext
@@ -411,7 +412,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    */
   private static Optional<BSLParser.AssignmentContext> findAssignmentInCodeBlock(
     BSLParser.CodeBlockContext codeBlock,
-    BSLParserRuleContext beforeNode,
+    ParserRuleContext beforeNode,
     String variableName
   ) {
     var beforeLine = beforeNode.getStart().getLine();
@@ -741,7 +742,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @return true, если выражение находится в указанном контексте
    */
   protected static boolean insideContext(BSLParser.ExpressionContext expression,
-                                        Class<? extends BSLParserRuleContext> contextClass) {
+                                        Class<? extends ParserRuleContext> contextClass) {
     if (expression == null) {
       return false;
     }

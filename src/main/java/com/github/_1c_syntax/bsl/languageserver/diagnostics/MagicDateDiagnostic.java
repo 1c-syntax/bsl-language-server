@@ -172,7 +172,6 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
     return authorizedDates.contains(s);
   }
 
-
   private static boolean insideAssignmentWithDateMethodForSimpleDate(BSLParser.ExpressionContext expression) {
     if (expression == null) {
       return false;

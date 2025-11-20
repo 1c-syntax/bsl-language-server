@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -112,7 +111,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
     return super.visitNewExpression(ctx);
   }
 
-  private boolean findNestedCall(BSLParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {
+  private boolean findNestedCall(ParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {
     // однострочники пропускаем сразу
     if (ctx.getStart().getLine() == ctx.getStop().getLine()) {
       return false;
@@ -133,7 +132,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
       .anyMatch(callParamContext -> callParamContext.getStop().getLine() > callParamContext.getStart().getLine());
   }
 
-  private void checkMethodCall(BSLParserRuleContext ctx,
+  private void checkMethodCall(ParserRuleContext ctx,
                                BSLParser.DoCallContext ctxDoCall,
                                BSLParser.MethodNameContext ctxMethodName) {
     if (findNestedCall(ctx, ctxDoCall)) {
