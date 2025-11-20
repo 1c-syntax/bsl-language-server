@@ -1520,6 +1520,29 @@
 
 <span class="k">КонецФункции</span>
 </code></pre></div>
+<h2 id="Исключения">Исключения<a class="headerlink" href="#Исключения" title="Permanent link">&para;</a></h2>
+<p>Магические числа, используемые в структурах и соответствиях, не считаются ошибками, так как они используются в качестве ключей или значений в структурах данных, где контекст понятен:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Операция Вставить структуры - нет ошибки</span>
+<span class="nv">Структура</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;МояПеременная&quot;</span><span class="p">,</span> <span class="m">20</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;ДругаяПеременная&quot;</span><span class="p">,</span> <span class="m">42</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Конструктор структуры - нет ошибки</span>
+<span class="nv">Структура2</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Поле1, Поле2&quot;</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">15</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Прямое присваивание свойству структуры - нет ошибки</span>
+<span class="nv">СтруктураСПолями</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;МояПеременная, ДругоеПоле&quot;</span><span class="p">);</span>
+<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">МояПеременная</span> <span class="o">=</span> <span class="m">20</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">ДругоеПоле</span> <span class="o">=</span> <span class="m">50</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Фиксированная структура - нет ошибки</span>
+<span class="nv">ФиксированнаяСтруктура</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ФиксированнаяСтруктура</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">,</span> <span class="m">200</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Соответствие - нет ошибки (как ключ, так и значение)</span>
+<span class="nv">Соответствие</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Соответствие</span><span class="p">;</span>
+<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;Код&quot;</span><span class="p">,</span> <span class="m">123</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="m">1980</span><span class="p">,</span> <span class="s">&quot;Олимпиада в Москве&quot;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+</code></pre></div>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>

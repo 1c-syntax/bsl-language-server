@@ -1517,6 +1517,30 @@
     <span class="nv">ХоверБордБудетИзобретен</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
+<h2 id="Исключения">Исключения<a class="headerlink" href="#Исключения" title="Permanent link">&para;</a></h2>
+<p>Магические даты, используемые в структурах и соответствиях, не считаются ошибками, так как они используются в качестве ключей или значений в структурах данных, где контекст понятен:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Операция Вставить структуры - нет ошибки</span>
+<span class="nv">Структура</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;ДатаНачала&quot;</span><span class="p">,</span> <span class="ld">&#39;20250101&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;ДатаОкончания&quot;</span><span class="p">,</span> <span class="ld">&#39;20251231&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Структура</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;МаксимальнаяДата&quot;</span><span class="p">,</span> <span class="ld">&#39;39991231235959&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Конструктор структуры - нет ошибки</span>
+<span class="nv">Структура2</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;ДатаНачала, ДатаОкончания&quot;</span><span class="p">,</span> <span class="ld">&#39;20250101&#39;</span><span class="p">,</span> <span class="ld">&#39;20251231&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Прямое присваивание свойству структуры - нет ошибки</span>
+<span class="nv">СтруктураСПолями</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;ДатаНачала, ДатаОкончания&quot;</span><span class="p">);</span>
+<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">ДатаНачала</span> <span class="o">=</span> <span class="ld">&#39;20250101&#39;</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">СтруктураСПолями</span><span class="o">.</span><span class="nv">ДатаОкончания</span> <span class="o">=</span> <span class="ld">&#39;20251231&#39;</span><span class="p">;</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Фиксированная структура - нет ошибки</span>
+<span class="nv">ФиксированнаяСтруктура</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ФиксированнаяСтруктура</span><span class="p">(</span><span class="s">&quot;Значение&quot;</span><span class="p">,</span> <span class="ld">&#39;20240101&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+
+<span class="c1">// Соответствие - нет ошибки (как ключ, так и значение)</span>
+<span class="nv">Соответствие</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Соответствие</span><span class="p">;</span>
+<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;Код&quot;</span><span class="p">,</span> <span class="ld">&#39;20230101&#39;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+<span class="nv">Соответствие</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="ld">&#39;19800101&#39;</span><span class="p">,</span> <span class="s">&quot;Олимпиада в Москве&quot;</span><span class="p">);</span> <span class="c1">// Нет ошибки</span>
+</code></pre></div>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>

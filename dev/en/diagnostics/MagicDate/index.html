@@ -1517,6 +1517,30 @@ constant</p>
     <span class="nv">HoverBoardWillBeInvented</span> <span class="o">=</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="k">EndIf</span><span class="p">;</span>
 </code></pre></div>
+<h2 id="Exceptions">Exceptions<a class="headerlink" href="#Exceptions" title="Permanent link">&para;</a></h2>
+<p>Magic dates used in structures and correspondences are not considered errors, as they are used as keys or values in data structures where the context is clear:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Structure insert - no error</span>
+<span class="nv">Structure</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Structure</span><span class="p">;</span>
+<span class="nv">Structure</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;StartDate&quot;</span><span class="p">,</span> <span class="ld">&#39;20250101&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
+<span class="nv">Structure</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;EndDate&quot;</span><span class="p">,</span> <span class="ld">&#39;20251231&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
+<span class="nv">Structure</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;MaxDate&quot;</span><span class="p">,</span> <span class="ld">&#39;39991231235959&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
+
+<span class="c1">// Structure constructor - no error</span>
+<span class="nv">Structure2</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;StartDate, EndDate&quot;</span><span class="p">,</span> <span class="ld">&#39;20250101&#39;</span><span class="p">,</span> <span class="ld">&#39;20251231&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
+
+<span class="c1">// Direct structure property assignment - no error</span>
+<span class="nv">StructureWithFields</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Structure</span><span class="p">(</span><span class="s">&quot;StartDate, EndDate&quot;</span><span class="p">);</span>
+<span class="nv">StructureWithFields</span><span class="o">.</span><span class="nv">StartDate</span> <span class="o">=</span> <span class="ld">&#39;20250101&#39;</span><span class="p">;</span> <span class="c1">// No error</span>
+<span class="nv">StructureWithFields</span><span class="o">.</span><span class="nv">EndDate</span> <span class="o">=</span> <span class="ld">&#39;20251231&#39;</span><span class="p">;</span> <span class="c1">// No error</span>
+
+<span class="c1">// Fixed structure - no error</span>
+<span class="nv">FixedStructure</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">FixedStructure</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">,</span> <span class="ld">&#39;20240101&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
+
+<span class="c1">// Correspondence - no error (both key and value)</span>
+<span class="nv">Correspondence</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Correspondence</span><span class="p">;</span>
+<span class="nv">Correspondence</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;Code&quot;</span><span class="p">,</span> <span class="ld">&#39;20230101&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
+<span class="nv">Correspondence</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="ld">&#39;19800101&#39;</span><span class="p">,</span> <span class="s">&quot;Olympics in Moscow&quot;</span><span class="p">);</span> <span class="c1">// No error</span>
+</code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
