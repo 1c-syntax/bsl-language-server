@@ -246,6 +246,6 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
         documentContext.getUri(),
         Ranges.create(context),
         "+1"
-      )).collect(Collectors.toList());
+      )).toList();
   }
 }

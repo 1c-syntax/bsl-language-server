@@ -87,7 +87,6 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Scope("prototype")
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-//@NullUnmarked
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
