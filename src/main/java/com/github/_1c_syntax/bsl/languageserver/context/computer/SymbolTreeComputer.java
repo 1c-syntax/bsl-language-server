@@ -75,6 +75,26 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     return new SymbolTree(moduleSymbol);
   }
 
+  /**
+   * Создает минимальное и пустое SymbolTree по контексту документа.
+   * <p/>
+   * Дерево содержит только ModuleSymbol с пустыми диапазонами.
+   *
+   * @param documentContext Контекст документа
+   *
+   * @return Пустое дерево символов.
+   */
+  public static SymbolTree empty(DocumentContext documentContext) {
+    var module = ModuleSymbol.builder()
+      .owner(documentContext)
+      .range(Ranges.create())
+      .selectionRange(Ranges.create())
+      .name("empty")
+      .build();
+
+    return new SymbolTree(module);
+  }
+
   private static SourceDefinedSymbol placeSymbol(
     List<SourceDefinedSymbol> topLevelSymbols,
     SourceDefinedSymbol currentParent,
