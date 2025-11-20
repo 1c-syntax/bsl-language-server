@@ -39,6 +39,8 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -53,6 +55,22 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractS
 
   private final Class<T> diagnosticClass;
   protected T diagnosticInstance;
+
+  @SuppressWarnings("unchecked")
+  AbstractDiagnosticTest() {
+    Type superclass = getClass().getGenericSuperclass();
+    if (superclass instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) superclass;
+      Type[] typeArguments = parameterizedType.getActualTypeArguments();
+      if (typeArguments.length > 0 && typeArguments[0] instanceof Class) {
+        this.diagnosticClass = (Class<T>) typeArguments[0];
+      } else {
+        throw new IllegalStateException("Cannot determine diagnostic class from generic type parameter");
+      }
+    } else {
+      throw new IllegalStateException("Cannot determine diagnostic class from generic type parameter");
+    }
+  }
 
   AbstractDiagnosticTest(Class<T> diagnosticClass) {
     this.diagnosticClass = diagnosticClass;
