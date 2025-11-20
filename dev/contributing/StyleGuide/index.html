@@ -1604,18 +1604,17 @@
 <h2 id="Обработка-null">Обработка null<a class="headerlink" href="#Обработка-null" title="Permanent link">&para;</a></h2>
 <p>Если метод на законных основаниях может возвращать <code>null</code>, рекомендуется вместо явного возврата <code>null</code> возвращать <code>Optional&lt;T&gt;</code>. Исключения (например, высокочастотные или перфомансные функции) обговариваются отдельно.</p>
 <p>В описании пакета <code>package-info.java</code> необходимо указать, что в пакете по умолчанию используется NonNull API.
-Для этого над именем пакета добавляется аннотация <code>@DefaultAnnotation(NonNull.class)</code></p>
+Для этого над именем пакета добавляется аннотация <code>@NullMarked</code></p>
 <p>Пример:
 <div class="highlight"><pre><span></span><code><span class="c1">// ...Лицензия...</span>
-<span class="nd">@DefaultAnnotation</span><span class="p">(</span><span class="n">NonNull</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+<span class="nd">@NullMarked</span>
 <span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver</span><span class="p">;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">edu.umd.cs.findbugs.annotations.DefaultAnnotation</span><span class="p">;</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">edu.umd.cs.findbugs.annotations.NonNull</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.jspecify.annotations.NullMarked</span><span class="p">;</span>
 </code></pre></div></p>
-<p>Для явного указания того, что метод может принимать или возвращать <code>null</code>, используется аннотация <code>@edu.umd.cs.findbugs.annotations.Nullable</code>.</p>
-<p>В общем случае это позволяет не использовать аннотации <code>@edu.umd.cs.findbugs.annotations.NonNull</code> вообще.</p>
-<p>Аннотации по контролю за <code>null</code> из пакета <code>javax.annotations</code> или <code>jetbrains.annotations</code> использоваться не должны.</p>
+<p>Для явного указания того, что метод может принимать или возвращать <code>null</code>, используется аннотация <code>@org.jspecify.annotations.Nullable</code>.</p>
+<p>В общем случае это позволяет не использовать аннотации <code>@org.jspecify.annotations.NonNull</code> вообще.</p>
+<p>Аннотации по контролю за <code>null</code> из пакета <code>javax.annotations</code>, <code>jakarta.annotations</code> или <code>edu.umd.cs.findbugs.annotations</code> использоваться не должны.</p>
 <h2 id="Форматирование">Форматирование<a class="headerlink" href="#Форматирование" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Весь код в модулях должен быть автоматически отформатирован.</li>

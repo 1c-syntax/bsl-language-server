@@ -1604,18 +1604,17 @@
 <h2 id="Null-values">Null values<a class="headerlink" href="#Null-values" title="Permanent link">&para;</a></h2>
 <p>If a method can legally return <code>null</code>, it is recommended that you return <code>Optional&lt;T&gt;</code> instead of explicitly returning <code>null</code>. Exceptions (eg. high frequency or performance functions) are negotiated separately.</p>
 <p>The description of the <code>package-info.java</code> package must indicate that the NonNull API is used by default in the package.
-To do this, the annotation <code>@DefaultAnnotation(NonNull.class)</code> is added above the package name</p>
+To do this, the annotation <code>@NullMarked</code> is added above the package name</p>
 <p>Example:
 <div class="highlight"><pre><span></span><code><span class="c1">// ...license...</span>
-<span class="nd">@DefaultAnnotation</span><span class="p">(</span><span class="n">NonNull</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
+<span class="nd">@NullMarked</span>
 <span class="kn">package</span><span class="w"> </span><span class="nn">com.github._1c_syntax.bsl.languageserver</span><span class="p">;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">edu.umd.cs.findbugs.annotations.DefaultAnnotation</span><span class="p">;</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">edu.umd.cs.findbugs.annotations.NonNull</span><span class="p">;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">org.jspecify.annotations.NullMarked</span><span class="p">;</span>
 </code></pre></div></p>
-<p>To explicitly indicate that a method can accept or return <code>null</code>, use the annotation <code>@edu.umd.cs.findbugs.annotations.Nullable</code>.</p>
-<p>This avoids using the <code>@edu.umd.cs.findbugs.annotations.NonNull</code> annotation.</p>
-<p>The <code>null</code> control annotations from the <code>javax.annotations</code> or <code>jetbrains.annotations</code> packages are not allowed.</p>
+<p>To explicitly indicate that a method can accept or return <code>null</code>, use the annotation <code>@org.jspecify.annotations.Nullable</code>.</p>
+<p>This avoids using the <code>@org.jspecify.annotations.NonNull</code> annotation.</p>
+<p>The <code>null</code> control annotations from the <code>javax.annotations</code>, <code>jakarta.annotations</code> or <code>edu.umd.cs.findbugs.annotations</code> packages are not allowed.</p>
 <h2 id="Formatting">Formatting<a class="headerlink" href="#Formatting" title="Permanent link">&para;</a></h2>
 <ol>
 <li>All code in the modules should be automatically formatted.</li>
