@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1763562460783,
+  "lastUpdate": 1763625970545,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31403,6 +31403,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.632996452948123",
             "extra": "mean: 88.60749228795369 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bcd4332c115f93066b75f27861d730c7c5633643",
+          "message": "Merge pull request #3542 from johnnyshut/deature/3496\n\nfix: Исправлены ложные срабатывания диагностик MagicNumber и MagicDate при работе со структурами",
+          "timestamp": "2025-11-20T08:33:45+01:00",
+          "tree_id": "6503c6dafa25a6dc0aa251f602ff66a8faba8edf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bcd4332c115f93066b75f27861d730c7c5633643"
+        },
+        "date": 1763625965613,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.46812756856282,
+            "unit": "sec",
+            "range": "stddev: 1.2614252010578773",
+            "extra": "mean: 90.46812756856282 sec\nrounds: 3"
           }
         ]
       }
