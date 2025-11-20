@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataMapDeserializer;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.jspecify.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -54,9 +55,11 @@ public class DiagnosticsOptions {
   @JsonDeserialize(using = ParametersDeserializer.class)
   private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
 
-    private org.eclipse.lsp4j.@Nullable DiagnosticSeverity minimumLSPDiagnosticLevel;
+  @Nullable
+  private DiagnosticSeverity minimumLSPDiagnosticLevel;
 
-    private org.eclipse.lsp4j.@Nullable DiagnosticSeverity overrideMinimumLSPDiagnosticLevel;
+  @Nullable
+  private DiagnosticSeverity overrideMinimumLSPDiagnosticLevel;
 
   @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
   private Map<String, DiagnosticMetadata> metadata = new HashMap<>();

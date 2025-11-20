@@ -47,6 +47,7 @@ import java.util.Objects;
 public class FileAwarePrintWriter extends PrintWriter {
 
   private boolean isEmpty = true;
+  @Nullable
   private File file;
 
   /**

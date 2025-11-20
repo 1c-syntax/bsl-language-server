@@ -45,6 +45,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullUnmarked;
 import org.jspecify.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
@@ -91,6 +92,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @RequiredArgsConstructor
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@NullUnmarked
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
