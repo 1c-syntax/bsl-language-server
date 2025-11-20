@@ -23,8 +23,7 @@
  * В пакете содержатся классы, относящиеся к отслеживанию факта изменения (удаление, создание, редактирование) файла
  * конфигурации ({@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}).
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

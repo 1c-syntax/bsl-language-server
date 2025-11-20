@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -134,7 +134,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       });
   }
 
-  private static boolean haveExprNotIsNullInsideWhere(@Nullable SDBLParser.LogicalExpressionContext whereCtx) {
+  private static boolean haveExprNotIsNullInsideWhere(SDBLParser.@Nullable LogicalExpressionContext whereCtx) {
     return Optional.ofNullable(whereCtx)
       .stream().flatMap(ctx -> Trees.findAllRuleNodes(ctx, SDBLParser.RULE_isNullPredicate).stream())
       .map(SDBLParser.IsNullPredicateContext.class::cast)
@@ -222,7 +222,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
       .isPresent();
   }
 
-  private void checkWhere(String tableName, @Nullable SDBLParser.LogicalExpressionContext where) {
+  private void checkWhere(String tableName, SDBLParser.@Nullable LogicalExpressionContext where) {
     Optional.ofNullable(where)
       .stream().flatMap(searchConditionsContext -> searchConditionsContext.condidions.stream())
       .forEach(searchConditionContext -> checkStatements(tableName, searchConditionContext,

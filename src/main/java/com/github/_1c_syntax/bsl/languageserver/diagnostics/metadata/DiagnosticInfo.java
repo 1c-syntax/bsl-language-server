@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -297,8 +297,7 @@ public class DiagnosticInfo {
     return Optional.ofNullable(metadataFromConfig);
   }
 
-  @Nullable
-  private static org.eclipse.lsp4j.DiagnosticSeverity parseLspSeverity(String severityString) {
+  private static org.eclipse.lsp4j.@Nullable DiagnosticSeverity parseLspSeverity(String severityString) {
     if (severityString == null || severityString.isEmpty()) {
       return null;
     }

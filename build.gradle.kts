@@ -92,6 +92,9 @@ dependencies {
     api("io.github.1c-syntax", "bsl-common-library", "0.9.0")
     api("io.github.1c-syntax", "supportconf", "0.15.0")
 
+    // nullability annotations
+    api("org.jspecify", "jspecify", "1.0.0")
+
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
         exclude("commons-logging", "commons-logging")
@@ -144,7 +147,6 @@ dependencies {
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs", "spotbugs-annotations", "4.9.8")
 
     // TEST
 

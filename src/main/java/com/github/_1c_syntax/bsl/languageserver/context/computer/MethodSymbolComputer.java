@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -237,7 +237,7 @@ public final class MethodSymbolComputer
   }
 
   private static List<ParameterDefinition> createParameters(
-    @Nullable BSLParser.ParamListContext paramList,
+    BSLParser.@Nullable ParamListContext paramList,
     Optional<MethodDescription> description
   ) {
     if (paramList == null) {

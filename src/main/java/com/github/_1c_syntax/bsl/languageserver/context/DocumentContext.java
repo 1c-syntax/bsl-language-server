@@ -44,13 +44,9 @@ import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import jakarta.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Locked;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
@@ -59,6 +55,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -88,9 +85,9 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
  */
 @Component
 @Scope("prototype")
-@RequiredArgsConstructor
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+//@NullUnmarked
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
@@ -118,12 +115,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Setter(onMethod = @__({@Autowired}))
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
 
-  @Getter
-  private FileType fileType;
-  @Getter(onMethod = @__({@Locked("computeLock")}))
+  @Nullable
   private BSLTokenizer tokenizer;
+
   @Getter(onMethod = @__({@Locked("computeLock")}))
-  private SymbolTree symbolTree;
+  private SymbolTree symbolTree = SymbolTreeComputer.empty(this);
+
+  @Getter
+  private final FileType fileType;
 
   @Getter
   private boolean isComputedDataFrozen;
@@ -144,9 +143,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
-  @PostConstruct
-  void init() {
-    this.fileType = computeFileType(this.uri);
+  public DocumentContext(URI uri) {
+    this.uri = uri;
+    this.fileType = computeFileType(uri);
   }
 
   public ServerContext getServerContext() {
@@ -166,13 +165,13 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Locked("computeLock")
   public BSLParser.FileContext getAst() {
-    requireNonNull(content);
+    requireNonNull(tokenizer);
     return tokenizer.getAst();
   }
 
   @Locked("computeLock")
   public List<Token> getTokens() {
-    requireNonNull(content);
+    requireNonNull(tokenizer);
     return tokenizer.getTokens();
   }
 
@@ -295,7 +294,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   protected void rebuild(String content, int version) {
-    aquireLocks();
+    acquireLocks();
 
     try {
 
@@ -331,7 +330,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   protected void clearSecondaryData() {
-    aquireLocks();
+    acquireLocks();
 
     try {
 
@@ -359,7 +358,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
     diagnostics.clear();
   }
 
-  private void aquireLocks() {
+  private void acquireLocks() {
     diagnosticsLock.lock();
     computeLock.lock();
   }
@@ -462,7 +461,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   @Override
-  public int compareTo(@NonNull DocumentContext other) {
+  public int compareTo(DocumentContext other) {
     return Comparator.comparing(DocumentContext::getUri)
       .thenComparing(DocumentContext::getVersion)
       .compare(this, other);

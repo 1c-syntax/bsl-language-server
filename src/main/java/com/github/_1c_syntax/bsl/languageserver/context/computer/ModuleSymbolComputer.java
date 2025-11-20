@@ -60,7 +60,6 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
     return ModuleSymbol.builder()
       .name(getName(documentContext))
-      .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
       .selectionRange(firstRange)

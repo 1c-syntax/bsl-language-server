@@ -35,7 +35,7 @@ import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 

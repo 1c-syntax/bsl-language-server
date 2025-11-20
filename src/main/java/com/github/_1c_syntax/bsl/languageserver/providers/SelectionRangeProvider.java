@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.SelectionRange;
@@ -77,7 +77,7 @@ public class SelectionRangeProvider {
    * @param params          параметры вызова.
    * @return список найденных диапазонов.
    */
-  public List<SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
+  public List<@Nullable SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
 
     var positions = params.getPositions();
     var ast = documentContext.getAst();
@@ -127,6 +127,7 @@ public class SelectionRangeProvider {
     return Optional.of(parent);
   }
 
+  @Nullable
   private static ParserRuleContext getParentContext(ParseTree ctx) {
     if (ctx instanceof BSLParser.StatementContext statementContext) {
       return getStatementParent(statementContext);
@@ -140,6 +141,7 @@ public class SelectionRangeProvider {
     return (ParserRuleContext) ctx.getParent();
   }
 
+  @Nullable
   private static ParserRuleContext getStatementParent(BSLParser.StatementContext statement) {
 
     var parent = getDefaultParent(statement);

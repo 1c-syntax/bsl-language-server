@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
