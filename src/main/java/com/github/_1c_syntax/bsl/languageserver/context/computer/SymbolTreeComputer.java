@@ -77,7 +77,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   /**
    * Создает минимальное и пустое SymbolTree по контексту документа.
-   * <p/>
+   * <p>
    * Дерево содержит только ModuleSymbol с пустыми диапазонами.
    *
    * @param documentContext Контекст документа
