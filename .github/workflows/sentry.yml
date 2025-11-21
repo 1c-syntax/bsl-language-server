@@ -30,7 +30,7 @@ jobs:
         run: |
           if [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "ENVIRONMENT=production" >> $GITHUB_ENV
-          elif [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-r[ca][0-9]+$ ]]; then
+          elif [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-r[ca]\.[0-9]+$ ]]; then
             echo "ENVIRONMENT=pre-release" >> $GITHUB_ENV
           elif [[ "${{ env.RELEASE_VERSION }}" == *-SNAPSHOT && ! "${{ env.RELEASE_VERSION }}" == *-DIRTY ]]; then
             echo "ENVIRONMENT=develop" >> $GITHUB_ENV
