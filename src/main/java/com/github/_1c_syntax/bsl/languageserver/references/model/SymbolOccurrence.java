@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.Builder;
 
 /**

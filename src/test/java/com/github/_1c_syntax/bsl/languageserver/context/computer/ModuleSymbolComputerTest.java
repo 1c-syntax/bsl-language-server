@@ -65,13 +65,13 @@ class ModuleSymbolComputerTest {
     var documentContext = spy(TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/ModuleSymbol.bsl"));
     var computer = new ModuleSymbolComputer(documentContext);
 
-    var mdoReference = mock(MdoReference.class);
-    when(mdoReference.getMdoRef()).thenReturn("Document.Document1");
+    var mdoReference = MdoReference.create("Document.Document1");
 
     var mdObject = mock(MD.class);
     when(mdObject.getMdoReference()).thenReturn(mdoReference);
 
     doReturn(Optional.of(mdObject)).when(documentContext).getMdObject();
+    doReturn(mdoReference.getMdoRef()).when(documentContext).getMdoRef();
 
     // when-then pairs:
 

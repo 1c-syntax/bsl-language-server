@@ -25,8 +25,7 @@
  * Пакет содержит классы для построения и обхода графа потока управления кода BSL,
  * включая различные типы вершин (условные, циклические, блочные) и рёбер графа.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

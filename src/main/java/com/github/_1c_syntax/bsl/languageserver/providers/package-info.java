@@ -25,8 +25,7 @@
  * Пакет содержит реализации провайдеров для различных возможностей LSP:
  * навигация по коду, подсказки, форматирование, диагностика и другие.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

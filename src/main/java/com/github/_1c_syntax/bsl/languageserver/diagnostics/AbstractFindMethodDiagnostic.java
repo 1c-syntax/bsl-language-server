@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
 import lombok.Setter;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
@@ -81,7 +81,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    * первым параметром которого <b>всегда</b> будет имя метода.
    * В противном случае возвращается обычное сообщение без параметров.
    */
-  protected String getMessage(BSLParserRuleContext ctx) {
+  protected String getMessage(ParserRuleContext ctx) {
 
     if (ctx instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
       return info.getMessage(globalMethodCallContext.methodName().getText());

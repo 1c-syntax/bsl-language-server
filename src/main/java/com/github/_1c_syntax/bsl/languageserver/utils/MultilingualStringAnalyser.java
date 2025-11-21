@@ -107,8 +107,7 @@ public final class MultilingualStringAnalyser {
   }
 
   private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
-    BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
-      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+    BSLParser.AssignmentContext assignment = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment != null) {
       BSLParser.LValueContext lValue = assignment.lValue();
@@ -204,7 +203,7 @@ public final class MultilingualStringAnalyser {
       return false;
     }
 
-    BSLParser.CodeBlockContext codeBlock = getCodeBlock();
+    var codeBlock = getCodeBlock();
 
     if (codeBlock == null) {
       return false;
@@ -223,10 +222,7 @@ public final class MultilingualStringAnalyser {
   }
 
   private BSLParser.CodeBlockContext getCodeBlock() {
-    return (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(
-      globalMethodCallContext,
-      BSLParser.RULE_codeBlock
-    );
+    return Trees.getAncestorByRuleIndex(globalMethodCallContext, BSLParser.RULE_codeBlock);
   }
 
 }

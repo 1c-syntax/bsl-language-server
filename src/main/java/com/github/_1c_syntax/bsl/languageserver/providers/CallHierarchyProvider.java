@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
@@ -36,11 +35,9 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,14 +73,14 @@ public class CallHierarchyProvider {
    * Подготовить элементы иерархии вызовов для указанной позиции в документе.
    *
    * @param documentContext Контекст документа
-   * @param params Параметры запроса
+   * @param params          Параметры запроса
    * @return Список элементов иерархии вызовов
    */
   public List<CallHierarchyItem> prepareCallHierarchy(
     DocumentContext documentContext,
     CallHierarchyPrepareParams params
   ) {
-    Position position = params.getPosition();
+    var position = params.getPosition();
 
     return referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol)
@@ -96,7 +93,7 @@ public class CallHierarchyProvider {
    * Получить входящие вызовы для элемента иерархии.
    *
    * @param documentContext Контекст документа
-   * @param params Параметры запроса
+   * @param params          Параметры запроса
    * @return Список входящих вызовов
    */
   public List<CallHierarchyIncomingCall> incomingCalls(
@@ -104,9 +101,9 @@ public class CallHierarchyProvider {
     CallHierarchyIncomingCallsParams params
   ) {
 
-    URI uri = documentContext.getUri();
-    CallHierarchyItem item = params.getItem();
-    Position position = item.getSelectionRange().getStart();
+    var uri = documentContext.getUri();
+    var item = params.getItem();
+    var position = item.getSelectionRange().getStart();
 
     return referenceResolver.findReference(uri, position)
       .flatMap(Reference::getSourceDefinedSymbol)
@@ -128,7 +125,7 @@ public class CallHierarchyProvider {
    * Получить исходящие вызовы для элемента иерархии.
    *
    * @param documentContext Контекст документа
-   * @param params Параметры запроса
+   * @param params          Параметры запроса
    * @return Список исходящих вызовов
    */
   public List<CallHierarchyOutgoingCall> outgoingCalls(
@@ -136,8 +133,8 @@ public class CallHierarchyProvider {
     CallHierarchyOutgoingCallsParams params
   ) {
 
-    URI uri = documentContext.getUri();
-    Position position = params.getItem().getSelectionRange().getStart();
+    var uri = documentContext.getUri();
+    var position = params.getItem().getSelectionRange().getStart();
     return referenceResolver.findReference(uri, position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
@@ -157,9 +154,9 @@ public class CallHierarchyProvider {
   }
 
   private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
-    String detail = MdoRefBuilder.getMdoRef(sourceDefinedSymbol.getOwner());
+    var detail = sourceDefinedSymbol.getOwner().getMdoRef();
 
-    CallHierarchyItem item = new CallHierarchyItem();
+    var item = new CallHierarchyItem();
     item.setName(sourceDefinedSymbol.getName());
     item.setDetail(detail);
     item.setKind(sourceDefinedSymbol.getSymbolKind());
