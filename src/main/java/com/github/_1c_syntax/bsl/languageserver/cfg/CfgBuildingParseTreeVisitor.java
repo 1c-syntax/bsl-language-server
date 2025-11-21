@@ -376,15 +376,23 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     blocks.enterBlock();
 
     blocks.enterBlock();
-    ctx.exceptCodeBlock().accept(this);
+    if (ctx.exceptCodeBlock() != null) {
+      ctx.exceptCodeBlock().accept(this);
+    }
     var exception = blocks.leaveBlock();
+
+    graph.addVertex(exception.begin());
 
     var jumpInfo = new StatementsBlockWriter.JumpInformationRecord();
     jumpInfo.exceptionHandler = exception.begin();
 
     blocks.enterBlock(jumpInfo);
-    ctx.tryCodeBlock().accept(this);
+    if (ctx.tryCodeBlock() != null) {
+      ctx.tryCodeBlock().accept(this);
+    }
     var success = blocks.leaveBlock();
+
+    graph.addVertex(success.begin());
 
     graph.addEdge(tryBranch, success.begin(), CfgEdgeType.TRUE_BRANCH);
     blocks.getCurrentBlock().getBuildParts().push(success.end());
@@ -594,9 +602,12 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     blocks.enterBlock(jumpState);
 
-    ctx.accept(this);
-
+    if (ctx != null) {
+      ctx.accept(this);
+    }
     var body = blocks.leaveBlock();
+
+    graph.addVertex(body.begin());
 
     graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);
     graph.addEdge(loopStart, blocks.getCurrentBlock().end(), CfgEdgeType.FALSE_BRANCH);
