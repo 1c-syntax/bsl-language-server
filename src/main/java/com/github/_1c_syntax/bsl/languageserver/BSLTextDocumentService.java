@@ -108,9 +108,12 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Сервис обработки запросов, связанных с текстовым документом.
@@ -144,10 +147,17 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
   
+  // Executors per document URI to serialize didChange operations and avoid race conditions
+  private final Map<String, ExecutorService> documentExecutors = new ConcurrentHashMap<>();
+  
   private boolean clientSupportsPullDiagnostics;
 
   @PreDestroy
   private void onDestroy() {
+    // Shutdown all document executors
+    documentExecutors.values().forEach(ExecutorService::shutdown);
+    documentExecutors.clear();
+    
     executorService.shutdown();
   }
 
@@ -392,6 +402,12 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public void didOpen(DidOpenTextDocumentParams params) {
     var textDocumentItem = params.getTextDocument();
     var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
+    
+    // Create single-threaded executor for this document to serialize didChange operations
+    // Use normalized URI from documentContext
+    var normalizedUri = documentContext.getUri().toString();
+    documentExecutors.computeIfAbsent(normalizedUri, key -> 
+      Executors.newSingleThreadExecutor(new CustomizableThreadFactory("doc-" + documentContext.getUri().getPath() + "-")));
 
     context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
@@ -402,23 +418,36 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
-
     var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
-
-    var newContent = applyTextDocumentChanges(documentContext.getContent(), params.getContentChanges());
-
-    context.rebuildDocument(
-      documentContext,
-      newContent,
-      params.getTextDocument().getVersion()
-    );
-
-    if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
-      validate(documentContext);
+    
+    // Use normalized URI from documentContext
+    var normalizedUri = documentContext.getUri().toString();
+    var version = params.getTextDocument().getVersion();
+    
+    // Get executor for this document
+    var executor = documentExecutors.get(normalizedUri);
+    if (executor == null) {
+      // Document not opened or already closed
+      return;
     }
+    
+    // Submit change operation to document's executor to serialize operations
+    executor.submit(() -> {
+      var newContent = applyTextDocumentChanges(documentContext.getContent(), params.getContentChanges());
+
+      context.rebuildDocument(
+        documentContext,
+        newContent,
+        version
+      );
+
+      if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
+        validate(documentContext);
+      }
+    });
   }
 
   @Override
@@ -426,6 +455,24 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
+    }
+    
+    // Use normalized URI from documentContext
+    var normalizedUri = documentContext.getUri().toString();
+
+    // Remove and shutdown the executor for this document, waiting for all pending changes
+    var executor = documentExecutors.remove(normalizedUri);
+    if (executor != null) {
+      executor.shutdown();
+      try {
+        // Wait for all queued changes to complete (with timeout to avoid hanging)
+        if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
+          executor.shutdownNow();
+        }
+      } catch (InterruptedException e) {
+        executor.shutdownNow();
+        Thread.currentThread().interrupt();
+      }
     }
 
     context.closeDocument(documentContext);
