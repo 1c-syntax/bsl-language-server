@@ -43,6 +43,22 @@ import static org.mockito.Mockito.when;
 class ControlFlowGraphBuilderTest {
 
   @Test
+  void ReturnOutsideLoop() {
+
+    var code = """
+      Если Истина Тогда
+        Прервать;
+      КонецЕсли;
+      Продолжить;""";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+    var vertices = traverseToOrderedList(graph);
+    assertThat(vertices).isNotEmpty(); // or empty...
+  }
+
+  @Test
   void PreprocCanBeBuild() {
 
     var code = """
