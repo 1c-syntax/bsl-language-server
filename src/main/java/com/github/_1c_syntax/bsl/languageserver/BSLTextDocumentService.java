@@ -411,7 +411,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // Create single-threaded executor for this document to serialize didChange operations
     var uri = documentContext.getUri();
     documentExecutors.computeIfAbsent(uri, key ->
-      new DocumentExecutor("doc-" + documentContext.getUri() + "-"));
+      new DocumentExecutor(documentContext, "doc-" + documentContext.getUri() + "-"));
 
     context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
@@ -439,19 +439,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     // Submit change operation to document's executor to serialize operations.
     // DocumentExecutor will order tasks by `version` (ascending) before execution.
-    executor.submit(version, () -> {
-      var newContent = applyTextDocumentChanges(documentContext.getContent(), params.getContentChanges());
-
-      context.rebuildDocument(
-        documentContext,
-        newContent,
-        version
-      );
-
-      if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
-        validate(documentContext);
-      }
-    });
+    executor.submit(version, params.getContentChanges());
   }
 
   @Override
@@ -695,65 +683,100 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return offset + character;
   }
 
-  // Custom per-document executor which executes submitted tasks ordered by version (ascending).
-  private static final class DocumentExecutor {
+  private void processDocumentChange(
+    DocumentContext documentContext,
+    String newContent,
+    Integer version
+  ) {
+    context.rebuildDocument(
+      documentContext,
+      newContent,
+      version
+    );
 
-    private final PriorityBlockingQueue<ChangeTask> queue = new PriorityBlockingQueue<>();
-    private final Thread worker;
-    private volatile boolean running = true;
+    if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
+      validate(documentContext);
+    }
+  }
 
-    DocumentExecutor(String threadNamePrefix) {
-      worker = new Thread(() -> {
-        try {
-          while (running || !queue.isEmpty()) {
-            ChangeTask task;
-            try {
-              // Block until a task is available or the thread is interrupted for shutdown
-              task = queue.take();
-            } catch (InterruptedException ie) {
-              // Interrupted: likely requested shutdown. Drain remaining tasks (non-blocking) and exit.
-              Thread.currentThread().interrupt();
-              ChangeTask t;
-              while ((t = queue.poll()) != null) {
-                try {
-                  t.runnable.run();
-                } catch (Throwable ex) {
-                  // Keep worker alive
-                  LOGGER.error("Error while executing drained document change task", ex);
-                }
-              }
-              break;
-            }
+  private final class DocumentExecutor {
 
-            if (task == null) {
-              continue;
-            }
+     private final DocumentContext documentContext;
+     private final PriorityBlockingQueue<ChangeTask> queue = new PriorityBlockingQueue<>();
+     private final Thread worker;
+     private volatile boolean running = true;
+     private @Nullable String pendingContent;
+     private int pendingVersion = -1;
 
-            try {
-              task.runnable.run();
-            } catch (Throwable t) {
-              // Swallow exceptions from task to keep worker alive
-              LOGGER.error("Error while executing document change task", t);
-            }
-          }
-        } catch (Throwable t) {
-          // Catch unexpected throwable to avoid silent thread death
-          LOGGER.error("Unexpected error in document executor worker", t);
-        }
-      });
-      worker.setName(threadNamePrefix + "executor");
-      worker.setDaemon(true);
-      worker.start();
+     DocumentExecutor(DocumentContext documentContext, String threadNamePrefix) {
+       this.documentContext = documentContext;
+       worker = new Thread(this::runWorker);
+       worker.setName(threadNamePrefix + "executor");
+       worker.setDaemon(true);
+       worker.start();
+     }
+
+    void submit(@Nullable Integer version, List<TextDocumentContentChangeEvent> contentChanges) {
+      if (version == null) {
+        LOGGER.warn("Received didChange without document version; skipping change for {}", documentContext.getUri());
+        return;
+      }
+      queue.put(new ChangeTask(version, List.copyOf(contentChanges)));
     }
 
-    void submit(Integer version, Runnable runnable) {
-      long ver = version.longValue();
-      queue.put(new ChangeTask(ver, runnable));
+    private void runWorker() {
+      try {
+        while (running || !queue.isEmpty()) {
+          ChangeTask task;
+          try {
+            task = queue.take();
+          } catch (InterruptedException ie) {
+            if (!running && queue.isEmpty()) {
+              break;
+            }
+            continue;
+          }
+
+          accumulate(task);
+
+          if (queue.isEmpty()) {
+            flushPendingChanges();
+          }
+        }
+      } catch (Throwable t) {
+        LOGGER.error("Unexpected error in document executor worker", t);
+      } finally {
+        flushPendingChanges();
+      }
+    }
+
+    private void accumulate(ChangeTask task) {
+      try {
+        var baseContent = pendingContent == null ? documentContext.getContent() : pendingContent;
+        pendingContent = applyTextDocumentChanges(baseContent, task.contentChanges);
+        pendingVersion = task.version;
+      } catch (Throwable t) {
+        LOGGER.error("Error while accumulating document change task", t);
+        pendingContent = null;
+      }
+    }
+
+    private void flushPendingChanges() {
+      if (pendingContent == null) {
+        return;
+      }
+
+      try {
+        processDocumentChange(documentContext, pendingContent, pendingVersion);
+      } catch (Throwable t) {
+        LOGGER.error("Error while applying accumulated document changes", t);
+      } finally {
+        pendingContent = null;
+      }
     }
 
     void shutdown() {
       running = false;
-      // Interrupt to wake up blocking take() so worker can drain queue and exit gracefully
       worker.interrupt();
     }
 
@@ -766,7 +789,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
       long millis = unit.toMillis(timeout);
       long start = System.currentTimeMillis();
-      // Wait for worker thread to finish
       worker.join(millis);
       if (worker.isAlive()) {
         return false;
@@ -776,11 +798,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
   }
 
-  private record ChangeTask(long version, Runnable runnable) implements Comparable<ChangeTask> {
+  private record ChangeTask(
+    int version,
+    List<TextDocumentContentChangeEvent> contentChanges
+  ) implements Comparable<ChangeTask> {
 
-    @Override
+      @Override
       public int compareTo(ChangeTask o) {
-        return Long.compare(this.version, o.version);
+        return Integer.compare(this.version, o.version);
       }
     }
 }

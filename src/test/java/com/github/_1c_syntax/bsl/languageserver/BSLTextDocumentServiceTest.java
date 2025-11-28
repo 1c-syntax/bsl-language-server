@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -38,15 +39,19 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,6 +61,8 @@ class BSLTextDocumentServiceTest {
 
   @Autowired
   private BSLTextDocumentService textDocumentService;
+  @MockitoSpyBean
+  private ServerContext serverContext;
 
   @Test
   void didOpen() throws IOException {
@@ -262,6 +269,50 @@ class BSLTextDocumentServiceTest {
     var result = textDocumentService.prepareRename(params);
 
     assertThat(result).isNotNull();
+  }
+
+  @Test
+  void executorsBatchChangesBeforeRebuild_unit() throws InterruptedException {
+    var uri = "file:///tmp/document-executor-batch.bsl";
+    var textDoc = new TextDocumentItem(uri, "bsl", 0, "base");
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(textDoc));
+
+    var documentContext = serverContext.getDocument(uri);
+    assertThat(documentContext).isNotNull();
+
+    var rebuildLatch = new CountDownLatch(1);
+    Mockito.doAnswer(invocation -> {
+      rebuildLatch.countDown();
+      return invocation.callRealMethod();
+    }).when(serverContext).rebuildDocument(Mockito.eq(documentContext), Mockito.anyString(), Mockito.any());
+
+    try {
+      textDocumentService.didChange(buildDidChangeParams(uri, 1, "first"));
+      textDocumentService.didChange(buildDidChangeParams(uri, 2, "second"));
+      textDocumentService.didChange(buildDidChangeParams(uri, 2, "third"));
+
+      assertThat(rebuildLatch.await(5, TimeUnit.SECONDS)).isTrue();
+      Mockito.verify(serverContext, Mockito.times(1))
+        .rebuildDocument(Mockito.eq(documentContext), Mockito.eq("third"), Mockito.eq(2));
+      assertThat(documentContext.getContent()).isEqualTo("third");
+    } finally {
+      textDocumentService.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri)));
+      Mockito.reset(serverContext);
+    }
+  }
+
+  private static DidChangeTextDocumentParams buildDidChangeParams(String uri, int version, String text) {
+    var versioned = new VersionedTextDocumentIdentifier();
+    versioned.setUri(uri);
+    versioned.setVersion(version);
+
+    var change = new TextDocumentContentChangeEvent();
+    change.setText(text);
+
+    var params = new DidChangeTextDocumentParams();
+    params.setTextDocument(versioned);
+    params.setContentChanges(List.of(change));
+    return params;
   }
 
   private File getTestFile() {
