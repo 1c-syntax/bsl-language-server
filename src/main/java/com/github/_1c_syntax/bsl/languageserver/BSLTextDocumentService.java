@@ -72,7 +72,6 @@ import org.eclipse.lsp4j.DocumentDiagnosticParams;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentLink;
-import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.DocumentLinkParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -96,11 +95,13 @@ import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
@@ -113,6 +114,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -125,6 +127,8 @@ import java.util.concurrent.TimeUnit;
 @Component
 @RequiredArgsConstructor
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
+
+  private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(BSLTextDocumentService.class);
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -146,23 +150,24 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
-  
+
   // Executors per document URI to serialize didChange operations and avoid race conditions
-  private final Map<String, ExecutorService> documentExecutors = new ConcurrentHashMap<>();
-  
+  // Use custom DocumentExecutor which processes tasks ordered by document version (ascending)
+  private final Map<URI, DocumentExecutor> documentExecutors = new ConcurrentHashMap<>();
+
   private boolean clientSupportsPullDiagnostics;
 
   @PreDestroy
   private void onDestroy() {
     // Shutdown all document executors
-    documentExecutors.values().forEach(ExecutorService::shutdown);
+    documentExecutors.values().forEach(DocumentExecutor::shutdown);
     documentExecutors.clear();
     
     executorService.shutdown();
   }
 
   @Override
-  public CompletableFuture<Hover> hover(HoverParams params) {
+  public CompletableFuture<@Nullable Hover> hover(HoverParams params) {
     var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
@@ -297,7 +302,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
+  public CompletableFuture<@Nullable List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
     // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
     var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
@@ -347,7 +352,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  public CompletableFuture<List<SelectionRange>> selectionRange(SelectionRangeParams params) {
+  public CompletableFuture<List<@Nullable SelectionRange>> selectionRange(SelectionRangeParams params) {
     var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
@@ -404,10 +409,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
     
     // Create single-threaded executor for this document to serialize didChange operations
-    // Use normalized URI from documentContext
-    var normalizedUri = documentContext.getUri().toString();
-    documentExecutors.computeIfAbsent(normalizedUri, key -> 
-      Executors.newSingleThreadExecutor(new CustomizableThreadFactory("doc-" + documentContext.getUri().getPath() + "-")));
+    var uri = documentContext.getUri();
+    documentExecutors.computeIfAbsent(uri, key ->
+      new DocumentExecutor("doc-" + documentContext.getUri() + "-"));
 
     context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
@@ -422,20 +426,20 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return;
     }
-    
-    // Use normalized URI from documentContext
-    var normalizedUri = documentContext.getUri().toString();
+
+    var uri = documentContext.getUri();
     var version = params.getTextDocument().getVersion();
     
     // Get executor for this document
-    var executor = documentExecutors.get(normalizedUri);
+    var executor = documentExecutors.get(uri);
     if (executor == null) {
       // Document not opened or already closed
       return;
     }
-    
-    // Submit change operation to document's executor to serialize operations
-    executor.submit(() -> {
+
+    // Submit change operation to document's executor to serialize operations.
+    // DocumentExecutor will order tasks by `version` (ascending) before execution.
+    executor.submit(version, () -> {
       var newContent = applyTextDocumentChanges(documentContext.getContent(), params.getContentChanges());
 
       context.rebuildDocument(
@@ -457,20 +461,19 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
     
-    // Use normalized URI from documentContext
-    var normalizedUri = documentContext.getUri().toString();
+    var uri = documentContext.getUri();
 
     // Remove and shutdown the executor for this document, waiting for all pending changes
-    var executor = documentExecutors.remove(normalizedUri);
-    if (executor != null) {
-      executor.shutdown();
+    var docExecutor = documentExecutors.remove(uri);
+    if (docExecutor != null) {
+      docExecutor.shutdown();
       try {
         // Wait for all queued changes to complete (with timeout to avoid hanging)
-        if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
-          executor.shutdownNow();
+        if (!docExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+          docExecutor.shutdownNow();
         }
       } catch (InterruptedException e) {
-        executor.shutdownNow();
+        docExecutor.shutdownNow();
         Thread.currentThread().interrupt();
       }
     }
@@ -575,10 +578,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * <p>
    * Проверяет поддержку клиентом pull-модели диагностик.
    *
-   * @param event Событие
+   * @param ignored Событие
    */
   @EventListener
-  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent event) {
+  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
     clientSupportsPullDiagnostics = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getDiagnostic)
@@ -692,4 +695,92 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return offset + character;
   }
 
+  // Custom per-document executor which executes submitted tasks ordered by version (ascending).
+  private static final class DocumentExecutor {
+
+    private final PriorityBlockingQueue<ChangeTask> queue = new PriorityBlockingQueue<>();
+    private final Thread worker;
+    private volatile boolean running = true;
+
+    DocumentExecutor(String threadNamePrefix) {
+      worker = new Thread(() -> {
+        try {
+          while (running || !queue.isEmpty()) {
+            ChangeTask task;
+            try {
+              // Block until a task is available or the thread is interrupted for shutdown
+              task = queue.take();
+            } catch (InterruptedException ie) {
+              // Interrupted: likely requested shutdown. Drain remaining tasks (non-blocking) and exit.
+              Thread.currentThread().interrupt();
+              ChangeTask t;
+              while ((t = queue.poll()) != null) {
+                try {
+                  t.runnable.run();
+                } catch (Throwable ex) {
+                  // Keep worker alive
+                  LOGGER.error("Error while executing drained document change task", ex);
+                }
+              }
+              break;
+            }
+
+            if (task == null) {
+              continue;
+            }
+
+            try {
+              task.runnable.run();
+            } catch (Throwable t) {
+              // Swallow exceptions from task to keep worker alive
+              LOGGER.error("Error while executing document change task", t);
+            }
+          }
+        } catch (Throwable t) {
+          // Catch unexpected throwable to avoid silent thread death
+          LOGGER.error("Unexpected error in document executor worker", t);
+        }
+      });
+      worker.setName(threadNamePrefix + "executor");
+      worker.setDaemon(true);
+      worker.start();
+    }
+
+    void submit(Integer version, Runnable runnable) {
+      long ver = version.longValue();
+      queue.put(new ChangeTask(ver, runnable));
+    }
+
+    void shutdown() {
+      running = false;
+      // Interrupt to wake up blocking take() so worker can drain queue and exit gracefully
+      worker.interrupt();
+    }
+
+    void shutdownNow() {
+      running = false;
+      queue.clear();
+      worker.interrupt();
+    }
+
+    boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+      long millis = unit.toMillis(timeout);
+      long start = System.currentTimeMillis();
+      // Wait for worker thread to finish
+      worker.join(millis);
+      if (worker.isAlive()) {
+        return false;
+      }
+      long elapsed = System.currentTimeMillis() - start;
+      return elapsed <= millis;
+    }
+  }
+
+  private record ChangeTask(long version, Runnable runnable) implements Comparable<ChangeTask> {
+
+    @Override
+      public int compareTo(ChangeTask o) {
+        return Long.compare(this.version, o.version);
+      }
+    }
 }
