@@ -98,7 +98,7 @@ jobs:
           body: |
             ✅ Собраны JAR-файлы для этого PR по команде `/buildJar`.
 
-            **Артефакт:** [${{ steps.upload_jar.outputs.artifact-name }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_jar.outputs.artifact-id }})
+            **Артефакт:** [${{ steps.upload_jar.outputs.artifact-id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_jar.outputs.artifact-id }})
 
             **Файлы внутри:**
             ${{ steps.list_jars.outputs.list }}
