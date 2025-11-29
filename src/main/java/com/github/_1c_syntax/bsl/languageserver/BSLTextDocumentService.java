@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -114,7 +115,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -152,15 +152,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
 
   // Executors per document URI to serialize didChange operations and avoid race conditions
-  // Use custom DocumentExecutor which processes tasks ordered by document version (ascending)
-  private final Map<URI, DocumentExecutor> documentExecutors = new ConcurrentHashMap<>();
+  private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
 
   private boolean clientSupportsPullDiagnostics;
 
   @PreDestroy
   private void onDestroy() {
     // Shutdown all document executors
-    documentExecutors.values().forEach(DocumentExecutor::shutdown);
+    documentExecutors.values().forEach(DocumentChangeExecutor::shutdown);
     documentExecutors.clear();
     
     executorService.shutdown();
@@ -411,7 +410,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // Create single-threaded executor for this document to serialize didChange operations
     var uri = documentContext.getUri();
     documentExecutors.computeIfAbsent(uri, key ->
-      new DocumentExecutor(documentContext, "doc-" + documentContext.getUri() + "-"));
+      new DocumentChangeExecutor(
+        documentContext,
+        BSLTextDocumentService::applyTextDocumentChanges,
+        this::processDocumentChange,
+        "doc-" + documentContext.getUri() + "-"
+      )
+    );
 
     context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
@@ -437,8 +442,12 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
+    if (version == null) {
+      LOGGER.warn("Received didChange without version for {}", uri);
+      return;
+    }
+
     // Submit change operation to document's executor to serialize operations.
-    // DocumentExecutor will order tasks by `version` (ascending) before execution.
     executor.submit(version, params.getContentChanges());
   }
 
@@ -698,114 +707,4 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       validate(documentContext);
     }
   }
-
-  private final class DocumentExecutor {
-
-     private final DocumentContext documentContext;
-     private final PriorityBlockingQueue<ChangeTask> queue = new PriorityBlockingQueue<>();
-     private final Thread worker;
-     private volatile boolean running = true;
-     private @Nullable String pendingContent;
-     private int pendingVersion = -1;
-
-     DocumentExecutor(DocumentContext documentContext, String threadNamePrefix) {
-       this.documentContext = documentContext;
-       worker = new Thread(this::runWorker);
-       worker.setName(threadNamePrefix + "executor");
-       worker.setDaemon(true);
-       worker.start();
-     }
-
-    void submit(@Nullable Integer version, List<TextDocumentContentChangeEvent> contentChanges) {
-      if (version == null) {
-        LOGGER.warn("Received didChange without document version; skipping change for {}", documentContext.getUri());
-        return;
-      }
-      queue.put(new ChangeTask(version, List.copyOf(contentChanges)));
-    }
-
-    private void runWorker() {
-      try {
-        while (running || !queue.isEmpty()) {
-          ChangeTask task;
-          try {
-            task = queue.take();
-          } catch (InterruptedException ie) {
-            if (!running && queue.isEmpty()) {
-              break;
-            }
-            continue;
-          }
-
-          accumulate(task);
-
-          if (queue.isEmpty()) {
-            flushPendingChanges();
-          }
-        }
-      } catch (Throwable t) {
-        LOGGER.error("Unexpected error in document executor worker", t);
-      } finally {
-        flushPendingChanges();
-      }
-    }
-
-    private void accumulate(ChangeTask task) {
-      try {
-        var baseContent = pendingContent == null ? documentContext.getContent() : pendingContent;
-        pendingContent = applyTextDocumentChanges(baseContent, task.contentChanges);
-        pendingVersion = task.version;
-      } catch (Throwable t) {
-        LOGGER.error("Error while accumulating document change task", t);
-        pendingContent = null;
-      }
-    }
-
-    private void flushPendingChanges() {
-      if (pendingContent == null) {
-        return;
-      }
-
-      try {
-        processDocumentChange(documentContext, pendingContent, pendingVersion);
-      } catch (Throwable t) {
-        LOGGER.error("Error while applying accumulated document changes", t);
-      } finally {
-        pendingContent = null;
-      }
-    }
-
-    void shutdown() {
-      running = false;
-      worker.interrupt();
-    }
-
-    void shutdownNow() {
-      running = false;
-      queue.clear();
-      worker.interrupt();
-    }
-
-    boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-      long millis = unit.toMillis(timeout);
-      long start = System.currentTimeMillis();
-      worker.join(millis);
-      if (worker.isAlive()) {
-        return false;
-      }
-      long elapsed = System.currentTimeMillis() - start;
-      return elapsed <= millis;
-    }
-  }
-
-  private record ChangeTask(
-    int version,
-    List<TextDocumentContentChangeEvent> contentChanges
-  ) implements Comparable<ChangeTask> {
-
-      @Override
-      public int compareTo(ChangeTask o) {
-        return Integer.compare(this.version, o.version);
-      }
-    }
 }
