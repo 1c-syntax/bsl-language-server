@@ -161,12 +161,14 @@ public final class DocumentChangeExecutor {
   }
 
   private void runWorker() {
+    var interrupted = false;
     try {
       while (running || !queue.isEmpty()) {
         ChangeTask task;
         try {
           task = queue.take();
         } catch (InterruptedException ie) {
+          interrupted = true;
           if (!running && queue.isEmpty()) {
             break;
           }
@@ -183,6 +185,10 @@ public final class DocumentChangeExecutor {
       LOGGER.error("Unexpected error in document executor worker", e);
     } finally {
       flushPendingChanges();
+    }
+
+    if (interrupted) {
+      Thread.currentThread().interrupt();
     }
   }
 
