@@ -22,4 +22,7 @@
 /**
  * Пакет содержит настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
  */
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.configuration.documentlink;
+
+import org.jspecify.annotations.NullMarked;

@@ -19,10 +19,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-/**
- * Пакет содержит настройки для работы {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
- */
-@NullMarked
-package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.configuration.capabilities;
 
-import org.jspecify.annotations.NullMarked;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * Настройки возможностей сервера LSP, передаваемые клиенту.
+ */
+@Data
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CapabilitiesOptions {
+
+  /**
+   * Настройки синхронизации текстовых документов.
+   */
+  private TextDocumentSyncCapabilityOptions textDocumentSync = new TextDocumentSyncCapabilityOptions();
+}
