@@ -310,7 +310,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
       }
 
       this.content = content;
-      tokenizer = new BSLTokenizer(content);
+      if(tokenizer != null) {
+        tokenizer.rebuild(content);
+      } else {
+        tokenizer = new BSLTokenizer(content);
+      }
       this.version = version;
       symbolTree = computeSymbolTree();
 
