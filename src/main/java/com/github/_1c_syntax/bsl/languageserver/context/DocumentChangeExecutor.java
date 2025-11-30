@@ -27,8 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 
 /**
@@ -36,6 +40,8 @@ import java.util.function.BiFunction;
  * <p>
  *   Задачи попадают в приоритетную очередь и выполняются строго в порядке возрастания версии,
  * что позволяет консистентно накапливать изменения и применять их одним вызовом обработчика.
+ * Дополнительно класс предоставляет барьер {@link #awaitLatest()}, позволяющий клиентским потокам дождаться
+ * применения всех поставленных изменений и тем самым читать консистентное состояние документа.
  */
 public final class DocumentChangeExecutor {
 
@@ -51,6 +57,19 @@ public final class DocumentChangeExecutor {
   private final Thread worker;
   private final BiFunction<String, List<TextDocumentContentChangeEvent>, String> changeApplier;
   private final DocumentChangeListener changeListener;
+  /**
+   * Наибольшая версия документа, для которой уже был поставлен {@code didChange}.
+   */
+  private final AtomicInteger latestSubmittedVersion;
+  /**
+   * Наибольшая версия документа, полностью применённая к {@link DocumentContext}.
+   */
+  private final AtomicInteger latestAppliedVersion;
+  /**
+   * Очередь ожиданий для запросов, которым нужно дождаться применения конкретных версий.
+   */
+  private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<CompletableFuture<Void>>> versionWaiters
+    = new ConcurrentSkipListMap<>();
   private volatile boolean running = true;
   private @Nullable String pendingContent;
   private int pendingVersion = -1;
@@ -72,6 +91,9 @@ public final class DocumentChangeExecutor {
     this.documentContext = documentContext;
     this.changeApplier = changeApplier;
     this.changeListener = changeListener;
+    int initialVersion = documentContext.getVersion();
+    this.latestSubmittedVersion = new AtomicInteger(initialVersion);
+    this.latestAppliedVersion = new AtomicInteger(initialVersion);
     worker = new Thread(this::runWorker);
     worker.setName(threadName + "executor");
     worker.setDaemon(true);
@@ -85,6 +107,7 @@ public final class DocumentChangeExecutor {
    * @param contentChanges список изменений, которые необходимо применить
    */
   public void submit(int version, List<TextDocumentContentChangeEvent> contentChanges) {
+    latestSubmittedVersion.accumulateAndGet(version, Math::max);
     queue.put(new ChangeTask(version, List.copyOf(contentChanges)));
   }
 
@@ -119,6 +142,24 @@ public final class DocumentChangeExecutor {
     return !worker.isAlive();
   }
 
+  /**
+   * Дожидается применения всех изменений, поставленных на момент вызова.
+   * <p>
+   *   Метод безопасно вызывается из любых потоков: если все изменения уже применены, возвращает
+   *   немедленно завершённый {@link CompletableFuture}, иначе регистрирует ожидание и завершит его,
+   *   как только рабочий поток применит соответствующую версию.
+   * </p>
+   *
+   * @return future, завершающийся после применения всех накопленных изменений.
+   */
+  public CompletableFuture<Void> awaitLatest() {
+    int targetVersion = latestSubmittedVersion.get();
+    if (targetVersion <= latestAppliedVersion.get()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    return registerWaiter(targetVersion);
+  }
+
   private void runWorker() {
     try {
       while (running || !queue.isEmpty()) {
@@ -145,6 +186,33 @@ public final class DocumentChangeExecutor {
     }
   }
 
+  /**
+   * Регистрирует новый future, который завершится, когда будет обработана указанная версия документа.
+   *
+   * @param version требуемая версия
+   * @return future, завершение которого сигнализирует о достижении нужной версии
+   */
+  private CompletableFuture<Void> registerWaiter(int version) {
+    var future = new CompletableFuture<Void>();
+    versionWaiters.compute(version, (key, futures) -> {
+      var list = futures;
+      if (list == null) {
+        list = new CopyOnWriteArrayList<>();
+      }
+      list.add(future);
+      return list;
+    });
+
+    if (version <= latestAppliedVersion.get()) {
+      completeWaitersUpTo(latestAppliedVersion.get());
+    }
+
+    return future;
+  }
+
+  /**
+   * Накопить ещё одну задачу изменения, чтобы позже применить пакет изменений одним вызовом rebuild.
+   */
   private void accumulate(ChangeTask task) {
     try {
       var baseContent = pendingContent == null ? documentContext.getContent() : pendingContent;
@@ -153,20 +221,45 @@ public final class DocumentChangeExecutor {
     } catch (Exception e) {
       LOGGER.error("Error while accumulating document change task", e);
       pendingContent = null;
+      pendingVersion = -1;
+      latestAppliedVersion.accumulateAndGet(task.version, Math::max);
+      completeWaitersUpTo(latestAppliedVersion.get());
     }
   }
 
+  /**
+   * Применяет накопленные изменения и уведомляет ожидающие запросы о доступности новой версии.
+   */
   private void flushPendingChanges() {
-    if (pendingContent == null) {
+    if (pendingContent == null || pendingVersion < 0) {
       return;
     }
 
     try {
       changeListener.onChange(documentContext, pendingContent, pendingVersion);
+      latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
+      completeWaitersUpTo(latestAppliedVersion.get());
     } catch (Exception e) {
       LOGGER.error("Error while applying accumulated document changes", e);
     } finally {
       pendingContent = null;
+      pendingVersion = -1;
+    }
+  }
+
+  /**
+   * Завершает все ожидания, чей целевой номер версии оказался не больше указанного значения.
+   */
+  private void completeWaitersUpTo(int version) {
+    var iterator = versionWaiters.entrySet().iterator();
+    while (iterator.hasNext()) {
+      var entry = iterator.next();
+      if (entry.getKey() <= version) {
+        entry.getValue().forEach(future -> future.complete(null));
+        iterator.remove();
+      } else {
+        break;
+      }
     }
   }
 

@@ -27,6 +27,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,6 +48,7 @@ class DocumentChangeExecutorTest {
   void setUp() {
     documentContext = mock(DocumentContext.class);
     when(documentContext.getContent()).thenReturn("base");
+    when(documentContext.getVersion()).thenReturn(0);
     listenerCalls = new AtomicInteger();
     listener = (ctx, content, version) -> listenerCalls.incrementAndGet();
     executor = new DocumentChangeExecutor(
@@ -85,5 +89,37 @@ class DocumentChangeExecutorTest {
     }
     return result;
   }
-}
 
+  @Test
+  void awaitLatestCompletesAfterChangeApplied() throws Exception {
+    var change = List.of(new TextDocumentContentChangeEvent("first"));
+    var latch = new CountDownLatch(1);
+    listener = (ctx, content, version) -> {
+      listenerCalls.incrementAndGet();
+      latch.countDown();
+    };
+
+    executor = new DocumentChangeExecutor(
+      documentContext,
+      DocumentChangeExecutorTest::apply,
+      listener,
+      "test"
+    );
+
+    executor.submit(1, change);
+    CompletableFuture<Void> waiter = executor.awaitLatest();
+
+    latch.await(1, TimeUnit.SECONDS);
+    waiter.get(1, TimeUnit.SECONDS);
+    assertThat(listenerCalls.get()).isEqualTo(1);
+  }
+
+  @Test
+  void awaitLatestReturnsImmediatelyWhenUpToDate() throws Exception {
+    assertThat(executor.awaitLatest().isDone()).isTrue();
+
+    executor.submit(1, List.of(new TextDocumentContentChangeEvent("updated")));
+    executor.awaitLatest().get(1, TimeUnit.SECONDS);
+    assertThat(executor.awaitLatest().isDone()).isTrue();
+  }
+}
