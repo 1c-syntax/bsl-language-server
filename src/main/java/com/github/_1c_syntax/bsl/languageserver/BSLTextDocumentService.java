@@ -48,6 +48,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyItem;
@@ -126,9 +127,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
-
-  private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(BSLTextDocumentService.class);
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -433,14 +433,15 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
 
     var uri = documentContext.getUri();
-    var version = params.getTextDocument().getVersion();
-    
+
     // Get executor for this document
     var executor = documentExecutors.get(uri);
     if (executor == null) {
       // Document not opened or already closed
       return;
     }
+
+    var version = params.getTextDocument().getVersion();
 
     if (version == null) {
       LOGGER.warn("Received didChange without version for {}", uri);
@@ -600,7 +601,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @param changes список изменений для применения
    * @return обновленное содержимое документа
    */
-  private static String applyTextDocumentChanges(String content, List<TextDocumentContentChangeEvent> changes) {
+  protected static String applyTextDocumentChanges(String content, List<TextDocumentContentChangeEvent> changes) {
     var currentContent = content;
     for (var change : changes) {
       if (change.getRange() == null) {
@@ -653,9 +654,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return character;
     }
 
-    int offset = 0;
-    int currentLine = 0;
-    int searchFrom = 0;
+    var offset = 0;
+    var currentLine = 0;
+    var searchFrom = 0;
 
     while (currentLine < line) {
       int nlPos = content.indexOf('\n', searchFrom);

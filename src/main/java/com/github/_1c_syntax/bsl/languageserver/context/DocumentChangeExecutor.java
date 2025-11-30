@@ -37,7 +37,7 @@ import java.util.function.BiFunction;
  *   Задачи попадают в приоритетную очередь и выполняются строго в порядке возрастания версии,
  * что позволяет консистентно накапливать изменения и применять их одним вызовом обработчика.
  */
-public class DocumentChangeExecutor {
+public final class DocumentChangeExecutor {
 
   @FunctionalInterface
   public interface DocumentChangeListener {
@@ -138,8 +138,8 @@ public class DocumentChangeExecutor {
           flushPendingChanges();
         }
       }
-    } catch (Throwable t) {
-      LOGGER.error("Unexpected error in document executor worker", t);
+    } catch (Exception e) {
+      LOGGER.error("Unexpected error in document executor worker", e);
     } finally {
       flushPendingChanges();
     }
@@ -150,8 +150,8 @@ public class DocumentChangeExecutor {
       var baseContent = pendingContent == null ? documentContext.getContent() : pendingContent;
       pendingContent = changeApplier.apply(baseContent, task.contentChanges);
       pendingVersion = task.version;
-    } catch (Throwable t) {
-      LOGGER.error("Error while accumulating document change task", t);
+    } catch (Exception e) {
+      LOGGER.error("Error while accumulating document change task", e);
       pendingContent = null;
     }
   }
@@ -163,8 +163,8 @@ public class DocumentChangeExecutor {
 
     try {
       changeListener.onChange(documentContext, pendingContent, pendingVersion);
-    } catch (Throwable t) {
-      LOGGER.error("Error while applying accumulated document changes", t);
+    } catch (Exception e) {
+      LOGGER.error("Error while applying accumulated document changes", e);
     } finally {
       pendingContent = null;
     }

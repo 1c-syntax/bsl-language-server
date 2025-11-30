@@ -22,16 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService.applyIncrementalChange;
+import static com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService.applyTextDocumentChanges;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -40,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class IncrementalTextChangeTest {
 
   @Test
-  void testInsertAtBeginning() throws Exception {
+  void testInsertAtBeginning() {
     // given
     String content = "Процедура Тест()\nКонецПроцедуры";
     Range range = Ranges.create(0, 0, 0, 0);
@@ -54,7 +53,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testInsertInMiddle() throws Exception {
+  void testInsertInMiddle() {
     // given
     String content = "Процедура Тест()\nКонецПроцедуры";
     Range range = Ranges.create(1, 0, 1, 0);
@@ -68,7 +67,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testDeleteRange() throws Exception {
+  void testDeleteRange() {
     // given
     String content = "Процедура Тест()\nКонецПроцедуры";
     Range range = Ranges.create(0, 0, 0, 10);
@@ -82,7 +81,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testReplaceText() throws Exception {
+  void testReplaceText() {
     // given
     String content = "Процедура Тест()\nКонецПроцедуры";
     Range range = Ranges.create(0, 10, 0, 14);
@@ -96,7 +95,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testDeleteMultipleLines() throws Exception {
+  void testDeleteMultipleLines() {
     // given
     String content = "Строка 1\nСтрока 2\nСтрока 3";
     Range range = Ranges.create(0, 8, 2, 0);
@@ -110,7 +109,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testFullDocumentUpdate() throws Exception {
+  void testFullDocumentUpdate() {
     // given
     String content = "Старое содержимое";
     var change = new TextDocumentContentChangeEvent("Новое содержимое");
@@ -125,7 +124,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testMultipleIncrementalChanges() throws Exception {
+  void testMultipleIncrementalChanges() {
     // given
     String content = "Процедура Тест()\nКонецПроцедуры";
     
@@ -143,7 +142,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testInsertAtEndOfLine() throws Exception {
+  void testInsertAtEndOfLine() {
     // given
     String content = "Процедура\nТест";
     Range range = Ranges.create(0, 9, 0, 9);
@@ -157,7 +156,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testInsertNewline() throws Exception {
+  void testInsertNewline() {
     // given
     String content = "Строка1Строка2";
     Range range = Ranges.create(0, 7, 0, 7);
@@ -171,7 +170,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testPreserveWindowsLineEndings() throws Exception {
+  void testPreserveWindowsLineEndings() {
     // given - document with Windows line endings
     String content = "Строка1\r\nСтрока2\r\nСтрока3";
     Range range = Ranges.create(1, 0, 1, 7);
@@ -185,7 +184,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testPreserveOldMacLineEndings() throws Exception {
+  void testPreserveOldMacLineEndings() {
     // given - document with old Mac line endings
     String content = "Строка1\rСтрока2\rСтрока3";
     Range range = Ranges.create(1, 0, 1, 7);
@@ -199,7 +198,7 @@ class IncrementalTextChangeTest {
   }
 
   @Test
-  void testPreserveMixedLineEndings() throws Exception {
+  void testPreserveMixedLineEndings() {
     // given - document with mixed line endings
     String content = "Строка1\r\nСтрока2\nСтрока3\rСтрока4";
     Range range = Ranges.create(2, 0, 2, 7);
@@ -212,16 +211,4 @@ class IncrementalTextChangeTest {
     assertThat(result).isEqualTo("Строка1\r\nСтрока2\nИзменено\rСтрока4");
   }
 
-  // Helper methods to call methods directly (now protected)
-  private String applyIncrementalChange(String content, TextDocumentContentChangeEvent change) {
-    return BSLTextDocumentService.applyIncrementalChange(content, change);
-  }
-
-  private String applyTextDocumentChanges(String content, List<TextDocumentContentChangeEvent> changes) 
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    Method method = BSLTextDocumentService.class.getDeclaredMethod(
-        "applyTextDocumentChanges", String.class, List.class);
-    method.setAccessible(true);
-    return (String) method.invoke(null, content, changes);
-  }
 }
