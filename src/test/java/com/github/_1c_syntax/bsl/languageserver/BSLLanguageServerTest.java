@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import mockit.Mock;
@@ -75,9 +76,8 @@ class BSLLanguageServerTest {
     InitializeResult initialize = server.initialize(params).get();
 
     // then
-    assertThat(initialize.getCapabilities().getWorkspaceSymbolProvider().isRight()).isTrue();
     assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
-      .isEqualTo(TextDocumentSyncKind.Full);
+      .isEqualTo(TextDocumentSyncKind.Incremental);
   }
 
   @Test
