@@ -8,9 +8,6 @@ The placement of Boolean constants "True" or "False" in the ternary operator ind
 Useless operators
 
 ```Bsl
-A = ?(True, 1, 0);
-```
-```Bsl
 A = ?(B = 1, True, False);
 ```
 ```Bsl
