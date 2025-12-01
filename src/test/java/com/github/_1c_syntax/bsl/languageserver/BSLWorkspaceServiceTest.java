@@ -94,14 +94,12 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    // Для открытого файла событие Created должно быть проигнорировано
-    // Ожидаем завершения асинхронной обработки
-    await().atMost(Duration.ofSeconds(2)).until(() -> true);
+    await().pollDelay(Duration.ofMillis(200)).until(() -> true);
 
     // then
+    // Для открытого файла событие Created должно быть проигнорировано
     // Документ должен остаться в контексте
-    var resultDocument = serverContext.getDocument(uri);
-    assertThat(resultDocument).isNotNull();
+    assertThat(serverContext.getDocument(uri)).isNotNull();
   }
 
   @Test
@@ -122,8 +120,7 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    // Ожидаем завершения асинхронной обработки файла
-    await().atMost(Duration.ofSeconds(2)).until(() -> serverContext.getDocument(uri) != null);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
 
     // then
     assertThat(serverContext.getDocument(uri)).isNotNull();
@@ -149,14 +146,12 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    // Ожидаем завершения асинхронной обработки
-    await().atMost(Duration.ofSeconds(2)).until(() -> true);
+    await().pollDelay(Duration.ofMillis(200)).until(() -> true);
 
     // then
     // Для открытого файла событие Changed должно быть проигнорировано
     // Документ должен остаться в контексте
-    var resultDocument = serverContext.getDocument(uri);
-    assertThat(resultDocument).isNotNull();
+    assertThat(serverContext.getDocument(uri)).isNotNull();
   }
 
   @Test
@@ -235,8 +230,7 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    // Ожидаем завершения асинхронной обработки (файл неизвестен, просто ожидаем без изменений)
-    await().atMost(Duration.ofSeconds(2)).until(() -> true);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
 
     // then
     // Не должно быть исключений
