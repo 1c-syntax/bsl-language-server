@@ -137,8 +137,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     // добавим к переданным строки в разных регистрах
     if (caseInsensitive && !exceptions.isEmpty()) {
       exceptions +=
-        delimiter + exceptions.toLowerCase(Locale.getDefault()) // верхний регистр
-          + delimiter + exceptions.toUpperCase(Locale.getDefault()) // нижний регистр
+        delimiter + exceptions.toLowerCase(Locale.getDefault()) // нижний регистр
           + delimiter + WordUtils.capitalizeFully(exceptions, delimiter); // титульный
     }
 
