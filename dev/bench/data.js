@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764228948161,
+  "lastUpdate": 1764598208973,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31620,6 +31620,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4059740860355168",
             "extra": "mean: 89.3638292948405 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bf6660f358ee205cf4b3eceba8ac3754c4dad5fa",
+          "message": "Merge pull request #3593 from 1c-syntax/copilot/add-incremental-sync-support",
+          "timestamp": "2025-12-01T14:58:32+01:00",
+          "tree_id": "1180a3f2f1809a6744b823ee62248734db8e0d36",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bf6660f358ee205cf4b3eceba8ac3754c4dad5fa"
+        },
+        "date": 1764598204596,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.8294796148936,
+            "unit": "sec",
+            "range": "stddev: 0.6839706570639774",
+            "extra": "mean: 94.8294796148936 sec\nrounds: 3"
           }
         ]
       }
