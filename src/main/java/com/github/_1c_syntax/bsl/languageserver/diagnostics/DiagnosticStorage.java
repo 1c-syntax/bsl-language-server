@@ -230,23 +230,17 @@ public class DiagnosticStorage {
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
-
-    if (Ranges.isEmpty(range)) {
-      return;
-    }
-
-    diagnosticList.add(createDiagnostic(
-      diagnostic,
+    addDiagnostic(
       range,
       null,
       diagnosticMessage,
       relatedInformation
-    ));
+    );
   }
 
   public void addDiagnostic(
     Range range,
-    DiagnosticAdditionalData data,
+    @Nullable DiagnosticAdditionalData data,
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
