@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764598208973,
+  "lastUpdate": 1764608311268,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31651,6 +31651,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6839706570639774",
             "extra": "mean: 94.8294796148936 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "68f0609e506c702b421c2f67ae04354da04ec15c",
+          "message": "Merge pull request #3631 from 1c-syntax/theshadowco-patch-1\n\nобновлена зависимость от bsl-parser",
+          "timestamp": "2025-12-01T17:46:21+01:00",
+          "tree_id": "c9228016b1637598ac8762533895b8a5ac55aa7a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/68f0609e506c702b421c2f67ae04354da04ec15c"
+        },
+        "date": 1764608306121,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 94.21317028999329,
+            "unit": "sec",
+            "range": "stddev: 2.0406631300738147",
+            "extra": "mean: 94.21317028999329 sec\nrounds: 3"
           }
         ]
       }
