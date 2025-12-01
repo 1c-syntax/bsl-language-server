@@ -132,7 +132,6 @@ public class BSLWorkspaceService implements WorkspaceService {
     var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
     if (isDocumentOpened) {
       serverContext.closeDocument(documentContext);
-      serverContext.tryClearDocument(documentContext);
     }
     serverContext.removeDocument(uri);
   }
