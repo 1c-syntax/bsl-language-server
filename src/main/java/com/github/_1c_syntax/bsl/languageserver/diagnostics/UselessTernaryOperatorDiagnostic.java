@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.mdo.MDLanguage;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -49,30 +48,30 @@ import java.util.Optional;
     DiagnosticTag.BADPRACTICE,
     DiagnosticTag.SUSPICIOUS
   }
-
 )
 public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final int SKIPPED_RULE_INDEX = 0;
 
   @Override
-  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx){
-
+  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
     var exp = ctx.expression();
-    var condition = getBooleanToken(exp.get(0));
-    var trueBranch = getBooleanToken(exp.get(1));
-    var falseBranch = getBooleanToken(exp.get(2));
 
-    if (condition != SKIPPED_RULE_INDEX) {
-      diagnosticStorage.addDiagnostic(ctx);
-    } else if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE){
-      var dgs = diagnosticStorage.addDiagnostic(ctx);
-      dgs.ifPresent(diagnostic -> diagnostic.setData(exp.get(0).getText()));
-    } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE){
-      var dgs = diagnosticStorage.addDiagnostic(ctx);
-      dgs.ifPresent(diagnostic -> diagnostic.setData(getAdaptedText(exp.get(0).getText())));
-    } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX){
-      diagnosticStorage.addDiagnostic(ctx);
+    if (exp != null && exp.size() >= 3) {
+      var condition = getBooleanToken(exp.get(0));
+      var trueBranch = getBooleanToken(exp.get(1));
+      var falseBranch = getBooleanToken(exp.get(2));
+
+      if (condition != SKIPPED_RULE_INDEX) {
+        diagnosticStorage.addDiagnostic(ctx);
+      } else if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE) {
+        diagnosticStorage.addDiagnostic(ctx, DiagnosticStorage.createAdditionalData(exp.get(0).getText()));
+      } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE) {
+        diagnosticStorage.addDiagnostic(ctx,
+          DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(0).getText())));
+      } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX) {
+        diagnosticStorage.addDiagnostic(ctx);
+      }
     }
 
     return super.visitTernaryOperator(ctx);
@@ -89,8 +88,11 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       var range = diagnostic.getRange();
-      var textEdit = new TextEdit(range, (String) diagnostic.getData());
-      textEdits.add(textEdit);
+      var data = diagnostic.getData();
+      if (data instanceof DiagnosticStorage.DiagnosticAdditionalData additionalData) {
+        var textEdit = new TextEdit(range, additionalData.string());
+        textEdits.add(textEdit);
+      }
     });
 
     return CodeActionProvider.createCodeActions(
@@ -103,18 +105,14 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
   }
 
   private String getAdaptedText(String text) {
-    if(documentContext.getServerContext().getConfiguration().getDefaultLanguage() == MDLanguage.ENGLISH) {
-      return "NOT (" + text + ")";
-    } else {
-      return "НЕ (" + text + ")";
-    }
+    return info.getResourceString("quickFixAdaptedText", text);
   }
 
-  private int getBooleanToken(BSLParser.ExpressionContext expCtx){
+  private int getBooleanToken(BSLParser.ExpressionContext expCtx) {
 
     var tmpCtx = Optional.of(expCtx)
       .filter(ctx -> ctx.children.size() == 1)
-      .map(ctx -> (BSLParser.MemberContext) ctx.getChild(0))
+      .map(ctx -> ctx.member(0))
       .map(ctx -> ctx.getChild(0))
       .filter(BSLParser.ConstValueContext.class::isInstance)
       .map(BSLParser.ConstValueContext.class::cast);
@@ -123,9 +121,9 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
       .map(ctx -> ctx.getToken(BSLParser.TRUE, 0))
       .map(ctx -> BSLParser.TRUE)
       .or(() -> tmpCtx
-          .map(ctx -> ctx.getToken(BSLParser.FALSE, 0))
-          .map(ctx -> BSLParser.FALSE)
-        )
+        .map(ctx -> ctx.getToken(BSLParser.FALSE, 0))
+        .map(ctx -> BSLParser.FALSE)
+      )
       .orElse(SKIPPED_RULE_INDEX);
   }
 }

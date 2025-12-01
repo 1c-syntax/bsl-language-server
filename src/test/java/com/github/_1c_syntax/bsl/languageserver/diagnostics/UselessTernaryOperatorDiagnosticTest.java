@@ -80,7 +80,7 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
       .in(documentContext)
       .fixes(reversDiagnostic)
       .hasChanges(1)
-      .hasNewText("NOT (Б=0)");
+      .hasNewText("НЕ (Б=0)");
   }
 
 }
