@@ -106,6 +106,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     type = String.class
   )
   private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;
+  @DiagnosticParameter(
+    type = Boolean.class
+  )
+  private Boolean caseInsensitive = false;
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -113,15 +117,19 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     minWordLength = Math.max(minWordLength, DEFAULT_MIN_WORD_LENGTH);
   }
 
-  private Set<String> getWordsToIgnore() {
+  private List<String> getWordsToIgnore() {
     var delimiter = ",";
     String exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
     if (!userWordsToIgnore.isEmpty()) {
       exceptions = exceptions + delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
     }
 
+    if (caseInsensitive) {
+      exceptions = exceptions.toLowerCase();
+    }
+
     return Arrays.stream(exceptions.split(delimiter))
-      .collect(Collectors.toSet());
+      .collect(Collectors.toList());
   }
 
   private static JLanguageTool acquireLanguageTool(String lang) {
@@ -135,7 +143,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private Map<String, List<Token>> getTokensMap(
     DocumentContext documentContext
   ) {
-    Set<String> wordsToIgnore = getWordsToIgnore();
+    List<String> wordsToIgnore = getWordsToIgnore();
     Map<String, List<Token>> tokensMap = new HashMap<>();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
@@ -144,12 +152,14 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
       .forEach((Token token) -> {
           String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("").trim();
-          String[] camelCaseSplitedWords = StringUtils.splitByCharacterTypeCamelCase(curText);
+          String[] camelCaseSplitWords = StringUtils.splitByCharacterTypeCamelCase(curText);
 
-          Arrays.stream(camelCaseSplitedWords)
+          Arrays.stream(camelCaseSplitWords)
             .filter(Predicate.not(String::isBlank))
             .filter(element -> element.length() >= minWordLength)
-            .filter(Predicate.not(wordsToIgnore::contains))
+            .filter(element -> wordsToIgnore.stream().noneMatch(word
+                -> (caseInsensitive && word.equalsIgnoreCase(element))
+                || (!caseInsensitive && word.equals(element))))
             .forEach(element -> tokensMap.computeIfAbsent(element, newElement -> new ArrayList<>()).add(token));
         }
       );
