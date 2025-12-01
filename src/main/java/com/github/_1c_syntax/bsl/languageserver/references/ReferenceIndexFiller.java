@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -80,6 +81,19 @@ public class ReferenceIndexFiller {
       return;
     }
     fill(documentContext);
+  }
+
+  /**
+   * Обрабатывает событие удаления документа из контекста сервера.
+   * <p>
+   * При удалении документа очищает все зарегистрированные в индексе ссылки,
+   * исходящие из этого документа (вызовы методов, использование переменных и т.д.).
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleEvent(ServerContextDocumentRemovedEvent event) {
+    index.clearReferences(event.getUri());
   }
 
   public void fill(DocumentContext documentContext) {
