@@ -924,15 +924,30 @@
                         "properties": {
                             "type": {
                                 "type": "string",
-                                "enum": ["ERROR", "CODE_SMELL", "VULNERABILITY", "SECURITY_HOTSPOT"]
+                                "enum": [
+                                    "ERROR",
+                                    "CODE_SMELL",
+                                    "VULNERABILITY",
+                                    "SECURITY_HOTSPOT"
+                                ]
                             },
                             "severity": {
                                 "type": "string",
-                                "enum": ["INFO", "MINOR", "MAJOR", "CRITICAL", "BLOCKER"]
+                                "enum": [
+                                    "INFO",
+                                    "MINOR",
+                                    "MAJOR",
+                                    "CRITICAL",
+                                    "BLOCKER"
+                                ]
                             },
                             "scope": {
                                 "type": "string",
-                                "enum": ["ALL", "BSL", "OS"]
+                                "enum": [
+                                    "ALL",
+                                    "BSL",
+                                    "OS"
+                                ]
                             },
                             "modules": {
                                 "type": "array",
@@ -963,7 +978,12 @@
                             },
                             "lspSeverity": {
                                 "type": "string",
-                                "enum": ["Error", "Warning", "Information", "Hint"],
+                                "enum": [
+                                    "Error",
+                                    "Warning",
+                                    "Information",
+                                    "Hint"
+                                ],
                                 "description": "LSP severity level (Error, Warning, Information, Hint). If not specified, calculated automatically based on type and severity."
                             }
                         }
