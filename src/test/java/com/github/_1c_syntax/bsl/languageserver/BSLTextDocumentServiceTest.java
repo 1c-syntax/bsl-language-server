@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -40,15 +41,18 @@ import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
@@ -56,6 +60,8 @@ class BSLTextDocumentServiceTest {
 
   @Autowired
   private BSLTextDocumentService textDocumentService;
+  @MockitoSpyBean
+  private ServerContext serverContext;
 
   @Test
   void didOpen() throws IOException {
@@ -79,6 +85,96 @@ class BSLTextDocumentServiceTest {
     params.setContentChanges(contentChanges);
 
     textDocumentService.didChange(params);
+  }
+
+  @Test
+  void didChangeIncremental() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    assertThat(documentContext).isNotNull();
+
+    // when - incremental change: insert text at position
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+
+    var range = Ranges.create(0, 0, 0, 0);
+    var changeEvent = new TextDocumentContentChangeEvent(range, "// Комментарий\n");
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    contentChanges.add(changeEvent);
+    params.setContentChanges(contentChanges);
+
+    // then - should not throw exception
+    textDocumentService.didChange(params);
+
+    await().atMost(Duration.ofSeconds(2))
+      .untilAsserted(() -> assertThat(documentContext.getContent()).startsWith("// Комментарий"));
+  }
+
+  @Test
+  void didChangeIncrementalMultipleChanges() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    assertThat(documentContext).isNotNull();
+
+    // when - multiple incremental changes
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    
+    // First change: insert at beginning
+    var range1 = Ranges.create(0, 0, 0, 0);
+    contentChanges.add(new TextDocumentContentChangeEvent(range1, "// Comment 1\n"));
+    
+    // Second change: replace some text
+    var range2 = Ranges.create(1, 0, 1, 10);
+    contentChanges.add(new TextDocumentContentChangeEvent(range2, "Replaced"));
+
+    params.setContentChanges(contentChanges);
+
+    // then - should not throw exception
+    textDocumentService.didChange(params);
+
+    await().atMost(Duration.ofSeconds(2))
+      .untilAsserted(() -> assertThat(documentContext.getContent()).contains("Replaced"));
+  }
+
+  @Test
+  void didChangeIncrementalDelete() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    assertThat(documentContext).isNotNull();
+
+    // when - incremental change: delete text
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+
+    var range = Ranges.create(0, 0, 0, 5);
+    var changeEvent = new TextDocumentContentChangeEvent(range, "");
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    contentChanges.add(changeEvent);
+    params.setContentChanges(contentChanges);
+
+    // then - should not throw exception
+    textDocumentService.didChange(params);
+
+    await().atMost(Duration.ofSeconds(2))
+      .untilAsserted(() -> assertThat(documentContext.getContent()).doesNotStartWith(textDocumentItem.getText().substring(0, 5)));
   }
 
   @Test

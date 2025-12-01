@@ -20,9 +20,9 @@
  * License along with BSL Language Server.
  */
 /**
- * Пакет содержит настройки для работы {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
+ * Пакет с настройками возможностей сервера LSP, передаваемыми клиенту.
  */
 @NullMarked
-package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.configuration.capabilities;
 
 import org.jspecify.annotations.NullMarked;
