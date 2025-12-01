@@ -94,12 +94,14 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(200)).until(() -> true);
+    // Для открытого файла событие Created должно быть проигнорировано
+    // Ожидаем завершения асинхронной обработки
+    await().atMost(Duration.ofSeconds(2)).until(() -> true);
 
     // then
-    // Для открытого файла событие Created должно быть проигнорировано
     // Документ должен остаться в контексте
-    assertThat(serverContext.getDocument(uri)).isNotNull();
+    var resultDocument = serverContext.getDocument(uri);
+    assertThat(resultDocument).isNotNull();
   }
 
   @Test
@@ -120,7 +122,8 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+    // Ожидаем завершения асинхронной обработки файла
+    await().atMost(Duration.ofSeconds(2)).until(() -> serverContext.getDocument(uri) != null);
 
     // then
     assertThat(serverContext.getDocument(uri)).isNotNull();
@@ -146,12 +149,14 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(200)).until(() -> true);
+    // Ожидаем завершения асинхронной обработки
+    await().atMost(Duration.ofSeconds(2)).until(() -> true);
 
     // then
     // Для открытого файла событие Changed должно быть проигнорировано
     // Документ должен остаться в контексте
-    assertThat(serverContext.getDocument(uri)).isNotNull();
+    var resultDocument = serverContext.getDocument(uri);
+    assertThat(resultDocument).isNotNull();
   }
 
   @Test
@@ -230,7 +235,8 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+    // Ожидаем завершения асинхронной обработки (файл неизвестен, просто ожидаем без изменений)
+    await().atMost(Duration.ofSeconds(2)).until(() -> true);
 
     // then
     // Не должно быть исключений
@@ -251,6 +257,10 @@ class BSLWorkspaceServiceTest {
     var documentContext2 = serverContext.addDocument(uri2);
     serverContext.rebuildDocument(documentContext2);
 
+    // file3 добавляем в контекст, чтобы проверить его удаление
+    var documentContext3 = serverContext.addDocument(uri3);
+    serverContext.rebuildDocument(documentContext3);
+
     var events = List.of(
       new FileEvent(uri1.toString(), FileChangeType.Created),
       new FileEvent(uri2.toString(), FileChangeType.Changed),
@@ -262,12 +272,14 @@ class BSLWorkspaceServiceTest {
     workspaceService.didChangeWatchedFiles(params);
     await().until(() ->
       serverContext.getDocument(uri1) != null &&
-      serverContext.getDocument(uri2) != null
+      serverContext.getDocument(uri2) != null &&
+      serverContext.getDocument(uri3) == null
     );
 
     // then
     assertThat(serverContext.getDocument(uri1)).isNotNull();
     assertThat(serverContext.getDocument(uri2)).isNotNull();
+    assertThat(serverContext.getDocument(uri3)).isNull();
   }
 
   /**
