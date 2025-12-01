@@ -129,8 +129,8 @@ public class BSLWorkspaceService implements WorkspaceService {
       return;
     }
 
-    var wasDocumentOpenedBefore = serverContext.isDocumentOpened(documentContext);
-    if (wasDocumentOpenedBefore) {
+    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    if (isDocumentOpened) {
       serverContext.closeDocument(documentContext);
       serverContext.tryClearDocument(documentContext);
     }
@@ -142,7 +142,7 @@ public class BSLWorkspaceService implements WorkspaceService {
    * <p>
    * Добавляет файл в контекст сервера. Если файл не открыт в редакторе,
    * выполняет его парсинг и анализ, после чего сразу очищает вторичные данные
-   * для экономии памяти. Для открытых файлов обработка не требуется,
+   * для экономии памяти. Для открытых файлов обработка пропускается,
    * т.к. их содержимое управляется через события textDocument/didOpen.
    *
    * @param uri URI созданного файла
@@ -150,8 +150,8 @@ public class BSLWorkspaceService implements WorkspaceService {
   private void handleCreatedFileEvent(URI uri) {
     var documentContext = serverContext.addDocument(uri);
 
-    var wasDocumentOpenedBefore = serverContext.isDocumentOpened(documentContext);
-    if (!wasDocumentOpenedBefore) {
+    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    if (!isDocumentOpened) {
       serverContext.rebuildDocument(documentContext);
       serverContext.tryClearDocument(documentContext);
     }
@@ -162,7 +162,7 @@ public class BSLWorkspaceService implements WorkspaceService {
    * <p>
    * Если файл уже есть в контексте сервера и не открыт в редакторе,
    * перечитывает его содержимое с диска, выполняет повторный парсинг и анализ,
-   * после чего очищает вторичные данные. Для открытых файлов обработка не требуется,
+   * после чего очищает вторичные данные. Для открытых файлов обработка пропускается,
    * т.к. их актуальное содержимое управляется через события textDocument/didChange.
    * <p>
    * Если файл отсутствует в контексте, добавляет его и обрабатывает аналогично созданному.
@@ -175,8 +175,8 @@ public class BSLWorkspaceService implements WorkspaceService {
       documentContext = serverContext.addDocument(uri);
     }
 
-    var wasDocumentOpenedBefore = serverContext.isDocumentOpened(documentContext);
-    if (!wasDocumentOpenedBefore) {
+    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    if (!isDocumentOpened) {
       serverContext.rebuildDocument(documentContext);
       serverContext.tryClearDocument(documentContext);
     }
