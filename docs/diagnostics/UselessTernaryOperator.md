@@ -10,7 +10,7 @@
 ```Bsl
 А = ?(Б = 1, Истина, Ложь);
 ```
-```BslUselessTernaryOperator
+```Bsl
 А = ?(Б = 0, False, True);
 ```
 
