@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters.data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -48,6 +48,7 @@ public class FileInfo {
     path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
-    mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+    var mdo = documentContext.getMdObject();
+    mdoRef = mdo.map(MD::getMdoRef).orElse("");
   }
 }

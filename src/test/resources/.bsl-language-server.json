@@ -24,6 +24,11 @@
       "MethodSize": false
     }
   },
+  "capabilities": {
+    "textDocumentSync": {
+      "change": "Full"
+    }
+  },
   "useDevSite": true,
   "traceLog": "build/.trace.log",
   "configurationRoot": "src/test/resources/metadata/designer"

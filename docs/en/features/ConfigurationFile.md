@@ -20,6 +20,7 @@ If there is no configuration file, an attempt will be made to find the ".bsl-lan
 | ⤷&nbsp;&nbsp;&nbsp;`skipSupport`                               |          `String`          | This parameter sets **1C configuration** file skipping mode *(for example files are not analyzed for issues)* which are "on support" from vendor configuration. Possible values:<br/>* `withSupport` - skip all modules set "on support" *(all "locks" types)*<br/>* `withSupportLocked` - skip modules set "on support" with prohibited modification *("yellow closed lock")*<br/>* `never` - skip no modules as support mode is not analyzed *(set by default)*                                                                                        |
 | ⤷&nbsp;&nbsp;&nbsp;`mode`                                      |          `String`          | Setting for controlling the diagnostic settings accounting mode. Possible options: <br/>* `OFF` - All diagnostics are considered to be turned off, regardless of their settings. <br/>* `ON` - All diagnostics enabled by default are considered enabled, the rest - depending on personal settings <br/>* `EXCEPT` - All diagnostics other than those specified are considered enabled. <br/>* `ONLY` - Only the specified diagnostics are considered enabled. <br/>* `ALL` - All diagnostics are considered enabled                                                                                                                                            |
 | ⤷&nbsp;&nbsp;&nbsp;`parameters`                                |       `JSON-Object`        | Parameter is a collection of diagnostics parameters. Collection items are json-objects with the following structure:<br/>* *object key* - string, is diagnostic key<br/>* *object value* - if is boolean, then interpreted as diagnostic off-switch (`false`) or on-switch with default parameters (`true`), if is type `json-object`, collection of diagnostic parameters.<br/><br/>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page. |
+| ⤷&nbsp;&nbsp;&nbsp;`minimumLSPDiagnosticLevel`                 |          `String`          | This parameter allows setting a minimum LSP severity level for running diagnostics. Diagnostics with severity level lower than specified will not run. Possible values:<br/>* `Error` - error<br/>* `Warning` - warning<br/>* `Information` - information<br/>* `Hint` - hint<br/><br/>By default, the parameter is not set and all diagnostics run according to other settings.                                                                                                                                                        |
 | ⤷&nbsp;&nbsp;&nbsp;`overrideMinimumLSPDiagnosticLevel`         |          `String`          | This parameter allows setting a minimum severity level for LSP diagnostics. If the diagnostic severity is lower than specified, it will be raised to the specified level. Possible values:<br/>* `Error` - error<br/>* `Warning` - warning<br/>* `Information` - information<br/>* `Hint` - hint<br/><br/>By default, the parameter is not set and diagnostic levels are used according to their definition.                                                                                                                                                        |
 | ⤷&nbsp;&nbsp;&nbsp;`metadata`                                  |       `JSON-Object`        | Parameter is a collection of diagnostic metadata overrides. Collection items are json-objects with the following structure:<br/>* *object key* - string, is diagnostic key<br/>* *object value* - json-object with diagnostic parameters to override. You can override: `type`, `severity`, `scope`, `modules`, `minutesToFix`, `activatedByDefault`, `compatibilityMode`, `tags`, `canLocateOnProject`, `extraMinForComplexity`, `lspSeverity`.<br/><br/>Values from configuration file override those defined in source code. The `lspSeverity` parameter allows explicitly setting LSP severity level (`Error`, `Warning`, `Information`, `Hint`), if not specified - calculated automatically.                                          |
 | ⤷&nbsp;&nbsp;&nbsp;`subsystemsFilter`                          |       `JSON-Object`        | Filter by configuration subsystems                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -33,6 +34,9 @@ If there is no configuration file, an attempt will be made to find the ".bsl-lan
 | &nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;`cognitiveComplexity`     | `Boolean` or `JSON-Object` | Enables displaying the value of the [Cognitive Complexity](../diagnostics/CognitiveComplexity.md) method as inlay hints. By default, the setting is set to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | &nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;`cyclomaticComplexity`    | `Boolean` or `JSON-Object` | Enables displaying the value of the [Cyclomatic Complexity](../diagnostics/CyclomaticComplexity.md) method as inlay hints. By default, the setting is set to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | &nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;`sourceDefinedMethodCall` | `Boolean` or `JSON-Object` | Enables displaying the parameters of the invoked configuration/library method as inlay hints. By default, the setting is set to `true`. Available parameters:<br/>* `showParametersWithTheSameName` - show parameters with names contained in the passed value. The default parameter value is `false`.<br/>* `showDefaultValues` - show default values for parameters not passed. The default value of the parameter is `true`.                                                                                                                                                                                 |
+| `capabilities`                                                 |       `JSON-Object`        | Settings for LSP capabilities that the server advertises to clients. Use this section to override defaults such as document sync mode.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ⤷&nbsp;&nbsp;&nbsp;`textDocumentSync`                          |       `JSON-Object`        | Settings for text document synchronization.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| &nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;`change`                  |          `String`          | Text document sync strategy advertised to the client. Supported values: `Incremental` *(default)*, `Full`, `None`. Changing this value requires restarting BSL Language Server so the new capability is sent to clients.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `useDevSite`                                                   |          `Boolean`          | When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off (*set to `false`*)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `siteRoot`                                                     |          `String`          | The path to the root of the site with the documentation. By default, the parameter value is `"https://1c-syntax.github.io/bsl-language-server"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `traceLog`                                                     |          `String`          | To log all requests *(incoming and outgoing)* between **BSL Language Server** and **Language Client** from used editor/IDE, this parameter sets log file path. The path can set either absolute or relative *(from project root)*, by default the value is not set.<br/><br/>**WARNING**<br/><br/>* When starting **BSL Language Server** overwrites this file <br/>* Speed of interaction between client and server **DRAMATICALLY REDUCED**                                                                                                                          |
@@ -47,18 +51,43 @@ You can use the following JSON schema to make it easier to compile and edit a co
 https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
 ```
 
-## Example
+## Examples
 
-Setting example:
+### Example 1: Using minimumLSPDiagnosticLevel to filter diagnostics
+
+This example demonstrates filtering diagnostics by LSP severity level:
 
 * Language of diagnostics messages - English;
 * Changes the diagnostic setting [LineLength - Line length limit](../diagnostics/LineLength.md) by setting
   line length limit of 140 characters;
 * Disable [MethodSize - Method size restriction diagnostic](../diagnostics/MethodSize.md).
+* Filters diagnostics, not running diagnostics with severity level below `Warning` (Information and Hint diagnostics will not run)
+
+```json
+{
+  "$schema": "https://1c-syntax.github.io/bsl-language-server/configuration/schema.json",
+  "language": "en",
+  "diagnostics": {
+    "minimumLSPDiagnosticLevel": "Warning",
+    "parameters": {
+      "LineLength": {
+        "maxLineLength": 140
+      },
+      "MethodSize": false
+    }
+  }
+}
+```
+
+### Example 2: Using overrideMinimumLSPDiagnosticLevel to adjust severity
+
+This example demonstrates adjusting diagnostic severity display:
+
+* Language of diagnostics messages - English;
 * Enables the calculation of diagnostics in continuous mode (`computeTrigger = onType`)
 * Diagnostics are calculated only for the objects of the "StandardSubsystems" subsystem, with the exception of "ReportVariants" and "
   ObjectVersioning"
-* Sets the minimum diagnostic severity level to `Warning`
+* Raises the severity level to `Warning` for all running diagnostics (diagnostics with Information or Hint will be displayed as Warning)
 * Overrides the diagnostic type `EmptyCodeBlock` to `ERROR` and severity to `BLOCKER`
 
 ```json
@@ -68,12 +97,6 @@ Setting example:
   "diagnostics": {
     "computeTrigger": "onType",
     "overrideMinimumLSPDiagnosticLevel": "Warning",
-    "parameters": {
-      "LineLength": {
-        "maxLineLength": 140
-      },
-      "MethodSize": false
-    },
     "metadata": {
       "EmptyCodeBlock": {
         "type": "ERROR",
@@ -89,9 +112,6 @@ Setting example:
         "ObjectVersioning"
       ]
     }
-  }
-}
-```
   }
 }
 ```

@@ -99,12 +99,6 @@ public class SameMetadataObjectAndChildNamesDiagnostic extends AbstractMetadataD
   private void checkAttributes(List<Attribute> attributeOwner, String mdoName) {
     attributeOwner.stream()
       .filter(attribute -> mdoName.equalsIgnoreCase(attribute.getName()))
-      .forEach(attribute -> addAttributeDiagnostic(attribute, mdoName));
-  }
-
-  private void addAttributeDiagnostic(Attribute attribute, String mdoName) {
-    var mdoRef = attribute.getMdoReference().getMdoRef(
-      documentContext.getServerContext().getConfiguration().getScriptVariant());
-    addDiagnostic(info.getMessage(mdoRef, mdoName));
+      .forEach(attribute -> addDiagnostic(info.getMessage(getMdoRefLocal(attribute), mdoName)));
   }
 }

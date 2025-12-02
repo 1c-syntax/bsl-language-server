@@ -22,14 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.EqualsAndHashCode;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
 public class ConditionalVertex extends BranchingVertex {
-  private final BSLParserRuleContext ast;
+  private final ParserRuleContext ast;
 
   public ConditionalVertex(BSLParser.IfBranchContext ctx) {
     ast = ctx;
@@ -50,7 +50,7 @@ public class ConditionalVertex extends BranchingVertex {
   }
 
   @Override
-  public Optional<BSLParserRuleContext> getAst() {
+  public Optional<ParserRuleContext> getAst() {
     return Optional.of(ast);
   }
 

@@ -27,9 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -54,7 +54,7 @@ public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagno
     return super.visitLikePredicate(ctx);
   }
 
-  private void checkRightStatement(BSLParserRuleContext ctx,
+  private void checkRightStatement(ParserRuleContext ctx,
                                    @Nullable TerminalNode like,
                                    List<? extends SDBLParser.ExpressionContext> expressions) {
 
@@ -71,8 +71,7 @@ public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagno
     diagnosticStorage.addDiagnostic(ctx);
   }
 
-  @Nullable
-  private static SDBLParser.PrimitiveExpressionContext getPrimitiveExpression(SDBLParser.ExpressionContext ctx) {
+  private static SDBLParser.@Nullable PrimitiveExpressionContext getPrimitiveExpression(SDBLParser.ExpressionContext ctx) {
     var primitive = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_primitiveExpression).stream()
       .filter(SDBLParser.PrimitiveExpressionContext.class::isInstance)
       .map(SDBLParser.PrimitiveExpressionContext.class::cast)

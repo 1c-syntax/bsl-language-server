@@ -24,8 +24,7 @@
  * <p>
  * Пакет содержит вспомогательные классы для работы с конструкторами объектов 1С и другими специфическими элементами языка.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.utils.bsl;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

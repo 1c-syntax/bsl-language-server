@@ -43,6 +43,24 @@ import static org.mockito.Mockito.when;
 class ControlFlowGraphBuilderTest {
 
   @Test
+  void PreprocCanBeBuild() {
+
+    var code = """
+      Если А = 1 Тогда
+      #Если Сервер Тогда
+      ИначеЕсли А = 2 Тогда
+      #КонецЕсли
+      Иначе
+      КонецЕсли;""";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+    var vertices = traverseToOrderedList(graph);
+    assertThat(vertices).isNotEmpty(); // or empty...
+  }
+
+  @Test
   void linearBlockCanBeBuilt() {
 
     var code = "А = 1; Б = 2.; В = 3;";

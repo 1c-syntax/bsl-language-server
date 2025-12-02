@@ -413,6 +413,9 @@
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
                 },
+                "ServerCallsInFormEvents": {
+                    "$ref": "parameters-schema.json#/definitions/ServerCallsInFormEvents"
+                },
                 "ServerSideExportFormMethod": {
                     "$ref": "parameters-schema.json#/definitions/ServerSideExportFormMethod"
                 },
@@ -662,7 +665,7 @@
                     "description": "\u0420\u0443\u0441\u0441\u043a\u0438\u0439 (russian)"
                 }
             ],
-            "title": "Language of messages, resources and all communications between BLS LS and user.",
+            "title": "Language of messages, resources and all communications between BSL LS and user.",
             "default": "ru"
         },
         "codeLens": {
@@ -1012,6 +1015,31 @@
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/inlayHintParameters"
+                }
+            }
+        },
+        "capabilities": {
+            "$id": "#/properties/capabilities",
+            "type": "object",
+            "title": "LSP capabilities configuration.",
+            "properties": {
+                "textDocumentSync": {
+                    "$id": "#/properties/capabilities/textDocumentSync",
+                    "type": "object",
+                    "title": "Text document sync capabilities.",
+                    "properties": {
+                        "change": {
+                            "$id": "#/properties/capabilities/textDocumentSync/change",
+                            "type": "string",
+                            "enum": [
+                                "None",
+                                "Full",
+                                "Incremental"
+                            ],
+                            "default": "Incremental",
+                            "title": "Text document sync strategy."
+                        }
+                    }
                 }
             }
         },

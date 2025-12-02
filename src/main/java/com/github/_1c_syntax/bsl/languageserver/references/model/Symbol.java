@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references.model;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.GenericInterner;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.Builder;
 import org.eclipse.lsp4j.SymbolKind;
 

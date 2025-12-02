@@ -18,7 +18,7 @@ jobs:
     outputs:
       has_pr: ${{ steps.check.outputs.has_pr }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Check if PR exists for this branch
         id: check
         env:
@@ -36,7 +36,7 @@ jobs:
         java_version: ['17', '21', '25']
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Set up JDK ${{ matrix.java_version }}

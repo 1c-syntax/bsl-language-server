@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
@@ -73,10 +72,10 @@ public class ReferenceIndex {
    * @return Список ссылок на символ.
    */
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
-    var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
+    var mdoRef = symbol.getOwner().getMdoRef();
     var moduleType = symbol.getOwner().getModuleType();
     var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
-    String scopeName = "";
+    var scopeName = "";
 
     if (symbol.getSymbolKind() == SymbolKind.Variable) {
       scopeName = symbol.getRootParent(SymbolKind.Method)
@@ -121,7 +120,6 @@ public class ReferenceIndex {
    * @return Список ссылок на символы.
    */
   public List<Reference> getReferencesFrom(URI uri) {
-
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .map(this::buildReference)
       .flatMap(Optional::stream)
@@ -135,7 +133,6 @@ public class ReferenceIndex {
    * @return Список ссылок на символы.
    */
   public List<Reference> getReferencesFrom(URI uri, SymbolKind kind) {
-
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
       .filter(s -> s.symbol().symbolKind() == kind)
       .map(this::buildReference)
@@ -176,7 +173,7 @@ public class ReferenceIndex {
    * @param range      Диапазон, в котором происходит обращение к символу.
    */
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-    String symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
+    var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
@@ -236,7 +233,7 @@ public class ReferenceIndex {
    * @param methodName   Имя метода, к которому относиться перменная. Пустой если переменная относиться к модулю.
    * @param variableName Имя переменной, к которой происходит обращение.
    * @param range        Диапазон, в котором происходит обращение к символу.
-   * @param definition     Признак обновления значения переменной.
+   * @param definition   Признак обновления значения переменной.
    */
   public void addVariableUsage(URI uri,
                                String mdoRef,
@@ -245,8 +242,8 @@ public class ReferenceIndex {
                                String variableName,
                                Range range,
                                boolean definition) {
-    String methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
-    String variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
+    var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
+    var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
@@ -286,16 +283,16 @@ public class ReferenceIndex {
   }
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(Symbol symbolEntity) {
-    String mdoRef = symbolEntity.mdoRef();
-    ModuleType moduleType = symbolEntity.moduleType();
-    String symbolName = symbolEntity.symbolName();
+    var mdoRef = symbolEntity.mdoRef();
+    var moduleType = symbolEntity.moduleType();
+    var symbolName = symbolEntity.symbolName();
 
     if (symbolEntity.symbolKind() == SymbolKind.Variable) {
       return serverContext.getDocument(mdoRef, moduleType)
         .map(DocumentContext::getSymbolTree)
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.scopeName())
-        .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
-        .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
+          .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
+          .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
     }
 
     if (symbolEntity.symbolKind() == SymbolKind.Module) {
@@ -314,7 +311,7 @@ public class ReferenceIndex {
     var uri = symbolOccurrence.location().getUri();
     var position = symbolOccurrence.location().getRange().getStart();
 
-    Optional<SymbolTree> symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
+    var symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
       .map(DocumentContext::getSymbolTree);
     return symbolTree
       .map(SymbolTree::getChildrenFlat)
@@ -332,8 +329,8 @@ public class ReferenceIndex {
       return true;
     }
 
-    SourceDefinedSymbol to = reference.getSourceDefinedSymbol().orElseThrow();
-    SourceDefinedSymbol from = reference.getFrom();
+    var to = reference.getSourceDefinedSymbol().orElseThrow();
+    var from = reference.getFrom();
     if (to.getOwner().equals(from.getOwner())) {
       return true;
     }
@@ -344,5 +341,4 @@ public class ReferenceIndex {
 
     return true;
   }
-
 }

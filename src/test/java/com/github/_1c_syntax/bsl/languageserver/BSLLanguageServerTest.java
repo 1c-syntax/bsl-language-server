@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import mockit.Mock;
@@ -28,6 +29,7 @@ import mockit.MockUp;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -74,7 +76,8 @@ class BSLLanguageServerTest {
     InitializeResult initialize = server.initialize(params).get();
 
     // then
-    assertThat(initialize.getCapabilities().getWorkspaceSymbolProvider().isRight()).isTrue();
+    assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
+      .isEqualTo(TextDocumentSyncKind.Incremental);
   }
 
   @Test

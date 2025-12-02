@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -64,7 +64,7 @@ public class DiagnosticStorage {
     diagnosticList.clear();
   }
 
-  protected void addDiagnostic(BSLParserRuleContext node) {
+  protected void addDiagnostic(ParserRuleContext node) {
     if (node.exception != null) {
       return;
     }
@@ -74,7 +74,7 @@ public class DiagnosticStorage {
     );
   }
 
-  protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
+  protected void addDiagnostic(ParserRuleContext node, String diagnosticMessage) {
     if (node.exception != null) {
       return;
     }
@@ -137,7 +137,7 @@ public class DiagnosticStorage {
     addDiagnostic(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
 
-  protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
+  protected void addDiagnostic(ParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
     if (node.exception != null) {
       return;
     }
@@ -158,7 +158,7 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(
-    BSLParserRuleContext node,
+    ParserRuleContext node,
     String diagnosticMessage,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
@@ -216,7 +216,7 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(ParseTree tree) {
-    if (tree instanceof BSLParserRuleContext parserRuleContext) {
+    if (tree instanceof ParserRuleContext parserRuleContext) {
       addDiagnostic(parserRuleContext);
     } else if (tree instanceof TerminalNode terminalNode) {
       addDiagnostic(terminalNode);

@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -140,7 +140,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       .filter(vertex -> vertex != graph.getEntryPoint() && vertex.getClass() != ExitVertex.class)
       .filter(vertex -> graph.inDegreeOf(vertex) == 0)
       .flatMap(vertex -> vertex.getAst().stream())
-      .sorted(Comparator.comparingInt(bslParserRuleContext -> bslParserRuleContext.getStart().getLine()))
+      .sorted(Comparator.comparingInt(ruleContext -> ruleContext.getStart().getLine()))
       .map(Ranges::create)
       .toList();
 
@@ -196,7 +196,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitBreakStatement(ctx);
   }
 
-  private void findAndAddDiagnostic(BSLParserRuleContext ctx) {
+  private void findAndAddDiagnostic(ParserRuleContext ctx) {
 
     // если это вложенный в ранее обработанный блок, то исключим из проверки
     var pos = new Position(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
@@ -221,7 +221,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    List<BSLParserRuleContext> statements = Trees.getChildren(ppNodeParent, BSLParser.RULE_statement)
+    List<ParserRuleContext> statements = Trees.getChildren(ppNodeParent, BSLParser.RULE_statement)
       .stream()
       .filter(node ->
         node.getStart().getType() != BSLLexer.SEMICOLON
@@ -236,7 +236,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       Collections.reverse(statements);
 
       // найдем последний блок
-      BSLParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
+      ParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
 
       // если последний стейт не текущий, значит он будет недостижим
       if (!ppNode.equals(endCurrentBlockNode)) {
@@ -250,7 +250,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private BSLParserRuleContext getEndCurrentBlockNode(List<BSLParserRuleContext> statements, Position pos) {
+  private ParserRuleContext getEndCurrentBlockNode(List<ParserRuleContext> statements, Position pos) {
 
     // найдем блок препроцессора, в котором лежит наш стейт
     Range preprocRange = null;
@@ -261,12 +261,12 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     // т.к. список реверснут, берем первый элемент
-    BSLParserRuleContext endCurrentBlockNode = statements.get(0);
+    ParserRuleContext endCurrentBlockNode = statements.get(0);
 
     if (preprocRange != null) {
       // пройдем по всем стейтам (с конца идем) и ищем первый, находящийся в том же блоке
       // препроцессора, что и стейт прерывания
-      for (BSLParserRuleContext statement : statements) {
+      for (ParserRuleContext statement : statements) {
         var posStatement = new Position(
           statement.getStart().getLine(),
           statement.getStart().getCharPositionInLine());

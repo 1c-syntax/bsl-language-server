@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
@@ -33,7 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.formating.Formatti
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.utils.Absolute;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -88,6 +89,10 @@ public class LanguageServerConfiguration {
   @JsonProperty("inlayHint")
   @Setter(value = AccessLevel.NONE)
   private InlayHintOptions inlayHintOptions = new InlayHintOptions();
+
+  @JsonProperty("capabilities")
+  @Setter(value = AccessLevel.NONE)
+  private CapabilitiesOptions capabilities = new CapabilitiesOptions();
 
   @JsonProperty("formatting")
   @Setter(value = AccessLevel.NONE)
@@ -206,6 +211,7 @@ public class LanguageServerConfiguration {
     // todo: refactor
     PropertyUtils.copyProperties(this, configuration);
     PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
+    PropertyUtils.copyProperties(this.capabilities, configuration.capabilities);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
