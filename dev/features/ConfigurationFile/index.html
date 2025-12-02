@@ -1674,6 +1674,21 @@
 <td style="text-align: left;">Включает отображение параметров вызываемого метода конфигурации/библиотеки в виде inlay hints. По умолчанию настройка установлена в <code>true</code>. Доступные параметры:<br/><em> <code>showParametersWithTheSameName</code> - отображать параметры с именами, содержащимися в передаваемом значении. Значение параметра по умолчанию - <code>false</code>.<br/></em> <code>showDefaultValues</code> - отображать значения по умолчанию для непереданных параметров. Значение параметра по умолчанию - <code>true</code>.</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>capabilities</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Настройки возможностей сервера LSP, которые он сообщает клиенту. Позволяет переопределить значения по умолчанию, например, режим синхронизации документов.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>textDocumentSync</code></td>
+<td style="text-align: center;"><code>JSON-Объект</code></td>
+<td style="text-align: left;">Настройки синхронизации текстовых документов.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>change</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: left;">Стратегия синхронизации, передаваемая клиенту. Поддерживаются значения <code>Incremental</code> <em>(по умолчанию)</em>, <code>Full</code>, <code>None</code>. Чтобы новое значение вступило в силу, перезапустите BSL Language Server, иначе клиент не получит обновлённые возможности.</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>useDevSite</code></td>
 <td style="text-align: center;"><code>Булево</code></td>
 <td style="text-align: left;">При включении настройки формирующиеся ссылки на документацию будут вести на develop-версию сайта. По умолчанию параметр выключен (<em>установлен в <code>false</code></em>)</td>

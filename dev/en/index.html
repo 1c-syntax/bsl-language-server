@@ -1646,24 +1646,64 @@
 <h2 id="Supported-protocol-operations">Supported protocol operations<a class="headerlink" href="#Supported-protocol-operations" title="Permanent link">&para;</a></h2>
 <details class="workspace">
 <summary>Workspace</summary>
-</details>
-<p>| Operation                                                     | Support                                                    | Commentary                                                  |
-    | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-    | <a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
-    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | with restrictions see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a> |
-    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
-    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-    | <a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-    | <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_diagnostic_refresh">diagnostic/refresh</a> | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | sent on configuration change |
-    | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a> |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
-    | <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a> |   <img src="./assets/images/cross.svg" alt="no" width="20">  |                                                              |</p>
-<details>
-<summary>Text Synchronization</summary>
-</details>
 <table>
 <thead>
 <tr>
-<th>Opertaion</th>
+<th>Operation</th>
+<th>Support</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>with restrictions see <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_diagnostic_refresh">diagnostic/refresh</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>sent on configuration change</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</details>
+<details>
+<summary>Text Synchronization</summary>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
 <th>Supported</th>
 <th>Comment</th>
 </tr>
@@ -1677,7 +1717,7 @@
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didChange">didChange</a></td>
 <td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
-<td>textDocumentSyncKind = Full</td>
+<td>textDocumentSyncKind = Incremental</td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didClose">didClose</a></td>
@@ -1701,6 +1741,7 @@
 </tr>
 </tbody>
 </table>
+</details>
 <details class="textdocument">
 <summary>Textdocument</summary>
 <table>
@@ -2039,10 +2080,6 @@ Format<span class="w"> </span>files<span class="w"> </span><span class="k">in</s
 <p>Many thanks to all <a href="https://github.com/1c-syntax/bsl-language-server/graphs/contributors">contributors</a> to the project, to all who participated in the discussions, who helped with the testing.</p>
 <p>You are awesome!</p>
 <p>Thanks to companies supporting open source projects, and especially to those who supported us:</p>
-<hr />
-<p><a href="https://www.yourkit.com"><img alt="YourKit" src="https://www.yourkit.com/images/yklogo.png" /></a>  </p>
-<p><a href="https://www.yourkit.com">YourKit, LLC</a> is the creator of innovative and intelligent tools for profiling <code>Java</code> and <code>.NET</code> applications. YourKit has offered an open source license <a href="https://www.yourkit.com">YourKit Java Profiler</a> for <code>BSL Language Server</code> to improve its performance.</p>
-<p>With <code>YourKit Java Profiler</code> we profile and improve project performance.</p>
 <hr />
 <p><a href="https://www.jetbrains.com?from=bsl-language-server"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a></p>
 <p><a href="https://www.jetbrains.com?from=bsl-language-server">JetBrains</a> is the creator of professional software for development. JetBrains has offered an open source license for his products, including <code>IntelliJ IDEA Ultimate</code>.</p>

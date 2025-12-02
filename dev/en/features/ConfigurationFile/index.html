@@ -1670,6 +1670,21 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td style="text-align: left;">Enables displaying the parameters of the invoked configuration/library method as inlay hints. By default, the setting is set to <code>true</code>. Available parameters:<br/><em> <code>showParametersWithTheSameName</code> - show parameters with names contained in the passed value. The default parameter value is <code>false</code>.<br/></em> <code>showDefaultValues</code> - show default values for parameters not passed. The default value of the parameter is <code>true</code>.</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>capabilities</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Settings for LSP capabilities that the server advertises to clients. Use this section to override defaults such as document sync mode.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>textDocumentSync</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Settings for text document synchronization.</td>
+</tr>
+<tr>
+<td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>change</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: left;">Text document sync strategy advertised to the client. Supported values: <code>Incremental</code> <em>(default)</em>, <code>Full</code>, <code>None</code>. Changing this value requires restarting BSL Language Server so the new capability is sent to clients.</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>useDevSite</code></td>
 <td style="text-align: center;"><code>Boolean</code></td>
 <td style="text-align: left;">When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off (<em>set to <code>false</code></em>)</td>
@@ -1733,7 +1748,7 @@ The created file must be specified using the key <code>--configuration</code> <e
 <li>Raises the severity level to <code>Warning</code> for all running diagnostics (diagnostics with Information or Hint will be displayed as Warning)</li>
 <li>Overrides the diagnostic type <code>EmptyCodeBlock</code> to <code>ERROR</code> and severity to <code>BLOCKER</code></li>
 </ul>
-<p><div class="highlight"><pre><span></span><code><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -1757,9 +1772,6 @@ The created file must be specified using the key <code>--configuration</code> <e
 <span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-  }
-}
-```</p>
 
 
 

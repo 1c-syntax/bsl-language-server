@@ -14,6 +14,7 @@ com.github._1c_syntax.bsl.languageserver.commands
 com.github._1c_syntax.bsl.languageserver.commands.complexity
 com.github._1c_syntax.bsl.languageserver.commands.infrastructure
 com.github._1c_syntax.bsl.languageserver.configuration
+com.github._1c_syntax.bsl.languageserver.configuration.capabilities
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.databind
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
