@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 
@@ -41,20 +43,12 @@ public class CommonModuleReference {
   private static final Pattern COMMON_MODULE_METHOD = CaseInsensitivePattern.compile(
     "^(ОбщийМодуль|CommonModule)$");
   
-  // Поддержка различных вариантов общих модулей для получения ссылок
+  // TODO: В будущем этот паттерн должен быть конфигурируемым для поддержки пользовательских
+  // общих модулей с методами типа ОбщийМодуль("ИмяМодуля")
   private static final Pattern COMMON_USE_MODULE = CaseInsensitivePattern.compile(
     "^(ОбщегоНазначения|ОбщегоНазначенияКлиент|ОбщегоНазначенияСервер|" +
     "ОбщегоНазначенияКлиентСервер|ОбщегоНазначенияПовтИсп|" +
     "CommonUse|CommonUseClient|CommonUseServer|CommonUseClientServer)$");
-
-  // Паттерн для модулей менеджеров (Справочники, Документы, РегистрыСведений и т.д.)
-  private static final Pattern MANAGER_MODULE_TYPES = CaseInsensitivePattern.compile(
-    "^(Справочники|Документы|РегистрыСведений|РегистрыНакопления|РегистрыБухгалтерии|" +
-    "РегистрыРасчета|ПланыВидовХарактеристик|ПланыСчетов|ПланыВидовРасчета|" +
-    "ПланыОбмена|БизнесПроцессы|Задачи|ПланыОбмена|" +
-    "Catalogs|Documents|InformationRegisters|AccumulationRegisters|AccountingRegisters|" +
-    "CalculationRegisters|ChartsOfCharacteristicTypes|ChartsOfAccounts|ChartsOfCalculationTypes|" +
-    "ExchangePlans|BusinessProcesses|Tasks)$");
 
   /**
    * Проверить, является ли expression вызовом получения ссылки на общий модуль.
@@ -260,6 +254,7 @@ public class CommonModuleReference {
   /**
    * Проверить, является ли expression обращением к модулю менеджера.
    * Распознает паттерны типа: Справочники.ИмяСправочника, Документы.ИмяДокумента и т.д.
+   * Использует MDOType.fromValue() для определения допустимых типов.
    *
    * @param expression Контекст выражения
    * @return true, если это обращение к модулю менеджера
@@ -280,8 +275,10 @@ public class CommonModuleReference {
         var identifier = complexId.IDENTIFIER();
         if (identifier != null) {
           var idText = identifier.getText();
-          // Проверяем, является ли это типом модуля менеджера (Справочники, Документы и т.д.)
-          if (MANAGER_MODULE_TYPES.matcher(idText).matches()) {
+          // Используем MDOType.fromValue() для определения типа менеджера
+          var mdoType = MDOType.fromValue(idText);
+          if (mdoType.isPresent() && 
+              ModuleType.byMDOType(mdoType.get()).contains(ModuleType.ManagerModule)) {
             // Должен быть хотя бы один модификатор (имя объекта)
             return !complexId.modifier().isEmpty();
           }
@@ -294,6 +291,7 @@ public class CommonModuleReference {
 
   /**
    * Извлечь информацию о модуле менеджера из expression.
+   * Использует MDOType.fromValue() для определения типа менеджера.
    * 
    * @param expression Контекст выражения
    * @return Пара (тип менеджера, имя объекта), например ("Справочники", "Номенклатура")
@@ -314,7 +312,10 @@ public class CommonModuleReference {
         var identifier = complexId.IDENTIFIER();
         if (identifier != null) {
           var managerType = identifier.getText();
-          if (MANAGER_MODULE_TYPES.matcher(managerType).matches()) {
+          // Используем MDOType.fromValue() для проверки типа менеджера
+          var mdoType = MDOType.fromValue(managerType);
+          if (mdoType.isPresent() && 
+              ModuleType.byMDOType(mdoType.get()).contains(ModuleType.ManagerModule)) {
             // Ищем имя объекта в первом модификаторе
             var modifiers = complexId.modifier();
             if (!modifiers.isEmpty()) {

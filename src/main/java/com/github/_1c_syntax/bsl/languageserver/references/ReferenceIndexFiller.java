@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -601,50 +602,18 @@ public class ReferenceIndexFiller {
     
     /**
      * Находит mdoRef для модуля менеджера по типу и имени объекта.
+     * Использует MDOType.fromValue() для определения типа метаданных.
      */
     private Optional<String> findManagerModuleMdoRef(
       CF configuration,
       String managerType,
       String objectName
     ) {
-      // Преобразуем тип менеджера в тип объекта метаданных
-      var mdoTypeName = mapManagerTypeToMdoType(managerType);
-      if (mdoTypeName.isEmpty()) {
-        return Optional.empty();
-      }
-      
-      // Формируем mdoRef в формате "ТипОбъекта.ИмяОбъекта"
-      var mdoRef = mdoTypeName.get() + "." + objectName;
-      
-      // Проверяем, что такой объект существует в конфигурации
-      var child = configuration.findChild(mdoRef);
-      if (child.isPresent()) {
-        return Optional.of(mdoRef);
-      }
-      
-      return Optional.empty();
-    }
-    
-    /**
-     * Преобразует тип менеджера в тип объекта метаданных.
-     */
-    private Optional<String> mapManagerTypeToMdoType(String managerType) {
-      var lowerType = managerType.toLowerCase(Locale.ENGLISH);
-      return switch (lowerType) {
-        case "справочники", "catalogs" -> Optional.of("Catalog");
-        case "документы", "documents" -> Optional.of("Document");
-        case "регистрысведений", "informationregisters" -> Optional.of("InformationRegister");
-        case "регистрынакопления", "accumulationregisters" -> Optional.of("AccumulationRegister");
-        case "регистрыбухгалтерии", "accountingregisters" -> Optional.of("AccountingRegister");
-        case "регистрырасчета", "calculationregisters" -> Optional.of("CalculationRegister");
-        case "планывидовхарактеристик", "chartsofcharacteristictypes" -> Optional.of("ChartOfCharacteristicTypes");
-        case "планысчетов", "chartsofaccounts" -> Optional.of("ChartOfAccounts");
-        case "планывидоврасчета", "chartsofcalculationtypes" -> Optional.of("ChartOfCalculationTypes");
-        case "планыобмена", "exchangeplans" -> Optional.of("ExchangePlan");
-        case "бизнеспроцессы", "businessprocesses" -> Optional.of("BusinessProcess");
-        case "задачи", "tasks" -> Optional.of("Task");
-        default -> Optional.empty();
-      };
+      // Используем MDOType.fromValue() для преобразования имени группы в тип MDO
+      return MDOType.fromValue(managerType)
+        .filter(mdoType -> ModuleType.byMDOType(mdoType).contains(ModuleType.ManagerModule))
+        .map(mdoType -> mdoType.nameEn() + "." + objectName)
+        .filter(mdoRef -> configuration.findChild(mdoRef).isPresent());
     }
     
     /**
