@@ -491,6 +491,9 @@
                 "UseSystemInformation": {
                     "$ref": "parameters-schema.json#/definitions/UseSystemInformation"
                 },
+                "UselessTernaryOperator": {
+                    "$ref": "parameters-schema.json#/definitions/UselessTernaryOperator"
+                },
                 "UsingCancelParameter": {
                     "$ref": "parameters-schema.json#/definitions/UsingCancelParameter"
                 },
