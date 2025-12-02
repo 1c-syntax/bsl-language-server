@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -28,12 +29,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class CommonModuleReferenceTest {
+
+  private static final List<String> DEFAULT_ACCESSORS = new ReferencesOptions().getCommonModuleAccessors();
 
   @Test
   void testDetectCommonModuleExpression() {
@@ -53,10 +57,40 @@ class CommonModuleReferenceTest {
     assertThat(assignments).hasSize(1);
     
     var expression = assignments.get(0).expression();
-    assertThat(CommonModuleReference.isCommonModuleExpression(expression)).isTrue();
+    assertThat(CommonModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isTrue();
     
-    var moduleName = CommonModuleReference.extractCommonModuleName(expression);
+    var moduleName = CommonModuleReference.extractCommonModuleName(expression, DEFAULT_ACCESSORS);
     assertThat(moduleName).isPresent();
     assertThat(moduleName.get()).isEqualTo("ПервыйОбщийМодуль");
+  }
+
+  @Test
+  void testCustomAccessor() {
+    var code = "Процедура Тест()\n" +
+      "  Модуль = МойМодуль.ПолучитьОбщийМодуль(\"ТестовыйМодуль\");\n" +
+      "КонецПроцедуры";
+    
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+    
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+    
+    assertThat(assignments).hasSize(1);
+    
+    var expression = assignments.get(0).expression();
+    
+    // With default accessors - should not match
+    assertThat(CommonModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isFalse();
+    
+    // With custom accessor - should match
+    var customAccessors = List.of("МойМодуль.ПолучитьОбщийМодуль");
+    assertThat(CommonModuleReference.isCommonModuleExpression(expression, customAccessors)).isTrue();
+    
+    var moduleName = CommonModuleReference.extractCommonModuleName(expression, customAccessors);
+    assertThat(moduleName).isPresent();
+    assertThat(moduleName.get()).isEqualTo("ТестовыйМодуль");
   }
 }

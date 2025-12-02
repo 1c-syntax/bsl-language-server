@@ -77,6 +77,7 @@ public class ReferenceIndexFiller {
   );
 
   private final ReferenceIndex index;
+  private final com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration configuration;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -328,11 +329,12 @@ public class ReferenceIndexFiller {
       // Detect pattern: Variable = ОбщегоНазначения.ОбщийМодуль("ModuleName") or Variable = ОбщийМодуль("ModuleName")
       var lValue = ctx.lValue();
       var expression = ctx.expression();
+      var commonModuleAccessors = configuration.getReferencesOptions().getCommonModuleAccessors();
 
       if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
         var variableKey = lValue.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH);
-        if (CommonModuleReference.isCommonModuleExpression(expression)) {
-          var commonModuleOpt = CommonModuleReference.extractCommonModuleName(expression)
+        if (CommonModuleReference.isCommonModuleExpression(expression, commonModuleAccessors)) {
+          var commonModuleOpt = CommonModuleReference.extractCommonModuleName(expression, commonModuleAccessors)
             .flatMap(moduleName -> documentContext.getServerContext()
               .getConfiguration()
               .findCommonModule(moduleName));

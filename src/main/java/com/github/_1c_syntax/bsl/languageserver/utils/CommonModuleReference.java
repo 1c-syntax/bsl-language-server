@@ -24,11 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * Утилитный класс для работы с вызовами ОбщийМодуль и ссылками на модули менеджеров.
@@ -40,29 +40,19 @@ import java.util.regex.Pattern;
 @UtilityClass
 public class CommonModuleReference {
 
-  private static final Pattern COMMON_MODULE_METHOD = CaseInsensitivePattern.compile(
-    "^(ОбщийМодуль|CommonModule)$");
-  
-  // TODO: В будущем этот паттерн должен быть конфигурируемым для поддержки пользовательских
-  // общих модулей с методами типа ОбщийМодуль("ИмяМодуля")
-  private static final Pattern COMMON_USE_MODULE = CaseInsensitivePattern.compile(
-    "^(ОбщегоНазначения|ОбщегоНазначенияКлиент|ОбщегоНазначенияСервер|" +
-    "ОбщегоНазначенияКлиентСервер|ОбщегоНазначенияПовтИсп|" +
-    "CommonUse|CommonUseClient|CommonUseServer|CommonUseClientServer)$");
-
   /**
    * Проверить, является ли expression вызовом получения ссылки на общий модуль.
-   * Распознает паттерны:
-   * - ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")
-   * - ОбщегоНазначенияКлиент.ОбщийМодуль("ИмяМодуля")
-   * - ОбщийМодуль("ИмяМодуля")
-   * И другие варианты общих модулей
+   * Использует список паттернов из конфигурации.
    *
    * @param expression Контекст выражения
-   * @return true, если это вызов ОбщийМодуль
+   * @param commonModuleAccessors Список паттернов "Модуль.Метод" или "Метод" для локального вызова
+   * @return true, если это вызов метода получения общего модуля
    */
-  public static boolean isCommonModuleExpression(BSLParser.ExpressionContext expression) {
-    if (expression == null) {
+  public static boolean isCommonModuleExpression(
+    BSLParser.ExpressionContext expression,
+    List<String> commonModuleAccessors
+  ) {
+    if (expression == null || commonModuleAccessors == null || commonModuleAccessors.isEmpty()) {
       return false;
     }
 
@@ -71,15 +61,11 @@ public class CommonModuleReference {
       return false;
     }
 
-    // В выражении могут быть один или несколько members
-    // Для простого вызова ОбщийМодуль("Name") - один member с globalMethodCall
-    // Для ОбщегоНазначения.ОбщийМодуль("Name") - один member с complexIdentifier и modifier
-    
     for (var member : members) {
-      // Случай 1: globalMethodCall - ОбщийМодуль("Name")
+      // Случай 1: IDENTIFIER - ОбщийМодуль("Name")
       if (member.IDENTIFIER() != null) {
         var identifier = member.IDENTIFIER().getText();
-        if (COMMON_MODULE_METHOD.matcher(identifier).matches()) {
+        if (isMethodMatch(identifier, null, commonModuleAccessors)) {
           return true;
         }
       }
@@ -87,22 +73,26 @@ public class CommonModuleReference {
       // Случай 2: complexIdentifier с модификаторами
       var complexId = member.complexIdentifier();
       if (complexId != null) {
-        // Проверяем базовый идентификатор
         var identifier = complexId.IDENTIFIER();
         if (identifier != null) {
           var idText = identifier.getText();
           
-          // Случай 2a: ОбщийМодуль с доп. модификаторами
-          if (COMMON_MODULE_METHOD.matcher(idText).matches()) {
+          // Случай 2a: Локальный вызов - ОбщийМодуль("Name")
+          if (isMethodMatch(idText, null, commonModuleAccessors)) {
             return true;
           }
           
-          // Случай 2b: ОбщегоНазначения.ОбщийМодуль("Name")
-          if (COMMON_USE_MODULE.matcher(idText).matches()) {
-            // Проверяем, есть ли вызов ОбщийМодуль в модификаторах
-            for (var modifier : complexId.modifier()) {
-              if (isCommonModuleCallInModifier(modifier)) {
-                return true;
+          // Случай 2b: Модуль.Метод - ОбщегоНазначения.ОбщийМодуль("Name")
+          for (var modifier : complexId.modifier()) {
+            var accessCall = modifier.accessCall();
+            if (accessCall != null && accessCall.methodCall() != null) {
+              var methodCall = accessCall.methodCall();
+              var methodName = methodCall.methodName();
+              if (methodName != null && methodName.IDENTIFIER() != null) {
+                var methodText = methodName.IDENTIFIER().getText();
+                if (isMethodMatch(methodText, idText, commonModuleAccessors)) {
+                  return true;
+                }
               }
             }
           }
@@ -117,10 +107,14 @@ public class CommonModuleReference {
    * Извлечь имя общего модуля из expression.
    *
    * @param expression Контекст выражения
+   * @param commonModuleAccessors Список паттернов "Модуль.Метод" или "Метод" для локального вызова
    * @return Имя модуля, если удалось извлечь
    */
-  public static Optional<String> extractCommonModuleName(BSLParser.ExpressionContext expression) {
-    if (expression == null) {
+  public static Optional<String> extractCommonModuleName(
+    BSLParser.ExpressionContext expression,
+    List<String> commonModuleAccessors
+  ) {
+    if (expression == null || commonModuleAccessors == null || commonModuleAccessors.isEmpty()) {
       return Optional.empty();
     }
 
@@ -130,34 +124,38 @@ public class CommonModuleReference {
     }
 
     for (var member : members) {
-      // Случай 1: complexIdentifier
       var complexId = member.complexIdentifier();
       if (complexId != null) {
         var identifier = complexId.IDENTIFIER();
         if (identifier != null) {
           var idText = identifier.getText();
           
-          // Случай 2a: ОбщийМодуль("Name") - параметры в модификаторах
-          if (COMMON_MODULE_METHOD.matcher(idText).matches()) {
+          // Случай 1: Локальный вызов - ОбщийМодуль("Name")
+          if (isMethodMatch(idText, null, commonModuleAccessors)) {
             return extractModuleNameFromModifiers(complexId.modifier());
           }
           
-          // Случай 2b: ОбщегоНазначения.ОбщийМодуль("Name")
-          if (COMMON_USE_MODULE.matcher(idText).matches()) {
-            for (var modifier : complexId.modifier()) {
-              var moduleName = extractModuleNameFromModifier(modifier);
-              if (moduleName.isPresent()) {
-                return moduleName;
+          // Случай 2: Модуль.Метод - ОбщегоНазначения.ОбщийМодуль("Name")
+          for (var modifier : complexId.modifier()) {
+            var accessCall = modifier.accessCall();
+            if (accessCall != null && accessCall.methodCall() != null) {
+              var methodCall = accessCall.methodCall();
+              var methodName = methodCall.methodName();
+              if (methodName != null && methodName.IDENTIFIER() != null) {
+                var methodText = methodName.IDENTIFIER().getText();
+                if (isMethodMatch(methodText, idText, commonModuleAccessors)) {
+                  return extractParameterFromDoCall(methodCall.doCall());
+                }
               }
             }
           }
         }
         
-        // Случай 2c: globalMethodCall внутри complexIdentifier
+        // Случай 3: globalMethodCall внутри complexIdentifier
         var globalMethodCall = complexId.globalMethodCall();
         if (globalMethodCall != null && globalMethodCall.methodName() != null) {
           var methodName = globalMethodCall.methodName().IDENTIFIER();
-          if (methodName != null && COMMON_MODULE_METHOD.matcher(methodName.getText()).matches()) {
+          if (methodName != null && isMethodMatch(methodName.getText(), null, commonModuleAccessors)) {
             return extractParameterFromDoCall(globalMethodCall.doCall());
           }
         }
@@ -167,42 +165,42 @@ public class CommonModuleReference {
     return Optional.empty();
   }
 
-  private static boolean isCommonModuleCallInModifier(BSLParser.ModifierContext modifier) {
-    var accessCall = modifier.accessCall();
-    if (accessCall == null) {
+  /**
+   * Проверяет, соответствует ли вызов метода одному из паттернов.
+   *
+   * @param methodName Имя вызываемого метода
+   * @param moduleName Имя модуля (null для локального вызова)
+   * @param patterns Список паттернов "Модуль.Метод" или "Метод"
+   * @return true, если есть совпадение
+   */
+  private static boolean isMethodMatch(String methodName, String moduleName, List<String> patterns) {
+    if (methodName == null) {
       return false;
     }
-
-    var methodCall = accessCall.methodCall();
-    if (methodCall == null) {
-      return false;
+    
+    var methodLower = methodName.toLowerCase(Locale.ENGLISH);
+    var moduleLower = moduleName != null ? moduleName.toLowerCase(Locale.ENGLISH) : null;
+    
+    for (var pattern : patterns) {
+      var patternLower = pattern.toLowerCase(Locale.ENGLISH);
+      
+      if (patternLower.contains(".")) {
+        // Паттерн "Модуль.Метод"
+        var parts = patternLower.split("\\.", 2);
+        if (parts.length == 2 && moduleLower != null) {
+          if (parts[0].equals(moduleLower) && parts[1].equals(methodLower)) {
+            return true;
+          }
+        }
+      } else {
+        // Паттерн "Метод" (локальный вызов)
+        if (moduleName == null && patternLower.equals(methodLower)) {
+          return true;
+        }
+      }
     }
-
-    var methodName = methodCall.methodName();
-    if (methodName == null || methodName.IDENTIFIER() == null) {
-      return false;
-    }
-
-    return COMMON_MODULE_METHOD.matcher(methodName.IDENTIFIER().getText()).matches();
-  }
-
-  private static Optional<String> extractModuleNameFromModifier(BSLParser.ModifierContext modifier) {
-    var accessCall = modifier.accessCall();
-    if (accessCall == null) {
-      return Optional.empty();
-    }
-
-    var methodCall = accessCall.methodCall();
-    if (methodCall == null || methodCall.methodName() == null) {
-      return Optional.empty();
-    }
-
-    var methodName = methodCall.methodName().IDENTIFIER();
-    if (methodName == null || !COMMON_MODULE_METHOD.matcher(methodName.getText()).matches()) {
-      return Optional.empty();
-    }
-
-    return extractParameterFromDoCall(methodCall.doCall());
+    
+    return false;
   }
 
   private static Optional<String> extractModuleNameFromModifiers(
