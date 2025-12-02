@@ -1519,12 +1519,12 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="Implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#Implemented-diagnostics" title="Permanent link">&para;</a></h2>
-<p>Total: <strong>176</strong></p>
+<p>Total: <strong>177</strong></p>
 <ul>
 <li>Security Hotspot: <strong>8</strong></li>
 <li>Vulnerability: <strong>7</strong></li>
 <li>Error: <strong>56</strong></li>
-<li>Code smell: <strong>105</strong></li>
+<li>Code smell: <strong>106</strong></li>
 </ul>
 <table>
 <thead>
@@ -2785,6 +2785,14 @@
 <td>Critical</td>
 <td>Security Hotspot</td>
 <td><code>suspicious</code></td>
+</tr>
+<tr>
+<td><a href="UselessTernaryOperator/">UselessTernaryOperator</a></td>
+<td>Useless ternary operator</td>
+<td style="text-align: center;">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>badpractice</code><br><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="UsingCancelParameter/">UsingCancelParameter</a></td>
