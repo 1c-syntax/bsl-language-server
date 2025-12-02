@@ -29,17 +29,17 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Strings;
-import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.ChartOfCharacteristicTypes;
+import com.github._1c_syntax.bsl.mdo.support.CodeSeries;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -86,10 +86,6 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
     "^(НайтиПоКоду|FindByCode)$"
   );
 
-  private static final String CATALOG_PREFIX = "Catalog.";
-  private static final String CHART_OF_CHARACTERISTIC_TYPES_PREFIX = "ChartOfCharacteristicTypes.";
-  private static final String CHART_OF_ACCOUNTS_PREFIX = "ChartOfAccounts.";
-  private static final String WHOLE_CATALOG_ENUM_VALUE = "WHOLE_CATALOG";
   private static final int COMMENT_LINE_OFFSET = 2;
 
   /**
@@ -110,6 +106,9 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   /**
    * Проверяет, является ли вызов методом FindByCode/НайтиПоКоду и обрабатывает его.
+   * <p>
+   * Если вызов является методом FindByCode/НайтиПоКоду и объект метаданных имеет небезопасное использование,
+   * добавляется диагностика на строку с комментарием перед вызовом метода.
    *
    * @param ctx контекст вызова метода
    * @param mdoRef ссылка на объект метаданных в формате "Catalog.ИмяКаталога",
@@ -117,8 +116,8 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
    */
   private void checkFindByCodeMethod(BSLParser.ComplexIdentifierContext ctx, String mdoRef) {
     Methods.getMethodName(ctx).ifPresent((Token methodName) -> {
-      if (isFindByCodeMethod(methodName)) {
-        checkMetadataObject(mdoRef, methodName);
+      if (isFindByCodeMethod(methodName) && checkMetadataObject(mdoRef)) {
+        addDiagnosticOnCommentLine(methodName);
       }
     });
   }
@@ -137,62 +136,47 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
   /**
    * Проверяет объект метаданных на небезопасное использование метода FindByCode.
    * <p>
-   * Метод проверяет справочники, планы видов характеристик и планы счетов.
+   * Метод получает объект метаданных из конфигурации по ссылке {@code mdoRef} и определяет его тип
+   * с помощью {@code getMdoType()}. Проверяются только справочники, планы видов характеристик и планы счетов.
+   * <p>
    * Использование считается небезопасным, если хотя бы одно из условий выполняется:
    * <ul>
    *   <li>контроль уникальности кода отключен ({@code CheckUnique = False})</li>
    *   <li>серии кодов установлены не для всего объекта ({@code CodeSeries} не равно {@code WHOLE_CATALOG})</li>
    * </ul>
    * <p>
-   * Если использование небезопасно, добавляется диагностика на строку с комментарием перед вызовом метода.
    * Если объект безопасен (контроль уникальности включен И серии кодов для всего объекта),
-   * диагностика не добавляется.
-   * <p>
-   * Если объект метаданных не найден в конфигурации или {@code mdoRef} не начинается с известных префиксов
-   * (например, для документов), диагностика не добавляется.
+   * или объект метаданных не найден в конфигурации, или объект не является справочником,
+   * планом видов характеристик или планом счетов, метод возвращает {@code false}.
    *
    * @param mdoRef ссылка на объект метаданных в формате "Catalog.ИмяКаталога",
    *               "ChartOfCharacteristicTypes.ИмяПлана" или "ChartOfAccounts.ИмяПлана"
-   * @param methodName токен с именем метода FindByCode/НайтиПоКоду
+   * @return {@code true}, если использование небезопасно; {@code false} в противном случае
    */
-  private void checkMetadataObject(String mdoRef, Token methodName) {
+  private boolean checkMetadataObject(String mdoRef) {
     var configuration = documentContext.getServerContext().getConfiguration();
-
-    if (mdoRef.startsWith(CATALOG_PREFIX)) {
-      findCatalog(configuration, mdoRef).ifPresent(catalog -> {
-        if (isUnsafeCatalogUsage(catalog)) {
-          addDiagnosticOnCommentLine(methodName);
-        }
-      });
-    } else if (mdoRef.startsWith(CHART_OF_CHARACTERISTIC_TYPES_PREFIX)) {
-      findChartOfCharacteristicTypes(configuration, mdoRef).ifPresent(chartOfCharacteristicTypes -> {
-        if (isUnsafeChartOfCharacteristicTypesUsage(chartOfCharacteristicTypes)) {
-          addDiagnosticOnCommentLine(methodName);
-        }
-      });
-    } else if (mdoRef.startsWith(CHART_OF_ACCOUNTS_PREFIX)) {
-      findChartOfAccounts(configuration, mdoRef).ifPresent(chartOfAccounts -> {
-        if (isUnsafeChartOfAccountsUsage(chartOfAccounts)) {
-          addDiagnosticOnCommentLine(methodName);
-        }
-      });
-    } else {
-      // Если mdoRef не начинается с известных префиксов (например, Document), диагностика не добавляется
-    }
-  }
-
-  /**
-   * Находит справочник по ссылке на объект метаданных.
-   *
-   * @param configuration конфигурация для поиска
-   * @param mdoRef ссылка на объект метаданных в формате "Catalog.ИмяКаталога"
-   * @return Optional с найденным справочником, или пустой Optional, если справочник не найден
-   */
-  private static Optional<Catalog> findCatalog(CF configuration, String mdoRef) {
     var mdoReference = MdoReference.create(mdoRef);
-    return configuration.findChild(mdoReference)
-      .filter(Catalog.class::isInstance)
-      .map(Catalog.class::cast);
+    var mdoOpt = configuration.findChild(mdoReference);
+
+    if (mdoOpt.isEmpty()) {
+      return false;
+    }
+
+    var mdo = mdoOpt.get();
+    var mdoType = mdo.getMdoType();
+    var result = false;
+
+    if (mdoType == MDOType.CATALOG) {
+      result = isUnsafeCatalogUsage((Catalog) mdo);
+    } else if (mdoType == MDOType.CHART_OF_CHARACTERISTIC_TYPES) {
+      result = isUnsafeChartOfCharacteristicTypesUsage((ChartOfCharacteristicTypes) mdo);
+    } else if (mdoType == MDOType.CHART_OF_ACCOUNTS) {
+      result = isUnsafeChartOfAccountsUsage((ChartOfAccounts) mdo);
+    } else {
+      result = false;
+    }
+
+    return result;
   }
 
   /**
@@ -214,21 +198,7 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
    * @return true, если использование небезопасно; false, если использование безопасно
    */
   private static boolean isUnsafeCatalogUsage(Catalog catalog) {
-    return !catalog.isCheckUnique() || !WHOLE_CATALOG_ENUM_VALUE.equals(catalog.getCodeSeries().name());
-  }
-
-  /**
-   * Находит план видов характеристик по ссылке на объект метаданных.
-   *
-   * @param configuration конфигурация для поиска
-   * @param mdoRef ссылка на объект метаданных в формате "ChartOfCharacteristicTypes.ИмяПлана"
-   * @return Optional с найденным планом видов характеристик, или пустой Optional, если план не найден
-   */
-  private static Optional<ChartOfCharacteristicTypes> findChartOfCharacteristicTypes(CF configuration, String mdoRef) {
-    var mdoReference = MdoReference.create(mdoRef);
-    return configuration.findChild(mdoReference)
-      .filter(ChartOfCharacteristicTypes.class::isInstance)
-      .map(ChartOfCharacteristicTypes.class::cast);
+    return !catalog.isCheckUnique() || catalog.getCodeSeries() != CodeSeries.WHOLE_CATALOG;
   }
 
   /**
@@ -255,21 +225,7 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
    */
   private static boolean isUnsafeChartOfCharacteristicTypesUsage(ChartOfCharacteristicTypes chartOfCharacteristicTypes) {
     return !chartOfCharacteristicTypes.isCheckUnique()
-      || !WHOLE_CATALOG_ENUM_VALUE.equals(chartOfCharacteristicTypes.getCodeSeries().name());
-  }
-
-  /**
-   * Находит план счетов по ссылке на объект метаданных.
-   *
-   * @param configuration конфигурация для поиска
-   * @param mdoRef ссылка на объект метаданных в формате "ChartOfAccounts.ИмяПлана"
-   * @return Optional с найденным планом счетов, или пустой Optional, если план не найден
-   */
-  private static Optional<ChartOfAccounts> findChartOfAccounts(CF configuration, String mdoRef) {
-    var mdoReference = MdoReference.create(mdoRef);
-    return configuration.findChild(mdoReference)
-      .filter(ChartOfAccounts.class::isInstance)
-      .map(ChartOfAccounts.class::cast);
+      || chartOfCharacteristicTypes.getCodeSeries() != CodeSeries.WHOLE_CATALOG;
   }
 
   /**
@@ -295,7 +251,7 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
    * @return true, если использование небезопасно; false, если использование безопасно
    */
   private static boolean isUnsafeChartOfAccountsUsage(ChartOfAccounts chartOfAccounts) {
-    return !chartOfAccounts.isCheckUnique() || !WHOLE_CATALOG_ENUM_VALUE.equals(chartOfAccounts.getCodeSeries().name());
+    return !chartOfAccounts.isCheckUnique() || chartOfAccounts.getCodeSeries() != CodeSeries.WHOLE_CATALOG;
   }
 
   /**
