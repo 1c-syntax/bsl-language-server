@@ -251,6 +251,7 @@
 			<Catalog>СправочникССериямиВладельца</Catalog>
 			<Catalog>СправочникБезКонтроляИСериями</Catalog>
 			<Catalog>СправочникСКонтролемУникальности</Catalog>
+			<Document>Документ1</Document>
 			<ChartOfCharacteristicTypes>ПланВидовХарактеристикБезКонтроляУникальности</ChartOfCharacteristicTypes>
 			<ChartOfCharacteristicTypes>ПланВидовХарактеристикССериямиПодчинения</ChartOfCharacteristicTypes>
 			<ChartOfCharacteristicTypes>ПланВидовХарактеристикБезКонтроляИСериями</ChartOfCharacteristicTypes>
