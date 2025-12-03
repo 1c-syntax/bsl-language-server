@@ -79,8 +79,7 @@ class UnsafeFindByCodeDiagnosticTest extends AbstractDiagnosticTest<UnsafeFindBy
    *   <li>План счетов без контроля уникальности и с сериями</li>
    * </ul>
    * <p>
-   * Ожидается 12 срабатываний диагностики на строках: 2, 5, 8, 11, 23, 26, 31, 34, 37, 43, 46, 49.
-   * Диагностика срабатывает на строках с комментариями, предшествующими вызовам метода FindByCode/НайтиПоКоду для небезопасных объектов.
+   * Ожидается 12 срабатываний диагностики на строках: 4, 7, 10, 13, 25, 28, 33, 36, 39, 45, 48, 51.
    */
   @Test
   void test() {
@@ -95,7 +94,9 @@ class UnsafeFindByCodeDiagnosticTest extends AbstractDiagnosticTest<UnsafeFindBy
       .toList();
     
     assertThat(diagnostics).hasSize(12);
-    assertThat(diagnosticLines).containsExactly(2, 5, 8, 11, 23, 26, 31, 34, 37, 43, 46, 49);
+    assertThat(diagnosticLines)
+      .as("Диагностика должна указывать на имя метода НайтиПоКоду/FindByCode")
+      .containsExactly(3, 6, 9, 12, 24, 27, 32, 35, 38, 44, 47, 50);
   }
 
   /**
@@ -103,11 +104,11 @@ class UnsafeFindByCodeDiagnosticTest extends AbstractDiagnosticTest<UnsafeFindBy
    * <p>
    * Проверяет, что диагностика не срабатывает для:
    * <ul>
-   *   <li>Справочников с безопасным использованием (с контролем уникальности и WHOLE_CATALOG) (строка 14 - комментарий)</li>
-   *   <li>Объектов, не являющихся справочниками, планами видов характеристик или планами счетов (строка 17 - комментарий перед Документом)</li>
-   *   <li>Методов, отличных от FindByCode/НайтиПоКоду (строка 20 - комментарий)</li>
-   *   <li>Планов видов характеристик с безопасным использованием (с контролем уникальности и WHOLE_CATALOG) (строка 40 - комментарий)</li>
-   *   <li>Планов счетов с безопасным использованием (с контролем уникальности и WHOLE_CATALOG) (строка 52 - комментарий)</li>
+   *   <li>Справочников с безопасным использованием (с контролем уникальности и WHOLE_CATALOG) (строка 16)</li>
+   *   <li>Объектов, не являющихся справочниками, планами видов характеристик или планами счетов (строка 19)</li>
+   *   <li>Методов, отличных от FindByCode/НайтиПоКоду (строка 22)</li>
+   *   <li>Планов видов характеристик с безопасным использованием (с контролем уникальности и WHOLE_CATALOG) (строка 42)</li>
+   *   <li>Планов счетов с безопасным использованием (с контролем уникальности и WHOLE_CATALOG) (строка 54)</li>
    * </ul>
    * <p>
    * Примечание: значения {@code WholeCharacteristicKind} и {@code WholeChartOfAccounts} из XML метаданных
@@ -129,7 +130,7 @@ class UnsafeFindByCodeDiagnosticTest extends AbstractDiagnosticTest<UnsafeFindBy
     assertThat(diagnosticLines)
       .as("Диагностика не должна срабатывать для безопасных объектов, других методов и объектов не из списка проверяемых")
       .isNotEmpty()
-      .doesNotContain(14, 17, 20, 40, 52);
+      .doesNotContain(15, 18, 21, 41, 53);
   }
 
 

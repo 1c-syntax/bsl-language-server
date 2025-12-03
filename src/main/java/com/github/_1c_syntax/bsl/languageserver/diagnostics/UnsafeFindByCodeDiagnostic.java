@@ -66,9 +66,6 @@ import java.util.regex.Pattern;
  * <p>
  * Также диагностика не срабатывает для объектов метаданных, не являющихся справочниками,
  * планами видов характеристик или планами счетов, а также если объект не найден в метаданных конфигурации.
- * <p>
- * Диагностика указывает на строку с комментарием, предшествующую вызову метода, что соответствует
- * принятому в проекте стилю указания диагностик на комментарии.
  */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -85,8 +82,6 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
     "^(НайтиПоКоду|FindByCode)$"
   );
-
-  private static final int COMMENT_LINE_OFFSET = 2;
 
   /**
    * Обрабатывает вызов метода в контексте сложного идентификатора.
@@ -108,24 +103,30 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
    * Проверяет, является ли вызов методом FindByCode/НайтиПоКоду и обрабатывает его.
    * <p>
    * Если вызов является методом FindByCode/НайтиПоКоду и объект метаданных имеет небезопасное использование,
-   * добавляется диагностика на строку с комментарием перед вызовом метода.
+   * добавляется диагностика на имя метода.
    *
    * @param ctx контекст вызова метода
    * @param mdoRef ссылка на объект метаданных в формате "Catalog.ИмяКаталога",
    *               "ChartOfCharacteristicTypes.ИмяПлана" или "ChartOfAccounts.ИмяПлана"
    */
   private void checkFindByCodeMethod(BSLParser.ComplexIdentifierContext ctx, String mdoRef) {
-    Methods.getMethodName(ctx).ifPresent((Token methodName) -> {
-      if (isFindByCodeMethod(methodName) && checkMetadataObject(mdoRef)) {
-        addDiagnosticOnCommentLine(methodName);
+    var modifiers = ctx.modifier();
+    for (var modifier : modifiers) {
+      var accessCall = modifier.accessCall();
+      if (accessCall != null) {
+        Methods.getMethodName(accessCall).ifPresent((Token methodName) -> {
+          if (isFindByCodeMethod(methodName) && checkMetadataObject(mdoRef)) {
+            diagnosticStorage.addDiagnostic(methodName);
+          }
+        });
       }
-    });
+    }
   }
 
   /**
-   * Проверяет, является ли токен методом FindByCode/НайтиПоКоду.
+   * Проверяет, является ли метод FindByCode/НайтиПоКоду.
    *
-   * @param methodName токен с именем метода
+   * @param methodName имя метода
    * @return true, если это метод FindByCode/НайтиПоКоду
    */
   private static boolean isFindByCodeMethod(Token methodName) {
@@ -136,18 +137,12 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
   /**
    * Проверяет объект метаданных на небезопасное использование метода FindByCode.
    * <p>
-   * Метод получает объект метаданных из конфигурации по ссылке {@code mdoRef} и определяет его тип
-   * с помощью {@code getMdoType()}. Проверяются только справочники, планы видов характеристик и планы счетов.
-   * <p>
+   * Проверяются только справочники, планы видов характеристик и планы счетов.
    * Использование считается небезопасным, если хотя бы одно из условий выполняется:
    * <ul>
    *   <li>контроль уникальности кода отключен ({@code CheckUnique = False})</li>
    *   <li>серии кодов установлены не для всего объекта ({@code CodeSeries} не равно {@code WHOLE_CATALOG})</li>
    * </ul>
-   * <p>
-   * Если объект безопасен (контроль уникальности включен И серии кодов для всего объекта),
-   * или объект метаданных не найден в конфигурации, или объект не является справочником,
-   * планом видов характеристик или планом счетов, метод возвращает {@code false}.
    *
    * @param mdoRef ссылка на объект метаданных в формате "Catalog.ИмяКаталога",
    *               "ChartOfCharacteristicTypes.ИмяПлана" или "ChartOfAccounts.ИмяПлана"
@@ -254,30 +249,4 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
     return !chartOfAccounts.isCheckUnique() || chartOfAccounts.getCodeSeries() != CodeSeries.WHOLE_CATALOG;
   }
 
-  /**
-   * Добавляет диагностику на строку с комментарием перед вызовом метода.
-   * <p>
-   * Диагностика указывает на строку с комментарием, предшествующую вызову метода,
-   * что соответствует принятому в проекте стилю указания диагностик на комментарии.
-   * <p>
-   * ANTLR использует индексацию строк с 1, LSP - с 0. Если метод находится на строке N (ANTLR),
-   * то комментарий находится на строке N-1 (ANTLR), что в LSP будет (N-1)-1 = N-2.
-   * Для вычисления строки комментария в LSP из строки метода в ANTLR вычитается {@link #COMMENT_LINE_OFFSET}.
-   * <p>
-   * Если вычисленная строка комментария меньше 0 (комментарий отсутствует или метод на первой строке),
-   * диагностика указывает на строку с самим методом.
-   * <p>
-   * Для покрытия всей строки комментария используется максимальное значение символа ({@code Integer.MAX_VALUE}).
-   *
-   * @param methodName токен с именем метода, для которого добавляется диагностика
-   */
-  private void addDiagnosticOnCommentLine(Token methodName) {
-    int methodLineANTLR = methodName.getLine();
-    int commentLineLSP = methodLineANTLR - COMMENT_LINE_OFFSET;
-    if (commentLineLSP >= 0) {
-      diagnosticStorage.addDiagnostic(commentLineLSP, 0, commentLineLSP, Integer.MAX_VALUE);
-    } else {
-      diagnosticStorage.addDiagnostic(methodName);
-    }
-  }
 }
