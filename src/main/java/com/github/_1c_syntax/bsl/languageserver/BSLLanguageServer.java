@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.TextDocumentSyncCapabilityOptions;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -323,7 +321,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static Either<Boolean, RenameOptions> getRenameProvider(InitializeParams params) {
 
-    if (getRenamePrepareSupport(params)) {
+    if (hasRenamePrepareSupport(params)) {
 
       var renameOptions = new RenameOptions();
       renameOptions.setWorkDoneProgress(Boolean.FALSE);
@@ -339,7 +337,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   }
 
-  private static boolean getRenamePrepareSupport(InitializeParams params) {
+  private static boolean hasRenamePrepareSupport(InitializeParams params) {
     return Optional.of(params)
       .map(InitializeParams::getCapabilities)
       .map(ClientCapabilities::getTextDocument)

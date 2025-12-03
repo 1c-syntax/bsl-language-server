@@ -328,7 +328,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
-    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }

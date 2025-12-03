@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
@@ -129,15 +130,15 @@ public class SemanticTokensProvider {
     BSLLexer.ANNOTATION_CUSTOM_SYMBOL
   );
 
+  private static final String[] NO_MODIFIERS = new String[0];
+  private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
+
   private final SemanticTokensLegend legend;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
   @Setter(AccessLevel.PROTECTED)
   private boolean multilineTokenSupport;
-
-  private static final String[] NO_MODIFIERS = new String[0];
-  private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
 
   @EventListener
   public void onClientCapabilitiesChanged(LanguageServerInitializeRequestReceivedEvent event) {
@@ -155,7 +156,7 @@ public class SemanticTokensProvider {
 
     // collect description ranges for describable symbols
     List<Range> descriptionRanges = new ArrayList<>();
-    BitSet documentationLines = new BitSet();
+    var documentationLines = new BitSet();
 
     var symbolTree = documentContext.getSymbolTree();
     var ast = documentContext.getAst();
@@ -189,18 +190,20 @@ public class SemanticTokensProvider {
   }
 
   private void addMultilineDescriptions(DocumentContext documentContext, List<Range> descriptionRanges, List<TokenEntry> entries) {
-    if (multilineTokenSupport) {
-      for (Range r : descriptionRanges) {
-        // compute multi-line token length using document text
-        int length = documentContext.getText(r).length();
-        addRange(entries, r, length, SemanticTokenTypes.Comment, DOC_ONLY);
-      }
+    if (!multilineTokenSupport) {
+      return;
+    }
+
+    for (Range r : descriptionRanges) {
+      // compute multi-line token length using document text
+      int length = documentContext.getText(r).length();
+      addRange(entries, r, length, SemanticTokenTypes.Comment, DOC_ONLY);
     }
   }
 
   private void addVariableSymbols(DocumentContext documentContext, SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
-    for (VariableSymbol variableSymbol : symbolTree.getVariables()) {
-      Range nameRange = variableSymbol.getVariableNameRange();
+    for (var variableSymbol : symbolTree.getVariables()) {
+      var nameRange = variableSymbol.getVariableNameRange();
       if (!Ranges.isEmpty(nameRange)) {
         Position pos = nameRange.getStart();
         boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), pos)
@@ -212,24 +215,25 @@ public class SemanticTokensProvider {
           addRange(entries, nameRange, SemanticTokenTypes.Variable);
         }
       }
-      variableSymbol.getDescription().ifPresent(desc -> {
-        var r = desc.getRange();
-        if (!Ranges.isEmpty(r)) {
-          descriptionRanges.add(r);
-          if (!multilineTokenSupport) {
-            markLines(documentationLines, r);
-          }
-        }
-        desc.getTrailingDescription().ifPresent(trailing -> {
-          var tr = trailing.getRange();
-          if (!Ranges.isEmpty(tr)) {
-            descriptionRanges.add(tr);
-            if (!multilineTokenSupport) {
-              markLines(documentationLines, tr);
-            }
-          }
-        });
+      variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
+        processVariableDescription(descriptionRanges, documentationLines, description);
+
+        description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
+          processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
+        );
       });
+    }
+  }
+
+  private void processVariableDescription(List<Range> descriptionRanges, BitSet documentationLines, VariableDescription description) {
+    var range = description.getRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
+    descriptionRanges.add(range);
+    if (!multilineTokenSupport) {
+      markLines(documentationLines, range);
     }
   }
 
@@ -253,8 +257,8 @@ public class SemanticTokensProvider {
   }
 
   private void addComments(List<Token> comments, List<Range> descriptionRanges, List<TokenEntry> entries, BitSet documentationLines) {
-    for (Token commentToken : comments) {
-      Range commentRange = Ranges.create(commentToken);
+    for (var commentToken : comments) {
+      var commentRange = Ranges.create(commentToken);
       if (multilineTokenSupport) {
         boolean insideDescription = descriptionRanges.stream().anyMatch(r -> Ranges.containsRange(r, commentRange));
         if (insideDescription) {
@@ -418,7 +422,7 @@ public class SemanticTokensProvider {
     int start = range.getStart().getCharacter();
     int length = Math.max(0, explicitLength);
     if (length > 0) {
-      int modifierMask = 0;
+      var modifierMask = 0;
       for (String mod : modifiers) {
         int idx = legend.getTokenModifiers().indexOf(mod);
         if (idx >= 0) {
@@ -429,7 +433,7 @@ public class SemanticTokensProvider {
     }
   }
 
-  private List<Integer> toDeltaEncoded(List<TokenEntry> entries) {
+  private static List<Integer> toDeltaEncoded(List<TokenEntry> entries) {
     // de-dup and sort
     Set<TokenEntry> uniq = new HashSet<>(entries);
     List<TokenEntry> sorted = new ArrayList<>(uniq);

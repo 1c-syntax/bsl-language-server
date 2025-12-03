@@ -29,12 +29,23 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * Конфигурация легенды семантических токенов для Language Server Protocol.
+ * <p>
+ * Определяет типы и модификаторы семантических токенов, которые поддерживаются
+ * сервером для подсветки синтаксиса на основе семантического анализа кода.
+ */
 @Configuration
 public class SemanticTokensLegendConfiguration {
 
+  /**
+   * Создает легенду семантических токенов для Language Server Protocol.
+   *
+   * @return легенда с поддерживаемыми типами токенов и модификаторами
+   */
   @Bean
   public SemanticTokensLegend semanticTokensLegend() {
-    // Types we actually emit from the provider
+
     List<String> tokenTypes = List.of(
       SemanticTokenTypes.Keyword,
       SemanticTokenTypes.String,
@@ -50,7 +61,6 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Namespace
     );
 
-    // Add tokenModifiers we plan to emit
     List<String> tokenModifiers = List.of(
       SemanticTokenModifiers.Documentation,
       SemanticTokenModifiers.Definition
@@ -58,5 +68,4 @@ public class SemanticTokensLegendConfiguration {
 
     return new SemanticTokensLegend(tokenTypes, tokenModifiers);
   }
-
 }

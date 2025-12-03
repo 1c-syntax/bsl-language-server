@@ -261,7 +261,7 @@ class SemanticTokensProviderTest {
 
     // and no operators or strings on that line
     long operatorsOnFirstLine = firstLineTokens.stream().filter(t -> t.type == operatorIdx).count();
-    assertThat(operatorsOnFirstLine).isEqualTo(0);
+    assertThat(operatorsOnFirstLine).isZero();
   }
 
   @Test
@@ -502,7 +502,7 @@ class SemanticTokensProviderTest {
     // then: exactly one documentation comment token exists (merged), starting on line 0
     var docTokens = decoded.stream().filter(t -> t.type == commentIdx && (t.modifiers & docMask) != 0).toList();
     assertThat(docTokens).hasSize(1);
-    assertThat(docTokens.get(0).line).isEqualTo(0);
+    assertThat(docTokens.get(0).line).isZero();
 
     // and there is no comment token on line 1 (second doc line)
     var commentsLine1 = decoded.stream().filter(t -> t.line == 1 && t.type == commentIdx).toList();
