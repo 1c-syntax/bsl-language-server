@@ -78,7 +78,7 @@ class SemanticTokensProviderTest {
   void emitsExpectedTokenTypes() {
     // given: sample BSL with annotation, macro, method, parameter, string, number, comment, operators
     String bsl = String.join("\n",
-      "&��аКлиенте",
+      "&НаКлиенте",
       "#Если Истина Тогда",
       "Процедура Тест(Парам) Экспорт",
       "  // комментарий",
