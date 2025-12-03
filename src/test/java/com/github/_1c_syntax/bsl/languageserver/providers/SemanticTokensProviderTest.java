@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -36,6 +35,7 @@ import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,13 +49,10 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.SemanticTokensCapabilities;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -69,11 +66,13 @@ class SemanticTokensProviderTest {
   @Autowired
   private SemanticTokensLegend legend;
 
-  @Autowired
-  private ClientCapabilitiesHolder clientCapabilitiesHolder;
-
   @MockitoBean
   private ReferenceIndex referenceIndex;
+
+  @BeforeEach
+  void init() {
+    provider.setMultilineTokenSupport(false);
+  }
 
   @Test
   void emitsExpectedTokenTypes() {
@@ -475,16 +474,9 @@ class SemanticTokensProviderTest {
 
   @Test
   void multilineDocumentation_isMergedIntoSingleToken_whenClientSupportsIt() {
-    // set multilineTokenSupport via ClientCapabilitiesHolder directly
-    ClientCapabilities caps = new ClientCapabilities();
-    TextDocumentClientCapabilities td = new TextDocumentClientCapabilities();
-    SemanticTokensCapabilities st = new SemanticTokensCapabilities();
-    st.setMultilineTokenSupport(true);
-    td.setSemanticTokens(st);
-    caps.setTextDocument(td);
-    clientCapabilitiesHolder.setCapabilities(caps);
-
     // given: two-line documentation followed by a method and a body comment
+    provider.setMultilineTokenSupport(true);
+
     String bsl = String.join("\n",
       "// Первая строка описания",
       "// Вторая строка описания",
@@ -520,9 +512,6 @@ class SemanticTokensProviderTest {
     var bodyComments = decoded.stream().filter(t -> t.line == 3 && t.type == commentIdx).toList();
     assertThat(bodyComments).isNotEmpty();
     assertThat(bodyComments.stream().allMatch(t -> (t.modifiers & docMask) == 0)).isTrue();
-
-    // reset capabilities to avoid side-effects on other tests
-    clientCapabilitiesHolder.setCapabilities(null);
   }
 
   @Test

@@ -43,7 +43,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.UseContext;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -128,10 +130,10 @@ public class SemanticTokensProvider {
   );
 
   private final SemanticTokensLegend legend;
-  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
+  @Setter(AccessLevel.PROTECTED)
   private boolean multilineTokenSupport;
 
   private static final String[] NO_MODIFIERS = new String[0];
