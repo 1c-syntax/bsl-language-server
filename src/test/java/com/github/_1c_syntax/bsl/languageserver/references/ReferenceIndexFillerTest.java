@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -452,5 +453,58 @@ class ReferenceIndexFillerTest {
       .filter(ref -> ref.getUri().equals(documentContext.getUri()))
       .toList();
     assertThat(referencesToFuncFromTest).hasSize(0);
+  void testHandleServerContextDocumentRemovedEvent() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.fill(documentContext);
+
+    var uri = documentContext.getUri();
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").orElseThrow();
+
+    // Проверяем, что ссылки есть
+    var referencesTo = referenceIndex.getReferencesTo(methodSymbol);
+    assertThat(referencesTo).hasSize(1);
+
+    var reference = referenceIndex.getReference(uri, new Position(4, 0));
+    assertThat(reference).isPresent();
+
+    // when - эмулируем удаление документа из контекста сервера
+    referenceIndexFiller.handleEvent(new ServerContextDocumentRemovedEvent(serverContext, uri));
+
+    // then - все ссылки из этого документа должны быть удалены
+    referencesTo = referenceIndex.getReferencesTo(methodSymbol);
+    assertThat(referencesTo).isEmpty();
+
+    reference = referenceIndex.getReference(uri, new Position(4, 0));
+    assertThat(reference).isEmpty();
+  }
+
+  @Test
+  void testHandleServerContextDocumentRemovedEvent_WithVariables() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var uri = documentContext.getUri();
+    var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
+
+    // Проверяем, что ссылки на переменные есть
+    var usage = referenceIndex.getReferencesTo(targetVariable);
+    assertThat(usage).hasSize(5);
+
+    var reference = referenceIndex.getReference(uri, new Position(25, 24));
+    assertThat(reference).isPresent();
+
+    // when - эмулируем удаление документа из контекста сервера
+    referenceIndexFiller.handleEvent(new ServerContextDocumentRemovedEvent(serverContext, uri));
+
+    // then - все ссылки на переменные из этого документа должны быть удалены
+    usage = referenceIndex.getReferencesTo(targetVariable);
+    assertThat(usage).isEmpty();
+
+    reference = referenceIndex.getReference(uri, new Position(25, 24));
+    assertThat(reference).isEmpty();
   }
 }
