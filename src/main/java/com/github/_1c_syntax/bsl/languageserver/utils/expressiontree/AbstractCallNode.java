@@ -25,6 +25,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Абстрактный узел вызова в дереве выражений.
+ * <p>
+ * Базовый класс для представления вызовов методов и функций
+ * с поддержкой аргументов.
+ */
 public abstract class AbstractCallNode extends BslExpression {
 
   private final List<BslExpression> callArguments = new ArrayList<>();

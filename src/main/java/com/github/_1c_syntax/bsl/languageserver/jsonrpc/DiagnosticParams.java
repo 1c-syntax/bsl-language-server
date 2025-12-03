@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

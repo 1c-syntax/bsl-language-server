@@ -53,7 +53,7 @@ public class ColorPresentationsAssert extends AbstractListAssert<ColorPresentati
   /**
    * Ассерт для проверки совпадения редактирования текста.
    *
-   * @param textEdit Редактирование текста (см. {@link TextEdit}.
+   * @param textEdit Редактирование текста см. {@link TextEdit}.
    * @return Ссылка на объект для текучести.
    */
   public ColorPresentationsAssert hasTextEdit(TextEdit textEdit) {
@@ -68,7 +68,7 @@ public class ColorPresentationsAssert extends AbstractListAssert<ColorPresentati
    * Ассерт для проверки совпадения метки и редактирования текста.
    *
    * @param label    Метка.
-   * @param textEdit Редактирование текста (см. {@link TextEdit}.
+   * @param textEdit Редактирование текста см. {@link TextEdit}.
    * @return Ссылка на объект для текучести
    */
   public ColorPresentationsAssert hasLabelAndTextEdit(String label, TextEdit textEdit) {

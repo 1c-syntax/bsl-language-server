@@ -22,8 +22,7 @@
 /**
  * Spring-специфичные классы для настройки внутренней инфраструктуры уровня приложения.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

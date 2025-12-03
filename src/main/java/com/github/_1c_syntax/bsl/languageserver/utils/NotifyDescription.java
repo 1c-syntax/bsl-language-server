@@ -31,6 +31,12 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+/**
+ * Утилитный класс для работы с ОписаниеОповещения (NotifyDescription).
+ * <p>
+ * Предоставляет методы для анализа конструкций ОписаниеОповещения
+ * и извлечения информации об обработчиках.
+ */
 @UtilityClass
 public class NotifyDescription {
 
@@ -40,11 +46,29 @@ public class NotifyDescription {
   private static final int MIN_PARAM_LIST_SIZE = 1;
   private static final int FULL_PARAM_LIST_SIZE = 5;
 
+  /**
+   * Индекс параметра с обработчиком.
+   */
   public static final int HANDLER_INDEX = 0;
+  /**
+   * Индекс параметра с модулем обработчика.
+   */
   public static final int HANDLER_MODULE_INDEX = 1;
+  /**
+   * Индекс параметра с обработчиком ошибки.
+   */
   public static final int HANDLER_ERROR_INDEX = 3;
+  /**
+   * Индекс параметра с модулем обработчика ошибки.
+   */
   public static final int HANDLER_ERROR_MODULE_INDEX = 4;
 
+  /**
+   * Проверить, является ли выражение созданием ОписаниеОповещения.
+   *
+   * @param newExpression Выражение создания объекта
+   * @return true, если создается ОписаниеОповещения/NotifyDescription
+   */
   public static boolean isNotifyDescription(BSLParser.NewExpressionContext newExpression) {
     var result = Optional.of(newExpression)
       .map(BSLParser.NewExpressionContext::typeName)
@@ -53,14 +77,32 @@ public class NotifyDescription {
     return result.isPresent();
   }
 
+  /**
+   * Проверить, содержит ли ОписаниеОповещения обработчик.
+   *
+   * @param callParamList Список параметров вызова
+   * @return true, если есть обработчик
+   */
   public static boolean notifyDescriptionContainsHandler(Collection<?> callParamList) {
     return callParamList.size() > MIN_PARAM_LIST_SIZE;
   }
 
+  /**
+   * Проверить, содержит ли ОписаниеОповещения обработчик ошибки.
+   *
+   * @param callParamList Список параметров вызова
+   * @return true, если есть обработчик ошибки
+   */
   public static boolean notifyDescriptionContainsErrorHandler(Collection<?> callParamList) {
     return callParamList.size() == FULL_PARAM_LIST_SIZE;
   }
 
+  /**
+   * Получить первый элемент (member) из параметра вызова.
+   *
+   * @param callParamContext Контекст параметра вызова
+   * @return Первый member, если найден
+   */
   public static Optional<BSLParser.MemberContext> getFirstMember(BSLParser.CallParamContext callParamContext) {
     return Optional.ofNullable(callParamContext.expression())
       .map(BSLParser.ExpressionContext::member)

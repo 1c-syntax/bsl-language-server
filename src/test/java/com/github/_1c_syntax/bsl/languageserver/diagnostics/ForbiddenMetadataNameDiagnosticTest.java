@@ -79,7 +79,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
 
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics).hasSize(17);
     assertThat(diagnostics, true)
       .hasMessageOnRange("Запрещено использовать имя `Справочник` для `Справочник.Справочник1`", 0, 0, 9)
       .hasMessageOnRange(

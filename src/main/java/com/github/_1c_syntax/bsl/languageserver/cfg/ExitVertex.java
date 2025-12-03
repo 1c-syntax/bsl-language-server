@@ -22,4 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 public class ExitVertex extends CfgVertex {
+  @Override
+  protected void onConnectOutgoing(ControlFlowGraph graph, CfgVertex target, CfgEdge edge) {
+    throw new FlowGraphLinkException("ExitNode can't have outgoing edges");
+  }
 }

@@ -53,9 +53,12 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
   int endCharacter;
 
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int variableNameLine;
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int variableNameStartCharacter;
+  @EqualsAndHashCode.Include
   @Getter(AccessLevel.NONE)
   int variableNameEndCharacter;
 
@@ -92,7 +95,6 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
   }
 
   @Override
-  @EqualsAndHashCode.Include
   public Range getVariableNameRange() {
     return Ranges.create(
       variableNameLine,

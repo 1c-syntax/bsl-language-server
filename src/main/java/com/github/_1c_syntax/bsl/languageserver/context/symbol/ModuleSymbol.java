@@ -42,7 +42,7 @@ import java.util.Optional;
 @Value
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
+@ToString(exclude = {"children"})
 public class ModuleSymbol implements SourceDefinedSymbol {
   /**
    * Имя символа.
@@ -52,8 +52,6 @@ public class ModuleSymbol implements SourceDefinedSymbol {
    * В остальных случаях содержит строковое представление uri ({@link DocumentContext#getUri()}.
    */
   String name;
-
-  SymbolKind symbolKind;
 
   @EqualsAndHashCode.Include
   DocumentContext owner;
@@ -66,14 +64,23 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   @EqualsAndHashCode.Include
   Range selectionRange;
 
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<SourceDefinedSymbol> parent = Optional.empty();
-
   @Builder.Default
   List<SourceDefinedSymbol> children = new ArrayList<>();
+
+  @Override
+  public SymbolKind getSymbolKind() {
+    return SymbolKind.Module;
+  }
+
+  @Override
+  public Optional<SourceDefinedSymbol> getParent() {
+    return Optional.empty();
+  }
+
+  @Override
+  public void setParent(Optional<SourceDefinedSymbol> parent) {
+    throw new UnsupportedOperationException();
+  }
 
   @Override
   public void accept(SymbolTreeVisitor visitor) {

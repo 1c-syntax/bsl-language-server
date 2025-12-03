@@ -30,12 +30,10 @@ import com.github._1c_syntax.bsl.languageserver.references.model.LocationReposit
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
@@ -51,13 +49,12 @@ import java.util.Optional;
     DiagnosticTag.ERROR
   }
 )
-
 @RequiredArgsConstructor
 public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
   private final LocationRepository locationRepository;
 
-  private static String getMethodNameByLocation(BSLParserRuleContext node, Range range) {
+  private static String getMethodNameByLocation(ParserRuleContext node, Range range) {
     return Trees.findTerminalNodeContainsPosition(node, range.getStart())
       .map(ParseTree::getText)
       .orElseThrow();
@@ -65,31 +62,31 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY){
+    if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY) {
       return;
     }
     locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
-      .filter(symbolOccurrence -> symbolOccurrence.getOccurrenceType() == OccurrenceType.REFERENCE)
-      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getSymbolKind() == SymbolKind.Method)
-      .filter(symbolOccurrence -> symbolOccurrence.getSymbol().getModuleType() == ModuleType.CommonModule)
+      .filter(symbolOccurrence -> symbolOccurrence.occurrenceType() == OccurrenceType.REFERENCE)
+      .filter(symbolOccurrence -> symbolOccurrence.symbol().symbolKind() == SymbolKind.Method)
+      .filter(symbolOccurrence -> symbolOccurrence.symbol().moduleType() == ModuleType.CommonModule)
       .map(this::getReferenceToMethodCall)
       .flatMap(Optional::stream)
       .forEach(this::fireIssue);
   }
 
   private Optional<CallData> getReferenceToMethodCall(SymbolOccurrence symbolOccurrence) {
-    final var symbol = symbolOccurrence.getSymbol();
+    final var symbol = symbolOccurrence.symbol();
     final var document = documentContext.getServerContext()
-      .getDocument(symbol.getMdoRef(), symbol.getModuleType());
+      .getDocument(symbol.mdoRef(), symbol.moduleType());
     if (document.isEmpty()) return Optional.empty();
     final var mdObject = document.get().getMdObject();
     if (mdObject.isEmpty()) return Optional.empty();
 
     // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
     final var methodSymbol = document.get()
-      .getSymbolTree().getMethodSymbol(symbol.getSymbolName());
-    if (methodSymbol.isEmpty()){
-      final var location = symbolOccurrence.getLocation();
+      .getSymbolTree().getMethodSymbol(symbol.symbolName());
+    if (methodSymbol.isEmpty()) {
+      final var location = symbolOccurrence.location();
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
       return Optional.of(
         new CallData(mdObject.get().getName(),
@@ -97,33 +94,27 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
           location.getRange(), false, false));
     }
     // вызовы приватных методов внутри самого модуля пропускаем
-    if (document.get().getUri().equals(documentContext.getUri())){
+    if (document.get().getUri().equals(documentContext.getUri())) {
       return Optional.empty();
     }
     return methodSymbol
       .filter(methodSymbol2 -> !methodSymbol2.isExport())
       .map(methodSymbol1 -> new CallData(mdObject.get().getName(),
         methodSymbol1.getName(),
-        symbolOccurrence.getLocation().getRange(), true, true));
+        symbolOccurrence.location().getRange(), true, true));
   }
 
   private void fireIssue(CallData callData) {
     final String message;
-    if (!callData.exists){
-      message = info.getMessage(callData.methodName, callData.moduleName);
+    if (!callData.exists) {
+      message = info.getMessage(callData.methodName(), callData.moduleName());
     } else {
-      message = info.getResourceString(PRIVATE_METHOD_MESSAGE, callData.methodName, callData.moduleName);
+      message = info.getResourceString(PRIVATE_METHOD_MESSAGE, callData.methodName(), callData.moduleName());
     }
-    diagnosticStorage.addDiagnostic(callData.moduleMethodRange, message);
+    diagnosticStorage.addDiagnostic(callData.moduleMethodRange(), message);
   }
 
-  @Value
-  @AllArgsConstructor
-  private static class CallData {
-    String moduleName;
-    String methodName;
-    Range moduleMethodRange;
-    boolean nonExport;
-    boolean exists;
+  private record CallData(String moduleName, String methodName, Range moduleMethodRange, boolean nonExport,
+                          boolean exists) {
   }
 }

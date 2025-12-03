@@ -27,6 +27,12 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+/**
+ * Узел дерева выражений с ошибкой разбора.
+ * <p>
+ * Представляет участок кода, который не удалось корректно разобрать
+ * в дерево выражений.
+ */
 @Value
 @NonFinal
 @EqualsAndHashCode(callSuper = true)

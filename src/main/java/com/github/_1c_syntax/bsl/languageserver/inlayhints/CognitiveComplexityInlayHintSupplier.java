@@ -46,6 +46,6 @@ public class CognitiveComplexityInlayHintSupplier extends AbstractComplexityInla
   ) {
     return documentContext
       .getCognitiveComplexityData()
-      .getMethodsComplexitySecondaryLocations();
+      .methodsComplexitySecondaryLocations();
   }
 }

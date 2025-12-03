@@ -26,7 +26,9 @@ import lombok.ToString;
 import lombok.Value;
 
 /**
- * Ветка тернарного оператора
+ * Узел тернарного оператора в дереве выражений.
+ * <p>
+ * Представляет тернарный оператор (троичное выражение): ?(условие, истина, ложь).
  */
 @Value(staticConstructor = "create")
 @EqualsAndHashCode(callSuper = true)
@@ -37,7 +39,7 @@ public class TernaryOperatorNode extends BslExpression {
   BslExpression truePart;
   BslExpression falsePart;
 
-  protected TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {
+  private TernaryOperatorNode(BslExpression condition, BslExpression truePart, BslExpression falsePart) {
     super(ExpressionNodeType.TERNARY_OP);
     this.condition = condition;
     this.truePart = truePart;

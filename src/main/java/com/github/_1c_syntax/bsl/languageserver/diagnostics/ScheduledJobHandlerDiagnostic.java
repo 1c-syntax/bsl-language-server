@@ -134,8 +134,7 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
     final var fullName = getFullName(mdCommonModule, methodName);
     scheduledJobHandlers.computeIfAbsent(fullName, k -> new ArrayList<>()).add(scheduleJob);
 
-    documentContext.getServerContext().getDocument(
-        mdCommonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
+    documentContext.getServerContext().getDocument(mdCommonModule.getMdoRef(), ModuleType.CommonModule)
       .ifPresent((DocumentContext commonModuleContext) -> {
         var method = commonModuleContext.getSymbolTree().getMethods().stream()
           .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))

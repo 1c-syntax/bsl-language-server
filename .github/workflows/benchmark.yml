@@ -22,24 +22,41 @@ on:
     - 'lombok.config'
 
 jobs:
+  check-pr-exists:
+    runs-on: ubuntu-latest
+    outputs:
+      has_pr: ${{ steps.check.outputs.has_pr }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check if PR exists for this branch
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          result=$(.github/scripts/check-pr-exists.sh "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.repository }}")
+          echo "has_pr=$result" >> $GITHUB_OUTPUT
+
   Benchmark:
+    needs: check-pr-exists
+    if: needs.check-pr-exists.outputs.has_pr != 'true'
     runs-on: self-hosted
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Setup JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: 17
-          distribution: 'temurin'
+          distribution: 'corretto'
           cache: gradle
 
       - name: Build with Gradle
         run: ./gradlew bootJar
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.7"
 
@@ -53,7 +70,7 @@ jobs:
         run: pytest .github/scripts/benchmark.py --benchmark-min-rounds=3 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose
 
       - name: Archive results in SARIF
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: "SARIF report"
           path: bsl-ls.sarif

@@ -29,6 +29,12 @@ import lombok.Setter;
 import lombok.ToString;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+/**
+ * Базовый класс для узлов дерева выражений.
+ * <p>
+ * Представляет любой узел в дереве выражений BSL:
+ * литералы, идентификаторы, операции, вызовы методов.
+ */
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)

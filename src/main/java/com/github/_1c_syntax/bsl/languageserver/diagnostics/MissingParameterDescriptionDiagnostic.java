@@ -105,7 +105,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
     var descriptions = parametersDescriptions.stream()
       .collect(
         Collectors.toMap(
-          ParameterDescription::getName,
+          ParameterDescription::name,
           Function.identity(),
           (first, second) -> first,
           CaseInsensitiveMap::new));
@@ -120,7 +120,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
       }
 
       // параметр в описании есть, но нет типа и описания типа
-      if (description.getTypes().isEmpty()) {
+      if (description.types().isEmpty()) {
         addDiagnostic(parameter, "emptyDescription");
       }
 
@@ -139,7 +139,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
 
     if (!hasMissingDescription.get()) {
       var paramDescriptionString = parametersDescriptions.stream()
-        .map(ParameterDescription::getName).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
+        .map(ParameterDescription::name).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
       var paramString = parameters.stream()
         .map(ParameterDefinition::getName).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
       // если строки не равны, значит порядок описаний не совпадает
@@ -155,7 +155,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
 
   private void addDiagnostic(MethodSymbol methodSymbol, List<ParameterDescription> parametersDescriptions) {
     var parametersString = parametersDescriptions.stream()
-      .map(ParameterDescription::getName).collect(Collectors.joining(", "));
+      .map(ParameterDescription::name).collect(Collectors.joining(", "));
     diagnosticStorage.addDiagnostic(
       methodSymbol.getSubNameRange(),
       info.getResourceString("missingInSignature", parametersString));

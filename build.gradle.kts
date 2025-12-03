@@ -1,47 +1,51 @@
-import me.qoomon.gitversioning.commons.GitRefType
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
 import java.text.SimpleDateFormat
+import org.jreleaser.model.Active.*
 
 plugins {
     `java-library`
     `maven-publish`
     jacoco
-    signing
-    id("org.cadixdev.licenser") version "0.6.1"
-    id("org.sonarqube") version "6.1.0.5360"
-    id("io.freefair.lombok") version "8.13.1"
-    id("io.freefair.javadoc-links") version "8.13.1"
-    id("io.freefair.javadoc-utf-8") version "8.13.1"
-    id("io.freefair.aspectj.post-compile-weaving") version "8.13.1"
-    id("io.freefair.maven-central.validate-poms") version "8.13.1"
+    id("cloud.rio.license") version "0.18.0"
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("com.github.ben-manes.versions") version "0.52.0"
-    id("org.springframework.boot") version "3.4.5"
+    id("io.freefair.lombok") version "9.1.0"
+    id("io.freefair.javadoc-links") version "9.1.0"
+    id("io.freefair.javadoc-utf-8") version "9.1.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.1.0"
+    // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
+    id("com.github.ben-manes.versions") version "0.53.0"
+    id("org.springframework.boot") version "3.5.7"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "5.5.0"
+    id("io.sentry.jvm.gradle") version "5.12.2"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
-    id("com.gorylenko.gradle-git-properties") version "2.5.0"
-    id("io.codearte.nexus-staging") version "0.30.0"
+    id("org.jreleaser") version "1.21.0"
+    id("org.sonarqube") version "7.1.0.6387"
     id("me.champeau.jmh") version "0.7.3"
+    id("com.gorylenko.gradle-git-properties") version "2.5.4"
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://projectlombok.org/edge-releases")
-    maven(url = "https://s01.oss.sonatype.org/content/repositories/snapshots")
+    maven("https://central.sonatype.com/repository/maven-snapshots")
 }
 
 group = "io.github.1c-syntax"
-
 gitVersioning.apply {
     refs {
-        considerTagsOnBranches = true
+        describeTagFirstParent = false
         tag("v(?<tagVersion>[0-9].*)") {
             version = "\${ref.tagVersion}\${dirty}"
         }
+
+        branch("develop") {
+            version = "\${describe.tag.version}." +
+                    "\${describe.distance}-SNAPSHOT\${dirty}"
+        }
+
         branch(".+") {
             version = "\${ref}-\${commit.short}\${dirty}"
         }
@@ -56,9 +60,7 @@ gitProperties {
     customProperty("git.build.time", buildTime())
 }
 
-val isSnapshot = gitVersioning.gitVersionDetails.refType != GitRefType.TAG
-
-val languageToolVersion = "6.5"
+val languageToolVersion = "6.7"
 
 dependencies {
 
@@ -72,44 +74,56 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
-    api("com.github.ben-manes.caffeine", "caffeine", "3.2.0")
+    api("com.github.ben-manes.caffeine", "caffeine", "3.2.3")
+    api("org.ehcache:ehcache:3.11.1")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.24.0")
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.26.0") {
+    api("io.github.1c-syntax", "bsl-parser", "0.27.0") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
-        exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
     }
-    api("io.github.1c-syntax", "utils", "0.6.2")
-    api("io.github.1c-syntax", "mdclasses", "0.15.0")
-    api("io.github.1c-syntax", "bsl-common-library", "0.8.0")
-    api("io.github.1c-syntax", "supportconf", "0.14.2")
-    api("io.github.1c-syntax", "bsl-parser-core", "0.3.0")
+    api("io.github.1c-syntax", "utils", "0.6.6")
+    api("io.github.1c-syntax", "mdclasses", "0.16.1-rc.1")
+    api("io.github.1c-syntax", "bsl-common-library", "0.9.0")
+    api("io.github.1c-syntax", "supportconf", "0.15.0")
+
+    // nullability annotations
+    api("org.jspecify", "jspecify", "1.0.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
         exclude("commons-logging", "commons-logging")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
     }
-    implementation("org.languagetool", "language-en", languageToolVersion)
-    implementation("org.languagetool", "language-ru", languageToolVersion)
+    implementation("org.languagetool", "language-en", languageToolVersion){
+        exclude("commons-logging", "commons-logging")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
+    }
+    implementation("org.languagetool", "language-ru", languageToolVersion){
+        exclude("commons-logging", "commons-logging")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
+    }
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.22.1")
+    implementation("org.aspectj", "aspectjrt", "1.9.25")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.18.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.10.1"){
+    implementation("commons-io", "commons-io", "2.20.0")
+    implementation("commons-beanutils", "commons-beanutils", "1.11.0"){
         exclude("commons-logging", "commons-logging")
     }
-    implementation("commons-codec", "commons-codec", "1.16.0")
-    implementation("org.apache.commons", "commons-lang3", "3.17.0")
-    implementation("org.apache.commons", "commons-collections4", "4.4")
-    implementation("org.apache.commons", "commons-exec", "1.4.0")
+    implementation("commons-codec", "commons-codec", "1.20.0")
+    implementation("org.apache.commons", "commons-lang3", "3.19.0")
+    implementation("org.apache.commons", "commons-collections4", "4.5.0")
+    implementation("org.apache.commons", "commons-exec", "1.5.0")
 
     // progress bar
     implementation("me.tongfei", "progressbar", "0.10.1")
@@ -117,6 +131,7 @@ dependencies {
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
     implementation("org.jgrapht", "jgrapht-core", "1.5.2")
@@ -127,12 +142,11 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.4.0-jre")
+            strictly("33.4.8-jre")
        }
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.3")
 
     // TEST
 
@@ -142,7 +156,7 @@ dependencies {
     }
 
     // test utils
-    testImplementation("org.jmockit", "jmockit", "1.49")
+    testImplementation("org.jmockit", "jmockit", "1.50")
     testImplementation("org.awaitility", "awaitility", "4.3.0")
 }
 
@@ -195,8 +209,34 @@ tasks.test {
         html.required.set(true)
     }
 
+    // Increase heap size to prevent OOM during test execution with EhCache
+    maxHeapSize = "2g"
+
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}")
+
+    // Cleanup test cache directories after tests complete
+    doLast {
+        try {
+            val tmpDir = File(System.getProperty("java.io.tmpdir"))
+            // Use walkTopDown with maxDepth to avoid loading all temp files into memory
+            tmpDir.walkTopDown()
+                .maxDepth(1)  // Only look at direct children, not subdirectories
+                .drop(1)  // Skip the root temp directory itself (first element in the sequence)
+                .filter { it.isDirectory && it.name.startsWith("bsl-ls-cache-") }
+                .forEach { cacheDir ->
+                    try {
+                        cacheDir.deleteRecursively()
+                        logger.info("Deleted test cache directory: ${cacheDir.name}")
+                    } catch (e: Exception) {
+                        logger.warn("Failed to delete test cache directory ${cacheDir.name}: ${e.message}")
+                    }
+                }
+        } catch (e: Exception) {
+            // Don't fail the build if cleanup fails
+            logger.warn("Failed to cleanup test cache directories: ${e.message}")
+        }
+    }
 }
 
 tasks.check {
@@ -204,12 +244,12 @@ tasks.check {
     mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
-tasks.checkLicenseMain {
+tasks.named("licenseMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
 
-tasks.updateLicenseMain {
+tasks.named("licenseFormatMain") {
     dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
     dependsOn(tasks.collectExternalDependenciesForSentry)
 }
@@ -264,11 +304,13 @@ tasks.javadoc {
 }
 
 license {
-    header(rootProject.file("license/HEADER.txt"))
-    newLine(false)
+    header = rootProject.file("license/HEADER.txt")
+    skipExistingHeaders = false
+    strictCheck = true
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
+    mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.json")
@@ -299,41 +341,17 @@ artifacts {
     archives(tasks["javadocJar"])
 }
 
-signing {
-    val signingInMemoryKey: String? by project      // env.ORG_GRADLE_PROJECT_signingInMemoryKey
-    val signingInMemoryPassword: String? by project // env.ORG_GRADLE_PROJECT_signingInMemoryPassword
-    if (signingInMemoryKey != null) {
-        useInMemoryPgpKeys(signingInMemoryKey, signingInMemoryPassword)
-        sign(publishing.publications)
-    }
-}
-
 publishing {
     repositories {
         maven {
-            name = "sonatype"
-            url = if (isSnapshot)
-                uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            else
-                uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-
-            val sonatypeUsername: String? by project
-            val sonatypePassword: String? by project
-
-            credentials {
-                username = sonatypeUsername // ORG_GRADLE_PROJECT_sonatypeUsername
-                password = sonatypePassword // ORG_GRADLE_PROJECT_sonatypePassword
-            }
+            name = "staging"
+            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
         }
     }
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifact(tasks["bootJar"])
-
-            if (isSnapshot && project.hasProperty("simplifyVersion")) {
-                version = findProperty("git.ref.slug") as String + "-SNAPSHOT"
-            }
 
             pom {
                 description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
@@ -384,18 +402,54 @@ publishing {
                     developerConnection.set("scm:git:git@github.com:1c-syntax/bsl-language-server.git")
                     url.set("https://github.com/1c-syntax/bsl-language-server")
                 }
+                issueManagement {
+                    system.set("GitHub Issues")
+                    url.set("https://github.com/1c-syntax/bsl-language-server/issues")
+                }
+                ciManagement {
+                    system.set("GitHub Actions")
+                    url.set("https://github.com/1c-syntax/bsl-language-server/actions")
+                }
             }
         }
     }
 }
 
-nexusStaging {
-    serverUrl = "https://s01.oss.sonatype.org/service/local/"
-    stagingProfileId = "15bd88b4d17915" // ./gradlew getStagingProfile
+jreleaser {
+    signing {
+        active = ALWAYS
+        armored = true
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                create("release-deploy") {
+                    active = RELEASE
+                    url = "https://central.sonatype.com/api/v1/publisher"
+                    stagingRepository("build/staging-deploy")
+                }
+            }
+            nexus2 {
+                create("snapshot-deploy") {
+                    active = SNAPSHOT
+                    snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
+                    applyMavenCentralRules = true
+                    snapshotSupported = true
+                    closeRepository = true
+                    releaseRepository = true
+                    stagingRepository("build/staging-deploy")
+                }
+            }
+        }
+    }
 }
 
 tasks.withType<GenerateModuleMetadata> {
     enabled = false
+}
+
+tasks.register("updateLicenses") {
+    dependsOn(tasks.licenseFormat)
 }
 
 fun buildTime(): String {

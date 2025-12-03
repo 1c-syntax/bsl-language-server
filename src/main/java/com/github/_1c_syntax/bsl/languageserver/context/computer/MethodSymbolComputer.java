@@ -35,8 +35,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -52,6 +52,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Вычислитель символов методов и функций.
+ * <p>
+ * Анализирует AST и создает символы для всех методов и функций модуля,
+ * включая информацию о параметрах, аннотациях и описаниях.
+ */
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {
@@ -231,7 +237,7 @@ public final class MethodSymbolComputer
   }
 
   private static List<ParameterDefinition> createParameters(
-    @Nullable BSLParser.ParamListContext paramList,
+    BSLParser.@Nullable ParamListContext paramList,
     Optional<MethodDescription> description
   ) {
     if (paramList == null) {
@@ -318,7 +324,7 @@ public final class MethodSymbolComputer
     return description.map(MethodDescription::getParameters)
       .stream()
       .flatMap(Collection::stream)
-      .filter(parameterDescription -> parameterDescription.getName().equalsIgnoreCase(parameterName))
+      .filter(parameterDescription -> parameterDescription.name().equalsIgnoreCase(parameterName))
       .findFirst();
 
   }
@@ -352,10 +358,10 @@ public final class MethodSymbolComputer
 
   private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
     var name = Optional.ofNullable(o.annotationParamName())
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .orElse("");
     var value = Optional.ofNullable(o.constValue())
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .map(MethodSymbolComputer::excludeTrailingQuotes)
       .orElse("");
     var optional = o.constValue() != null;

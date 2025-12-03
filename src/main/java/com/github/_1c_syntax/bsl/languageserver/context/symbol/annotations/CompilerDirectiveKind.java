@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.Getter;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -37,14 +38,11 @@ public enum CompilerDirectiveKind {
   AT_CLIENT(BSLParser.ANNOTATION_ATCLIENT_SYMBOL),
   AT_SERVER(BSLParser.ANNOTATION_ATSERVER_SYMBOL);
 
+  @Getter
   private final int tokenType;
 
   CompilerDirectiveKind(int tokenType) {
     this.tokenType = tokenType;
-  }
-
-  public int getTokenType() {
-    return tokenType;
   }
 
   public static Optional<CompilerDirectiveKind> of(int tokenType) {

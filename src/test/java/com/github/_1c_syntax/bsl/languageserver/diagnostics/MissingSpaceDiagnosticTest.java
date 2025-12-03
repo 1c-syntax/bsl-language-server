@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -32,6 +33,7 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiagnostic> {
 
@@ -234,5 +236,31 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(57, 21, 23)
       .hasRange(57, 30, 35)
       .hasSize(19);
+  }
+
+  @Test
+  void testFirstTokenWithOperator() {
+    // Regression test for IndexOutOfBoundsException: Index -1 out of bounds
+    // This happens when the first token in the document requires space checking on the left.
+    // The fix ensures we check token index bounds before accessing previous token.
+    
+    // Test various operators as the first token - should not throw IndexOutOfBoundsException
+    var documentContext1 = TestUtils.getDocumentContext("+ 5", context);
+    assertThatCode(() -> getDiagnostics(documentContext1))
+      .doesNotThrowAnyException();
+    
+    var documentContext2 = TestUtils.getDocumentContext("= 5", context);
+    assertThatCode(() -> getDiagnostics(documentContext2))
+      .doesNotThrowAnyException();
+    
+    var documentContext3 = TestUtils.getDocumentContext("* 5", context);
+    assertThatCode(() -> getDiagnostics(documentContext3))
+      .doesNotThrowAnyException();
+    
+    // Test unary operator detection with second token
+    // The isUnaryChar method should check token at index 0
+    var documentContext4 = TestUtils.getDocumentContext("(+5)", context);
+    assertThatCode(() -> getDiagnostics(documentContext4))
+      .doesNotThrowAnyException();
   }
 }

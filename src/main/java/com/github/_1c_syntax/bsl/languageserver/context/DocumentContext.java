@@ -32,9 +32,9 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
@@ -42,14 +42,11 @@ import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import jakarta.annotation.PostConstruct;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Locked;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
@@ -58,6 +55,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -78,11 +76,18 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
+/**
+ * Контекст документа - содержит полную информацию об анализируемом файле.
+ * <p>
+ * Управляет синтаксическим деревом, токенизацией, символьной таблицей,
+ * метриками сложности, диагностиками и другими аспектами анализа кода BSL.
+ * Является центральным объектом для работы с отдельным файлом модуля.
+ */
 @Component
 @Scope("prototype")
-@RequiredArgsConstructor
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+//@NullUnmarked
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
@@ -110,12 +115,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Setter(onMethod = @__({@Autowired}))
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
 
-  @Getter
-  private FileType fileType;
-  @Getter(onMethod = @__({@Locked("computeLock")}))
+  @Nullable
   private BSLTokenizer tokenizer;
+
   @Getter(onMethod = @__({@Locked("computeLock")}))
-  private SymbolTree symbolTree;
+  private SymbolTree symbolTree = SymbolTreeComputer.empty(this);
+
+  @Getter
+  private final FileType fileType;
 
   @Getter
   private boolean isComputedDataFrozen;
@@ -136,9 +143,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
-  @PostConstruct
-  void init() {
-    this.fileType = computeFileType(this.uri);
+  public DocumentContext(URI uri) {
+    this.uri = uri;
+    this.fileType = computeFileType(uri);
   }
 
   public ServerContext getServerContext() {
@@ -158,13 +165,13 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Locked("computeLock")
   public BSLParser.FileContext getAst() {
-    requireNonNull(content);
+    requireNonNull(tokenizer);
     return tokenizer.getAst();
   }
 
   @Locked("computeLock")
   public List<Token> getTokens() {
-    requireNonNull(content);
+    requireNonNull(tokenizer);
     return tokenizer.getTokens();
   }
 
@@ -217,10 +224,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
       languageTag = configuration.getLanguage().getLanguageCode();
     } else {
       var scriptVariant = mdConfiguration.getScriptVariant();
-      if (scriptVariant == ScriptVariant.ENGLISH) {
-        languageTag = "en";
-      } else if (scriptVariant == ScriptVariant.RUSSIAN) {
-        languageTag = "ru";
+      if (scriptVariant != ScriptVariant.UNKNOWN) {
+        languageTag = scriptVariant.shortName();
       } else {
         throw new IllegalArgumentException("Unknown scriptVariant " + scriptVariant);
       }
@@ -256,6 +261,16 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return getServerContext().getConfiguration().findChild(getUri());
   }
 
+  /**
+   * Возвращает строковое представление ссылки связанного с объектом объекта метаданных 1С либо строку URI для
+   * остальных случаев
+   *
+   * @return Строковое представление ссылки
+   */
+  public String getMdoRef() {
+    return MdoRefBuilder.getMdoRef(this);
+  }
+
   public List<SDBLTokenizer> getQueries() {
     return queries.getOrCompute();
   }
@@ -279,7 +294,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   protected void rebuild(String content, int version) {
-    computeLock.lock();
+    acquireLocks();
 
     try {
 
@@ -295,12 +310,16 @@ public class DocumentContext implements Comparable<DocumentContext> {
       }
 
       this.content = content;
-      tokenizer = new BSLTokenizer(content);
+      if (tokenizer != null) {
+        tokenizer.rebuild(content);
+      } else {
+        tokenizer = new BSLTokenizer(content);
+      }
       this.version = version;
       symbolTree = computeSymbolTree();
 
     } finally {
-      computeLock.unlock();
+      releaseLocks();
     }
 
   }
@@ -315,7 +334,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   protected void clearSecondaryData() {
-    computeLock.lock();
+    acquireLocks();
 
     try {
 
@@ -332,20 +351,25 @@ public class DocumentContext implements Comparable<DocumentContext> {
         diagnosticIgnoranceData.clear();
       }
     } finally {
-      computeLock.unlock();
+      releaseLocks();
     }
   }
 
+  /**
+   * Убедитесь, что локи установлены корректно перед вызовом метода.
+   */
   private void clearDependantData() {
-    computeLock.lock();
-    diagnosticsLock.lock();
+    diagnostics.clear();
+  }
 
-    try {
-      diagnostics.clear();
-    } finally {
-      diagnosticsLock.unlock();
-      computeLock.unlock();
-    }
+  private void acquireLocks() {
+    diagnosticsLock.lock();
+    computeLock.lock();
+  }
+
+  private void releaseLocks() {
+    computeLock.unlock();
+    diagnosticsLock.unlock();
   }
 
   private static FileType computeFileType(URI uri) {
@@ -421,8 +445,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
     metricsTemp.setStatements(statements);
 
-    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
-    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().getFileComplexity());
+    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().fileComplexity());
+    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().fileComplexity());
 
     return metricsTemp;
   }
@@ -441,7 +465,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   @Override
-  public int compareTo(@NonNull DocumentContext other) {
+  public int compareTo(DocumentContext other) {
     return Comparator.comparing(DocumentContext::getUri)
       .thenComparing(DocumentContext::getVersion)
       .compare(this, other);

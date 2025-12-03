@@ -27,6 +27,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 
+/**
+ * Узел вызова конструктора в дереве выражений.
+ * <p>
+ * Представляет вызов конструктора типа: Новый Структура(), Новый("Структура").
+ */
 @Value
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)

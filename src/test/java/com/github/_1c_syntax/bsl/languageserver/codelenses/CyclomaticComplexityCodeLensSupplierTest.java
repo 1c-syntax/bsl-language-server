@@ -67,7 +67,7 @@ class CyclomaticComplexityCodeLensSupplierTest {
     );
 
     // then
-    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCyclomaticComplexityData().getMethodsComplexity();
+    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCyclomaticComplexityData().methodsComplexity();
 
     MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
     MethodSymbol secondMethod = documentContext.getSymbolTree().getMethods().get(1);

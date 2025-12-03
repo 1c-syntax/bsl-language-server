@@ -21,6 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+/**
+ * Область применения диагностики.
+ * <p>
+ * Определяет в каких типах файлов работает диагностика:
+ * только BSL, только OneScript или в обоих.
+ */
 public enum DiagnosticScope {
-  ALL, OS, BSL
+  /** Применяется ко всем типам файлов (BSL и OneScript) */
+  ALL,
+  /** Применяется только к OneScript файлам */
+  OS,
+  /** Применяется только к BSL файлам */
+  BSL
 }
