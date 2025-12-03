@@ -116,6 +116,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода removeDocument.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* removeDocument(..))")
+  public void isRemoveDocumentCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода update.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* update(..))")

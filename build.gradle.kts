@@ -448,6 +448,10 @@ tasks.withType<GenerateModuleMetadata> {
     enabled = false
 }
 
+tasks.register("updateLicenses") {
+    dependsOn(tasks.licenseFormat)
+}
+
 fun buildTime(): String {
     val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
     formatter.timeZone = TimeZone.getTimeZone("UTC")

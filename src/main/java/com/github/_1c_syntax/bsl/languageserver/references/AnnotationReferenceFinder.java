@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationParamSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
@@ -74,10 +75,15 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     DocumentContext documentContext = event.getSource();
     var uri = documentContext.getUri();
 
-    registeredAnnotations.values()
-      .removeIf(annotationSymbol -> annotationSymbol.getOwner().getUri().equals(uri));
-
+    removeAnnotationsRegisteredForUri(uri);
     findAndRegisterAnnotation(documentContext);
+  }
+
+  @EventListener
+  public void handleServerContextDocumentRemovedEvent(ServerContextDocumentRemovedEvent event) {
+    var uri = event.getUri();
+
+    removeAnnotationsRegisteredForUri(uri);
   }
 
   private void findAndRegisterAnnotation(DocumentContext documentContext) {
@@ -96,6 +102,11 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .flatMap(AnnotationReferenceFinder::findAnnotation)
       .map(methodSymbolAnnotationPair -> AnnotationSymbol.from(getAnnotationName(methodSymbolAnnotationPair.getRight()), methodSymbolAnnotationPair.getLeft()))
       .ifPresent(annotationSymbol -> registeredAnnotations.put(annotationSymbol.getName(), annotationSymbol));
+  }
+
+  private void removeAnnotationsRegisteredForUri(URI uri) {
+    registeredAnnotations.values()
+      .removeIf(annotationSymbol -> annotationSymbol.getOwner().getUri().equals(uri));
   }
 
   @Override

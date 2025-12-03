@@ -1980,6 +1980,12 @@
                     "default": 3,
                     "type": "integer",
                     "title": "Minimum length for checked words"
+                },
+                "caseInsensitive": {
+                    "description": "Excluded words are case-insensitive",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Excluded words are case-insensitive"
                 }
             },
             "$id": "#/definitions/Typo"
@@ -2117,6 +2123,16 @@
             ],
             "title": "Use of system information",
             "$id": "#/definitions/UseSystemInformation"
+        },
+        "UselessTernaryOperator": {
+            "description": "Useless ternary operator",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Useless ternary operator",
+            "$id": "#/definitions/UselessTernaryOperator"
         },
         "UsingCancelParameter": {
             "description": "Using parameter \"Cancel\"",

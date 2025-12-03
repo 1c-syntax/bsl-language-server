@@ -22,8 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
+import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -39,6 +41,7 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -58,6 +61,7 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final LanguageServerConfiguration configuration;
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
+  private final ServerContext serverContext;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
 
@@ -85,7 +89,20 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
-    // no-op
+    CompletableFuture.runAsync(
+      () -> {
+        for (var fileEvent : params.getChanges()) {
+          var uri = Absolute.uri(fileEvent.getUri());
+
+          switch (fileEvent.getType()) {
+            case Deleted -> handleDeletedFileEvent(uri);
+            case Created -> handleCreatedFileEvent(uri);
+            case Changed -> handleChangedFileEvent(uri);
+          }
+        }
+      },
+      executorService
+    );
   }
 
   @Override
@@ -96,5 +113,71 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> commandProvider.executeCommand(arguments),
       executorService
     );
+  }
+
+  /**
+   * Обрабатывает событие удаления файла из файловой системы.
+   * <p>
+   * Если файл был открыт в редакторе, сначала закрывает его и очищает вторичные данные.
+   * Затем полностью удаляет документ из контекста сервера, включая все связанные метаданные.
+   *
+   * @param uri URI удаленного файла
+   */
+  private void handleDeletedFileEvent(URI uri) {
+    var documentContext = serverContext.getDocument(uri);
+    if (documentContext == null) {
+      return;
+    }
+
+    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    if (isDocumentOpened) {
+      serverContext.closeDocument(documentContext);
+    }
+    serverContext.removeDocument(uri);
+  }
+
+  /**
+   * Обрабатывает событие создания нового файла в файловой системе.
+   * <p>
+   * Добавляет файл в контекст сервера. Если файл не открыт в редакторе,
+   * выполняет его парсинг и анализ, после чего сразу очищает вторичные данные
+   * для экономии памяти. Для открытых файлов обработка пропускается,
+   * т.к. их содержимое управляется через события textDocument/didOpen.
+   *
+   * @param uri URI созданного файла
+   */
+  private void handleCreatedFileEvent(URI uri) {
+    var documentContext = serverContext.addDocument(uri);
+
+    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    if (!isDocumentOpened) {
+      serverContext.rebuildDocument(documentContext);
+      serverContext.tryClearDocument(documentContext);
+    }
+  }
+
+  /**
+   * Обрабатывает событие изменения файла в файловой системе.
+   * <p>
+   * Если файл уже есть в контексте сервера и не открыт в редакторе,
+   * перечитывает его содержимое с диска, выполняет повторный парсинг и анализ,
+   * после чего очищает вторичные данные. Для открытых файлов обработка пропускается,
+   * т.к. их актуальное содержимое управляется через события textDocument/didChange.
+   * <p>
+   * Если файл отсутствует в контексте, добавляет его и обрабатывает аналогично созданному.
+   *
+   * @param uri URI измененного файла
+   */
+  private void handleChangedFileEvent(URI uri) {
+    var documentContext = serverContext.getDocument(uri);
+    if (documentContext == null) {
+      documentContext = serverContext.addDocument(uri);
+    }
+
+    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    if (!isDocumentOpened) {
+      serverContext.rebuildDocument(documentContext);
+      serverContext.tryClearDocument(documentContext);
+    }
   }
 }
