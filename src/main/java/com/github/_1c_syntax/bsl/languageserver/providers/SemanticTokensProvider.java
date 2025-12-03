@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
@@ -208,7 +209,8 @@ public class SemanticTokensProvider {
     return new SemanticTokens(data);
   }
 
-  private void addMultilineDescriptions(DocumentContext documentContext, List<Range> descriptionRanges, List<TokenEntry> entries) {
+  private void addMultilineDescriptions(
+    DocumentContext documentContext, List<Range> descriptionRanges, List<TokenEntry> entries) {
     if (!multilineTokenSupport) {
       return;
     }
@@ -220,7 +222,13 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void addVariableSymbols(DocumentContext documentContext, SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
+  private void addVariableSymbols(
+    DocumentContext documentContext,
+    SymbolTree symbolTree,
+    List<TokenEntry> entries,
+    List<Range> descriptionRanges,
+    BitSet documentationLines
+  ) {
     for (var variableSymbol : symbolTree.getVariables()) {
       var nameRange = variableSymbol.getVariableNameRange();
       if (!Ranges.isEmpty(nameRange)) {
@@ -244,7 +252,24 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void processVariableDescription(List<Range> descriptionRanges, BitSet documentationLines, VariableDescription description) {
+  private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
+    for (var method : symbolTree.getMethods()) {
+      var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
+      addRange(entries, method.getSubNameRange(), semanticTokenType);
+      for (ParameterDefinition parameter : method.getParameters()) {
+        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
+      }
+      method.getDescription().ifPresent((MethodDescription description) ->
+        processVariableDescription(descriptionRanges, documentationLines, description)
+      );
+    }
+  }
+
+  private void processVariableDescription(
+    List<Range> descriptionRanges,
+    BitSet documentationLines,
+    SourceDefinedSymbolDescription description
+  ) {
     var range = description.getRange();
     if (Ranges.isEmpty(range)) {
       return;
@@ -253,25 +278,6 @@ public class SemanticTokensProvider {
     descriptionRanges.add(range);
     if (!multilineTokenSupport) {
       markLines(documentationLines, range);
-    }
-  }
-
-  private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
-    for (var method : symbolTree.getMethods()) {
-      var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
-      addRange(entries, method.getSubNameRange(), semanticTokenType);
-      for (ParameterDefinition parameter : method.getParameters()) {
-        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
-      }
-      method.getDescription()
-        .map(MethodDescription::getRange)
-        .filter(r -> !Ranges.isEmpty(r))
-        .ifPresent(r -> {
-          descriptionRanges.add(r);
-          if (!multilineTokenSupport) {
-            markLines(documentationLines, r);
-          }
-        });
     }
   }
 
