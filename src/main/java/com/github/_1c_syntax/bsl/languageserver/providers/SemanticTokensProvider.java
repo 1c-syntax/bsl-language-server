@@ -74,6 +74,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Провайдер для предоставления семантических токенов.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/semanticTokens/full}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">Semantic Tokens specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
@@ -138,6 +145,13 @@ public class SemanticTokensProvider {
   @Setter(AccessLevel.PROTECTED)
   private boolean multilineTokenSupport;
 
+  /**
+   * Обработчик события инициализации языкового сервера.
+   * <p>
+   * Проверяет возможности клиента и определяет, поддерживаются ли многострочные токены.
+   *
+   * @param event Событие инициализации сервера
+   */
   @EventListener
   public void onClientCapabilitiesChanged(LanguageServerInitializeRequestReceivedEvent event) {
     multilineTokenSupport = Optional.of(event)
@@ -149,6 +163,13 @@ public class SemanticTokensProvider {
       .orElse(false);
   }
 
+  /**
+   * Получить семантические токены для всего документа.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Семантические токены в дельта-кодированном формате
+   */
   public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
     List<TokenEntry> entries = new ArrayList<>();
 
