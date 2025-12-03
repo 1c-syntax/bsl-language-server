@@ -25,9 +25,16 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Расширения протокола LSP для BSL Language Server.
+ * <p>
+ * Содержит дополнительные методы JSON-RPC, не входящие в стандартную спецификацию LSP.
+ */
 public interface ProtocolExtension {
 
   /**
+   * Запрос на вычисление диагностик для документа (расширение протокола).
+   *
    * @param params Параметры запроса.
    * @return Список рассчитанных диагностик.
    */

@@ -33,6 +33,11 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Поставщик быстрых исправлений для диагностик.
+ * <p>
+ * Связывает коды диагностик с классами, предоставляющими quick fix для этих диагностик.
+ */
 @Component
 @RequiredArgsConstructor
 public class QuickFixSupplier {
@@ -44,6 +49,13 @@ public class QuickFixSupplier {
   // Нужно как-то связать, что квик-фикс исправляет диагностику с таким-то кодом.
   // Возможно через аннотацию.
 
+  /**
+   * Получить класс провайдера быстрых исправлений для указанного кода диагностики.
+   *
+   * @param diagnosticCode Код диагностики
+   * @param <T> Тип кода диагностики (строка или число)
+   * @return Класс провайдера быстрых исправлений, если диагностика поддерживает quick fix
+   */
   @SuppressWarnings("unchecked")
   public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
     T diagnosticCode
@@ -56,6 +68,12 @@ public class QuickFixSupplier {
       .map(aClass -> (Class<? extends QuickFixProvider>) aClass);
   }
 
+  /**
+   * Получить экземпляр провайдера быстрых исправлений.
+   *
+   * @param quickFixProviderClass Класс провайдера быстрых исправлений
+   * @return Экземпляр провайдера быстрых исправлений
+   */
   @SuppressWarnings("unchecked")
   public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;

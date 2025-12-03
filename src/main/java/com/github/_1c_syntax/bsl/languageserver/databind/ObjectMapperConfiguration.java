@@ -35,6 +35,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+/**
+ * Конфигурация ObjectMapper для сериализации/десериализации.
+ * <p>
+ * Настраивает Jackson ObjectMapper для работы с code lenses и командами,
+ * регистрируя необходимые типы для полиморфной сериализации.
+ */
 @Configuration
 public class ObjectMapperConfiguration  {
 

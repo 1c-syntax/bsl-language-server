@@ -22,8 +22,7 @@
 /**
  * Формирование всплывающего окна.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

@@ -36,6 +36,13 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Провайдер для отображения всплывающих подсказок при наведении курсора.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/hover}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover">Hover Request specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public final class HoverProvider {
@@ -43,6 +50,13 @@ public final class HoverProvider {
   private final ReferenceResolver referenceResolver;
   private final Map<SymbolKind, MarkupContentBuilder<Symbol>> markupContentBuilders;
 
+  /**
+   * Получить информацию для отображения при наведении курсора на символ.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса hover
+   * @return Информация для отображения во всплывающей подсказке
+   */
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
     Position position = params.getPosition();
 

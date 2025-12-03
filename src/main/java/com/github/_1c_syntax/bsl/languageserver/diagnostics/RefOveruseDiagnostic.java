@@ -30,13 +30,12 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 
@@ -116,7 +115,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private Stream<SDBLParser.ColumnContext> checkQuery(SDBLParser.QueryContext ctx) {
     var columns = Trees.findAllTopLevelDescendantNodes(ctx, RULE_COLUMNS).stream()
       .filter(parserRuleContext -> parserRuleContext.getRuleIndex() == SDBLParser.RULE_column)
-      .filter(parserRuleContext -> Trees.getRootParent((BSLParserRuleContext) parserRuleContext, EXCLUDED_COLUMNS_ROOT)
+      .filter(parserRuleContext -> Trees.getRootParent(parserRuleContext, EXCLUDED_COLUMNS_ROOT)
         .getRuleIndex() == SDBLParser.RULE_query)
       .map(SDBLParser.ColumnContext.class::cast)
       .collect(Collectors.toList());
@@ -264,7 +263,6 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private Stream<SDBLParser.ColumnContext> getOverused(List<SDBLParser.ColumnContext> columnsCollection) {
     return columnsCollection.stream()
-      .map(SDBLParser.ColumnContext.class::cast)
       .filter(column -> column.getChildCount() >= COUNT_OF_TABLE_DOT_REF)
       .filter(this::isOveruse);
   }

@@ -37,6 +37,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Символ региона (области кода).
+ * <p>
+ * Представляет область кода, ограниченную директивами #Область/#Region и #КонецОбласти/#EndRegion,
+ * с поддержкой вложенных регионов и методов.
+ */
 @Value
 @Builder(access = lombok.AccessLevel.PUBLIC)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

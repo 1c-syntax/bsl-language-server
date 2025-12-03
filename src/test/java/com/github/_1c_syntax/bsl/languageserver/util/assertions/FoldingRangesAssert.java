@@ -46,7 +46,7 @@ public class FoldingRangesAssert extends AbstractListAssert<FoldingRangesAssert,
   /**
    * Ассерт для проверки совпадения диапазона и сообщения
    *
-   * @param kind   Тип области сворачивания (см. {@link org.eclipse.lsp4j.FoldingRangeKind}
+   * @param kind   Тип области сворачивания см. {@link org.eclipse.lsp4j.FoldingRangeKind}
    * @param startLine Первая строка диапазона
    * @param endLine   Последняя строка диапазона
    * @return Ссылка на объект для текучести

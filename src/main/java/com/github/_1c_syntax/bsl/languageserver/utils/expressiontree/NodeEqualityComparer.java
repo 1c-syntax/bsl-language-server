@@ -22,8 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 /**
- * Интерфейс стратегии сравнения узлов деревьев выражений
+ * Интерфейс стратегии сравнения узлов деревьев выражений.
+ * <p>
+ * Определяет способ сравнения двух узлов дерева выражений на равенство.
  */
 public interface NodeEqualityComparer {
+  /**
+   * Сравнить два узла дерева выражений на равенство.
+   *
+   * @param first Первый узел
+   * @param second Второй узел
+   * @return {@code true} если узлы равны согласно стратегии сравнения
+   */
   boolean areEqual(BslExpression first, BslExpression second);
 }

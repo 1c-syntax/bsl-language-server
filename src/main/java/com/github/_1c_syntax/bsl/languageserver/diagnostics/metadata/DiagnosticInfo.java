@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -37,11 +38,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.function.Predicate.not;
+
+/**
+ * Метаинформация о диагностике.
+ * <p>
+ * Содержит полную информацию о диагностике: метаданные из аннотации,
+ * описание на разных языках, параметры конфигурации, правила активации.
+ * Используется для настройки, фильтрации и отображения диагностик.
+ */
 @Slf4j
 public class DiagnosticInfo {
 
@@ -58,6 +69,9 @@ public class DiagnosticInfo {
   private final DiagnosticMetadata diagnosticMetadata;
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
+  private Optional<DiagnosticMetadata> metadataOverride;
+  private org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
+
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
     LanguageServerConfiguration configuration,
@@ -70,6 +84,15 @@ public class DiagnosticInfo {
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
+    
+    // Get metadata override from configuration if exists
+    metadataOverride = computeMetadataOverride();
+    lspSeverity = computeLSPSeverity();
+  }
+
+  public void refresh() {
+    metadataOverride = computeMetadataOverride();
+    lspSeverity = computeLSPSeverity();
   }
 
   public DiagnosticCode getCode() {
@@ -134,46 +157,96 @@ public class DiagnosticInfo {
   }
 
   public DiagnosticType getType() {
-    return diagnosticMetadata.type();
+    return metadataOverride
+      .map(DiagnosticMetadata::type)
+      .orElseGet(diagnosticMetadata::type);
   }
 
   public DiagnosticSeverity getSeverity() {
-    return diagnosticMetadata.severity();
+    return metadataOverride
+      .map(DiagnosticMetadata::severity)
+      .orElseGet(diagnosticMetadata::severity);
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
-    var type = getType();
-    if (type == DiagnosticType.CODE_SMELL) {
-      return severityToLSPSeverityMap.get(getSeverity());
-    } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
-      return org.eclipse.lsp4j.DiagnosticSeverity.Warning;
-    } else {
-      return org.eclipse.lsp4j.DiagnosticSeverity.Error;
+    return lspSeverity;
+  }
+  
+  private org.eclipse.lsp4j.DiagnosticSeverity computeLSPSeverity() {
+    org.eclipse.lsp4j.DiagnosticSeverity result = null;
+    
+    // First check if lspSeverity is explicitly set in metadata override from config
+    var lspSeverityFromOverride = metadataOverride
+      .map(DiagnosticMetadata::lspSeverity)
+      .filter(not(String::isEmpty));
+    
+    if (lspSeverityFromOverride.isPresent()) {
+      result = parseLspSeverity(lspSeverityFromOverride.get());
     }
+    
+    // If not set in config, check if lspSeverity is explicitly set in annotation
+    if (result == null) {
+      var lspSeverityFromAnnotation = diagnosticMetadata.lspSeverity();
+      if (lspSeverityFromAnnotation != null && !lspSeverityFromAnnotation.isEmpty()) {
+        result = parseLspSeverity(lspSeverityFromAnnotation);
+      }
+    }
+    
+    // If still null, calculate based on type and severity
+    if (result == null) {
+      var type = getType();
+      if (type == DiagnosticType.CODE_SMELL) {
+        result = severityToLSPSeverityMap.get(getSeverity());
+      } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
+        result = org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+      } else {
+        result = org.eclipse.lsp4j.DiagnosticSeverity.Error;
+      }
+    }
+    
+    // Apply minimum severity override if configured
+    var overrideMinimum = configuration.getDiagnosticsOptions().getOverrideMinimumLSPDiagnosticLevel();
+    if (result != null && overrideMinimum != null && result.getValue() > overrideMinimum.getValue()) {
+      result = overrideMinimum;
+    }
+    
+    return result;
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
-    return diagnosticMetadata.compatibilityMode();
+    return metadataOverride
+      .map(DiagnosticMetadata::compatibilityMode)
+      .orElseGet(diagnosticMetadata::compatibilityMode);
   }
 
   public DiagnosticScope getScope() {
-    return diagnosticMetadata.scope();
+    return metadataOverride
+      .map(DiagnosticMetadata::scope)
+      .orElseGet(diagnosticMetadata::scope);
   }
 
   public ModuleType[] getModules() {
-    return diagnosticMetadata.modules();
+    return metadataOverride
+      .map(DiagnosticMetadata::modules)
+      .orElseGet(diagnosticMetadata::modules);
   }
 
   public int getMinutesToFix() {
-    return diagnosticMetadata.minutesToFix();
+    return metadataOverride
+      .map(DiagnosticMetadata::minutesToFix)
+      .orElseGet(diagnosticMetadata::minutesToFix);
   }
 
   public boolean isActivatedByDefault() {
-    return diagnosticMetadata.activatedByDefault();
+    return metadataOverride
+      .map(DiagnosticMetadata::activatedByDefault)
+      .orElseGet(diagnosticMetadata::activatedByDefault);
   }
 
   public List<DiagnosticTag> getTags() {
-    return new ArrayList<>(Arrays.asList(diagnosticMetadata.tags()));
+    return metadataOverride
+      .map(metadata -> new ArrayList<>(Arrays.asList(metadata.tags())))
+      .orElseGet(() -> new ArrayList<>(Arrays.asList(diagnosticMetadata.tags())));
   }
 
   public List<org.eclipse.lsp4j.DiagnosticTag> getLSPTags() {
@@ -192,11 +265,15 @@ public class DiagnosticInfo {
   }
 
   public boolean canLocateOnProject() {
-    return diagnosticMetadata.canLocateOnProject();
+    return metadataOverride
+      .map(DiagnosticMetadata::canLocateOnProject)
+      .orElseGet(diagnosticMetadata::canLocateOnProject);
   }
 
   public double getExtraMinForComplexity() {
-    return diagnosticMetadata.extraMinForComplexity();
+    return metadataOverride
+      .map(DiagnosticMetadata::extraMinForComplexity)
+      .orElseGet(diagnosticMetadata::extraMinForComplexity);
   }
 
   public Map<String, Object> getDefaultConfiguration() {
@@ -211,6 +288,29 @@ public class DiagnosticInfo {
     }
 
     return new DiagnosticCode(stringInterner.intern(simpleName));
+  }
+
+  private Optional<DiagnosticMetadata> computeMetadataOverride() {
+    var diagnosticsOptions = configuration.getDiagnosticsOptions();
+    var metadataFromConfig = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
+
+    return Optional.ofNullable(metadataFromConfig);
+  }
+
+  private static org.eclipse.lsp4j.@Nullable DiagnosticSeverity parseLspSeverity(String severityString) {
+    if (severityString == null || severityString.isEmpty()) {
+      return null;
+    }
+
+    try {
+      // DiagnosticSeverity constants are named with capital first letter: Error, Warning, Information, Hint
+      var normalized = severityString.substring(0, 1).toUpperCase(Locale.ROOT)
+        + severityString.substring(1).toLowerCase(Locale.ROOT);
+      return org.eclipse.lsp4j.DiagnosticSeverity.valueOf(normalized);
+    } catch (IllegalArgumentException e) {
+      LOGGER.warn("Unknown LSP severity value: {}, using null", severityString);
+      return null;
+    }
   }
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {

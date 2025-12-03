@@ -48,6 +48,13 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Провайдер для поиска символов в рабочей области.
+ * <p>
+ * Обрабатывает запросы {@code workspace/symbol}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_symbol">Workspace Symbols Request specification</a>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor

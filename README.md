@@ -10,6 +10,7 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=coverage)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Benchmark](https://1c-syntax.github.io/bsl-language-server/dev/bench/benchmark.svg)](https://1c-syntax.github.io/bsl-language-server/dev/bench/index.html)
 [![telegram](https://img.shields.io/badge/telegram-chat-green.svg)](https://t.me/bsl_language_server)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/1c-syntax/bsl-language-server)
 
 Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
 

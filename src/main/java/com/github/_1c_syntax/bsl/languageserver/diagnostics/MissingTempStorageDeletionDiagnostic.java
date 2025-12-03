@@ -33,7 +33,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser.FileCodeBlockContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.StatementContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.SubContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;

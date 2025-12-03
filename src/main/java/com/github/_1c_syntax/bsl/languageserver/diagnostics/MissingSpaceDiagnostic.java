@@ -237,6 +237,9 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   }
 
   private static boolean noSpaceLeft(List<Token> tokens, Token t) {
+    if (t.getTokenIndex() == 0) {
+      return false;
+    }
     var previousToken = tokens.get(t.getTokenIndex() - 1);
     return previousToken.getType() != BSLParser.LPAREN
       && !StringUtils.isWhitespace(previousToken.getText());
@@ -274,7 +277,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     // Унарные + и -
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
     int currentIndex = t.getTokenIndex() - 1;
-    while (currentIndex > 0) {
+    while (currentIndex >= 0) {
 
       if (!StringUtils.isWhitespace(tokens.get(currentIndex).getText())) {
         return setUnary.contains(tokens.get(currentIndex).getText());

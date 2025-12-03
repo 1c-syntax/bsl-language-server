@@ -37,7 +37,10 @@ import java.util.Objects;
 
 
 /**
- * Посетитель AST, который находит выражения и преобразует их в Expression Tree
+ * Построитель дерева выражений из AST.
+ * <p>
+ * Посетитель AST, который находит выражения BSL и преобразует их в Expression Tree
+ * для упрощенного анализа структуры выражений в диагностиках.
  */
 public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 
@@ -175,9 +178,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
       var token = terminalNode.getSymbol().getType();
 
       // ручная диспетчеризация
-      switch (token) {
-        case BSLLexer.LPAREN -> visitParenthesis(ctx.expression(), ctx.modifier());
-        default -> operands.push(new ErrorExpressionNode(dispatchChild));
+      if (token == BSLLexer.LPAREN) {
+        visitParenthesis(ctx.expression(), ctx.modifier());
+      } else {
+        operands.push(new ErrorExpressionNode(dispatchChild));
       }
     } else {
       dispatchChild.accept(this);

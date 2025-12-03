@@ -23,6 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import org.eclipse.lsp4j.Range;
 
+/**
+ * Интерфейс описания символов, определенных в исходном коде.
+ * <p>
+ * Предоставляет доступ к описанию символа из комментариев,
+ * включая информацию об устаревании, назначении и примерах использования.
+ */
 public interface SourceDefinedSymbolDescription {
   /**
    * Содержит полное описание (весь текст).

@@ -21,262 +21,168 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.types.MultiName;
+
+/**
+ * Класс-справочник ключевых слов языка BSL.
+ * <p>
+ * Содержит константы с мультиязычными названиями ключевых слов
+ * (русский и английский варианты) для использования в анализаторах.
+ */
 public final class Keywords {
-  public static final String THEN_RU = "Тогда";
-  public static final String THEN_UP_RU = "ТОГДА";
-  public static final String THEN_EN = "Then";
-  public static final String THEN_UP_EN = "THEN";
-  public static final String IF_RU = "Если";
-  public static final String IF_UP_RU = "ЕСЛИ";
-  public static final String IF_EN = "If";
-  public static final String IF_UP_EN = "IF";
-  public static final String ELSE_RU = "Иначе";
-  public static final String ELSE_UP_RU = "ИНАЧЕ";
-  public static final String ELSE_EN = "Else";
-  public static final String ELSE_UP_EN = "ELSE";
-  public static final String ELSIF_RU = "ИначеЕсли";
-  public static final String ELSIF_UP_RU = "ИНАЧЕЕСЛИ";
-  public static final String ELSIF_EN = "ElsIf";
-  public static final String ELSIF_UP_EN = "ELSIF";
-  public static final String ENDIF_RU = "КонецЕсли";
-  public static final String ENDIF_UP_RU = "КОНЕЦЕСЛИ";
-  public static final String ENDIF_EN = "EndIf";
-  public static final String ENDIF_UP_EN = "ENDIF";
+  public static final MultiName THEN = MultiName.create("Then", "Тогда");
+  public static final MultiName THEN_UP = MultiName.create("THEN", "ТОГДА");
+  public static final MultiName IF = MultiName.create("If", "Если");
+  public static final MultiName IF_UP = MultiName.create("IF", "ЕСЛИ");
+  public static final MultiName ELSE = MultiName.create("Else", "Иначе");
+  public static final MultiName ELSE_UP = MultiName.create("ELSE", "ИНАЧЕ");
+  public static final MultiName ELSIF = MultiName.create("ElsIf", "ИначеЕсли");
+  public static final MultiName ELSIF_UP = MultiName.create("ELSIF", "ИНАЧЕЕСЛИ");
+  public static final MultiName ENDIF = MultiName.create("EndIf", "КонецЕсли");
+  public static final MultiName ENDIF_UP = MultiName.create("ENDIF", "КОНЕЦЕСЛИ");
 
-  public static final String FOR_RU = "Для";
-  public static final String FOR_UP_RU = "ДЛЯ";
-  public static final String FOR_EN = "For";
-  public static final String FOR_UP_EN = "FOR";
-  public static final String EACH_RU = "Каждого";
-  public static final String EACH_UP_RU = "КАЖДОГО";
-  public static final String EACH_LO_RU = "каждого";
-  public static final String EACH_EN = "Each";
-  public static final String EACH_UP_EN = "EACH";
-  public static final String EACH_LO_EN = "each";
-  public static final String IN_RU = "Из";
-  public static final String IN_UP_RU = "ИЗ";
-  public static final String IN_EN = "In";
-  public static final String IN_UP_EN = "IN";
-  public static final String DO_RU = "Цикл";
-  public static final String DO_UP_RU = "ЦИКЛ";
-  public static final String DO_EN = "Do";
-  public static final String DO_UP_EN = "DO";
-  public static final String WHILE_RU = "Пока";
-  public static final String WHILE_UP_RU = "ПОКА";
-  public static final String WHILE_EN = "While";
-  public static final String WHILE_UP_EN = "WHILE";
-  public static final String END_DO_RU = "КонецЦикла";
-  public static final String END_DO_UP_RU = "КОНЕЦЦИКЛА";
-  public static final String END_DO_EN = "EndDo";
-  public static final String END_DO_UP_EN = "ENDDO";
-  public static final String TO_RU = "По";
-  public static final String TO_UP_RU = "ПО";
-  public static final String TO_EN = "To";
-  public static final String TO_UP_EN = "TO";
+  public static final MultiName FOR = MultiName.create("For", "Для");
+  public static final MultiName FOR_UP = MultiName.create("FOR", "ДЛЯ");
+  public static final MultiName EACH = MultiName.create("Each", "Каждого");
+  public static final MultiName EACH_UP = MultiName.create("EACH", "КАЖДОГО");
+  public static final MultiName EACH_LO = MultiName.create("each", "каждого");
+  public static final MultiName IN = MultiName.create("In", "Из");
+  public static final MultiName IN_UP = MultiName.create("IN", "ИЗ");
+  public static final MultiName DO = MultiName.create("Do", "Цикл");
+  public static final MultiName DO_UP = MultiName.create("DO", "ЦИКЛ");
+  public static final MultiName WHILE = MultiName.create("While", "Пока");
+  public static final MultiName WHILE_UP = MultiName.create("WHILE", "ПОКА");
+  public static final MultiName END_DO = MultiName.create("EndDo", "КонецЦикла");
+  public static final MultiName END_DO_UP = MultiName.create("ENDDO", "КОНЕЦЦИКЛА");
+  public static final MultiName TO = MultiName.create("To", "По");
+  public static final MultiName TO_UP = MultiName.create("TO", "ПО");
 
-  public static final String BREAK_RU = "Прервать";
-  public static final String BREAK_UP_RU = "ПРЕРВАТЬ";
-  public static final String BREAK_EN = "Break";
-  public static final String BREAK_UP_EN = "BREAK";
-  public static final String CONTINUE_RU = "Продолжить";
-  public static final String CONTINUE_UP_RU = "ПРОДОЛЖИТЬ";
-  public static final String CONTINUE_EN = "Continue";
-  public static final String CONTINUE_UP_EN = "CONTINUE";
-  public static final String RETURN_RU = "Возврат";
-  public static final String RETURN_UP_RU = "ВОЗВРАТ";
-  public static final String RETURN_EN = "Return";
-  public static final String RETURN_UP_EN = "RETURN";
-  public static final String GOTO_RU = "Перейти";
-  public static final String GOTO_UP_RU = "ПЕРЕЙТИ";
-  public static final String GOTO_EN = "Goto";
-  public static final String GOTO_UP_EN = "GOTO";
+  public static final MultiName BREAK = MultiName.create("Break", "Прервать");
+  public static final MultiName BREAK_UP = MultiName.create("BREAK", "ПРЕРВАТЬ");
+  public static final MultiName CONTINUE = MultiName.create("Continue", "Продолжить");
+  public static final MultiName CONTINUE_UP = MultiName.create("CONTINUE", "ПРОДОЛЖИТЬ");
+  public static final MultiName RETURN = MultiName.create("Return", "Возврат");
+  public static final MultiName RETURN_UP = MultiName.create("RETURN", "ВОЗВРАТ");
+  public static final MultiName GOTO = MultiName.create("Goto", "Перейти");
+  public static final MultiName GOTO_UP = MultiName.create("GOTO", "ПЕРЕЙТИ");
 
-  public static final String PROCEDURE_RU = "Процедура";
-  public static final String PROCEDURE_UP_RU = "ПРОЦЕДУРА";
-  public static final String PROCEDURE_EN = "Procedure";
-  public static final String PROCEDURE_UP_EN = "PROCEDURE";
-  public static final String END_PROCEDURE_RU = "КонецПроцедуры";
-  public static final String END_PROCEDURE_UP_RU = "КОНЕЦПРОЦЕДУРЫ";
-  public static final String END_PROCEDURE_EN = "EndProcedure";
-  public static final String END_PROCEDURE_UP_EN = "ENDPROCEDURE";
-  public static final String FUNCTION_RU = "Функция";
-  public static final String FUNCTION_UP_RU = "ФУНКЦИЯ";
-  public static final String FUNCTION_EN = "Function";
-  public static final String FUNCTION_UP_EN = "FUNCTION";
-  public static final String END_FUNCTION_RU = "КонецФункции";
-  public static final String END_FUNCTION_UP_RU = "КОНЕЦФУНКЦИИ";
-  public static final String END_FUNCTION_EN = "EndFunction";
-  public static final String END_FUNCTION_UP_EN = "ENDFUNCTION";
+  public static final MultiName PROCEDURE = MultiName.create("Procedure", "Процедура");
+  public static final MultiName PROCEDURE_UP = MultiName.create("PROCEDURE", "ПРОЦЕДУРА");
+  public static final MultiName END_PROCEDURE = MultiName.create("EndProcedure", "КонецПроцедуры");
+  public static final MultiName END_PROCEDURE_UP = MultiName.create("ENDPROCEDURE", "КОНЕЦПРОЦЕДУРЫ");
+  public static final MultiName FUNCTION = MultiName.create("Function", "Функция");
+  public static final MultiName FUNCTION_UP = MultiName.create("FUNCTION", "ФУНКЦИЯ");
+  public static final MultiName END_FUNCTION = MultiName.create("EndFunction", "КонецФункции");
+  public static final MultiName END_FUNCTION_UP = MultiName.create("ENDFUNCTION", "КОНЕЦФУНКЦИИ");
 
-  public static final String VAL_RU = "Знач";
-  public static final String VAL_UP_RU = "ЗНАЧ";
-  public static final String VAL_EN = "Val";
-  public static final String VAL_UP_EN = "VAL";
-  public static final String EXPORT_RU = "Экспорт";
-  public static final String EXPORT_UP_RU = "ЭКСПОРТ";
-  public static final String EXPORT_EN = "Export";
-  public static final String EXPORT_UP_EN = "EXPORT";
-  public static final String VAR_RU = "Перем";
-  public static final String VAR_UP_RU = "ПЕРЕМ";
-  public static final String VAR_EN = "Var";
-  public static final String VAR_UP_EN = "VAR";
+  public static final MultiName VAL = MultiName.create("Val", "Знач");
+  public static final MultiName VAL_UP = MultiName.create("VAL", "ЗНАЧ");
+  public static final MultiName EXPORT = MultiName.create("Export", "Экспорт");
+  public static final MultiName EXPORT_UP = MultiName.create("EXPORT", "ЭКСПОРТ");
+  public static final MultiName VAR = MultiName.create("Var", "Перем");
+  public static final MultiName VAR_UP = MultiName.create("VAR", "ПЕРЕМ");
 
-  public static final String TRY_RU = "Попытка";
-  public static final String TRY_UP_RU = "ПОПЫТКА";
-  public static final String TRY_EN = "Try";
-  public static final String TRY_UP_EN = "TRY";
-  public static final String EXCEPT_RU = "Исключение";
-  public static final String EXCEPT_UP_RU = "ИСКЛЮЧЕНИЕ";
-  public static final String EXCEPT_EN = "Except";
-  public static final String EXCEPT_UP_EN = "EXCEPT";
-  public static final String RAISE_RU = "ВызватьИсключение";
-  public static final String RAISE_UP_RU = "ВЫЗВАТЬИСКЛЮЧЕНИЕ";
-  public static final String RAISE_EN = "Raise";
-  public static final String RAISE_UP_EN = "RAISE";
-  public static final String END_TRY_RU = "КонецПопытки";
-  public static final String END_TRY_UP_RU = "КОНЕЦПОПЫТКИ";
-  public static final String END_TRY_EN = "EndTry";
-  public static final String END_TRY_UP_EN = "ENDTRY";
+  public static final MultiName TRY = MultiName.create("Try", "Попытка");
+  public static final MultiName TRY_UP = MultiName.create("TRY", "ПОПЫТКА");
+  public static final MultiName EXCEPT = MultiName.create("Except", "Исключение");
+  public static final MultiName EXCEPT_UP = MultiName.create("EXCEPT", "ИСКЛЮЧЕНИЕ");
+  public static final MultiName RAISE = MultiName.create("Raise", "ВызватьИсключение");
+  public static final MultiName RAISE_UP = MultiName.create("RAISE", "ВЫЗВАТЬИСКЛЮЧЕНИЕ");
+  public static final MultiName END_TRY = MultiName.create("EndTry", "КонецПопытки");
+  public static final MultiName END_TRY_UP = MultiName.create("ENDTRY", "КОНЕЦПОПЫТКИ");
 
-  public static final String REGION_RU = "Область";
-  public static final String REGION_UP_RU = "ОБЛАСТЬ";
-  public static final String REGION_EN = "Region";
-  public static final String REGION_UP_EN = "REGION";
-  public static final String ENDREGION_RU = "КонецОбласти";
-  public static final String ENDREGION_UP_RU = "КОНЕЦОБЛАСТИ";
-  public static final String ENDREGION_EN = "EndRegion";
-  public static final String ENDREGION_UP_EN = "ENDREGION";
+  public static final MultiName REGION = MultiName.create("Region", "Область");
+  public static final MultiName REGION_UP = MultiName.create("REGION", "ОБЛАСТЬ");
+  public static final MultiName ENDREGION = MultiName.create("EndRegion", "КонецОбласти");
+  public static final MultiName ENDREGION_UP = MultiName.create("ENDREGION", "КОНЕЦОБЛАСТИ");
 
-  public static final String EXECUTE_RU = "Выполнить";
-  public static final String EXECUTE_UP_RU = "ВЫПОЛНИТЬ";
-  public static final String EXECUTE_EN = "Execute";
-  public static final String EXECUTE_UP_EN = "EXECUTE";
-  public static final String EVAL_RU = "Вычислить";
-  public static final String EVAL_EN = "Eval";
-  public static final String ADD_HANDLER_RU = "ДобавитьОбработчик";
-  public static final String ADD_HANDLER_UP_RU = "ДОБАВИТЬОБРАБОТЧИК";
-  public static final String ADD_HANDLER_EN = "AddHandler";
-  public static final String ADD_HANDLER_UP_EN = "ADDHANDLER";
-  public static final String REMOVE_HANDLER_RU = "УдалитьОбработчик";
-  public static final String REMOVE_HANDLER_UP_RU = "УДАЛИТЬОБРАБОТЧИК";
-  public static final String REMOVE_HANDLER_EN = "RemoveHandler";
-  public static final String REMOVE_HANDLER_UP_EN = "REMOVEHANDLER";
-  public static final String NEW_RU = "Новый";
-  public static final String NEW_UP_RU = "НОВЫЙ";
-  public static final String NEW_EN = "New";
-  public static final String NEW_UP_EN = "NEW";
+  public static final MultiName EXECUTE = MultiName.create("Execute", "Выполнить");
+  public static final MultiName EXECUTE_UP = MultiName.create("EXECUTE", "ВЫПОЛНИТЬ");
+  public static final MultiName EVAL = MultiName.create("Eval", "Вычислить");
+  public static final MultiName ADD_HANDLER = MultiName.create("AddHandler", "ДобавитьОбработчик");
+  public static final MultiName ADD_HANDLER_UP = MultiName.create("ADDHANDLER", "ДОБАВИТЬОБРАБОТЧИК");
+  public static final MultiName REMOVE_HANDLER = MultiName.create("RemoveHandler", "УдалитьОбработчик");
+  public static final MultiName REMOVE_HANDLER_UP = MultiName.create("REMOVEHANDLER", "УДАЛИТЬОБРАБОТЧИК");
+  public static final MultiName NEW = MultiName.create("New", "Новый");
+  public static final MultiName NEW_UP = MultiName.create("NEW", "НОВЫЙ");
 
-  public static final String TRUE_RU = "Истина";
-  public static final String TRUE_UP_RU = "ИСТИНА";
-  public static final String TRUE_EN = "True";
-  public static final String TRUE_UP_EN = "TRUE";
-  public static final String FALSE_RU = "Ложь";
-  public static final String FALSE_UP_RU = "ЛОЖЬ";
-  public static final String FALSE_EN = "False";
-  public static final String FALSE_UP_EN = "FALSE";
-  public static final String AND_RU = "И";
-  public static final String AND_EN = "And";
-  public static final String AND_UP_EN = "AND";
-  public static final String OR_RU = "Или";
-  public static final String OR_UP_RU = "ИЛИ";
-  public static final String OR_EN = "Or";
-  public static final String OR_UP_EN = "OR";
-  public static final String NOT_RU = "Не";
-  public static final String NOT_UP_RU = "НЕ";
-  public static final String NOT_EN = "Not";
-  public static final String NOT_UP_EN = "NOT";
-  public static final String UNDEFINED_RU = "Неопределено";
-  public static final String UNDEFINED_UP_RU = "НЕОПРЕДЕЛЕНО";
-  public static final String UNDEFINED_EN = "Undefined";
-  public static final String UNDEFINED_UP_EN = "UNDEFINED";
+  public static final MultiName TRUE = MultiName.create("True", "Истина");
+  public static final MultiName TRUE_UP = MultiName.create("TRUE", "ИСТИНА");
+  public static final MultiName FALSE = MultiName.create("False", "Ложь");
+  public static final MultiName FALSE_UP = MultiName.create("FALSE", "ЛОЖЬ");
+  public static final MultiName AND = MultiName.create("And", "И");
+  public static final MultiName AND_UP = MultiName.create("AND", "И");
+  public static final MultiName OR = MultiName.create("Or", "Или");
+  public static final MultiName OR_UP = MultiName.create("OR", "ИЛИ");
+  public static final MultiName NOT = MultiName.create("Not", "Не");
+  public static final MultiName NOT_UP = MultiName.create("NOT", "НЕ");
+  public static final MultiName UNDEFINED = MultiName.create("Undefined", "Неопределено");
+  public static final MultiName UNDEFINED_UP = MultiName.create("UNDEFINED", "НЕОПРЕДЕЛЕНО");
 
-  public static final String SERVER_RU = "Сервер";
-  public static final String SERVER_UP_RU = "СЕРВЕР";
-  public static final String SERVER_EN = "Server";
-  public static final String SERVER_UP_EN = "SERVER";
-  public static final String CLIENT_RU = "Клиент";
-  public static final String CLIENT_UP_RU = "КЛИЕНТ";
-  public static final String CLIENT_EN = "Client";
-  public static final String CLIENT_UP_EN = "CLIENT";
-  public static final String MOBILE_APP_CLIENT_RU = "МобильноеПриложениеКлиент";
-  public static final String MOBILE_APP_CLIENT_UP_RU = "МОБИЛЬНОЕПРИЛОЖЕНИЕКЛИЕНТ";
-  public static final String MOBILE_APP_CLIENT_EN = "MobileAppClient";
-  public static final String MOBILE_APP_CLIENT_UP_EN = "MOBILEAPPCLIENT";
-  public static final String MOBILE_APP_SERVER_RU = "МобильноеПриложениеСервер";
-  public static final String MOBILE_APP_SERVER_UP_RU = "МОБИЛЬНОЕПРИЛОЖЕНИЕСЕРВЕР";
-  public static final String MOBILE_APP_SERVER_EN = "MobileAppServer";
-  public static final String MOBILE_APP_SERVER_UP_EN = "MOBILEAPPSERVER";
-  public static final String MOBILE_CLIENT_RU = "МобильныйКлиент";
-  public static final String MOBILE_CLIENT_UP_RU = "МОБИЛЬНЫЙКЛИЕНТ";
-  public static final String MOBILE_CLIENT_EN = "MobileClient";
-  public static final String MOBILE_CLIENT_UP_EN = "MOBILECLIENT";
-  public static final String THICK_CLIENT_ORDINARY_APPLICATION_RU = "ТолстыйКлиентОбычноеПриложение";
-  public static final String THICK_CLIENT_ORDINARY_APPLICATION_UP_RU = "ТОЛСТЫЙКЛИЕНТОБЫЧНОЕПРИЛОЖЕНИЕ";
-  public static final String THICK_CLIENT_ORDINARY_APPLICATION_EN = "ThickClientOrdinaryApplication";
-  public static final String THICK_CLIENT_ORDINARY_APPLICATION_UP_EN = "THICKCLIENTORDINARYAPPLICATION";
-  public static final String THICK_CLIENT_MANAGED_APPLICATION_RU = "ТолстыйКлиентУправляемоеПриложение";
-  public static final String THICK_CLIENT_MANAGED_APPLICATION_UP_RU = "ТОЛСТЫЙКЛИЕНТУПРАВЛЯЕМОЕПРИЛОЖЕНИЕ";
-  public static final String THICK_CLIENT_MANAGED_APPLICATION_EN = "ThickClientManagedApplication";
-  public static final String THICK_CLIENT_MANAGED_APPLICATION_UP_EN = "THICKCLIENTMANAGEDAPPLICATION";
-  public static final String EXTERNAL_CONNECTION_RU = "ВнешнееСоединение";
-  public static final String EXTERNAL_CONNECTION_UP_RU = "ВНЕШНЕЕСОЕДИНЕНИЕ";
-  public static final String EXTERNAL_CONNECTION_EN = "ExternalConnection";
-  public static final String EXTERNAL_CONNECTION_UP_EN = "EXTERNALCONNECTION";
-  public static final String THIN_CLIENT_RU = "ТонкийКлиент";
-  public static final String THIN_CLIENT_UP_RU = "ТОНКИЙКЛИЕНТ";
-  public static final String THIN_CLIENT_EN = "ThinClient";
-  public static final String THIN_CLIENT_UP_EN = "THINCLIENT";
-  public static final String WEB_CLIENT_RU = "ВебКлиент";
-  public static final String WEB_CLIENT_UP_RU = "ВЕБКЛИЕНТ";
-  public static final String WEB_CLIENT_EN = "WebClient";
-  public static final String WEB_CLIENT_UP_EN = "WEBCLIENT";
+  public static final MultiName SERVER = MultiName.create("Server", "Сервер");
+  public static final MultiName SERVER_UP = MultiName.create("SERVER", "СЕРВЕР");
+  public static final MultiName CLIENT = MultiName.create("Client", "Клиент");
+  public static final MultiName CLIENT_UP = MultiName.create("CLIENT", "КЛИЕНТ");
+  public static final MultiName MOBILE_APP_CLIENT =
+    MultiName.create("MobileAppClient", "МобильноеПриложениеКлиент");
+  public static final MultiName MOBILE_APP_CLIENT_UP =
+    MultiName.create("MOBILEAPPCLIENT", "МОБИЛЬНОЕПРИЛОЖЕНИЕКЛИЕНТ");
+  public static final MultiName MOBILE_APP_SERVER =
+    MultiName.create("MobileAppServer", "МобильноеПриложениеСервер");
+  public static final MultiName MOBILE_APP_SERVER_UP =
+    MultiName.create("MOBILEAPPSERVER", "МОБИЛЬНОЕПРИЛОЖЕНИЕСЕРВЕР");
+  public static final MultiName MOBILE_CLIENT = MultiName.create("MobileClient", "МобильныйКлиент");
+  public static final MultiName MOBILE_CLIENT_UP = MultiName.create("MOBILECLIENT", "МОБИЛЬНЫЙКЛИЕНТ");
+  public static final MultiName THICK_CLIENT_ORDINARY_APPLICATION =
+    MultiName.create("ThickClientOrdinaryApplication", "ТолстыйКлиентОбычноеПриложение");
+  public static final MultiName THICK_CLIENT_ORDINARY_APPLICATION_UP =
+    MultiName.create("THICKCLIENTORDINARYAPPLICATION", "ТОЛСТЫЙКЛИЕНТОБЫЧНОЕПРИЛОЖЕНИЕ");
+  public static final MultiName THICK_CLIENT_MANAGED_APPLICATION =
+    MultiName.create("ThickClientManagedApplication", "ТолстыйКлиентУправляемоеПриложение");
+  public static final MultiName THICK_CLIENT_MANAGED_APPLICATION_UP =
+    MultiName.create("THICKCLIENTMANAGEDAPPLICATION", "ТОЛСТЫЙКЛИЕНТУПРАВЛЯЕМОЕПРИЛОЖЕНИЕ");
+  public static final MultiName EXTERNAL_CONNECTION =
+    MultiName.create("ExternalConnection", "ВнешнееСоединение");
+  public static final MultiName EXTERNAL_CONNECTION_UP =
+    MultiName.create("EXTERNALCONNECTION", "ВНЕШНЕЕСОЕДИНЕНИЕ");
+  public static final MultiName THIN_CLIENT = MultiName.create("ThinClient", "ТонкийКлиент");
+  public static final MultiName THIN_CLIENT_UP = MultiName.create("THINCLIENT", "ТОНКИЙКЛИЕНТ");
+  public static final MultiName WEB_CLIENT = MultiName.create("WebClient", "ВебКлиент");
+  public static final MultiName WEB_CLIENT_UP = MultiName.create("WEBCLIENT", "ВЕБКЛИЕНТ");
 
-  public static final String AT_CLIENT_RU = "НаКлиенте";
-  public static final String AT_CLIENT_UP_RU = "НАКЛИЕНТЕ";
-  public static final String AT_CLIENT_EN = "AtClient";
-  public static final String AT_CLIENT_UP_EN = "ATCLIENT";
-  public static final String AT_SERVER_RU = "НаСервере";
-  public static final String AT_SERVER_UP_RU = "НАСЕРВЕРЕ";
-  public static final String AT_SERVER_EN = "AtServer";
-  public static final String AT_SERVER_UP_EN = "ATSERVER";
-  public static final String AT_SERVER_NO_CONTEXT_RU = "НаСервереБезКонтекста";
-  public static final String AT_SERVER_NO_CONTEXT_UP_RU = "НАСЕРВЕРЕБЕЗКОНТЕКСТА";
-  public static final String AT_SERVER_NO_CONTEXT_EN = "AtServerNoContext";
-  public static final String AT_SERVER_NO_CONTEXT_UP_EN = "ATSERVERNOCONTEXT";
-  public static final String AT_CLIENT_AT_SERVER_NO_CONTEXT_RU = "НаКлиентеНаСервереБезКонтекста";
-  public static final String AT_CLIENT_AT_SERVER_NO_CONTEXT_UP_RU = "НАКЛИЕНТЕНАСЕРВЕРЕБЕЗКОНТЕКСТА";
-  public static final String AT_CLIENT_AT_SERVER_NO_CONTEXT_EN = "AtClientAtServerNoContext";
-  public static final String AT_CLIENT_AT_SERVER_NO_CONTEXT_UP_EN = "ATCLIENTATSERVERNOCONTEXT";
-  public static final String AT_CLIENT_AT_SERVER_RU = "НаКлиентеНаСервере";
-  public static final String AT_CLIENT_AT_SERVER_UP_RU = "НАКЛИЕНТЕНАСЕРВЕРЕ";
-  public static final String AT_CLIENT_AT_SERVER_EN = "AtClientAtServer";
-  public static final String AT_CLIENT_AT_SERVER_UP_EN = "ATCLIENTATSERVER";
+  public static final MultiName AT_CLIENT = MultiName.create("AtClient", "НаКлиенте");
+  public static final MultiName AT_CLIENT_UP = MultiName.create("ATCLIENT", "НАКЛИЕНТЕ");
+  public static final MultiName AT_SERVER = MultiName.create("AtServer", "НаСервере");
+  public static final MultiName AT_SERVER_UP = MultiName.create("ATSERVER", "НАСЕРВЕРЕ");
+  public static final MultiName AT_SERVER_NO_CONTEXT =
+    MultiName.create("AtServerNoContext", "НаСервереБезКонтекста");
+  public static final MultiName AT_SERVER_NO_CONTEXT_UP =
+    MultiName.create("ATSERVERNOCONTEXT", "НАСЕРВЕРЕБЕЗКОНТЕКСТА");
+  public static final MultiName AT_CLIENT_AT_SERVER_NO_CONTEXT =
+    MultiName.create("AtClientAtServerNoContext", "НаКлиентеНаСервереБезКонтекста");
+  public static final MultiName AT_CLIENT_AT_SERVER_NO_CONTEXT_UP =
+    MultiName.create("ATCLIENTATSERVERNOCONTEXT", "НАКЛИЕНТЕНАСЕРВЕРЕБЕЗКОНТЕКСТА");
+  public static final MultiName AT_CLIENT_AT_SERVER =
+    MultiName.create("AtClientAtServer", "НаКлиентеНаСервере");
+  public static final MultiName AT_CLIENT_AT_SERVER_UP =
+    MultiName.create("ATCLIENTATSERVER", "НАКЛИЕНТЕНАСЕРВЕРЕ");
 
-  public static final String PUBLIC_REGION_RU = "ПрограммныйИнтерфейс";
-  public static final String PUBLIC_REGION_EN = "Public";
-  public static final String INTERNAL_REGION_RU = "СлужебныйПрограммныйИнтерфейс";
-  public static final String INTERNAL_REGION_EN = "Internal";
-  public static final String PRIVATE_REGION_RU = "СлужебныеПроцедурыИФункции";
-  public static final String PRIVATE_REGION_EN = "Private";
-  public static final String EVENT_HANDLERS_REGION_RU = "ОбработчикиСобытий";
-  public static final String EVENT_HANDLERS_REGION_EN = "EventHandlers";
-  public static final String FORM_EVENT_HANDLERS_REGION_RU = "ОбработчикиСобытийФормы";
-  public static final String FORM_EVENT_HANDLERS_REGION_EN = "FormEventHandlers";
-  public static final String FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU = "ОбработчикиСобытийЭлементовШапкиФормы";
-  public static final String FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN = "FormHeaderItemsEventHandlers";
-  public static final String FORM_COMMANDS_EVENT_HANDLERS_REGION_RU = "ОбработчикиКомандФормы";
-  public static final String FORM_COMMANDS_EVENT_HANDLERS_REGION_EN = "FormCommandsEventHandlers";
-  public static final String VARIABLES_REGION_RU = "ОписаниеПеременных";
-  public static final String VARIABLES_REGION_EN = "Variables";
-  public static final String INITIALIZE_REGION_RU = "Инициализация";
-  public static final String INITIALIZE_REGION_EN = "Initialize";
-  public static final String FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU =
-    "ОбработчикиСобытийЭлементовТаблицыФормы";
-  public static final String FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN = "FormTableItemsEventHandlers";
-  public static final String ASYNC_EN = "Async";
-  public static final String ASYNC_RU = "Асинх";
-  public static final String AWAIT_EN = "Await";
-  public static final String AWAIT_RU = "Ждать";
+  public static final MultiName PUBLIC_REGION = MultiName.create("Public", "ПрограммныйИнтерфейс");
+  public static final MultiName INTERNAL_REGION = MultiName.create("Internal", "СлужебныйПрограммныйИнтерфейс");
+  public static final MultiName PRIVATE_REGION = MultiName.create("Private", "СлужебныеПроцедурыИФункции");
+  public static final MultiName EVENT_HANDLERS_REGION = MultiName.create("EventHandlers", "ОбработчикиСобытий");
+  public static final MultiName FORM_EVENT_HANDLERS_REGION =
+    MultiName.create("FormEventHandlers", "ОбработчикиСобытийФормы");
+  public static final MultiName FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION =
+    MultiName.create("FormHeaderItemsEventHandlers", "ОбработчикиСобытийЭлементовШапкиФормы");
+  public static final MultiName FORM_COMMANDS_EVENT_HANDLERS_REGION =
+    MultiName.create("FormCommandsEventHandlers", "ОбработчикиКомандФормы");
+  public static final MultiName VARIABLES_REGION = MultiName.create("Variables", "ОписаниеПеременных");
+  public static final MultiName INITIALIZE_REGION = MultiName.create("Initialize", "Инициализация");
+  public static final MultiName FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START =
+    MultiName.create("FormTableItemsEventHandlers", "ОбработчикиСобытийЭлементовТаблицыФормы");
+  public static final MultiName ASYNC = MultiName.create("Async", "Асинх");
+  public static final MultiName AWAIT = MultiName.create("Await", "Ждать");
 
   private Keywords() {
     // static utils

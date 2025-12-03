@@ -22,7 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 /**
- * Обходчик дерева выражений
+ * Базовый класс для обхода дерева выражений.
+ * <p>
+ * Реализует паттерн Visitor для обхода узлов дерева выражений BSL.
+ * Наследники могут переопределять методы visit* для обработки конкретных типов узлов.
  */
 public class ExpressionTreeVisitor {
 

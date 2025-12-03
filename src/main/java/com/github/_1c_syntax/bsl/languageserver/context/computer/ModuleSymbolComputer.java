@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -61,7 +60,6 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
     return ModuleSymbol.builder()
       .name(getName(documentContext))
-      .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
       .selectionRange(firstRange)
@@ -69,7 +67,7 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
   }
 
   private static String getName(DocumentContext documentContext) {
-    String name = MdoRefBuilder.getMdoRef(documentContext);
+    var name = documentContext.getMdoRef();
     var moduleType = documentContext.getModuleType();
     if (MODULE_TYPES_TO_APPEND_NAME.contains(moduleType)) {
       name += "." + moduleType.name();

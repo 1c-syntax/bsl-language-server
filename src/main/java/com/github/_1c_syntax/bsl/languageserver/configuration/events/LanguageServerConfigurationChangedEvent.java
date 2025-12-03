@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration.events;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.springframework.context.ApplicationEvent;
 
+import java.io.Serial;
+
 /**
  * Описание события изменения конфигурации.
  * <p>
@@ -31,6 +33,7 @@ import org.springframework.context.ApplicationEvent;
  */
 public class LanguageServerConfigurationChangedEvent extends ApplicationEvent {
 
+  @Serial
   private static final long serialVersionUID = 649143503434640953L;
 
   public LanguageServerConfigurationChangedEvent(LanguageServerConfiguration configuration) {

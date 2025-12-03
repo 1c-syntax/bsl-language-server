@@ -37,6 +37,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Вычислитель символов областей (регионов).
+ * <p>
+ * Анализирует директивы #Область/#Region и #КонецОбласти/#EndRegion
+ * для построения иерархии областей кода.
+ */
 public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<RegionSymbol>> {

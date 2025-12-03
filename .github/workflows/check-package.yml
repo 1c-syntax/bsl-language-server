@@ -31,13 +31,14 @@ jobs:
 
         steps:
             - name: Checkout source
-              uses: actions/checkout@v4
-
-            - name: Set up JDK
-              uses: actions/setup-java@v4
+              uses: actions/checkout@v6
               with:
-                java-version: 23
-                distribution: 'temurin'
+                fetch-depth: 0
+            - name: Set up JDK
+              uses: actions/setup-java@v5
+              with:
+                java-version: 25
+                distribution: 'zulu'
                 cache: gradle
 
             - name: Build bootJar with Gradle
@@ -45,6 +46,9 @@ jobs:
 
             - name: Build jpackage application image
               run: python .github/scripts/build-jpackage.py ${{ matrix.prefix }} ${{ matrix.app-image }}
+
+            - name: Verify archive size
+              run: python .github/scripts/verify-archive-size.py bsl-language-server_${{ matrix.prefix }}.zip
 
 
                   

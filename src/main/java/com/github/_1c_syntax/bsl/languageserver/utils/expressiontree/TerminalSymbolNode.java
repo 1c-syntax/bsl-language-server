@@ -26,7 +26,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
- * Терминальный узел дерева выражений
+ * Терминальный узел дерева выражений.
+ * <p>
+ * Представляет литералы (константы) и идентификаторы (имена переменных, методов):
+ * числа, строки, булевы значения, Неопределено, имена переменных.
  */
 public class TerminalSymbolNode extends BslExpression {
   private TerminalSymbolNode(ExpressionNodeType type, ParseTree representingAst) {

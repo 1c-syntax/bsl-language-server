@@ -22,8 +22,7 @@
 /**
  * Пакет содержит настройки {@link com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider}
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.configuration.inlayhints;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

@@ -32,7 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -51,6 +51,12 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Вычислитель символов переменных.
+ * <p>
+ * Анализирует AST и создает символы для всех переменных в модуле:
+ * параметров, локальных переменных, переменных уровня модуля.
+ */
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;
@@ -209,7 +215,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubContext ctx) {
-      BSLParserRuleContext subNameNode;
+      ParserRuleContext subNameNode;
       if (Trees.nodeContainsErrors(ctx)) {
         return module;
       } else if (ctx.function() != null) {
@@ -257,7 +263,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     );
   }
 
-  private Optional<VariableDescription> createDescription(BSLParserRuleContext ctx) {
+  private Optional<VariableDescription> createDescription(ParserRuleContext ctx) {
     List<Token> tokens = documentContext.getTokens();
     List<Token> comments = new ArrayList<>();
 

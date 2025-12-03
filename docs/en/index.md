@@ -54,30 +54,32 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
 ## Supported protocol operations
 
 ??? workspace
-    | Operation                                                     | Support                                                    | Commentary                                                  |
-    | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-    | [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
-    | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | with restrictions see [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
-    | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
-    | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-    | [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-    | [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit) |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
-    | [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles) |   <img src="./assets/images/cross.svg" alt="no" width="20">  |                                                              |
+    | Operation   | Support  | Comment  |
+    | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+    | [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | with restrictions see [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
+    | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) |  <img src="./assets/images/checkmark.svg" alt="yes" width="20">   |                                                              |
+    | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+    | [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+    | [diagnostic/refresh](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_diagnostic_refresh) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | sent on configuration change |
+    | [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit) |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles) |   <img src="./assets/images/cross.svg" alt="no" width="20">  |                                                              |
 
 ??? "Text Synchronization"
-| Opertaion                                                                                                                                            | Supported                                                      | Comment                                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [didOpen](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didOpen) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [didChange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didChange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | textDocumentSyncKind = Full                                  |                  |
-| [didClose](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didClose) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [didSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didSave) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [willSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSave) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [willSaveWaitUntil](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSaveWaitUntil) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | Operation                                                                                                                                            | Supported                                                      | Comment                                                                                |
+    | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+    | [didOpen](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didOpen) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+    | [didChange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didChange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | textDocumentSyncKind = Incremental                                  |                  |
+    | [didClose](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didClose) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+    | [didSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didSave) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
+    | [willSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSave) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [willSaveWaitUntil](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSaveWaitUntil) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
 
 ??? textDocument
     | Operation                                                     | Support                                                    | Commentary                                                  | Is configured? |
     | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------- |
     | [publishDiagnostics](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | tagSupport = true<br />versionSupport = true<br />[diagnostics](./diagnostics/index.md) | yes               |
+    | [diagnostic](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_diagnostic) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | interFileDependencies = true<br />workspaceDiagnostics = false | no               |
     | [completion](https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/diagnostics/index.md) | <img src="./assets/images/cross.svg" alt="no" width="20">    | resolveProvider = false                                      |                  |
     | [completionItem/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#completionItem_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | contentFormat = MarkupContent                                |                  |
@@ -257,14 +259,6 @@ Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-serv
 You are awesome!
 
 Thanks to companies supporting open source projects, and especially to those who supported us:
-
----
-
-[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)  
-
-[YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling `Java` and `.NET` applications. YourKit has offered an open source license [YourKit Java Profiler](https://www.yourkit.com) for `BSL Language Server` to improve its performance.
-
-With `YourKit Java Profiler` we profile and improve project performance.
 
 ---
 

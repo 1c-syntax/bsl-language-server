@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import com.github._1c_syntax.bsl.parser.Tokenizer;
+import org.antlr.v4.runtime.Tokenizer;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;

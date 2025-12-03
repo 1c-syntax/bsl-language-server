@@ -416,6 +416,9 @@
                 "SemicolonPresence": {
                     "$ref": "parameters-schema.json#/definitions/SemicolonPresence"
                 },
+                "ServerCallsInFormEvents": {
+                    "$ref": "parameters-schema.json#/definitions/ServerCallsInFormEvents"
+                },
                 "ServerSideExportFormMethod": {
                     "$ref": "parameters-schema.json#/definitions/ServerSideExportFormMethod"
                 },
@@ -490,6 +493,9 @@
                 },
                 "UseSystemInformation": {
                     "$ref": "parameters-schema.json#/definitions/UseSystemInformation"
+                },
+                "UselessTernaryOperator": {
+                    "$ref": "parameters-schema.json#/definitions/UselessTernaryOperator"
                 },
                 "UsingCancelParameter": {
                     "$ref": "parameters-schema.json#/definitions/UsingCancelParameter"
@@ -665,7 +671,7 @@
                     "description": "\u0420\u0443\u0441\u0441\u043a\u0438\u0439 (russian)"
                 }
             ],
-            "title": "Language of messages, resources and all communications between BLS LS and user.",
+            "title": "Language of messages, resources and all communications between BSL LS and user.",
             "default": "ru"
         },
         "codeLens": {
@@ -891,6 +897,103 @@
                             "description": "Don't analyze project on start. (default)."
                         }
                     ]
+                },
+                "overrideMinimumLSPDiagnosticLevel": {
+                    "$id": "#/properties/overrideMinimumLSPDiagnosticLevel",
+                    "type": "string",
+                    "title": "Override minimum LSP diagnostic severity level. If diagnostic severity is lower than specified, it will be raised to the specified level.",
+                    "oneOf": [
+                        {
+                            "const": "Error",
+                            "description": "Error"
+                        },
+                        {
+                            "const": "Warning",
+                            "description": "Warning"
+                        },
+                        {
+                            "const": "Information",
+                            "description": "Information"
+                        },
+                        {
+                            "const": "Hint",
+                            "description": "Hint"
+                        }
+                    ]
+                },
+                "metadata": {
+                    "$id": "#/properties/metadata",
+                    "type": "object",
+                    "title": "Diagnostic metadata overrides. Key is diagnostic code, value is object with metadata properties to override.",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "ERROR",
+                                    "CODE_SMELL",
+                                    "VULNERABILITY",
+                                    "SECURITY_HOTSPOT"
+                                ]
+                            },
+                            "severity": {
+                                "type": "string",
+                                "enum": [
+                                    "INFO",
+                                    "MINOR",
+                                    "MAJOR",
+                                    "CRITICAL",
+                                    "BLOCKER"
+                                ]
+                            },
+                            "scope": {
+                                "type": "string",
+                                "enum": [
+                                    "ALL",
+                                    "BSL",
+                                    "OS"
+                                ]
+                            },
+                            "modules": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "minutesToFix": {
+                                "type": "integer"
+                            },
+                            "activatedByDefault": {
+                                "type": "boolean"
+                            },
+                            "compatibilityMode": {
+                                "type": "string"
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "canLocateOnProject": {
+                                "type": "boolean"
+                            },
+                            "extraMinForComplexity": {
+                                "type": "number"
+                            },
+                            "lspSeverity": {
+                                "type": "string",
+                                "enum": [
+                                    "Error",
+                                    "Warning",
+                                    "Information",
+                                    "Hint"
+                                ],
+                                "description": "LSP severity level (Error, Warning, Information, Hint). If not specified, calculated automatically based on type and severity."
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -938,6 +1041,31 @@
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/inlayHintParameters"
+                }
+            }
+        },
+        "capabilities": {
+            "$id": "#/properties/capabilities",
+            "type": "object",
+            "title": "LSP capabilities configuration.",
+            "properties": {
+                "textDocumentSync": {
+                    "$id": "#/properties/capabilities/textDocumentSync",
+                    "type": "object",
+                    "title": "Text document sync capabilities.",
+                    "properties": {
+                        "change": {
+                            "$id": "#/properties/capabilities/textDocumentSync/change",
+                            "type": "string",
+                            "enum": [
+                                "None",
+                                "Full",
+                                "Incremental"
+                            ],
+                            "default": "Incremental",
+                            "title": "Text document sync strategy."
+                        }
+                    }
                 }
             }
         },

@@ -35,6 +35,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Вычислитель дерева символов документа.
+ * <p>
+ * Создаёт иерархическую структуру символов документа (модуль, методы, регионы, переменные),
+ * правильно расставляя родительско-дочерние связи между символами.
+ */
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   private final DocumentContext documentContext;
@@ -67,6 +73,26 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     collapseChildrenCollection(moduleSymbol);
 
     return new SymbolTree(moduleSymbol);
+  }
+
+  /**
+   * Создает минимальное и пустое SymbolTree по контексту документа.
+   * <p>
+   * Дерево содержит только ModuleSymbol с пустыми диапазонами.
+   *
+   * @param documentContext Контекст документа
+   *
+   * @return Пустое дерево символов.
+   */
+  public static SymbolTree empty(DocumentContext documentContext) {
+    var module = ModuleSymbol.builder()
+      .owner(documentContext)
+      .range(Ranges.create())
+      .selectionRange(Ranges.create())
+      .name("empty")
+      .build();
+
+    return new SymbolTree(module);
   }
 
   private static SourceDefinedSymbol placeSymbol(

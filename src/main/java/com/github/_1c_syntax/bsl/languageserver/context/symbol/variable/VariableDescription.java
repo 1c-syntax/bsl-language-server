@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.description.Param
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
+import lombok.NonNull;
 import lombok.Value;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
@@ -96,16 +97,13 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
     trailingDescription = trailingComment.map(List::of).map(VariableDescription::new);
   }
 
-  public VariableDescription(ParameterDescription param) {
-
+  public VariableDescription(@NonNull ParameterDescription param) {
     description = "";
     deprecationInfo = "";
     deprecated = false;
     purposeDescription = "";
     range = Ranges.create();
-    link = param.getLink();
+    link = param.link();
     trailingDescription = Optional.empty();
-
   }
-
 }

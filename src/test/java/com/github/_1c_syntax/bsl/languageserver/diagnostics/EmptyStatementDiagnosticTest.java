@@ -69,7 +69,7 @@ class EmptyStatementDiagnosticTest extends AbstractDiagnosticTest<EmptyStatement
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().equals("")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().isEmpty()
       )
     ;
   }
