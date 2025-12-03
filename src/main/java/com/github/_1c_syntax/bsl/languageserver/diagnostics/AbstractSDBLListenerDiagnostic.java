@@ -31,6 +31,12 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
 
+/**
+ * Абстрактная диагностика для анализа запросов СДБЛ.
+ * <p>
+ * Базовый класс для диагностик, использующих парсер SDBL
+ * и обрабатывающих запросы на языке запросов 1С.
+ */
 public abstract class AbstractSDBLListenerDiagnostic extends SDBLParserBaseListener implements BSLDiagnostic {
 
   @Getter

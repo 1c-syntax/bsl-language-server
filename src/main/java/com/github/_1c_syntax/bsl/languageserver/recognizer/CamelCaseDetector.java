@@ -21,8 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
+/**
+ * Детектор CamelCase нотации в коде.
+ * <p>
+ * Определяет наличие CamelCase идентификаторов,
+ * характерных для кода BSL.
+ */
 public class CamelCaseDetector extends AbstractDetector {
 
+  /**
+   * Создать детектор CamelCase.
+   *
+   * @param probability Вероятность обнаружения
+   */
   public CamelCaseDetector(double probability) {
     super(probability);
   }

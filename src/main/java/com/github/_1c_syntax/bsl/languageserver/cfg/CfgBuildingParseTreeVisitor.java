@@ -24,10 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +44,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   private boolean adjacentDeadCodeEnabled = false;
 
   private boolean hasTopLevelPreprocessor = false;
+  private final Deque<StatementsBlockWriter.StatementsBlockRecord> conditionBlocks = new ArrayDeque<>();
 
   public void produceLoopIterations(boolean enable) {
     produceLoopIterationsEnabled = enable;
@@ -128,6 +131,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     // подграф if
     var currentLevelBlock = blocks.enterBlock();
+    conditionBlocks.push(currentLevelBlock);
 
     // тело true
     blocks.enterBlock();
@@ -136,6 +140,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
     var truePart = blocks.leaveBlock();
 
+    graph.addVertex(truePart.begin());
     graph.addEdge(conditionStatement, truePart.begin(), CfgEdgeType.TRUE_BRANCH);
     currentLevelBlock.getBuildParts().push(truePart.end());
     currentLevelBlock.getBuildParts().push(conditionStatement);
@@ -154,6 +159,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
 
     // конец подграфа if
+    conditionBlocks.pop();
     blocks.leaveBlock();
 
     var upperBlock = blocks.getCurrentBlock();
@@ -174,6 +180,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
         graph.removeVertex(basicBlock);
         continue;
       }
+      graph.addVertex(blockTail);
       graph.addEdge(blockTail, upperBlock.end());
     }
 
@@ -190,7 +197,21 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
 
-    var previousCondition = blocks.getCurrentBlock().getBuildParts().pop();
+    var currentIfBlock = conditionBlocks.peek();
+    if (currentIfBlock == null) {
+      throw new IllegalStateException(
+        "Cannot process elsif branch: there is no active condition block. " +
+        "This may occur when preprocessor directives modify the block stack.");
+    }
+
+    var buildParts = currentIfBlock.getBuildParts();
+    if (buildParts.isEmpty()) {
+      throw new IllegalStateException(
+        "Cannot process elsif branch: build parts stack is empty. " +
+        "Expected previous condition on stack. " +
+        "This may occur when preprocessor conditions modify the stack inside if statement body.");
+    }
+    var previousCondition = buildParts.pop();
 
     var condition = new ConditionalVertex(ctx);
     graph.addVertex(condition);
@@ -222,9 +243,15 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     var block = blocks.leaveBlock();
 
     // на стеке находится условие
-    var condition = blocks.getCurrentBlock().getBuildParts().pop();
+    var currentIfBlock = conditionBlocks.peek();
+    if (currentIfBlock == null) {
+      throw new IllegalStateException(
+        "Cannot process else branch: there is no active condition block. " +
+        "This may occur when preprocessor directives modify the block stack.");
+    }
+    var condition = currentIfBlock.getBuildParts().pop();
     graph.addEdge(condition, block.begin(), CfgEdgeType.FALSE_BRANCH);
-    blocks.getCurrentBlock().getBuildParts().push(block.end());
+    currentIfBlock.getBuildParts().push(block.end());
 
     return ctx;
   }
@@ -349,15 +376,23 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     blocks.enterBlock();
 
     blocks.enterBlock();
-    ctx.exceptCodeBlock().accept(this);
+    if (ctx.exceptCodeBlock() != null) {
+      ctx.exceptCodeBlock().accept(this);
+    }
     var exception = blocks.leaveBlock();
+
+    graph.addVertex(exception.begin());
 
     var jumpInfo = new StatementsBlockWriter.JumpInformationRecord();
     jumpInfo.exceptionHandler = exception.begin();
 
     blocks.enterBlock(jumpInfo);
-    ctx.tryCodeBlock().accept(this);
+    if (ctx.tryCodeBlock() != null) {
+      ctx.tryCodeBlock().accept(this);
+    }
     var success = blocks.leaveBlock();
+
+    graph.addVertex(success.begin());
 
     graph.addEdge(tryBranch, success.begin(), CfgEdgeType.TRUE_BRANCH);
     blocks.getCurrentBlock().getBuildParts().push(success.end());
@@ -528,7 +563,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     return ctx;
   }
 
-  private static boolean isStatementLevelPreproc(BSLParserRuleContext ctx) {
+  private static boolean isStatementLevelPreproc(ParserRuleContext ctx) {
     return ctx.getParent().getParent().getRuleIndex() == BSLParser.RULE_statement;
   }
 
@@ -567,9 +602,12 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
     blocks.enterBlock(jumpState);
 
-    ctx.accept(this);
-
+    if (ctx != null) {
+      ctx.accept(this);
+    }
     var body = blocks.leaveBlock();
+
+    graph.addVertex(body.begin());
 
     graph.addEdge(loopStart, body.begin(), CfgEdgeType.TRUE_BRANCH);
     graph.addEdge(loopStart, blocks.getCurrentBlock().end(), CfgEdgeType.FALSE_BRANCH);

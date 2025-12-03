@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.NoArgsConstructor;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
@@ -59,6 +59,11 @@ public class LanguageClientHolder implements LanguageClientAware {
     return client != null;
   }
 
+  /**
+   * Выполнить действие с клиентом, если он подключен.
+   *
+   * @param consumer Действие для выполнения с подключенным клиентом
+   */
   public void execIfConnected(Consumer<LanguageClient> consumer) {
     getClient().ifPresent(consumer);
   }

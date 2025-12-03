@@ -27,7 +27,9 @@ import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
- * Класс, представляющий унарное выражение
+ * Узел унарной операции в дереве выражений.
+ * <p>
+ * Представляет унарную операцию с одним операндом: -x, НЕ условие, +значение.
  */
 @Value
 @EqualsAndHashCode(callSuper = false)

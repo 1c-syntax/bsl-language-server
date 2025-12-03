@@ -23,15 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
+import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -56,6 +56,12 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * Контекст сервера - центральное хранилище информации о рабочей области.
+ * <p>
+ * Управляет коллекцией всех документов проекта, метаданными конфигурации 1С,
+ * обеспечивает доступ к контекстам отдельных документов и их синхронизацию.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -77,6 +83,11 @@ public class ServerContext {
 
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
+
+  private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
+    .skipDataCompositionSchema(true)
+    .skipXdtoPackage(true)
+    .build();
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -210,6 +221,23 @@ public class ServerContext {
   }
 
   /**
+   * Проверяет, открыт ли документ в редакторе.
+   * <p>
+   * Открытые документы управляются клиентом через события textDocument/didOpen,
+   * textDocument/didChange и textDocument/didClose. Для таких документов содержимое
+   * хранится в памяти сервера и может отличаться от содержимого файла на диске.
+   * <p>
+   * Открытые документы не будут удалены при вызове {@link #removeDocument(URI)}
+   * и не будут очищены при вызове {@link #tryClearDocument(DocumentContext)}.
+   *
+   * @param documentContext документ для проверки
+   * @return {@code true}, если документ открыт в редакторе, {@code false} в противном случае
+   */
+  public boolean isDocumentOpened(DocumentContext documentContext) {
+    return openedDocuments.contains(documentContext);
+  }
+
+  /**
    * Перестроить документ. В качестве содержимого будут использоваться данные,
    * прочитанные из файла, с которым связан документ.
    *
@@ -289,12 +317,13 @@ public class ServerContext {
 
     CF configuration;
     try {
-      configuration = (CF) executorService.submit(() -> MDClasses.createConfiguration(configurationRoot)).get();
+      configuration = (CF) executorService.submit(
+        () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
-      LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
+      LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
     } catch (InterruptedException e) {
-      LOGGER.error("Can't parse configuration metadata. Interrupted exception.", e);
+      LOGGER.error("Can't parse configuration metadata. Interrupted exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
       Thread.currentThread().interrupt();
     } finally {
@@ -307,7 +336,7 @@ public class ServerContext {
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+    var mdoRef = documentContext.getMdoRef();
 
     mdoRefs.put(uri, mdoRef);
     documentsByMDORef.computeIfAbsent(

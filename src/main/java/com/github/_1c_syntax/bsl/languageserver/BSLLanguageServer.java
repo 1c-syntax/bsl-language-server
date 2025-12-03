@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.TextDocumentSyncCapabilityOptions;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -38,6 +40,7 @@ import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
@@ -77,6 +80,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 
+/**
+ * Основной класс BSL Language Server.
+ * <p>
+ * Реализует интерфейс {@link LanguageServer} из LSP4J и обеспечивает
+ * обработку запросов инициализации, настройку возможностей сервера
+ * и координацию работы сервисов документов и рабочей области.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -97,7 +107,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
-
+    
     setConfigurationRoot(params);
 
     var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
@@ -126,6 +136,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setRenameProvider(getRenameProvider(params));
     capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
+    capabilities.setDiagnosticProvider(getDiagnosticProvider());
     capabilities.setSemanticTokensProvider(getSemanticTokensProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
@@ -188,11 +199,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return workspaceService;
   }
 
-  private static TextDocumentSyncOptions getTextDocumentSyncOptions() {
+  /**
+   * Формирует настройки синхронизации текстовых документов на основе конфигурации сервера.
+   */
+  private TextDocumentSyncOptions getTextDocumentSyncOptions() {
     var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
-    textDocumentSync.setChange(TextDocumentSyncKind.Full);
+    textDocumentSync.setChange(getConfiguredSyncKind());
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
@@ -202,6 +216,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     textDocumentSync.setSave(save);
 
     return textDocumentSync;
+  }
+
+  /**
+   * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
+   */
+  private TextDocumentSyncKind getConfiguredSyncKind() {
+    return configuration.getCapabilities().getTextDocumentSync().getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {
@@ -302,7 +323,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static Either<Boolean, RenameOptions> getRenameProvider(InitializeParams params) {
 
-    if (Boolean.TRUE.equals(getRenamePrepareSupport(params))) {
+    if (getRenamePrepareSupport(params)) {
 
       var renameOptions = new RenameOptions();
       renameOptions.setWorkDoneProgress(Boolean.FALSE);
@@ -318,7 +339,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   }
 
-  private static Boolean getRenamePrepareSupport(InitializeParams params) {
+  private static boolean getRenamePrepareSupport(InitializeParams params) {
     return Optional.of(params)
       .map(InitializeParams::getCapabilities)
       .map(ClientCapabilities::getTextDocument)
@@ -332,6 +353,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     inlayHintOptions.setResolveProvider(Boolean.FALSE);
     inlayHintOptions.setWorkDoneProgress(Boolean.FALSE);
     return inlayHintOptions;
+  }
+
+  private static DiagnosticRegistrationOptions getDiagnosticProvider() {
+    var diagnosticOptions = new DiagnosticRegistrationOptions();
+    diagnosticOptions.setWorkDoneProgress(Boolean.FALSE);
+    diagnosticOptions.setInterFileDependencies(Boolean.TRUE);
+    diagnosticOptions.setWorkspaceDiagnostics(Boolean.FALSE);
+    return diagnosticOptions;
   }
 
   private ExecuteCommandOptions getExecuteCommandProvider() {

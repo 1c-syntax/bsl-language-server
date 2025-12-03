@@ -46,6 +46,11 @@ public interface BSLDiagnostic {
 
   DiagnosticInfo getInfo();
 
+  /**
+   * Настроить параметры диагностики.
+   *
+   * @param configuration Карта параметров конфигурации
+   */
   default void configure(Map<String, Object> configuration) {
     DiagnosticHelper.configureDiagnostic(this, configuration);
   }

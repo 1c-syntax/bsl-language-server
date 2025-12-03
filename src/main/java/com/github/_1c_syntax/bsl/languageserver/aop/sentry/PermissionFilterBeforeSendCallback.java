@@ -27,10 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions.BeforeSendCallback;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.MessageActionItem;
@@ -70,7 +71,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
 
   @Override
-  public SentryEvent execute(SentryEvent event, Hint hint) {
+  public SentryEvent execute(@NonNull SentryEvent event, @NonNull Hint hint) {
     if (sendToSentry()) {
       return event;
     }

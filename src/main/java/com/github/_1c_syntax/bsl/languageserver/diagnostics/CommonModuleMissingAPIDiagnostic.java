@@ -54,10 +54,10 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
 
   private static Set<String> makeRegionsAPI() {
     Set<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    result.add(Keywords.PUBLIC_REGION_RU);
-    result.add(Keywords.PUBLIC_REGION_EN);
-    result.add(Keywords.INTERNAL_REGION_RU);
-    result.add(Keywords.INTERNAL_REGION_EN);
+    result.add(Keywords.PUBLIC_REGION.getRu());
+    result.add(Keywords.PUBLIC_REGION.getEn());
+    result.add(Keywords.INTERNAL_REGION.getRu());
+    result.add(Keywords.INTERNAL_REGION.getEn());
 
     return result;
   }

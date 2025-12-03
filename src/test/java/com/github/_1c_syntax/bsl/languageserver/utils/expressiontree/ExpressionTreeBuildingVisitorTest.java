@@ -100,7 +100,7 @@ class ExpressionTreeBuildingVisitorTest {
     String code = """
                 Процедура Имя()
                   Если %s Тогда
-                  
+                
                   КонецЕсли;
                 КонецПроцедуры
                 """.formatted(condition);

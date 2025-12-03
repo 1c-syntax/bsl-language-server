@@ -25,10 +25,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
+/**
+ * Детектор ключевых слов в строке.
+ * <p>
+ * Подсчитывает количество ключевых слов BSL,
+ * встречающихся в строке как отдельные токены.
+ */
 public class KeywordsDetector extends AbstractDetector {
 
   private final List<String> keywords;
 
+  /**
+   * Создать детектор ключевых слов.
+   *
+   * @param probability Вероятность обнаружения
+   * @param keywords Массив ключевых слов для поиска
+   */
   public KeywordsDetector(double probability, String... keywords) {
     super(probability);
     this.keywords = Arrays.asList(keywords);

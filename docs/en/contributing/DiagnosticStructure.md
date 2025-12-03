@@ -52,6 +52,7 @@ At the time of this writing, the following properties are available:
 - Compatibility mode `compatibilityMode`, by which diagnostics are filtered when using metadata. The default is `UNDEFINED`.
 - List of module types `modules` for the ability to limit the area analyzed by diagnostics
 - Sign of the ability to set issues on the entire project `canLocateOnProject`. Used for diagnostics not related to the source code module. At the moment, the option is accepted only by SonarQube, other tools ignore it.
+- LSP severity level `lspSeverity` (by default empty string). Allows explicit control over the LSP severity level for the diagnostic. When set, this value takes priority over the calculated LSP severity. Supported values: `Error`, `Warning`, `Information`, `Hint`. This parameter can also be overridden in the configuration file.
 The last two can be omitted.
 
 Annotation example
@@ -71,7 +72,8 @@ Annotation example
     ModuleType.CommonModule       
   },
   canLocateOnProject = false,          
-  extraMinForComplexity = 1  // For each additional note position (`DiagnosticRelatedInformation`) one minute will be added
+  extraMinForComplexity = 1,  // For each additional note position (`DiagnosticRelatedInformation`) one minute will be added
+  lspSeverity = "Warning"     // Explicit LSP severity level (Error, Warning, Information, Hint)
 )
 ```
 

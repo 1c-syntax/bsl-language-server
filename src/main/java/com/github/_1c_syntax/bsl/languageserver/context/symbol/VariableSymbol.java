@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import lombok.EqualsAndHashCode;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Optional;
@@ -40,7 +39,6 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
   /**
    * @return Диапазон, в котором определено имя переменной.
    */
-  @EqualsAndHashCode.Include
   Range getVariableNameRange();
 
   @Override

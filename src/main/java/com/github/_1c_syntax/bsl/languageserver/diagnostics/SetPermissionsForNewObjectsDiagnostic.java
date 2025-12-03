@@ -68,7 +68,7 @@ public class SetPermissionsForNewObjectsDiagnostic extends AbstractDiagnostic {
     }
 
     documentContext.getServerContext().getConfiguration().getRoles().stream()
-      .filter(role -> role.getData().isSetForNewObjects())
+      .filter(role -> role.getData().setForNewObjects())
       .map(Role::getName)
       .filter(Predicate.not(namesFullAccessRole::contains))
       .map(info::getMessage)

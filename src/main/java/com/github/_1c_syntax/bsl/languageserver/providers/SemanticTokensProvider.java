@@ -41,8 +41,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.UseContext;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -385,7 +385,7 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void addNamespaceForPreprocessorNode(List<TokenEntry> entries, BSLParserRuleContext preprocessorChildNode) {
+  private void addNamespaceForPreprocessorNode(List<TokenEntry> entries, ParserRuleContext preprocessorChildNode) {
     var preprocessor = Trees.<PreprocessorContext>getAncestorByRuleIndex(preprocessorChildNode, BSLParser.RULE_preprocessor);
     if (preprocessor == null) {
       return;
@@ -420,33 +420,12 @@ public class SemanticTokensProvider {
   }
 
   private void addRange(List<TokenEntry> entries, Range range, String type, String... modifiers) {
-    if (Ranges.isEmpty(range)) {
-      return;
-    }
-    int typeIdx = legend.getTokenTypes().indexOf(type);
-    if (typeIdx < 0) {
-      return;
-    }
-    int line = range.getStart().getLine();
-    int start = range.getStart().getCharacter();
-    int length = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
-    if (length > 0) {
-      int modifierMask = 0;
-      if (modifiers != null) {
-        for (String mod : modifiers) {
-          if (mod == null) continue;
-          int idx = legend.getTokenModifiers().indexOf(mod);
-          if (idx >= 0) {
-            modifierMask |= (1 << idx);
-          }
-        }
-      }
-      entries.add(new TokenEntry(line, start, length, typeIdx, modifierMask));
-    }
+    int explicitLength = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
+    addRange(entries, range, explicitLength, type, modifiers);
   }
 
   // overload to add token with explicit precomputed length (used for multi-line tokens)
-  private void addRange(List<TokenEntry> entries, Range range, int explicitLength, String type, String... modifiers) {
+  private void addRange(List<TokenEntry> entries, Range range, int explicitLength, String type, String[] modifiers) {
     if (Ranges.isEmpty(range)) {
       return;
     }
@@ -459,13 +438,10 @@ public class SemanticTokensProvider {
     int length = Math.max(0, explicitLength);
     if (length > 0) {
       int modifierMask = 0;
-      if (modifiers != null) {
-        for (String mod : modifiers) {
-          if (mod == null) continue;
-          int idx = legend.getTokenModifiers().indexOf(mod);
-          if (idx >= 0) {
-            modifierMask |= (1 << idx);
-          }
+      for (String mod : modifiers) {
+        int idx = legend.getTokenModifiers().indexOf(mod);
+        if (idx >= 0) {
+          modifierMask |= (1 << idx);
         }
       }
       entries.add(new TokenEntry(line, start, length, typeIdx, modifierMask));

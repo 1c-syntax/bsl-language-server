@@ -31,6 +31,12 @@ import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
+/**
+ * Контроллер для загрузки ResourceBundle в кодировке UTF-8.
+ * <p>
+ * Переопределяет стандартное поведение {@link ResourceBundle.Control}
+ * для корректной загрузки properties-файлов в UTF-8.
+ */
 public class UTF8Control extends ResourceBundle.Control {
   @Override
   public ResourceBundle newBundle

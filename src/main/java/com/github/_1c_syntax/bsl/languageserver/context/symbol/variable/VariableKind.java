@@ -21,10 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol.variable;
 
+/**
+ * Вид переменной в коде BSL.
+ */
 public enum VariableKind {
+  /**
+   * Динамическая переменная.
+   */
   DYNAMIC,
+  /**
+   * Локальная переменная.
+   */
   LOCAL,
+  /**
+   * Параметр метода/функции.
+   */
   PARAMETER,
+  /**
+   * Переменная уровня модуля.
+   */
   MODULE,
+  /**
+   * Глобальная переменная.
+   */
   GLOBAL
 }

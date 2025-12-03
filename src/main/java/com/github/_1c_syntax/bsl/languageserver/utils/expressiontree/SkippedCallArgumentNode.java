@@ -22,8 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
 /**
- * Специализированный узел дерева, обозначающий пропущенный аргумент вызова метода.
- * МояФункция(1,,3); - второй параметр - instanceof SkippedCallArgumentNode
+ * Узел пропущенного аргумента вызова в дереве выражений.
+ * <p>
+ * Представляет пропущенный параметр при вызове метода: МояФункция(1,,3) - второй параметр пропущен.
  */
 public class SkippedCallArgumentNode extends BslExpression {
 

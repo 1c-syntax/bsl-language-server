@@ -94,7 +94,7 @@ class VariableSymbolTest {
 
     assertThat(variableDescriptions)
       .hasSize(12)
-      .filteredOn(variableDescription -> !variableDescription.getDescription().equals(""))
+      .filteredOn(variableDescription -> !variableDescription.getDescription().isEmpty())
       .hasSize(5)
       .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(1, 0, 18)))
       .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(4, 0, 5, 23)))

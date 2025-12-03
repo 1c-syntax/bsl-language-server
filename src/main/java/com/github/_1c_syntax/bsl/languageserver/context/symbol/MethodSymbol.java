@@ -26,8 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.jspecify.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,15 +44,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Символ метода или функции.
+ * <p>
+ * Представляет метод или функцию в модуле BSL с информацией о параметрах,
+ * аннотациях, экспортности и вложенных элементах.
+ */
 @Value
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
+public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable, Comparable<MethodSymbol> {
   @EqualsAndHashCode.Include
   String name;
 
-  @Builder.Default
+  @Default
   SymbolKind symbolKind = SymbolKind.Method;
 
   @EqualsAndHashCode.Include
@@ -66,19 +74,22 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   int endCharacter;
 
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int subNameLine;
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int subNameStartCharacter;
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   int subNameEndCharacter;
 
   @Getter
   @Setter
-  @Builder.Default
+  @Default
   @NonFinal
   Optional<SourceDefinedSymbol> parent = Optional.empty();
 
-  @Builder.Default
+  @Default
   List<SourceDefinedSymbol> children = new ArrayList<>();
 
   boolean function;
@@ -87,12 +98,12 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
 
   boolean deprecated;
 
-  @Builder.Default
+  @Default
   List<ParameterDefinition> parameters = Collections.emptyList();
 
-  @Builder.Default
+  @Default
   Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
-  @Builder.Default
+  @Default
   List<Annotation> annotations = Collections.emptyList();
 
   @Override
@@ -100,7 +111,6 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
     return Ranges.create(startLine, startCharacter, endLine, endCharacter);
   }
 
-  @EqualsAndHashCode.Include
   public Range getSubNameRange() {
     return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
   }
@@ -119,6 +129,20 @@ public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describabl
   @Override
   public Range getSelectionRange() {
     return getSubNameRange();
+  }
+
+  @Override
+  public int compareTo(@Nullable MethodSymbol other) {
+    if (other == null) {
+      return 1;
+    }
+
+    return java.util.Comparator.comparing(MethodSymbol::getName)
+      .thenComparing(MethodSymbol::getOwner)
+      .thenComparingInt(m -> m.subNameLine)
+      .thenComparingInt(m -> m.subNameStartCharacter)
+      .thenComparingInt(m -> m.subNameEndCharacter)
+      .compare(this, other);
   }
 
   public static MethodSymbolBuilder builder() {

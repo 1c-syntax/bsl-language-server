@@ -31,8 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 
@@ -137,7 +137,7 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
     return expression.getText().toUpperCase(Locale.ENGLISH);
   }
 
-  private Range getSubNameRange(BSLParserRuleContext ctx) {
+  private Range getSubNameRange(ParserRuleContext ctx) {
     return Optional.ofNullable(Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub))
       .map(BSLParser.SubContext.class::cast)
       .flatMap(context -> documentContext.getSymbolTree().getMethodSymbol(context))

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Класс отвечает за вызов операций замера производительности для lazy-методов {@link DocumentContext}.
+ * Вычислитель замеров производительности для ленивых данных DocumentContext.
+ * <p>
+ * Автоматически измеряет время вычисления ленивых методов DocumentContext
+ * при изменении содержимого документа для мониторинга производительности.
  */
 @Component
 @ConditionalOnMeasuresEnabled

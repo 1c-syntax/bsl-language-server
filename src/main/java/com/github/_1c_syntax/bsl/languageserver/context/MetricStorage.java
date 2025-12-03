@@ -25,19 +25,57 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Хранилище метрик кода для документа.
+ * <p>
+ * Содержит различные метрики, вычисленные для файла:
+ * количество процедур, функций, строк кода, комментариев, сложность и т.д.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class MetricStorage {
+  /**
+   * Количество процедур.
+   */
   private int procedures;
+  /**
+   * Количество функций.
+   */
   private int functions;
+  /**
+   * Общее количество строк.
+   */
   private int lines;
+  /**
+   * Количество строк кода (без пустых и комментариев).
+   */
   private int ncloc;
+  /**
+   * Количество строк с комментариями.
+   */
   private int comments;
+  /**
+   * Количество операторов.
+   */
   private int statements;
+  /**
+   * Данные о строках кода (массив номеров строк).
+   */
   private int[] nclocData;
+  /**
+   * Данные о покрытии кода (устарело).
+   *
+   * @deprecated Используется для обратной совместимости
+   */
   @Deprecated
   private int[] covlocData;
+  /**
+   * Когнитивная сложность.
+   */
   private int cognitiveComplexity;
+  /**
+   * Цикломатическая сложность.
+   */
   private int cyclomaticComplexity;
 }

@@ -111,7 +111,7 @@ class DocumentContextTest {
   }
 
   @Test
-  void testMethodComputeParseError() throws IOException {
+  void testMethodComputeParseError() {
 
     var documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextParseErrorTest.bsl");
@@ -152,7 +152,7 @@ class DocumentContextTest {
     assertThat(methods)
       .anyMatch(methodSymbol -> methodSymbol.getRegion().isPresent())
       .anySatisfy(methodSymbol -> methodSymbol.getRegion().ifPresent(
-        regionSymbol -> assertThat(regionSymbol.getMethods()).contains(methodSymbol)
+          regionSymbol -> assertThat(regionSymbol.getMethods()).contains(methodSymbol)
         )
       )
     ;

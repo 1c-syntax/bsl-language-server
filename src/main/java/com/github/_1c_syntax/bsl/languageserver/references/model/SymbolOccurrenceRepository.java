@@ -46,7 +46,7 @@ public class SymbolOccurrenceRepository {
    * @param symbolOccurrence Обращение к символу.
    */
   public void save(SymbolOccurrence symbolOccurrence) {
-    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> new ConcurrentSkipListSet<>())
+    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.symbol(), symbol -> new ConcurrentSkipListSet<>())
       .add(symbolOccurrence);
   }
 
@@ -67,8 +67,10 @@ public class SymbolOccurrenceRepository {
    */
   public void deleteAll(Set<SymbolOccurrence> symbolOccurrences) {
     symbolOccurrences.forEach(symbolOccurrence ->
-      occurrencesToSymbols.get(symbolOccurrence.getSymbol()).remove(symbolOccurrence)
+      occurrencesToSymbols.computeIfPresent(symbolOccurrence.symbol(), (Symbol s, Set<SymbolOccurrence> set) -> {
+        set.remove(symbolOccurrence);
+        return set.isEmpty() ? null : set; // null => remove mapping
+      })
     );
   }
-
 }

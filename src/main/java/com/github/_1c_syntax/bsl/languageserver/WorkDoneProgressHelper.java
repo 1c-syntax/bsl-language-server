@@ -38,6 +38,12 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Помощник для работы с progress-уведомлениями LSP.
+ * <p>
+ * Управляет созданием и обновлением индикаторов прогресса выполнения
+ * длительных операций (WorkDoneProgress).
+ */
 @Component
 @RequiredArgsConstructor
 public class WorkDoneProgressHelper {

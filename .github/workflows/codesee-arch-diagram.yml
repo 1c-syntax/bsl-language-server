@@ -12,7 +12,23 @@ name: CodeSee
 permissions: read-all
 
 jobs:
+  check-pr-exists:
+    runs-on: ubuntu-latest
+    outputs:
+      has_pr: ${{ steps.check.outputs.has_pr }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check if PR exists for this branch
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          result=$(.github/scripts/check-pr-exists.sh "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.repository }}")
+          echo "has_pr=$result" >> $GITHUB_OUTPUT
+
   codesee:
+    needs: check-pr-exists
+    if: needs.check-pr-exists.outputs.has_pr != 'true'
     runs-on: ubuntu-latest
     continue-on-error: true
     name: Analyze the repo with CodeSee

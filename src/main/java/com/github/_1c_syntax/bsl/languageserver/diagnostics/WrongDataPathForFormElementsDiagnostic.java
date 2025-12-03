@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormItem;
-import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Range;
 
@@ -64,7 +63,7 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private static boolean wrongDataPath(FormItem formItem) {
-    return formItem.getDataPath().segments().startsWith("~");
+    return formItem.getDataPath().startsWith("~");
   }
 
   private static boolean haveFormModules(Form form) {
@@ -108,9 +107,6 @@ public class WrongDataPathForFormElementsDiagnostic extends AbstractDiagnostic {
   }
 
   private String getMdoRef(Form form) {
-    if (documentContext.getServerContext().getConfiguration().getScriptVariant() == ScriptVariant.ENGLISH) {
-      return form.getMdoReference().getMdoRef();
-    }
-    return form.getMdoReference().getMdoRefRu();
+    return documentContext.getServerContext().getConfiguration().getMdoRefLocal(form);
   }
 }

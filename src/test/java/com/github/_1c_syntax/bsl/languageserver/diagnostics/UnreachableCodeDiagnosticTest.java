@@ -64,4 +64,10 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
     List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeRegionDiagnostic");
     assertThat(diagnostics).isEmpty();
   }
+
+  @Test
+  void testParseError() {
+    List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeParseErrorDiagnostic");
+    assertThat(diagnostics).isEmpty();
+  }
 }
