@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class CommonModuleReferenceTest {
+class ModuleReferenceTest {
 
   private static final List<String> DEFAULT_ACCESSORS = new ReferencesOptions().getCommonModuleAccessors();
 
@@ -57,9 +57,9 @@ class CommonModuleReferenceTest {
     assertThat(assignments).hasSize(1);
     
     var expression = assignments.get(0).expression();
-    assertThat(CommonModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isTrue();
+    assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isTrue();
     
-    var moduleName = CommonModuleReference.extractCommonModuleName(expression, DEFAULT_ACCESSORS);
+    var moduleName = ModuleReference.extractCommonModuleName(expression, DEFAULT_ACCESSORS);
     assertThat(moduleName).isPresent();
     assertThat(moduleName.get()).isEqualTo("ПервыйОбщийМодуль");
   }
@@ -83,13 +83,13 @@ class CommonModuleReferenceTest {
     var expression = assignments.get(0).expression();
     
     // With default accessors - should not match
-    assertThat(CommonModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isFalse();
+    assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isFalse();
     
     // With custom accessor - should match
     var customAccessors = List.of("МойМодуль.ПолучитьОбщийМодуль");
-    assertThat(CommonModuleReference.isCommonModuleExpression(expression, customAccessors)).isTrue();
+    assertThat(ModuleReference.isCommonModuleExpression(expression, customAccessors)).isTrue();
     
-    var moduleName = CommonModuleReference.extractCommonModuleName(expression, customAccessors);
+    var moduleName = ModuleReference.extractCommonModuleName(expression, customAccessors);
     assertThat(moduleName).isPresent();
     assertThat(moduleName.get()).isEqualTo("ТестовыйМодуль");
   }

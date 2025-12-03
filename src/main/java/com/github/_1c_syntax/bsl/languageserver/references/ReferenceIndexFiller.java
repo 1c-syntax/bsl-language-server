@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.CommonModuleReference;
+import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Modules;
@@ -334,8 +334,8 @@ public class ReferenceIndexFiller {
 
       if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
         var variableKey = lValue.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH);
-        if (CommonModuleReference.isCommonModuleExpression(expression, commonModuleAccessors)) {
-          var commonModuleOpt = CommonModuleReference.extractCommonModuleName(expression, commonModuleAccessors)
+        if (ModuleReference.isCommonModuleExpression(expression, commonModuleAccessors)) {
+          var commonModuleOpt = ModuleReference.extractCommonModuleName(expression, commonModuleAccessors)
             .flatMap(moduleName -> documentContext.getServerContext()
               .getConfiguration()
               .findCommonModule(moduleName));
@@ -574,7 +574,7 @@ public class ReferenceIndexFiller {
         return;
       }
       
-      var managerInfo = CommonModuleReference.extractManagerModuleInfo(expressionCtx);
+      var managerInfo = ModuleReference.extractManagerModuleInfo(expressionCtx);
       if (managerInfo.isEmpty()) {
         return;
       }
