@@ -24,8 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -47,6 +49,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -57,8 +60,10 @@ import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
@@ -127,40 +132,71 @@ public class SemanticTokensProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
+  private boolean multilineTokenSupport;
+
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
 
-  public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
-    List<TokenEntry> entries = new ArrayList<>();
-
-    boolean multilineTokenSupport = clientCapabilitiesHolder.getCapabilities()
+  @EventListener
+  public void onClientCapabilitiesChanged(LanguageServerInitializeRequestReceivedEvent event) {
+    multilineTokenSupport = Optional.of(event)
+      .map(LanguageServerInitializeRequestReceivedEvent::getParams)
+      .map(InitializeParams::getCapabilities)
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getSemanticTokens)
       .map(SemanticTokensCapabilities::getMultilineTokenSupport)
       .orElse(false);
+  }
+
+  public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
+    List<TokenEntry> entries = new ArrayList<>();
 
     // collect description ranges for describable symbols
     List<Range> descriptionRanges = new ArrayList<>();
     BitSet documentationLines = new BitSet();
 
-    // 1) Symbols: methods/functions, variables, parameters
     var symbolTree = documentContext.getSymbolTree();
-    for (var method : symbolTree.getMethods()) {
-      var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
-      addRange(entries, method.getSubNameRange(), semanticTokenType);
-      for (ParameterDefinition parameter : method.getParameters()) {
-        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
+    var ast = documentContext.getAst();
+    var uri = documentContext.getUri();
+    var comments = documentContext.getComments();
+    var tokensFromDefaultChannel = documentContext.getTokensFromDefaultChannel();
+
+    // 1) Symbols: methods/functions, variables, parameters
+
+    addMethodSymbols(symbolTree, entries, descriptionRanges, documentationLines);
+    addVariableSymbols(documentContext, symbolTree, entries, descriptionRanges, documentationLines);
+
+    addMultilineDescriptions(documentContext, descriptionRanges, entries);
+
+    // 2) Comments (lexer type LINE_COMMENT)
+    addComments(comments, descriptionRanges, entries, documentationLines);
+
+    // 3) AST-driven annotations and compiler directives
+    addAnnotationsFromAst(entries, ast);
+    addPreprocessorFromAst(entries, ast);
+
+    // 3.1) Method call occurrences as Method tokens
+    addMethodCallTokens(entries, uri);
+
+    // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
+    addLexicalTokens(tokensFromDefaultChannel, entries);
+
+    // 5) Build delta-encoded data
+    List<Integer> data = toDeltaEncoded(entries);
+    return new SemanticTokens(data);
+  }
+
+  private void addMultilineDescriptions(DocumentContext documentContext, List<Range> descriptionRanges, List<TokenEntry> entries) {
+    if (multilineTokenSupport) {
+      for (Range r : descriptionRanges) {
+        // compute multi-line token length using document text
+        int length = documentContext.getText(r).length();
+        addRange(entries, r, length, SemanticTokenTypes.Comment, DOC_ONLY);
       }
-      method.getDescription()
-        .map(MethodDescription::getRange)
-        .filter(r -> !Ranges.isEmpty(r))
-        .ifPresent(r -> {
-          descriptionRanges.add(r);
-          if (!multilineTokenSupport) {
-            markLines(documentationLines, r);
-          }
-        });
     }
+  }
+
+  private void addVariableSymbols(DocumentContext documentContext, SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
     for (VariableSymbol variableSymbol : symbolTree.getVariables()) {
       Range nameRange = variableSymbol.getVariableNameRange();
       if (!Ranges.isEmpty(nameRange)) {
@@ -193,17 +229,29 @@ public class SemanticTokensProvider {
         });
       });
     }
+  }
 
-    if (multilineTokenSupport) {
-      for (Range r : descriptionRanges) {
-        // compute multi-line token length using document text
-        int length = documentContext.getText(r).length();
-        addRange(entries, r, length, SemanticTokenTypes.Comment, DOC_ONLY);
+  private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
+    for (var method : symbolTree.getMethods()) {
+      var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
+      addRange(entries, method.getSubNameRange(), semanticTokenType);
+      for (ParameterDefinition parameter : method.getParameters()) {
+        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
       }
+      method.getDescription()
+        .map(MethodDescription::getRange)
+        .filter(r -> !Ranges.isEmpty(r))
+        .ifPresent(r -> {
+          descriptionRanges.add(r);
+          if (!multilineTokenSupport) {
+            markLines(documentationLines, r);
+          }
+        });
     }
+  }
 
-    // 2) Comments (lexer type LINE_COMMENT)
-    for (Token commentToken : documentContext.getComments()) {
+  private void addComments(List<Token> comments, List<Range> descriptionRanges, List<TokenEntry> entries, BitSet documentationLines) {
+    for (Token commentToken : comments) {
       Range commentRange = Ranges.create(commentToken);
       if (multilineTokenSupport) {
         boolean insideDescription = descriptionRanges.stream().anyMatch(r -> Ranges.containsRange(r, commentRange));
@@ -221,71 +269,6 @@ public class SemanticTokensProvider {
         }
       }
     }
-
-    // 3) AST-driven annotations and compiler directives
-    addAnnotationsFromAst(entries, documentContext);
-    addPreprocessorFromAst(entries, documentContext);
-
-    // 3.1) Method call occurrences as Method tokens
-    addMethodCallTokens(entries, documentContext);
-
-    // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
-    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
-    for (Token token : tokens) {
-      var tokenType = token.getType();
-      var tokenText = Objects.toString(token.getText(), "");
-      if (tokenText.isEmpty()) {
-        continue;
-      }
-
-      // strings
-      if (STRING_TYPES.contains(tokenType)) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
-        continue;
-      }
-
-      // date literals in single quotes
-      if (tokenType == BSLLexer.DATETIME) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
-        continue;
-      }
-
-      // numbers
-      if (NUMBER_TYPES.contains(tokenType)) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
-        continue;
-      }
-
-      // operators and punctuators
-      if (OPERATOR_TYPES.contains(tokenType)) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Operator);
-        continue;
-      }
-
-      // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
-      if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
-        continue;
-      }
-
-      // specific literals as keywords: undefined/boolean/null
-      if (tokenType == BSLLexer.UNDEFINED
-        || tokenType == BSLLexer.TRUE
-        || tokenType == BSLLexer.FALSE
-        || tokenType == BSLLexer.NULL) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
-        continue;
-      }
-
-      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
-      String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
-      if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
-      }
-    }
-
-    // 5) Build delta-encoded data
-    List<Integer> data = toDeltaEncoded(entries);
-    return new SemanticTokens(data);
   }
 
   private static void markLines(BitSet lines, Range range) {
@@ -294,9 +277,7 @@ public class SemanticTokensProvider {
     lines.set(startLine, endLine + 1); // inclusive end
   }
 
-  private void addAnnotationsFromAst(List<TokenEntry> entries, DocumentContext documentContext) {
-    ParseTree parseTree = documentContext.getAst();
-
+  private void addAnnotationsFromAst(List<TokenEntry> entries, ParseTree parseTree) {
     // compiler directives: single Decorator from '&' through directive symbol
     for (var compilerDirective : Trees.<CompilerDirectiveContext>findAllRuleNodes(parseTree, BSLParser.RULE_compilerDirective)) {
       var ampersand = compilerDirective.AMPERSAND().getSymbol(); // '&'
@@ -327,9 +308,7 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void addPreprocessorFromAst(List<TokenEntry> entries, DocumentContext documentContext) {
-    ParseTree parseTree = documentContext.getAst();
-
+  private void addPreprocessorFromAst(List<TokenEntry> entries, ParseTree parseTree) {
     // 1) Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
     for (var regionStart : Trees.<RegionStartContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionStart)) {
       // Namespace only for '#'+keyword part to avoid overlap with region name token
@@ -479,14 +458,68 @@ public class SemanticTokensProvider {
     return data;
   }
 
-  private void addMethodCallTokens(List<TokenEntry> entries, DocumentContext documentContext) {
-    for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
+  private void addMethodCallTokens(List<TokenEntry> entries, URI uri) {
+    for (var reference : referenceIndex.getReferencesFrom(uri, SymbolKind.Method)) {
       if (!reference.isSourceDefinedSymbolReference()) {
         continue;
       }
 
       reference.getSourceDefinedSymbol()
         .ifPresent(symbol -> addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Method));
+    }
+  }
+
+  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries) {
+    for (Token token : tokens) {
+      var tokenType = token.getType();
+      var tokenText = Objects.toString(token.getText(), "");
+      if (tokenText.isEmpty()) {
+        continue;
+      }
+
+      // strings
+      if (STRING_TYPES.contains(tokenType)) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
+        continue;
+      }
+
+      // date literals in single quotes
+      if (tokenType == BSLLexer.DATETIME) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
+        continue;
+      }
+
+      // numbers
+      if (NUMBER_TYPES.contains(tokenType)) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
+        continue;
+      }
+
+      // operators and punctuators
+      if (OPERATOR_TYPES.contains(tokenType)) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Operator);
+        continue;
+      }
+
+      // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
+      if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
+        continue;
+      }
+
+      // specific literals as keywords: undefined/boolean/null
+      if (tokenType == BSLLexer.UNDEFINED
+        || tokenType == BSLLexer.TRUE
+        || tokenType == BSLLexer.FALSE
+        || tokenType == BSLLexer.NULL) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
+        continue;
+      }
+
+      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
+      String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
+      if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
+        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
+      }
     }
   }
 
