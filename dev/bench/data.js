@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764971337131,
+  "lastUpdate": 1764974193297,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31930,6 +31930,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6654681638875326",
             "extra": "mean: 95.12344868977864 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e71b061fcf77e77ba5e1937660e81c934e27a160",
+          "message": "Merge pull request #3470 from Levon444/feauture/QueryNestedFieldsByDot\n\nFeauture/query nested fields by dot",
+          "timestamp": "2025-12-05T20:53:51+01:00",
+          "tree_id": "02d5d4bcb74eda633e100544e423d60a8fa3b7d9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e71b061fcf77e77ba5e1937660e81c934e27a160"
+        },
+        "date": 1764974188692,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 96.11094371477763,
+            "unit": "sec",
+            "range": "stddev: 2.6285187408131465",
+            "extra": "mean: 96.11094371477763 sec\nrounds: 3"
           }
         ]
       }
