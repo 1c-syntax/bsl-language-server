@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764961987654,
+  "lastUpdate": 1764967588754,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31837,6 +31837,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.357003132658212",
             "extra": "mean: 95.61831227938335 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9465b625879a5f6c1a1d8a74fa46d4922108cfba",
+          "message": "Merge pull request #3627 from johnnyshut/feature/3475\n\nfeat(diagnostic): добавлена диагностика небезопасного использования метода НайтиПоКоду()",
+          "timestamp": "2025-12-05T19:50:00+01:00",
+          "tree_id": "9943c9931538f5d13772454dfc904260556887de",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9465b625879a5f6c1a1d8a74fa46d4922108cfba"
+        },
+        "date": 1764967584483,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 95.17488853136699,
+            "unit": "sec",
+            "range": "stddev: 0.4922801302990103",
+            "extra": "mean: 95.17488853136699 sec\nrounds: 3"
           }
         ]
       }
