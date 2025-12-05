@@ -380,6 +380,9 @@
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
                 },
+                "QueryNestedFieldsByDot": {
+                    "$ref": "parameters-schema.json#/definitions/QueryNestedFieldsByDot"
+                },
                 "QueryParseError": {
                     "$ref": "parameters-schema.json#/definitions/QueryParseError"
                 },
