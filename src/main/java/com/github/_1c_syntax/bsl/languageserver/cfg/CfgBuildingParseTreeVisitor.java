@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.NullUnmarked;
 
 import java.util.ArrayList;
 import java.util.ArrayDeque;
@@ -33,6 +34,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
+@NullUnmarked
 public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree> {
 
   private StatementsBlockWriter blocks;
@@ -338,12 +340,36 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   @Override
   public ParseTree visitContinueStatement(BSLParser.ContinueStatementContext ctx) {
     blocks.addStatement(ctx);
-    var currentTail = blocks.getCurrentBlock().end();
     var jumps = blocks.getCurrentBlock().getJumpContext();
-    makeJump(jumps.loopContinue);
-    connectAdjacentCode(currentTail);
+
+    // Может быть синтаксически некорреткный код. Тогда прыжок в начало/конец цикла невозможен.
+    // Для анализатора мы тут не делаем никакой переход, ведь перехода не будет, будет ошибка.
+    // Трактуем просто как statement и ничего не делаем
+    if (jumps.loopContinue != null) {
+      var currentTail = blocks.getCurrentBlock().end();
+      makeJump(jumps.loopContinue);
+      connectAdjacentCode(currentTail);
+    }
     return ctx;
   }
+
+  @Override
+  public ParseTree visitBreakStatement(BSLParser.BreakStatementContext ctx) {
+    blocks.addStatement(ctx);
+    var jumps = blocks.getCurrentBlock().getJumpContext();
+
+    // Может быть синтаксически некорреткный код. Тогда прыжок в начало/конец цикла невозможен.
+    // Для анализатора мы тут не делаем никакой переход, ведь перехода не будет, будет ошибка.
+    // Трактуем просто как statement и ничего не делаем
+    if (jumps.loopBreak != null) {
+      var currentTail = blocks.getCurrentBlock().end();
+      makeJump(jumps.loopBreak);
+      connectAdjacentCode(currentTail);
+    }
+
+    return ctx;
+  }
+
 
   @Override
   public ParseTree visitReturnStatement(BSLParser.ReturnStatementContext ctx) {
@@ -351,16 +377,6 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     var currentTail = blocks.getCurrentBlock().end();
     var jumps = blocks.getCurrentBlock().getJumpContext();
     makeJump(jumps.methodReturn);
-    connectAdjacentCode(currentTail);
-    return ctx;
-  }
-
-  @Override
-  public ParseTree visitBreakStatement(BSLParser.BreakStatementContext ctx) {
-    blocks.addStatement(ctx);
-    var currentTail = blocks.getCurrentBlock().end();
-    var jumps = blocks.getCurrentBlock().getJumpContext();
-    makeJump(jumps.loopBreak);
     connectAdjacentCode(currentTail);
     return ctx;
   }
