@@ -27,4 +27,7 @@
  * , настройки верхнего уровня и дополнительные пакеты для настроек в разрезе провайдеров
  * (диагностики, code lens, и т.д.)
  */
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.configuration;
+
+import org.jspecify.annotations.NullMarked;

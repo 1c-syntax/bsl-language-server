@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.TextDocumentSyncCapabilityOptions;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -193,11 +194,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return workspaceService;
   }
 
-  private static TextDocumentSyncOptions getTextDocumentSyncOptions() {
+  /**
+   * Формирует настройки синхронизации текстовых документов на основе конфигурации сервера.
+   */
+  private TextDocumentSyncOptions getTextDocumentSyncOptions() {
     var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
-    textDocumentSync.setChange(TextDocumentSyncKind.Full);
+    textDocumentSync.setChange(getConfiguredSyncKind());
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
@@ -207,6 +211,16 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     textDocumentSync.setSave(save);
 
     return textDocumentSync;
+  }
+
+  /**
+   * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
+   */
+  private TextDocumentSyncKind getConfiguredSyncKind() {
+    return Optional.ofNullable(configuration.getCapabilities())
+      .map(caps -> caps.getTextDocumentSync())
+      .map(TextDocumentSyncCapabilityOptions::getChange)
+      .orElse(TextDocumentSyncCapabilityOptions.DEFAULT_CHANGE);
   }
 
   private static CodeActionOptions getCodeActionProvider() {
