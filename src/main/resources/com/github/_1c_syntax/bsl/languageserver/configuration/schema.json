@@ -473,6 +473,9 @@
                 "UnreachableCode": {
                     "$ref": "parameters-schema.json#/definitions/UnreachableCode"
                 },
+                "UnsafeFindByCode": {
+                    "$ref": "parameters-schema.json#/definitions/UnsafeFindByCode"
+                },
                 "UnsafeSafeModeMethodCall": {
                     "$ref": "parameters-schema.json#/definitions/UnsafeSafeModeMethodCall"
                 },

@@ -2040,6 +2040,16 @@
             "title": "Unreachable Code",
             "$id": "#/definitions/UnreachableCode"
         },
+        "UnsafeFindByCode": {
+            "description": "Unsafe FindByCode() method usage",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unsafe FindByCode() method usage",
+            "$id": "#/definitions/UnsafeFindByCode"
+        },
         "UnsafeSafeModeMethodCall": {
             "description": "Unsafe SafeMode method call",
             "default": true,
