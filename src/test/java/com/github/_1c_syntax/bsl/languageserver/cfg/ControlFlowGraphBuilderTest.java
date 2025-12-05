@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 class ControlFlowGraphBuilderTest {
 
   @Test
-  void ReturnOutsideLoop() {
+  void testBreakContinueOutsideLoop() {
 
     var code = """
       Если Истина Тогда
