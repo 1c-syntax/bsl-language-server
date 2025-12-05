@@ -1636,6 +1636,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "QueryNestedFieldsByDot": {
+            "description": "Getting objects nested fields data by dot in database query text",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Getting objects nested fields data by dot in database query text",
+            "$id": "#/definitions/QueryNestedFieldsByDot"
+        },
         "QueryParseError": {
             "description": "Query text parsing error",
             "default": true,
