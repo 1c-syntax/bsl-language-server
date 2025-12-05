@@ -1519,12 +1519,12 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="Список-реализованных-диагностик">Список реализованных диагностик<a class="headerlink" href="#Список-реализованных-диагностик" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>178</strong></p>
+<p>Общее количество: <strong>179</strong></p>
 <ul>
 <li>Потенциальная уязвимость: <strong>8</strong></li>
 <li>Уязвимость: <strong>7</strong></li>
 <li>Ошибка: <strong>56</strong></li>
-<li>Дефект кода: <strong>107</strong></li>
+<li>Дефект кода: <strong>108</strong></li>
 </ul>
 <table>
 <thead>
@@ -2185,6 +2185,14 @@
 <td>Незначительный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="LogicalOrInJoinQuerySection/">LogicalOrInJoinQuerySection</a></td>
+<td>Логическое 'ИЛИ' в соединениях запроса</td>
+<td style="text-align: center;">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>sql</code><br><code>performance</code><br><code>unpredictable</code></td>
 </tr>
 <tr>
 <td><a href="LogicalOrInTheWhereSectionOfQuery/">LogicalOrInTheWhereSectionOfQuery</a></td>
