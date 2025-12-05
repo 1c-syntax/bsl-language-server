@@ -29,9 +29,10 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10,
   tags = {
+    DiagnosticTag.STANDARD,
     DiagnosticTag.SQL,
     DiagnosticTag.PERFORMANCE,
     DiagnosticTag.DESIGN
@@ -41,7 +42,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagnostic {
 
   //Флаг обработки параметров виртуальной таблицы
-  public boolean isVirtualTable = false;
+  private boolean isVirtualTable = false;
 
   @Override
   public void enterQuery(SDBLParser.QueryContext ctx) {
