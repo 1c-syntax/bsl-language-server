@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
     DiagnosticTag.STANDARD,
     DiagnosticTag.SQL,
     DiagnosticTag.PERFORMANCE
-    DiagnosticTag.DESIGN
   }
 
 )
