@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764967588754,
+  "lastUpdate": 1764969800989,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31868,6 +31868,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4922801302990103",
             "extra": "mean: 95.17488853136699 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d81de4161cb396528c0fab5e51975631c7dd2d6a",
+          "message": "Merge pull request #2959 from ovcharenko-di/issue/2282\n\nDRAFT Разбор запросов к внешним источникам данных (bsl-parser), новые тесты в bsl-language-server",
+          "timestamp": "2025-12-05T19:53:50+01:00",
+          "tree_id": "d1ce4f6ab893d9bc25d82d35e127f351ff20aff9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d81de4161cb396528c0fab5e51975631c7dd2d6a"
+        },
+        "date": 1764969795401,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.93167726198833,
+            "unit": "sec",
+            "range": "stddev: 0.5017614912513145",
+            "extra": "mean: 93.93167726198833 sec\nrounds: 3"
           }
         ]
       }
