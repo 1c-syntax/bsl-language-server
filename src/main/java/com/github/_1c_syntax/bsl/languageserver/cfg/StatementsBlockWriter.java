@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import lombok.Getter;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.jspecify.annotations.NullUnmarked;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+@NullUnmarked
 class StatementsBlockWriter {
 
   static class JumpInformationRecord {
