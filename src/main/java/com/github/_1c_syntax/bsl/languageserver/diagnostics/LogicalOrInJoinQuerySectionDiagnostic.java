@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 15,
   tags = {
     DiagnosticTag.SQL,
     DiagnosticTag.PERFORMANCE,
