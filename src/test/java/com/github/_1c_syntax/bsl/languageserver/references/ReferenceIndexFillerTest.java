@@ -453,6 +453,9 @@ class ReferenceIndexFillerTest {
       .filter(ref -> ref.getUri().equals(documentContext.getUri()))
       .toList();
     assertThat(referencesToFuncFromTest).hasSize(0);
+  }
+
+  @Test
   void testHandleServerContextDocumentRemovedEvent() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
