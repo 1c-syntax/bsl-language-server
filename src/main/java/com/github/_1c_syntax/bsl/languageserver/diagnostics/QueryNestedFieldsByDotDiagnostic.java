@@ -34,7 +34,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.SQL,
-    DiagnosticTag.PERFORMANCE,
+    DiagnosticTag.PERFORMANCE
     DiagnosticTag.DESIGN
   }
 
