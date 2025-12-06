@@ -46,11 +46,11 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Set up JDK 17 (Corretto) with Gradle cache
+      - name: Set up JDK with Gradle cache
         uses: actions/setup-java@v5
         with:
           distribution: 'corretto'
-          java-version: '17'
+          java-version: 25
           cache: 'gradle'
 
       - name: Make Gradle wrapper executable (if needed)

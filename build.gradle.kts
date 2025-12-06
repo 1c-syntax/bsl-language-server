@@ -21,7 +21,7 @@ plugins {
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.21.0"
-    id("org.sonarqube") version "7.1.0.6387"
+    id("org.sonarqube") version "7.2.0.6526"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.4"
 }
@@ -116,14 +116,14 @@ dependencies {
     implementation("org.aspectj", "aspectjrt", "1.9.25")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.20.0")
+    implementation("commons-io", "commons-io", "2.21.0")
     implementation("commons-beanutils", "commons-beanutils", "1.11.0"){
         exclude("commons-logging", "commons-logging")
     }
     implementation("commons-codec", "commons-codec", "1.20.0")
-    implementation("org.apache.commons", "commons-lang3", "3.19.0")
+    implementation("org.apache.commons", "commons-lang3", "3.20.0")
     implementation("org.apache.commons", "commons-collections4", "4.5.0")
-    implementation("org.apache.commons", "commons-exec", "1.5.0")
+    implementation("org.apache.commons", "commons-exec", "1.6.0")
 
     // progress bar
     implementation("me.tongfei", "progressbar", "0.10.1")
@@ -142,7 +142,7 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.4.8-jre")
+            strictly("33.5.0-jre")
        }
     }
     

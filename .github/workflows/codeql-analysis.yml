@@ -44,10 +44,10 @@ jobs:
         # a pull request then we can checkout the head.
         fetch-depth: 0
 
-    - name: Set up JDK 17
+    - name: Set up JDK 25
       uses: actions/setup-java@v5
       with:
-        java-version: 17
+        java-version: 25
         distribution: 'corretto'
         cache: gradle
 
