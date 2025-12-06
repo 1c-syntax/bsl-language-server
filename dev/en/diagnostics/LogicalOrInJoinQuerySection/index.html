@@ -1484,12 +1484,12 @@ Diagnostics monitors the presence of predicates in the condition <code>OR</code>
 When executing a query on the SQL side, the control over the variants of one field is automatically converted to the IN condition.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>1) The error will not be fixed when using <code>OR</code> over variants of a single field.</p>
-<div class="highlight"><pre><span></span><code><span class="nv">LEFT</span> <span class="nv">JOIN</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">NomenclatureTypes</span> <span class="nv">КАК</span> <span class="nv">NomenclatureTypes</span>
+<p><div class="highlight"><pre><span></span><code><span class="nv">LEFT</span> <span class="nv">JOIN</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">NomenclatureTypes</span> <span class="nv">КАК</span> <span class="nv">NomenclatureTypes</span>
     <span class="nv">ON</span> <span class="nv">CatalogNomenclature</span><span class="o">.</span><span class="nv">NomenclatureType</span> <span class="o">=</span> <span class="nv">NomenclatureTypes</span><span class="o">.</span><span class="nv">Reference</span>
         <span class="nf">AND</span> <span class="p">(</span><span class="nv">CatalogNomenclature</span><span class="o">.</span><span class="nv">ExpirationDate</span> <span class="o">&gt;</span> <span class="m">1</span>
      <span class="k">OR</span> <span class="nv">CatalogNomenclature</span><span class="o">.</span><span class="nv">ExpirationDate</span> <span class="o">&lt;</span> <span class="m">10</span><span class="p">)</span>
 </code></pre></div>
-<p>2) When using the <code>OR</code> operator over various fields, the error will be fixed for each occurrence of the operator.</p>
+2) When using the <code>OR</code> operator over various fields, the error will be fixed for each occurrence of the operator.</p>
 <div class="highlight"><pre><span></span><code><span class="nv">INNER</span> <span class="nv">JOIN</span> <span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsServicesSaling</span> <span class="nv">КАК</span> <span class="nv">GoodsServicesSaling</span>
 <span class="nv">ON</span> <span class="nv">GoodsServicesSalingGoods</span><span class="o">.</span><span class="nv">Reference</span> <span class="o">=</span> <span class="nv">GoodsServicesSaling</span><span class="o">.</span><span class="nv">Reference</span>
    <span class="nf">AND</span> <span class="p">(</span><span class="nv">GoodsServicesSalingGoods</span><span class="o">.</span><span class="nv">Amount</span>  <span class="o">&gt;</span> <span class="m">0</span> 
