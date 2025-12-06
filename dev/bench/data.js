@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765007994724,
+  "lastUpdate": 1765012164928,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -31992,6 +31992,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.38393739405498",
             "extra": "mean: 93.86133050918579 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "84d360ff305207dd3aab38455ea3a122126bfcef",
+          "message": "Merge pull request #3641 from 1c-syntax/feature/deps-bupm\n\nUpdate Java version to 25 in CI configurations and dependencies + change sync model back to Full by default",
+          "timestamp": "2025-12-06T09:54:41+01:00",
+          "tree_id": "2edf071869a6945e66787d722fe2f2a92defd910",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/84d360ff305207dd3aab38455ea3a122126bfcef"
+        },
+        "date": 1765012159616,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.83847832679749,
+            "unit": "sec",
+            "range": "stddev: 1.3578328010339047",
+            "extra": "mean: 87.83847832679749 sec\nrounds: 3"
           }
         ]
       }
