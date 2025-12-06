@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765012164928,
+  "lastUpdate": 1765023728223,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32023,6 +32023,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3578328010339047",
             "extra": "mean: 87.83847832679749 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "71297e33e056720380a1beed95a3dd58e210cc6a",
+          "message": "Merge pull request #3642 from 1c-syntax/copilot/move-populatecontext-to-initialized\n\nПеренести запуск populateContext из обработки initialize в initialized",
+          "timestamp": "2025-12-06T12:40:45+01:00",
+          "tree_id": "d42d65e3bc1000f07d3582693e269b103a1c115b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/71297e33e056720380a1beed95a3dd58e210cc6a"
+        },
+        "date": 1765023723232,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.9499659538269,
+            "unit": "sec",
+            "range": "stddev: 0.8683998292580991",
+            "extra": "mean: 87.9499659538269 sec\nrounds: 3"
           }
         ]
       }
