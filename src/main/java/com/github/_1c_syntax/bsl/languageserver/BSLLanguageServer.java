@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
+import com.github._1c_syntax.bsl.languageserver.aop.sentry.SentrySessionTransaction;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
@@ -98,11 +100,16 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ServerContext context;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
+  private final SentrySessionTransaction sentrySessionTransaction;
 
   private boolean shutdownWasCalled;
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
+
+    // Запускаем сессионную транзакцию Sentry
+    var sessionName = getSessionName(params);
+    sentrySessionTransaction.startSession(sessionName);
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     
@@ -163,9 +170,22 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     context.setConfigurationRoot(configurationRoot);
   }
 
+  private String getSessionName(InitializeParams params) {
+    var workspaceFolders = params.getWorkspaceFolders();
+    if (workspaceFolders != null && !workspaceFolders.isEmpty()) {
+      return workspaceFolders.get(0).getName();
+    }
+    var rootUri = params.getRootUri();
+    if (rootUri != null) {
+      return rootUri;
+    }
+    return "unknown-workspace";
+  }
+
   @Override
   public CompletableFuture<Object> shutdown() {
     shutdownWasCalled = true;
+    sentrySessionTransaction.finishSession();
     textDocumentService.reset();
     context.clear();
     return CompletableFuture.completedFuture(Boolean.TRUE);

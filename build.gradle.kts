@@ -33,6 +33,19 @@ repositories {
     maven("https://central.sonatype.com/repository/maven-snapshots")
 }
 
+val sentryVersion = "8.28.0"
+
+// Force all Sentry dependencies to use the same version
+// Required because the Sentry Gradle plugin brings its own versions
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.sentry") {
+            useVersion(sentryVersion)
+            because("Align all Sentry dependencies to the same version to avoid mixed versions error")
+        }
+    }
+}
+
 group = "io.github.1c-syntax"
 gitVersioning.apply {
     refs {
@@ -95,6 +108,13 @@ dependencies {
     // nullability annotations
     api("org.jspecify", "jspecify", "1.0.0")
 
+    // Sentry profiling
+    api(platform("io.sentry:sentry-bom:$sentryVersion"))
+
+    api("io.sentry:sentry-async-profiler")
+    api("io.sentry:sentry-spring-jakarta")
+
+
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
         exclude("commons-logging", "commons-logging")
@@ -139,13 +159,15 @@ dependencies {
     // SARIF serialization
     implementation("com.contrastsecurity", "java-sarif", "2.0")
 
+    implementation("io.micrometer", "context-propagation")
+
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
             strictly("33.4.8-jre")
        }
     }
-    
+
     // COMPILE
 
     // TEST

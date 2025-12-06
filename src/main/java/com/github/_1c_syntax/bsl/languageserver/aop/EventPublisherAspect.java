@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop;
 
+import com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -33,7 +34,9 @@ import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -44,6 +47,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import java.io.File;
 import java.net.URI;
 import java.util.Collection;
+import java.util.UUID;
 
 /**
  * Аспект подсистемы событий.
@@ -97,6 +101,16 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
       initializeParams
     );
     publishEvent(event);
+  }
+
+  @Around("Pointcuts.isTextDocumentService() && Pointcuts.isPublicMethodCall()")
+  public Object textDocumentServiceMethodCall(ProceedingJoinPoint joinPoint) throws Throwable {
+    // log method name and arguments
+    var methodCallUUID = UUID.randomUUID().toString();
+    LOGGER.info("{}: Method {} called with arguments {}", methodCallUUID, joinPoint.getSignature().getName(), joinPoint.getArgs());
+    var result = joinPoint.proceed();
+    LOGGER.info("{}: Method {} finished", methodCallUUID, joinPoint.getSignature());
+    return result;
   }
 
   private void publishEvent(ApplicationEvent event) {

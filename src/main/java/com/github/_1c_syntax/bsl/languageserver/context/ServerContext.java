@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@SentrySpan
 public class ServerContext {
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;

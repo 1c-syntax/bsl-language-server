@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.utils.Absolute;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -56,6 +57,7 @@ import java.util.concurrent.Executors;
  */
 @Component
 @RequiredArgsConstructor
+@SentrySpan
 public class BSLWorkspaceService implements WorkspaceService {
 
   private final LanguageServerConfiguration configuration;

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
 import io.sentry.IScope;
+import io.sentry.ProfileLifecycle;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
 import org.jspecify.annotations.Nullable;
@@ -50,6 +51,18 @@ public class SentryScopeConfigurer {
   @Value("${sentry.dsn:}")
   private final String dsn;
 
+  @Value("${sentry.traces-sample-rate:0.0}")
+  private final double tracesSampleRate;
+
+  @Value("${sentry.logs.enabled:false}")
+  private final boolean logsEnabled;
+
+  @Value("${sentry.debug:false}")
+  private final boolean debug;
+
+  @Value("${sentry.profile-session-sample-rate:0.0}")
+  private final double profileSessionSampleRate;
+
   @PostConstruct
   public void init() {
     if (dsn != null && !dsn.isEmpty()) {
@@ -61,6 +74,24 @@ public class SentryScopeConfigurer {
         options.setServerName(getServerName());
         options.setBeforeSend(beforeSendCallback);
         options.addInAppInclude("com.github._1c_syntax.bsl.languageserver");
+
+        // Включение трейсов
+        options.setTracesSampleRate(tracesSampleRate);
+
+        // Включение логов
+        options.getLogs().setEnabled(logsEnabled);
+
+        // Режим отладки
+        options.setDebug(debug);
+
+        // To collect profiles for all profile sessions,
+        // set `profile_session_sample_rate` to 1.0.
+        options.setProfileSessionSampleRate(profileSessionSampleRate);
+        // Profiles will be automatically collected while
+        // there is an active span.
+        if (profileSessionSampleRate > 0) {
+          options.setProfileLifecycle(ProfileLifecycle.TRACE);
+        }
       });
     }
 

@@ -47,6 +47,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +108,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
@@ -117,6 +119,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -132,6 +135,7 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SentrySpan
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private final ServerContext context;
@@ -154,7 +158,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
 
-  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
+  @Qualifier("textDocumentServiceExecutor")
+  private final Executor executorService;
 
   // Executors per document URI to serialize didChange operations and avoid race conditions
   private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
@@ -167,7 +172,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     documentExecutors.values().forEach(DocumentChangeExecutor::shutdown);
     documentExecutors.clear();
 
-    executorService.shutdown();
+//    executorService.shutdown();
   }
 
   @Override
