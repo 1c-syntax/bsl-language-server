@@ -163,8 +163,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     CompletableFuture
       .runAsync(context::populateContext, executorService)
-      .thenAccept(unused -> executorService.shutdown())
-    ;
+      .whenComplete((unused, throwable) -> {
+        executorService.shutdown();
+        if (throwable != null) {
+          LOGGER.error("Error populating context", throwable);
+        }
+      });
   }
 
   @Override
