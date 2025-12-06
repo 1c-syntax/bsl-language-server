@@ -116,7 +116,7 @@ class LanguageServerConfigurationTest {
     assertThat(configuration.getDiagnosticsOptions().getParameters()).isEmpty();
     assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isTrue();
     assertThat(configuration.getCapabilities().getTextDocumentSync().getChange())
-      .isEqualTo(TextDocumentSyncKind.Incremental);
+      .isEqualTo(TextDocumentSyncKind.Full);
   }
 
   @Test

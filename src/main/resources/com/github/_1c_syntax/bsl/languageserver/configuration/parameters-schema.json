@@ -1076,6 +1076,16 @@
             },
             "$id": "#/definitions/LineLength"
         },
+        "LogicalOrInJoinQuerySection": {
+            "description": "Logical 'OR' in 'JOIN' query section",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Logical 'OR' in 'JOIN' query section",
+            "$id": "#/definitions/LogicalOrInJoinQuerySection"
+        },
         "LogicalOrInTheWhereSectionOfQuery": {
             "description": "Using a logical \"OR\" in the \"WHERE\" section of a query",
             "default": true,
@@ -1626,6 +1636,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "QueryNestedFieldsByDot": {
+            "description": "Getting objects nested fields data by dot in database query text",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Getting objects nested fields data by dot in database query text",
+            "$id": "#/definitions/QueryNestedFieldsByDot"
+        },
         "QueryParseError": {
             "description": "Query text parsing error",
             "default": true,
@@ -2029,6 +2049,16 @@
             ],
             "title": "Unreachable Code",
             "$id": "#/definitions/UnreachableCode"
+        },
+        "UnsafeFindByCode": {
+            "description": "Unsafe FindByCode() method usage",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unsafe FindByCode() method usage",
+            "$id": "#/definitions/UnsafeFindByCode"
         },
         "UnsafeSafeModeMethodCall": {
             "description": "Unsafe SafeMode method call",

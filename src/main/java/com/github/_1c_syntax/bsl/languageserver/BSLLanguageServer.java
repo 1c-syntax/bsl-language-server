@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.TextDocumentSyncCapabilityOptions;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -55,6 +54,8 @@ import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -96,6 +97,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+  private final SemanticTokensLegend legend;
 
   private boolean shutdownWasCalled;
 
@@ -133,6 +135,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
     capabilities.setDiagnosticProvider(getDiagnosticProvider());
+    capabilities.setSemanticTokensProvider(getSemanticTokensProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -217,10 +220,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
    */
   private TextDocumentSyncKind getConfiguredSyncKind() {
-    return Optional.ofNullable(configuration.getCapabilities())
-      .map(caps -> caps.getTextDocumentSync())
-      .map(TextDocumentSyncCapabilityOptions::getChange)
-      .orElse(TextDocumentSyncCapabilityOptions.DEFAULT_CHANGE);
+    return configuration.getCapabilities().getTextDocumentSync().getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {
@@ -321,7 +321,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static Either<Boolean, RenameOptions> getRenameProvider(InitializeParams params) {
 
-    if (Boolean.TRUE.equals(getRenamePrepareSupport(params))) {
+    if (hasRenamePrepareSupport(params)) {
 
       var renameOptions = new RenameOptions();
       renameOptions.setWorkDoneProgress(Boolean.FALSE);
@@ -337,7 +337,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   }
 
-  private static Boolean getRenamePrepareSupport(InitializeParams params) {
+  private static boolean hasRenamePrepareSupport(InitializeParams params) {
     return Optional.of(params)
       .map(InitializeParams::getCapabilities)
       .map(ClientCapabilities::getTextDocument)
@@ -367,4 +367,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     executeCommandOptions.setWorkDoneProgress(Boolean.FALSE);
     return executeCommandOptions;
   }
+
+  private SemanticTokensWithRegistrationOptions getSemanticTokensProvider() {
+    var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
+    semanticTokensProvider.setFull(Boolean.TRUE);
+    semanticTokensProvider.setRange(Boolean.FALSE);
+    return semanticTokensProvider;
+  }
+
 }

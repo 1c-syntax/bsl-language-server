@@ -266,6 +266,9 @@
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
+                "LogicalOrInJoinQuerySection": {
+                    "$ref": "parameters-schema.json#/definitions/LogicalOrInJoinQuerySection"
+                },
                 "LogicalOrInTheWhereSectionOfQuery": {
                     "$ref": "parameters-schema.json#/definitions/LogicalOrInTheWhereSectionOfQuery"
                 },
@@ -377,6 +380,9 @@
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
                 },
+                "QueryNestedFieldsByDot": {
+                    "$ref": "parameters-schema.json#/definitions/QueryNestedFieldsByDot"
+                },
                 "QueryParseError": {
                     "$ref": "parameters-schema.json#/definitions/QueryParseError"
                 },
@@ -469,6 +475,9 @@
                 },
                 "UnreachableCode": {
                     "$ref": "parameters-schema.json#/definitions/UnreachableCode"
+                },
+                "UnsafeFindByCode": {
+                    "$ref": "parameters-schema.json#/definitions/UnsafeFindByCode"
                 },
                 "UnsafeSafeModeMethodCall": {
                     "$ref": "parameters-schema.json#/definitions/UnsafeSafeModeMethodCall"

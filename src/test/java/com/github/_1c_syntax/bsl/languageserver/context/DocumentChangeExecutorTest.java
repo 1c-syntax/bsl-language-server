@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,23 +62,6 @@ class DocumentChangeExecutorTest {
   void tearDown() throws InterruptedException {
     executor.shutdown();
     executor.awaitTermination(1, TimeUnit.SECONDS);
-  }
-
-  @Test
-  void processesChangesInVersionOrder() throws InterruptedException {
-    // given
-    var changesV1 = List.of(new TextDocumentContentChangeEvent("first"));
-    var changesV2 = List.of(new TextDocumentContentChangeEvent("second"));
-
-    // when
-    executor.submit(2, changesV2);
-    executor.submit(1, changesV1);
-
-    executor.shutdown();
-    executor.awaitTermination(1, TimeUnit.SECONDS);
-
-    // thens
-    assertThat(listenerCalls.get()).isEqualTo(1);
   }
 
   private static String apply(String base, List<TextDocumentContentChangeEvent> changes) {

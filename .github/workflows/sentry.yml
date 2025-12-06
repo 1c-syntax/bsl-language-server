@@ -16,10 +16,10 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: 21
+          java-version: 25
           distribution: 'corretto'
           cache: gradle
       - name: Get version from Gradle

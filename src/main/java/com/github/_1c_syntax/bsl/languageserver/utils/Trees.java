@@ -71,7 +71,7 @@ public final class Trees {
    * @param ruleIndex Индекс правила для поиска
    * @return Коллекция найденных узлов
    */
-  public static Collection<ParseTree> findAllRuleNodes(ParseTree t, int ruleIndex) {
+  public static <T extends ParseTree> Collection<T> findAllRuleNodes(ParseTree t, int ruleIndex) {
     return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
   }
 

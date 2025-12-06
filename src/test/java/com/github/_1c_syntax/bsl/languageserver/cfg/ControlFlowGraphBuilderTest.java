@@ -43,6 +43,42 @@ import static org.mockito.Mockito.when;
 class ControlFlowGraphBuilderTest {
 
   @Test
+  void testBreakContinueOutsideLoop() {
+
+    var code = """
+      Если Истина Тогда
+        А = 1;
+        Прервать;
+        Б = 2;
+      КонецЕсли;
+      В = 1;
+      Продолжить;
+      Г = 7;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+    var vertices = traverseToOrderedList(graph);
+    assertThat(vertices).isNotEmpty();
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ConditionalVertex.class);
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    // Единый блок без разрыва в месте оператора перехода
+    assertThat(((BasicBlockVertex)walker.getCurrentNode()).statements()).hasSize(3);
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    // Единый блок без разрыва в месте оператора перехода
+    assertThat(((BasicBlockVertex)walker.getCurrentNode()).statements()).hasSize(3);
+    walker.walkNext();
+
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+  }
+
+  @Test
   void PreprocCanBeBuild() {
 
     var code = """

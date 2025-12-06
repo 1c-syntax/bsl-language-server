@@ -45,6 +45,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -93,6 +94,8 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -149,6 +152,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final RenameProvider renameProvider;
   private final InlayHintProvider inlayHintProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final SemanticTokensProvider semanticTokensProvider;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
 
@@ -162,7 +166,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // Shutdown all document executors
     documentExecutors.values().forEach(DocumentChangeExecutor::shutdown);
     documentExecutors.clear();
-    
+
     executorService.shutdown();
   }
 
@@ -323,6 +327,21 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
+  public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> semanticTokensProvider.getSemanticTokensFull(documentContext, params)
+    );
+  }
+
+
+
+  @Override
   public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
     CallHierarchyIncomingCallsParams params
   ) {
@@ -408,7 +427,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public void didOpen(DidOpenTextDocumentParams params) {
     var textDocumentItem = params.getTextDocument();
     var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
-    
+
     // Create single-threaded executor for this document to serialize didChange operations
     var uri = documentContext.getUri();
     documentExecutors.computeIfAbsent(uri, key ->
@@ -460,7 +479,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return;
     }
-    
+
     var uri = documentContext.getUri();
 
     // Remove and shutdown the executor for this document, waiting for all pending changes
@@ -539,7 +558,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(Collections.emptyList()))
       );
     }
-    
+
     return withFreshDocumentContext(
       documentContext,
       () -> diagnosticProvider.getDiagnostic(documentContext)
@@ -682,10 +701,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       }
 
       currentLine++;
-      
+
       // Handle \r\n as a single line ending
-      if (content.charAt(nextLineBreak) == '\r' 
-          && nextLineBreak + 1 < content.length() 
+      if (content.charAt(nextLineBreak) == '\r'
+          && nextLineBreak + 1 < content.length()
           && content.charAt(nextLineBreak + 1) == '\n') {
         offset = nextLineBreak + 2;
         searchFrom = nextLineBreak + 2;
