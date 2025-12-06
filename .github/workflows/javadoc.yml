@@ -38,7 +38,7 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v5
       with:
-        java-version: 17
+        java-version: 25
         distribution: 'corretto'
         cache: gradle
     - name: Check javadoc build

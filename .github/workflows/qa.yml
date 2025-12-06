@@ -49,10 +49,10 @@ jobs:
         git clean -ffdx && git reset --hard HEAD
       env:
         HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-    - name: Set up JDK 17
+    - name: Set up JDK
       uses: actions/setup-java@v5
       with:
-        java-version: 17
+        java-version: 25
         distribution: 'corretto'
         cache: gradle
     - name: SonarCloud Scan on PR
