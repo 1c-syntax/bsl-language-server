@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.List;
 import java.util.Locale;
@@ -205,32 +206,17 @@ public class ModuleReference {
     String moduleName,
     List<String> commonModuleAccessors
   ) {
-    for (var modifier : complexId.modifier()) {
-      var methodName = extractMethodNameFromModifier(modifier);
-      if (methodName != null && isModuleMethodMatch(methodName, moduleName, commonModuleAccessors)) {
-        return true;
-      }
-    }
-    return false;
+    return complexId.modifier().stream()
+      .flatMap(modifier -> extractMethodNameFromModifier(modifier).stream())
+      .anyMatch(methodName -> isModuleMethodMatch(methodName, moduleName, commonModuleAccessors));
   }
 
-  private static String extractMethodNameFromModifier(BSLParser.ModifierContext modifier) {
-    var accessCall = modifier.accessCall();
-    if (accessCall == null) {
-      return null;
-    }
-    
-    var methodCall = accessCall.methodCall();
-    if (methodCall == null) {
-      return null;
-    }
-    
-    var methodName = methodCall.methodName();
-    if (methodName == null || methodName.IDENTIFIER() == null) {
-      return null;
-    }
-    
-    return methodName.IDENTIFIER().getText();
+  private static Optional<String> extractMethodNameFromModifier(BSLParser.ModifierContext modifier) {
+    return Optional.ofNullable(modifier.accessCall())
+      .map(BSLParser.AccessCallContext::methodCall)
+      .map(BSLParser.MethodCallContext::methodName)
+      .map(BSLParser.MethodNameContext::IDENTIFIER)
+      .map(TerminalNode::getText);
   }
 
   private static Optional<String> extractCommonModuleNameFromMember(
@@ -267,19 +253,15 @@ public class ModuleReference {
     String moduleName,
     List<String> commonModuleAccessors
   ) {
-    for (var modifier : complexId.modifier()) {
-      var accessCall = modifier.accessCall();
-      if (accessCall == null || accessCall.methodCall() == null) {
-        continue;
-      }
-      
-      var methodCall = accessCall.methodCall();
-      var methodName = extractMethodNameFromModifier(modifier);
-      if (methodName != null && isModuleMethodMatch(methodName, moduleName, commonModuleAccessors)) {
-        return extractParameterFromDoCall(methodCall.doCall());
-      }
-    }
-    return Optional.empty();
+    return complexId.modifier().stream()
+      .filter(modifier -> extractMethodNameFromModifier(modifier)
+        .filter(methodName -> isModuleMethodMatch(methodName, moduleName, commonModuleAccessors))
+        .isPresent())
+      .findFirst()
+      .flatMap(modifier -> Optional.ofNullable(modifier.accessCall())
+        .map(BSLParser.AccessCallContext::methodCall)
+        .map(BSLParser.MethodCallContext::doCall)
+        .flatMap(ModuleReference::extractParameterFromDoCall));
   }
 
   private static Optional<String> extractModuleNameFromGlobalMethodCall(
