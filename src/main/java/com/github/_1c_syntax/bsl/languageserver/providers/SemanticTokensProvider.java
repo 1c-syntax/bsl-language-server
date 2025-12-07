@@ -332,7 +332,11 @@ public class SemanticTokensProvider {
 
       var annotationParams = annotation.annotationParams();
       if (annotationParams != null) {
-        for (var annotationParamName : Trees.<AnnotationParamNameContext>findAllRuleNodes(annotationParams, BSLParser.RULE_annotationParamName)) {
+        for (var annotationParam : annotationParams.annotationParam()) {
+          var annotationParamName = annotationParam.annotationParamName();
+          if (annotationParamName == null) {
+            continue;
+          }
           addRange(entries, Ranges.create(annotationParamName.IDENTIFIER()), SemanticTokenTypes.Parameter);
         }
       }

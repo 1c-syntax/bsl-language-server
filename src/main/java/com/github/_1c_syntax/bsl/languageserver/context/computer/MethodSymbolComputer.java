@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition.ParameterType;
@@ -35,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -356,15 +358,23 @@ public final class MethodSymbolComputer
       .toList();
   }
 
-  private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
-    var name = Optional.ofNullable(o.annotationParamName())
+  private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext annotationParam) {
+    var name = Optional.ofNullable(annotationParam.annotationParamName())
       .map(ParserRuleContext::getText)
       .orElse("");
-    var value = Optional.ofNullable(o.constValue())
+    var value = Optional.ofNullable(annotationParam.annotationParamValue())
+      .map(BSLParser.AnnotationParamValueContext::constValue)
       .map(ParserRuleContext::getText)
       .map(MethodSymbolComputer::excludeTrailingQuotes)
-      .orElse("");
-    var optional = o.constValue() != null;
+      .map(Either::<String, Annotation>forLeft)
+      .or(
+        () -> Optional.ofNullable(annotationParam.annotationParamValue())
+          .map(BSLParser.AnnotationParamValueContext::annotation)
+          .map(MethodSymbolComputer::createAnnotation)
+          .map(Either::<String, Annotation>forRight)
+      )
+      .orElse(Either.forLeft(""));
+    var optional = annotationParam.annotationParamValue() != null;
 
     return new AnnotationParameterDefinition(name, value, optional);
   }
