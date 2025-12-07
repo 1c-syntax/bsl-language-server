@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+
 /**
  * Класс хранит информацию о параметре аннотации.
  * См. {@link Annotation}
  */
-public record AnnotationParameterDefinition(String name, String value, boolean optional) {
+public record AnnotationParameterDefinition(String name, Either<String, Annotation> value, boolean optional) {
 }
