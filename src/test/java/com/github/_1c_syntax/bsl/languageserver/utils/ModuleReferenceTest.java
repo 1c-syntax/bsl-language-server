@@ -93,4 +93,133 @@ class ModuleReferenceTest {
     assertThat(moduleName).isPresent();
     assertThat(moduleName.get()).isEqualTo("ТестовыйМодуль");
   }
+
+  @Test
+  void testDetectManagerModuleExpression() {
+    // Проверяем, что null возвращает false
+    assertThat(ModuleReference.isManagerModuleExpression(null)).isFalse();
+  }
+
+  @Test
+  void testExtractManagerModuleInfoCatalogs() {
+    var code = "Процедура Тест()\n" +
+      "  Результат = Справочники.Номенклатура.НайтиПоКоду(\"001\");\n" +
+      "КонецПроцедуры";
+    
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+    
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+    
+    assertThat(assignments).hasSize(1);
+    
+    var expression = assignments.get(0).expression();
+    assertThat(ModuleReference.isManagerModuleExpression(expression)).isTrue();
+    
+    var managerInfo = ModuleReference.extractManagerModuleInfo(expression);
+    assertThat(managerInfo).isPresent();
+    assertThat(managerInfo.get().managerType()).isEqualTo("Справочники");
+    assertThat(managerInfo.get().objectName()).isEqualTo("Номенклатура");
+  }
+
+  @Test
+  void testExtractManagerModuleInfoDocuments() {
+    var code = "Процедура Тест()\n" +
+      "  Результат = Документы.ПриходнаяНакладная.СоздатьДокумент();\n" +
+      "КонецПроцедуры";
+    
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+    
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+    
+    assertThat(assignments).hasSize(1);
+    
+    var expression = assignments.get(0).expression();
+    assertThat(ModuleReference.isManagerModuleExpression(expression)).isTrue();
+    
+    var managerInfo = ModuleReference.extractManagerModuleInfo(expression);
+    assertThat(managerInfo).isPresent();
+    assertThat(managerInfo.get().managerType()).isEqualTo("Документы");
+    assertThat(managerInfo.get().objectName()).isEqualTo("ПриходнаяНакладная");
+  }
+
+  @Test
+  void testExtractManagerModuleInfoEnglishSyntax() {
+    var code = "Procedure Test()\n" +
+      "  Result = Catalogs.Nomenclature.FindByCode(\"001\");\n" +
+      "EndProcedure";
+    
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+    
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+    
+    assertThat(assignments).hasSize(1);
+    
+    var expression = assignments.get(0).expression();
+    assertThat(ModuleReference.isManagerModuleExpression(expression)).isTrue();
+    
+    var managerInfo = ModuleReference.extractManagerModuleInfo(expression);
+    assertThat(managerInfo).isPresent();
+    assertThat(managerInfo.get().managerType()).isEqualTo("Catalogs");
+    assertThat(managerInfo.get().objectName()).isEqualTo("Nomenclature");
+  }
+
+  @Test
+  void testExtractManagerModuleInfoInformationRegisters() {
+    var code = "Процедура Тест()\n" +
+      "  Результат = РегистрыСведений.КурсыВалют.СоздатьМенеджерЗаписи();\n" +
+      "КонецПроцедуры";
+    
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+    
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+    
+    assertThat(assignments).hasSize(1);
+    
+    var expression = assignments.get(0).expression();
+    assertThat(ModuleReference.isManagerModuleExpression(expression)).isTrue();
+    
+    var managerInfo = ModuleReference.extractManagerModuleInfo(expression);
+    assertThat(managerInfo).isPresent();
+    assertThat(managerInfo.get().managerType()).isEqualTo("РегистрыСведений");
+    assertThat(managerInfo.get().objectName()).isEqualTo("КурсыВалют");
+  }
+
+  @Test
+  void testNonManagerModuleExpression() {
+    var code = "Процедура Тест()\n" +
+      "  Результат = МояПеременная.Метод();\n" +
+      "КонецПроцедуры";
+    
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+    
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+    
+    assertThat(assignments).hasSize(1);
+    
+    var expression = assignments.get(0).expression();
+    assertThat(ModuleReference.isManagerModuleExpression(expression)).isFalse();
+    
+    var managerInfo = ModuleReference.extractManagerModuleInfo(expression);
+    assertThat(managerInfo).isEmpty();
+  }
 }
