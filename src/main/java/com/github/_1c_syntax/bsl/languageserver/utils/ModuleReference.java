@@ -277,7 +277,7 @@ public class ModuleReference {
   }
 
   private static Optional<String> extractModuleNameFromModifiers(
-    java.util.List<? extends BSLParser.ModifierContext> modifiers
+    List<? extends BSLParser.ModifierContext> modifiers
   ) {
     for (var modifier : modifiers) {
       var moduleName = extractParameterFromDoCall(modifier.accessCall());

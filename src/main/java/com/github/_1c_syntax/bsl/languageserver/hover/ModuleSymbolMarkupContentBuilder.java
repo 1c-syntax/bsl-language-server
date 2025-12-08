@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -74,11 +75,19 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     var moduleName = symbol.getName();
 
     // Для CommonModule показываем только имя модуля
-    if (moduleType == com.github._1c_syntax.bsl.types.ModuleType.CommonModule) {
+    if (moduleType == ModuleType.CommonModule) {
       return String.format("```bsl\n%s\n```", moduleName);
     }
 
-    // Для остальных типов используем mdoRef
+    // Для остальных типов используем mdoRef в зависимости от локали
+    var mdObject = documentContext.getMdObject();
+    if (mdObject.isPresent()) {
+      var mdoRefLocal = documentContext.getServerContext()
+        .getConfiguration()
+        .getMdoRefLocal(mdObject.get());
+      return String.format("```bsl\n%s\n```", mdoRefLocal);
+    }
+
     var mdoRef = documentContext.getMdoRef();
     return String.format("```bsl\n%s\n```", mdoRef);
   }
@@ -86,9 +95,19 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
   private String buildLocation(ModuleSymbol symbol) {
     var documentContext = symbol.getOwner();
     var uri = documentContext.getUri();
-    var mdoRef = documentContext.getMdoRef();
+    
+    // Используем локализованный mdoRef
+    var mdObject = documentContext.getMdObject();
+    String mdoRefLocal;
+    if (mdObject.isPresent()) {
+      mdoRefLocal = documentContext.getServerContext()
+        .getConfiguration()
+        .getMdoRefLocal(mdObject.get());
+    } else {
+      mdoRefLocal = documentContext.getMdoRef();
+    }
 
-    return String.format("[%s](%s)", mdoRef, uri);
+    return String.format("[%s](%s)", mdoRefLocal, uri);
   }
 
   private String buildModuleInfo(ModuleSymbol symbol) {

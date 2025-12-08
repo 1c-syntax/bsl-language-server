@@ -72,8 +72,8 @@ class ModuleSymbolMarkupContentBuilderTest {
     assertThat(blocks.get(0)).contains("ПервыйОбщийМодуль");
     assertThat(blocks.get(0)).doesNotContain("Общий модуль:");
 
-    // Местоположение
-    assertThat(blocks.get(1)).contains("CommonModule.ПервыйОбщийМодуль");
+    // Местоположение - используется локализованный mdoRef
+    assertThat(blocks.get(1)).contains("ОбщийМодуль.ПервыйОбщийМодуль");
   }
 
   @Test
@@ -92,8 +92,8 @@ class ModuleSymbolMarkupContentBuilderTest {
 
     assertThat(blocks).hasSizeGreaterThanOrEqualTo(2);
 
-    // Для ManagerModule используется mdoRef
-    assertThat(blocks.get(0)).contains("Catalog.Справочник1");
+    // Для ManagerModule используется локализованный mdoRef
+    assertThat(blocks.get(0)).contains("Справочник.Справочник1");
   }
 
   @Test
@@ -112,8 +112,8 @@ class ModuleSymbolMarkupContentBuilderTest {
 
     assertThat(blocks).hasSizeGreaterThanOrEqualTo(2);
 
-    // Для ObjectModule используется mdoRef
-    assertThat(blocks.get(0)).contains("Catalog.Справочник1");
+    // Для ObjectModule используется локализованный mdoRef
+    assertThat(blocks.get(0)).contains("Справочник.Справочник1");
   }
 
   @Test
