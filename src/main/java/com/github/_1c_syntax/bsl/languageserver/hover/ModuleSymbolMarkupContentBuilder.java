@@ -120,7 +120,7 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
 
     // Комментарий
     var comment = commonModule.getComment();
-    if (comment != null && !comment.isBlank()) {
+    if (!comment.isBlank()) {
       infoBuilder.add(comment);
       infoBuilder.add("");
     }
