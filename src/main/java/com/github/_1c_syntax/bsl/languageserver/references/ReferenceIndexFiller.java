@@ -312,12 +312,17 @@ public class ReferenceIndexFiller {
     }
   }
 
-  @RequiredArgsConstructor
   private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
+    private final List<String> commonModuleAccessors;
     private SourceDefinedSymbol currentScope;
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
+
+    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext) {
+      this.documentContext = documentContext;
+      this.commonModuleAccessors = configuration.getReferencesOptions().getCommonModuleAccessors();
+    }
 
     @Override
     public ParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
@@ -376,7 +381,6 @@ public class ReferenceIndexFiller {
       // Detect pattern: Variable = ОбщегоНазначения.ОбщийМодуль("ModuleName") or Variable = ОбщийМодуль("ModuleName")
       var lValue = ctx.lValue();
       var expression = ctx.expression();
-      var commonModuleAccessors = configuration.getReferencesOptions().getCommonModuleAccessors();
 
       if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
         var variableKey = lValue.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH);
@@ -471,7 +475,7 @@ public class ReferenceIndexFiller {
       var isInsideCallStatement = false;
       if (parentCallStatement instanceof BSLParser.CallStatementContext callStmt) {
         isInsideCallStatement = callStmt.IDENTIFIER() != null
-          && callStmt.IDENTIFIER().getText().equals(variableName);
+          && callStmt.IDENTIFIER().getText().equalsIgnoreCase(variableName);
       }
       
       // Check if variable references a common module
