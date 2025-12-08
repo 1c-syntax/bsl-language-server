@@ -141,7 +141,7 @@ public class ReferenceIndexFiller {
       }
 
       // Добавляем ссылку на модуль по позиции идентификатора (только для общих модулей)
-      addModuleReferenceForCommonModuleIdentifier(mdoRef, ctx.IDENTIFIER());
+      addModuleReferenceForCommonModuleIdentifier(ctx.IDENTIFIER());
 
       Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
@@ -156,7 +156,7 @@ public class ReferenceIndexFiller {
       }
 
       // Добавляем ссылку на модуль по позиции идентификатора (только для общих модулей)
-      addModuleReferenceForCommonModuleIdentifier(mdoRef, ctx.IDENTIFIER());
+      addModuleReferenceForCommonModuleIdentifier(ctx.IDENTIFIER());
 
       Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
       return super.visitComplexIdentifier(ctx);
@@ -237,7 +237,7 @@ public class ReferenceIndexFiller {
      * именем общего модуля. Для вызовов вида Справочники.Имя.Метод() ссылка не добавляется,
      * так как "Справочники" - это тип MDO, а не имя модуля.
      */
-    private void addModuleReferenceForCommonModuleIdentifier(String mdoRef, TerminalNode identifier) {
+    private void addModuleReferenceForCommonModuleIdentifier(TerminalNode identifier) {
       if (identifier == null) {
         return;
       }
@@ -248,9 +248,11 @@ public class ReferenceIndexFiller {
         return;
       }
       
+      // Используем mdoRef из найденного модуля для консистентности
+      var commonModuleMdoRef = commonModule.get().getMdoReference().getMdoRef();
       index.addModuleReference(
         documentContext.getUri(),
-        mdoRef,
+        commonModuleMdoRef,
         ModuleType.CommonModule,
         Ranges.create(identifier)
       );

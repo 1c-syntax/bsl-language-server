@@ -291,7 +291,12 @@ class ReferenceIndexTest {
     var references = referenceIndex.getReferencesFrom(localMethodSymbol);
 
     // then
-    // 5 references: local method, 2x module name (lines 3 and 5), method in common module, method in manager module
+    // 5 references from ReferenceIndex.bsl:
+    // - line 2: local method call ИмяПроцедуры()
+    // - line 3: module name ПервыйОбщийМодуль
+    // - line 3: method УстаревшаяПроцедура in common module
+    // - line 4: method УстаревшаяПроцедура in manager module
+    // - line 5: module name ПервыйОбщийМодуль
     assertThat(references)
       .hasSize(5)
       .contains(Reference.of(localMethodSymbol, localMethodSymbol, locationLocal))
