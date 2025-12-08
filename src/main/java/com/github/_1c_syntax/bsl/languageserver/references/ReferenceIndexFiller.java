@@ -72,6 +72,7 @@ import java.util.stream.Collectors;
 public class ReferenceIndexFiller {
 
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
+    ModuleType.ManagerModule,
     ModuleType.CommonModule,
     ModuleType.UNKNOWN
   );

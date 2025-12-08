@@ -275,30 +275,19 @@ public class ModuleReference {
   }
 
   private static Optional<String> extractParameterFromDoCall(BSLParser.AccessCallContext accessCall) {
-    if (accessCall == null || accessCall.methodCall() == null) {
-      return Optional.empty();
-    }
-    return extractParameterFromDoCall(accessCall.methodCall().doCall());
+    return Optional.ofNullable(accessCall)
+      .map(BSLParser.AccessCallContext::methodCall)
+      .map(BSLParser.MethodCallContext::doCall)
+      .flatMap(ModuleReference::extractParameterFromDoCall);
   }
 
   private static Optional<String> extractParameterFromDoCall(BSLParser.DoCallContext doCall) {
-    if (doCall == null) {
-      return Optional.empty();
-    }
-
-    var callParamList = doCall.callParamList();
-    if (callParamList == null) {
-      return Optional.empty();
-    }
-
-    var params = callParamList.callParam();
-    if (params.isEmpty()) {
-      return Optional.empty();
-    }
-
-    // Берем первый параметр - имя модуля
-    var firstParam = params.get(0);
-    return Optional.ofNullable(firstParam.getText())
+    return Optional.ofNullable(doCall)
+      .map(BSLParser.DoCallContext::callParamList)
+      .map(BSLParser.CallParamListContext::callParam)
+      .filter(params -> !params.isEmpty())
+      .map(params -> params.get(0))
+      .map(BSLParser.CallParamContext::getText)
       .map(Strings::trimQuotes);
   }
 }
