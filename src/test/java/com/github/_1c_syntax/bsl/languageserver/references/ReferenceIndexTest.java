@@ -257,7 +257,8 @@ class ReferenceIndexTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
     var uri = documentContext.getUri();
-    var position = new Position(4, 10);
+    // Position on "Тест" method name (non-export method)
+    var position = new Position(4, 24);
 
     // when
     var reference = referenceIndex.getReference(uri, position);
@@ -274,24 +275,30 @@ class ReferenceIndexTest {
 
     var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var commonModuleMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
+    var commonModuleSymbol = commonModuleContext.getSymbolTree().getModule();
 
     var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri().toString();
     var locationLocal = new Location(uri, Ranges.create(1, 4, 16));
+    var locationCommonModuleName1 = new Location(uri, Ranges.create(2, 4, 21)); // ПервыйОбщийМодуль on line 3
     var locationCommonModule = new Location(uri, Ranges.create(2, 22, 41));
     var locationManagerModule = new Location(uri, Ranges.create(3, 38, 57));
+    var locationCommonModuleName2 = new Location(uri, Ranges.create(4, 4, 21)); // ПервыйОбщийМодуль on line 5
 
     // when
     var references = referenceIndex.getReferencesFrom(localMethodSymbol);
 
     // then
+    // 5 references: local method, 2x module name (lines 3 and 5), method in common module, method in manager module
     assertThat(references)
-      .hasSize(3)
+      .hasSize(5)
       .contains(Reference.of(localMethodSymbol, localMethodSymbol, locationLocal))
+      .contains(Reference.of(localMethodSymbol, commonModuleSymbol, locationCommonModuleName1))
       .contains(Reference.of(localMethodSymbol, commonModuleMethodSymbol, locationCommonModule))
       .contains(Reference.of(localMethodSymbol, managerModuleMethodSymbol, locationManagerModule))
+      .contains(Reference.of(localMethodSymbol, commonModuleSymbol, locationCommonModuleName2))
     ;
   }
 
