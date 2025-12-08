@@ -44,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.event.EventListener;
@@ -139,6 +140,9 @@ public class ReferenceIndexFiller {
         return super.visitCallStatement(ctx);
       }
 
+      // Добавляем ссылку на модуль по позиции идентификатора (только для общих модулей)
+      addModuleReferenceForCommonModuleIdentifier(mdoRef, ctx.IDENTIFIER());
+
       Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
       return super.visitCallStatement(ctx);
@@ -150,6 +154,9 @@ public class ReferenceIndexFiller {
       if (mdoRef.isEmpty()) {
         return super.visitComplexIdentifier(ctx);
       }
+
+      // Добавляем ссылку на модуль по позиции идентификатора (только для общих модулей)
+      addModuleReferenceForCommonModuleIdentifier(mdoRef, ctx.IDENTIFIER());
 
       Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
       return super.visitComplexIdentifier(ctx);
@@ -223,6 +230,30 @@ public class ReferenceIndexFiller {
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
       }
+    }
+
+    /**
+     * Добавляет ссылку на модуль по позиции идентификатора, только если идентификатор является
+     * именем общего модуля. Для вызовов вида Справочники.Имя.Метод() ссылка не добавляется,
+     * так как "Справочники" - это тип MDO, а не имя модуля.
+     */
+    private void addModuleReferenceForCommonModuleIdentifier(String mdoRef, TerminalNode identifier) {
+      if (identifier == null) {
+        return;
+      }
+      // Добавляем ссылку только если идентификатор является именем общего модуля
+      var identifierText = identifier.getText();
+      var commonModule = documentContext.getServerContext().getConfiguration().findCommonModule(identifierText);
+      if (commonModule.isEmpty()) {
+        return;
+      }
+      
+      index.addModuleReference(
+        documentContext.getUri(),
+        mdoRef,
+        ModuleType.CommonModule,
+        Ranges.create(identifier)
+      );
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {

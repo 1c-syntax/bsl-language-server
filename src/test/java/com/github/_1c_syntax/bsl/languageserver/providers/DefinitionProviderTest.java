@@ -49,6 +49,7 @@ class DefinitionProviderTest {
   private ServerContext serverContext;
 
   private static final String PATH_TO_FILE = "./src/test/resources/providers/definition.bsl";
+  private static final String PATH_TO_COMMON_MODULE_FILE = "./src/test/resources/providers/definitionCommonModule.bsl";
 
   @PostConstruct
   void prepareServerContext() {
@@ -93,7 +94,7 @@ class DefinitionProviderTest {
   }
 
   @Test
-  void testDefinitionOfCommonModule() {
+  void testDefinitionOfManagerModuleMethod() {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var managerModule = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
     var methodSymbol = managerModule.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
@@ -113,5 +114,32 @@ class DefinitionProviderTest {
     assertThat(definition.getTargetSelectionRange()).isEqualTo(methodSymbol.getSelectionRange());
     assertThat(definition.getTargetRange()).isEqualTo(methodSymbol.getRange());
     assertThat(definition.getOriginSelectionRange()).isEqualTo(Ranges.create(6, 24, 38));
+  }
+
+  @Test
+  void testDefinitionOfCommonModuleName() {
+    // Тест: клик на "ПервыйОбщийМодуль" в "ПервыйОбщийМодуль.НеУстаревшаяПроцедура()"
+    // должен вести к модулю ПервыйОбщийМодуль
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
+    var commonModule = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var moduleSymbol = commonModule.getSymbolTree().getModule();
+
+    var params = new DefinitionParams();
+    // Position on "ПервыйОбщийМодуль" (line 2, columns 0-17)
+    params.setPosition(new Position(1, 5));
+
+    // when
+    var definitions = definitionProvider.getDefinition(documentContext, params);
+
+    // then
+    assertThat(definitions).hasSize(1);
+
+    var definition = definitions.get(0);
+
+    assertThat(definition.getTargetUri()).isEqualTo(commonModule.getUri().toString());
+    assertThat(definition.getTargetSelectionRange()).isEqualTo(moduleSymbol.getSelectionRange());
+    assertThat(definition.getTargetRange()).isEqualTo(moduleSymbol.getRange());
+    // "ПервыйОбщийМодуль" spans 17 characters
+    assertThat(definition.getOriginSelectionRange()).isEqualTo(Ranges.create(1, 0, 17));
   }
 }
