@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.types.MDOType;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -33,11 +31,11 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Утилитный класс для работы со ссылками на модули.
+ * Утилитный класс для работы со ссылками на общие модули.
  * <p>
  * Предоставляет методы для анализа конструкций получения ссылки на общий модуль
  * через ОбщегоНазначения.ОбщийМодуль("ИмяМодуля"), ОбщегоНазначенияКлиент.ОбщийМодуль("ИмяМодуля")
- * и других вариантов, а также для работы с модулями менеджеров (Справочники.Имя, Документы.Имя и т.д.)
+ * и других вариантов.
  */
 @UtilityClass
 public class ModuleReference {
@@ -100,69 +98,6 @@ public class ModuleReference {
     }
 
     return Optional.empty();
-  }
-
-  /**
-   * Проверить, является ли expression обращением к модулю менеджера.
-   * Распознает паттерны типа: Справочники.ИмяСправочника, Документы.ИмяДокумента и т.д.
-   * Использует MDOType.fromValue() для определения допустимых типов.
-   *
-   * @param expression Контекст выражения
-   * @return true, если это обращение к модулю менеджера
-   */
-  public static boolean isManagerModuleExpression(BSLParser.ExpressionContext expression) {
-    if (expression == null) {
-      return false;
-    }
-
-    var members = expression.member();
-    if (members.isEmpty()) {
-      return false;
-    }
-
-    for (var member : members) {
-      if (isManagerModuleExpressionMember(member)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Извлечь информацию о модуле менеджера из expression.
-   * Использует MDOType.fromValue() для определения типа менеджера.
-   * 
-   * @param expression Контекст выражения
-   * @return Пара (тип менеджера, имя объекта), например ("Справочники", "Номенклатура")
-   */
-  public static Optional<ManagerModuleInfo> extractManagerModuleInfo(BSLParser.ExpressionContext expression) {
-    if (expression == null) {
-      return Optional.empty();
-    }
-
-    var members = expression.member();
-    if (members.isEmpty()) {
-      return Optional.empty();
-    }
-
-    for (var member : members) {
-      var result = extractManagerModuleInfoFromMember(member);
-      if (result.isPresent()) {
-        return result;
-      }
-    }
-
-    return Optional.empty();
-  }
-
-  /**
-   * Информация о модуле менеджера.
-   *
-   * @param managerType Тип менеджера (Справочники, Документы и т.д.)
-   * @param objectName Имя объекта метаданных
-   */
-  public record ManagerModuleInfo(String managerType, String objectName) {
   }
 
   // ===== Private helper methods =====
@@ -365,61 +300,5 @@ public class ModuleReference {
     var firstParam = params.get(0);
     return Optional.ofNullable(firstParam.getText())
       .map(Strings::trimQuotes);
-  }
-
-  private static boolean isManagerModuleExpressionMember(BSLParser.MemberContext member) {
-    var complexId = member.complexIdentifier();
-    if (complexId == null) {
-      return false;
-    }
-    
-    var identifier = complexId.IDENTIFIER();
-    if (identifier == null) {
-      return false;
-    }
-    
-    var idText = identifier.getText();
-    // Используем MDOType.fromValue() для определения типа менеджера
-    var mdoType = MDOType.fromValue(idText);
-    if (mdoType.isEmpty() || !ModuleType.byMDOType(mdoType.get()).contains(ModuleType.ManagerModule)) {
-      return false;
-    }
-    
-    // Должен быть хотя бы один модификатор (имя объекта)
-    return !complexId.modifier().isEmpty();
-  }
-
-  private static Optional<ManagerModuleInfo> extractManagerModuleInfoFromMember(BSLParser.MemberContext member) {
-    var complexId = member.complexIdentifier();
-    if (complexId == null) {
-      return Optional.empty();
-    }
-    
-    var identifier = complexId.IDENTIFIER();
-    if (identifier == null) {
-      return Optional.empty();
-    }
-    
-    var managerType = identifier.getText();
-    // Используем MDOType.fromValue() для проверки типа менеджера
-    var mdoType = MDOType.fromValue(managerType);
-    if (mdoType.isEmpty() || !ModuleType.byMDOType(mdoType.get()).contains(ModuleType.ManagerModule)) {
-      return Optional.empty();
-    }
-    
-    // Ищем имя объекта в первом модификаторе
-    var modifiers = complexId.modifier();
-    if (modifiers.isEmpty()) {
-      return Optional.empty();
-    }
-    
-    var firstModifier = modifiers.get(0);
-    var accessProperty = firstModifier.accessProperty();
-    if (accessProperty == null || accessProperty.IDENTIFIER() == null) {
-      return Optional.empty();
-    }
-    
-    var objectName = accessProperty.IDENTIFIER().getText();
-    return Optional.of(new ManagerModuleInfo(managerType, objectName));
   }
 }

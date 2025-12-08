@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
@@ -34,11 +35,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.NotifyDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.jspecify.annotations.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -73,13 +72,12 @@ import java.util.stream.Collectors;
 public class ReferenceIndexFiller {
 
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
-    ModuleType.ManagerModule,
     ModuleType.CommonModule,
     ModuleType.UNKNOWN
   );
 
   private final ReferenceIndex index;
-  private final com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration configuration;
+  private final LanguageServerConfiguration configuration;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -449,11 +447,6 @@ public class ReferenceIndexFiller {
         processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
       }
       
-      // Check if this is a manager module reference (e.g., Справочники.ИмяСправочника.Метод())
-      if (!isInsideCallStatement) {
-        processManagerModuleReference(ctx);
-      }
-      
       findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(
             s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
@@ -570,81 +563,6 @@ public class ReferenceIndexFiller {
             documentContext.getUri(),
             mdoRef,
             ModuleType.CommonModule,
-            methodNameToken.getText(),
-            Ranges.create(methodNameToken)
-          );
-        }
-      }
-    }
-    
-    /**
-     * Обрабатывает обращение к модулю менеджера (например, Справочники.ИмяСправочника.Метод()).
-     * Находит и индексирует вызовы методов менеджера объектов метаданных.
-     */
-    private void processManagerModuleReference(BSLParser.ComplexIdentifierContext ctx) {
-      // Проверяем, является ли это обращением к модулю менеджера
-      var parentCtx = Trees.getRootParent(ctx, BSLParser.RULE_expression);
-      if (!(parentCtx instanceof BSLParser.ExpressionContext expressionCtx)) {
-        return;
-      }
-      
-      var managerInfo = ModuleReference.extractManagerModuleInfo(expressionCtx);
-      if (managerInfo.isEmpty()) {
-        return;
-      }
-      
-      var info = managerInfo.get();
-      var configuration = documentContext.getServerContext().getConfiguration();
-      
-      // Ищем объект метаданных по типу менеджера и имени
-      var mdoRef = findManagerModuleMdoRef(configuration, info.managerType(), info.objectName());
-      if (mdoRef.isEmpty()) {
-        return;
-      }
-      
-      // Обрабатываем вызовы методов на модуле менеджера
-      // Модификаторы после первого (имени объекта) могут содержать вызовы методов
-      var modifiers = ctx.modifier();
-      if (modifiers.size() > 1) {
-        // Пропускаем первый модификатор (имя объекта), обрабатываем остальные
-        for (int i = 1; i < modifiers.size(); i++) {
-          var modifier = modifiers.get(i);
-          var accessCall = modifier.accessCall();
-          if (accessCall != null) {
-            processManagerModuleAccessCall(accessCall, mdoRef.get());
-          }
-        }
-      }
-    }
-    
-    /**
-     * Находит mdoRef для модуля менеджера по типу и имени объекта.
-     * Использует MDOType.fromValue() для определения типа метаданных.
-     */
-    private Optional<String> findManagerModuleMdoRef(
-      CF configuration,
-      String managerType,
-      String objectName
-    ) {
-      // Используем MDOType.fromValue() для преобразования имени группы в тип MDO
-      return MDOType.fromValue(managerType)
-        .filter(mdoType -> ModuleType.byMDOType(mdoType).contains(ModuleType.ManagerModule))
-        .map(mdoType -> mdoType.nameEn() + "." + objectName)
-        .filter(mdoRef -> configuration.findChild(mdoRef).isPresent());
-    }
-    
-    /**
-     * Обрабатывает вызов метода на модуле менеджера.
-     */
-    private void processManagerModuleAccessCall(BSLParser.AccessCallContext accessCall, String mdoRef) {
-      var methodCall = accessCall.methodCall();
-      if (methodCall != null && methodCall.methodName() != null) {
-        var methodNameToken = methodCall.methodName().IDENTIFIER();
-        if (methodNameToken != null) {
-          index.addMethodCall(
-            documentContext.getUri(),
-            mdoRef,
-            ModuleType.ManagerModule,
             methodNameToken.getText(),
             Ranges.create(methodNameToken)
           );
