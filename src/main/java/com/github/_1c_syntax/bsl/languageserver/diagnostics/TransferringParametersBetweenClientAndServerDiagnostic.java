@@ -41,12 +41,13 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -77,7 +78,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
     type = String.class,
     defaultValue = DEFAULT_CACHED_VALUE_NAMES
   )
-  private final List<String> cachedValueNames = new ArrayList<>();
+  private final Set<String> cachedValueNames = new HashSet<>();
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -87,6 +88,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
     if (!cachedValueNamesString.isBlank()) {
       Arrays.stream(cachedValueNamesString.split(","))
         .map(String::trim)
+        .map(name -> name.toUpperCase(Locale.ENGLISH))
         .forEach(this.cachedValueNames::add);
     }
   }
@@ -144,7 +146,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
     }
     
     var paramName = parameterDefinition.getName();
-    if (cachedValueNames.stream().noneMatch(name -> name.equalsIgnoreCase(paramName))) {
+    if (!cachedValueNames.contains(paramName.toUpperCase(Locale.ENGLISH))) {
       return false;
     }
     
