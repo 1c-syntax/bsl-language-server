@@ -315,13 +315,15 @@ public class ReferenceIndexFiller {
   private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private final List<String> commonModuleAccessors;
+    private final ModuleReference.ParsedAccessors parsedAccessors;
     private SourceDefinedSymbol currentScope;
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
 
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext) {
       this.documentContext = documentContext;
-      this.commonModuleAccessors = configuration.getReferencesOptions().getCommonModuleAccessors();
+      this.parsedAccessors = ModuleReference.parseAccessors(
+        configuration.getReferencesOptions().getCommonModuleAccessors()
+      );
     }
 
     @Override
@@ -384,8 +386,8 @@ public class ReferenceIndexFiller {
 
       if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
         var variableKey = lValue.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH);
-        if (ModuleReference.isCommonModuleExpression(expression, commonModuleAccessors)) {
-          var commonModuleOpt = ModuleReference.extractCommonModuleName(expression, commonModuleAccessors)
+        if (ModuleReference.isCommonModuleExpression(expression, parsedAccessors)) {
+          var commonModuleOpt = ModuleReference.extractCommonModuleName(expression, parsedAccessors)
             .flatMap(moduleName -> documentContext.getServerContext()
               .getConfiguration()
               .findCommonModule(moduleName));

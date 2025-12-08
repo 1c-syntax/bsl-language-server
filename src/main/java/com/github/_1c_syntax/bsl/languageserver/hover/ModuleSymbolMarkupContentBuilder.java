@@ -73,26 +73,14 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     var moduleType = documentContext.getModuleType();
     var moduleName = symbol.getName();
 
-    var moduleTypeKey = switch (moduleType) {
-      case CommonModule -> "commonModule";
-      case ManagerModule -> "managerModule";
-      case ObjectModule -> "objectModule";
-      case FormModule -> "formModule";
-      case CommandModule -> "commandModule";
-      case RecordSetModule -> "recordSetModule";
-      case ValueManagerModule -> "valueManagerModule";
-      case SessionModule -> "sessionModule";
-      case ExternalConnectionModule -> "externalConnectionModule";
-      case ManagedApplicationModule -> "managedApplicationModule";
-      case OrdinaryApplicationModule -> "ordinaryApplicationModule";
-      case HTTPServiceModule -> "httpServiceModule";
-      case WEBServiceModule -> "webServiceModule";
-      case IntegrationServiceModule -> "integrationServiceModule";
-      default -> "module";
-    };
+    // Для CommonModule показываем только имя модуля
+    if (moduleType == com.github._1c_syntax.bsl.types.ModuleType.CommonModule) {
+      return String.format("```bsl\n%s\n```", moduleName);
+    }
 
-    var moduleTypeText = getResourceString(moduleTypeKey);
-    return String.format("```bsl\n%s: %s\n```", moduleTypeText, moduleName);
+    // Для остальных типов используем mdoRef
+    var mdoRef = documentContext.getMdoRef();
+    return String.format("```bsl\n%s\n```", mdoRef);
   }
 
   private String buildLocation(ModuleSymbol symbol) {
@@ -153,6 +141,7 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     if (!flags.isEmpty()) {
       var flagsHeader = "**" + getResourceString("availability") + ":** ";
       infoBuilder.add(flagsHeader + String.join(", ", flags));
+      infoBuilder.add("");
     }
 
     // Режим повторного использования

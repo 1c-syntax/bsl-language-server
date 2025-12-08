@@ -37,7 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ModuleReferenceTest {
 
-  private static final List<String> DEFAULT_ACCESSORS = new ReferencesOptions().getCommonModuleAccessors();
+  private static final ModuleReference.ParsedAccessors DEFAULT_ACCESSORS = 
+    ModuleReference.parseAccessors(new ReferencesOptions().getCommonModuleAccessors());
 
   @Test
   void testDetectCommonModuleExpression() {
@@ -86,11 +87,32 @@ class ModuleReferenceTest {
     assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isFalse();
     
     // With custom accessor - should match
-    var customAccessors = List.of("МойМодуль.ПолучитьОбщийМодуль");
+    var customAccessors = ModuleReference.parseAccessors(List.of("МойМодуль.ПолучитьОбщийМодуль"));
     assertThat(ModuleReference.isCommonModuleExpression(expression, customAccessors)).isTrue();
     
     var moduleName = ModuleReference.extractCommonModuleName(expression, customAccessors);
     assertThat(moduleName).isPresent();
     assertThat(moduleName.get()).isEqualTo("ТестовыйМодуль");
+  }
+
+  @Test
+  void testParseAccessors() {
+    var accessors = List.of(
+      "ОбщийМодуль",
+      "CommonModule",
+      "ОбщегоНазначения.ОбщийМодуль",
+      "Common.CommonModule"
+    );
+    
+    var parsed = ModuleReference.parseAccessors(accessors);
+    
+    // Проверяем локальные методы
+    assertThat(parsed.localMethods()).containsExactlyInAnyOrder("общиймодуль", "commonmodule");
+    
+    // Проверяем пары модуль.метод
+    assertThat(parsed.moduleMethodPairs()).containsKey("общегоназначения");
+    assertThat(parsed.moduleMethodPairs().get("общегоназначения")).contains("общиймодуль");
+    assertThat(parsed.moduleMethodPairs()).containsKey("common");
+    assertThat(parsed.moduleMethodPairs().get("common")).contains("commonmodule");
   }
 }
