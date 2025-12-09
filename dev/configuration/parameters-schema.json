@@ -1968,6 +1968,14 @@
                 "object"
             ],
             "title": "Transferring parameters between the client and the server",
+            "properties": {
+                "cachedValueNames": {
+                    "description": "List of parameter names to ignore (e.g., CachedValues). The diagnostic is ignored if a variable with the same name and the &AtClient compiler directive exists in the module",
+                    "default": "",
+                    "type": "string",
+                    "title": "List of parameter names to ignore (e.g., CachedValues). The diagnostic is ignored if a variable with the same name and the &AtClient compiler directive exists in the module"
+                }
+            },
             "$id": "#/definitions/TransferringParametersBetweenClientAndServer"
         },
         "TryNumber": {
