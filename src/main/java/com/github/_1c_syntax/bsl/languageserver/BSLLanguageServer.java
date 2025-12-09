@@ -48,6 +48,7 @@ import org.eclipse.lsp4j.FoldingRangeProviderOptions;
 import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.InlayHintRegistrationOptions;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.RenameCapabilities;
@@ -108,13 +109,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     
     setConfigurationRoot(params);
 
-    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-    CompletableFuture
-      .runAsync(context::populateContext, executorService)
-      .thenAccept(unused -> executorService.shutdown())
-    ;
-
     var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
     capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
@@ -161,6 +155,20 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       configuration,
       rootPath);
     context.setConfigurationRoot(configurationRoot);
+  }
+
+  @Override
+  public void initialized(InitializedParams params) {
+    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+    CompletableFuture
+      .runAsync(context::populateContext, executorService)
+      .whenComplete((unused, throwable) -> {
+        executorService.shutdown();
+        if (throwable != null) {
+          LOGGER.error("Error populating context", throwable);
+        }
+      });
   }
 
   @Override

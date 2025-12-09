@@ -261,4 +261,81 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     // then - ссылка не должна быть найдена, т.к. работаем только с .os файлами
     assertThat(reference).isEmpty();
   }
+
+  @Test
+  void findReferenceOfNestedAnnotationName() {
+    // given
+    // Строка 32 (1-based), 31 (0-based): &ТестоваяАннотация(&ВложеннаяАннотация("Значение"))
+    // При клике на имя вложенной аннотации должна находиться ссылка на определение этой аннотации
+    initServerContext("./src/test/resources/references/annotations");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
+    var module = documentContext.getSymbolTree().getModule();
+
+    // when - кликаем на имя вложенной аннотации "ВложеннаяАннотация"
+    // &ТестоваяАннотация(&ВложеннаяАннотация("Значение"))
+    // Позиция 20 - это внутри имени "ВложеннаяАннотация"
+    var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(31, 22));
+
+    // then - должна найтись ссылка на определение аннотации ВложеннаяАннотация (если она зарегистрирована)
+    // Поскольку аннотация ВложеннаяАннотация не зарегистрирована в тестовом контексте, ссылка не найдётся
+    assertThat(optionalReference).isEmpty();
+  }
+
+  @Test
+  void findReferenceOfNestedAnnotationParameterValue() {
+    // given
+    // Строка 32 (1-based), 31 (0-based): &ТестоваяАннотация(&ВложеннаяАннотация("Значение"))
+    // При клике на значение параметра вложенной аннотации должна находиться ссылка на параметр вложенной аннотации
+    initServerContext("./src/test/resources/references/annotations");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
+    var module = documentContext.getSymbolTree().getModule();
+
+    // when - кликаем на значение "Значение" внутри вложенной аннотации
+    // &ТестоваяАннотация(&ВложеннаяАннотация("Значение"))
+    // Позиция 40 - это внутри "Значение"
+    var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(31, 40));
+
+    // then - должна найтись ссылка на параметр "Значение" вложенной аннотации
+    // Поскольку аннотация ВложеннаяАннотация не зарегистрирована, ссылка не найдётся
+    assertThat(optionalReference).isEmpty();
+  }
+
+  @Test
+  void findReferenceOfNestedAnnotationWithNamedParameter() {
+    // given
+    // Строка 35 (1-based), 34 (0-based): &ТестоваяАннотация(Параметр = &ВложеннаяАннотация("Значение"))
+    initServerContext("./src/test/resources/references/annotations");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
+    var module = documentContext.getSymbolTree().getModule();
+
+    // when - кликаем на имя параметра "Параметр" внешней аннотации
+    // &ТестоваяАннотация(Параметр = &ВложеннаяАннотация("Значение"))
+    // Позиция 20 - это внутри "Параметр"
+    var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(34, 20));
+
+    // then - должна найтись ссылка на параметр "Параметр" внешней аннотации ТестоваяАннотация
+    assertThat(optionalReference)
+      .isPresent()
+      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("Параметр"))
+      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter));
+  }
+
+  @Test
+  void findReferenceOfDeeplyNestedAnnotationName() {
+    // given
+    // Строка 38 (1-based), 37 (0-based): &ТестоваяАннотация(&ВложеннаяАннотация(&ГлубокоВложеннаяАннотация("Глубокое значение")))
+    initServerContext("./src/test/resources/references/annotations");
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
+
+    // when - кликаем на имя глубоко вложенной аннотации "ГлубокоВложеннаяАннотация"
+    // Позиция 45 - это внутри имени "ГлубокоВложеннаяАннотация"
+    var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(37, 45));
+
+    // then - поскольку аннотация не зарегистрирована, ссылка не найдётся
+    assertThat(optionalReference).isEmpty();
+  }
 }

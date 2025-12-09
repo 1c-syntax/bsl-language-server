@@ -15,7 +15,7 @@ plugins {
     id("io.freefair.aspectj.post-compile-weaving") version "9.1.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
-    id("org.springframework.boot") version "3.5.7"
+    id("org.springframework.boot") version "3.5.8"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "5.12.2"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
@@ -82,7 +82,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.27.0") {
+    api("io.github.1c-syntax", "bsl-parser", "0.28.0") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.antlr", "antlr-runtime")
