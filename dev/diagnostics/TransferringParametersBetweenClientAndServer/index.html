@@ -1473,6 +1473,25 @@
 </tr>
 </tbody>
 </table>
+<h2 id="Параметры">Параметры<a class="headerlink" href="#Параметры" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Имя</th>
+<th style="text-align: center;">Тип</th>
+<th style="text-align: center;">Описание</th>
+<th style="text-align: center;">Значение<br>по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code>cachedValueNames</code></td>
+<td style="text-align: center;"><code>Строка</code></td>
+<td style="text-align: center;"><code>Список имен параметров для игнорирования (например, КэшированныеЗначения). Диагностика игнорируется, если в модуле существует переменная с таким же именем и директивой компиляции &amp;НаКлиенте</code></td>
+<td style="text-align: center;">``</td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -1564,6 +1583,34 @@
 </code></pre></div></p>
 </li>
 </ol>
+<h2 id="Параметры_1">Параметры<a class="headerlink" href="#Параметры_1" title="Permanent link">&para;</a></h2>
+<h3 id="cachedValueNames">cachedValueNames<a class="headerlink" href="#cachedValueNames" title="Permanent link">&para;</a></h3>
+<p>Тип: <code>Строка</code><br />
+Значение по умолчанию: `` (пустая строка)</p>
+<p>Список имен параметров, разделенных запятыми, которые должны игнорироваться диагностикой, если в модуле существует переменная с таким же именем и директивой компиляции <code>&amp;НаКлиенте</code>.</p>
+<p>Это полезно для кэшируемых значений, которые специально передаются с сервера на клиент для хранения в переменных модуля формы.</p>
+<p>Пример:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;КэшированныеЗначения,КэшДанных&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Если в коде есть объявление:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
+<span class="kd">Перем</span> <span class="nv">КэшированныеЗначения</span><span class="p">;</span> <span class="c1">// используется механизмом обработки изменения реквизитов ТЧ</span>
+</code></pre></div>
+<p>То следующий код не будет генерировать замечание:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
+<span class="k">Процедура</span> <span class="nf">ПриИзмененииРеквизита</span><span class="p">()</span>
+    <span class="nf">ОбновитьКэш</span><span class="p">(</span><span class="nv">КэшированныеЗначения</span><span class="p">);</span>
+<span class="k">КонецПроцедуры</span>
+
+<span class="nd">&amp;НаСервере</span>
+<span class="k">Процедура</span> <span class="nf">ОбновитьКэш</span><span class="p">(</span><span class="nv">КэшированныеЗначения</span><span class="p">)</span>
+    <span class="nv">КэшированныеЗначения</span> <span class="o">=</span> <span class="nf">ПолучитьДанныеНаСервере</span><span class="p">();</span>
+<span class="k">КонецПроцедуры</span>
+</code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -1582,7 +1629,9 @@
 <span class="c1">// BSLLS:TransferringParametersBetweenClientAndServer-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 

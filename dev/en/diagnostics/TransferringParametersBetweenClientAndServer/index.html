@@ -1473,6 +1473,25 @@
 </tr>
 </tbody>
 </table>
+<h2 id="Parameters">Parameters<a class="headerlink" href="#Parameters" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Name</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Description</th>
+<th style="text-align: center;">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code>cachedValueNames</code></td>
+<td style="text-align: center;"><code>String</code></td>
+<td style="text-align: center;"><code>List of parameter names to ignore (e.g., CachedValues). The diagnostic is ignored if a variable with the same name and the &amp;AtClient compiler directive exists in the module</code></td>
+<td style="text-align: center;">``</td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>When transferring control from the client to the server (and vice versa), copies of the parameters are always transferred.</p>
@@ -1569,6 +1588,34 @@ It can be seen that all parameters passed through Value do not change their valu
 <span class="k">EndFunction</span>
 </code></pre></div></li>
 </ol>
+<h2 id="Parameters_1">Parameters<a class="headerlink" href="#Parameters_1" title="Permanent link">&para;</a></h2>
+<h3 id="cachedValueNames">cachedValueNames<a class="headerlink" href="#cachedValueNames" title="Permanent link">&para;</a></h3>
+<p>Type: <code>String</code><br />
+Default value: `` (empty string)</p>
+<p>Comma-separated list of parameter names that should be ignored by the diagnostic if a variable with the same name and the <code>&amp;AtClient</code> compiler directive exists in the module.</p>
+<p>This is useful for cached values that are intentionally transferred from the server to the client for storage in form module variables.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CachedValues,DataCache&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If there is a declaration in the code:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtClient</span>
+<span class="kd">Var</span> <span class="nv">CachedValues</span><span class="p">;</span> <span class="c1">// used by the tabular section attribute change processing mechanism</span>
+</code></pre></div>
+<p>Then the following code will not generate a remark:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtClient</span>
+<span class="k">Procedure</span> <span class="nf">OnAttributeChange</span><span class="p">()</span>
+    <span class="nf">UpdateCache</span><span class="p">(</span><span class="nv">CachedValues</span><span class="p">);</span>
+<span class="k">EndProcedure</span>
+
+<span class="nd">&amp;AtServer</span>
+<span class="k">Procedure</span> <span class="nf">UpdateCache</span><span class="p">(</span><span class="nv">CachedValues</span><span class="p">)</span>
+    <span class="nv">CachedValues</span> <span class="o">=</span> <span class="nf">GetDataOnServer</span><span class="p">();</span>
+<span class="k">EndProcedure</span>
+</code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- It is necessary to provide links to all sources from which information was obtained to create diagnostics -->
 <!-- Sample sources
@@ -1587,7 +1634,9 @@ It can be seen that all parameters passed through Value do not change their valu
 <span class="c1">// BSLLS:TransferringParametersBetweenClientAndServer-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;TransferringParametersBetweenClientAndServer&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;cachedValueNames&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 
