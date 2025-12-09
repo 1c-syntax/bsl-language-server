@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.11">
+	<Cube uuid="d097446c-5961-4e05-a5b1-dd2b3b1e51e6">
+		<InternalInfo>
+			<xr:GeneratedType name="ExternalDataSourceCubeManager.ВнешнийИсточникДанных1.Куб1" category="Manager">
+				<xr:TypeId>91a00b63-44b7-4610-b504-15c593d8c4ee</xr:TypeId>
+				<xr:ValueId>c4c0d63d-b7cb-4c48-ad16-5d626a7dbef7</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeList.ВнешнийИсточникДанных1.Куб1" category="List">
+				<xr:TypeId>11f58724-3236-464a-8b8b-174041fe47ad</xr:TypeId>
+				<xr:ValueId>b42039ba-d5be-4023-9db9-79622775a94a</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeRecordSet.ВнешнийИсточникДанных1.Куб1" category="RecordSet">
+				<xr:TypeId>ddd5555b-0521-4d92-8741-09933ae054c3</xr:TypeId>
+				<xr:ValueId>b4c4f887-a431-4ba6-bdb0-8ec281440967</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeRecordKey.ВнешнийИсточникДанных1.Куб1" category="RecordKey">
+				<xr:TypeId>d3881e3d-943d-449b-a2b7-97068d4fdc3d</xr:TypeId>
+				<xr:ValueId>b94e5d2b-b198-425f-ae23-30641d396519</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeRecordManager.ВнешнийИсточникДанных1.Куб1" category="RecordManager">
+				<xr:TypeId>07861d3e-a9bd-46a7-b773-a0680de924d0</xr:TypeId>
+				<xr:ValueId>5d379885-a7f4-438d-82a6-2c206bd96053</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeDimensionsTablesManager.ВнешнийИсточникДанных1.Куб1" category="DimensionTables">
+				<xr:TypeId>f56756f4-d0f0-42b4-ac23-b9d4625ce362</xr:TypeId>
+				<xr:ValueId>db51a42e-9193-4243-9326-13c578b289cd</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>Куб1</Name>
+			<Synonym/>
+			<Comment/>
+			<NameInDataSource/>
+			<Characteristics/>
+			<UseStandardCommands>false</UseStandardCommands>
+			<DefaultRecordForm/>
+			<DefaultListForm/>
+			<RecordPresentation/>
+			<ExtendedRecordPresentation/>
+			<ListPresentation/>
+			<ExtendedListPresentation/>
+			<Explanation/>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+		</Properties>
+		<ChildObjects>
+			<DimensionTable>ТаблицаИзмерения1</DimensionTable>
+			<Dimension uuid="c235f687-f120-414f-a502-ec0d6986d091">
+				<Properties>
+					<Name>Измерение1</Name>
+					<Synonym/>
+					<Comment/>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>10</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+					<PasswordMode>false</PasswordMode>
+					<Format/>
+					<EditFormat/>
+					<ToolTip/>
+					<MarkNegatives>false</MarkNegatives>
+					<Mask/>
+					<MultiLine>false</MultiLine>
+					<ExtendedEdit>false</ExtendedEdit>
+					<MinValue xsi:nil="true"/>
+					<MaxValue xsi:nil="true"/>
+					<FillChecking>DontCheck</FillChecking>
+					<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
+					<ChoiceParameterLinks/>
+					<ChoiceParameters/>
+					<QuickChoice>Auto</QuickChoice>
+					<CreateOnInput>Auto</CreateOnInput>
+					<ChoiceForm/>
+					<LinkByType/>
+					<ChoiceHistoryOnInput>Auto</ChoiceHistoryOnInput>
+				</Properties>
+			</Dimension>
+		</ChildObjects>
+	</Cube>
+</MetaDataObject>
