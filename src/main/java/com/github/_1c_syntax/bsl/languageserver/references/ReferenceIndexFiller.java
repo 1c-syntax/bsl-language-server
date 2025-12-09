@@ -370,7 +370,7 @@ public class ReferenceIndexFiller {
       var module = moduleSymbolTree.getModule();
 
       // Оставляем только те mappings, которые соответствуют модульным переменным
-      variableToCommonModuleMap.keySet().removeIf(variableKey -> {
+      variableToCommonModuleMap.keySet().removeIf((String variableKey) -> {
         // Ищем переменную на уровне модуля
         var moduleVariable = moduleSymbolTree.getVariableSymbol(variableKey, module);
         // Если переменной нет на уровне модуля - это локальная переменная, удаляем mapping

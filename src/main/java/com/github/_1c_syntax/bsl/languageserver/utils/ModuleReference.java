@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +64,7 @@ public class ModuleReference {
    * @param commonModuleAccessors Список паттернов "Модуль.Метод" или "Метод" для локального вызова
    * @return Предварительно разобранные паттерны
    */
-  public static ParsedAccessors parseAccessors(@NonNull List<String> commonModuleAccessors) {
+  public static ParsedAccessors parseAccessors(List<String> commonModuleAccessors) {
     var localMethods = new HashSet<String>();
     var moduleMethodPairs = new HashMap<String, Set<String>>();
 
@@ -96,11 +96,8 @@ public class ModuleReference {
    */
   public static boolean isCommonModuleExpression(
     BSLParser.ExpressionContext expression,
-    @NonNull ParsedAccessors parsedAccessors
+    ParsedAccessors parsedAccessors
   ) {
-    if (expression == null) {
-      return false;
-    }
 
     var members = expression.member();
     if (members.isEmpty()) {
@@ -125,11 +122,8 @@ public class ModuleReference {
    */
   public static Optional<String> extractCommonModuleName(
     BSLParser.ExpressionContext expression,
-    @NonNull ParsedAccessors parsedAccessors
+    ParsedAccessors parsedAccessors
   ) {
-    if (expression == null) {
-      return Optional.empty();
-    }
 
     var members = expression.member();
     if (members.isEmpty()) {
@@ -262,16 +256,10 @@ public class ModuleReference {
   }
 
   private static boolean isLocalMethodMatch(String methodName, ParsedAccessors parsedAccessors) {
-    if (methodName == null) {
-      return false;
-    }
     return parsedAccessors.localMethods().contains(methodName.toLowerCase(Locale.ENGLISH));
   }
 
   private static boolean isModuleMethodMatch(String methodName, String moduleName, ParsedAccessors parsedAccessors) {
-    if (methodName == null || moduleName == null) {
-      return false;
-    }
     var moduleMethods = parsedAccessors.moduleMethodPairs().get(moduleName.toLowerCase(Locale.ENGLISH));
     return moduleMethods != null && moduleMethods.contains(methodName.toLowerCase(Locale.ENGLISH));
   }
@@ -288,14 +276,14 @@ public class ModuleReference {
     return Optional.empty();
   }
 
-  private static Optional<String> extractParameterFromDoCall(BSLParser.AccessCallContext accessCall) {
+  private static Optional<String> extractParameterFromDoCall(BSLParser.@Nullable AccessCallContext accessCall) {
     return Optional.ofNullable(accessCall)
       .map(BSLParser.AccessCallContext::methodCall)
       .map(BSLParser.MethodCallContext::doCall)
       .flatMap(ModuleReference::extractParameterFromDoCall);
   }
 
-  private static Optional<String> extractParameterFromDoCall(BSLParser.DoCallContext doCall) {
+  private static Optional<String> extractParameterFromDoCall(BSLParser.@Nullable DoCallContext doCall) {
     return Optional.ofNullable(doCall)
       .map(BSLParser.DoCallContext::callParamList)
       .map(BSLParser.CallParamListContext::callParam)

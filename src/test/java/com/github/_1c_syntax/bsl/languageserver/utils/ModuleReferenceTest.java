@@ -42,9 +42,10 @@ class ModuleReferenceTest {
 
   @Test
   void testDetectCommonModuleExpression() {
-    var code = "Процедура Тест()\n" +
-      "  Модуль = ОбщегоНазначения.ОбщийМодуль(\"ПервыйОбщийМодуль\");\n" +
-      "КонецПроцедуры";
+    var code = """
+      Процедура Тест()
+        Модуль = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
+      КонецПроцедуры""";
     
     var documentContext = TestUtils.getDocumentContext(code);
     var ast = documentContext.getAst();
@@ -67,9 +68,10 @@ class ModuleReferenceTest {
 
   @Test
   void testCustomAccessor() {
-    var code = "Процедура Тест()\n" +
-      "  Модуль = МойМодуль.ПолучитьОбщийМодуль(\"ТестовыйМодуль\");\n" +
-      "КонецПроцедуры";
+    var code = """
+      Процедура Тест()
+        Модуль = МойМодуль.ПолучитьОбщийМодуль("ТестовыйМодуль");
+      КонецПроцедуры""";
     
     var documentContext = TestUtils.getDocumentContext(code);
     var ast = documentContext.getAst();
