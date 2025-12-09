@@ -96,8 +96,8 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
     return getCube(eds).isEmpty();
   }
 
-  private boolean nonCubeDimTableExists(SDBLParser.ExternalDataSourceTableContext eds_ctx) {
-    return getCubeDimTable(eds_ctx).isEmpty();
+  private boolean nonCubeDimTableExists(SDBLParser.ExternalDataSourceTableContext eds) {
+    return getCubeDimTable(eds).isEmpty();
   }
 
   private Optional<MD> getMdo(String mdoTypeName, String mdoName) {
@@ -119,17 +119,17 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
       .findFirst();
   }
 
-  private Optional<ExternalDataSourceCubeDimensionTable> getCubeDimTable(SDBLParser.ExternalDataSourceTableContext eds_ctx) {
+  private Optional<ExternalDataSourceCubeDimensionTable> getCubeDimTable(SDBLParser.ExternalDataSourceTableContext eds) {
 
-    var mdo_name = eds_ctx.mdo().tableName.getText();
-    var cube_dim_table_name = eds_ctx.tableName.getText();
+    var mdoName = eds.mdo().tableName.getText();
+    var cubeDimTableName = eds.tableName.getText();
 
     return documentContext.getServerContext().getConfiguration().getExternalDataSources()
       .stream()
-      .filter(mdo -> mdo_name.equalsIgnoreCase(mdo.getName()))
+      .filter(mdo -> mdoName.equalsIgnoreCase(mdo.getName()))
       .flatMap(mdo -> mdo.getCubes().stream()
         .flatMap(c -> c.getDimensionTables().stream()))
-      .filter(table -> cube_dim_table_name.equalsIgnoreCase(table.getName()))
+      .filter(table -> cubeDimTableName.equalsIgnoreCase(table.getName()))
       .findFirst();
   }
 }
