@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Diagno
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.utils.Absolute;
 import org.jspecify.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
@@ -96,6 +97,10 @@ public class LanguageServerConfiguration {
   @JsonProperty("formatting")
   @Setter(value = AccessLevel.NONE)
   private FormattingOptions formattingOptions = new FormattingOptions();
+
+  @JsonProperty("references")
+  @Setter(value = AccessLevel.NONE)
+  private ReferencesOptions referencesOptions = new ReferencesOptions();
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
@@ -211,5 +216,6 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
+    PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
   }
 }

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
@@ -135,6 +136,23 @@ public class DescriptionFormatter {
     }
 
     return codeFences;
+  }
+
+  public String getLocation(ModuleSymbol symbol) {
+    var documentContext = symbol.getOwner();
+    var uri = documentContext.getUri();
+
+    var mdObject = documentContext.getMdObject();
+    String mdoRefLocal = mdObject.map(md -> documentContext.getServerContext()
+      .getConfiguration()
+      .getMdoRefLocal(md)
+    ).orElseGet(documentContext::getMdoRef);
+
+    return String.format(
+      "[%s](%s)",
+      mdoRefLocal,
+      uri
+    );
   }
 
   public String getLocation(MethodSymbol symbol) {
