@@ -1,4 +1,4 @@
-# Unsafe FindByCode() method usage
+# Unsafe FindByCode() method usage (UnsafeFindByCode)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
