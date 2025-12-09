@@ -23,6 +23,7 @@
 		</Properties>
 		<ChildObjects>
 			<Table>Таблица1</Table>
+            <Cube>Куб1</Cube>
 		</ChildObjects>
 	</ExternalDataSource>
 </MetaDataObject>
