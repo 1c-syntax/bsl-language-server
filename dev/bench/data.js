@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765312609052,
+  "lastUpdate": 1765314599641,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32178,6 +32178,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6325089412036984",
             "extra": "mean: 88.11905852953593 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e9b1587c4ed7e04f6016bc7e34d615b030dc39bb",
+          "message": "Merge pull request #3650 from ovcharenko-di/feature/query-missing-eds-cubes\n\nУлучшение диагностики QueryToMissingMetadataDiagnostic",
+          "timestamp": "2025-12-09T19:47:34+01:00",
+          "tree_id": "09c50c992c9de91d10a8a16d9f68b83bc11109cc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e9b1587c4ed7e04f6016bc7e34d615b030dc39bb"
+        },
+        "date": 1765314594389,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.73945498466492,
+            "unit": "sec",
+            "range": "stddev: 1.3445760897525492",
+            "extra": "mean: 87.73945498466492 sec\nrounds: 3"
           }
         ]
       }
