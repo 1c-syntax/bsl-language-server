@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765187469140,
+  "lastUpdate": 1765290776494,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32116,6 +32116,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5428293128116766",
             "extra": "mean: 88.36798214912415 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "89370e04ba9b177da251d4e622c197e7f6ce33e0",
+          "message": "Merge pull request #3591 from 1c-syntax/copilot/add-cache-parameter-ignoring",
+          "timestamp": "2025-12-09T15:09:34+01:00",
+          "tree_id": "fb5652d946c6e0c5635a001b001136327ec30e53",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/89370e04ba9b177da251d4e622c197e7f6ce33e0"
+        },
+        "date": 1765290770332,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 86.60589122772217,
+            "unit": "sec",
+            "range": "stddev: 0.8456017924333673",
+            "extra": "mean: 86.60589122772217 sec\nrounds: 3"
           }
         ]
       }
