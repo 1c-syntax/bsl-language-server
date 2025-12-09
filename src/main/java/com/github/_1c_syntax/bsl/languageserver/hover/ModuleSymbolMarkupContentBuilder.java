@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
-import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -43,22 +41,19 @@ import java.util.StringJoiner;
 public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<ModuleSymbol> {
 
   private final Resources resources;
+  private final DescriptionFormatter descriptionFormatter;
 
   @Override
   public MarkupContent getContent(ModuleSymbol symbol) {
     var markupBuilder = new StringJoiner("\n");
 
-    // Сигнатура модуля
-    String signature = buildSignature(symbol);
-    addSectionIfNotEmpty(markupBuilder, signature);
-
     // Местоположение модуля
-    String location = buildLocation(symbol);
-    addSectionIfNotEmpty(markupBuilder, location);
+    String moduleLocation = descriptionFormatter.getLocation(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, moduleLocation);
 
     // Информация о модуле из метаданных
-    String moduleInfo = buildModuleInfo(symbol);
-    addSectionIfNotEmpty(markupBuilder, moduleInfo);
+    String moduleInfo = getModuleInfo(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, moduleInfo);
 
     String content = markupBuilder.toString();
     return new MarkupContent(MarkupKind.MARKDOWN, content);
@@ -69,48 +64,7 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     return SymbolKind.Module;
   }
 
-  private String buildSignature(ModuleSymbol symbol) {
-    var documentContext = symbol.getOwner();
-    var moduleType = documentContext.getModuleType();
-    var moduleName = symbol.getName();
-
-    // Для CommonModule показываем только имя модуля
-    if (moduleType == ModuleType.CommonModule) {
-      return String.format("```bsl\n%s\n```", moduleName);
-    }
-
-    // Для остальных типов используем mdoRef в зависимости от локали
-    var mdObject = documentContext.getMdObject();
-    if (mdObject.isPresent()) {
-      var mdoRefLocal = documentContext.getServerContext()
-        .getConfiguration()
-        .getMdoRefLocal(mdObject.get());
-      return String.format("```bsl\n%s\n```", mdoRefLocal);
-    }
-
-    var mdoRef = documentContext.getMdoRef();
-    return String.format("```bsl\n%s\n```", mdoRef);
-  }
-
-  private String buildLocation(ModuleSymbol symbol) {
-    var documentContext = symbol.getOwner();
-    var uri = documentContext.getUri();
-    
-    // Используем локализованный mdoRef
-    var mdObject = documentContext.getMdObject();
-    String mdoRefLocal;
-    if (mdObject.isPresent()) {
-      mdoRefLocal = documentContext.getServerContext()
-        .getConfiguration()
-        .getMdoRefLocal(mdObject.get());
-    } else {
-      mdoRefLocal = documentContext.getMdoRef();
-    }
-
-    return String.format("[%s](%s)", mdoRefLocal, uri);
-  }
-
-  private String buildModuleInfo(ModuleSymbol symbol) {
+  private String getModuleInfo(ModuleSymbol symbol) {
     var documentContext = symbol.getOwner();
     var mdObject = documentContext.getMdObject();
 
@@ -123,13 +77,13 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
       return "";
     }
 
-    var infoBuilder = new StringJoiner("\n");
+    var moduleInfoBuilder = new StringJoiner("\n");
 
     // Комментарий
     var comment = commonModule.getComment();
     if (!comment.isBlank()) {
-      infoBuilder.add(comment);
-      infoBuilder.add("");
+      moduleInfoBuilder.add(comment);
+      moduleInfoBuilder.add("");
     }
 
     // Флаги доступности
@@ -159,33 +113,24 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
 
     if (!flags.isEmpty()) {
       var flagsHeader = "**" + getResourceString("availability") + ":** ";
-      infoBuilder.add(flagsHeader + String.join(", ", flags));
-      infoBuilder.add("");
+      moduleInfoBuilder.add(flagsHeader + String.join(", ", flags));
+      moduleInfoBuilder.add("");
     }
 
     // Режим повторного использования
     var returnValueReuse = commonModule.getReturnValuesReuse();
-    if (returnValueReuse != ReturnValueReuse.DONT_USE) {
-      var reuseKey = switch (returnValueReuse) {
-        case DURING_REQUEST -> "duringRequest";
-        case DURING_SESSION -> "duringSession";
-        default -> "";
-      };
-      if (!reuseKey.isEmpty()) {
-        var reuseHeader = "**" + getResourceString("returnValuesReuse") + ":** ";
-        infoBuilder.add(reuseHeader + getResourceString(reuseKey));
-      }
+    var reuseKey = switch (returnValueReuse) {
+      case DURING_REQUEST -> "duringRequest";
+      case DURING_SESSION -> "duringSession";
+      case DONT_USE, UNKNOWN -> "";
+    };
+
+    if (!reuseKey.isEmpty()) {
+      var reuseHeader = "**" + getResourceString("returnValuesReuse") + ":** ";
+      moduleInfoBuilder.add(reuseHeader + getResourceString(reuseKey));
     }
 
-    return infoBuilder.toString();
-  }
-
-  private void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
-    if (!newContent.isEmpty()) {
-      markupBuilder.add(newContent);
-      markupBuilder.add("");
-      markupBuilder.add("---");
-    }
+    return moduleInfoBuilder.toString();
   }
 
   private String getResourceString(String key) {

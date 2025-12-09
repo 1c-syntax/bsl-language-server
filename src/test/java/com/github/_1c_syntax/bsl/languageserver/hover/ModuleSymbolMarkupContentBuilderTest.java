@@ -65,15 +65,14 @@ class ModuleSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    // Должны быть: сигнатура, местоположение, информация о модуле
+    // Должны быть: местоположение, информация о модуле
     assertThat(blocks).hasSizeGreaterThanOrEqualTo(2);
 
     // Сигнатура - для CommonModule показывается только имя модуля
-    assertThat(blocks.get(0)).contains("ПервыйОбщийМодуль");
-    assertThat(blocks.get(0)).doesNotContain("Общий модуль:");
+    assertThat(blocks.get(0)).contains("ОбщийМодуль.ПервыйОбщийМодуль");
 
     // Местоположение - используется локализованный mdoRef
-    assertThat(blocks.get(1)).contains("ОбщийМодуль.ПервыйОбщийМодуль");
+    assertThat(blocks.get(1)).contains("Доступность:");
   }
 
   @Test
@@ -90,7 +89,7 @@ class ModuleSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(blocks).hasSizeGreaterThanOrEqualTo(1);
 
     // Для ManagerModule используется локализованный mdoRef
     assertThat(blocks.get(0)).contains("Справочник.Справочник1");
@@ -110,7 +109,7 @@ class ModuleSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(blocks).hasSizeGreaterThanOrEqualTo(1);
 
     // Для ObjectModule используется локализованный mdoRef
     assertThat(blocks.get(0)).contains("Справочник.Справочник1");
