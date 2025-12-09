@@ -27,7 +27,7 @@ jobs:
     outputs:
       has_pr: ${{ steps.check.outputs.has_pr }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Check if PR exists for this branch
         id: check
         env:
@@ -42,13 +42,13 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout project
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Setup JDK
         uses: actions/setup-java@v5
         with:
-          java-version: 17
+          java-version: 25
           distribution: 'corretto'
           cache: gradle
 

@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -32,7 +31,7 @@ import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -222,6 +221,23 @@ public class ServerContext {
   }
 
   /**
+   * Проверяет, открыт ли документ в редакторе.
+   * <p>
+   * Открытые документы управляются клиентом через события textDocument/didOpen,
+   * textDocument/didChange и textDocument/didClose. Для таких документов содержимое
+   * хранится в памяти сервера и может отличаться от содержимого файла на диске.
+   * <p>
+   * Открытые документы не будут удалены при вызове {@link #removeDocument(URI)}
+   * и не будут очищены при вызове {@link #tryClearDocument(DocumentContext)}.
+   *
+   * @param documentContext документ для проверки
+   * @return {@code true}, если документ открыт в редакторе, {@code false} в противном случае
+   */
+  public boolean isDocumentOpened(DocumentContext documentContext) {
+    return openedDocuments.contains(documentContext);
+  }
+
+  /**
    * Перестроить документ. В качестве содержимого будут использоваться данные,
    * прочитанные из файла, с которым связан документ.
    *
@@ -320,7 +336,7 @@ public class ServerContext {
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+    var mdoRef = documentContext.getMdoRef();
 
     mdoRefs.put(uri, mdoRef);
     documentsByMDORef.computeIfAbsent(

@@ -23,8 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -32,6 +31,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticCodeDescription;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +64,7 @@ public class DiagnosticStorage {
     diagnosticList.clear();
   }
 
-  protected void addDiagnostic(BSLParserRuleContext node) {
+  protected void addDiagnostic(ParserRuleContext node) {
     if (node.exception != null) {
       return;
     }
@@ -74,7 +74,18 @@ public class DiagnosticStorage {
     );
   }
 
-  protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
+  protected void addDiagnostic(ParserRuleContext node, DiagnosticAdditionalData data) {
+    if (node.exception != null) {
+      return;
+    }
+
+    addDiagnostic(
+      Ranges.create(node),
+      data
+    );
+  }
+
+  protected void addDiagnostic(ParserRuleContext node, String diagnosticMessage) {
     if (node.exception != null) {
       return;
     }
@@ -98,9 +109,26 @@ public class DiagnosticStorage {
     );
   }
 
+  protected void addDiagnostic(Range range, DiagnosticAdditionalData data) {
+    addDiagnostic(
+      range,
+      data,
+      diagnostic.getInfo().getMessage()
+    );
+  }
+
   protected void addDiagnostic(Range range, String diagnosticMessage) {
     addDiagnostic(
       range,
+      diagnosticMessage,
+      null
+    );
+  }
+
+  protected void addDiagnostic(Range range, DiagnosticAdditionalData data, String diagnosticMessage) {
+    addDiagnostic(
+      range,
+      data,
       diagnosticMessage,
       null
     );
@@ -137,7 +165,7 @@ public class DiagnosticStorage {
     addDiagnostic(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
 
-  protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
+  protected void addDiagnostic(ParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
     if (node.exception != null) {
       return;
     }
@@ -158,7 +186,7 @@ public class DiagnosticStorage {
   }
 
   public void addDiagnostic(
-    BSLParserRuleContext node,
+    ParserRuleContext node,
     String diagnosticMessage,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
@@ -202,6 +230,20 @@ public class DiagnosticStorage {
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
+    addDiagnostic(
+      range,
+      null,
+      diagnosticMessage,
+      relatedInformation
+    );
+  }
+
+  public void addDiagnostic(
+    Range range,
+    @Nullable DiagnosticAdditionalData data,
+    String diagnosticMessage,
+    @Nullable List<DiagnosticRelatedInformation> relatedInformation
+  ) {
 
     if (Ranges.isEmpty(range)) {
       return;
@@ -210,13 +252,14 @@ public class DiagnosticStorage {
     diagnosticList.add(createDiagnostic(
       diagnostic,
       range,
+      data,
       diagnosticMessage,
       relatedInformation
     ));
   }
 
   public void addDiagnostic(ParseTree tree) {
-    if (tree instanceof BSLParserRuleContext parserRuleContext) {
+    if (tree instanceof ParserRuleContext parserRuleContext) {
       addDiagnostic(parserRuleContext);
     } else if (tree instanceof TerminalNode terminalNode) {
       addDiagnostic(terminalNode);
@@ -234,9 +277,20 @@ public class DiagnosticStorage {
     addDiagnostic(sourceDefinedSymbol.getSelectionRange());
   }
 
+  /**
+   * Создает доп данные для диагностики на основании строки
+   *
+   * @param string Некая строка для помещения в доп данные диагностики
+   * @return Допданные диагностики
+   */
+  public static DiagnosticAdditionalData createAdditionalData(String string) {
+    return new DiagnosticAdditionalData(string);
+  }
+
   private static Diagnostic createDiagnostic(
     BSLDiagnostic bslDiagnostic,
     Range range,
+    @Nullable DiagnosticAdditionalData data,
     String diagnosticMessage,
     @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
@@ -258,6 +312,21 @@ public class DiagnosticStorage {
     if (relatedInformation != null) {
       diagnostic.setRelatedInformation(relatedInformation);
     }
+
+    if (data != null) {
+      diagnostic.setData(data);
+    }
     return diagnostic;
+  }
+
+  /**
+   * Служебный класс для хранения вспомогательной информации диагностики, которая может использоваться
+   * например в квикфиксах.
+   * Пока реализация примитивная под конкретную задачу
+   *
+   * @param string Некая строка
+   */
+  public record DiagnosticAdditionalData(String string) {
+
   }
 }

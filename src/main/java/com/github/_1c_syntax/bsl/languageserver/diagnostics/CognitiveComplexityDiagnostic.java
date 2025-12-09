@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -125,7 +125,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private void checkFileCodeBlock(BSLParserRuleContext ctx) {
+  private void checkFileCodeBlock(ParserRuleContext ctx) {
     if (!checkModuleBody) {
       return;
     }

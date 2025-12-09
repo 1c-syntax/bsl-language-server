@@ -23,8 +23,7 @@
  * Классы для конфигурирования и запуска команды
  * {@link com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand}
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

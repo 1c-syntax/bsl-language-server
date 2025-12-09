@@ -24,8 +24,7 @@
  * <p>
  * Пакет содержит классы для работы с переменными, включая их описание, виды и метаданные.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.context.symbol.variable;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

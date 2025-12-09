@@ -23,8 +23,7 @@
  * Spring-специфичные классы для настройки внутренней инфраструктуры
  * пакета {@link com.github._1c_syntax.bsl.languageserver.inlayhints}.
  */
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;

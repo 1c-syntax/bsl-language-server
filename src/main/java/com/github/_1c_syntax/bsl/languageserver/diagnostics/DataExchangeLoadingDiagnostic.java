@@ -117,7 +117,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
 
   private Optional<MethodSymbol> methodSymbol(BSLParser.ProcDeclarationContext ctx) {
     return Optional.of(documentContext.getSymbolTree())
-      .flatMap(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx)));
+      .flatMap(symbolTree -> symbolTree.getMethodSymbol(getSubContext(ctx)));
   }
 
   private boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {

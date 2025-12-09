@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
+import org.jspecify.annotations.Nullable;
 import io.sentry.Sentry;
 import io.sentry.protocol.SentryId;
 import jakarta.annotation.PostConstruct;
@@ -51,7 +51,7 @@ public class SentryAspect {
   private ExecutorService executorService;
 
   @Setter(onMethod = @__({@Autowired}))
-  @CheckForNull
+  @Nullable
   private LanguageClientHolder languageClientHolder;
 
   @Setter(onMethod = @__({@Autowired}))

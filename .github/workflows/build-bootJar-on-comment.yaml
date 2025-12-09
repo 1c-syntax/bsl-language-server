@@ -1,0 +1,104 @@
+name: Build bootJar on PR comment
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  build-jar:
+    # Только если комментарий к PR и в нём есть /buildJar
+    if: >
+      github.event.issue.pull_request != '' &&
+      contains(github.event.comment.body, '/buildJar')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get PR info
+        id: pr
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.issue.number;
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            core.info(`Base: ${pr.data.base.repo.full_name}@${pr.data.base.ref}`);
+            core.info(`Head: ${pr.data.head.repo.full_name}@${pr.data.head.ref}`);
+
+            core.setOutput('head_ref', pr.data.head.ref);
+            core.setOutput('head_repo', pr.data.head.repo.full_name);
+
+      - name: Checkout PR head with full history
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ steps.pr.outputs.head_repo }}
+          ref: ${{ steps.pr.outputs.head_ref }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up JDK with Gradle cache
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'corretto'
+          java-version: 25
+          cache: 'gradle'
+
+      - name: Make Gradle wrapper executable (if needed)
+        run: chmod +x ./gradlew
+
+      - name: Build bootJar
+        run: ./gradlew bootJar
+
+      - name: List built JARs
+        id: list_jars
+        run: |
+          if ! ls build/libs/*.jar >/dev/null 2>&1; then
+            echo "No JAR found in build/libs"
+            exit 1
+          fi
+
+          echo "Найдены JAR-файлы:"
+          ls -1 build/libs/*.jar
+
+          # Собираем список файлов в формате markdown-списка
+          {
+            for path in build/libs/*.jar; do
+              echo "- \`$(basename "$path")\`"
+            done
+          } > jar_list.txt
+
+          echo 'list<<EOF' >> "$GITHUB_OUTPUT"
+          cat jar_list.txt >> "$GITHUB_OUTPUT"
+          echo 'EOF' >> "$GITHUB_OUTPUT"
+
+      - name: Upload JAR artifact
+        id: upload_jar
+        uses: actions/upload-artifact@v5
+        with:
+          # имя артефакта; можешь поменять на что-то своё
+          name: bootJar-${{ github.run_id }}
+          path: build/libs/*.jar
+          # retention-days: 7  # при желании
+
+      - name: Comment on PR with JAR link
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            ✅ Собраны JAR-файлы для этого PR по команде `/buildJar`.
+
+            **Артефакт:** [${{ steps.upload_jar.outputs.artifact-id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload_jar.outputs.artifact-id }})
+
+            **Файлы внутри:**
+            ${{ steps.list_jars.outputs.list }}

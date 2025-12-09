@@ -161,36 +161,36 @@ class MethodSymbolComputerTest {
 
     assertThat(parameters.get(0).name()).isEqualTo("ДажеСПараметром");
     assertThat(parameters.get(0).optional()).isTrue();
-    assertThat(parameters.get(0).value()).isEqualTo("Да");
+    assertThat(parameters.get(0).value().getLeft()).isEqualTo("Да");
 
     assertThat(parameters.get(1).name()).isEqualTo("СПараметромБезЗначения");
     assertThat(parameters.get(1).optional()).isFalse();
-    assertThat(parameters.get(1).value()).isEmpty();
+    assertThat(parameters.get(1).value().getLeft()).isEmpty();
 
     assertThat(parameters.get(2).name()).isEmpty();
     assertThat(parameters.get(2).optional()).isTrue();
-    assertThat(parameters.get(2).value()).isEqualTo("Значение без параметра");
+    assertThat(parameters.get(2).value().getLeft()).isEqualTo("Значение без параметра");
 
     // BEFORE
     methodSymbol = methods.get(20);
     assertThat(methodSymbol.getName()).isEqualTo("Р_Перед");
     assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("Перед");
     assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.BEFORE);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value()).isEqualTo("Перед");
+    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("Перед");
 
     // AFTER
     methodSymbol = methods.get(21);
     assertThat(methodSymbol.getName()).isEqualTo("Р_После");
     assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("После");
     assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value()).isEqualTo("После");
+    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("После");
 
     // AROUND
     methodSymbol = methods.get(22);
     assertThat(methodSymbol.getName()).isEqualTo("Р_Вместо");
     assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("Вместо");
     assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.AROUND);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value()).isEqualTo("Вместо");
+    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("Вместо");
   }
 
   @Test
@@ -243,7 +243,7 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(1).getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
     assertThat(parameters.get(1).getAnnotations().get(0).getParameters()).hasSize(1);
     assertThat(parameters.get(1).getAnnotations().get(0).getParameters().get(0).name()).isEmpty();
-    assertThat(parameters.get(1).getAnnotations().get(0).getParameters().get(0).value()).isEqualTo("СПараметром");
+    assertThat(parameters.get(1).getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("СПараметром");
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).getAnnotations()).isEmpty();
 

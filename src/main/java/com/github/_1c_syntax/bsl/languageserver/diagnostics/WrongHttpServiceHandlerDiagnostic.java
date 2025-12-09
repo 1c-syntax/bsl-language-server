@@ -73,7 +73,7 @@ public class WrongHttpServiceHandlerDiagnostic extends AbstractDiagnostic {
     httpService.getUrlTemplates().stream()
       .flatMap(httpServiceURLTemplate -> httpServiceURLTemplate.getMethods().stream())
       .forEach((HTTPServiceMethod service) -> {
-        final var serviceName = service.getMdoReference().getMdoRef();
+        final var serviceName = service.getMdoRef();
         if (service.getHandler().isEmpty()) {
           addMissingHandlerDiagnostic(serviceName);
           return;

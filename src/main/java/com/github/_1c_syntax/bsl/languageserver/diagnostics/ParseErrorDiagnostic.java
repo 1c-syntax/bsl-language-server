@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.IntervalSet;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -57,7 +57,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
     if (((ErrorNodeImpl) node).symbol.getTokenIndex() == -1) {
       diagnosticStorage.addDiagnostic(
-        ((BSLParserRuleContext) node.getParent()).getStart(),
+        ((ParserRuleContext) node.getParent()).getStart(),
         info.getMessage(node.getText())
       );
     }
@@ -70,9 +70,9 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
     Trees.getDescendants(ast).stream()
       .filter(parseTree -> !(parseTree instanceof TerminalNodeImpl))
-      .map(parseTree -> (BSLParserRuleContext) parseTree)
+      .map(parseTree -> (ParserRuleContext) parseTree)
       .filter(node -> node.exception != null)
-      .forEach((BSLParserRuleContext node) -> {
+      .forEach((ParserRuleContext node) -> {
         IntervalSet expectedTokens = node.exception.getExpectedTokens();
         StringJoiner sj = new StringJoiner(", ");
         expectedTokens.getIntervals().stream()

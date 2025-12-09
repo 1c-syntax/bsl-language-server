@@ -18,7 +18,7 @@ jobs:
     outputs:
       has_pr: ${{ steps.check.outputs.has_pr }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Check if PR exists for this branch
         id: check
         env:
@@ -32,13 +32,13 @@ jobs:
     if: needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Set up JDK
       uses: actions/setup-java@v5
       with:
-        java-version: 17
+        java-version: 25
         distribution: 'corretto'
         cache: gradle
     - name: Check javadoc build

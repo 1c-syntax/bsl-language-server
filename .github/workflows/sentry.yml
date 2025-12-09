@@ -12,14 +12,14 @@ jobs:
     name: Sentry
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: Set up JDK 21
+      - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: 21
+          java-version: 25
           distribution: 'corretto'
           cache: gradle
       - name: Get version from Gradle
@@ -30,7 +30,7 @@ jobs:
         run: |
           if [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "ENVIRONMENT=production" >> $GITHUB_ENV
-          elif [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-r[ca][0-9]+$ ]]; then
+          elif [[ "${{ env.RELEASE_VERSION }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-r[ca]\.[0-9]+$ ]]; then
             echo "ENVIRONMENT=pre-release" >> $GITHUB_ENV
           elif [[ "${{ env.RELEASE_VERSION }}" == *-SNAPSHOT && ! "${{ env.RELEASE_VERSION }}" == *-DIRTY ]]; then
             echo "ENVIRONMENT=develop" >> $GITHUB_ENV

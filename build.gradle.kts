@@ -9,21 +9,21 @@ plugins {
     jacoco
     id("cloud.rio.license") version "0.18.0"
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.0.0"
-    id("io.freefair.javadoc-links") version "9.0.0"
-    id("io.freefair.javadoc-utf-8") version "9.0.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.0.0"
+    id("io.freefair.lombok") version "9.1.0"
+    id("io.freefair.javadoc-links") version "9.1.0"
+    id("io.freefair.javadoc-utf-8") version "9.1.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.1.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
-    id("org.springframework.boot") version "3.5.7"
+    id("org.springframework.boot") version "3.5.8"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "5.12.2"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.21.0"
-    id("org.sonarqube") version "7.0.1.6134"
+    id("org.sonarqube") version "7.2.0.6526"
     id("me.champeau.jmh") version "0.7.3"
-    id("com.gorylenko.gradle-git-properties") version "2.5.3"
+    id("com.gorylenko.gradle-git-properties") version "2.5.4"
 }
 
 repositories {
@@ -82,17 +82,18 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.26.2") {
+    api("io.github.1c-syntax", "bsl-parser", "0.28.0") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
-        exclude("org.abego.treelayout", "org.abego.treelayout.core")
         exclude("org.antlr", "antlr-runtime")
     }
-    api("io.github.1c-syntax", "utils", "0.6.4")
-    api("io.github.1c-syntax", "mdclasses", "0.16.1-rc.1")
+    api("io.github.1c-syntax", "utils", "0.6.6")
+    api("io.github.1c-syntax", "mdclasses", "0.16.1-rc.3")
     api("io.github.1c-syntax", "bsl-common-library", "0.9.0")
     api("io.github.1c-syntax", "supportconf", "0.15.0")
-    api("io.github.1c-syntax", "bsl-parser-core", "0.3.1")
+
+    // nullability annotations
+    api("org.jspecify", "jspecify", "1.0.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion){
@@ -115,14 +116,14 @@ dependencies {
     implementation("org.aspectj", "aspectjrt", "1.9.25")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.20.0")
+    implementation("commons-io", "commons-io", "2.21.0")
     implementation("commons-beanutils", "commons-beanutils", "1.11.0"){
         exclude("commons-logging", "commons-logging")
     }
     implementation("commons-codec", "commons-codec", "1.20.0")
-    implementation("org.apache.commons", "commons-lang3", "3.19.0")
+    implementation("org.apache.commons", "commons-lang3", "3.20.0")
     implementation("org.apache.commons", "commons-collections4", "4.5.0")
-    implementation("org.apache.commons", "commons-exec", "1.5.0")
+    implementation("org.apache.commons", "commons-exec", "1.6.0")
 
     // progress bar
     implementation("me.tongfei", "progressbar", "0.10.1")
@@ -141,12 +142,11 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.4.8-jre")
+            strictly("33.5.0-jre")
        }
     }
     
     // COMPILE
-    compileOnly("com.github.spotbugs", "spotbugs-annotations", "4.9.8")
 
     // TEST
 
@@ -446,6 +446,10 @@ jreleaser {
 
 tasks.withType<GenerateModuleMetadata> {
     enabled = false
+}
+
+tasks.register("updateLicenses") {
+    dependsOn(tasks.licenseFormat)
 }
 
 fun buildTime(): String {

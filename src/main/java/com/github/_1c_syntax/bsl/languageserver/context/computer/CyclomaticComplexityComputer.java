@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.StringInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
@@ -51,6 +50,7 @@ import java.util.Optional;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 // idea from https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html
+
 /**
  * Вычислитель цикломатической сложности кода.
  * <p>
@@ -240,13 +240,9 @@ public class CyclomaticComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof BSLParserRuleContext parserRule)) {
-        continue;
-      }
-
-      if (parserRule instanceof BSLParser.MemberContext memberContext) {
+      if (tree instanceof BSLParser.MemberContext memberContext) {
         flattenMember(result, memberContext);
-      } else if (parserRule instanceof BSLParser.OperationContext operationContext) {
+      } else if (tree instanceof BSLParser.OperationContext operationContext) {
         flattenOperation(result, operationContext);
       }
     }

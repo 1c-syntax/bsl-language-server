@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
@@ -47,12 +48,15 @@ import org.eclipse.lsp4j.FoldingRangeProviderOptions;
 import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.InlayHintRegistrationOptions;
 import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -94,6 +98,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+  private final SemanticTokensLegend legend;
 
   private boolean shutdownWasCalled;
 
@@ -103,13 +108,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     
     setConfigurationRoot(params);
-
-    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-    CompletableFuture
-      .runAsync(context::populateContext, executorService)
-      .thenAccept(unused -> executorService.shutdown())
-    ;
 
     var capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
@@ -130,6 +128,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setRenameProvider(getRenameProvider(params));
     capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
+    capabilities.setDiagnosticProvider(getDiagnosticProvider());
+    capabilities.setSemanticTokensProvider(getSemanticTokensProvider());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -155,6 +155,20 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       configuration,
       rootPath);
     context.setConfigurationRoot(configurationRoot);
+  }
+
+  @Override
+  public void initialized(InitializedParams params) {
+    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
+    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+    CompletableFuture
+      .runAsync(context::populateContext, executorService)
+      .whenComplete((unused, throwable) -> {
+        executorService.shutdown();
+        if (throwable != null) {
+          LOGGER.error("Error populating context", throwable);
+        }
+      });
   }
 
   @Override
@@ -191,11 +205,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return workspaceService;
   }
 
-  private static TextDocumentSyncOptions getTextDocumentSyncOptions() {
+  /**
+   * Формирует настройки синхронизации текстовых документов на основе конфигурации сервера.
+   */
+  private TextDocumentSyncOptions getTextDocumentSyncOptions() {
     var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
-    textDocumentSync.setChange(TextDocumentSyncKind.Full);
+    textDocumentSync.setChange(getConfiguredSyncKind());
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
@@ -205,6 +222,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     textDocumentSync.setSave(save);
 
     return textDocumentSync;
+  }
+
+  /**
+   * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
+   */
+  private TextDocumentSyncKind getConfiguredSyncKind() {
+    return configuration.getCapabilities().getTextDocumentSync().getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {
@@ -305,7 +329,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static Either<Boolean, RenameOptions> getRenameProvider(InitializeParams params) {
 
-    if (Boolean.TRUE.equals(getRenamePrepareSupport(params))) {
+    if (hasRenamePrepareSupport(params)) {
 
       var renameOptions = new RenameOptions();
       renameOptions.setWorkDoneProgress(Boolean.FALSE);
@@ -321,7 +345,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   }
 
-  private static Boolean getRenamePrepareSupport(InitializeParams params) {
+  private static boolean hasRenamePrepareSupport(InitializeParams params) {
     return Optional.of(params)
       .map(InitializeParams::getCapabilities)
       .map(ClientCapabilities::getTextDocument)
@@ -337,10 +361,26 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return inlayHintOptions;
   }
 
+  private static DiagnosticRegistrationOptions getDiagnosticProvider() {
+    var diagnosticOptions = new DiagnosticRegistrationOptions();
+    diagnosticOptions.setWorkDoneProgress(Boolean.FALSE);
+    diagnosticOptions.setInterFileDependencies(Boolean.TRUE);
+    diagnosticOptions.setWorkspaceDiagnostics(Boolean.FALSE);
+    return diagnosticOptions;
+  }
+
   private ExecuteCommandOptions getExecuteCommandProvider() {
     var executeCommandOptions = new ExecuteCommandOptions();
     executeCommandOptions.setCommands(commandProvider.getCommandIds());
     executeCommandOptions.setWorkDoneProgress(Boolean.FALSE);
     return executeCommandOptions;
   }
+
+  private SemanticTokensWithRegistrationOptions getSemanticTokensProvider() {
+    var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
+    semanticTokensProvider.setFull(Boolean.TRUE);
+    semanticTokensProvider.setRange(Boolean.FALSE);
+    return semanticTokensProvider;
+  }
+
 }

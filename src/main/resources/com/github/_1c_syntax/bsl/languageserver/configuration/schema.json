@@ -266,6 +266,9 @@
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
+                "LogicalOrInJoinQuerySection": {
+                    "$ref": "parameters-schema.json#/definitions/LogicalOrInJoinQuerySection"
+                },
                 "LogicalOrInTheWhereSectionOfQuery": {
                     "$ref": "parameters-schema.json#/definitions/LogicalOrInTheWhereSectionOfQuery"
                 },
@@ -377,6 +380,9 @@
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
                 },
+                "QueryNestedFieldsByDot": {
+                    "$ref": "parameters-schema.json#/definitions/QueryNestedFieldsByDot"
+                },
                 "QueryParseError": {
                     "$ref": "parameters-schema.json#/definitions/QueryParseError"
                 },
@@ -470,6 +476,9 @@
                 "UnreachableCode": {
                     "$ref": "parameters-schema.json#/definitions/UnreachableCode"
                 },
+                "UnsafeFindByCode": {
+                    "$ref": "parameters-schema.json#/definitions/UnsafeFindByCode"
+                },
                 "UnsafeSafeModeMethodCall": {
                     "$ref": "parameters-schema.json#/definitions/UnsafeSafeModeMethodCall"
                 },
@@ -490,6 +499,9 @@
                 },
                 "UseSystemInformation": {
                     "$ref": "parameters-schema.json#/definitions/UseSystemInformation"
+                },
+                "UselessTernaryOperator": {
+                    "$ref": "parameters-schema.json#/definitions/UselessTernaryOperator"
                 },
                 "UsingCancelParameter": {
                     "$ref": "parameters-schema.json#/definitions/UsingCancelParameter"
@@ -665,7 +677,7 @@
                     "description": "\u0420\u0443\u0441\u0441\u043a\u0438\u0439 (russian)"
                 }
             ],
-            "title": "Language of messages, resources and all communications between BLS LS and user.",
+            "title": "Language of messages, resources and all communications between BSL LS and user.",
             "default": "ru"
         },
         "codeLens": {
@@ -924,15 +936,30 @@
                         "properties": {
                             "type": {
                                 "type": "string",
-                                "enum": ["ERROR", "CODE_SMELL", "VULNERABILITY", "SECURITY_HOTSPOT"]
+                                "enum": [
+                                    "ERROR",
+                                    "CODE_SMELL",
+                                    "VULNERABILITY",
+                                    "SECURITY_HOTSPOT"
+                                ]
                             },
                             "severity": {
                                 "type": "string",
-                                "enum": ["INFO", "MINOR", "MAJOR", "CRITICAL", "BLOCKER"]
+                                "enum": [
+                                    "INFO",
+                                    "MINOR",
+                                    "MAJOR",
+                                    "CRITICAL",
+                                    "BLOCKER"
+                                ]
                             },
                             "scope": {
                                 "type": "string",
-                                "enum": ["ALL", "BSL", "OS"]
+                                "enum": [
+                                    "ALL",
+                                    "BSL",
+                                    "OS"
+                                ]
                             },
                             "modules": {
                                 "type": "array",
@@ -963,7 +990,12 @@
                             },
                             "lspSeverity": {
                                 "type": "string",
-                                "enum": ["Error", "Warning", "Information", "Hint"],
+                                "enum": [
+                                    "Error",
+                                    "Warning",
+                                    "Information",
+                                    "Hint"
+                                ],
                                 "description": "LSP severity level (Error, Warning, Information, Hint). If not specified, calculated automatically based on type and severity."
                             }
                         }
@@ -1015,6 +1047,31 @@
             "properties": {
                 "parameters": {
                     "$ref": "#/definitions/inlayHintParameters"
+                }
+            }
+        },
+        "capabilities": {
+            "$id": "#/properties/capabilities",
+            "type": "object",
+            "title": "LSP capabilities configuration.",
+            "properties": {
+                "textDocumentSync": {
+                    "$id": "#/properties/capabilities/textDocumentSync",
+                    "type": "object",
+                    "title": "Text document sync capabilities.",
+                    "properties": {
+                        "change": {
+                            "$id": "#/properties/capabilities/textDocumentSync/change",
+                            "type": "string",
+                            "enum": [
+                                "None",
+                                "Full",
+                                "Incremental"
+                            ],
+                            "default": "Incremental",
+                            "title": "Text document sync strategy."
+                        }
+                    }
                 }
             }
         },

@@ -22,4 +22,7 @@
 /**
  * Пакет содержит настройки для работы {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
  */
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
+
+import org.jspecify.annotations.NullMarked;

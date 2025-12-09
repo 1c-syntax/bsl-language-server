@@ -34,7 +34,7 @@ jobs:
         full_name: ${{ github.event.repository.full_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
           ref: ${{ github.event.workflow_run.head_branch }}
@@ -49,10 +49,10 @@ jobs:
         git clean -ffdx && git reset --hard HEAD
       env:
         HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-    - name: Set up JDK 17
+    - name: Set up JDK
       uses: actions/setup-java@v5
       with:
-        java-version: 17
+        java-version: 25
         distribution: 'corretto'
         cache: gradle
     - name: SonarCloud Scan on PR

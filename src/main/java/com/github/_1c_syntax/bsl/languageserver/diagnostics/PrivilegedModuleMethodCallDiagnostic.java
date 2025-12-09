@@ -85,8 +85,7 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
   }
 
   private Optional<ModuleSymbol> getPrivilegedModuleSymbol(CommonModule mdCommonModule) {
-    return documentContext.getServerContext().getDocument(
-        mdCommonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
+    return documentContext.getServerContext().getDocument(mdCommonModule.getMdoRef(), ModuleType.CommonModule)
       .map(documentContext1 -> documentContext1.getSymbolTree().getModule());
   }
 

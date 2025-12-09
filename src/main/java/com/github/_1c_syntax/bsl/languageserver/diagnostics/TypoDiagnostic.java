@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPo
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -40,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Languages;
 import org.languagetool.rules.RuleMatch;
@@ -49,7 +49,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -108,20 +110,38 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   )
   private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;
 
+  /**
+   * Готовый список слов для игнорирования
+   */
+  private Set<String> wordsToIgnore = new HashSet<>();
+
+  @DiagnosticParameter(
+    type = Boolean.class
+  )
+  private Boolean caseInsensitive = false;
+
   @Override
   public void configure(Map<String, Object> configuration) {
     super.configure(configuration);
     minWordLength = Math.max(minWordLength, DEFAULT_MIN_WORD_LENGTH);
+    wordsToIgnore = makeWordsToIgnore();
   }
 
-  private Set<String> getWordsToIgnore() {
-    var delimiter = ",";
-    String exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
+  private Set<String> makeWordsToIgnore() {
+    char delimiter = ',';
+    var exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
     if (!userWordsToIgnore.isEmpty()) {
-      exceptions = exceptions + delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
+      exceptions += delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
     }
 
-    return Arrays.stream(exceptions.split(delimiter))
+    // добавим к переданным строки в разных регистрах
+    if (caseInsensitive && !exceptions.isEmpty()) {
+      exceptions +=
+        delimiter + exceptions.toLowerCase(Locale.getDefault()) // нижний регистр
+          + delimiter + WordUtils.capitalizeFully(exceptions, delimiter); // титульный
+    }
+
+    return Arrays.stream(exceptions.split(String.valueOf(delimiter)))
       .collect(Collectors.toSet());
   }
 
@@ -136,19 +156,17 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private Map<String, List<Token>> getTokensMap(
     DocumentContext documentContext
   ) {
-    Set<String> wordsToIgnore = getWordsToIgnore();
     Map<String, List<Token>> tokensMap = new HashMap<>();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
-      .map(BSLParserRuleContext.class::cast)
       .flatMap(ruleContext -> ruleContext.getTokens().stream())
       .filter(token -> tokenTypes.contains(token.getType()))
       .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
       .forEach((Token token) -> {
           String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("").trim();
-          String[] camelCaseSplitedWords = StringUtils.splitByCharacterTypeCamelCase(curText);
+          String[] camelCaseSplitWords = StringUtils.splitByCharacterTypeCamelCase(curText);
 
-          Arrays.stream(camelCaseSplitedWords)
+          Arrays.stream(camelCaseSplitWords)
             .filter(Predicate.not(String::isBlank))
             .filter(element -> element.length() >= minWordLength)
             .filter(Predicate.not(wordsToIgnore::contains))
