@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube;
 import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCubeDimensionTable;
@@ -73,6 +74,7 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
       .map(SDBLParser.DataSourceContext::externalDataSourceTable)
       .filter(Objects::nonNull)
       .filter(eds -> eds.cubeName != null)
+      .filter(eds -> eds.mdo() != null && eds.mdo().tableName != null)
       .forEach(eds -> {
         if (nonCubeExists(eds)) {
           diagnosticStorage.addDiagnostic(eds.cubeName, info.getMessage(eds.cubeName.getText()));
@@ -106,30 +108,38 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
         && mdoName.equalsIgnoreCase(mdo.getName())));
   }
 
+  /**
+   * Returns the external data source with the given name, case-insensitive.
+   */
+  private Optional<ExternalDataSource> getExternalDataSource(String name) {
+    return documentContext.getServerContext().getConfiguration().getExternalDataSources()
+      .stream()
+      .filter(mdo -> name.equalsIgnoreCase(mdo.getName()))
+      .findFirst();
+  }
+
   private Optional<ExternalDataSourceCube> getCube(SDBLParser.ExternalDataSourceTableContext eds) {
 
     var mdoName = eds.mdo().tableName.getText();
     var cubeName = eds.cubeName.getText();
 
-    return documentContext.getServerContext().getConfiguration().getExternalDataSources()
-      .stream()
-      .filter(mdo -> mdoName.equalsIgnoreCase(mdo.getName()))
-      .flatMap(mdo -> mdo.getCubes().stream())
+    return getExternalDataSource(mdoName)
+      .flatMap(mdo -> mdo.getCubes().stream()
       .filter(cube -> cubeName.equalsIgnoreCase(cube.getName()))
-      .findFirst();
+      .findFirst());
   }
 
   private Optional<ExternalDataSourceCubeDimensionTable> getCubeDimTable(SDBLParser.ExternalDataSourceTableContext eds) {
 
     var mdoName = eds.mdo().tableName.getText();
+    var cubeName = eds.cubeName.getText();
     var cubeDimTableName = eds.tableName.getText();
 
-    return documentContext.getServerContext().getConfiguration().getExternalDataSources()
-      .stream()
-      .filter(mdo -> mdoName.equalsIgnoreCase(mdo.getName()))
+    return getExternalDataSource(mdoName)
       .flatMap(mdo -> mdo.getCubes().stream()
-        .flatMap(c -> c.getDimensionTables().stream()))
-      .filter(table -> cubeDimTableName.equalsIgnoreCase(table.getName()))
-      .findFirst();
+        .filter(cube -> cubeName.equalsIgnoreCase(cube.getName()))
+        .flatMap(c -> c.getDimensionTables().stream())
+        .filter(table -> cubeDimTableName.equalsIgnoreCase(table.getName()))
+        .findFirst());
   }
 }

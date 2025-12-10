@@ -55,10 +55,12 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
         66, 18, 62)
       .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"Куб2\" в запросе",
         80, 51, 55)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"ТаблицаИзмерения1\" в запросе",
+        80, 73, 90)
       .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"ТаблицаИзмерения2\" в запросе",
         94, 73, 90)
 
-      .hasSize(6);
+      .hasSize(7);
 
   }
 

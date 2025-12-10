@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.11">
+	<DimensionTable uuid="75a20b42-1f61-4f58-ab49-a158925e63ba">
+		<InternalInfo>
+			<xr:GeneratedType name="ExternalDataSourceCubeDimensionTableManager.ВнешнийИсточникДанных1.Куб3.ТаблицаИзмерения2" category="Manager">
+				<xr:TypeId>4e33c017-02a6-47a9-b190-db8cbd65cf8d</xr:TypeId>
+				<xr:ValueId>70e9413e-e493-410e-8795-2928540a7ecb</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeDimensionTableObject.ВнешнийИсточникДанных1.Куб3.ТаблицаИзмерения2" category="Object">
+				<xr:TypeId>906eff59-3cfe-4920-8ed5-07a3d0232e99</xr:TypeId>
+				<xr:ValueId>bc19facd-8a3d-44ef-9283-8fdcbe4e1114</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeDimensionTableRef.ВнешнийИсточникДанных1.Куб3.ТаблицаИзмерения2" category="Ref">
+				<xr:TypeId>4a17e893-dbff-43bf-bd8b-6977e0d9cbed</xr:TypeId>
+				<xr:ValueId>4de2d3ae-7a29-45fc-8dac-63655ebdc769</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="ExternalDataSourceCubeDimensionTableList.ВнешнийИсточникДанных1.Куб3.ТаблицаИзмерения2" category="List">
+				<xr:TypeId>093e1073-e6be-4020-bb80-230cafeca673</xr:TypeId>
+				<xr:ValueId>955aab6c-0cef-465c-a4b2-2247d5b07d6e</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>ТаблицаИзмерения2</Name>
+			<Synonym/>
+			<Comment/>
+			<NameInDataSource/>
+			<PresentationField/>
+			<HierarchyNameInDataSource/>
+			<LevelNumber>0</LevelNumber>
+			<Hierarchical>false</Hierarchical>
+			<UnfilledParentValue xsi:nil="true"/>
+			<UseStandardCommands>false</UseStandardCommands>
+			<QuickChoice>false</QuickChoice>
+			<DefaultObjectForm/>
+			<DefaultListForm/>
+			<DefaultChoiceForm/>
+			<ObjectPresentation/>
+			<ExtendedObjectPresentation/>
+			<ListPresentation/>
+			<ExtendedListPresentation/>
+			<Explanation/>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+		</Properties>
+		<ChildObjects>
+			<Field uuid="cb66ceb2-9970-4136-a185-3eee0b39a533">
+				<Properties>
+					<Name>Поле1</Name>
+					<Synonym/>
+					<Comment/>
+					<Type>
+						<v8:Type>xs:string</v8:Type>
+						<v8:StringQualifiers>
+							<v8:Length>10</v8:Length>
+							<v8:AllowedLength>Variable</v8:AllowedLength>
+						</v8:StringQualifiers>
+					</Type>
+					<PasswordMode>false</PasswordMode>
+					<Format/>
+					<EditFormat/>
+					<ToolTip/>
+					<MarkNegatives>false</MarkNegatives>
+					<Mask/>
+					<MultiLine>false</MultiLine>
+					<ExtendedEdit>false</ExtendedEdit>
+					<MinValue xsi:nil="true"/>
+					<MaxValue xsi:nil="true"/>
+					<FillFromFillingValue>false</FillFromFillingValue>
+					<FillValue xsi:type="xs:string"/>
+					<FillChecking>DontCheck</FillChecking>
+					<ChoiceParameterLinks/>
+					<ChoiceParameters/>
+					<QuickChoice>Auto</QuickChoice>
+					<CreateOnInput>Auto</CreateOnInput>
+					<ChoiceHistoryOnInput>Auto</ChoiceHistoryOnInput>
+					<ChoiceForm/>
+					<NameInDataSource/>
+					<ReadOnly>false</ReadOnly>
+					<AllowNull>true</AllowNull>
+				</Properties>
+			</Field>
+		</ChildObjects>
+	</DimensionTable>
+</MetaDataObject>
