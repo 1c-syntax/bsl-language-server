@@ -1121,6 +1121,34 @@
             ],
             "title": "Send errors and exceptions to developers of BSL Language Server.",
             "default": "ask"
+        },
+        "references": {
+            "$id": "#/properties/references",
+            "type": "object",
+            "title": "Reference index configuration.",
+            "properties": {
+                "commonModuleAccessors": {
+                    "$id": "#/properties/references/commonModuleAccessors",
+                    "type": "array",
+                    "title": "List of 'Module.Method' patterns for methods returning common module references (e.g. CommonUse.CommonModule(\"ModuleName\")).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "ОбщийМодуль",
+                        "CommonModule",
+                        "ОбщегоНазначения.ОбщийМодуль",
+                        "ОбщегоНазначенияКлиент.ОбщийМодуль",
+                        "ОбщегоНазначенияСервер.ОбщийМодуль",
+                        "ОбщегоНазначенияКлиентСервер.ОбщийМодуль",
+                        "ОбщегоНазначенияПовтИсп.ОбщийМодуль",
+                        "CommonUse.CommonModule",
+                        "CommonUseClient.CommonModule",
+                        "CommonUseServer.CommonModule",
+                        "CommonUseClientServer.CommonModule"
+                    ]
+                }
+            }
         }
     }
 }

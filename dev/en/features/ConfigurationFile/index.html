@@ -1709,6 +1709,16 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td style="text-align: center;"><code>String</code></td>
 <td style="text-align: left;">Mode for sending error messages to BSL Language Server developers. More <a href="../Monitoring/">Monitoring</a>.Possible values:<br/><em> <code>ask</code> - ask permission on every error </em>(set by default)<em>. <br/></em> <code>send</code> - always send error messages.<br/>* <code>never</code> - never send error messages.</td>
 </tr>
+<tr>
+<td style="text-align: left;"><code>references</code></td>
+<td style="text-align: center;"><code>JSON-Object</code></td>
+<td style="text-align: left;">Contains reference index settings</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>commonModuleAccessors</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">List of 'Module.Method' patterns for methods returning common module references (e.g. <code>CommonUse.CommonModule("ModuleName")</code>). Supports both format with module name (<code>CommonUse.CommonModule</code>) and local call (<code>CommonModule</code>). By default, includes standard BSL patterns: <code>ОбщийМодуль</code>, <code>CommonModule</code>, <code>ОбщегоНазначения.ОбщийМодуль</code>, <code>ОбщегоНазначенияКлиент.ОбщийМодуль</code>, <code>ОбщегоНазначенияСервер.ОбщийМодуль</code>, <code>ОбщегоНазначенияКлиентСервер.ОбщийМодуль</code>, <code>ОбщегоНазначенияПовтИсп.ОбщийМодуль</code> and their English equivalents.</td>
+</tr>
 </tbody>
 </table>
 <p>You can use the following JSON schema to make it easier to compile and edit a configuration file:</p>
