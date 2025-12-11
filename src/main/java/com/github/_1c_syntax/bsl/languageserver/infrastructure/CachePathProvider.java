@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -76,7 +77,7 @@ public class CachePathProvider {
    * @param instanceNumber номер экземпляра (0 для основного, 1+ для дополнительных)
    * @return путь к каталогу кэша
    */
-  public Path getCachePath(String basePath, String fullPath, int instanceNumber) {
+  public Path getCachePath(String basePath, @Nullable String fullPath, int instanceNumber) {
     if (fullPath != null && !fullPath.isEmpty()) {
       return Path.of(fullPath);
     }
@@ -95,7 +96,7 @@ public class CachePathProvider {
    *
    * @return абсолютный путь к текущей директории
    */
-  private String getCurrentDirectory() {
+  private static String getCurrentDirectory() {
     try {
       return Path.of(".").toRealPath().toString();
     } catch (IOException e) {

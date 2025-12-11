@@ -50,7 +50,7 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
   );
 
   private @Nullable ParserRuleContext nodeEndTransaction;
-  private @Nullable BSLParser.StatementContext nodeEndFile;
+  private BSLParser.@Nullable StatementContext nodeEndFile;
 
   public CommitTransactionOutsideTryCatchDiagnostic() {
     nodeEndTransaction = null;

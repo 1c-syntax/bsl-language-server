@@ -50,7 +50,7 @@ public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDia
   );
 
   private @Nullable ParserRuleContext nodeBeginTransaction;
-  private @Nullable BSLParser.StatementContext nodeEndFile;
+  private BSLParser.@Nullable StatementContext nodeEndFile;
 
   public BeginTransactionBeforeTryCatchDiagnostic() {
     nodeBeginTransaction = null;
