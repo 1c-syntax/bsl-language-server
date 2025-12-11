@@ -27,10 +27,10 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.StringInterner;
-import org.jspecify.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -99,8 +99,7 @@ public class MdoRefBuilder {
    */
   public String getMdoRef(
     DocumentContext documentContext,
-    @Nullable
-    TerminalNode identifier,
+    @Nullable TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
   ) {
     if (identifier == null) {

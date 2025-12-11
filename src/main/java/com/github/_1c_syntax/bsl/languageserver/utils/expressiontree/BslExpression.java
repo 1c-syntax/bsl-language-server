@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Базовый класс для узлов дерева выражений.
@@ -44,7 +45,7 @@ public abstract class BslExpression {
 
   @ToString.Exclude
   @Setter(AccessLevel.PACKAGE)
-  private BslExpression parent;
+  private @Nullable BslExpression parent;
 
   /**
    * Синтаксический-помощник для более удобных downcast-ов
