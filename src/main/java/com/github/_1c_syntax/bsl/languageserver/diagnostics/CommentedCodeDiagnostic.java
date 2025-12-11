@@ -80,6 +80,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
 
   public CommentedCodeDiagnostic() {
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
+    methodDescriptions = Collections.emptyList(); // non-null
   }
 
   @Override

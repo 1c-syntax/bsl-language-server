@@ -36,12 +36,11 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
     DiagnosticTag.SQL,
     DiagnosticTag.PERFORMANCE
   }
-
 )
 public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagnostic {
 
   //Флаг обработки параметров виртуальной таблицы
-  private boolean isVirtualTable = false;
+  private boolean isVirtualTable;
 
   @Override
   public void enterQuery(SDBLParser.QueryContext ctx) {
@@ -58,7 +57,7 @@ public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagno
   @Override
   public void enterFunctionCall(SDBLParser.FunctionCallContext ctx) {
     //Контролируем разыменование в функциях (ВЫРАЗИТЬ, ЕСТЬNULL и т.д.)
-    if(ctx.identifier != null && ctx.columnNames.size() > 1){
+    if (ctx.identifier != null && ctx.columnNames.size() > 1) {
       diagnosticStorage.addDiagnostic(ctx);
     }
     super.enterFunctionCall(ctx);
@@ -66,13 +65,13 @@ public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagno
 
   @Override
   public void enterColumn(SDBLParser.ColumnContext ctx) {
-    /*Если взведен флаг обработки виртуальной таблицы
+    /*
+    Если взведен флаг обработки виртуальной таблицы
     и определен контекст метаданных, то проверяем заполненность контекста имен колонок.
     В противном случае считаем что работаем со стандартным полем выборки или соединения
     и выводим ошибку когда список имен колонки содержит более одного идентификатора
     */
-    if((isVirtualTable && ctx.mdoName != null && !ctx.columnNames.isEmpty()) || ctx.columnNames.size() > 1){
-
+    if ((isVirtualTable && ctx.mdoName != null && !ctx.columnNames.isEmpty()) || ctx.columnNames.size() > 1) {
       diagnosticStorage.addDiagnostic(ctx);
     }
     super.enterColumn(ctx);

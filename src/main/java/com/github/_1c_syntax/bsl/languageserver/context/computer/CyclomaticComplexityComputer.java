@@ -244,6 +244,8 @@ public class CyclomaticComplexityComputer
         flattenMember(result, memberContext);
       } else if (tree instanceof BSLParser.OperationContext operationContext) {
         flattenOperation(result, operationContext);
+      } else {
+        // no-op
       }
     }
 

@@ -66,6 +66,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Component
 @RequiredArgsConstructor
 public class ServerContext {
+  private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
+    .skipDataCompositionSchema(true)
+    .skipXdtoPackage(true)
+    .build();
+
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final LanguageServerConfiguration languageServerConfiguration;
@@ -84,10 +89,6 @@ public class ServerContext {
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
-  private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
-    .skipDataCompositionSchema(true)
-    .skipXdtoPackage(true)
-    .build();
 
   public void populateContext() {
     if (configurationRoot == null) {

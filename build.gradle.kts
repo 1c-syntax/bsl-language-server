@@ -449,6 +449,8 @@ tasks.withType<GenerateModuleMetadata> {
 }
 
 tasks.register("updateLicenses") {
+    description = "Wrapper for licenseFormat"
+    group = "license"
     dependsOn(tasks.licenseFormat)
 }
 
