@@ -104,12 +104,12 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     if (count > 1) {
       for (var i = 1; i < count; ++i) {
         var child = ctx.getChild(i);
-        if (child.getClass() == BSLParser.OperationContext.class) {
-          visitOperation((BSLParser.OperationContext) child);
-        } else if (child.getClass() == BSLParser.MemberContext.class) {
-          visitMember((BSLParser.MemberContext) child);
-        } else if (child.getClass() == BSLParser.PreprocessorContext.class) {
-          continue;
+        if (child instanceof BSLParser.OperationContext operationContext) {
+          visitOperation(operationContext);
+        } else if (child instanceof BSLParser.MemberContext memberContext) {
+          visitMember(memberContext);
+        } else if (child instanceof BSLParser.PreprocessorContext) {
+          // просто пропускаем
         } else {
           throw new IllegalStateException();
         }

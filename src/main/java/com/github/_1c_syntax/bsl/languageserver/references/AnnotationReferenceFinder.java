@@ -92,8 +92,10 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     // In normal case this method may be called twice per each document context:
     // 1. When the document context is created during the server context population or document opening
     // 2. When server context is fully populated.
-    // This can lead to the situation when annotations registered from opened documents are cleared after populateContext step.
-    // Due to limitation of mechanism to only OS files, we can leave it as is for now, but it should be refactored in the future.
+    // This can lead to the situation when annotations registered from opened documents are cleared after
+    // populateContext step.
+    // Due to limitation of mechanism to only OS files, we can leave it as is for now, but it should be refactored
+    // in the future.
     if (documentContext.getFileType() != FileType.OS) {
       return;
     }
@@ -107,8 +109,9 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .map(Pair::getRight)
       .flatMap(AnnotationReferenceFinder::getAnnotationName)
       .flatMap(annotationName -> methodSymbolAnnotationPair.map(Pair::getLeft)
-          .map(methodSymbol -> AnnotationSymbol.from(annotationName, methodSymbol)))
-      .ifPresent(annotationSymbol -> registeredAnnotations.put(annotationSymbol.getName(), annotationSymbol));
+        .map(methodSymbol -> AnnotationSymbol.from(annotationName, methodSymbol)))
+      .ifPresent(annotationSymbol ->
+        registeredAnnotations.put(annotationSymbol.getName(), annotationSymbol));
   }
 
   private void removeAnnotationsRegisteredForUri(URI uri) {
@@ -147,13 +150,15 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     var annotationParamValueContext = parentContext instanceof BSLParser.AnnotationParamValueContext apv
       ? apv
       : Trees.<BSLParser.AnnotationParamValueContext>getAncestorByRuleIndex(
-          parentContext, BSLParser.RULE_annotationParamValue);
+      parentContext, BSLParser.RULE_annotationParamValue);
 
     return Optional.ofNullable(annotationParamValueContext)
       .flatMap(apv -> getReferenceToAnnotationParamSymbol(apv, documentContext));
   }
 
-  private Optional<Reference> getReferenceToAnnotationSymbol(URI uri, BSLParser.AnnotationNameContext annotationName, DocumentContext documentContext) {
+  private Optional<Reference> getReferenceToAnnotationSymbol(URI uri,
+                                                             BSLParser.AnnotationNameContext annotationName,
+                                                             DocumentContext documentContext) {
     var annotationNode = (BSLParser.AnnotationContext) annotationName.getParent();
 
     return getAnnotationSymbol(annotationName)
@@ -164,19 +169,29 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       ));
   }
 
-  private Optional<Reference> getReferenceToAnnotationParamSymbol(BSLParser.AnnotationParamNameContext annotationParamName, DocumentContext documentContext) {
+  private Optional<Reference> getReferenceToAnnotationParamSymbol(
+    BSLParser.AnnotationParamNameContext annotationParamName,
+    DocumentContext documentContext) {
+
     return Optional.of(annotationParamName)
       .map(ParserRuleContext::getParent) // BSLParser.AnnotationParamContext
       .map(BSLParser.AnnotationParamContext.class::cast)
-      .flatMap(annotationParamContext -> getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
+      .flatMap(annotationParamContext -> getReferenceToAnnotationParam(
+        documentContext,
+        Optional.of(annotationParamContext))
+      );
   }
 
-  private Optional<Reference> getReferenceToAnnotationParamSymbol(BSLParser.AnnotationParamValueContext annotationParamValue, DocumentContext documentContext) {
+  private Optional<Reference> getReferenceToAnnotationParamSymbol(
+    BSLParser.AnnotationParamValueContext annotationParamValue,
+    DocumentContext documentContext) {
+
     return Optional.of(annotationParamValue)
       .map(ParserRuleContext::getParent) // BSLParser.AnnotationParamContext
       .filter(BSLParser.AnnotationParamContext.class::isInstance)
       .map(BSLParser.AnnotationParamContext.class::cast)
-      .flatMap(annotationParamContext -> getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
+      .flatMap(annotationParamContext ->
+        getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
   }
 
   private Optional<AnnotationSymbol> getAnnotationSymbol(BSLParser.AnnotationNameContext annotationNode) {
@@ -210,7 +225,8 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .flatMap(AnnotationSymbol::getParent)
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast)
-      .map(annotationDefinitionMethodSymbol -> AnnotationParamSymbol.from(annotationParamName, annotationDefinitionMethodSymbol))
+      .map(annotationDefinitionMethodSymbol ->
+        AnnotationParamSymbol.from(annotationParamName, annotationDefinitionMethodSymbol))
       .map(annotationParamSymbol -> Reference.of(
         documentContext.getSymbolTree().getModule(),
         annotationParamSymbol,
@@ -231,6 +247,5 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     return Optional.of(annotationParameterDefinition)
       .map(AnnotationParameterDefinition::value)
       .map(Either::getLeft);
-
   }
 }

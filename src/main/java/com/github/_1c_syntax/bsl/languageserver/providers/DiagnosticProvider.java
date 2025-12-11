@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +63,7 @@ public final class DiagnosticProvider {
 
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-  
+
   private boolean clientSupportsRefresh;
 
   /**
@@ -121,7 +122,7 @@ public final class DiagnosticProvider {
   @EventListener
   public void handleConfigurationChangedEvent(LanguageServerConfigurationChangedEvent event) {
     if (clientSupportsRefresh) {
-      clientHolder.execIfConnected(languageClient -> {
+      clientHolder.execIfConnected((LanguageClient languageClient) -> {
         LOGGER.debug("Requesting diagnostic refresh from client");
         languageClient.refreshDiagnostics();
       });

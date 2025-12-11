@@ -247,14 +247,14 @@ public class ReferenceIndexFiller {
       documentContext.getServerContext()
         .getConfiguration()
         .findCommonModule(identifierText)
-        .ifPresent(commonModule -> {
+        .ifPresent(commonModule ->
           index.addModuleReference(
             documentContext.getUri(),
             commonModule.getMdoReference().getMdoRef(),
             ModuleType.CommonModule,
             Ranges.create(identifier)
-          );
-        });
+          )
+        );
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {

@@ -48,8 +48,8 @@ import java.util.List;
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
-
   private static final String TYPO_CACHE_NAME = "typoCache";
+  private static final int MAX_CACHE_INSTANCES = 10;
 
   /**
    * Основной менеджер кэша, использующий Caffeine для кэширования в памяти.
@@ -93,8 +93,6 @@ public class CacheConfiguration {
     // if the primary directory is locked
     return createEhcacheManagerWithRetry(cachePathProvider, basePath, fullPath);
   }
-
-  private static final int MAX_CACHE_INSTANCES = 10;
 
   /**
    * Создаёт менеджер EhCache, пробуя пути с разными номерами экземпляров при блокировке.
