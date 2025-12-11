@@ -21,13 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import org.antlr.v4.runtime.tree.ParseTree;
-
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -36,6 +29,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -97,7 +96,7 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
         }
         current = current.getParent();
       }
-      
+
       if (!isDefaultValue && isWrongExpression(ctx, ctx.getParent())) {
         diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
@@ -118,18 +117,19 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
     if (mayBeNumberAccess(ctx)) {
       return true;
     }
-    
+
     var expression = getExpression(numericContextParent);
-    if (expression.isPresent() && insideStructureOrCorrespondence(expression.get())) {
-      return false;
+    if (expression.isPresent()) {
+      var context = expression.get();
+      if (insideStructureOrCorrespondence(context)) {
+        return false;
+      }
+      if (insideReturnStatement(context)) {
+        return true;
+      }
+      return !isNumericExpression(context) || insideCallParam(context);
     }
-    if (expression.isPresent() && insideReturnStatement(expression.get())) {
-      return true;
-    }
-    return expression
-      .filter((BSLParser.ExpressionContext expr) ->
-        (!isNumericExpression(expr) || insideCallParam(expr)))
-      .isPresent();
+    return false;
   }
 
   private boolean mayBeNumberAccess(BSLParser.NumericContext ctx) {

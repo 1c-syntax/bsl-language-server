@@ -21,16 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import java.util.Optional;
-import java.util.regex.Pattern;
-
-import org.antlr.v4.runtime.ParserRuleContext;
-
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
+
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Абстрактный базовый класс для диагностик магических значений (чисел и дат).
@@ -95,20 +94,12 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param expression выражение для проверки
    * @return true, если выражение находится внутри структуры или соответствия
    */
-  protected boolean insideStructureOrCorrespondence(BSLParser.ExpressionContext expression) {    
-    if (checkInsideStructureInsertOrAdd(expression)) {
-      return true;
-    }
-    if (checkInsideStructureConstructor(expression)) {
-      return true;
-    }
-    if (checkInsideStructurePropertyAssignment(expression)) {
-      return true;
-    }
-    if (checkInsideCorrespondenceInsert(expression)) {
-      return true;
-    }
-    return checkInsideCorrespondenceInsertFirstParam(expression);
+  protected boolean insideStructureOrCorrespondence(BSLParser.ExpressionContext expression) {
+    return checkInsideStructureInsertOrAdd(expression)
+      || checkInsideStructureConstructor(expression)
+      || checkInsideStructurePropertyAssignment(expression)
+      || checkInsideCorrespondenceInsert(expression)
+      || checkInsideCorrespondenceInsertFirstParam(expression);
   }
 
   /**
@@ -134,19 +125,15 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return false;
     }
     var callParamList = callParamListOpt.get();
-    var callParams = callParamList.callParam();
-    var paramIndex = callParams.indexOf(callParam);
+    var paramIndex = callParamList.callParam().indexOf(callParam);
 
     if (paramIndex != 1) {
       return false;
     }
 
-    var variableType = getVariableTypeFromCallParamList(callParamList);
-    if (variableType.isPresent()) {
-      return !variableType.get();
-    }
-
-    return false;
+    return getVariableTypeFromCallParamList(callParamList)
+      .map(typeIsCorrespondence -> !typeIsCorrespondence)
+      .orElse(false);
   }
 
   /**
@@ -234,10 +221,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return Optional.empty();
     }
     var methodCallOpt = isInsertMethod(doCallOpt.get());
-    if (methodCallOpt.isEmpty()) {
-      return Optional.empty();
-    }
-    return getVariableTypeFromCallStatement(methodCallOpt.get());
+    return methodCallOpt.flatMap(AbstractMagicValueDiagnostic::getVariableTypeFromCallStatement);
   }
 
   /**
@@ -269,25 +253,23 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    */
   private static Optional<Boolean> getVariableTypeFromCallStatement(BSLParser.MethodCallContext methodCall) {
     var callStatementOpt = findCallStatement(methodCall);
-    if (callStatementOpt.isEmpty()) {
-      return Optional.empty();
-    }
+    return callStatementOpt.flatMap(AbstractMagicValueDiagnostic::getVariableTypeFromAST);
 
-    return getVariableTypeFromAST(callStatementOpt.get());
   }
 
   /**
    * Информация о параметре вызова метода.
    *
-   * @param callParam контекст параметра вызова
-   * @param paramIndex индекс параметра в списке параметров
+   * @param callParam     контекст параметра вызова
+   * @param paramIndex    индекс параметра в списке параметров
    * @param callParamList контекст списка параметров вызова
    */
   private record CallParamInfo(
     BSLParser.CallParamContext callParam,
     int paramIndex,
     BSLParser.CallParamListContext callParamList
-  ) {}
+  ) {
+  }
 
   /**
    * Получает CallParamContext и его индекс из ExpressionContext.
@@ -325,13 +307,10 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
     if (assignmentOpt.isEmpty() || assignmentOpt.get().expression() == null) {
       return Optional.empty();
     }
-    
-    var typeNameOpt = extractTypeNameFromExpression(assignmentOpt.get().expression());
-    if (typeNameOpt.isEmpty()) {
-      return Optional.empty();
-    }
 
-    return determineVariableType(typeNameOpt.get());
+    var typeNameOpt = extractTypeNameFromExpression(assignmentOpt.get().expression());
+    return typeNameOpt.flatMap(AbstractMagicValueDiagnostic::determineVariableType);
+
   }
 
   /**
@@ -380,7 +359,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * Находит AssignmentContext для переменной с указанным именем.
    * Ищет в пределах того же блока кода (CodeBlockContext), поднимаясь по AST вверх.
    *
-   * @param startNode начальный узел для поиска
+   * @param startNode    начальный узел для поиска
    * @param variableName имя переменной
    * @return Optional с AssignmentContext или empty, если не найден
    */
@@ -405,8 +384,8 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
   /**
    * Находит AssignmentContext для переменной в пределах блока кода до указанного узла.
    *
-   * @param codeBlock блок кода для поиска
-   * @param beforeNode узел, до которого нужно искать
+   * @param codeBlock    блок кода для поиска
+   * @param beforeNode   узел, до которого нужно искать
    * @param variableName имя переменной
    * @return Optional с AssignmentContext или empty, если не найден
    */
@@ -435,9 +414,9 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
   /**
    * Находит AssignmentContext для переменной в statement до указанной позиции.
    *
-   * @param statement statement для поиска
-   * @param beforeLine номер строки, до которой нужно искать
-   * @param beforeChar позиция символа, до которой нужно искать
+   * @param statement    statement для поиска
+   * @param beforeLine   номер строки, до которой нужно искать
+   * @param beforeChar   позиция символа, до которой нужно искать
    * @param variableName имя переменной
    * @return Optional с AssignmentContext или empty, если не найден
    */
@@ -479,7 +458,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
   /**
    * Проверяет, является ли присваивание присваиванием указанной переменной.
    *
-   * @param assignment контекст присваивания
+   * @param assignment   контекст присваивания
    * @param variableName имя переменной
    * @return true, если это присваивание указанной переменной
    */
@@ -508,12 +487,11 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return false;
     }
 
-    var typeNameOpt = getStructureTypeName(callParamContextOpt.get());
-    if (typeNameOpt.isEmpty()) {
-      return false;
-    }
-
-    return isValidStructureConstructorParameter(callParamContextOpt.get(), typeNameOpt.get());
+    var callParamContext = callParamContextOpt.get();
+    var typeNameOpt = getStructureTypeName(callParamContext);
+    return typeNameOpt
+      .map(typeName -> isValidStructureConstructorParameter(callParamContext, typeName))
+      .orElse(false);
   }
 
   /**
@@ -566,7 +544,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * Проверяет, является ли параметр валидным параметром конструктора структуры.
    *
    * @param callParamContext контекст параметра вызова
-   * @param typeName тип структуры
+   * @param typeName         тип структуры
    * @return true, если параметр валиден
    */
   private static boolean isValidStructureConstructorParameter(
@@ -578,16 +556,16 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return false;
     }
     var callParams = callParamList.callParam();
-    
+
     var paramIndex = callParams.indexOf(callParamContext);
     if (paramIndex == 0) {
       return false;
     }
-    
+
     if (DiagnosticHelper.isFixedStructureType(typeName)) {
       return true;
     }
-    
+
     var firstParam = callParams.get(0);
     var tokens = firstParam.getTokens();
     if (tokens.isEmpty()) {
@@ -655,11 +633,8 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
     }
 
     var variableType = getVariableTypeFromCallParamList(callParamInfo.callParamList());
-    if (variableType.isPresent()) {
-      return variableType.get();
-    }
+    return variableType.orElse(false);
 
-    return false;
   }
 
   /**
@@ -683,11 +658,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return false;
     }
     var variableType = getVariableTypeFromCallParamList(callParamListOpt.get());
-    if (variableType.isPresent()) {
-      return variableType.get();
-    }
-
-    return false;
+    return variableType.orElse(false);
   }
 
   /**
@@ -708,10 +679,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
     }
 
     var doCallOpt = getDoCall(callParamInfo.callParamList());
-    if (doCallOpt.isEmpty()) {
-      return false;
-    }
-    return isInsertMethod(doCallOpt.get()).isPresent();
+    return doCallOpt.filter(doCallContext -> isInsertMethod(doCallContext).isPresent()).isPresent();
   }
 
   /**
@@ -737,12 +705,12 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
   /**
    * Универсальный метод для проверки контекста.
    *
-   * @param expression выражение для проверки
+   * @param expression   выражение для проверки
    * @param contextClass класс контекста для проверки
    * @return true, если выражение находится в указанном контексте
    */
   protected static boolean insideContext(BSLParser.ExpressionContext expression,
-                                        Class<? extends ParserRuleContext> contextClass) {
+                                         Class<? extends ParserRuleContext> contextClass) {
     if (expression == null) {
       return false;
     }

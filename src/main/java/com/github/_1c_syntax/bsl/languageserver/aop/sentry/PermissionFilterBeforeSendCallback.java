@@ -31,7 +31,6 @@ import org.jspecify.annotations.Nullable;
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions.BeforeSendCallback;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.MessageActionItem;
@@ -71,7 +70,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
 
   @Override
-  public SentryEvent execute(@NonNull SentryEvent event, @NonNull Hint hint) {
+  public @Nullable SentryEvent execute(SentryEvent event, Hint hint) {
     if (sendToSentry()) {
       return event;
     }

@@ -37,6 +37,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -57,7 +58,7 @@ import java.util.Collection;
 public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
   private boolean active;
-  private ApplicationEventPublisher applicationEventPublisher;
+  private @Nullable ApplicationEventPublisher applicationEventPublisher;
 
   @PreDestroy
   public void destroy() {
@@ -100,7 +101,7 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   }
 
   private void publishEvent(ApplicationEvent event) {
-    if (!active) {
+    if (!active || applicationEventPublisher == null) {
       LOGGER.warn("Trying to send event in not active event publisher.");
       return;
     }

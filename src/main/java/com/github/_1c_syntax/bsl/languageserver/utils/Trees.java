@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.jspecify.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -31,6 +30,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.util.Positions;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -311,7 +311,7 @@ public final class Trees {
           return Optional.of(terminalNode);
         }
       } else {
-        Optional<TerminalNode> node = findTerminalNodeContainsPosition((ParserRuleContext) child, position);
+        var node = findTerminalNodeContainsPosition((ParserRuleContext) child, position);
         if (node.isPresent()) {
           return node;
         }

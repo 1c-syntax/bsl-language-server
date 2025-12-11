@@ -163,9 +163,9 @@ public class LanguageServerConfiguration {
    *
    * @param configuration Конфигурация language server
    * @param srcDir Директория исходных файлов
-   * @return Корневой каталог для анализа
+   * @return Корневой каталог для анализа, или {@code null} если конфигурация находится вне srcDir
    */
-  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+  public static @Nullable Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
     var pathFromConfiguration = configuration.getConfigurationRoot();

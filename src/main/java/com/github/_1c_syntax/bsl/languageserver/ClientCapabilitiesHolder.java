@@ -27,6 +27,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -46,7 +47,7 @@ public class ClientCapabilitiesHolder {
    * Возможности клиента.
    */
   @Setter
-  private ClientCapabilities capabilities;
+  private @Nullable ClientCapabilities capabilities;
 
   /**
    * Получить возможности клиента, если было произведено подключение клиента к серверу.

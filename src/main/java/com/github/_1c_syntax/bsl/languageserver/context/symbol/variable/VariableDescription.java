@@ -97,7 +97,7 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
     trailingDescription = trailingComment.map(List::of).map(VariableDescription::new);
   }
 
-  public VariableDescription(@NonNull ParameterDescription param) {
+  public VariableDescription(ParameterDescription param) {
     description = "";
     deprecationInfo = "";
     deprecated = false;

@@ -24,12 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import lombok.Getter;
 import lombok.Setter;
 import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
   @Setter
-  private CfgVertex entryPoint;
+  private @Nullable CfgVertex entryPoint;
 
   private final ExitVertex exitPoint;
 
