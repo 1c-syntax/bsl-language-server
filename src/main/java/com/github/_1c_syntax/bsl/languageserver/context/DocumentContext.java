@@ -100,7 +100,6 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private String content;
 
   @Getter
-  @EqualsAndHashCode.Include
   private int version;
 
   @Setter(onMethod = @__({@Autowired}))

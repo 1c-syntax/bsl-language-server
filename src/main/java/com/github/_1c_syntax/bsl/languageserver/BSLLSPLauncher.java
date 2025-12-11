@@ -97,9 +97,9 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private List<String> unmatched;
 
   private final Set<Pattern> allowedAdditionalArgs = Set.of(
-    CaseInsensitivePattern.compile("--spring\\."),
-    CaseInsensitivePattern.compile("--app\\."),
-    CaseInsensitivePattern.compile("--logging\\."),
+    CaseInsensitivePattern.compile("--spring\\..*"),
+    CaseInsensitivePattern.compile("--app\\..*"),
+    CaseInsensitivePattern.compile("--logging\\..*"),
     CaseInsensitivePattern.compile("--debug")
   );
 

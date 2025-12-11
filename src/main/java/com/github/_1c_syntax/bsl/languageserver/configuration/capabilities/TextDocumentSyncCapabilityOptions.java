@@ -34,7 +34,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TextDocumentSyncCapabilityOptions {
 
-  public static final TextDocumentSyncKind DEFAULT_CHANGE = TextDocumentSyncKind.Full;
+  public static final TextDocumentSyncKind DEFAULT_CHANGE = TextDocumentSyncKind.Incremental;
 
   /**
    * Стратегия уведомления об изменениях (None, Full, Incremental).

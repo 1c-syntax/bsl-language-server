@@ -155,9 +155,13 @@ dependencies {
         exclude("com.vaadin.external.google", "android-json")
     }
 
+    testImplementation("org.junit.jupiter:junit-jupiter")
+
     // test utils
     testImplementation("org.jmockit", "jmockit", "1.50")
     testImplementation("org.awaitility", "awaitility", "4.3.0")
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
