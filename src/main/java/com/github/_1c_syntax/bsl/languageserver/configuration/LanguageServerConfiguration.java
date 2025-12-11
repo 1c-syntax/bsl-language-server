@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.formating.Formatti
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.utils.Absolute;
-import org.jspecify.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -45,6 +44,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Role;

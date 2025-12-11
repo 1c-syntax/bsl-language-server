@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import org.jspecify.annotations.Nullable;
 import lombok.NoArgsConstructor;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

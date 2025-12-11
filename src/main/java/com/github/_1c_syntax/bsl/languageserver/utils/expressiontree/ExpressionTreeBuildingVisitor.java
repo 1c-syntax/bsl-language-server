@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -56,7 +57,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   private final Deque<BslExpression> operands = new ArrayDeque<>();
   private final Deque<OperatorInCode> operatorsInFly = new ArrayDeque<>();
 
-  private BslExpression resultExpression;
+  private @Nullable BslExpression resultExpression;
   private int recursionLevel = -1;
 
   /**
@@ -74,7 +75,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   /**
    * @return результирующее выражение в виде дерева вычисления операций
    */
-  public BslExpression getExpressionTree() {
+  public @Nullable BslExpression getExpressionTree() {
     return resultExpression;
   }
 
@@ -190,7 +191,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     return ctx;
   }
 
-  private void visitParenthesis(BSLParser.ExpressionContext expression,
+  private void visitParenthesis(BSLParser.@Nullable ExpressionContext expression,
                                 List<? extends BSLParser.ModifierContext> modifiers) {
 
     // Handle the case where expression is empty (empty parentheses)

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Objects;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -34,7 +35,7 @@ public class ControlFlowGraphWalker {
   private CfgVertex currentNode;
 
   public void start() {
-    currentNode = graph.getEntryPoint();
+    currentNode = Objects.requireNonNull(graph.getEntryPoint());
   }
 
   public Set<CfgEdge> availableRoutes() {

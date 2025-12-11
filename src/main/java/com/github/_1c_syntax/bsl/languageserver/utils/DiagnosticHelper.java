@@ -21,24 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Tree;
+import org.jspecify.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
-
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Tree;
-
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
-
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Вспомогательный класс для работы с диагностиками.
@@ -53,7 +52,7 @@ public final class DiagnosticHelper {
   /**
    * Проверить равенство двух узлов синтаксического дерева.
    *
-   * @param leftNode Первый узел для сравнения
+   * @param leftNode  Первый узел для сравнения
    * @param rightNode Второй узел для сравнения
    * @return true, если узлы эквивалентны
    */
@@ -151,10 +150,10 @@ public final class DiagnosticHelper {
   /**
    * Настроить параметры диагностики из конфигурации.
    *
-   * @param diagnostic Диагностика для настройки
+   * @param diagnostic    Диагностика для настройки
    * @param configuration Карта конфигурации с параметрами
    */
-  public static void configureDiagnostic(BSLDiagnostic diagnostic, Map<String, Object> configuration) {
+  public static void configureDiagnostic(BSLDiagnostic diagnostic, @Nullable Map<String, Object> configuration) {
     if (configuration == null || configuration.isEmpty()) {
       return;
     }
@@ -183,9 +182,9 @@ public final class DiagnosticHelper {
   /**
    * Настроить параметры диагностики с фильтрацией по именам параметров.
    *
-   * @param diagnostic Диагностика для настройки
+   * @param diagnostic    Диагностика для настройки
    * @param configuration Карта конфигурации с параметрами
-   * @param filter Список имён параметров для применения
+   * @param filter        Список имён параметров для применения
    */
   public static void configureDiagnostic(BSLDiagnostic diagnostic,
                                          Map<String, Object> configuration,

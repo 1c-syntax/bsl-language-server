@@ -76,10 +76,8 @@ public final class MultilingualStringAnalyser {
    * @param declaredLanguages Строка с объявленными языками через запятую
    */
   public MultilingualStringAnalyser(String declaredLanguages) {
-
     Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
     this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
-
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
@@ -107,7 +105,7 @@ public final class MultilingualStringAnalyser {
     return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).find();
   }
 
-  private @Nullable static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+  private static @Nullable String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
     BSLParser.AssignmentContext assignment = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment != null) {
@@ -222,7 +220,7 @@ public final class MultilingualStringAnalyser {
       .anyMatch(cp -> cp.stream().anyMatch(p -> p.getText().equalsIgnoreCase(variableName)));
   }
 
-  private BSLParser.CodeBlockContext getCodeBlock() {
+  private BSLParser.@Nullable CodeBlockContext getCodeBlock() {
     return Trees.getAncestorByRuleIndex(globalMethodCallContext, BSLParser.RULE_codeBlock);
   }
 

@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -69,7 +70,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param constValue ConstValueContext
    * @return Optional с ExpressionContext, если найден
    */
-  protected static Optional<BSLParser.ExpressionContext> getExpression(BSLParser.ConstValueContext constValue) {
+  protected static Optional<BSLParser.ExpressionContext> getExpression(BSLParser.@Nullable ConstValueContext constValue) {
     if (constValue == null) {
       return Optional.empty();
     }
@@ -679,7 +680,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
     }
 
     var doCallOpt = getDoCall(callParamInfo.callParamList());
-    return doCallOpt.filter(doCallContext -> isInsertMethod(doCallContext).isPresent()).isPresent();
+    return doCallOpt.flatMap(AbstractMagicValueDiagnostic::isInsertMethod).isPresent();
   }
 
   /**
@@ -688,7 +689,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param expression выражение для проверки
    * @return true, если выражение находится в простом присваивании
    */
-  protected static boolean insideSimpleAssignment(BSLParser.ExpressionContext expression) {
+  protected static boolean insideSimpleAssignment(BSLParser.@Nullable ExpressionContext expression) {
     return insideContext(expression, BSLParser.AssignmentContext.class);
   }
 
@@ -698,7 +699,7 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param expression выражение для проверки
    * @return true, если выражение находится в return statement
    */
-  protected static boolean insideReturnStatement(BSLParser.ExpressionContext expression) {
+  protected static boolean insideReturnStatement(BSLParser.@Nullable ExpressionContext expression) {
     return insideContext(expression, BSLParser.ReturnStatementContext.class);
   }
 
@@ -709,13 +710,12 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
    * @param contextClass класс контекста для проверки
    * @return true, если выражение находится в указанном контексте
    */
-  protected static boolean insideContext(BSLParser.ExpressionContext expression,
+  protected static boolean insideContext(BSLParser.@Nullable ExpressionContext expression,
                                          Class<? extends ParserRuleContext> contextClass) {
     if (expression == null) {
       return false;
     }
-    var parent = expression.getParent();
-    return parent != null && contextClass.isInstance(parent);
+    return contextClass.isInstance(expression.getParent());
   }
 }
 

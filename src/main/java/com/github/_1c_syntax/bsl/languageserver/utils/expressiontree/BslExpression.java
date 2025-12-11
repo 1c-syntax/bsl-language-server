@@ -41,7 +41,7 @@ import org.jspecify.annotations.Nullable;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class BslExpression {
   private final ExpressionNodeType nodeType;
-  private ParseTree representingAst;
+  private @Nullable ParseTree representingAst;
 
   @ToString.Exclude
   @Setter(AccessLevel.PACKAGE)

@@ -34,6 +34,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
@@ -50,7 +51,7 @@ import java.util.Collection;
 public class MeasuresAspect {
 
   @Setter(onMethod = @__({@Autowired}))
-  private MeasureCollector measureCollector;
+  private @Nullable MeasureCollector measureCollector;
 
   @PreDestroy
   void destroy() {

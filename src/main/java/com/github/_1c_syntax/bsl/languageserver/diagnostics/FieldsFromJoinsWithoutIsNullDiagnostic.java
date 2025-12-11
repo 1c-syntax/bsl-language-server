@@ -29,11 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import org.jspecify.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,7 +100,6 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   private static Stream<String> joinedTables(SDBLParser.JoinPartContext joinPartCtx) {
     return Optional.of(joinPartCtx)
       .stream().flatMap(joinPartContext -> joinedDataSourceContext(joinPartContext).stream())
-      .filter(Objects::nonNull)
       .map(SDBLParser.DataSourceContext::alias)
       .filter(Objects::nonNull)
       .map(SDBLParser.AliasContext::identifier)
@@ -175,7 +174,6 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
                                Integer rootForStatement, boolean checkIsNullOperator) {
 
     Trees.findAllRuleNodes(expression, SDBLParser.RULE_column).stream()
-      .filter(Objects::nonNull)
       .filter(SDBLParser.ColumnContext.class::isInstance)
       .map(SDBLParser.ColumnContext.class::cast)
       .filter(columnContext -> checkColumn(tableName, columnContext, statements, rootForStatement, checkIsNullOperator))
