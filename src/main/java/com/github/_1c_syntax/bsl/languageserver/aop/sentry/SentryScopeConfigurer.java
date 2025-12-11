@@ -24,10 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 import io.sentry.IScope;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
-import org.jspecify.annotations.Nullable;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -61,6 +61,7 @@ public class SentryScopeConfigurer {
         options.setServerName(getServerName());
         options.setBeforeSend(beforeSendCallback);
         options.addInAppInclude("com.github._1c_syntax.bsl.languageserver");
+        options.getLogs().setEnabled(true);
       });
     }
 
@@ -103,3 +104,4 @@ public class SentryScopeConfigurer {
   }
 
 }
+
