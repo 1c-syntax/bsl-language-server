@@ -316,7 +316,7 @@ public class ReferenceIndexFiller {
     private final DocumentContext documentContext;
     private final ModuleReference.ParsedAccessors parsedAccessors;
     @SuppressWarnings("NullAway.Init")
-    private SourceDefinedSymbol currentScope;
+    private @Nullable SourceDefinedSymbol currentScope;
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
 
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext) {
