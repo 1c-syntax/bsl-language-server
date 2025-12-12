@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.aop.sentry.SentrySessionTransaction;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
@@ -28,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
@@ -69,6 +70,8 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -79,7 +82,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * Основной класс BSL Language Server.
@@ -91,6 +93,8 @@ import java.util.concurrent.ForkJoinPool;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@SentrySpan
+//@SentryTransaction(operation = "lsp")
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private final LanguageServerConfiguration configuration;
@@ -101,11 +105,17 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ServerContext context;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
+  @Qualifier("populateContextExecutor")
+  private final ThreadPoolTaskExecutor executor;
+  private final SentrySessionTransaction sentrySessionTransaction;
 
   private boolean shutdownWasCalled;
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
+
+    var sessionName = getSessionName(params);
+//    sentrySessionTransaction.startSession(sessionName);
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
 
@@ -161,12 +171,10 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   @Override
   public void initialized(InitializedParams params) {
-    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     CompletableFuture
-      .runAsync(context::populateContext, executorService)
+      .runAsync(context::populateContext, executor)
       .whenComplete((Void unused, @Nullable Throwable throwable) -> {
-        executorService.shutdown();
+        executor.shutdown();
         if (throwable != null) {
           LOGGER.error("Error populating context", throwable);
         }
@@ -178,6 +186,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     shutdownWasCalled = true;
     textDocumentService.reset();
     context.clear();
+    sentrySessionTransaction.finishSession();
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
 
@@ -387,6 +396,14 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
     semanticTokensProvider.setRange(Boolean.TRUE);
     return semanticTokensProvider;
+  }
+
+  private String getSessionName(InitializeParams params) {
+    var workspaceFolders = params.getWorkspaceFolders();
+    if (workspaceFolders != null && !workspaceFolders.isEmpty()) {
+      return workspaceFolders.get(0).getName();
+    }
+    return "unknown-workspace";
   }
 
 }

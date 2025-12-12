@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Locked;
@@ -87,7 +88,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Scope("prototype")
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-//@NullUnmarked
+@SentrySpan
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");

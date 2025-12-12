@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
@@ -31,6 +30,7 @@ import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -38,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -52,7 +54,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -65,6 +66,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@SentrySpan
 public class ServerContext {
   private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
     .skipDataCompositionSchema(true)
@@ -74,6 +76,8 @@ public class ServerContext {
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final LanguageServerConfiguration languageServerConfiguration;
+  @Qualifier("computeConfigurationExecutor")
+  private final ThreadPoolTaskExecutor executor;
 
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
@@ -355,12 +359,9 @@ public class ServerContext {
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
-    var factory = new NamedForkJoinWorkerThreadFactory("compute-configuration-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-
     CF configuration;
     try {
-      configuration = (CF) executorService.submit(
+      configuration = (CF) executor.submit(
         () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
@@ -370,7 +371,7 @@ public class ServerContext {
       configuration = (CF) MDClasses.createConfiguration();
       Thread.currentThread().interrupt();
     } finally {
-      executorService.shutdown();
+      executor.shutdown();
     }
 
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
