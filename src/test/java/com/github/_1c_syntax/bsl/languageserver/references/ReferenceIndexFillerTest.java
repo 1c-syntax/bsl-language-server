@@ -370,7 +370,7 @@ class ReferenceIndexFillerTest {
       .filter(ref -> ref.getUri().equals(documentContext.getUri()))
       .toList();
     // Не должно быть ссылок, так как вызов после переназначения на Неопределено
-    assertThat(referencesToFuncFromTest).hasSize(0);
+    assertThat(referencesToFuncFromTest).isEmpty();
   }
 
   @Test
@@ -452,7 +452,7 @@ class ReferenceIndexFillerTest {
     var referencesToFuncFromTest = referencesToFunc.stream()
       .filter(ref -> ref.getUri().equals(documentContext.getUri()))
       .toList();
-    assertThat(referencesToFuncFromTest).hasSize(0);
+    assertThat(referencesToFuncFromTest).isEmpty();
   }
 
   @Test
