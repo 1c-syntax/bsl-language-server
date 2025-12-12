@@ -90,10 +90,11 @@ class CachePathProviderTest {
     // then
     // Get the last component (hash)
     var hashComponent = cachePath.getFileName().toString();
-    
+
     // MD5 hash in hex is 32 characters
-    assertThat(hashComponent).hasSize(32);
-    assertThat(hashComponent).matches("[0-9a-f]{32}");
+    assertThat(hashComponent)
+      .hasSize(32)
+      .matches("[0-9a-f]{32}");
   }
 
   @Test
@@ -122,9 +123,9 @@ class CachePathProviderTest {
 
     // then
     // Check that the path structure ends with: .bsl-language-server/cache/{hash}
-    assertThat(cachePath.getParent().getParent().getFileName().toString()).isEqualTo(".bsl-language-server");
-    assertThat(cachePath.getParent().getFileName().toString()).isEqualTo("cache");
-    
+    assertThat(cachePath.getParent().getParent().getFileName()).hasToString(".bsl-language-server");
+    assertThat(cachePath.getParent().getFileName()).hasToString("cache");
+
     // Verify the path starts with basePath
     assertThat(cachePath.toString()).startsWith(basePath);
   }
@@ -140,7 +141,7 @@ class CachePathProviderTest {
     var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
-    assertThat(cachePath.toString()).isEqualTo(fullPath);
+    assertThat(cachePath).hasToString(fullPath);
     assertThat(cachePath.toString()).doesNotContain(".bsl-language-server");
   }
 
@@ -155,7 +156,7 @@ class CachePathProviderTest {
     var cachePath = cachePathProvider.getCachePath(basePath, fullPath);
 
     // then
-    assertThat(cachePath.toString()).isEqualTo(fullPath);
+    assertThat(cachePath).hasToString(fullPath);
     assertThat(cachePath.toString()).doesNotContain(basePath);
   }
 
@@ -185,9 +186,10 @@ class CachePathProviderTest {
 
     // then
     assertThat(cachePath).isNotNull();
-    assertThat(cachePath.toString()).startsWith(basePath);
-    assertThat(cachePath.toString()).contains(".bsl-language-server");
-    assertThat(cachePath.toString()).contains("cache");
+    assertThat(cachePath.toString())
+      .startsWith(basePath)
+      .contains(".bsl-language-server")
+      .contains("cache");
   }
 
   @Test
@@ -216,8 +218,9 @@ class CachePathProviderTest {
 
     // then
     var fileName = cachePath.getFileName().toString();
-    assertThat(fileName).doesNotContain("@");
-    assertThat(fileName).hasSize(32); // MD5 hash length
+    assertThat(fileName)
+      .doesNotContain("@")
+      .hasSize(32); // MD5 hash length
   }
 
   @Test
@@ -232,8 +235,9 @@ class CachePathProviderTest {
     var cachePath2 = cachePathProvider.getCachePath(basePath, fullPath, 2);
 
     // then
-    assertThat(cachePath0).isNotEqualTo(cachePath1);
-    assertThat(cachePath0).isNotEqualTo(cachePath2);
+    assertThat(cachePath0)
+      .isNotEqualTo(cachePath1)
+      .isNotEqualTo(cachePath2);
     assertThat(cachePath1).isNotEqualTo(cachePath2);
   }
 
@@ -250,8 +254,9 @@ class CachePathProviderTest {
 
     // then
     // All instances should have the same parent (cache directory)
-    assertThat(cachePath0.getParent()).isEqualTo(cachePath1.getParent());
-    assertThat(cachePath0.getParent()).isEqualTo(cachePath2.getParent());
+    assertThat(cachePath0.getParent())
+      .isEqualTo(cachePath1.getParent())
+      .isEqualTo(cachePath2.getParent());
   }
 
   @Test
@@ -267,8 +272,9 @@ class CachePathProviderTest {
 
     // then
     // When fullPath is provided, instance number should be ignored
-    assertThat(cachePath0).isEqualTo(customPath);
+    assertThat(cachePath0)
+      .isEqualTo(customPath)
+      .isEqualTo(cachePath1);
     assertThat(cachePath1).isEqualTo(customPath);
-    assertThat(cachePath0).isEqualTo(cachePath1);
   }
 }
