@@ -32,8 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 
-import java.util.Objects;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -88,7 +86,7 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
   }
 
   private void addDiagnostic(BinaryOperationNode node) {
-    var startToken = Trees.getTokens(Objects.requireNonNull(node.getParent()).getRepresentingAst())
+    var startToken = Trees.getTokens(node.getParent().getRepresentingAst())
       .stream()
       .findFirst()
       .orElseThrow();
@@ -102,7 +100,7 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
   }
 
   private void addDiagnostic(UnaryOperationNode node) {
-    var startToken = Trees.getTokens(Objects.requireNonNull(node.getParent()).getRepresentingAst())
+    var startToken = Trees.getTokens(node.getParent().getRepresentingAst())
       .stream()
       .findFirst()
       .orElseThrow();

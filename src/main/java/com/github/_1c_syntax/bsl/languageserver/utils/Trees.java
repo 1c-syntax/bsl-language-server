@@ -34,6 +34,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -93,7 +94,10 @@ public final class Trees {
    * @param tree Дерево разбора
    * @return Список токенов
    */
-  public static List<Token> getTokens(ParseTree tree) {
+  public static List<Token> getTokens(@Nullable ParseTree tree) {
+    if (tree == null) {
+      return Collections.emptyList();
+    }
     return org.antlr.v4.runtime.tree.Trees.getTokens(tree);
   }
 

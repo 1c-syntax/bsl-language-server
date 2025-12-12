@@ -40,7 +40,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagnostic {
 
   //Флаг обработки параметров виртуальной таблицы
-  private boolean isVirtualTable;
+  private boolean isVirtualTable = false;
 
   @Override
   public void enterQuery(SDBLParser.QueryContext ctx) {

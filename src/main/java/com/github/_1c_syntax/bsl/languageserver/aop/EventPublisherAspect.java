@@ -58,7 +58,8 @@ import java.util.Collection;
 public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
   private boolean active;
-  private @Nullable ApplicationEventPublisher applicationEventPublisher;
+  @SuppressWarnings("NullAway.Init")
+  private ApplicationEventPublisher applicationEventPublisher;
 
   @PreDestroy
   public void destroy() {
