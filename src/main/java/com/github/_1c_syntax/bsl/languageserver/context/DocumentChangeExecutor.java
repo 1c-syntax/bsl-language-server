@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import io.sentry.spring.jakarta.tracing.SentrySpan;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -43,14 +43,14 @@ import java.util.function.BiFunction;
  * Дополнительно класс предоставляет барьер {@link #awaitLatest()}, позволяющий клиентским потокам дождаться
  * применения всех поставленных изменений и тем самым читать консистентное состояние документа.
  */
+@SentrySpan
+@Slf4j
 public final class DocumentChangeExecutor {
 
   @FunctionalInterface
   public interface DocumentChangeListener {
     void onChange(DocumentContext documentContext, String newContent, int version);
   }
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(DocumentChangeExecutor.class);
 
   private final DocumentContext documentContext;
   private final PriorityBlockingQueue<ChangeTask> queue = new PriorityBlockingQueue<>();
@@ -182,7 +182,7 @@ public final class DocumentChangeExecutor {
         }
       }
     } catch (Exception e) {
-      LOGGER.error("Unexpected error in document executor worker", e);
+      LOGGER.error("Unexpected error in document executor worker: {}", e.getMessage(), e);
     } finally {
       flushPendingChanges();
     }

@@ -26,8 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.utils.Absolute;
-import jakarta.annotation.PreDestroy;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
+import io.sentry.spring.jakarta.tracing.SentryTransaction;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
@@ -37,15 +39,14 @@ import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Сервис обработки запросов, связанных с рабочей областью.
@@ -56,25 +57,23 @@ import java.util.concurrent.Executors;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
+@SentrySpan
+@SentryTransaction(operation = "workspace-service")
 public class BSLWorkspaceService implements WorkspaceService {
 
   private final LanguageServerConfiguration configuration;
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
   private final ServerContext serverContext;
-
-  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
+  @Qualifier("workspaceServiceExecutor")
+  private final ThreadPoolTaskExecutor executor;
 
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
     return CompletableFuture.supplyAsync(
       () -> Either.forRight(symbolProvider.getSymbols(params)),
-      executorService
+      executor
     );
   }
 
@@ -93,6 +92,8 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> {
         for (var fileEvent : params.getChanges()) {
           var uri = Absolute.uri(fileEvent.getUri());
+          LOGGER.info("handleChangedEvent: original uri = {}", fileEvent.getUri());
+          LOGGER.info("handleChangedEvent: absolute uri = {}", uri);
 
           switch (fileEvent.getType()) {
             case Deleted -> handleDeletedFileEvent(uri);
@@ -101,7 +102,7 @@ public class BSLWorkspaceService implements WorkspaceService {
           }
         }
       },
-      executorService
+      executor
     );
   }
 
@@ -111,7 +112,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     return CompletableFuture.supplyAsync(
       () -> commandProvider.executeCommand(arguments),
-      executorService
+      executor
     );
   }
 
@@ -131,6 +132,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
     if (isDocumentOpened) {
+      LOGGER.info("handleDeletedFileEvent: document is not opened, uri = {}", documentContext.getUri());
       serverContext.closeDocument(documentContext);
     }
     serverContext.removeDocument(uri);
@@ -151,6 +153,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
+      LOGGER.info("handleCreatedFileEvent: document is not opened, uri = {}", documentContext.getUri());
       serverContext.rebuildDocument(documentContext);
       serverContext.tryClearDocument(documentContext);
     }
@@ -171,11 +174,14 @@ public class BSLWorkspaceService implements WorkspaceService {
   private void handleChangedFileEvent(URI uri) {
     var documentContext = serverContext.getDocument(uri);
     if (documentContext == null) {
+      LOGGER.info("handleChangedEvent: documentContext = null, uri = {}", uri);
       documentContext = serverContext.addDocument(uri);
+      LOGGER.info("handleChangedEvent: created documentContext with uri = {}", documentContext.getUri());
     }
 
     var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
+      LOGGER.info("handleChangedFileEvent: document is not opened, uri = {}", documentContext.getUri());
       serverContext.rebuildDocument(documentContext);
       serverContext.tryClearDocument(documentContext);
     }

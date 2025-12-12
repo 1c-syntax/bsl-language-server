@@ -25,15 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * Перехватчик события заполнения контекста сервера, запускающий анализ всех файлов контекста.
@@ -46,6 +46,8 @@ public class AnalyzeProjectOnStart {
   private final DiagnosticProvider diagnosticProvider;
   private final LanguageClientHolder languageClientHolder;
   private final WorkDoneProgressHelper workDoneProgressHelper;
+  @Qualifier("analyzeOnStartExecutor")
+  private final ThreadPoolTaskExecutor executor;
 
   @EventListener
   @Async
@@ -64,11 +66,8 @@ public class AnalyzeProjectOnStart {
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
 
-    var factory = new NamedForkJoinWorkerThreadFactory("analyze-on-start-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-
     try {
-      executorService.submit(() ->
+      executor.submit(() ->
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
           progress.tick();
 
@@ -85,7 +84,7 @@ public class AnalyzeProjectOnStart {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Interrupted while analyzing project on start", e);
     } finally {
-      executorService.shutdown();
+      executor.shutdown();
     }
 
     progress.endProgress(getMessage("projectAnalyzed"));

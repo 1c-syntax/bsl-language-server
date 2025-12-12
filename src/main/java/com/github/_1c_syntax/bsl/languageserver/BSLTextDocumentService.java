@@ -47,6 +47,8 @@ import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
+import io.sentry.spring.jakarta.tracing.SentryTransaction;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -94,10 +96,10 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
 import org.eclipse.lsp4j.RenameParams;
-import org.eclipse.lsp4j.SemanticTokens;
-import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
+import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
@@ -107,8 +109,9 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -117,8 +120,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -132,6 +133,8 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SentrySpan
+@SentryTransaction(operation = "text-document-service")
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private final ServerContext context;
@@ -154,7 +157,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
 
-  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
+  @Qualifier("textDocumentServiceExecutor")
+  private final ThreadPoolTaskExecutor executor;
 
   // Executors per document URI to serialize didChange operations and avoid race conditions
   private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
@@ -166,8 +170,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // Shutdown all document executors
     documentExecutors.values().forEach(DocumentChangeExecutor::shutdown);
     documentExecutors.clear();
-
-    executorService.shutdown();
   }
 
   @Override
@@ -747,7 +749,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return waitFuture.thenApplyAsync(
       ignored -> supplier.get(),
-      executorService
+      this.executor
     );
   }
 }
