@@ -54,7 +54,7 @@ jobs:
         name: Test Results (Java ${{ matrix.java_version }}.${{ matrix.os }})
         path: "**/test-results/test/**/*.xml"
   publish-test-results:
-    needs: build
+    needs: [gatekeeper, check-pr-exists, build]
     runs-on: ubuntu-latest
     permissions:
       checks: write
