@@ -128,7 +128,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   private Set<String> makeWordsToIgnore() {
-    char delimiter = ',';
+    var delimiter = ',';
     var exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
     if (!userWordsToIgnore.isEmpty()) {
       exceptions += delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
@@ -180,11 +180,11 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
 
-    String lang = info.getResourceString("diagnosticLanguage");
-    Map<String, List<Token>> tokensMap = getTokensMap(documentContext);
+    var lang = info.getResourceString("diagnosticLanguage");
+    var tokensMap = getTokensMap(documentContext);
 
     // build string of unchecked words
-    Set<String> uncheckedWords = tokensMap.keySet().stream()
+    var uncheckedWords = tokensMap.keySet().stream()
       .filter(word -> checkedWordsHolder.getWordStatus(lang, word) == WordStatus.MISSING)
       .collect(Collectors.toSet());
 
@@ -195,9 +195,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     // Join with double \n to force LT make paragraph after each word.
     // Otherwise results may be flaky cause of sort order of words in file.
-    String uncheckedWordsString = String.join("\n\n", uncheckedWords);
+    var uncheckedWordsString = String.join("\n\n", uncheckedWords);
 
-    JLanguageTool languageTool = acquireLanguageTool(lang);
+    var languageTool = acquireLanguageTool(lang);
 
     List<RuleMatch> matches = Collections.emptyList();
     try {
@@ -228,7 +228,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private void fireDiagnosticOnCheckedWordsWithErrors(
     Map<String, List<Token>> tokensMap
   ) {
-    String lang = info.getResourceString("diagnosticLanguage");
+    var lang = info.getResourceString("diagnosticLanguage");
 
     tokensMap.entrySet().stream()
       .filter(entry -> checkedWordsHolder.getWordStatus(lang, entry.getKey()) == WordStatus.HAS_ERROR)
@@ -239,5 +239,4 @@ public class TypoDiagnostic extends AbstractDiagnostic {
         tokens.forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
       });
   }
-
 }

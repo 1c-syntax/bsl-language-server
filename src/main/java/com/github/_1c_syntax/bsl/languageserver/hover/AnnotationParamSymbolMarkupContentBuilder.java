@@ -61,10 +61,10 @@ public class AnnotationParamSymbolMarkupContentBuilder implements MarkupContentB
     var parameterDefinition = maybeParameterDefinition.get();
 
     // описание параметра аннотации
-    String parameter = descriptionFormatter.parameterToString(parameterDefinition);
+    var parameter = descriptionFormatter.parameterToString(parameterDefinition);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parameter);
 
-    String content = markupBuilder.toString();
+    var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }

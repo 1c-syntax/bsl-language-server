@@ -134,6 +134,8 @@ import java.util.function.Supplier;
 @Slf4j
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
+  private static final long AWAIT_CLOSE = 30;
+
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
@@ -488,7 +490,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       docExecutor.shutdown();
       try {
         // Wait for all queued changes to complete (with timeout to avoid hanging)
-        if (!docExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+        if (!docExecutor.awaitTermination(AWAIT_CLOSE, TimeUnit.SECONDS)) {
           docExecutor.shutdownNow();
         }
       } catch (InterruptedException e) {

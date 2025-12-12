@@ -52,15 +52,19 @@ import java.util.Optional;
 public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final int SKIPPED_RULE_INDEX = 0;
+  private static final int COUNT_EXPRESSIONS = 3;
+  private static final int INDEX_CONDITION = 0;
+  private static final int INDEX_TRUE_BRANCH = 1;
+  private static final int INDEX_FALSE_BRANCH = 2;
 
   @Override
   public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
     var exp = ctx.expression();
 
-    if (exp != null && exp.size() >= 3) {
-      var condition = getBooleanToken(exp.get(0));
-      var trueBranch = getBooleanToken(exp.get(1));
-      var falseBranch = getBooleanToken(exp.get(2));
+    if (exp != null && exp.size() >= COUNT_EXPRESSIONS) {
+      var condition = getBooleanToken(exp.get(INDEX_CONDITION));
+      var trueBranch = getBooleanToken(exp.get(INDEX_TRUE_BRANCH));
+      var falseBranch = getBooleanToken(exp.get(INDEX_FALSE_BRANCH));
 
       if (condition != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
