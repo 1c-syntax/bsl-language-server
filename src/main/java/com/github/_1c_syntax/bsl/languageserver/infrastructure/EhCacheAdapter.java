@@ -100,10 +100,6 @@ public class EhCacheAdapter<K, V> extends AbstractValueAdaptingCache {
 
   @Override
   public void put(Object key, @Nullable Object value) {
-    if(value == null) { // не будем в кеш класть null-значения
-      throw new IllegalArgumentException("Null values are not allowed for cache \"" + name + "\"");
-    }
-
     @SuppressWarnings("unchecked")
     var typedKey = (K) key;
     @SuppressWarnings("unchecked")

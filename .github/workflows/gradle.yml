@@ -48,8 +48,26 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew check --stacktrace
     - name: Archive test results
-      if: failure()
+      if: always()
       uses: actions/upload-artifact@v5
       with:
-        name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
-        path: build/reports/tests/test
+        name: Test Results (Java ${{ matrix.java_version }}.${{ matrix.os }})
+        path: "**/test-results/test/**/*.xml"
+  publish-test-results:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+      issues: read
+    if: always()
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: artifacts
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "artifacts/**/*.xml"
