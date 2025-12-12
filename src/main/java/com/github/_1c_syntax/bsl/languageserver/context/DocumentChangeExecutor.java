@@ -200,7 +200,7 @@ public final class DocumentChangeExecutor {
    */
   private CompletableFuture<Void> registerWaiter(int version) {
     var future = new CompletableFuture<Void>();
-    versionWaiters.compute(version, (key, futures) -> {
+    versionWaiters.compute(version, (Integer key, CopyOnWriteArrayList<CompletableFuture<Void>> futures) -> {
       var list = futures;
       if (list == null) {
         list = new CopyOnWriteArrayList<>();

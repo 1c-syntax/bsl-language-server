@@ -55,7 +55,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
 
     // местоположение переменной
-    String location = descriptionFormatter.getLocation(symbol);
+    var location = descriptionFormatter.getLocation(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, location);
 
     // описание переменной
@@ -68,7 +68,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
       .map(VariableDescription::getPurposeDescription)
       .ifPresent(trailingDescription -> descriptionFormatter.addSectionIfNotEmpty(markupBuilder, trailingDescription));
 
-    String content = markupBuilder.toString();
+    var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }
