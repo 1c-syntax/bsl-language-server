@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765537286222,
+  "lastUpdate": 1765564864191,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32457,6 +32457,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5710761637284612",
             "extra": "mean: 92.03409655888875 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3349563b433e649914d2c4d7b39eca7a2a957ffa",
+          "message": "Merge pull request #3660 from 1c-syntax/nixel2007-patch-2\n\nDisable Sentry logging in scope configuration",
+          "timestamp": "2025-12-12T17:57:15+01:00",
+          "tree_id": "d2b50197c05b0c6ba59d4dc47f078ef9463c6bf5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3349563b433e649914d2c4d7b39eca7a2a957ffa"
+        },
+        "date": 1765564858716,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.02362140019734,
+            "unit": "sec",
+            "range": "stddev: 1.1690272122651852",
+            "extra": "mean: 89.02362140019734 sec\nrounds: 3"
           }
         ]
       }
