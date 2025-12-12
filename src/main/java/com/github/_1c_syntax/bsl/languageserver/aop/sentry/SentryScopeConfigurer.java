@@ -89,7 +89,7 @@ public class SentryScopeConfigurer {
   }
 
   private String getVersion() {
-    return serverInfo.getVersion();
+    return "bsl-language-server@" + serverInfo.getVersion();
   }
 
   @Nullable

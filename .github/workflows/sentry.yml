@@ -45,4 +45,4 @@ jobs:
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
         with:
           environment: ${{ env.ENVIRONMENT }}
-          release: ${{ env.RELEASE_VERSION }}
+          release: bsl-language-server@${{ env.RELEASE_VERSION }}
