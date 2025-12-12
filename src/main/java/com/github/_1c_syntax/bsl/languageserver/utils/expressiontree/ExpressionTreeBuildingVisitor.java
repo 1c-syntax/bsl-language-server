@@ -69,8 +69,8 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   public static BslExpression buildExpressionTree(BSLParser.ExpressionContext ctx) {
     var instance = new ExpressionTreeBuildingVisitor();
     instance.visitExpression(ctx);
-    @SuppressWarnings("NullAway")
-    var result = instance.getExpressionTree(); // тут не будет null
+    var result = instance.getExpressionTree();
+    assert result != null;
     return result;
   }
 
