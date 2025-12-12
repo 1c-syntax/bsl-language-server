@@ -63,7 +63,7 @@ public final class MultilingualStringAnalyser {
     WHITE_SPACE_REGEX
   );
 
-  private BSLParser.GlobalMethodCallContext globalMethodCallContext;
+  private BSLParser.@Nullable GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
   private @Nullable String variableName;
   private final ArrayList<String> expectedLanguages;
@@ -153,8 +153,12 @@ public final class MultilingualStringAnalyser {
 
   }
 
-  private static String getMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    return globalMethodCallContext.doCall().callParamList().callParam(0).getText();
+  private static String getMultilingualString(BSLParser.@Nullable GlobalMethodCallContext globalMethodCallContext) {
+    if (globalMethodCallContext == null) {
+      return "";
+    } else {
+      return globalMethodCallContext.doCall().callParamList().callParam(0).getText();
+    }
   }
 
   private void checkDeclaredLanguages() {
@@ -208,6 +212,7 @@ public final class MultilingualStringAnalyser {
       return false;
     }
 
+    assert globalMethodCallContext != null;
     return Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_globalMethodCall)
       .stream()
       .filter(node ->
