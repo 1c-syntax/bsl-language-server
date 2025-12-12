@@ -83,10 +83,11 @@ public class EhCacheAdapter<K, V> extends AbstractValueAdaptingCache {
     var typedKey = (K) key;
     var value = nativeCache.get(typedKey);
 
-    if (value != null) { // если нет в кеше, загружаем из valueLoader
+    if (value != null) {
       return (T) value;
     }
 
+    // если нет в кеше (value == null), то загружаем из valueLoader
     try {
       T newValue = valueLoader.call();
       if (newValue != null) {

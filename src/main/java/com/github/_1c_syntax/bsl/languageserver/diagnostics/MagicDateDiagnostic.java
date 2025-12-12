@@ -183,10 +183,8 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
     }
     var doCall = callParamList.getParent(); // doCall
     var globalCall = doCall.getParent(); // globalCall - метод Дата(ХХХ)
-    if (!(globalCall instanceof BSLParser.GlobalMethodCallContext globalMethodCall)) {
-      return false;
-    }
-    if (!METHOD_PATTERN.matcher(globalMethodCall.methodName().getText()).matches()) {
+    if (!(globalCall instanceof BSLParser.GlobalMethodCallContext globalMethodCall)
+      || (!METHOD_PATTERN.matcher(globalMethodCall.methodName().getText()).matches())) {
       return false;
     }
     var complexId = globalCall.getParent(); // complexId
