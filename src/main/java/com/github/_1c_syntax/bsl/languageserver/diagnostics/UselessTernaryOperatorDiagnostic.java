@@ -69,10 +69,10 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
       if (condition != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
       } else if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE) {
-        diagnosticStorage.addDiagnostic(ctx, DiagnosticStorage.createAdditionalData(exp.get(0).getText()));
+        diagnosticStorage.addDiagnostic(ctx, DiagnosticStorage.createAdditionalData(exp.get(INDEX_CONDITION).getText()));
       } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE) {
         diagnosticStorage.addDiagnostic(ctx,
-          DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(0).getText())));
+          DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(INDEX_CONDITION).getText())));
       } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
       } else {

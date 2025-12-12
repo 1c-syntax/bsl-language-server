@@ -50,8 +50,8 @@ import java.util.List;
 public class CacheConfiguration {
   private static final String TYPO_CACHE_NAME = "typoCache";
   private static final int MAX_CACHE_INSTANCES = 10;
-  private static final long ENTRIES_COUNT = 125_000;
-  private static final long DISK_SIZE = 50;
+  private static final long HEAP_ENTRIES_COUNT = 125_000;
+  private static final long DISK_SIZE_MB = 50;
 
   /**
    * Основной менеджер кэша, использующий Caffeine для кэширования в памяти.
@@ -138,8 +138,8 @@ public class CacheConfiguration {
   private static org.ehcache.CacheManager createEhcacheManager(java.nio.file.Path cacheDir) {
     // Build resource pools with disk persistence
     var resourcePools = ResourcePoolsBuilder.newResourcePoolsBuilder()
-      .heap(ENTRIES_COUNT, EntryUnit.ENTRIES)
-      .disk(DISK_SIZE, MemoryUnit.MB, true);
+      .heap(HEAP_ENTRIES_COUNT, EntryUnit.ENTRIES)
+      .disk(DISK_SIZE_MB, MemoryUnit.MB, true);
     
     var cacheConfig = createTypoCacheConfig(resourcePools);
 
@@ -161,7 +161,7 @@ public class CacheConfiguration {
   private static org.ehcache.CacheManager createInMemoryEhcacheManager() {
     // Build resource pools with heap-only storage
     var resourcePools = ResourcePoolsBuilder.newResourcePoolsBuilder()
-      .heap(ENTRIES_COUNT, EntryUnit.ENTRIES);
+      .heap(HEAP_ENTRIES_COUNT, EntryUnit.ENTRIES);
     
     var cacheConfig = createTypoCacheConfig(resourcePools);
 
