@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.PropertyResourceBundle;
@@ -39,17 +39,20 @@ import java.util.ResourceBundle;
  */
 public class UTF8Control extends ResourceBundle.Control {
   @Override
-  public ResourceBundle newBundle
-    (String baseName, Locale locale, String format, ClassLoader loader, boolean reload) throws IOException {
+  public @Nullable ResourceBundle newBundle(String baseName,
+                                            Locale locale,
+                                            String format,
+                                            ClassLoader loader,
+                                            boolean reload) throws IOException {
     // The below is a copy of the default implementation.
-    String bundleName = toBundleName(baseName, locale);
-    String resourceName = toResourceName(bundleName, "properties");
+    var bundleName = toBundleName(baseName, locale);
+    var resourceName = toResourceName(bundleName, "properties");
     ResourceBundle bundle = null;
     InputStream stream = null;
     if (reload) {
-      URL url = loader.getResource(resourceName);
+      var url = loader.getResource(resourceName);
       if (url != null) {
-        URLConnection connection = url.openConnection();
+        var connection = url.openConnection();
         if (connection != null) {
           connection.setUseCaches(false);
           stream = connection.getInputStream();
@@ -58,8 +61,9 @@ public class UTF8Control extends ResourceBundle.Control {
     } else {
       stream = loader.getResourceAsStream(resourceName);
     }
+
     if (stream != null) {
-      try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+      try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
         // Only this line is changed to make it to read properties files as UTF-8.
         bundle = new PropertyResourceBundle(reader);
       } finally {

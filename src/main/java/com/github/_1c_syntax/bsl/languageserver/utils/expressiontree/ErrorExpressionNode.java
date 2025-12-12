@@ -26,6 +26,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Узел дерева выражений с ошибкой разбора.
@@ -43,7 +44,7 @@ public class ErrorExpressionNode extends BslExpression {
     super(ExpressionNodeType.ERROR);
   }
 
-  protected ErrorExpressionNode(ParseTree sourceCodeOperator) {
+  protected ErrorExpressionNode(@Nullable ParseTree sourceCodeOperator) {
     super(ExpressionNodeType.ERROR, sourceCodeOperator, null);
   }
 

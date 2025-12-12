@@ -31,12 +31,12 @@ import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
-import org.jspecify.annotations.Nullable;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -66,6 +66,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Component
 @RequiredArgsConstructor
 public class ServerContext {
+  private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
+    .skipDataCompositionSchema(true)
+    .skipXdtoPackage(true)
+    .build();
+
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final LanguageServerConfiguration languageServerConfiguration;
@@ -84,10 +89,6 @@ public class ServerContext {
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
-  private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
-    .skipDataCompositionSchema(true)
-    .skipXdtoPackage(true)
-    .build();
 
   public void populateContext() {
     if (configurationRoot == null) {

@@ -90,7 +90,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   }
 
   private static List<? extends BSLParser.ParamContext> getParams(ParserRuleContext declaration) {
-    BSLParser.ParamListContext paramList = declaration.getRuleContext(BSLParser.ParamListContext.class, 0);
+    var paramList = declaration.getRuleContext(BSLParser.ParamListContext.class, 0);
     if (paramList == null) {
       return Collections.emptyList();
     }

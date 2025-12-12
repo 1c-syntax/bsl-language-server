@@ -21,15 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.antlr.v4.runtime.tree.ParseTree;
-
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -37,6 +28,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -119,7 +119,7 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
     return false;
   }
 
-  private static boolean shouldAddDiagnostic(BSLParser.ExpressionContext expressionContext) {
+  private static boolean shouldAddDiagnostic(BSLParser.@Nullable ExpressionContext expressionContext) {
     return !insideSimpleAssignment(expressionContext)
       && !insideReturnStatement(expressionContext)
       && !insideAssignmentWithDateMethodForSimpleDate(expressionContext);
@@ -172,7 +172,7 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
     return authorizedDates.contains(s);
   }
 
-  private static boolean insideAssignmentWithDateMethodForSimpleDate(BSLParser.ExpressionContext expression) {
+  private static boolean insideAssignmentWithDateMethodForSimpleDate(BSLParser.@Nullable ExpressionContext expression) {
     if (expression == null) {
       return false;
     }
@@ -183,10 +183,8 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
     }
     var doCall = callParamList.getParent(); // doCall
     var globalCall = doCall.getParent(); // globalCall - метод Дата(ХХХ)
-    if (!(globalCall instanceof BSLParser.GlobalMethodCallContext globalMethodCall)) {
-      return false;
-    }
-    if (!METHOD_PATTERN.matcher(globalMethodCall.methodName().getText()).matches()) {
+    if (!(globalCall instanceof BSLParser.GlobalMethodCallContext globalMethodCall)
+      || (!METHOD_PATTERN.matcher(globalMethodCall.methodName().getText()).matches())) {
       return false;
     }
     var complexId = globalCall.getParent(); // complexId

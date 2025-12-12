@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,7 +65,7 @@ public final class MultilingualStringAnalyser {
 
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
-  private String variableName;
+  private @Nullable String variableName;
   private final ArrayList<String> expectedLanguages;
   private final Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
@@ -75,10 +76,8 @@ public final class MultilingualStringAnalyser {
    * @param declaredLanguages Строка с объявленными языками через запятую
    */
   public MultilingualStringAnalyser(String declaredLanguages) {
-
     Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
     this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
-
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
@@ -106,11 +105,11 @@ public final class MultilingualStringAnalyser {
     return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).find();
   }
 
-  private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+  private static @Nullable String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
     BSLParser.AssignmentContext assignment = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment != null) {
-      BSLParser.LValueContext lValue = assignment.lValue();
+      var lValue = assignment.lValue();
       if (lValue != null) {
         return lValue.getText();
       }
@@ -221,7 +220,7 @@ public final class MultilingualStringAnalyser {
       .anyMatch(cp -> cp.stream().anyMatch(p -> p.getText().equalsIgnoreCase(variableName)));
   }
 
-  private BSLParser.CodeBlockContext getCodeBlock() {
+  private BSLParser.@Nullable CodeBlockContext getCodeBlock() {
     return Trees.getAncestorByRuleIndex(globalMethodCallContext, BSLParser.RULE_codeBlock);
   }
 

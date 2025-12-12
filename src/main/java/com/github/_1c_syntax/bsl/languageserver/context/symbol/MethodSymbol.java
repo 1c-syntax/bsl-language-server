@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.jspecify.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -38,6 +37,7 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;

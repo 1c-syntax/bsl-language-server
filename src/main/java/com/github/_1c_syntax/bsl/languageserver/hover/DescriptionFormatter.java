@@ -321,15 +321,15 @@ public class DescriptionFormatter {
   public String parameterToString(ParameterDefinition parameterDefinition) {
     var level = 0;
     var parameterDescription = parameterDefinition.getDescription();
-    if (parameterDescription.isPresent()) {
-      return parameterToString(parameterDescription.get(), level);
-    }
+    return parameterDescription
+      .map(description -> parameterToString(description, level))
+      .orElseGet(() -> String.format(
+          PARAMETER_TEMPLATE,
+          parameterDefinition.getName(),
+          ""
+        )
+      );
 
-    return String.format(
-      PARAMETER_TEMPLATE,
-      parameterDefinition.getName(),
-      ""
-    );
   }
 
   private Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {

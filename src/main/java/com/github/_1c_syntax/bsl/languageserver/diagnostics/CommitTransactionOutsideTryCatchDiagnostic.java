@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -48,8 +49,8 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
     "ЗафиксироватьТранзакцию|CommitTransaction"
   );
 
-  private ParserRuleContext nodeEndTransaction;
-  private BSLParser.StatementContext nodeEndFile;
+  private @Nullable ParserRuleContext nodeEndTransaction;
+  private BSLParser.@Nullable StatementContext nodeEndFile;
 
   public CommitTransactionOutsideTryCatchDiagnostic() {
     nodeEndTransaction = null;

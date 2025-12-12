@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.AbstractValueAdaptingCache;
 
@@ -81,11 +82,12 @@ public class EhCacheAdapter<K, V> extends AbstractValueAdaptingCache {
   public <T> T get(Object key, Callable<T> valueLoader) {
     var typedKey = (K) key;
     var value = nativeCache.get(typedKey);
-    
+
     if (value != null) {
       return (T) value;
     }
-    
+
+    // если нет в кеше (value == null), то загружаем из valueLoader
     try {
       T newValue = valueLoader.call();
       if (newValue != null) {
@@ -98,7 +100,7 @@ public class EhCacheAdapter<K, V> extends AbstractValueAdaptingCache {
   }
 
   @Override
-  public void put(Object key, Object value) {
+  public void put(Object key, @Nullable Object value) {
     @SuppressWarnings("unchecked")
     var typedKey = (K) key;
     @SuppressWarnings("unchecked")

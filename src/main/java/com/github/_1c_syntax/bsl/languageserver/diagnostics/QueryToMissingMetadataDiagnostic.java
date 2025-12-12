@@ -75,7 +75,7 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
       .filter(Objects::nonNull)
       .filter(eds -> eds.cubeName != null)
       .filter(eds -> eds.mdo() != null && eds.mdo().tableName != null)
-      .forEach(eds -> {
+      .forEach((SDBLParser.ExternalDataSourceTableContext eds) -> {
         if (nonCubeExists(eds)) {
           diagnosticStorage.addDiagnostic(eds.cubeName, info.getMessage(eds.cubeName.getText()));
         }

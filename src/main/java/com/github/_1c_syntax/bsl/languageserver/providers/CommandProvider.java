@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ExecuteCommandParams;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -55,7 +56,7 @@ public class CommandProvider {
    *
    * @return Результат выполнения команды.
    */
-  public Object executeCommand(CommandArguments arguments) {
+  public @Nullable Object executeCommand(CommandArguments arguments) {
     var commandId = arguments.getId();
 
     var commandSupplier = commandSuppliersById.get(commandId);

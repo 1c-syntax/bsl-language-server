@@ -67,6 +67,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -106,7 +107,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
-    
+
     setConfigurationRoot(params);
 
     var capabilities = new ServerCapabilities();
@@ -142,7 +143,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       return;
     }
 
-    String rootUri = workspaceFolders.get(0).getUri();
+    var rootUri = workspaceFolders.get(0).getUri();
     Path rootPath;
     try {
       rootPath = new File(new URI(rootUri).getPath()).getCanonicalFile().toPath();
@@ -151,7 +152,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       return;
     }
 
-    Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
+    var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
       configuration,
       rootPath);
     context.setConfigurationRoot(configurationRoot);
@@ -163,7 +164,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     CompletableFuture
       .runAsync(context::populateContext, executorService)
-      .whenComplete((unused, throwable) -> {
+      .whenComplete((Void unused, @Nullable Throwable throwable) -> {
         executorService.shutdown();
         if (throwable != null) {
           LOGGER.error("Error populating context", throwable);

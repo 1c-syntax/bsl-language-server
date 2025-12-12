@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import org.jspecify.annotations.Nullable;
 import io.sentry.Sentry;
 import io.sentry.protocol.SentryId;
 import jakarta.annotation.PostConstruct;
@@ -34,6 +33,7 @@ import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
@@ -82,19 +82,21 @@ public class SentryAspect {
 
   private void logException(Throwable ex) {
     CompletableFuture.runAsync(() -> {
-      SentryId sentryId = Sentry.captureException(ex);
-      if (sentryId.equals(SentryId.EMPTY_ID)) {
-        return;
-      }
-      if (languageClientHolder == null) {
-        return;
-      }
-      var messageType = MessageType.Info;
-      var message = resources.getResourceString(getClass(), "logMessage", sentryId);
-      var messageParams = new MessageParams(messageType, message);
+        var sentryId = Sentry.captureException(ex);
+        if (sentryId.equals(SentryId.EMPTY_ID)) {
+          return;
+        }
 
-      languageClientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));
-    }, executorService);
+        if (languageClientHolder == null) {
+          return;
+        }
+        var messageType = MessageType.Info;
+        var message = resources.getResourceString(getClass(), "logMessage", sentryId);
+        var messageParams = new MessageParams(messageType, message);
+
+        languageClientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));
+      },
+      executorService);
   }
 
 }

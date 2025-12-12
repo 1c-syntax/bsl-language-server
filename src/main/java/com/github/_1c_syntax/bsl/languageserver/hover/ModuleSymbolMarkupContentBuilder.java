@@ -31,6 +31,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.StringJoiner;
 
 /**
@@ -87,6 +88,31 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     }
 
     // Флаги доступности
+    var flags = getModuleFlags(commonModule);
+
+    if (!flags.isEmpty()) {
+      var flagsHeader = "**" + getResourceString("availability") + ":** ";
+      moduleInfoBuilder.add(flagsHeader + String.join(", ", flags));
+      moduleInfoBuilder.add("");
+    }
+
+    // Режим повторного использования
+    var returnValueReuse = commonModule.getReturnValuesReuse();
+    var reuseKey = switch (returnValueReuse) {
+      case DURING_REQUEST -> "duringRequest";
+      case DURING_SESSION -> "duringSession";
+      case DONT_USE, UNKNOWN -> "";
+    };
+
+    if (!reuseKey.isEmpty()) {
+      var reuseHeader = "**" + getResourceString("returnValuesReuse") + ":** ";
+      moduleInfoBuilder.add(reuseHeader + getResourceString(reuseKey));
+    }
+
+    return moduleInfoBuilder.toString();
+  }
+
+  private List<String> getModuleFlags(CommonModule commonModule) {
     var flags = new ArrayList<String>();
 
     if (commonModule.isServer()) {
@@ -110,27 +136,7 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     if (commonModule.isGlobal()) {
       flags.add(getResourceString("global"));
     }
-
-    if (!flags.isEmpty()) {
-      var flagsHeader = "**" + getResourceString("availability") + ":** ";
-      moduleInfoBuilder.add(flagsHeader + String.join(", ", flags));
-      moduleInfoBuilder.add("");
-    }
-
-    // Режим повторного использования
-    var returnValueReuse = commonModule.getReturnValuesReuse();
-    var reuseKey = switch (returnValueReuse) {
-      case DURING_REQUEST -> "duringRequest";
-      case DURING_SESSION -> "duringSession";
-      case DONT_USE, UNKNOWN -> "";
-    };
-
-    if (!reuseKey.isEmpty()) {
-      var reuseHeader = "**" + getResourceString("returnValuesReuse") + ":** ";
-      moduleInfoBuilder.add(reuseHeader + getResourceString(reuseKey));
-    }
-
-    return moduleInfoBuilder.toString();
+    return flags;
   }
 
   private String getResourceString(String key) {

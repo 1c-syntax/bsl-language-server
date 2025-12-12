@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.EnumSet;
 import java.util.Set;

@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.util.Preconditions;
 import org.eclipse.lsp4j.util.Positions;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -115,7 +116,7 @@ public final class Ranges {
    * @param endToken Конечный токен
    * @return Диапазон между токенами
    */
-  public Range create(Token startToken, Token endToken) {
+  public Range create(Token startToken, @Nullable Token endToken) {
     int startLine = startToken.getLine() - 1;
     int startChar = startToken.getCharPositionInLine();
     var tokenToCalculateEnd = endToken == null ? startToken : endToken;

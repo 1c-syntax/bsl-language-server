@@ -36,7 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationParamNameContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.CompilerDirectiveContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.Preproc_nativeContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
@@ -62,6 +61,7 @@ import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -168,7 +168,7 @@ public class SemanticTokensProvider {
    * Получить семантические токены для всего документа.
    *
    * @param documentContext Контекст документа
-   * @param params Параметры запроса
+   * @param params          Параметры запроса
    * @return Семантические токены в дельта-кодированном формате
    */
   public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
@@ -311,32 +311,21 @@ public class SemanticTokensProvider {
   private void addAnnotationsFromAst(List<TokenEntry> entries, ParseTree parseTree) {
     // compiler directives: single Decorator from '&' through directive symbol
     for (var compilerDirective : Trees.<CompilerDirectiveContext>findAllRuleNodes(parseTree, BSLParser.RULE_compilerDirective)) {
-      var ampersand = compilerDirective.AMPERSAND().getSymbol(); // '&'
-      if (compilerDirective.compilerDirectiveSymbol() != null) {
-        var symbolToken = compilerDirective.compilerDirectiveSymbol().getStart();
-        addRange(entries, Ranges.create(ampersand, symbolToken), SemanticTokenTypes.Decorator);
-      } else {
-        addRange(entries, Ranges.create(ampersand), SemanticTokenTypes.Decorator);
-      }
+      addAmpersandRange(entries, compilerDirective.AMPERSAND(), compilerDirective.compilerDirectiveSymbol());
     }
 
     // annotations: single Decorator from '&' through annotation name; params identifiers as Parameter
     for (var annotation : Trees.<AnnotationContext>findAllRuleNodes(parseTree, BSLParser.RULE_annotation)) {
-      var ampersand = annotation.AMPERSAND().getSymbol(); // '&'
-      if (annotation.annotationName() != null) {
-        var annotationNameToken = annotation.annotationName().getStart();
-        addRange(entries, Ranges.create(ampersand, annotationNameToken), SemanticTokenTypes.Decorator);
-      } else {
-        addRange(entries, Ranges.create(ampersand), SemanticTokenTypes.Decorator);
-      }
+      addAmpersandRange(entries, annotation.AMPERSAND(), annotation.annotationName());
 
       var annotationParams = annotation.annotationParams();
-      if (annotationParams != null) {
-        for (var annotationParam : annotationParams.annotationParam()) {
-          var annotationParamName = annotationParam.annotationParamName();
-          if (annotationParamName == null) {
-            continue;
-          }
+      if (annotationParams == null) {
+        continue;
+      }
+
+      for (var annotationParam : annotationParams.annotationParam()) {
+        var annotationParamName = annotationParam.annotationParamName();
+        if (annotationParamName != null) {
           addRange(entries, Ranges.create(annotationParamName.IDENTIFIER()), SemanticTokenTypes.Parameter);
         }
       }
@@ -349,7 +338,9 @@ public class SemanticTokensProvider {
       // Namespace only for '#'+keyword part to avoid overlap with region name token
       var preprocessor = Trees.<PreprocessorContext>getAncestorByRuleIndex(regionStart, BSLParser.RULE_preprocessor);
       if (preprocessor != null && regionStart.PREPROC_REGION() != null) {
-        addRange(entries, Ranges.create(preprocessor.getStart(), regionStart.PREPROC_REGION().getSymbol()), SemanticTokenTypes.Namespace);
+        addRange(entries,
+          Ranges.create(preprocessor.getStart(), regionStart.PREPROC_REGION().getSymbol()),
+          SemanticTokenTypes.Namespace);
       } else {
         addNamespaceForPreprocessorNode(entries, regionStart);
       }
@@ -427,6 +418,17 @@ public class SemanticTokensProvider {
     Optional.ofNullable(useCtx.usedLib())
       .map(BSLParser.UsedLibContext::PREPROC_IDENTIFIER)
       .ifPresent(id -> addRange(entries, Ranges.create(id), SemanticTokenTypes.Variable));
+  }
+
+  // общий для аннотаций и директив компиляции способ добавления
+  private void addAmpersandRange(List<TokenEntry> entries, TerminalNode node, @Nullable ParserRuleContext name) {
+    var ampersand = node.getSymbol(); // '&'
+    if (name != null) {
+      var symbolToken = name.getStart();
+      addRange(entries, Ranges.create(ampersand, symbolToken), SemanticTokenTypes.Decorator);
+    } else {
+      addRange(entries, Ranges.create(ampersand), SemanticTokenTypes.Decorator);
+    }
   }
 
   private void addRange(List<TokenEntry> entries, Range range, String type) {
@@ -558,5 +560,6 @@ public class SemanticTokensProvider {
     }
   }
 
-  private record TokenEntry(int line, int start, int length, int type, int modifiers) {}
+  private record TokenEntry(int line, int start, int length, int type, int modifiers) {
+  }
 }

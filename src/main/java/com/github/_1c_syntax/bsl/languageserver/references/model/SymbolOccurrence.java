@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.jspecify.annotations.Nullable;
 import lombok.Builder;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Обращение к символу в файле.

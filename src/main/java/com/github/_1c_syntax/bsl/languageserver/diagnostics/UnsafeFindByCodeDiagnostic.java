@@ -105,7 +105,7 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
    * Если вызов является методом FindByCode/НайтиПоКоду и объект метаданных имеет небезопасное использование,
    * добавляется диагностика на имя метода.
    *
-   * @param ctx контекст вызова метода
+   * @param ctx    контекст вызова метода
    * @param mdoRef ссылка на объект метаданных в формате "Catalog.ИмяКаталога",
    *               "ChartOfCharacteristicTypes.ИмяПлана" или "ChartOfAccounts.ИмяПлана"
    */
@@ -159,19 +159,16 @@ public class UnsafeFindByCodeDiagnostic extends AbstractVisitorDiagnostic {
 
     var mdo = mdoOpt.get();
     var mdoType = mdo.getMdoType();
-    var result = false;
 
     if (mdoType == MDOType.CATALOG) {
-      result = isUnsafeCatalogUsage((Catalog) mdo);
+      return isUnsafeCatalogUsage((Catalog) mdo);
     } else if (mdoType == MDOType.CHART_OF_CHARACTERISTIC_TYPES) {
-      result = isUnsafeChartOfCharacteristicTypesUsage((ChartOfCharacteristicTypes) mdo);
+      return isUnsafeChartOfCharacteristicTypesUsage((ChartOfCharacteristicTypes) mdo);
     } else if (mdoType == MDOType.CHART_OF_ACCOUNTS) {
-      result = isUnsafeChartOfAccountsUsage((ChartOfAccounts) mdo);
+      return isUnsafeChartOfAccountsUsage((ChartOfAccounts) mdo);
     } else {
-      result = false;
+      return false;
     }
-
-    return result;
   }
 
   /**

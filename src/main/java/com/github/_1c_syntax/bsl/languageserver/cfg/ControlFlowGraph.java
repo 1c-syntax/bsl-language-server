@@ -29,6 +29,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
   @Setter
+  @SuppressWarnings("NullAway.Init")
   private CfgVertex entryPoint;
 
   private final ExitVertex exitPoint;

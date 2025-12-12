@@ -144,12 +144,12 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
     if (cachedValueNames.isEmpty()) {
       return false;
     }
-    
+
     var paramName = parameterDefinition.getName();
     if (!cachedValueNames.contains(paramName.toUpperCase(Locale.ENGLISH))) {
       return false;
     }
-    
+
     // Check if module has a client variable with this name
     return hasClientModuleVariable(paramName);
   }
@@ -159,17 +159,17 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
       .filter(BSLParser.ModuleVarContext.class::isInstance)
       .map(BSLParser.ModuleVarContext.class::cast)
       .filter(ctx -> hasVariableWithName(ctx, variableName))
-      .anyMatch(this::hasClientCompilerDirective);
+      .anyMatch(TransferringParametersBetweenClientAndServerDiagnostic::hasClientCompilerDirective);
   }
 
-  private boolean hasVariableWithName(BSLParser.ModuleVarContext ctx, String variableName) {
+  private static boolean hasVariableWithName(BSLParser.ModuleVarContext ctx, String variableName) {
     return Trees.findAllRuleNodes(ctx, BSLParser.RULE_moduleVarDeclaration).stream()
       .filter(BSLParser.ModuleVarDeclarationContext.class::isInstance)
       .map(BSLParser.ModuleVarDeclarationContext.class::cast)
       .anyMatch(decl -> decl.var_name().getText().equalsIgnoreCase(variableName));
   }
 
-  private boolean hasClientCompilerDirective(BSLParser.ModuleVarContext ctx) {
+  private static boolean hasClientCompilerDirective(BSLParser.ModuleVarContext ctx) {
     return ctx.compilerDirective().stream()
       .map(BSLParser.CompilerDirectiveContext::getStop)
       .map(Token::getType)

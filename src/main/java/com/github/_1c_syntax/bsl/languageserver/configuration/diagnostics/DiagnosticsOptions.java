@@ -27,12 +27,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataMapDeserializer;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.jspecify.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;

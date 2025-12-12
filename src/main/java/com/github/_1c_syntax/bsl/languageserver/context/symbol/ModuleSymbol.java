@@ -23,12 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.EqualsAndHashCode.Include;
 import lombok.ToString;
 import lombok.Value;
-import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -53,7 +52,7 @@ public class ModuleSymbol implements SourceDefinedSymbol {
    */
   String name;
 
-  @EqualsAndHashCode.Include
+  @Include
   DocumentContext owner;
 
   Range range;
@@ -61,10 +60,10 @@ public class ModuleSymbol implements SourceDefinedSymbol {
   /**
    * Область первого токена модуля
    */
-  @EqualsAndHashCode.Include
+  @Include
   Range selectionRange;
 
-  @Builder.Default
+  @Default
   List<SourceDefinedSymbol> children = new ArrayList<>();
 
   @Override

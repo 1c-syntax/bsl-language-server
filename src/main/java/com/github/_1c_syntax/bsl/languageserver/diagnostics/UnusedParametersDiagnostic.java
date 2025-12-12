@@ -73,8 +73,6 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       .collect(Collectors.toList());
 
     Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER)
-      .stream()
-      .filter(Objects::nonNull)
       .forEach(node ->
         paramsNames.remove((node.getText().toLowerCase(Locale.getDefault())))
       );

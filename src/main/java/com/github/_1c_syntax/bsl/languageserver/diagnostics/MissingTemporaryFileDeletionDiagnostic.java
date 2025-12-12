@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -167,7 +168,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return result;
   }
 
-  private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+  private static @Nullable String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
 
     BSLParser.AssignmentContext assignment = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 

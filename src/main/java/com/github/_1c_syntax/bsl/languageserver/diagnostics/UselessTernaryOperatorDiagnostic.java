@@ -71,6 +71,8 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
           DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(0).getText())));
       } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
+      } else {
+        // остальное - не ошибка
       }
     }
 
@@ -108,7 +110,7 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
     return info.getResourceString("quickFixAdaptedText", text);
   }
 
-  private int getBooleanToken(BSLParser.ExpressionContext expCtx) {
+  private static int getBooleanToken(BSLParser.ExpressionContext expCtx) {
 
     var tmpCtx = Optional.of(expCtx)
       .filter(ctx -> ctx.children.size() == 1)
