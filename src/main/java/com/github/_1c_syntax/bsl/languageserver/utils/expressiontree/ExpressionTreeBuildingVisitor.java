@@ -69,7 +69,9 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   public static BslExpression buildExpressionTree(BSLParser.ExpressionContext ctx) {
     var instance = new ExpressionTreeBuildingVisitor();
     instance.visitExpression(ctx);
-    return instance.getExpressionTree();
+    @SuppressWarnings("NullAway")
+    var result = instance.getExpressionTree(); // тут не будет null
+    return result;
   }
 
   /**
@@ -155,10 +157,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     // нужен ручной dispatch на конкретного child,
     // т.к. нет отдельного правила для подвыражения в скобках
     //  constValue
-      // | complexIdentifier
-      // | (( LPAREN expression RPAREN ) modifier*) // нечего оверрайдить !
-      // | (IDENTIFIER | globalMethodCall)          // нечего оверрайдить !
-      // | waitExpression
+    // | complexIdentifier
+    // | (( LPAREN expression RPAREN ) modifier*) // нечего оверрайдить !
+    // | (IDENTIFIER | globalMethodCall)          // нечего оверрайдить !
+    // | waitExpression
 
     var unaryModifier = ctx.unaryModifier();
     var childIndex = 0;
