@@ -86,15 +86,15 @@ public class SentryAspect {
         if (sentryId.equals(SentryId.EMPTY_ID)) {
           return;
         }
-        var clientHolder = languageClientHolder;
-        if (clientHolder == null) {
+
+        if (languageClientHolder == null) {
           return;
         }
         var messageType = MessageType.Info;
         var message = resources.getResourceString(getClass(), "logMessage", sentryId);
         var messageParams = new MessageParams(messageType, message);
 
-        clientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));
+        languageClientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));
       },
       executorService);
   }

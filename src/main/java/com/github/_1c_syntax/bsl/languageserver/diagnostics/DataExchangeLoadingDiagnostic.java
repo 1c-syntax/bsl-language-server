@@ -129,7 +129,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .orElse(false);
   }
 
-  private @Nullable ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
+  private static @Nullable ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
     return Trees.getAncestorByRuleIndex(ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 
