@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
 import io.sentry.IScope;
 import io.sentry.Sentry;
+import io.sentry.protocol.Geo;
 import io.sentry.protocol.User;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +68,7 @@ public class SentryScopeConfigurer {
     Sentry.configureScope((IScope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());
+      user.setGeo(new Geo()); // empty geo to block calculating geolocation by ip
       scope.setUser(user);
     });
   }
