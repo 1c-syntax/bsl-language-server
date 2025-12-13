@@ -128,10 +128,7 @@ public final class Trees {
    * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
   @Nullable
-  public static <T extends ParserRuleContext> T getAncestorByRuleIndex(@Nullable ParserRuleContext element, int type) {
-    if (element == null) {
-      return null;
-    }
+  public static <T extends ParserRuleContext> T getAncestorByRuleIndex(ParserRuleContext element, int type) {
     return org.antlr.v4.runtime.tree.Trees.getAncestor(element, type);
   }
 
