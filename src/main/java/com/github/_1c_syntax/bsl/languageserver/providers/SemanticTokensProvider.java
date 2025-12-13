@@ -345,47 +345,7 @@ public class SemanticTokensProvider {
     addOtherPreprocs(entries, parseTree);
   }
 
-  // 2) Other preprocessor directives: Macro for each HASH and PREPROC_* token,
-  // excluding region start/end (handled as Namespace)
-  private void addOtherPreprocs(List<TokenEntry> entries, ParseTree parseTree) {
-    for (var preprocessor : Trees.<PreprocessorContext>findAllRuleNodes(parseTree, BSLParser.RULE_preprocessor)) {
-      boolean containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
-      if (containsRegion) {
-        continue; // region handled as Namespace above
-      }
-
-      for (Token token : Trees.getTokens(preprocessor)) {
-        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-          continue;
-        }
-        String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
-        if (token.getType() == BSLLexer.HASH || (symbolicName != null && symbolicName.startsWith("PREPROC_"))) {
-          addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
-        }
-      }
-    }
-  }
-
-  private void addDirectives(List<TokenEntry> entries, ParseTree parseTree) {
-    // 1.1) Use directives as Namespace: #Использовать ... (moduleAnnotations scope)
-    for (var use : Trees.<UseContext>findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
-      addNamespaceForUse(entries, use);
-    }
-
-    // 1.2) Native directives as Macro: #NATIVE (moduleAnnotations scope)
-    for (var nativeCtx : Trees.<Preproc_nativeContext>findAllRuleNodes(parseTree, BSLParser.RULE_preproc_native)) {
-      var hash = nativeCtx.HASH();
-      var nativeKw = nativeCtx.PREPROC_NATIVE();
-      if (hash != null) {
-        addRange(entries, Ranges.create(hash), SemanticTokenTypes.Macro);
-      }
-      if (nativeKw != null) {
-        addRange(entries, Ranges.create(nativeKw), SemanticTokenTypes.Macro);
-      }
-    }
-  }
-
-  // 1) Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
+  // Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
   private void addRegionsNamespaces(List<TokenEntry> entries, ParseTree parseTree) {
     for (var regionStart : Trees.<RegionStartContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionStart)) {
       // Namespace only for '#'+keyword part to avoid overlap with region name token
@@ -404,6 +364,46 @@ public class SemanticTokensProvider {
     }
     for (var regionEnd : Trees.<RegionEndContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionEnd)) {
       addNamespaceForPreprocessorNode(entries, regionEnd);
+    }
+  }
+
+  // Use directives as Namespace: #Использовать ...
+  // Native directives as Macro: #native
+  private void addDirectives(List<TokenEntry> entries, ParseTree parseTree) {
+    for (var use : Trees.<UseContext>findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
+      addNamespaceForUse(entries, use);
+    }
+
+    for (var nativeCtx : Trees.<Preproc_nativeContext>findAllRuleNodes(parseTree, BSLParser.RULE_preproc_native)) {
+      var hash = nativeCtx.HASH();
+      var nativeKw = nativeCtx.PREPROC_NATIVE();
+      if (hash != null) {
+        addRange(entries, Ranges.create(hash), SemanticTokenTypes.Macro);
+      }
+      if (nativeKw != null) {
+        addRange(entries, Ranges.create(nativeKw), SemanticTokenTypes.Macro);
+      }
+    }
+  }
+
+  // Other preprocessor directives: Macro for each HASH and PREPROC_* token,
+  // excluding region start/end, native, use (handled as Namespace)
+  private void addOtherPreprocs(List<TokenEntry> entries, ParseTree parseTree) {
+    for (var preprocessor : Trees.<PreprocessorContext>findAllRuleNodes(parseTree, BSLParser.RULE_preprocessor)) {
+      boolean containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
+      if (containsRegion) {
+        continue; // region handled as Namespace above
+      }
+
+      for (Token token : Trees.getTokens(preprocessor)) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
+        if (token.getType() == BSLLexer.HASH || (symbolicName != null && symbolicName.startsWith("PREPROC_"))) {
+          addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
+        }
+      }
     }
   }
 
