@@ -53,10 +53,10 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, moduleLocation);
 
     // Информация о модуле из метаданных
-    String moduleInfo = getModuleInfo(symbol);
+    var moduleInfo = getModuleInfo(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, moduleInfo);
 
-    String content = markupBuilder.toString();
+    var content = markupBuilder.toString();
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }
 

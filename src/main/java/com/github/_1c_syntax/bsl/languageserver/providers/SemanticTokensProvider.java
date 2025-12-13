@@ -136,6 +136,13 @@ public class SemanticTokensProvider {
     BSLLexer.ANNOTATION_CUSTOM_SYMBOL
   );
 
+  private static final Set<Integer> SPEC_LITERALS = Set.of(
+    BSLLexer.UNDEFINED,
+    BSLLexer.TRUE,
+    BSLLexer.FALSE,
+    BSLLexer.NULL
+  );
+
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
 
@@ -333,7 +340,13 @@ public class SemanticTokensProvider {
   }
 
   private void addPreprocessorFromAst(List<TokenEntry> entries, ParseTree parseTree) {
-    // 1) Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
+    addRegionsNamespaces(entries, parseTree);
+    addDirectives(entries, parseTree);
+    addOtherPreprocs(entries, parseTree);
+  }
+
+  // Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
+  private void addRegionsNamespaces(List<TokenEntry> entries, ParseTree parseTree) {
     for (var regionStart : Trees.<RegionStartContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionStart)) {
       // Namespace only for '#'+keyword part to avoid overlap with region name token
       var preprocessor = Trees.<PreprocessorContext>getAncestorByRuleIndex(regionStart, BSLParser.RULE_preprocessor);
@@ -352,13 +365,15 @@ public class SemanticTokensProvider {
     for (var regionEnd : Trees.<RegionEndContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionEnd)) {
       addNamespaceForPreprocessorNode(entries, regionEnd);
     }
+  }
 
-    // 1.1) Use directives as Namespace: #Использовать ... (moduleAnnotations scope)
+  // Use directives as Namespace: #Использовать ...
+  // Native directives as Macro: #native
+  private void addDirectives(List<TokenEntry> entries, ParseTree parseTree) {
     for (var use : Trees.<UseContext>findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
       addNamespaceForUse(entries, use);
     }
 
-    // 1.2) Native directives as Macro: #NATIVE (moduleAnnotations scope)
     for (var nativeCtx : Trees.<Preproc_nativeContext>findAllRuleNodes(parseTree, BSLParser.RULE_preproc_native)) {
       var hash = nativeCtx.HASH();
       var nativeKw = nativeCtx.PREPROC_NATIVE();
@@ -369,9 +384,11 @@ public class SemanticTokensProvider {
         addRange(entries, Ranges.create(nativeKw), SemanticTokenTypes.Macro);
       }
     }
+  }
 
-    // 2) Other preprocessor directives: Macro for each HASH and PREPROC_* token,
-    // excluding region start/end (handled as Namespace)
+  // Other preprocessor directives: Macro for each HASH and PREPROC_* token,
+  // excluding region start/end, native, use (handled as Namespace)
+  private void addOtherPreprocs(List<TokenEntry> entries, ParseTree parseTree) {
     for (var preprocessor : Trees.<PreprocessorContext>findAllRuleNodes(parseTree, BSLParser.RULE_preprocessor)) {
       boolean containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
       if (containsRegion) {
@@ -404,8 +421,8 @@ public class SemanticTokensProvider {
   }
 
   private void addNamespaceForUse(List<TokenEntry> entries, UseContext useCtx) {
-    TerminalNode hashNode = useCtx.HASH();
-    TerminalNode useNode = useCtx.PREPROC_USE_KEYWORD();
+    var hashNode = useCtx.HASH();
+    var useNode = useCtx.PREPROC_USE_KEYWORD();
 
     if (hashNode != null && useNode != null) {
       addRange(entries, Ranges.create(hashNode, useNode), SemanticTokenTypes.Namespace);
@@ -510,49 +527,26 @@ public class SemanticTokensProvider {
     for (Token token : tokens) {
       var tokenType = token.getType();
       var tokenText = Objects.toString(token.getText(), "");
-      if (tokenText.isEmpty()) {
-        continue;
+      if (!tokenText.isEmpty()) {
+        selectAndAddSemanticToken(entries, token, tokenType);
       }
+    }
+  }
 
-      // strings
-      if (STRING_TYPES.contains(tokenType)) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
-        continue;
-      }
-
-      // date literals in single quotes
-      if (tokenType == BSLLexer.DATETIME) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
-        continue;
-      }
-
-      // numbers
-      if (NUMBER_TYPES.contains(tokenType)) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
-        continue;
-      }
-
-      // operators and punctuators
-      if (OPERATOR_TYPES.contains(tokenType)) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Operator);
-        continue;
-      }
-
+  private void selectAndAddSemanticToken(List<TokenEntry> entries, Token token, int tokenType) {
+    if (STRING_TYPES.contains(tokenType)) { // strings
+      addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
+    } else if (tokenType == BSLLexer.DATETIME) { // date literals in single quotes
+      addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
+    } else if (NUMBER_TYPES.contains(tokenType)) { // numbers
+      addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
+    } else if (OPERATOR_TYPES.contains(tokenType)) { // operators and punctuators
+      addRange(entries, Ranges.create(token), SemanticTokenTypes.Operator);
+    } else if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
       // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
-      if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
-        continue;
-      }
-
-      // specific literals as keywords: undefined/boolean/null
-      if (tokenType == BSLLexer.UNDEFINED
-        || tokenType == BSLLexer.TRUE
-        || tokenType == BSLLexer.FALSE
-        || tokenType == BSLLexer.NULL) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
-        continue;
-      }
-
-      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
+    } else if (SPEC_LITERALS.contains(tokenType)) { // specific literals as keywords: undefined/boolean/null
+      addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
+    } else {      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
       String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
       if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
         addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);

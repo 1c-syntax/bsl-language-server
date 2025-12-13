@@ -27,9 +27,11 @@ import com.github._1c_syntax.bsl.mdo.ModuleOwner;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Базовый класс для анализа объектов метаданных, когда диагностика регистрируется на первый токен модуля
@@ -56,7 +58,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   /**
    * Область для регистрации замечания
    */
-  private Range diagnosticRange;
+  private @Nullable Range diagnosticRange;
 
   /**
    * Конструктор с указанием типов объектов метаданных для проверки.
@@ -118,6 +120,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    * @param message Сообщение об ошибке
    */
   protected void addDiagnostic(String message) {
+    Objects.requireNonNull(diagnosticRange);
     diagnosticStorage.addDiagnostic(diagnosticRange, message);
   }
 

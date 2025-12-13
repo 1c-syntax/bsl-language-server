@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ModuleReferenceTest {
 
-  private static final ModuleReference.ParsedAccessors DEFAULT_ACCESSORS = 
+  private static final ModuleReference.ParsedAccessors DEFAULT_ACCESSORS =
     ModuleReference.parseAccessors(new ReferencesOptions().getCommonModuleAccessors());
 
   @Test
@@ -46,24 +46,25 @@ class ModuleReferenceTest {
       Процедура Тест()
         Модуль = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
       КонецПроцедуры""";
-    
+
     var documentContext = TestUtils.getDocumentContext(code);
     var ast = documentContext.getAst();
-    
+
     // Find assignment
     var assignments = new ArrayList<BSLParser.AssignmentContext>();
-    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node ->
       assignments.add((BSLParser.AssignmentContext) node)
     );
-    
+
     assertThat(assignments).hasSize(1);
-    
+
     var expression = assignments.get(0).expression();
     assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isTrue();
-    
+
     var moduleName = ModuleReference.extractCommonModuleName(expression, DEFAULT_ACCESSORS);
-    assertThat(moduleName).isPresent();
-    assertThat(moduleName.get()).isEqualTo("ПервыйОбщийМодуль");
+    assertThat(moduleName)
+      .isPresent()
+      .contains("ПервыйОбщийМодуль");
   }
 
   @Test
@@ -72,29 +73,30 @@ class ModuleReferenceTest {
       Процедура Тест()
         Модуль = МойМодуль.ПолучитьОбщийМодуль("ТестовыйМодуль");
       КонецПроцедуры""";
-    
+
     var documentContext = TestUtils.getDocumentContext(code);
     var ast = documentContext.getAst();
-    
+
     var assignments = new ArrayList<BSLParser.AssignmentContext>();
-    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node -> 
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node ->
       assignments.add((BSLParser.AssignmentContext) node)
     );
-    
+
     assertThat(assignments).hasSize(1);
-    
+
     var expression = assignments.get(0).expression();
-    
+
     // With default accessors - should not match
     assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isFalse();
-    
+
     // With custom accessor - should match
     var customAccessors = ModuleReference.parseAccessors(List.of("МойМодуль.ПолучитьОбщийМодуль"));
     assertThat(ModuleReference.isCommonModuleExpression(expression, customAccessors)).isTrue();
-    
+
     var moduleName = ModuleReference.extractCommonModuleName(expression, customAccessors);
-    assertThat(moduleName).isPresent();
-    assertThat(moduleName.get()).isEqualTo("ТестовыйМодуль");
+    assertThat(moduleName)
+      .isPresent()
+      .contains("ТестовыйМодуль");
   }
 
   @Test
@@ -105,12 +107,12 @@ class ModuleReferenceTest {
       "ОбщегоНазначения.ОбщийМодуль",
       "Common.CommonModule"
     );
-    
+
     var parsed = ModuleReference.parseAccessors(accessors);
-    
+
     // Проверяем локальные методы
     assertThat(parsed.localMethods()).containsExactlyInAnyOrder("общиймодуль", "commonmodule");
-    
+
     // Проверяем пары модуль.метод
     assertThat(parsed.moduleMethodPairs()).containsKey("общегоназначения");
     assertThat(parsed.moduleMethodPairs().get("общегоназначения")).contains("общиймодуль");

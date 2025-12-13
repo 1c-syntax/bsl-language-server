@@ -36,17 +36,6 @@ import java.util.StringJoiner;
 @Component
 @RequiredArgsConstructor
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<MethodSymbol> {
-
-  private static final String PROCEDURE_KEY = "procedure";
-  private static final String FUNCTION_KEY = "function";
-  private static final String EXPORT_KEY = "export";
-  private static final String VAL_KEY = "val";
-  private static final String PARAMETERS_KEY = "parameters";
-  private static final String RETURNED_VALUE_KEY = "returnedValue";
-  private static final String EXAMPLES_KEY = "examples";
-  private static final String CALL_OPTIONS_KEY = "callOptions";
-  private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
-
   private final DescriptionFormatter descriptionFormatter;
 
   @Override
@@ -62,34 +51,34 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     // варианты вызова
 
     // сигнатура
-    String signature = descriptionFormatter.getSignature(symbol);
+    var signature = descriptionFormatter.getSignature(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
 
     // местоположение метода
-    String methodLocation = descriptionFormatter.getLocation(symbol);
+    var methodLocation = descriptionFormatter.getLocation(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, methodLocation);
 
     // описание метода
-    String purposeSection = descriptionFormatter.getPurposeSection(symbol);
+    var purposeSection = descriptionFormatter.getPurposeSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, purposeSection);
 
     // параметры
-    String parametersSection = descriptionFormatter.getParametersSection(symbol);
+    var parametersSection = descriptionFormatter.getParametersSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parametersSection);
 
     // возвращаемое значение
-    String returnedValueSection = descriptionFormatter.getReturnedValueSection(symbol);
+    var returnedValueSection = descriptionFormatter.getReturnedValueSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, returnedValueSection);
 
     // примеры
-    String examplesSection = descriptionFormatter.getExamplesSection(symbol);
+    var examplesSection = descriptionFormatter.getExamplesSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, examplesSection);
 
     // варианты вызова
-    String callOptionsSection = descriptionFormatter.getCallOptionsSection(symbol);
+    var callOptionsSection = descriptionFormatter.getCallOptionsSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
 
-    String content = markupBuilder.toString();
+    var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }

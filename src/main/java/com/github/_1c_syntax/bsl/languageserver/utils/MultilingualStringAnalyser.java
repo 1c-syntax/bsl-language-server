@@ -63,6 +63,7 @@ public final class MultilingualStringAnalyser {
     WHITE_SPACE_REGEX
   );
 
+  @SuppressWarnings("NullAway.Init")
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
   private @Nullable String variableName;
@@ -125,15 +126,17 @@ public final class MultilingualStringAnalyser {
    * @return true, если это вызов НСтр/NStr и он успешно разобран
    */
   public boolean parse(BSLParser.GlobalMethodCallContext ctx) {
+    Objects.requireNonNull(ctx);
+
     expandedMultilingualString.clear();
     missingLanguages.clear();
     isParentTemplate = false;
+    globalMethodCallContext = ctx;
 
     if (isNotMultilingualString(ctx)) {
       return false;
     }
 
-    globalMethodCallContext = ctx;
     isParentTemplate = hasTemplateInParents(ctx);
     variableName = getVariableName(ctx);
     expandMultilingualString();
@@ -194,6 +197,7 @@ public final class MultilingualStringAnalyser {
    * @return true, если строка используется в шаблоне
    */
   public boolean isParentTemplate() {
+    Objects.requireNonNull(globalMethodCallContext, "Call parse method first");
     return isParentTemplate || istVariableUsingInTemplate();
   }
 
@@ -202,7 +206,7 @@ public final class MultilingualStringAnalyser {
       return false;
     }
 
-    var codeBlock = getCodeBlock();
+    var codeBlock = Trees.getAncestorByRuleIndex(globalMethodCallContext, BSLParser.RULE_codeBlock);
 
     if (codeBlock == null) {
       return false;
@@ -218,10 +222,6 @@ public final class MultilingualStringAnalyser {
       .map(BSLParser.CallParamListContext::callParam)
       .filter(cp -> !cp.isEmpty())
       .anyMatch(cp -> cp.stream().anyMatch(p -> p.getText().equalsIgnoreCase(variableName)));
-  }
-
-  private BSLParser.@Nullable CodeBlockContext getCodeBlock() {
-    return Trees.getAncestorByRuleIndex(globalMethodCallContext, BSLParser.RULE_codeBlock);
   }
 
 }

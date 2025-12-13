@@ -52,23 +52,27 @@ import java.util.Optional;
 public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final int SKIPPED_RULE_INDEX = 0;
+  private static final int COUNT_EXPRESSIONS = 3;
+  private static final int INDEX_CONDITION = 0;
+  private static final int INDEX_TRUE_BRANCH = 1;
+  private static final int INDEX_FALSE_BRANCH = 2;
 
   @Override
   public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
     var exp = ctx.expression();
 
-    if (exp != null && exp.size() >= 3) {
-      var condition = getBooleanToken(exp.get(0));
-      var trueBranch = getBooleanToken(exp.get(1));
-      var falseBranch = getBooleanToken(exp.get(2));
+    if (exp != null && exp.size() >= COUNT_EXPRESSIONS) {
+      var condition = getBooleanToken(exp.get(INDEX_CONDITION));
+      var trueBranch = getBooleanToken(exp.get(INDEX_TRUE_BRANCH));
+      var falseBranch = getBooleanToken(exp.get(INDEX_FALSE_BRANCH));
 
       if (condition != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
       } else if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE) {
-        diagnosticStorage.addDiagnostic(ctx, DiagnosticStorage.createAdditionalData(exp.get(0).getText()));
+        diagnosticStorage.addDiagnostic(ctx, DiagnosticStorage.createAdditionalData(exp.get(INDEX_CONDITION).getText()));
       } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE) {
         diagnosticStorage.addDiagnostic(ctx,
-          DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(0).getText())));
+          DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(INDEX_CONDITION).getText())));
       } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
       } else {

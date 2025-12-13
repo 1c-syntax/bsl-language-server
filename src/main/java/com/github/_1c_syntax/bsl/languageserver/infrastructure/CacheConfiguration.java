@@ -50,6 +50,8 @@ import java.util.List;
 public class CacheConfiguration {
   private static final String TYPO_CACHE_NAME = "typoCache";
   private static final int MAX_CACHE_INSTANCES = 10;
+  private static final long HEAP_ENTRIES_COUNT = 125_000;
+  private static final long DISK_SIZE_MB = 50;
 
   /**
    * Основной менеджер кэша, использующий Caffeine для кэширования в памяти.
@@ -108,12 +110,12 @@ public class CacheConfiguration {
    * @param fullPath полный путь (если задан)
    * @return менеджер EhCache
    */
-  private org.ehcache.CacheManager createEhcacheManagerWithRetry(
+  private static org.ehcache.CacheManager createEhcacheManagerWithRetry(
     CachePathProvider cachePathProvider,
     String basePath,
     String fullPath
   ) {
-    for (int instanceNumber = 0; instanceNumber < MAX_CACHE_INSTANCES; instanceNumber++) {
+    for (var instanceNumber = 0; instanceNumber < MAX_CACHE_INSTANCES; instanceNumber++) {
       try {
         var cacheDir = cachePathProvider.getCachePath(basePath, fullPath, instanceNumber);
         return createEhcacheManager(cacheDir);
@@ -133,11 +135,11 @@ public class CacheConfiguration {
    * @param cacheDir каталог для персистентного хранилища
    * @return менеджер EhCache
    */
-  private org.ehcache.CacheManager createEhcacheManager(java.nio.file.Path cacheDir) {
+  private static org.ehcache.CacheManager createEhcacheManager(java.nio.file.Path cacheDir) {
     // Build resource pools with disk persistence
     var resourcePools = ResourcePoolsBuilder.newResourcePoolsBuilder()
-      .heap(125_000, EntryUnit.ENTRIES)
-      .disk(50, MemoryUnit.MB, true);
+      .heap(HEAP_ENTRIES_COUNT, EntryUnit.ENTRIES)
+      .disk(DISK_SIZE_MB, MemoryUnit.MB, true);
     
     var cacheConfig = createTypoCacheConfig(resourcePools);
 
@@ -156,10 +158,10 @@ public class CacheConfiguration {
    *
    * @return менеджер EhCache с in-memory хранилищем
    */
-  private org.ehcache.CacheManager createInMemoryEhcacheManager() {
+  private static org.ehcache.CacheManager createInMemoryEhcacheManager() {
     // Build resource pools with heap-only storage
     var resourcePools = ResourcePoolsBuilder.newResourcePoolsBuilder()
-      .heap(125_000, EntryUnit.ENTRIES);
+      .heap(HEAP_ENTRIES_COUNT, EntryUnit.ENTRIES);
     
     var cacheConfig = createTypoCacheConfig(resourcePools);
 
@@ -175,7 +177,7 @@ public class CacheConfiguration {
    * @param resourcePoolsBuilder построитель пулов ресурсов (heap, disk и т.д.)
    * @return конфигурация кэша
    */
-  private org.ehcache.config.CacheConfiguration<String, WordStatus> createTypoCacheConfig(
+  private static org.ehcache.config.CacheConfiguration<String, WordStatus> createTypoCacheConfig(
     ResourcePoolsBuilder resourcePoolsBuilder
   ) {
     return CacheConfigurationBuilder
