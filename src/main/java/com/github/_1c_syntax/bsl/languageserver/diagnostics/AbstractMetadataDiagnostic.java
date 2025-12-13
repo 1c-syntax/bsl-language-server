@@ -31,6 +31,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Базовый класс для анализа объектов метаданных, когда диагностика регистрируется на первый токен модуля
@@ -119,7 +120,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    * @param message Сообщение об ошибке
    */
   protected void addDiagnostic(String message) {
-    assert diagnosticRange != null;
+    Objects.requireNonNull(diagnosticRange);
     diagnosticStorage.addDiagnostic(diagnosticRange, message);
   }
 
