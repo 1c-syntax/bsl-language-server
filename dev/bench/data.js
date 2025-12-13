@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765564864191,
+  "lastUpdate": 1765619561480,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32488,6 +32488,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1690272122651852",
             "extra": "mean: 89.02362140019734 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e14321572e86fc936be2525766ca52dde163baa",
+          "message": "Merge pull request #3661 from 1c-syntax/feature/disable-geo-location\n\nОтключение расчета геолокации по IP на стороне Sentry клиента",
+          "timestamp": "2025-12-13T10:11:39+01:00",
+          "tree_id": "2731bb36952137f480491b8a9bfc65eb9b90b433",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6e14321572e86fc936be2525766ca52dde163baa"
+        },
+        "date": 1765619555979,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.49045165379842,
+            "unit": "sec",
+            "range": "stddev: 2.5299781080550616",
+            "extra": "mean: 88.49045165379842 sec\nrounds: 3"
           }
         ]
       }
