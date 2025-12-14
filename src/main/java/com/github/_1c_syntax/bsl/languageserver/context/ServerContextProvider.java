@@ -73,7 +73,7 @@ public class ServerContextProvider {
       return contexts.get(uri);
     }
 
-    Path rootPath = Absolute.path(Absolute.uri(workspaceFolder.getUri()));
+    Path rootPath = Absolute.path(uri);
 
     // Create new ServerContext instance for workspace using Spring
     var serverContext = serverContextProvider.getObject();
