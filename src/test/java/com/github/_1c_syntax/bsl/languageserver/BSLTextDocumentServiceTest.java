@@ -65,8 +65,6 @@ class BSLTextDocumentServiceTest {
   private BSLTextDocumentService textDocumentService;
   @Autowired
   private ServerContextProvider serverContextProvider;
-  @MockitoSpyBean
-  private ServerContext serverContext;
 
   @BeforeEach
   void setUp() {
@@ -107,13 +105,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var uri = com.github._1c_syntax.utils.Absolute.uri(textDocumentItem.getUri());
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: insert text at position
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     var range = Ranges.create(0, 0, 0, 0);
     var changeEvent = new TextDocumentContentChangeEvent(range, "// Комментарий\n");
@@ -135,13 +134,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var uri = com.github._1c_syntax.utils.Absolute.uri(textDocumentItem.getUri());
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
 
     // when - multiple incremental changes
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
     
@@ -169,13 +169,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var uri = com.github._1c_syntax.utils.Absolute.uri(textDocumentItem.getUri());
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: delete text
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     var range = Ranges.create(0, 0, 0, 5);
     var changeEvent = new TextDocumentContentChangeEvent(range, "");

@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.utils.Absolute;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.jspecify.annotations.Nullable;
@@ -44,20 +43,27 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * Управляет коллекцией экземпляров {@link ServerContext} (по одному на каждую workspace folder)
  * и обеспечивает маршрутизацию от URI документа к контексту сервера.
- * <p>
- * Для обратной совместимости использует singleton {@link ServerContext},
- * когда workspace folders не настроены.
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ServerContextProvider {
 
-  private final ObjectProvider<ServerContext> serverContextProvider;
+  private final ObjectProvider<DocumentContext> documentContextProvider;
+  private final WorkDoneProgressHelper workDoneProgressHelper;
   private final LanguageServerConfiguration configuration;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
+
+  public ServerContextProvider(
+    ObjectProvider<DocumentContext> documentContextProvider,
+    WorkDoneProgressHelper workDoneProgressHelper,
+    LanguageServerConfiguration configuration
+  ) {
+    this.documentContextProvider = documentContextProvider;
+    this.workDoneProgressHelper = workDoneProgressHelper;
+    this.configuration = configuration;
+  }
 
   /**
    * Добавить workspace folder и создать для нее контекст сервера.
@@ -75,8 +81,8 @@ public class ServerContextProvider {
 
     Path rootPath = Absolute.path(uri);
 
-    // Create new ServerContext instance for workspace using Spring
-    var serverContext = serverContextProvider.getObject();
+    // Create new ServerContext instance for workspace
+    var serverContext = new ServerContext(documentContextProvider, workDoneProgressHelper, configuration);
     var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, rootPath);
     serverContext.setConfigurationRoot(configurationRoot);
 

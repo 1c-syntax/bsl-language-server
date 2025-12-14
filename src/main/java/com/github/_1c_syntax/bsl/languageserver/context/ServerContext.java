@@ -65,7 +65,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 @Slf4j
 @Component
-@Scope("prototype")
 @RequiredArgsConstructor
 public class ServerContext {
   private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
