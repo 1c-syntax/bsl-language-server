@@ -62,7 +62,6 @@ import java.util.stream.Stream;
 public class SymbolProvider {
 
   private final ServerContextProvider serverContextProvider;
-  @Deprecated
   private final ServerContext context;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(

@@ -138,7 +138,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private static final long AWAIT_CLOSE = 30;
 
   private final ServerContextProvider serverContextProvider;
-  @Deprecated
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;

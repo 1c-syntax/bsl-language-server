@@ -66,7 +66,6 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
   private final ServerContextProvider serverContextProvider;
-  @Deprecated
   private final ServerContext serverContext;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));

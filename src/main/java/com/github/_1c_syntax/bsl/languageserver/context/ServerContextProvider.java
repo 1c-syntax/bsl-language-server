@@ -42,13 +42,13 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Provider for server contexts in multi-workspace environment.
+ * Провайдер контекстов сервера для мульти-workspace окружения.
  * <p>
- * Maintains a collection of {@link ServerContext} instances (one per workspace folder)
- * and provides document URI to server context routing.
+ * Управляет коллекцией экземпляров {@link ServerContext} (по одному на каждую workspace folder)
+ * и обеспечивает маршрутизацию от URI документа к контексту сервера.
  * <p>
- * For backward compatibility, falls back to the singleton {@link ServerContext}
- * when no workspace folders are configured.
+ * Для обратной совместимости использует singleton {@link ServerContext},
+ * когда workspace folders не настроены.
  */
 @Slf4j
 @Component
@@ -63,10 +63,10 @@ public class ServerContextProvider {
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
 
   /**
-   * Add workspace folder and create server context for it.
+   * Добавить workspace folder и создать для нее контекст сервера.
    *
-   * @param workspaceFolder workspace folder information
-   * @return created server context
+   * @param workspaceFolder информация о workspace folder
+   * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = URI.create(workspaceFolder.getUri());
@@ -97,9 +97,9 @@ public class ServerContextProvider {
   }
 
   /**
-   * Remove workspace folder and clear its server context.
+   * Удалить workspace folder и очистить ее контекст сервера.
    *
-   * @param workspaceFolder workspace folder information
+   * @param workspaceFolder информация о workspace folder
    */
   public void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = URI.create(workspaceFolder.getUri());
@@ -113,13 +113,13 @@ public class ServerContextProvider {
   }
 
   /**
-   * Get server context for document URI.
+   * Получить контекст сервера для URI документа.
    * <p>
-   * Main method for document-to-context routing. Finds the appropriate
-   * server context based on document path.
+   * Основной метод для маршрутизации документа к контексту. Находит соответствующий
+   * контекст сервера на основе пути документа.
    *
-   * @param documentUri document URI
-   * @return server context containing the document, or empty if not found
+   * @param documentUri URI документа
+   * @return контекст сервера, содержащий документ, или пустой Optional, если не найден
    */
   public Optional<ServerContext> getServerContext(URI documentUri) {
     if (!"file".equalsIgnoreCase(documentUri.getScheme())) {
@@ -138,16 +138,16 @@ public class ServerContextProvider {
   }
 
   /**
-   * Get all server contexts.
+   * Получить все контексты серверов.
    *
-   * @return unmodifiable collection of all server contexts
+   * @return неизменяемая коллекция всех контекстов серверов
    */
   public Collection<ServerContext> getAllContexts() {
     return Collections.unmodifiableCollection(contexts.values());
   }
 
   /**
-   * Clear all workspaces.
+   * Очистить все workspaces.
    */
   public void clear() {
     contexts.values().forEach(ServerContext::clear);
@@ -157,9 +157,9 @@ public class ServerContextProvider {
   }
 
   /**
-   * Check if there are any registered workspaces.
+   * Проверить, есть ли зарегистрированные workspaces.
    *
-   * @return true if at least one workspace is registered
+   * @return true, если зарегистрирован хотя бы один workspace
    */
   public boolean hasWorkspaces() {
     return !contexts.isEmpty();

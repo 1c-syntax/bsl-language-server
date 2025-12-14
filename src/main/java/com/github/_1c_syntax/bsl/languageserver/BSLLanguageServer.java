@@ -101,7 +101,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContextProvider serverContextProvider;
-  @Deprecated
   private final ServerContext context;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
