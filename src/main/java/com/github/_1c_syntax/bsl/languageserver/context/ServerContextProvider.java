@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -33,7 +34,6 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,7 +69,7 @@ public class ServerContextProvider {
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(WorkspaceFolder workspaceFolder) {
-    var uri = URI.create(workspaceFolder.getUri());
+    var uri = Absolute.uri(workspaceFolder.getUri());
     
     if (contexts.containsKey(uri)) {
       LOGGER.debug("Workspace {} already exists", uri);
@@ -78,8 +78,8 @@ public class ServerContextProvider {
 
     Path rootPath;
     try {
-      rootPath = new File(new URI(workspaceFolder.getUri()).getPath()).getCanonicalFile().toPath();
-    } catch (URISyntaxException | IOException e) {
+      rootPath = new File(Absolute.uri(workspaceFolder.getUri()).getPath()).getCanonicalFile().toPath();
+    } catch (IOException e) {
       LOGGER.error("Can't read root URI from workspace folder: {}", workspaceFolder.getUri(), e);
       throw new IllegalArgumentException("Invalid workspace folder URI", e);
     }
