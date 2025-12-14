@@ -455,12 +455,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
-    var documentContext = getContextForDocument(URI.create(params.getTextDocument().getUri())).getDocument(params.getTextDocument().getUri());
+    var uri = URI.create(params.getTextDocument().getUri());
+    var documentContext = getContextForDocument(uri).getDocument(uri);
     if (documentContext == null) {
       return;
     }
-
-    var uri = documentContext.getUri();
 
     // Get executor for this document
     var executor = documentExecutors.get(uri);

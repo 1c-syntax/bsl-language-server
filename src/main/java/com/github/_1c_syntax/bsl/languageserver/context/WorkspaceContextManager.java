@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class WorkspaceContextManager {
 
-  private final ObjectProvider<ServerContext> serverContextProvider;
+  private final ObjectProvider<DocumentContext> documentContextProvider;
+  private final WorkDoneProgressHelper workDoneProgressHelper;
   private final LanguageServerConfiguration configuration;
 
   private final Map<URI, WorkspaceContext> workspaces = new ConcurrentHashMap<>();
@@ -79,7 +81,8 @@ public class WorkspaceContextManager {
       throw new IllegalArgumentException("Invalid workspace folder URI", e);
     }
 
-    var serverContext = serverContextProvider.getObject();
+    // Создаем новый экземпляр ServerContext для workspace
+    var serverContext = new ServerContext(documentContextProvider, workDoneProgressHelper, configuration);
     var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, rootPath);
     serverContext.setConfigurationRoot(configurationRoot);
 
