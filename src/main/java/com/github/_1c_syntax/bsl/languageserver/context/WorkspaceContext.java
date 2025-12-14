@@ -66,7 +66,14 @@ public class WorkspaceContext {
    * @return true, если документ принадлежит рабочей области
    */
   public boolean contains(URI documentUri) {
-    var documentPath = Path.of(documentUri);
-    return documentPath.startsWith(rootPath);
+    if (!"file".equalsIgnoreCase(documentUri.getScheme())) {
+      return false;
+    }
+    try {
+      var documentPath = Path.of(documentUri);
+      return documentPath.startsWith(rootPath);
+    } catch (UnsupportedOperationException e) {
+      return false;
+    }
   }
 }
