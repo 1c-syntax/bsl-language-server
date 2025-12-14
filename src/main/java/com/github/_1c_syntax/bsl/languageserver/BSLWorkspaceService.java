@@ -66,7 +66,6 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
   private final ServerContextProvider serverContextProvider;
-  private final ServerContext serverContext;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
 
@@ -214,15 +213,12 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   /**
    * Получить контекст сервера для документа.
-   * <p>
-   * Ищет workspace, содержащий данный документ. Если workspace не найден,
-   * возвращает устаревший серверный контекст для обратной совместимости.
    *
    * @param uri URI документа
    * @return контекст сервера
    */
   private ServerContext getContextForDocument(URI uri) {
     return serverContextProvider.getServerContext(uri)
-      .orElse(serverContext);
+      .orElseThrow(() -> new IllegalStateException("No workspace found for document: " + uri));
   }
 }

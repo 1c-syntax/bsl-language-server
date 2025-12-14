@@ -62,7 +62,6 @@ import java.util.stream.Stream;
 public class SymbolProvider {
 
   private final ServerContextProvider serverContextProvider;
-  private final ServerContext context;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -82,18 +81,8 @@ public class SymbolProvider {
     }
 
     // Search for symbols in all workspace contexts
-    var allContexts = serverContextProvider.getAllContexts();
-    Stream<DocumentContext> documentStream;
-    
-    if (!allContexts.isEmpty()) {
-      documentStream = allContexts.stream()
-        .flatMap(serverContext -> serverContext.getDocuments().values().stream());
-    } else {
-      // Backward compatibility
-      documentStream = context.getDocuments().values().stream();
-    }
-
-    return documentStream
+    return serverContextProvider.getAllContexts().stream()
+      .flatMap(serverContext -> serverContext.getDocuments().values().stream())
       .flatMap(SymbolProvider::getSymbolPairs)
       .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
       .map(SymbolProvider::createWorkspaceSymbol)

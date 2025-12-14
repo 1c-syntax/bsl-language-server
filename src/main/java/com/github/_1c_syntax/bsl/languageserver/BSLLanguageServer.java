@@ -101,7 +101,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContextProvider serverContextProvider;
-  private final ServerContext context;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
 
@@ -145,29 +144,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private void setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
-      // Поддержка обратной совместимости: если нет workspace folders, используем старый контекст
       return;
     }
 
     // Добавляем все workspace folders
     workspaceFolders.forEach(serverContextProvider::addWorkspace);
-
-    // Для обратной совместимости устанавливаем первый workspace в старый контекст
-    if (!workspaceFolders.isEmpty()) {
-      var rootUri = workspaceFolders.get(0).getUri();
-      Path rootPath;
-      try {
-        rootPath = new File(new URI(rootUri).getPath()).getCanonicalFile().toPath();
-      } catch (URISyntaxException | IOException e) {
-        LOGGER.error("Can't read root URI from initialization params.", e);
-        return;
-      }
-
-      var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
-        configuration,
-        rootPath);
-      context.setConfigurationRoot(configurationRoot);
-    }
   }
 
   @Override
@@ -177,32 +158,20 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     
     // Populate all workspace contexts
     var allContexts = serverContextProvider.getAllContexts();
-    if (!allContexts.isEmpty()) {
-      var tasks = allContexts.stream()
-        .map(serverContext -> CompletableFuture.runAsync(
-          serverContext::populateContext,
-          executorService
-        ))
-        .toArray(CompletableFuture[]::new);
+    var tasks = allContexts.stream()
+      .map(serverContext -> CompletableFuture.runAsync(
+        serverContext::populateContext,
+        executorService
+      ))
+      .toArray(CompletableFuture[]::new);
 
-      CompletableFuture.allOf(tasks)
-        .whenComplete((Void unused, @Nullable Throwable throwable) -> {
-          executorService.shutdown();
-          if (throwable != null) {
-            LOGGER.error("Error populating workspace contexts", throwable);
-          }
-        });
-    } else {
-      // Обратная совместимость: если нет workspace folders, используем старый контекст
-      CompletableFuture
-        .runAsync(context::populateContext, executorService)
-        .whenComplete((Void unused, @Nullable Throwable throwable) -> {
-          executorService.shutdown();
-          if (throwable != null) {
-            LOGGER.error("Error populating context", throwable);
-          }
-        });
-    }
+    CompletableFuture.allOf(tasks)
+      .whenComplete((Void unused, @Nullable Throwable throwable) -> {
+        executorService.shutdown();
+        if (throwable != null) {
+          LOGGER.error("Error populating workspace contexts", throwable);
+        }
+      });
   }
 
   @Override
@@ -210,7 +179,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     shutdownWasCalled = true;
     textDocumentService.reset();
     serverContextProvider.clear();
-    context.clear();
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
 
