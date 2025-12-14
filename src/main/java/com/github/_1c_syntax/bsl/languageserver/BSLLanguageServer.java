@@ -63,6 +63,7 @@ import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
 import org.eclipse.lsp4j.WorkspaceSymbolOptions;
@@ -143,8 +144,27 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private void setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
+    
+    // Fallback для старых клиентов: если workspaceFolders не указаны, используем rootUri или rootPath
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
-      return;
+      String rootUri = params.getRootUri();
+      if (rootUri == null || rootUri.isEmpty()) {
+        String rootPath = params.getRootPath();
+        if (rootPath != null && !rootPath.isEmpty()) {
+          try {
+            rootUri = new File(rootPath).getCanonicalFile().toURI().toString();
+          } catch (IOException e) {
+            LOGGER.error("Can't convert rootPath to URI: {}", rootPath, e);
+            return;
+          }
+        } else {
+          LOGGER.warn("No workspace folders, rootUri, or rootPath provided in initialize params");
+          return;
+        }
+      }
+      
+      // Создаем один workspace folder из rootUri/rootPath
+      workspaceFolders = List.of(new WorkspaceFolder(rootUri, "root"));
     }
 
     // Добавляем все workspace folders
