@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.WorkspaceContextManager;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
@@ -62,6 +63,8 @@ import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.WorkspaceFoldersOptions;
+import org.eclipse.lsp4j.WorkspaceServerCapabilities;
 import org.eclipse.lsp4j.WorkspaceSymbolOptions;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -97,6 +100,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final WorkspaceContextManager workspaceContextManager;
+  @Deprecated
   private final ServerContext context;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
@@ -131,6 +136,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
     capabilities.setDiagnosticProvider(getDiagnosticProvider());
     capabilities.setSemanticTokensProvider(getSemanticTokensProvider());
+    capabilities.setWorkspace(getWorkspaceCapabilities());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -140,42 +146,71 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private void setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
+      // Поддержка обратной совместимости: если нет workspace folders, используем старый контекст
       return;
     }
 
-    var rootUri = workspaceFolders.get(0).getUri();
-    Path rootPath;
-    try {
-      rootPath = new File(new URI(rootUri).getPath()).getCanonicalFile().toPath();
-    } catch (URISyntaxException | IOException e) {
-      LOGGER.error("Can't read root URI from initialization params.", e);
-      return;
-    }
+    // Добавляем все workspace folders
+    workspaceFolders.forEach(workspaceContextManager::addWorkspace);
 
-    var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
-      configuration,
-      rootPath);
-    context.setConfigurationRoot(configurationRoot);
+    // Для обратной совместимости устанавливаем первый workspace в старый контекст
+    if (!workspaceFolders.isEmpty()) {
+      var rootUri = workspaceFolders.get(0).getUri();
+      Path rootPath;
+      try {
+        rootPath = new File(new URI(rootUri).getPath()).getCanonicalFile().toPath();
+      } catch (URISyntaxException | IOException e) {
+        LOGGER.error("Can't read root URI from initialization params.", e);
+        return;
+      }
+
+      var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
+        configuration,
+        rootPath);
+      context.setConfigurationRoot(configurationRoot);
+    }
   }
 
   @Override
   public void initialized(InitializedParams params) {
     var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
     var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-    CompletableFuture
-      .runAsync(context::populateContext, executorService)
-      .whenComplete((Void unused, @Nullable Throwable throwable) -> {
-        executorService.shutdown();
-        if (throwable != null) {
-          LOGGER.error("Error populating context", throwable);
-        }
-      });
+    
+    // Популяция всех workspace contexts
+    var allWorkspaces = workspaceContextManager.getAllWorkspaces();
+    if (!allWorkspaces.isEmpty()) {
+      var tasks = allWorkspaces.stream()
+        .map(workspace -> CompletableFuture.runAsync(
+          () -> workspace.getServerContext().populateContext(),
+          executorService
+        ))
+        .toArray(CompletableFuture[]::new);
+
+      CompletableFuture.allOf(tasks)
+        .whenComplete((Void unused, @Nullable Throwable throwable) -> {
+          executorService.shutdown();
+          if (throwable != null) {
+            LOGGER.error("Error populating workspace contexts", throwable);
+          }
+        });
+    } else {
+      // Обратная совместимость: если нет workspace folders, используем старый контекст
+      CompletableFuture
+        .runAsync(context::populateContext, executorService)
+        .whenComplete((Void unused, @Nullable Throwable throwable) -> {
+          executorService.shutdown();
+          if (throwable != null) {
+            LOGGER.error("Error populating context", throwable);
+          }
+        });
+    }
   }
 
   @Override
   public CompletableFuture<Object> shutdown() {
     shutdownWasCalled = true;
     textDocumentService.reset();
+    workspaceContextManager.clear();
     context.clear();
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
@@ -382,6 +417,17 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     semanticTokensProvider.setFull(Boolean.TRUE);
     semanticTokensProvider.setRange(Boolean.FALSE);
     return semanticTokensProvider;
+  }
+
+  private static WorkspaceServerCapabilities getWorkspaceCapabilities() {
+    var workspaceCapabilities = new WorkspaceServerCapabilities();
+    
+    var workspaceFoldersOptions = new WorkspaceFoldersOptions();
+    workspaceFoldersOptions.setSupported(Boolean.TRUE);
+    workspaceFoldersOptions.setChangeNotifications(Boolean.TRUE);
+    
+    workspaceCapabilities.setWorkspaceFolders(workspaceFoldersOptions);
+    return workspaceCapabilities;
   }
 
 }

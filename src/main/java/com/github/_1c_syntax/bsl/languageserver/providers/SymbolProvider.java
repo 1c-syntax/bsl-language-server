@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.WorkspaceContextManager;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -60,6 +61,8 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SymbolProvider {
 
+  private final WorkspaceContextManager workspaceContextManager;
+  @Deprecated
   private final ServerContext context;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
@@ -79,7 +82,19 @@ public class SymbolProvider {
       return Collections.emptyList();
     }
 
-    return context.getDocuments().values().stream()
+    // Поиск символов во всех workspace contexts
+    var allWorkspaces = workspaceContextManager.getAllWorkspaces();
+    Stream<DocumentContext> documentStream;
+    
+    if (!allWorkspaces.isEmpty()) {
+      documentStream = allWorkspaces.stream()
+        .flatMap(workspace -> workspace.getServerContext().getDocuments().values().stream());
+    } else {
+      // Обратная совместимость
+      documentStream = context.getDocuments().values().stream();
+    }
+
+    return documentStream
       .flatMap(SymbolProvider::getSymbolPairs)
       .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
       .map(SymbolProvider::createWorkspaceSymbol)
