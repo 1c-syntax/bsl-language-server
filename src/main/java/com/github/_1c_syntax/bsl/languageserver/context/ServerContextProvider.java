@@ -48,20 +48,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ServerContextProvider {
 
-  private final ObjectProvider<DocumentContext> documentContextProvider;
-  private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final ObjectProvider<ServerContext> serverContextProvider;
   private final LanguageServerConfiguration configuration;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
 
   public ServerContextProvider(
-    ObjectProvider<DocumentContext> documentContextProvider,
-    WorkDoneProgressHelper workDoneProgressHelper,
+    ObjectProvider<ServerContext> serverContextProvider,
     LanguageServerConfiguration configuration
   ) {
-    this.documentContextProvider = documentContextProvider;
-    this.workDoneProgressHelper = workDoneProgressHelper;
+    this.serverContextProvider = serverContextProvider;
     this.configuration = configuration;
   }
 
@@ -81,9 +78,12 @@ public class ServerContextProvider {
 
     Path rootPath = Absolute.path(uri);
 
-    // Create new ServerContext instance for workspace
-    var serverContext = new ServerContext(documentContextProvider, workDoneProgressHelper, configuration);
-    var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, rootPath);
+    // Get new ServerContext instance from Spring (prototype scope)
+    var serverContext = serverContextProvider.getObject();
+    var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
+      configuration, 
+      rootPath
+    );
     serverContext.setConfigurationRoot(configurationRoot);
 
     contexts.put(uri, serverContext);

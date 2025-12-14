@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.util;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,10 @@ public class TestApplicationContext implements ApplicationContextAware {
 
   public static <T> T getBean(Class<T> requiredType) {
     return CONTEXT.getBean(requiredType);
+  }
+
+  public static <T> ObjectProvider<T> getBeanProvider(Class<T> requiredType) {
+    return CONTEXT.getBeanProvider(requiredType);
   }
 
 }
