@@ -154,11 +154,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
           try {
             rootUri = new File(rootPath).getCanonicalFile().toURI().toString();
           } catch (IOException e) {
-            LOGGER.error("Can't convert rootPath to URI: {}", rootPath, e);
+            LOGGER.debug("Can't convert rootPath to URI: {}", rootPath, e);
             return;
           }
         } else {
-          LOGGER.warn("No workspace folders, rootUri, or rootPath provided in initialize params");
+          LOGGER.debug("No workspace folders, rootUri, or rootPath provided in initialize params");
           return;
         }
       }
