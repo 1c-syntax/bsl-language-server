@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.SymbolKind;
@@ -43,16 +43,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SymbolProviderTest {
 
   @Autowired
-  private ServerContextProvider serverContextProvider;
+  private ServerContext context;
   @Autowired
   private SymbolProvider symbolProvider;
 
   @BeforeEach
   void before() {
     var configurationRoot = Absolute.path(PATH_TO_METADATA);
-    var workspaceFolder = new org.eclipse.lsp4j.WorkspaceFolder(configurationRoot.toUri().toString(), "test");
-    var serverContext = serverContextProvider.addWorkspace(workspaceFolder);
-    serverContext.populateContext();
+    context.setConfigurationRoot(configurationRoot);
+    context.populateContext();
   }
 
   @Test

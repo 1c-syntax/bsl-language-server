@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -38,6 +39,8 @@ import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceFolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,8 +63,18 @@ class BSLTextDocumentServiceTest {
 
   @Autowired
   private BSLTextDocumentService textDocumentService;
+  @Autowired
+  private ServerContextProvider serverContextProvider;
   @MockitoSpyBean
   private ServerContext serverContext;
+
+  @BeforeEach
+  void setUp() {
+    // Register workspace for test resources
+    var testResourcesPath = new File("./src/test/resources").getAbsoluteFile();
+    var workspaceFolder = new WorkspaceFolder(testResourcesPath.toURI().toString(), "test-workspace");
+    serverContextProvider.addWorkspace(workspaceFolder);
+  }
 
   @Test
   void didOpen() throws IOException {
