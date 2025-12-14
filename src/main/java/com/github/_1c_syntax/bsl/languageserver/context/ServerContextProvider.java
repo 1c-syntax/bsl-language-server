@@ -31,8 +31,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -75,13 +73,7 @@ public class ServerContextProvider {
       return contexts.get(uri);
     }
 
-    Path rootPath;
-    try {
-      rootPath = new File(Absolute.uri(workspaceFolder.getUri()).getPath()).getCanonicalFile().toPath();
-    } catch (IOException e) {
-      LOGGER.error("Can't read root URI from workspace folder: {}", workspaceFolder.getUri(), e);
-      throw new IllegalArgumentException("Invalid workspace folder URI", e);
-    }
+    Path rootPath = Absolute.path(Absolute.uri(workspaceFolder.getUri()));
 
     // Create new ServerContext instance for workspace using Spring
     var serverContext = serverContextProvider.getObject();
@@ -91,7 +83,6 @@ public class ServerContextProvider {
     contexts.put(uri, serverContext);
     workspaceRoots.put(uri, rootPath);
 
-    LOGGER.info("Added workspace: {} at {}", workspaceFolder.getName(), rootPath);
     return serverContext;
   }
 
@@ -101,13 +92,12 @@ public class ServerContextProvider {
    * @param workspaceFolder информация о workspace folder
    */
   public void removeWorkspace(WorkspaceFolder workspaceFolder) {
-    var uri = URI.create(workspaceFolder.getUri());
+    var uri = Absolute.uri(workspaceFolder.getUri());
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
     
     if (serverContext != null) {
       serverContext.clear();
-      LOGGER.info("Removed workspace: {}", workspaceFolder.getName());
     }
   }
 
