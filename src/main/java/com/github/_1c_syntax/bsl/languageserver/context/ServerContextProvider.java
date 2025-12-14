@@ -55,8 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ServerContextProvider {
 
-  private final ObjectProvider<DocumentContext> documentContextProvider;
-  private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final ObjectProvider<ServerContext> serverContextProvider;
   private final LanguageServerConfiguration configuration;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
@@ -84,8 +83,8 @@ public class ServerContextProvider {
       throw new IllegalArgumentException("Invalid workspace folder URI", e);
     }
 
-    // Create new ServerContext instance for workspace
-    var serverContext = new ServerContext(documentContextProvider, workDoneProgressHelper, configuration);
+    // Create new ServerContext instance for workspace using Spring
+    var serverContext = serverContextProvider.getObject();
     var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, rootPath);
     serverContext.setConfigurationRoot(configurationRoot);
 

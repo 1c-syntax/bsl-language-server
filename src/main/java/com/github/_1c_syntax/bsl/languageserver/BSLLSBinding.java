@@ -75,6 +75,10 @@ public class BSLLSBinding {
     return getApplicationContext().getBean(ServerContext.class);
   }
 
+  public static com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider getServerContextProvider() {
+    return getApplicationContext().getBean(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
+  }
+
   private static SpringApplication createApplication() {
     var app = new SpringApplicationBuilder(BSLLSBinding.class)
       .bannerMode(Banner.Mode.OFF)
