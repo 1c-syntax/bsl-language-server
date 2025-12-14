@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.WorkspaceContextManager;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.utils.Absolute;
@@ -65,7 +65,7 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final LanguageServerConfiguration configuration;
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
-  private final WorkspaceContextManager workspaceContextManager;
+  private final ServerContextProvider serverContextProvider;
   @Deprecated
   private final ServerContext serverContext;
 
@@ -127,14 +127,14 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> {
         var event = params.getEvent();
         
-        // Удаляем старые workspace folders
-        event.getRemoved().forEach(workspaceContextManager::removeWorkspace);
+        // Remove old workspace folders
+        event.getRemoved().forEach(serverContextProvider::removeWorkspace);
         
-        // Добавляем новые workspace folders
+        // Add new workspace folders
         event.getAdded().forEach(folder -> {
-          var workspace = workspaceContextManager.addWorkspace(folder);
-          // Асинхронная популяция контекста для нового workspace
-          CompletableFuture.runAsync(() -> workspace.getServerContext().populateContext());
+          var serverContext = serverContextProvider.addWorkspace(folder);
+          // Async population of context for new workspace
+          CompletableFuture.runAsync(serverContext::populateContext);
         });
         
         LOGGER.info("Workspace folders changed. Added: {}, Removed: {}",
@@ -223,8 +223,7 @@ public class BSLWorkspaceService implements WorkspaceService {
    * @return контекст сервера
    */
   private ServerContext getContextForDocument(URI uri) {
-    return workspaceContextManager.findWorkspaceForDocument(uri)
-      .map(workspace -> workspace.getServerContext())
+    return serverContextProvider.getServerContext(uri)
       .orElse(serverContext);
   }
 }

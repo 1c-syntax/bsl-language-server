@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.WorkspaceContextManager;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -61,7 +61,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SymbolProvider {
 
-  private final WorkspaceContextManager workspaceContextManager;
+  private final ServerContextProvider serverContextProvider;
   @Deprecated
   private final ServerContext context;
 
@@ -82,15 +82,15 @@ public class SymbolProvider {
       return Collections.emptyList();
     }
 
-    // Поиск символов во всех workspace contexts
-    var allWorkspaces = workspaceContextManager.getAllWorkspaces();
+    // Search for symbols in all workspace contexts
+    var allContexts = serverContextProvider.getAllContexts();
     Stream<DocumentContext> documentStream;
     
-    if (!allWorkspaces.isEmpty()) {
-      documentStream = allWorkspaces.stream()
-        .flatMap(workspace -> workspace.getServerContext().getDocuments().values().stream());
+    if (!allContexts.isEmpty()) {
+      documentStream = allContexts.stream()
+        .flatMap(serverContext -> serverContext.getDocuments().values().stream());
     } else {
-      // Обратная совместимость
+      // Backward compatibility
       documentStream = context.getDocuments().values().stream();
     }
 

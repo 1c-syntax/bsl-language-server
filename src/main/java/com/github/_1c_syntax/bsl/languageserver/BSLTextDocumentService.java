@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Comput
 import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.WorkspaceContextManager;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -137,7 +137,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   private static final long AWAIT_CLOSE = 30;
 
-  private final WorkspaceContextManager workspaceContextManager;
+  private final ServerContextProvider serverContextProvider;
   @Deprecated
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -767,8 +767,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @return контекст сервера
    */
   private ServerContext getContextForDocument(URI uri) {
-    return workspaceContextManager.findWorkspaceForDocument(uri)
-      .map(workspace -> workspace.getServerContext())
+    return serverContextProvider.getServerContext(uri)
       .orElse(context);
   }
 }

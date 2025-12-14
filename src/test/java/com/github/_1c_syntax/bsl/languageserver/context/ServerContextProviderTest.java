@@ -33,10 +33,10 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class WorkspaceContextManagerTest {
+class ServerContextProviderTest {
 
   @Autowired
-  private WorkspaceContextManager workspaceContextManager;
+  private ServerContextProvider serverContextProvider;
 
   @Test
   void testAddWorkspace() {
@@ -45,16 +45,15 @@ class WorkspaceContextManagerTest {
     var workspaceFolder = new WorkspaceFolder(workspaceUri, "test-workspace");
 
     // when
-    var workspaceContext = workspaceContextManager.addWorkspace(workspaceFolder);
+    var serverContext = serverContextProvider.addWorkspace(workspaceFolder);
 
     // then
-    assertThat(workspaceContext).isNotNull();
-    assertThat(workspaceContext.getName()).isEqualTo("test-workspace");
-    assertThat(workspaceContext.getServerContext()).isNotNull();
-    assertThat(workspaceContextManager.hasWorkspaces()).isTrue();
+    assertThat(serverContext).isNotNull();
+    assertThat(serverContext.getConfigurationRoot()).isNotNull();
+    assertThat(serverContextProvider.hasWorkspaces()).isTrue();
 
     // cleanup
-    workspaceContextManager.removeWorkspace(workspaceFolder);
+    serverContextProvider.removeWorkspace(workspaceFolder);
   }
 
   @Test
@@ -62,37 +61,37 @@ class WorkspaceContextManagerTest {
     // given
     var workspaceUri = Absolute.path(PATH_TO_METADATA).toUri().toString();
     var workspaceFolder = new WorkspaceFolder(workspaceUri, "test-workspace");
-    workspaceContextManager.addWorkspace(workspaceFolder);
+    serverContextProvider.addWorkspace(workspaceFolder);
 
     // when
-    workspaceContextManager.removeWorkspace(workspaceFolder);
+    serverContextProvider.removeWorkspace(workspaceFolder);
 
-    // then
-    assertThat(workspaceContextManager.getWorkspace(URI.create(workspaceUri))).isNull();
+    // then - workspace removed, should not find contexts
+    assertThat(serverContextProvider.hasWorkspaces()).isFalse();
   }
 
   @Test
-  void testFindWorkspaceForDocument() {
+  void testGetServerContextForDocument() {
     // given
     var workspaceUri = Absolute.path(PATH_TO_METADATA).toUri().toString();
     var workspaceFolder = new WorkspaceFolder(workspaceUri, "test-workspace");
-    workspaceContextManager.addWorkspace(workspaceFolder);
+    serverContextProvider.addWorkspace(workspaceFolder);
 
     var documentUri = Absolute.path(PATH_TO_METADATA).resolve("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl").toUri();
 
     // when
-    var foundWorkspace = workspaceContextManager.findWorkspaceForDocument(documentUri);
+    var foundContext = serverContextProvider.getServerContext(documentUri);
 
     // then
-    assertThat(foundWorkspace).isPresent();
-    assertThat(foundWorkspace.get().getName()).isEqualTo("test-workspace");
+    assertThat(foundContext).isPresent();
+    assertThat(foundContext.get()).isNotNull();
 
     // cleanup
-    workspaceContextManager.removeWorkspace(workspaceFolder);
+    serverContextProvider.removeWorkspace(workspaceFolder);
   }
 
   @Test
-  void testGetAllWorkspaces() {
+  void testGetAllContexts() {
     // given
     var workspaceUri1 = Absolute.path(PATH_TO_METADATA).toUri().toString();
     var workspaceFolder1 = new WorkspaceFolder(workspaceUri1, "workspace-1");
@@ -101,18 +100,16 @@ class WorkspaceContextManagerTest {
     var workspaceFolder2 = new WorkspaceFolder(workspaceUri2, "workspace-2");
 
     // when
-    workspaceContextManager.addWorkspace(workspaceFolder1);
-    workspaceContextManager.addWorkspace(workspaceFolder2);
+    serverContextProvider.addWorkspace(workspaceFolder1);
+    serverContextProvider.addWorkspace(workspaceFolder2);
 
     // then
-    var allWorkspaces = workspaceContextManager.getAllWorkspaces();
-    assertThat(allWorkspaces).hasSize(2);
-    assertThat(allWorkspaces).extracting(WorkspaceContext::getName)
-      .containsExactlyInAnyOrder("workspace-1", "workspace-2");
+    var allContexts = serverContextProvider.getAllContexts();
+    assertThat(allContexts).hasSize(2);
 
     // cleanup
-    workspaceContextManager.removeWorkspace(workspaceFolder1);
-    workspaceContextManager.removeWorkspace(workspaceFolder2);
+    serverContextProvider.removeWorkspace(workspaceFolder1);
+    serverContextProvider.removeWorkspace(workspaceFolder2);
   }
 
   @Test
@@ -120,13 +117,13 @@ class WorkspaceContextManagerTest {
     // given
     var workspaceUri = Absolute.path(PATH_TO_METADATA).toUri().toString();
     var workspaceFolder = new WorkspaceFolder(workspaceUri, "test-workspace");
-    workspaceContextManager.addWorkspace(workspaceFolder);
+    serverContextProvider.addWorkspace(workspaceFolder);
 
     // when
-    workspaceContextManager.clear();
+    serverContextProvider.clear();
 
     // then
-    assertThat(workspaceContextManager.hasWorkspaces()).isFalse();
-    assertThat(workspaceContextManager.getAllWorkspaces()).isEmpty();
+    assertThat(serverContextProvider.hasWorkspaces()).isFalse();
+    assertThat(serverContextProvider.getAllContexts()).isEmpty();
   }
 }

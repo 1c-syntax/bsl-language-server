@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.WorkspaceContextManager;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
@@ -100,7 +100,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-  private final WorkspaceContextManager workspaceContextManager;
+  private final ServerContextProvider serverContextProvider;
   @Deprecated
   private final ServerContext context;
   private final ServerInfo serverInfo;
@@ -151,7 +151,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     }
 
     // Добавляем все workspace folders
-    workspaceFolders.forEach(workspaceContextManager::addWorkspace);
+    workspaceFolders.forEach(serverContextProvider::addWorkspace);
 
     // Для обратной совместимости устанавливаем первый workspace в старый контекст
     if (!workspaceFolders.isEmpty()) {
@@ -176,12 +176,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
     var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     
-    // Популяция всех workspace contexts
-    var allWorkspaces = workspaceContextManager.getAllWorkspaces();
-    if (!allWorkspaces.isEmpty()) {
-      var tasks = allWorkspaces.stream()
-        .map(workspace -> CompletableFuture.runAsync(
-          () -> workspace.getServerContext().populateContext(),
+    // Populate all workspace contexts
+    var allContexts = serverContextProvider.getAllContexts();
+    if (!allContexts.isEmpty()) {
+      var tasks = allContexts.stream()
+        .map(serverContext -> CompletableFuture.runAsync(
+          serverContext::populateContext,
           executorService
         ))
         .toArray(CompletableFuture[]::new);
@@ -210,7 +210,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<Object> shutdown() {
     shutdownWasCalled = true;
     textDocumentService.reset();
-    workspaceContextManager.clear();
+    serverContextProvider.clear();
     context.clear();
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
