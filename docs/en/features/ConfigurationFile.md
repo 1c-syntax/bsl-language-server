@@ -105,11 +105,11 @@ This example demonstrates adjusting diagnostic severity display:
     },
     "subsystemsFilter": {
       "include": [
-        "СтандартныеПодсистемы"
+        "StandardSubsystems"
       ],
       "exclude": [
-        "ВариантыОтчетов",
-        "ВерсионированиеОбъектов"
+        "ReportsVariants",
+        "ObjectVersioning"
       ]
     }
   }
