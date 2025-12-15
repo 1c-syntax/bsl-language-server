@@ -31,13 +31,13 @@ Bad:
 
 ```bsl
 If ?(P.Emp_emptype = Null, 0, P.Emp_emptype) = 0 Then
-      Status = "Done";
+      Status = "Done";
 EndIf;
 ```
 Good:
 
 ```bsl
 If P.Emp_emptype = Null OR P.Emp_emptype = 0 Then
-      Status = "Done";
+      Status = "Done";
 End If;
 ```
