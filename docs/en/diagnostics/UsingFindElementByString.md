@@ -3,9 +3,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-The rule finds the use of the `FindByName`, `FindByCode` or `FindByNumber` methods using specific numbers, codes and names of elements or documents. 
-Similar code may not work correctly in other databases.
-Often such code is test code included in the release version, which is also not recommended.
+The rule finds the use of the `FindByName`, `FindByCode` or `FindByNumber` methods using specific numbers, codes and names of elements or documents. Similar code may not work correctly in other databases. Often such code is test code included in the release version, which is also not recommended.
 
 It is recommended to specify constant data values ​​from the database in "Сonstants" or predefined metadata elements.
 
