@@ -1,8 +1,7 @@
 # Duplicate string literal (DuplicateStringLiteral)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
+## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 It is bad form to use the same string literals multiple times in the same module or method:
