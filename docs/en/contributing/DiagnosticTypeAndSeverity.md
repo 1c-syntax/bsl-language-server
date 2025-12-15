@@ -56,7 +56,7 @@ Examples
 
 ### Error (ERROR)
 
-This category includes real errors during the user's work. They can be of any importance, except `Info`, while:
+This category includes real errors during the user's work. They can be of any importance, except `Informational`, while:
 
 - `Blocker` means there is no workaround, urgently needs to be fixed. An example is uncompiled code or calling a method that does not exist.
 - `Critical` means there is a known workaround (for example, disabling functionality with an error), but requiring the fastest possible fix.
