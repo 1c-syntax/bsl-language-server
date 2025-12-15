@@ -40,7 +40,7 @@ CI Recommendations:
 **Important**: With the new version, cache is stored by default in the user directory with workspace hash. For CI, it's recommended to explicitly set `app.cache.fullPath` to simplify caching between builds.
 
 - GitHub Actions
-  - Set explicit cache path in environment variables or configuration
+  - Set explicit cache path in environment variables or configuration
   - Use `actions/cache` to save the directory between build and test runs
   
   ```yaml
