@@ -70,4 +70,4 @@ Query.SetParameter("NameTemplate", "FU_");
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Standard. Features of use in operator requests LIKE (RU)](https://its.1c.ru/db/v8std/content/726/hdoc?ysclid=l3g3fkmxsx)
+- Standard. Features of use in operator requests LIKE (RU)
