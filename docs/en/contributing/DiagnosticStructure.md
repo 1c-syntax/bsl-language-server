@@ -59,21 +59,21 @@ Annotation example
 
 ```java
 @DiagnosticMetadata(
- type = DiagnosticType.CODE_SMELL, 
- severity = DiagnosticSeverity.MINOR, 
- minutesToFix = 1, 
- activatedByDefault = false, 
- scope = DiagnosticScope.BSL,
- compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3, 
- tags = {
-  DiagnosticTag.STANDARD 
- },
- modules = {
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MINOR, 
+  minutesToFix = 1, 
+  activatedByDefault = false, 
+  scope = DiagnosticScope.BSL,
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3, 
+  tags = {
+    DiagnosticTag.STANDARD 
+  },
+  modules = {
 ModuleType.CommonModule 
- },
- canLocateOnProject = false, 
- extraMinForComplexity = 1, // For each additional note position (`DiagnosticRelatedInformation`) one minute will be added
- lspSeverity = "Warning" // Explicit LSP severity level (Error, Warning, Information, Hint)
+  },
+  canLocateOnProject = false, 
+  extraMinForComplexity = 1, // For each additional note position (`DiagnosticRelatedInformation`) one minute will be added
+  lspSeverity = "Warning" // Explicit LSP severity level (Error, Warning, Information, Hint)
 )
 ```
 
