@@ -13,7 +13,7 @@ To do this, the annotation `@NullMarked` is added above the package name
 
 Example:
 ```java
-// ...license...
+// ...License...
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver;
 
@@ -24,7 +24,7 @@ To explicitly indicate that a method can accept or return `null`, use the annota
 
 This avoids using the `@org.jspecify.annotations.NonNull` annotation.
 
-The `null` control annotations from the `javax.annotations`, `jakarta.annotations` or `edu.umd.cs.findbugs.annotations` packages are not allowed.
+The `null` control annotations from the `javax.annotations`, `jetbrains.annotations` or `edu.umd.cs.findbugs.annotations` packages are not allowed.
 
 ## Formatting
 
