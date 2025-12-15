@@ -14,17 +14,17 @@ Incorrect code
 ```bsl
 &AtClient
 Procedure Command1(Command)
-    AdditionalParameters = New Structure("Result", 10);
-    Notify = New NotifyDescription("AfterNumberWereInputted", AdditionalParameters.Result, 2);
-
-    Message("Inputed value is " + AdditionalParameters.Result); // wrong because there will always be 10 
+	AdditionalParameters = New Structure("Result", 10);
+	Notify = New NotifyDescription("AfterNumberWereInputted", AdditionalParameters.Result, 2);
+	
+	Message("Inputed value is " + AdditionalParameters.Result); // wrong because there will always be 10 
 EndProcedure
 
 &AtClient
 Procedure AfterNumberWereInputted(Number, AdditionalParameters) Export
-    If Number <> Undefined Then
-        AdditionalParameters.Result = Number;
-    EndIf;
+	If Number <> Undefined Then
+		AdditionalParameters.Result = Number;
+	EndIf;
 EndProcedure;
 ```
 
@@ -49,10 +49,10 @@ Correct code
 
 In some cases, executing code immediately after calling an asynchronous method is entirely possible if you do not need to wait for the results of the asynchronous action. For example
 ```bsl
-&AtClient
-Procedure Command(Command)
-    ShowMessageBox(, "Moneo te!", 10);
-    Message("code started working after ShowMessageBox");
+&НаКлиенте
+Процедура Команда1(Команда)
+    ПоказатьПредупреждение(, "Предупреждаю", 10);
+    Сообщить("начал работать код после ПоказатьПредупреждение");
     // ...
 EndProcedure
 ```
@@ -78,7 +78,7 @@ It is also important to consider that an asynchronous method can be called in on
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-- [Developers guide: Internal language. Ch. 4: Sync and async methods (RU)](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
+- [Sync and async methods - Developers guide Chapter 4. Internal language](https://its.1c.ru/db/v8319doc#bookmark:dev:TI000001505)
