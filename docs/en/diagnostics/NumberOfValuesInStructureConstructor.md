@@ -51,6 +51,6 @@ Parameters.Insert("UUID ", UUID);
 Parameters.Insert("Description", Description);
 ```
 
-## Sources
+## Reference
 
-* [Standard: Using objects of type Structure (RU)](https://its.1c.ru/db/v8std#content:693:hdoc)
+* [Standard: Using objects of type Structure](https://its.1c.ru/db/v8std#content:693:hdoc)
