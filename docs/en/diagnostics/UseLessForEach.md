@@ -9,7 +9,7 @@ The absence of an iterator in the loop body indicates either a useless iteration
 
 Incorrect:
 
-```bsl
+```Bsl
 
 For Each Iterator From Collection Loop
 
@@ -19,9 +19,9 @@ EndLoop;
 
 ```
 
-Correct
+Correct:
 
-```bsl
+```Bsl
 
 For Each Iterator From Collection Loop
 
