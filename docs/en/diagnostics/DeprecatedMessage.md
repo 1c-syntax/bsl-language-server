@@ -9,4 +9,4 @@ To display messages to the user in all cases, you should use the MessageUser obj
 
 ## Sources
 
-* [Standard: Limit use of the obsolete method Message (RU)](https://its.1c.ru/db/v8std#content:418:hdoc)
+* [Standard: Limit use of the obsolete method Message](https://its.1c.ru/db/v8std#content:418:hdoc)
