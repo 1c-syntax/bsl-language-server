@@ -7,6 +7,6 @@
 
 * The “Service Programming Interface” region is intended for modules that are part of some functional subsystem. It should contain export procedures and functions that can only be called from other functional subsystems of the same library.
 
-## Sources
+## Reference
 
-* Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
+* [Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
