@@ -1,23 +1,29 @@
 # External applications starting (ExternalAppStarting)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
+
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
 To improve the quality and security of 1C solutions, it is necessary to control the launch of external applications from 1C code.
 
 This rule applies to all methods of launching external programs, including:
+
 - System
 - RunSystem
 - RunApp
 - BeginRunningApplication
-- RunAppAsync
+- ЗапуститьПриложениеАсинх
 - GotoURL or FileSystems.OpenURL
 - FileSystemsClient.RunApp (for client side) and FileSystems.RunApp (for server side)
 - FileSystemClient.OpenExplorer
 - FileSystemClient.OpenFile
 
 ## Examples
+
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
 ```bsl
 Процедура Метод()
     СтрокаКоманды = "";
@@ -68,11 +74,14 @@ This rule applies to all methods of launching external programs, including:
 ```
 
 ## Sources
+
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
 <!-- Примеры источников
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+
 - [Standard: Application launch security (RU)](https://its.1c.ru/db/v8std#content:774:hdoc)
 - Standard: [Restriction on the execution of "external" code (RU)](https://its.1c.ru/db/v8std/content/669/hdoc)
