@@ -1,12 +1,14 @@
 # Transferring parameters between the client and the server (TransferringParametersBetweenClientAndServer)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
+
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When transferring control from the client to the server (and vice versa), copies of the parameters are always transferred.
 
 - When a server procedure or function is called from the client, a copy of the actual parameter is created and this copy is passed to the server side.
-
 - When control is returned from the server to the client, a copy of the formal parameter (which was handled in the called procedure or function) is also created for transfer back to the client.
 
 If a formal parameter is specified with the Val modifier, then the value of the parameter will only be passed when the procedure or function is called and will not be passed back when control returns to the client.
@@ -20,10 +22,12 @@ As a result, the absence of the Val modifier in client-server interaction can le
 
 The current rule finds server methods that execute from client methods and throws remarks on parameters without the Val modifier that are not set to a value.
 
-## Examples 
-<!-- This section contains examples for which the diagnostics work, and you can also give an example of how to fix the situation -->
- 
+## Examples
+
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
 1. An example with passing parameters from the client to the server without "Val" and with "Val"
+
 ```bsl
 &AtServerNoContext
 Procedure TransferParametersToServer(Param1, Val ParamWithVal, Collection, Val CollectionWithVal)
@@ -55,51 +59,54 @@ Message(StrTemplate(Template, "CollectionWithVal.Key2", CollectionWithVal.Key2))
 EndProcedure
 
 ```
+
 This code, when executed, will show the following result
+
 ```
 after server Param1= <Changed1>
 after server ParamWithVal= <Initial2>
 after server Collection.Key1 =  <Changed1>
 after server CollectionWithVal.Key2= <Initial2>
 ```
+
 It can be seen that all parameters passed through Value do not change their values after execution, incl. and values within collections.
 
 2. An example of inaccurate parameter transfer
+
 ```bsl
-&AtClient
-Procedure UserGroupsDragNDropFinish(Response, AdditionalParameters)
+&НаКлиенте
+Процедура ГруппыПользователейПеретаскиваниеЗавершение(Ответ, ДополнительныеПараметры) Экспорт
+	
+	Если Ответ = КодВозвратаДиалога.Нет Тогда
+		Возврат;
+	КонецЕсли;
+	
+	СообщениеПользователю = ПеремещениеПользователяВНовуюГруппу(
+		ДополнительныеПараметры.ПараметрыПеретаскивания,
+		ДополнительныеПараметры.Строка,
+		ДополнительныеПараметры.Перемещение);
+	
+КонецПроцедуры
 
-If Response = DialogReturnCode.No Then
-Return;
-EndIf;
-
-MessageToUser = MoveUserToNewGroup(
-AdditionalOptions.DragNDropOptions,
-AdditionalParameters.String,
-AdditionalParameters.Move
-);
-
-EndProcedure
-
-// input parameters ArrayUsers and other parameters do not change
-// and therefore there is no point in additionally returning them from the server
-&AtServer
-Function MoveUserToNewGroup(ArrayUsers, NewGroupOwner, Move)
-
-If NewGroupOwner = Undefined Then
-Return Undefined;
-EndIf;
-
-CurrentGroupOwner = Items.UserGroups.CurrentRow;
-MessageToUser = UsersService.MovingUserToNewGroup(
-ArrayUsers, CurrentGroupOwner, NewGroupOwner, Move);
-
-Items.UsersList.Update();
-Items.UserGroups.Refresh();
-
-Return MessageToUser;
-
-EndFunction
+// входные параметры МассивПользователей и остальные параметры не меняются 
+// и поэтому нет смысла дополнительно возвращать их с сервера
+&НаСервере
+Функция ПеремещениеПользователяВНовуюГруппу(МассивПользователей, НоваяГруппаВладелец, Перемещение)
+	
+	Если НоваяГруппаВладелец = Неопределено Тогда
+		Возврат Неопределено;
+	КонецЕсли;
+	
+	ТекущаяГруппаВладелец = Элементы.ГруппыПользователей.ТекущаяСтрока;
+	СообщениеПользователю = ПользователиСлужебный.ПеремещениеПользователяВНовуюГруппу(
+		МассивПользователей, ТекущаяГруппаВладелец, НоваяГруппаВладелец, Перемещение);
+	
+	Элементы.ПользователиСписок.Обновить();
+	Элементы.ГруппыПользователей.Обновить();
+	
+	Возврат СообщениеПользователю;
+	
+КонецФункции
 ```
 
 ## Parameters
@@ -107,7 +114,7 @@ EndFunction
 ### cachedValueNames
 
 Type: `String`  
-Default value: `` (empty string)
+Default value: \`\` (empty string)
 
 Comma-separated list of parameter names that should be ignored by the diagnostic if a variable with the same name and the `&AtClient` compiler directive exists in the module.
 
@@ -144,12 +151,14 @@ Procedure UpdateCache(CachedValues)
 EndProcedure
 ```
 
-## Sources 
-<!-- It is necessary to provide links to all sources from which information was obtained to create diagnostics -->
-<!-- Sample sources
+## Sources
 
-* Source: [Standard: Module texts](https://its.1c.ru/db/v8std#content:456:hdoc) 
-* Useful information: [Refusal to use modal windows](https://its.1c.ru/db/metod8dev#content:5272:hdoc) 
-* Source: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
+<!-- Примеры источников
+
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 - [Article on 1C:ITS - Call with transfer of control from client to server](https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000153)
