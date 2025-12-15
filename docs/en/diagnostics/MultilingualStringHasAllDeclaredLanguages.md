@@ -7,4 +7,4 @@ NStr in a multilingual configuration has different fragments for different langu
 
 ## Sources
 
-- [Standard: Localization Requirements (RU)](https://its.1c.ru/db/v8std/content/763/hdoc)
+- [localization requirements](https://its.1c.ru/db/v8std/content/763/hdoc)
