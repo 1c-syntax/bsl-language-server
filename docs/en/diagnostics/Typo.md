@@ -40,9 +40,9 @@ CI Recommendations:
 **Important**: With the new version, cache is stored by default in the user directory with workspace hash. For CI, it's recommended to explicitly set `app.cache.fullPath` to simplify caching between builds.
 
 - GitHub Actions
-- Set explicit cache path in environment variables or configuration
-- Use `actions/cache` to save the directory between build and test runs
-
+  - Set explicit cache path in environment variables or configuration
+  - Use `actions/cache` to save the directory between build and test runs
+  
   ```yaml
   - name: Cache BSL LS Typo
     uses: actions/cache@v3
@@ -55,11 +55,11 @@ CI Recommendations:
 
 - GitLab CI
   - In `.gitlab-ci.yml` use the `cache` section:
-
+  
   ```yaml
   variables:
     APP_CACHE_FULLPATH: ".bsl-ls-cache"
-
+  
   cache:
     key: "bsl-ls-typo-cache"
     paths:
@@ -67,7 +67,7 @@ CI Recommendations:
     policy: pull-push
   ```
 
-- If needed, set a unique `key` for different branches/runners.
+  - If needed, set a unique `key` for different branches/runners.
 
 - Jenkins
   - Set environment variable `APP_CACHE_FULLPATH` for explicit cache path
