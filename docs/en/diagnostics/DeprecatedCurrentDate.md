@@ -16,16 +16,16 @@ When using the Library of Standard Subsystems, it is recommended to use the Date
 ## Examples
 
 ### On the client
-Wrong:
+Incorrect:
 
 ```bsl
 OperationDate = CurrentDate();
 ```
 
-Right:
+Correct:
 
 ```bsl
-OperationDate = GeneralPurposeClient.SessionDate();
+ДатаОперации = ОбщегоНазначенияКлиент.ДатаСеанса();
 ```
 
 ### On server
@@ -41,8 +41,7 @@ OperationDate = CurrentSessionDate();
 ```
 
 ## Sources
-<!-- It is necessary to provide links to all sources from which information was obtained to create diagnostics -->
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 
-
-* Reference: [Metadata creation and change. Work in different timezones (RU)](https://its.1c.ru/db/v8std/content/643/hdoc)
+* Reference: [Metadata creation and change. Work in different timezones](https://its.1c.ru/db/v8std/content/643/hdoc)
