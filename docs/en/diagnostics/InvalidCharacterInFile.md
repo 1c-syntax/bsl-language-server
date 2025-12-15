@@ -25,4 +25,4 @@ Diagnostics detects the following invalid characters
 
 ## Sources
 
-* [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)
