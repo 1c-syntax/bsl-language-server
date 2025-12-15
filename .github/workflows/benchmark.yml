@@ -70,7 +70,7 @@ jobs:
         run: pytest .github/scripts/benchmark.py --benchmark-min-rounds=3 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose
 
       - name: Archive results in SARIF
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: "SARIF report"
           path: bsl-ls.sarif
