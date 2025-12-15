@@ -9,4 +9,4 @@ It is not recommended to use the words "Procedures", "Functions", "Handlers", "M
 
 ## Sources
 
-* Standard: [Rules for creating common modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:3.1)
+* Standard: Rules for creating common modules (RU)
