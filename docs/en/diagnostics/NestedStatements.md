@@ -9,7 +9,7 @@ Such code is hard for reading, refactoring and support.
 
 ## Examples
 
-Incorrect
+Wrong
 
 ```bsl
 
