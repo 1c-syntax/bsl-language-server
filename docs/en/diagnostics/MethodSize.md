@@ -11,9 +11,9 @@ There are two rules for refactoring a large method:
 - If when writing a method you want to add a comment to the code, you must put this functionality in a separate method
 - If the method takes more than 50-100 lines of code, you should determine the tasks and subtasks that it performs and try to put the subtasks in a separate method
 
-## Sources
+## Reference
 
 - [Software Architecture Refactoring: Layering](http://citforum.ru/SE/project/refactor/)
 - [Martin Fowler: Refactoring](https://www.refactoring.com/)
-- [Refactoring and opt-out tools (RU)](https://v8.1c.ru/o7/201312ref/index.htm)
-- [Refactoring tools in 1C (RU)](https://www.koderline.ru/expert/programming/article-vspomogatelnye-funktsii-v-1s/#anchor6)
+- [Refactoring and opt-out tools](https://v8.1c.ru/o7/201312ref/index.htm)
+- [Refactoring tools in 1C](https://www.koderline.ru/expert/programming/article-vspomogatelnye-funktsii-v-1s/#anchor6)
