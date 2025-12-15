@@ -1,4 +1,4 @@
-# The check box «Set permissions for new objects» should only be selected for the FullAccess role (SetPermissionsForNewObjects)
+# The checkbox «Set permissions for new objects» should only be selected for the FullAccess role (SetPermissionsForNewObjects)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -9,4 +9,4 @@ When adding a new role, the "Set permissions for new objects" attribute may be s
 
 ## Sources
 
-* [Standard: Setting rights for new objects and object fields (RU)](https://its.1c.ru/db/v8std/content/532/hdoc)
+* [Standard: Setting rights for new objects and object fields](https://its.1c.ru/db/v8std/content/532/hdoc)
