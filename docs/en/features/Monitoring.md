@@ -12,18 +12,18 @@ unauthorized users.
 In the [configuration file](ConfigurationFile.md) of the BSL Language Server, you can configure the mode for sending error messages.
 The send mode can take one of three values:
 
-* ask (default);
-* send always;
-* never send.
+- ask (default);
+- send always;
+- never send.
 
 If the configuration file is missing a setting or has a value of "ask", when an error occurs
 the connected language client (used by the IDE) is sent a question about further actions with an error
 with the following answer options:
 
-* send this error but ask again;
-* don't send this error but ask again.
-* send this error and don't ask again;
-* don't send this error and don't ask again;
+- send this error but ask again;
+- don't send this error but ask again.
+- send this error and don't ask again;
+- don't send this error and don't ask again;
 
 You can completely refuse to answer (for example, by clicking on the cross next to the notification with the question).
 Lack of response is perceived as "don't send this error, but ask again".
@@ -40,10 +40,11 @@ Some messages sent between Language Client and BSL Language Server contain sourc
 or the entire text of the file.
 These fragments can also be attached to the sent message.
 
-Sending message example:
+Пример отправляемого события об ошибке:
 
 ??? event.json
 
+    ````
     ```json
     {
         "event_id": "746e2e82f4c1499abcdd935bc4c26644",
@@ -278,3 +279,4 @@ Sending message example:
         "location": null
     }
     ```
+    ````
