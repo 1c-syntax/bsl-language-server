@@ -108,7 +108,7 @@ This example demonstrates adjusting diagnostic severity display:
         "StandardSubsystems"
       ],
       "exclude": [
-        "ReportsVariants",
+        "ReportVariants",
         "ObjectVersioning"
       ]
     }
