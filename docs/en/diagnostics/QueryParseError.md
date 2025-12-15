@@ -1,8 +1,7 @@
 # Query text parsing error (QueryParseError)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
+## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When writing queries, you must follow the following rule: the query text must be opened by the query designer.
@@ -22,7 +21,7 @@ Text = "SELECT
 | Catalog.Goods КАК Goods";
 ```
 
-Correct
+Right
 
 ```bsl
 Text = "SELECT
