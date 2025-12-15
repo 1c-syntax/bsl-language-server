@@ -5,7 +5,6 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When you develop applications, note that not only execution of a code written in the Enterprise mode is unsafe, but also places, where the `Execute` or `Eval` methods are used to execute the code created based on parameters passed to server functions and procedures.
-It is forbidden to use the `Execute` and` Eval` methods in server methods of form modules, commands, objects, etc.
 
 **This restriction is not applicable to the code being executed on the client**
 
