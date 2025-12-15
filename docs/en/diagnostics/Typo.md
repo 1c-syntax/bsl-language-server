@@ -40,41 +40,41 @@ CI Recommendations:
 **Important**: With the new version, cache is stored by default in the user directory with workspace hash. For CI, it's recommended to explicitly set `app.cache.fullPath` to simplify caching between builds.
 
 - GitHub Actions
-  - Set explicit cache path in environment variables or configuration
-  - Use `actions/cache` to save the directory between build and test runs
-  
-  ```yaml
-  - name: Cache BSL LS Typo
-    uses: actions/cache@v3
-    with:
-      path: .bsl-ls-cache
-      key: ${{ runner.os }}-bsl-typo-${{ hashFiles('**/*.bsl') }}
-      restore-keys: |
-        ${{ runner.os }}-bsl-typo-
-  ```
+- Set explicit cache path in environment variables or configuration
+- Use `actions/cache` to save the directory between build and test runs
+
+```yaml
+- name: Cache BSL LS Typo
+uses: actions/cache@v3
+with:
+path: .bsl-ls-cache
+key: ${{ runner.os }}-bsl-typo-${{ hashFiles('**/*.bsl') }}
+restore-keys: |
+${{ runner.os }}-bsl-typo-
+```
 
 - GitLab CI
-  - In `.gitlab-ci.yml` use the `cache` section:
+- In `.gitlab-ci.yml` use the `cache` section:
 
-    ```yaml
-    variables:
-      APP_CACHE_FULLPATH: ".bsl-ls-cache"
-    
-    cache:
-      key: "bsl-ls-typo-cache"
-      paths:
-        - .bsl-ls-cache/
-      policy: pull-push
-    ```
+```yaml
+variables:
+APP_CACHE_FULLPATH: ".bsl-ls-cache"
 
-  - If needed, set a unique `key` for different branches/runners.
+cache:
+key: "bsl-ls-typo-cache"
+paths:
+- .bsl-ls-cache/
+policy: pull-push
+```
+
+- If needed, set a unique `key` for different branches/runners.
 
 - Jenkins
-  - Set environment variable `APP_CACHE_FULLPATH` for explicit cache path
-  - In pipeline, you can save the cache directory between builds in several ways:
-    - Use `stash`/`unstash` to transfer data between stages in one build.
-    - Use the `Workspace Cleanup` plugin and configure workspace preservation on the agent (if agents are permanent) or archive the artifact using `archiveArtifacts` and download it in subsequent builds.
-    - For Jenkins with dynamic agents (e.g., Kubernetes), it's recommended to save cache in network storage or object storage (S3) and restore it at the beginning of the job.
+- Set environment variable `APP_CACHE_FULLPATH` for explicit cache path
+- In pipeline, you can save the cache directory between builds in several ways:
+- Use `stash`/`unstash` to transfer data between stages in one build.
+- Use the `Workspace Cleanup` plugin and configure workspace preservation on the agent (if agents are permanent) or archive the artifact using `archiveArtifacts` and download it in subsequent builds.
+- For Jenkins with dynamic agents (e.g., Kubernetes), it's recommended to save cache in network storage or object storage (S3) and restore it at the beginning of the job.
 
 General recommendations:
 - For CI environments, it's recommended to explicitly set `app.cache.fullPath` (e.g., `.bsl-ls-cache` in project workspace) to simplify caching
