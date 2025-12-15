@@ -9,7 +9,7 @@ Modules executed in privileged mode have the Privileged flag, are named with the
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Example: FilesFullAccess
+FilesFullAccess
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
