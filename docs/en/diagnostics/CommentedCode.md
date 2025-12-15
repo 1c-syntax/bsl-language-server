@@ -30,4 +30,4 @@ A code block is considered commented, if at least one line inside the block is d
 
 ## Sources
 
-* [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Source (RU)](https://its.1c.ru/db/v8std/content/456/hdoc)
