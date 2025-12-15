@@ -14,6 +14,7 @@ com.github._1c_syntax.bsl.languageserver.commands
 com.github._1c_syntax.bsl.languageserver.commands.complexity
 com.github._1c_syntax.bsl.languageserver.commands.infrastructure
 com.github._1c_syntax.bsl.languageserver.configuration
+com.github._1c_syntax.bsl.languageserver.configuration.capabilities
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.databind
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
@@ -21,6 +22,7 @@ com.github._1c_syntax.bsl.languageserver.configuration.documentlink
 com.github._1c_syntax.bsl.languageserver.configuration.events
 com.github._1c_syntax.bsl.languageserver.configuration.formating
 com.github._1c_syntax.bsl.languageserver.configuration.inlayhints
+com.github._1c_syntax.bsl.languageserver.configuration.references
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
@@ -50,6 +52,7 @@ com.github._1c_syntax.bsl.languageserver.reporters
 com.github._1c_syntax.bsl.languageserver.reporters.data
 com.github._1c_syntax.bsl.languageserver.reporters.databind
 com.github._1c_syntax.bsl.languageserver.reporters.infrastructure
+com.github._1c_syntax.bsl.languageserver.semantictokens
 com.github._1c_syntax.bsl.languageserver.utils
 com.github._1c_syntax.bsl.languageserver.utils.bsl
 com.github._1c_syntax.bsl.languageserver.utils.expressiontree
