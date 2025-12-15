@@ -1,8 +1,7 @@
 # Metadata object has a forbidden name (ForbiddenMetadataName)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 It is forbidden to use the names of metadata objects (and their attributes and tabular sections), which are used when naming query tables (for example, Document, Catalog).
@@ -15,7 +14,7 @@ Using such names can lead to errors in the execution of the query, and also make
 Wrong name
 - `Catalog.Catalog`
 - `Catalog.MyCatalog.Attribute.Document`
-- `InformationRegister.MyRegister.Dimenssion.Documents`
+- `InformationRegister.MyRegister.Dimension.Documents`
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
