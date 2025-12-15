@@ -5,7 +5,7 @@
 
 It is unacceptable to catch any exception, without any trace for system administrator.
 
-*Incorrect*
+*Wrong*
 
 ```bsl
 Try
@@ -18,7 +18,7 @@ EndTry;
 
 As a rule, such a design hides a real problem, which is subsequently impossible to diagnose.
 
-*Correct*
+*Right*
 
 ```bsl
 Try
