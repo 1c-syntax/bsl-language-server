@@ -1,8 +1,7 @@
 # Same metadata object and child name (SameMetadataObjectAndChildNames)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
+## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 For child metadata objects, such as attributes, dimensions, resources, tabular sections (and their attributes), it is not recommended to use names that match the names of the owner objects, since this can lead to errors in queries.
