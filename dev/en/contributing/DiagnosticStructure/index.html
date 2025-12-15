@@ -1632,21 +1632,21 @@ The last two can be omitted.</li>
 </ul>
 <p>Annotation example</p>
 <div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
-<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span><span class="w"> </span>
+<span class="w">  </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
 <span class="w">  </span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span><span class="w"> </span>
-<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">                    </span>
-<span class="w">  </span><span class="n">activatedByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">   </span>
+<span class="w">  </span><span class="n">minutesToFix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span>
+<span class="w">  </span><span class="n">activatedByDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span>
 <span class="w">  </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticScope</span><span class="p">.</span><span class="na">BSL</span><span class="p">,</span>
 <span class="w">  </span><span class="n">compatibilityMode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span><span class="w"> </span>
 <span class="w">  </span><span class="n">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w">             </span>
+<span class="w">    </span><span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span><span class="w"> </span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="n">modules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">ModuleType</span><span class="p">.</span><span class="na">CommonModule</span><span class="w">       </span>
+<span class="w">    </span><span class="n">ModuleType</span><span class="p">.</span><span class="na">CommonModule</span><span class="w"> </span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="n">canLocateOnProject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">          </span>
-<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">  </span><span class="c1">// For each additional note position (`DiagnosticRelatedInformation`) one minute will be added</span>
-<span class="w">  </span><span class="n">lspSeverity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Warning&quot;</span><span class="w">     </span><span class="c1">// Explicit LSP severity level (Error, Warning, Information, Hint)</span>
+<span class="w">  </span><span class="n">canLocateOnProject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span>
+<span class="w">  </span><span class="n">extraMinForComplexity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">// For each additional note position (`DiagnosticRelatedInformation`) one minute will be added</span>
+<span class="w">  </span><span class="n">lspSeverity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Warning&quot;</span><span class="w"> </span><span class="c1">// Explicit LSP severity level (Error, Warning, Information, Hint)</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Class should implement the interface <code>BSLDiagnostic</code>. If diagnostic bases on AST, that class should extends at one of classes, that implement <code>BSLDiagnostic</code> below:</p>
