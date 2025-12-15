@@ -42,7 +42,7 @@ CI Recommendations:
 - GitHub Actions
   - Set explicit cache path in environment variables or configuration
   - Use `actions/cache` to save the directory between build and test runs
-  
+
   ```yaml
   - name: Cache BSL LS Typo
     uses: actions/cache@v3
@@ -59,7 +59,7 @@ CI Recommendations:
     ```yaml
     variables:
       APP_CACHE_FULLPATH: ".bsl-ls-cache"
-    
+
     cache:
       key: "bsl-ls-typo-cache"
       paths:
