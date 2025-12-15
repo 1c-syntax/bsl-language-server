@@ -69,7 +69,7 @@ Annotation example
     DiagnosticTag.STANDARD 
   },
   modules = {
-ModuleType.CommonModule 
+    ModuleType.CommonModule 
   },
   canLocateOnProject = false, 
   extraMinForComplexity = 1, // For each additional note position (`DiagnosticRelatedInformation`) one minute will be added
