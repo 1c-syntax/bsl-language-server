@@ -23,8 +23,7 @@ If now < PredictedDate Then
 EndIf;
 ```
 
-Also, a good solution is to use a special method with "telling name" that returns
-constant
+Also, a good solution is to use a special method with "telling name" that returns constant
 
 ```bsl
 Function DateInventionHover()
