@@ -38,4 +38,4 @@ FileObject.Write();
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников -->
 
-[Standard: Using global variables in modules (RU)](https://its.1c.ru/db/v8std#content:639:hdoc)
+[Standard: Using global variables in modules](https://its.1c.ru/db/v8std#content:639:hdoc)
