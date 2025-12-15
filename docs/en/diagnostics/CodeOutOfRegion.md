@@ -30,21 +30,21 @@ Correct:
 
 Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
 
-| RU  | EN |
-| ------------- | ------------- |
-| ПрограммныйИнтерфейс  | Public  |
-| СлужебныйПрограммныйИнтерфейс  | Internal  |
-| СлужебныеПроцедурыИФункции  | Private  |
-| ОбработчикиСобытий  | EventHandlers  |
-| ОбработчикиСобытийФормы  | FormEventHandlers  |
-| ОбработчикиСобытийЭлементовШапкиФормы  | FormHeaderItemsEventHandlers  |
-| ОбработчикиКомандФормы  | FormCommandsEventHandlers  |
-| ОписаниеПеременных  | Variables  |
-| Инициализация  | Initialize  |
-| ОбработчикиСобытийЭлементовТаблицыФормы  | FormTableItemsEventHandlers  |
+| RU                                      | EN                           |
+| --------------------------------------- | ---------------------------- |
+| ПрограммныйИнтерфейс                    | Public                       |
+| СлужебныйПрограммныйИнтерфейс           | Internal                     |
+| СлужебныеПроцедурыИФункции              | Private                      |
+| ОбработчикиСобытий                      | EventHandlers                |
+| ОбработчикиСобытийФормы                 | FormEventHandlers            |
+| ОбработчикиСобытийЭлементовШапкиФормы   | FormHeaderItemsEventHandlers |
+| ОбработчикиКомандФормы                  | FormCommandsEventHandlers    |
+| ОписаниеПеременных                      | Variables                    |
+| Инициализация                           | Initialize                   |
+| ОбработчикиСобытийЭлементовТаблицыФормы | FormTableItemsEventHandlers  |
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 
-* Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
+* Reference [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
