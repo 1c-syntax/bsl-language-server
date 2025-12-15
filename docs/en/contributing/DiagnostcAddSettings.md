@@ -69,7 +69,7 @@ diagnosticInstance.configure(configuration);
 ### Adding a Parameter Description
 
 For correct operation, it is necessary to add a parameter description for each language in the diagnostic resource files.  
-Diagnostic resources are located in files `resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_en.properties` and `resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_ru.properties`.  
+Diagnostic resources are located in files`resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_en.properties` and `resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_ru.properties`.  
 In each file, add a new line with the parameter name and description
 
 ```ini
