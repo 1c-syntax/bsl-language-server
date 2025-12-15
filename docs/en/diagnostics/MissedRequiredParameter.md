@@ -1,12 +1,15 @@
 # Missed a required method parameter (MissedRequiredParameter)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
-Required parameters must not be omitted when calling methods, otherwise the value `Undefined` will be passed to the parameter, which the method often cannot process.
+При вызове функций не следует пропускать обязательные параметры. В противном случае в параметр будет передано значение `Неопределено`, на которое функция может быть не рассчитана.
 If the value `Undefined` is valid, then you need to
-- explicitly pass a value
+
+- или его передавать в функцию явно
 - or make the parameter optional with a default value of `Undefined`.
+
 ## Examples
 
 For example
