@@ -48,7 +48,7 @@ jobs:
               run: python .github/scripts/verify-archive-size.py bsl-language-server_${{ matrix.prefix }}.zip
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v6
               with:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
