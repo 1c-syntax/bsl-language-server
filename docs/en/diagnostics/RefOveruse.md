@@ -16,7 +16,7 @@ Query.Text = "Select Files.File.Ref, // error
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-* Useful Information: [Dereferencing Complex Type Reference Fields in Query Language (RU)](https://its.1c.ru/db/v8std/content/654/hdoc)
+* Useful Information: [Dereferencing Complex Type Reference Fields in Query Language](https://its.1c.ru/db/v8std/content/654/hdoc)
