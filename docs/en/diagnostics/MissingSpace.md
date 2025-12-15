@@ -1,4 +1,4 @@
-# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; (MissingSpace)
+# Missing spaces to the left or right of operators `+ - * / = % < > <> <= >=`, keywords, and also to the right of `,` and `;` (MissingSpace)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
