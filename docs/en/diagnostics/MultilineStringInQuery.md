@@ -12,15 +12,15 @@ Multi-line literals are rarely used in query texts, mostly these are error resul
 In the example below, the selection will have two fields instead of three.
 
 ```bsl
-Query = New Query;
-Query.Text = "SELECT
-|   OrderGoods.Cargo AS Cargo,
-|   ISNULL(OrderGoods.Cargo.Code, "") AS CargoCode, // quote error here, should be """"
-|   ISNULL(OrderGoods.Cargo.Name, "") AS CargoName
-|FROM
-|   Document.Order.Goods AS OrderGoods
-|WHERE
-|   OrderGoods.Ref = &Ref";
+Запрос = Новый Запрос;
+Запрос.Текст = "ВЫБРАТЬ
+|   ПриходныйОрдерНоменклатура.Номенклатура КАК Номенклатура,
+|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Код, "") КАК НоменклатураКод, // здесь ошибка с кавычками, должно быть """"
+|   ЕСТЬNULL(ПриходныйОрдерНоменклатура.Номенклатура.Наименование, "") КАК НоменклатураНаименование
+|ИЗ
+|   Документ.ПриходныйОрдер.Номенклатура КАК ПриходныйОрдерНоменклатура
+|ГДЕ
+|   ПриходныйОрдерНоменклатура.Ссылка = &Ссылка";
 ```
 
 ## Sources
