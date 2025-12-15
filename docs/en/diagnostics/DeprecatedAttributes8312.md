@@ -8,7 +8,6 @@ The following items are deprecated and their use is not recommended since platfo
 * For the system enumeration `ChildFormItemsGroup` implemented the value `AlwaysHorizontal`, the value `ChildFormItemsGroup.Horizontal` is deprecated
 * `ChartLabelsOrientation` system enum is no longer available. Actual variant is `ChartLabelsOrientation`
 * The following properties and methods of Chart object are obsolete and not recommended for use:
-
    * `ColorPalette`;
    * `GradientPaletteStartColor`;
    * `GradientPaletteEndColor`;
@@ -17,7 +16,6 @@ The following items are deprecated and their use is not recommended since platfo
    * `SetPalette()`.
 
 * Names of properties of the object `ChartPlotArea`:
-
    * `ShowScale`
    * `ScaleLines`
    * `ScaleColor`
@@ -36,4 +34,4 @@ The following items are deprecated and their use is not recommended since platfo
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Platform 8.3.12 changelog (RU)](https://dl04.1c.ru/content/Platform/8_3_12_1714/1cv8upd_8_3_12_1714.htm)
+Source: [Platform 8.3.12 changelog](https://dl04.1c.ru/content/Platform/8_3_12_1714/1cv8upd_8_3_12_1714.htm)
