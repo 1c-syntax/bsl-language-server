@@ -40,4 +40,4 @@ Query.Text = "SELECT
 
 * Standard: [Using virtual tables (RU)](https://its.1c.ru/db/v8std#content:657:hdoc)
 * Standard: [Effective use of the virtual table «Turnovers» (RU)](https://its.1c.ru/db/v8std#content:733:hdoc)
-* 1C Recommendation: [Using the Condition parameter when accessing a virtual table (RU)](https://its.1c.ru/db/metod8dev/content/5457/hdoc) (RU)
+* 1C Recommendation: [Using the Condition parameter when accessing a virtual table](https://its.1c.ru/db/metod8dev/content/5457/hdoc) (RU)
