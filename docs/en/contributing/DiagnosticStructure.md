@@ -52,8 +52,7 @@ At the time of this writing, the following properties are available:
 - Compatibility mode `compatibilityMode`, by which diagnostics are filtered when using metadata. The default is `UNDEFINED`.
 - List of module types `modules` for the ability to limit the area analyzed by diagnostics
 - Sign of the ability to set issues on the entire project `canLocateOnProject`. Used for diagnostics not related to the source code module. At the moment, the option is accepted only by SonarQube, other tools ignore it.
-- LSP severity level `lspSeverity` (by default empty string). Allows explicit control over the LSP severity level for the diagnostic. When set, this value takes priority over the calculated LSP severity. Supported values: `Error`, `Warning`, `Information`, `Hint`. This parameter can also be overridden in the configuration file.
-The last two can be omitted.
+- LSP severity level `lspSeverity` (by default empty string). Allows explicit control over the LSP severity level for the diagnostic. When set, this value takes priority over the calculated LSP severity. Supported values: `Error`, `Warning`, `Information`, `Hint`. This parameter can also be overridden in the configuration file. The last two can be omitted.
 
 Annotation example
 
@@ -75,6 +74,7 @@ Annotation example
   extraMinForComplexity = 1, // For each additional note position (`DiagnosticRelatedInformation`) one minute will be added
   lspSeverity = "Warning" // Explicit LSP severity level (Error, Warning, Information, Hint)
 )
+
 ```
 
 Class should implement the interface `BSLDiagnostic`. If diagnostic bases on AST, that class should extends at one of classes, that implement `BSLDiagnostic` below:
@@ -226,13 +226,13 @@ Examples:
 
 ### Diagnostics class, inherits from AbstractSDBLVisitorDiagnostic
 
-The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4)). The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
+The diagnostic class implements the necessary `AST visitors`, according to the grammar of the query language (see [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4)).  The complete list of visitor methods is in the `SDBLParserBaseVisitor` class.
 
 The rest of the rules are identical to `AbstractVisitorDiagnostic`.
 
 ### Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**
 
-_**<Work in Progress>**_
+_**<В разработке>**_
 
 ## Diagnostics test class
 
@@ -279,10 +279,10 @@ Simplified, the diagnostic test contains the steps
 - checking the number of items found
 - checking the location of detected items
 
-The first step is to get the list of notes by calling the `getDiagnostics()` method _(implemented in the `AbstractDiagnosticTest` class)_. Calling this method will parse the diagnostics resource file and return a list of remarks in it.
-The next step is to use the `hasSize()` statement to make sure that the number of diagnostics is fixed as much as allowed in the fixtures.
-After that, you need to make sure that the diagnostics are detected correctly. To do this, you need to compare the diagnostic area obtained by the `getRange()` method with the expected area _(you should use the `RangeHelper` class to simplify the formation of control values)_.
-If the text of the error is templated, then it is necessary to check it in the test by getting the text of the error message using the `getMessage()` method of diagnostics.
+The first step is to get the list of notes by calling the `getDiagnostics()` method _(implemented in the `AbstractDiagnosticTest` class)_. При вызове этого метода будет выполнен анализ файла ресурса диагностики и возвращен список замечаний в нем.  
+Следующим шагом необходимо, с помощью утверждения `hasSize()` убедиться, что замечаний зафиксированно столько, сколько допущенно в фикстурах.  
+После этого, необходимо удостовериться, что замечания обнаружены верно, для чего нужно сравнить область замечания, полученную методом `getRange()`, с ожидаемой областью _(стоит использовать класс `RangeHelper` для упрощения формирования контрольнх значений)_.  
+В случае использования шаблонного текста сообщения об ошибке замечания, необходимо в тесте проверить и его, получив текст сообщения об ошибке методом `getMessage()` диагностики.
 
 Test method example
 
@@ -309,7 +309,7 @@ To reduce the amount of test code, you can use the `util.Assertions.assertThat` 
 
       assertThat(diagnostics).hasSize(2);                // checking the number of errors found
 
-      // verification of special cases
+      // проверка частных случаев
       assertThat(diagnostics, true)
         .hasRange(27, 4, 27, 29)
         .hasRange(40, 4, 40, 29);
@@ -318,8 +318,7 @@ To reduce the amount of test code, you can use the `util.Assertions.assertThat` 
 
 ### Test of configuration method for parameterized diagnostics
 
-Tests for the configuration method should cover all possible settings and their combinations. The test has almost the same structure as the diagnostic test.
-Before setting new values ​​for diagnostic parameters, you must get the default diagnostic settings using the `getDefaultDiagnosticConfiguration()` method using the information of the current diagnostic object `diagnosticInstance.getInfo()`. The result is a map in which the `put` method needs to change the values ​​of the required parameters. To apply the changed settings, you need to call the `configure()` method of the current diagnostic object `diagnosticInstance`.
+Tests for the configuration method should cover all possible settings and their combinations. The test has almost the same structure as the diagnostic test. Before setting new values ​​for diagnostic parameters, you must get the default diagnostic settings using the `getDefaultDiagnosticConfiguration()` method using the information of the current diagnostic object `diagnosticInstance.getInfo()`. The result is a map in which the `put` method needs to change the values ​​of the required parameters. To apply the changed settings, you need to call the `configure()` method of the current diagnostic object `diagnosticInstance`.
 
 Test method example
 
@@ -345,7 +344,7 @@ Test method example
 
 ### Quick fixes test **(Work in progress)**
 
-_**<Work in Progress>**_
+_**<В разработке>**_
 
 ## Diagnostics resources
 
@@ -360,18 +359,15 @@ For `quick fixes`, the `quickFixMessage` parameter is used, which contains a des
 
 ## Diagnostics test resources
 
-The fixtures are the contents of the test resource file located in the `src/test/resources` directory in the `diagnostics` package. The file must contain the necessary code examples in 1C language _(or oscript language)_. 
+The fixtures are the contents of the test resource file located in the `src/test/resources` directory in the `diagnostics` package. The file must contain the necessary code examples in 1C language _(or oscript language)_. It is best if the test cases are `real`, from practice, and not synthetic, invented `for diagnostics`.
 
-It is necessary to add both erroneous and correct code, **marking the places of errors with comments**. It is best if the test cases are `real`, from practice, and not synthetic, invented `for diagnostics`.
+## Diagnostics description
 
-## Description
-
-The diagnostic description is created in the [Markdown](https://ru.wikipedia.org/wiki/Markdown) format in two versions - for Russian and English. The files are located in the `docs/diagnostics` directory for Russian, for English in `docs/en/diagnostics`. 
-The file has the structure
+The diagnostic description is created in the [Markdown](https://ru.wikipedia.org/wiki/Markdown) format in two versions - for Russian and English. The files are located in the `docs/diagnostics` directory for Russian, for English in `docs/en/diagnostics`. The file has the structure
 
 - Header equal to the value of `diagnosticName` from the corresponding language's diagnostic resource file
 - A block with a description of the diagnostics, indicating "why it is so bad"
-- List of exceptions that diagnostics do not detect
+- Исключительные ситуации, когда диагностика не детектирует замечание
 - Examples of good and bad code
-- The diagnostic algorithm, if it is not obvious
+- Algorithm of diagnostics for complex
 - If diagnostics is an implementation of the standard, then links to sources (for example, to [ITS](https://its.1c.ru)).
