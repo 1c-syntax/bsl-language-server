@@ -7,4 +7,4 @@ Modules should not have unused procedures and functions. Diagnostics can skip `a
 
 ## Sources
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)
