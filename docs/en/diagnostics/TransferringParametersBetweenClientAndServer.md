@@ -101,6 +101,49 @@ Return MessageToUser;
 
 EndFunction
 ```
+
+## Parameters
+
+### cachedValueNames
+
+Type: `String`  
+Default value: `` (empty string)
+
+Comma-separated list of parameter names that should be ignored by the diagnostic if a variable with the same name and the `&AtClient` compiler directive exists in the module.
+
+This is useful for cached values that are intentionally transferred from the server to the client for storage in form module variables.
+
+Example:
+
+```json
+{
+  "TransferringParametersBetweenClientAndServer": {
+    "cachedValueNames": "CachedValues,DataCache"
+  }
+}
+```
+
+If there is a declaration in the code:
+
+```bsl
+&AtClient
+Var CachedValues; // used by the tabular section attribute change processing mechanism
+```
+
+Then the following code will not generate a remark:
+
+```bsl
+&AtClient
+Procedure OnAttributeChange()
+    UpdateCache(CachedValues);
+EndProcedure
+
+&AtServer
+Procedure UpdateCache(CachedValues)
+    CachedValues = GetDataOnServer();
+EndProcedure
+```
+
 ## Sources 
 <!-- It is necessary to provide links to all sources from which information was obtained to create diagnostics -->
 <!-- Sample sources

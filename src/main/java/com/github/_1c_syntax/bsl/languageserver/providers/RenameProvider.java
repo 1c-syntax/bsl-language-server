@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -98,10 +99,8 @@ public final class RenameProvider {
    * @param params          Параметры вызова.
    * @return Range
    */
-  public Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
-
-    return referenceResolver.findReference(
-        documentContext.getUri(), params.getPosition())
+  public @Nullable Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
+    return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .filter(Reference::isSourceDefinedSymbolReference)
       .map(Reference::getSelectionRange)
       .orElse(null);

@@ -21,25 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.Map;
+
+import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic> {
-  MagicDateDiagnosticTest() {
-    super(MagicDateDiagnostic.class);
-  }
 
   @Test
   void test() {
-
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(18);
+    assertThat(diagnostics).hasSize(17);
     assertThat(diagnostics, true)
       .hasRange(11, 12, 22)
       .hasRange(12, 12, 28)
@@ -57,20 +53,18 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
       .hasRange(58, 17, 27)
       .hasRange(58, 29, 45)
       .hasRange(58, 47, 63)
-      .hasRange(60, 19, 29)
-      .hasRange(65, 22, 32);
+      .hasRange(60, 19, 29);
   }
 
   @Test
   void testConfigure() {
-
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("authorizedDates", "00010101,00010101000000,000101010000,00050101,00020501121314,12340101, 00020101   ,,");
-    diagnosticInstance.configure(configuration);
+    Map<String, Object> config = diagnosticInstance.getInfo().getDefaultConfiguration();
+    config.put("authorizedDates", "00010101,00010101000000,000101010000,00050101,00020501121314,12340101, 00020101   ,,");
+    diagnosticInstance.configure(config);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
       .hasRange(12, 12, 28)
       .hasRange(13, 7, 17)
@@ -80,7 +74,6 @@ class MagicDateDiagnosticTest extends AbstractDiagnosticTest<MagicDateDiagnostic
       .hasRange(31, 64, 80)
       .hasRange(58, 17, 27)
       .hasRange(58, 29, 45)
-      .hasRange(58, 47, 63)
-      .hasRange(65, 22, 32);
+      .hasRange(58, 47, 63);
   }
 }

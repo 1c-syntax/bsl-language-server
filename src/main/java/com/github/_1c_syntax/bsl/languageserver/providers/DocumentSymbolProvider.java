@@ -35,6 +35,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для получения структуры символов документа.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/documentSymbol}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol">Document Symbols Request specification</a>
+ */
 @Component
 public final class DocumentSymbolProvider {
 
@@ -49,6 +56,12 @@ public final class DocumentSymbolProvider {
     VariableKind.GLOBAL
   );
 
+  /**
+   * Получить иерархическую структуру символов документа.
+   *
+   * @param documentContext Контекст документа
+   * @return Список символов верхнего уровня документа
+   */
   public List<DocumentSymbol> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
       .filter(DocumentSymbolProvider::isSupported)

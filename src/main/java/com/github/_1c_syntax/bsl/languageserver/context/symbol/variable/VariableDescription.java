@@ -97,15 +97,12 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
   }
 
   public VariableDescription(ParameterDescription param) {
-
     description = "";
     deprecationInfo = "";
     deprecated = false;
     purposeDescription = "";
     range = Ranges.create();
-    link = param.getLink();
+    link = param.link();
     trailingDescription = Optional.empty();
-
   }
-
 }

@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.Module;
 import com.github._1c_syntax.bsl.mdo.ModuleOwner;
@@ -79,13 +78,8 @@ public class ProtectedModuleDiagnostic extends AbstractDiagnostic {
           .filter(Module::isProtected)
           .findAny();
         if (hasProtected.isPresent()) {
-          addDiagnostic(moduleOwner);
+          diagnosticStorage.addDiagnostic(diagnosticRange, info.getMessage(configuration.getMdoRefLocal(moduleOwner)));
         }
       });
-  }
-
-  private void addDiagnostic(ModuleOwner moduleOwner) {
-    var ownerMDOName = MdoRefBuilder.getLocaleOwnerMdoName(documentContext, moduleOwner);
-    diagnosticStorage.addDiagnostic(diagnosticRange, info.getMessage(ownerMDOName));
   }
 }

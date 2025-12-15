@@ -26,10 +26,22 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Детектор вхождений заданных слов/фраз в строку.
+ * <p>
+ * Подсчитывает количество вхождений предопределенных слов и фраз,
+ * характерных для кода BSL.
+ */
 public class ContainsDetector extends AbstractDetector {
 
   private final List<String> searchWords;
 
+  /**
+   * Создать детектор вхождений.
+   *
+   * @param probability Вероятность обнаружения
+   * @param searchWords Массив слов/фраз для поиска
+   */
   public ContainsDetector(double probability, String... searchWords) {
     super(probability);
     this.searchWords = Arrays.asList(searchWords);

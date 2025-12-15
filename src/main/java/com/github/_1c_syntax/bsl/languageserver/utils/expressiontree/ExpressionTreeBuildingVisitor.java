@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -37,7 +38,10 @@ import java.util.Objects;
 
 
 /**
- * Посетитель AST, который находит выражения и преобразует их в Expression Tree
+ * Построитель дерева выражений из AST.
+ * <p>
+ * Посетитель AST, который находит выражения BSL и преобразует их в Expression Tree
+ * для упрощенного анализа структуры выражений в диагностиках.
  */
 public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<ParseTree> {
 
@@ -53,7 +57,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   private final Deque<BslExpression> operands = new ArrayDeque<>();
   private final Deque<OperatorInCode> operatorsInFly = new ArrayDeque<>();
 
-  private BslExpression resultExpression;
+  private @Nullable BslExpression resultExpression;
   private int recursionLevel = -1;
 
   /**
@@ -62,7 +66,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
    * @param ctx AST выражения
    * @return дерево вычисления выражения
    */
-  public static BslExpression buildExpressionTree(BSLParser.ExpressionContext ctx) {
+  public static @Nullable BslExpression buildExpressionTree(BSLParser.ExpressionContext ctx) {
     var instance = new ExpressionTreeBuildingVisitor();
     instance.visitExpression(ctx);
     return instance.getExpressionTree();
@@ -71,7 +75,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   /**
    * @return результирующее выражение в виде дерева вычисления операций
    */
-  public BslExpression getExpressionTree() {
+  public @Nullable BslExpression getExpressionTree() {
     return resultExpression;
   }
 
@@ -101,12 +105,12 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     if (count > 1) {
       for (var i = 1; i < count; ++i) {
         var child = ctx.getChild(i);
-        if (child.getClass() == BSLParser.OperationContext.class) {
-          visitOperation((BSLParser.OperationContext) child);
-        } else if (child.getClass() == BSLParser.MemberContext.class) {
-          visitMember((BSLParser.MemberContext) child);
-        } else if (child.getClass() == BSLParser.PreprocessorContext.class) {
-          continue;
+        if (child instanceof BSLParser.OperationContext operationContext) {
+          visitOperation(operationContext);
+        } else if (child instanceof BSLParser.MemberContext memberContext) {
+          visitMember(memberContext);
+        } else if (child instanceof BSLParser.PreprocessorContext) {
+          // просто пропускаем
         } else {
           throw new IllegalStateException();
         }
@@ -151,10 +155,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     // нужен ручной dispatch на конкретного child,
     // т.к. нет отдельного правила для подвыражения в скобках
     //  constValue
-      // | complexIdentifier
-      // | (( LPAREN expression RPAREN ) modifier*) // нечего оверрайдить !
-      // | (IDENTIFIER | globalMethodCall)          // нечего оверрайдить !
-      // | waitExpression
+    // | complexIdentifier
+    // | (( LPAREN expression RPAREN ) modifier*) // нечего оверрайдить !
+    // | (IDENTIFIER | globalMethodCall)          // нечего оверрайдить !
+    // | waitExpression
 
     var unaryModifier = ctx.unaryModifier();
     var childIndex = 0;
@@ -175,9 +179,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
       var token = terminalNode.getSymbol().getType();
 
       // ручная диспетчеризация
-      switch (token) {
-        case BSLLexer.LPAREN -> visitParenthesis(ctx.expression(), ctx.modifier());
-        default -> operands.push(new ErrorExpressionNode(dispatchChild));
+      if (token == BSLLexer.LPAREN) {
+        visitParenthesis(ctx.expression(), ctx.modifier());
+      } else {
+        operands.push(new ErrorExpressionNode(dispatchChild));
       }
     } else {
       dispatchChild.accept(this);
@@ -186,7 +191,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     return ctx;
   }
 
-  private void visitParenthesis(BSLParser.ExpressionContext expression,
+  private void visitParenthesis(BSLParser.@Nullable ExpressionContext expression,
                                 List<? extends BSLParser.ModifierContext> modifiers) {
 
     // Handle the case where expression is empty (empty parentheses)
@@ -359,8 +364,14 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
         operands.push(new ErrorExpressionNode(ctx));
         return ctx;
       }
+      var subExpression = makeSubexpression(typeNameArg.expression());
+      if (subExpression == null) {
+        operands.push(new ErrorExpressionNode(ctx));
+        return ctx;
+      } else {
+        callNode = ConstructorCallNode.createDynamic(subExpression);
+      }
       args = args.stream().skip(1).toList();
-      callNode = ConstructorCallNode.createDynamic(makeSubexpression(typeNameArg.expression()));
     } else {
       // static style
       var typeNameTerminal = TerminalSymbolNode.literal(typeName.IDENTIFIER());
@@ -389,6 +400,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
     var target = operands.pop();
     var expressionArg = makeSubexpression(ctx.expression());
+    assert expressionArg != null;
     var indexOperation = BinaryOperationNode.create(BslOperator.INDEX_ACCESS, target, expressionArg, ctx);
     operands.push(indexOperation);
     return ctx;
@@ -408,9 +420,9 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   @Override
   public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
     var ternary = TernaryOperatorNode.create(
-      makeSubexpression(ctx.expression(0)),
-      makeSubexpression(ctx.expression(1)),
-      makeSubexpression(ctx.expression(2))
+      Objects.requireNonNull(makeSubexpression(ctx.expression(0))),
+      Objects.requireNonNull(makeSubexpression(ctx.expression(1))),
+      Objects.requireNonNull(makeSubexpression(ctx.expression(2)))
     );
 
     ternary.setRepresentingAst(ctx);
@@ -419,7 +431,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     return ctx;
   }
 
-  private static BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
+  private static @Nullable BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
     return buildExpressionTree(ctx);
   }
 
@@ -428,7 +440,8 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
       if (parameter.expression() == null) {
         callNode.addArgument(new SkippedCallArgumentNode());
       } else {
-        callNode.addArgument(makeSubexpression(parameter.expression()));
+        var argument = makeSubexpression(parameter.expression());
+        callNode.addArgument(Objects.requireNonNullElseGet(argument, SkippedCallArgumentNode::new));
       }
     }
   }

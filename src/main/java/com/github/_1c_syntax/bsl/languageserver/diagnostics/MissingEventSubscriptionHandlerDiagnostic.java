@@ -109,7 +109,7 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
 
   private void checkMethod(EventSubscription eventSubs, String methodName, CommonModule commonModule) {
     documentContext.getServerContext()
-      .getDocument(commonModule.getMdoReference().getMdoRef(), ModuleType.CommonModule)
+      .getDocument(commonModule.getMdoRef(), ModuleType.CommonModule)
       .ifPresent((DocumentContext commonModuleContext) -> {
         var method = commonModuleContext.getSymbolTree().getMethods().stream()
           .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))

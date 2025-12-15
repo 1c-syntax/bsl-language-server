@@ -9,23 +9,22 @@ Try to stick to them and the code review process will be simple.
 If a method can legally return `null`, it is recommended that you return `Optional<T>` instead of explicitly returning `null`. Exceptions (eg. high frequency or performance functions) are negotiated separately.
 
 The description of the `package-info.java` package must indicate that the NonNull API is used by default in the package.
-To do this, the annotation `@DefaultAnnotation(NonNull.class)` is added above the package name
+To do this, the annotation `@NullMarked` is added above the package name
 
 Example:
 ```java
-// ...license...
-@DefaultAnnotation(NonNull.class)
+// ...License...
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 ```
 
-To explicitly indicate that a method can accept or return `null`, use the annotation `@edu.umd.cs.findbugs.annotations.Nullable`.
+To explicitly indicate that a method can accept or return `null`, use the annotation `@org.jspecify.annotations.Nullable`.
 
-This avoids using the `@edu.umd.cs.findbugs.annotations.NonNull` annotation.
+This avoids using the `@org.jspecify.annotations.NonNull` annotation.
 
-The `null` control annotations from the `javax.annotations` or `jetbrains.annotations` packages are not allowed.
+The `null` control annotations from the `javax.annotations`, `jetbrains.annotations` or `edu.umd.cs.findbugs.annotations` packages are not allowed.
 
 ## Formatting
 

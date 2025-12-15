@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -117,7 +118,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
 
   private Optional<MethodSymbol> methodSymbol(BSLParser.ProcDeclarationContext ctx) {
     return Optional.of(documentContext.getSymbolTree())
-      .flatMap(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx)));
+      .flatMap(symbolTree -> symbolTree.getMethodSymbol(getSubContext(ctx)));
   }
 
   private boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
@@ -128,7 +129,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .orElse(false);
   }
 
-  private ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
+  private static @Nullable ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
     return Trees.getAncestorByRuleIndex(ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 

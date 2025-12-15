@@ -24,10 +24,19 @@ package com.github._1c_syntax.bsl.languageserver.recognizer;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Отпечаток языка BSL для распознавания кода.
+ * <p>
+ * Содержит набор детекторов с различными уровнями уверенности
+ * для определения, является ли текст кодом BSL.
+ */
 public class BSLFootprint implements LanguageFootprint {
 
   private final Set<AbstractDetector> detectors = new HashSet<>();
 
+  /**
+   * Создать отпечаток языка BSL с предустановленными детекторами.
+   */
   public BSLFootprint() {
     final double CODE_EXACTLY = 0.95;
     final double CODE_MOST_LIKELY = 0.7;

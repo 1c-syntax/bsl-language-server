@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
 public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern PUBLIC = CaseInsensitivePattern.compile(
-    String.format("^(%s|%s)$", Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN));
+    String.format("^(%s|%s)$", Keywords.PUBLIC_REGION.getRu(), Keywords.PUBLIC_REGION.getEn()));
 
   @Override
   protected void check() {

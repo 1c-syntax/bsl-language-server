@@ -23,14 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
 import io.sentry.IScope;
 import io.sentry.Sentry;
+import io.sentry.SentryOptions;
+import io.sentry.protocol.Geo;
 import io.sentry.protocol.User;
-import jakarta.annotation.Nullable;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.jspecify.annotations.Nullable;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,33 +43,38 @@ import java.util.UUID;
  * <p>
  * Наполняет данные информацией о приложении и пользователе.
  */
-@Component
+@Configuration
 @RequiredArgsConstructor
 public class SentryScopeConfigurer {
 
   private final ServerInfo serverInfo;
   private final PermissionFilterBeforeSendCallback beforeSendCallback;
 
-  @Value("${sentry.dsn:}")
-  private final String dsn;
+  /**
+   * Конфигурирует опции Sentry до инициализации.
+   * Spring Boot Sentry автоматически применит эту конфигурацию.
+   */
+  @Bean
+  public Sentry.OptionsConfiguration<SentryOptions> sentryOptionsConfiguration() {
+    return options -> {
+      options.setEnvironment(getEnvironment());
+      options.setRelease(getVersion());
+      options.setAttachServerName(false);
+      options.setServerName(getServerName());
+      options.setBeforeSend(beforeSendCallback);
+      options.addInAppInclude("com.github._1c_syntax.bsl.languageserver");
+    };
+  }
 
-  @PostConstruct
-  public void init() {
-    if (dsn != null && !dsn.isEmpty()) {
-      Sentry.init(options -> {
-        options.setDsn(dsn);
-        options.setEnvironment(getEnvironment());
-        options.setRelease(getVersion());
-        options.setAttachServerName(false);
-        options.setServerName(getServerName());
-        options.setBeforeSend(beforeSendCallback);
-        options.addInAppInclude("com.github._1c_syntax.bsl.languageserver");
-      });
-    }
-
+  /**
+   * Настраивает scope Sentry после полной инициализации приложения.
+   */
+  @EventListener(ApplicationReadyEvent.class)
+  public void onApplicationReady() {
     Sentry.configureScope((IScope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());
+      user.setGeo(new Geo()); // empty geo to block calculating geolocation by ip
       scope.setUser(user);
     });
   }
@@ -89,7 +96,7 @@ public class SentryScopeConfigurer {
   }
 
   private String getVersion() {
-    return serverInfo.getVersion();
+    return "bsl-language-server@" + serverInfo.getVersion();
   }
 
   @Nullable
@@ -104,3 +111,4 @@ public class SentryScopeConfigurer {
   }
 
 }
+

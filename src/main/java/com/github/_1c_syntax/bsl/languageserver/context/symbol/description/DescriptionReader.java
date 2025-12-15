@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,7 +126,7 @@ public class DescriptionReader {
       }
     }
 
-    return fakeParam.makeParameterDescription().getTypes();
+    return fakeParam.makeParameterDescription().types();
   }
 
   /**
@@ -223,7 +223,7 @@ public class DescriptionReader {
     return "";
   }
 
-  private String getDescriptionString(BSLParserRuleContext ctx) {
+  private String getDescriptionString(ParserRuleContext ctx) {
     var strings = new StringJoiner("");
     for (int i = 0; i < ctx.getChildCount(); i++) {
       var child = ctx.getChild(i);
@@ -352,8 +352,8 @@ public class DescriptionReader {
       return new ParameterDescription(name.intern(), parameterTypes, "", false);
     }
 
-    private void addType(@Nullable BSLMethodDescriptionParser.TypeContext paramType,
-                         @Nullable BSLMethodDescriptionParser.TypeDescriptionContext paramDescription) {
+    private void addType(BSLMethodDescriptionParser.@Nullable TypeContext paramType,
+                         BSLMethodDescriptionParser.@Nullable TypeDescriptionContext paramDescription) {
       if (isEmpty() || paramType == null) {
         return;
       }
@@ -376,7 +376,7 @@ public class DescriptionReader {
       }
     }
 
-    private void addType(@Nullable BSLMethodDescriptionParser.TypeDescriptionContext descriptionContext,
+    private void addType(BSLMethodDescriptionParser.@Nullable TypeDescriptionContext descriptionContext,
                          String text,
                          boolean isHyperlink) {
       var newType = new TempParameterTypeData(text, level, isHyperlink);

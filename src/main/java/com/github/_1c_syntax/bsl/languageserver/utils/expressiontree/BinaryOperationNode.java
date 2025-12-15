@@ -26,6 +26,12 @@ import lombok.Getter;
 import lombok.ToString;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+/**
+ * Узел бинарной операции в дереве выражений.
+ * <p>
+ * Представляет бинарную операцию с левым и правым операндами,
+ * например: a + b, x AND y, value > 10.
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)

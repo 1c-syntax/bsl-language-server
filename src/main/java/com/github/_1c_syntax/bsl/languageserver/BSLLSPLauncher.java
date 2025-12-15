@@ -45,10 +45,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Command;
 
+/**
+ * Главный класс-лаунчер BSL Language Server.
+ * <p>
+ * Точка входа в приложение, обрабатывает аргументы командной строки
+ * и запускает соответствующие команды (lsp, analyze, format и т.д.).
+ * Интегрирован с Spring Boot для управления зависимостями и конфигурацией.
+ */
 @Command(
   name = "bsl-language-server",
   subcommands = {
@@ -91,9 +97,9 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private List<String> unmatched;
 
   private final Set<Pattern> allowedAdditionalArgs = Set.of(
-    CaseInsensitivePattern.compile("--spring\\."),
-    CaseInsensitivePattern.compile("--app\\."),
-    CaseInsensitivePattern.compile("--logging\\."),
+    CaseInsensitivePattern.compile("--spring\\..*"),
+    CaseInsensitivePattern.compile("--app\\..*"),
+    CaseInsensitivePattern.compile("--logging\\..*"),
     CaseInsensitivePattern.compile("--debug")
   );
 
@@ -127,7 +133,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
       var parseResult = cmd.parseArgs(args);
       var unmatchedArgs = parseResult.unmatched().stream()
         .filter(s -> allowedAdditionalArgs.stream().noneMatch(pattern -> pattern.matcher(s).matches()))
-        .collect(Collectors.toList());
+        .toList();
 
       if (!unmatchedArgs.isEmpty()) {
         unmatchedArgs.forEach(s -> cmd.getErr().println("Unknown option: '" + s + "'"));

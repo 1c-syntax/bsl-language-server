@@ -44,6 +44,6 @@ public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexi
 
   @Override
   protected Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext) {
-    return documentContext.getCyclomaticComplexityData().getMethodsComplexity();
+    return documentContext.getCyclomaticComplexityData().methodsComplexity();
   }
 }

@@ -32,6 +32,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Metadata annotation for BSL diagnostics.
+ * <p>
+ * IMPORTANT: When adding new enum or array fields to this annotation,
+ * you must also update:
+ * <ul>
+ *   <li>{@link com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataMapDeserializer} - add conversion for the new field</li>
+ *   <li>{@code DiagnosticMetadataMapDeserializerTest} - update expectedHandledFields set</li>
+ * </ul>
+ * Otherwise, configuration file deserialization will fail.
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -88,4 +99,11 @@ public @interface DiagnosticMetadata {
    * Надбавка ко времени исправления замечания за повышенную сложность
    */
   double extraMinForComplexity() default 0;
+
+  /**
+   * LSP-уровень серьезности диагностики.
+   * Если не указан (пустая строка), рассчитывается автоматически на основе type и severity.
+   * Возможные значения: "Error", "Warning", "Information", "Hint"
+   */
+  String lspSeverity() default "";
 }

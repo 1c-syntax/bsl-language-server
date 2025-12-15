@@ -31,9 +31,9 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
@@ -68,14 +68,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
-
-//    var ast = documentContext.getAst();
-//    Trees.findAllRuleNodes(
-//      ast,
-//      BSLParser.RULE_methodCall,
-//      BSLParser.RULE_globalMethodCall
-//    );
-
     return referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
       .filter(reference -> Ranges.containsPosition(range, reference.getSelectionRange().getStart()))
       .filter(Reference::isSourceDefinedSymbolReference)
@@ -83,7 +75,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       .flatMap(Collection::stream)
       .toList();
   }
-
 
   private List<InlayHint> toInlayHints(Reference reference) {
 
@@ -112,7 +103,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
           var passedValue = callParam.getText();
 
-          if (!showParametersWithTheSameName() && StringUtils.containsIgnoreCase(passedValue, parameter.getName())) {
+          if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
             continue;
           }
 
@@ -193,7 +184,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   }
 
 
-  private static boolean isRightMethod(BSLParserRuleContext doCallParent, Reference reference) {
+  private static boolean isRightMethod(ParserRuleContext doCallParent, Reference reference) {
     var selectionRange = reference.getSelectionRange();
 
     if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {

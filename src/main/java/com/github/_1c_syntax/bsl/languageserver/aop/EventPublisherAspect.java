@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import jakarta.annotation.PreDestroy;
@@ -41,6 +42,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Collection;
 
 /**
@@ -55,6 +57,7 @@ import java.util.Collection;
 public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
   private boolean active;
+  @SuppressWarnings("NullAway.Init")
   private ApplicationEventPublisher applicationEventPublisher;
 
   @PreDestroy
@@ -83,6 +86,11 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
     publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));
   }
 
+  @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isRemoveDocumentCall() && args(uri)")
+  public void serverContextRemoveDocument(JoinPoint joinPoint, URI uri) {
+    publishEvent(new ServerContextDocumentRemovedEvent((ServerContext) joinPoint.getThis(), uri));
+  }
+
   @AfterReturning("Pointcuts.isLanguageServer() && Pointcuts.isInitializeCall() && args(initializeParams)")
   public void languageServerInitialize(JoinPoint joinPoint, InitializeParams initializeParams) {
     var event = new LanguageServerInitializeRequestReceivedEvent(
@@ -93,7 +101,7 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   }
 
   private void publishEvent(ApplicationEvent event) {
-    if (!active) {
+    if (!active || applicationEventPublisher == null) {
       LOGGER.warn("Trying to send event in not active event publisher.");
       return;
     }

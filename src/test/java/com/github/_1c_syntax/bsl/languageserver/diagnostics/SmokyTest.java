@@ -72,7 +72,7 @@ class SmokyTest {
   }
 
   @Test
-  void test() throws Exception {
+  void test() {
 
     // given
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};

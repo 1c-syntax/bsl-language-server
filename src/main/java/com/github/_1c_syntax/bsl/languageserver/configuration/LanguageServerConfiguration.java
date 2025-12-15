@@ -26,14 +26,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.utils.Absolute;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -44,6 +44,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Role;
@@ -53,11 +54,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
@@ -75,8 +71,6 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LanguageServerConfiguration {
-
-  private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
   private Language language = Language.DEFAULT_LANGUAGE;
 
@@ -96,9 +90,17 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private InlayHintOptions inlayHintOptions = new InlayHintOptions();
 
+  @JsonProperty("capabilities")
+  @Setter(value = AccessLevel.NONE)
+  private CapabilitiesOptions capabilities = new CapabilitiesOptions();
+
   @JsonProperty("formatting")
   @Setter(value = AccessLevel.NONE)
   private FormattingOptions formattingOptions = new FormattingOptions();
+
+  @JsonProperty("references")
+  @Setter(value = AccessLevel.NONE)
+  private ReferencesOptions referencesOptions = new ReferencesOptions();
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
@@ -116,14 +118,14 @@ public class LanguageServerConfiguration {
   private File configurationFile;
 
   @Value("${app.configuration.path:.bsl-language-server.json}")
-  @Getter(value=AccessLevel.NONE)
-  @Setter(value=AccessLevel.NONE)
+  @Getter(value = AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
   @JsonIgnore
   private String configurationFilePath;
 
   @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
-  @Getter(value=AccessLevel.NONE)
-  @Setter(value=AccessLevel.NONE)
+  @Getter(value = AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
   @JsonIgnore
   private String globalConfigPath;
 
@@ -140,15 +142,30 @@ public class LanguageServerConfiguration {
     }
   }
 
+  /**
+   * Обновить конфигурацию из файла.
+   *
+   * @param configurationFile Файл с конфигурацией
+   */
   public void update(File configurationFile) {
     loadConfigurationFile(configurationFile);
   }
 
+  /**
+   * Сбросить конфигурацию к значениям по умолчанию.
+   */
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
   }
 
-  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+  /**
+   * Получить корневой каталог конфигурации с учётом настроек.
+   *
+   * @param configuration Конфигурация language server
+   * @param srcDir Директория исходных файлов
+   * @return Корневой каталог для анализа, или {@code null} если конфигурация находится вне srcDir
+   */
+  public static @Nullable Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
     var pathFromConfiguration = configuration.getConfigurationRoot();
@@ -164,47 +181,11 @@ public class LanguageServerConfiguration {
       }
     }
 
-    if (rootPath != null) {
-      var fileConfiguration = getConfigurationFile(rootPath);
-      if (fileConfiguration != null) {
-        if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
-          rootPath = Optional.of(fileConfiguration.toPath())
-            .map(Path::getParent)
-            .map(Path::getParent)
-            .map(Path::getParent)
-            .orElse(null);
-        } else {
-          rootPath = Optional.of(fileConfiguration.toPath())
-            .map(Path::getParent)
-            .orElse(null);
-        }
-      }
-    }
-
     return rootPath;
   }
 
-  @SuppressFBWarnings(
-    value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-    justification = "False positive"
-  )
-  private static File getConfigurationFile(Path rootPath) {
-    File configurationFile = null;
-    List<Path> listPath = new ArrayList<>();
-    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
-      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.toList();
-    } catch (IOException e) {
-      LOGGER.error("Error on read configuration file", e);
-    }
-    if (!listPath.isEmpty()) {
-      configurationFile = listPath.get(0).toFile();
-    }
-    return configurationFile;
-  }
-
   private void loadConfigurationFile(File configurationFile) {
-    if (!configurationFile.exists()) {
+    if (!configurationFile.exists() || configurationFile.isDirectory()) {
       return;
     }
 
@@ -214,8 +195,8 @@ public class LanguageServerConfiguration {
       .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
       .build();
 
-    try {
-      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    try (var inputStream = Files.newInputStream(configurationFile.toPath())) {
+      configuration = mapper.readValue(inputStream, LanguageServerConfiguration.class);
     } catch (IOException e) {
       LOGGER.error("Can't deserialize configuration file", e);
       return;
@@ -230,9 +211,11 @@ public class LanguageServerConfiguration {
     // todo: refactor
     PropertyUtils.copyProperties(this, configuration);
     PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
+    PropertyUtils.copyProperties(this.capabilities, configuration.capabilities);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
+    PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
   }
 }

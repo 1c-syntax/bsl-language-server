@@ -24,14 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationParamSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -63,10 +61,10 @@ public class AnnotationParamSymbolMarkupContentBuilder implements MarkupContentB
     var parameterDefinition = maybeParameterDefinition.get();
 
     // описание параметра аннотации
-    String parameter = descriptionFormatter.parameterToString(parameterDefinition);
+    var parameter = descriptionFormatter.parameterToString(parameterDefinition);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, parameter);
 
-    String content = markupBuilder.toString();
+    var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }

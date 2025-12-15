@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
 import com.github._1c_syntax.bsl.languageserver.utils.ThrowingSupplier;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,7 +71,7 @@ class MeasureCollectorTest {
     assertThat(measures)
       .containsKey("test")
       .extractingByKey("test")
-      .asList()
+      .asInstanceOf(InstanceOfAssertFactories.LIST)
       .isNotEmpty();
   }
 

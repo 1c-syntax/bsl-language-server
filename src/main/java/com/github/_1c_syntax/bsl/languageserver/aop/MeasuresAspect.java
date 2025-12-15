@@ -34,17 +34,24 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.util.Collection;
 
+/**
+ * Аспект для сбора метрик производительности.
+ * <p>
+ * Перехватывает вызовы методов для измерения времени их выполнения
+ * при включенном режиме сбора метрик.
+ */
 @Aspect
 @NoArgsConstructor
 public class MeasuresAspect {
 
   @Setter(onMethod = @__({@Autowired}))
-  private MeasureCollector measureCollector;
+  private @Nullable MeasureCollector measureCollector;
 
   @PreDestroy
   void destroy() {

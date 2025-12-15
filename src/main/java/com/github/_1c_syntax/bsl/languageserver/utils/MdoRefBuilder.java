@@ -22,126 +22,112 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Утилитный класс для построения ссылок на объекты метаданных (MDO).
+ * <p>
+ * Используется для создания строковых идентификаторов объектов конфигурации 1С,
+ * которые применяются при разрешении ссылок между модулями.
+ */
 @UtilityClass
 public class MdoRefBuilder {
 
+  /**
+   * Для оптимизации хранения одинаковых строк
+   */
   private final StringInterner stringInterner = new StringInterner();
 
+  /**
+   * Получить ссылку на объект метаданных для вызова метода.
+   *
+   * @param documentContext Контекст документа
+   * @param callStatement   Контекст вызова метода
+   * @return Строковая ссылка на MDO
+   */
   public String getMdoRef(DocumentContext documentContext, BSLParser.CallStatementContext callStatement) {
     if (callStatement.globalMethodCall() != null) {
+      // todo возвращается ссылка на документ, что не позволяет нормально с глобальными методами работать
       return getMdoRef(documentContext);
     } else {
       return getMdoRef(documentContext, callStatement.IDENTIFIER(), callStatement.modifier());
     }
   }
 
+  /**
+   * Получить ссылку на объект метаданных для документа.
+   *
+   * @param documentContext Контекст документа
+   * @return Строковая ссылка на MDO документа
+   */
   public static String getMdoRef(DocumentContext documentContext) {
+    // осторожно! не менять на вызов documentContext.getMdoRef, а то зациклится
     var mdoRef = documentContext.getMdObject()
-      .map(MD::getMdoReference)
-      .map(MdoReference::getMdoRef)
+      .map(MD::getMdoRef)
       .orElseGet(() -> documentContext.getUri().toString());
     return stringInterner.intern(mdoRef);
   }
 
-  public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
-    return getMdoRef(documentContext, complexIdentifier.IDENTIFIER(), complexIdentifier.modifier());
+  /**
+   * Формирует ссылку на объект-владелец свойства
+   *
+   * @param documentContext Документ (файл)
+   * @param ctx             Узел
+   * @return Ссылка на объект-владелец
+   */
+  public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext ctx) {
+    return getMdoRef(documentContext, ctx.IDENTIFIER(), ctx.modifier());
   }
 
+  /**
+   * Формирует ссылку на объект-владелец метода или свойства по идентификатору и модификаторам узла
+   *
+   * @param documentContext Документ (файл)
+   * @param identifier      Имя общего модуля или типа объекта метаданных
+   * @param modifiers       "Модификаторы", т.е. части имени между "точками" (используется только второй)
+   * @return Ссылка
+   */
   public String getMdoRef(
     DocumentContext documentContext,
-    @Nullable
-    TerminalNode identifier,
+    @Nullable TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
   ) {
-
-    AtomicReference<String> mdoRef = new AtomicReference<>("");
-
-    Optional.ofNullable(identifier)
-      .map(ParseTree::getText)
-      .flatMap(commonModuleName -> getCommonModuleMdoRef(documentContext, commonModuleName))
-      .or(() ->
-        Optional.ofNullable(identifier)
-          .map(ParseTree::getText)
-          .flatMap(MDOType::fromValue)
-          .filter(mdoType -> ModuleType.byMDOType(mdoType)
-            .contains(ModuleType.ManagerModule))
-          .map(mdoType -> getMdoRef(mdoType, getMdoName(modifiers)))
-      )
-      .ifPresent(mdoRef::set);
-
-    return stringInterner.intern(mdoRef.get());
-  }
-
-  /**
-   * Получить mdoRef в языке конфигурации
-   *
-   * @param documentContext the document context
-   * @param mdo             the mdo
-   * @return the locale mdoRef
-   */
-  public String getLocaleMdoRef(DocumentContext documentContext, MD mdo) {
-    final var mdoReference = mdo.getMdoReference();
-    final String result;
-    if (documentContext.getServerContext().getConfiguration().getScriptVariant() == ScriptVariant.ENGLISH) {
-      result = mdoReference.getMdoRef();
-    } else {
-      result = mdoReference.getMdoRefRu();
-    }
-    return stringInterner.intern(result);
-  }
-
-  /**
-   * Получить имя родителя метаданного в языке конфигурации.
-   *
-   * @param documentContext the document context
-   * @param mdo             the mdo
-   * @return the locale owner mdo name
-   */
-  public String getLocaleOwnerMdoName(DocumentContext documentContext, MD mdo) {
-    final var names = getLocaleMdoRef(documentContext, mdo).split("\\.");
-    if (names.length <= 1) {
-      return "";
-    }
-    return stringInterner.intern(names[0].concat(".").concat(names[1]));
-  }
-
-  private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
-    return documentContext.getServerContext()
-      .getConfiguration()
-      .findCommonModule(commonModuleName)
-      .map(CommonModule::getMdoReference)
-      .map(MdoReference::getMdoRef);
-  }
-
-  private String getMdoRef(MDOType mdoType, String identifier) {
-    if (identifier.isEmpty()) {
+    if (identifier == null) {
       return "";
     }
 
-    return mdoType.getName() + "." + identifier;
+    // предполагаем, что это вызов метода общего модуля
+    var commonModule = documentContext.getServerContext().getConfiguration().findCommonModule(identifier.getText());
+    if (commonModule.isPresent()) {
+      return commonModule.get().getMdoRef();
+    }
+
+    // раз не общий модуль, то нужно определить тип метаданного и, если у него есть модуль менеджера, вызвать метод
+    // todo такой подход не дает использовать ссылки на методы платформенных объектов
+    var mdoType = MDOType.fromValue(identifier.getText());
+    if (mdoType.isPresent()) {
+      var mdoName = getMdoName(modifiers);
+      if (!mdoName.isEmpty()) {
+        return MdoReference.create(mdoType.get(), mdoName).getMdoRef();
+      }
+    }
+    return "";
   }
 
   private String getMdoName(List<? extends BSLParser.ModifierContext> modifiers) {
     return modifiers.stream()
       .limit(1)
-      .findAny()
+      .findFirst()
       .map(BSLParser.ModifierContext::accessProperty)
       .map(BSLParser.AccessPropertyContext::IDENTIFIER)
       .map(ParseTree::getText)

@@ -9,23 +9,22 @@
 Если метод на законных основаниях может возвращать `null`, рекомендуется вместо явного возврата `null` возвращать `Optional<T>`. Исключения (например, высокочастотные или перфомансные функции) обговариваются отдельно.
 
 В описании пакета `package-info.java` необходимо указать, что в пакете по умолчанию используется NonNull API.
-Для этого над именем пакета добавляется аннотация `@DefaultAnnotation(NonNull.class)`
+Для этого над именем пакета добавляется аннотация `@NullMarked`
 
 Пример:
 ```java
 // ...Лицензия...
-@DefaultAnnotation(NonNull.class)
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver;
 
-import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 ```
 
-Для явного указания того, что метод может принимать или возвращать `null`, используется аннотация `@edu.umd.cs.findbugs.annotations.Nullable`.
+Для явного указания того, что метод может принимать или возвращать `null`, используется аннотация `@org.jspecify.annotations.Nullable`.
 
-В общем случае это позволяет не использовать аннотации `@edu.umd.cs.findbugs.annotations.NonNull` вообще.
+В общем случае это позволяет не использовать аннотации `@org.jspecify.annotations.NonNull` вообще.
 
-Аннотации по контролю за `null` из пакета `javax.annotations` или `jetbrains.annotations` использоваться не должны.
+Аннотации по контролю за `null` из пакета `javax.annotations`, `jakarta.annotations` или `edu.umd.cs.findbugs.annotations` использоваться не должны.
 
 ## Форматирование
 

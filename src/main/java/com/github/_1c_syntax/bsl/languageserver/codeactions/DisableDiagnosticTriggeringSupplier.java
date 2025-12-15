@@ -47,6 +47,12 @@ import java.util.stream.Collectors;
 import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider.SOURCE;
 
 
+/**
+ * Поставщик code action для отключения срабатывания диагностики.
+ * <p>
+ * Добавляет комментарий для игнорирования конкретной диагностики
+ * в указанной строке кода.
+ */
 @Component
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 

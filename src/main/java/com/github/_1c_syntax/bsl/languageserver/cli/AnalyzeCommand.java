@@ -26,8 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -156,9 +154,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     var configurationFile = new File(configurationOption);
-    if (configurationFile.exists()) {
-      configuration.update(configurationFile);
-    }
+    configuration.update(configurationFile);
 
     var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);
@@ -205,10 +201,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     var filePath = srcDir.relativize(Absolute.path(file));
     var diagnostics = documentContext.getDiagnostics();
     var metrics = documentContext.getMetrics();
-    var mdoRef = documentContext.getMdObject()
-      .map(MD::getMdoReference)
-      .map(MdoReference::getMdoRef)
-      .orElse("");
+    var mdoRef = documentContext.getMdoRef();
 
     var fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 

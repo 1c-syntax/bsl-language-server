@@ -21,81 +21,49 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.GenericInterner;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Облегченные данные символа для поиска без кросс-ссылок между файлами.
  *
- * @see com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol
+ * @param mdoRef     Ссылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
+ * @param moduleType Тип модуля объекта метаданных, в котором расположен символ.
+ * @param scopeName  Область видимости символа.
+ * @param symbolKind Тип символа.
+ * @param symbolName Имя символа.
+ * @see SourceDefinedSymbol
  */
-@Value
-@AllArgsConstructor
 @Builder
-public class Symbol implements Comparable<Symbol> {
+public record Symbol(
+  String mdoRef,
+  ModuleType moduleType,
+  String scopeName,
+  SymbolKind symbolKind,
+  String symbolName
+) implements Comparable<Symbol> {
 
-  private static GenericInterner<Symbol> interner = new GenericInterner<>();
-
-  /**
-   * Ссылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
-   */
-  String mdoRef;
-
-  /**
-   * Тип модуля объекта метаданных, в котором расположен символ.
-   */
-  ModuleType moduleType;
-
-  /**
-   * Область видимости символа.
-   */
-  String scopeName;
-
-  /**
-   * Тип символа.
-   */
-  SymbolKind symbolKind;
-
-  /**
-   * Имя символа.
-   */
-  String symbolName;
+  private static final GenericInterner<Symbol> INTERNER = new GenericInterner<>();
 
   public Symbol intern() {
-    return interner.intern(this);
+    return INTERNER.intern(this);
   }
 
   @Override
-  public int compareTo(Symbol o) {
-    if (this.equals(o)) {
-      return 0;
+  public int compareTo(@Nullable Symbol other) {
+    if (other == null) {
+      return 1;
     }
 
-    int compareResult = mdoRef.compareTo(o.mdoRef);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = moduleType.compareTo(o.moduleType);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = scopeName.compareTo(o.scopeName);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = symbolKind.compareTo(o.symbolKind);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = symbolName.compareTo(o.symbolName);
-    return compareResult;
+    return java.util.Comparator.comparing(Symbol::mdoRef)
+      .thenComparing(Symbol::moduleType)
+      .thenComparing(Symbol::scopeName)
+      .thenComparing(Symbol::symbolKind)
+      .thenComparing(Symbol::symbolName)
+      .compare(this, other);
   }
 }

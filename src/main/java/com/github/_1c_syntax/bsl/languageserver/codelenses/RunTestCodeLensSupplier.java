@@ -63,6 +63,7 @@ public class RunTestCodeLensSupplier
   @Autowired
   @Lazy
   @Getter
+  @SuppressWarnings("NullAway.Init")
   private RunTestCodeLensSupplier self;
 
   public RunTestCodeLensSupplier(

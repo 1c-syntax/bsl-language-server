@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +34,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Анализатор многоязычных строк НСтр (NStr).
+ * <p>
+ * Проверяет наличие всех объявленных языков в многоязычных строках
+ * и анализирует использование в шаблонах.
+ */
 public final class MultilingualStringAnalyser {
 
   private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
@@ -56,18 +63,22 @@ public final class MultilingualStringAnalyser {
     WHITE_SPACE_REGEX
   );
 
+  @SuppressWarnings("NullAway.Init")
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
-  private String variableName;
+  private @Nullable String variableName;
   private final ArrayList<String> expectedLanguages;
   private final Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
+  /**
+   * Создать анализатор многоязычных строк.
+   *
+   * @param declaredLanguages Строка с объявленными языками через запятую
+   */
   public MultilingualStringAnalyser(String declaredLanguages) {
-
     Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
     this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
-
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
@@ -95,12 +106,11 @@ public final class MultilingualStringAnalyser {
     return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).find();
   }
 
-  private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
-    BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
-      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+  private static @Nullable String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+    BSLParser.AssignmentContext assignment = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment != null) {
-      BSLParser.LValueContext lValue = assignment.lValue();
+      var lValue = assignment.lValue();
       if (lValue != null) {
         return lValue.getText();
       }
@@ -109,16 +119,24 @@ public final class MultilingualStringAnalyser {
     return null;
   }
 
+  /**
+   * Разобрать вызов метода НСтр/NStr.
+   *
+   * @param ctx Контекст вызова глобального метода
+   * @return true, если это вызов НСтр/NStr и он успешно разобран
+   */
   public boolean parse(BSLParser.GlobalMethodCallContext ctx) {
+    Objects.requireNonNull(ctx);
+
     expandedMultilingualString.clear();
     missingLanguages.clear();
     isParentTemplate = false;
+    globalMethodCallContext = ctx;
 
     if (isNotMultilingualString(ctx)) {
       return false;
     }
 
-    globalMethodCallContext = ctx;
     isParentTemplate = hasTemplateInParents(ctx);
     variableName = getVariableName(ctx);
     expandMultilingualString();
@@ -155,15 +173,31 @@ public final class MultilingualStringAnalyser {
     }
   }
 
+  /**
+   * Проверить, что не все объявленные языки присутствуют в строке.
+   *
+   * @return true, если какие-то языки отсутствуют
+   */
   public boolean hasNotAllDeclaredLanguages() {
     return !missingLanguages.isEmpty();
   }
 
+  /**
+   * Получить список отсутствующих языков.
+   *
+   * @return Строковое представление списка отсутствующих языков
+   */
   public String getMissingLanguages() {
     return missingLanguages.toString();
   }
 
+  /**
+   * Проверить, используется ли строка в родительском шаблоне.
+   *
+   * @return true, если строка используется в шаблоне
+   */
   public boolean isParentTemplate() {
+    Objects.requireNonNull(globalMethodCallContext, "Call parse method first");
     return isParentTemplate || istVariableUsingInTemplate();
   }
 
@@ -172,7 +206,7 @@ public final class MultilingualStringAnalyser {
       return false;
     }
 
-    BSLParser.CodeBlockContext codeBlock = getCodeBlock();
+    var codeBlock = Trees.getAncestorByRuleIndex(globalMethodCallContext, BSLParser.RULE_codeBlock);
 
     if (codeBlock == null) {
       return false;
@@ -188,13 +222,6 @@ public final class MultilingualStringAnalyser {
       .map(BSLParser.CallParamListContext::callParam)
       .filter(cp -> !cp.isEmpty())
       .anyMatch(cp -> cp.stream().anyMatch(p -> p.getText().equalsIgnoreCase(variableName)));
-  }
-
-  private BSLParser.CodeBlockContext getCodeBlock() {
-    return (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(
-      globalMethodCallContext,
-      BSLParser.RULE_codeBlock
-    );
   }
 
 }

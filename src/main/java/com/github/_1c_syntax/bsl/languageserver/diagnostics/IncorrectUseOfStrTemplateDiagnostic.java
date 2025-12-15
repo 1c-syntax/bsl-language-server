@@ -27,9 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -132,7 +132,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     final var LENGTH_OF_EMPTY_STRING_FROM_AST = 2;
     return getConstValue(expressionContext, true)
       .map(BSLParser.ConstValueContext::string)
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .filter(s -> s.length() > LENGTH_OF_EMPTY_STRING_FROM_AST);
   }
 
@@ -190,13 +190,13 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
   }
 
   @Nullable
-  private static BSLParserRuleContext getPreviousNode(BSLParserRuleContext node, int ruleStatement) {
+  private static ParserRuleContext getPreviousNode(ParserRuleContext node, int ruleStatement) {
 
     final var children = node.getParent().children;
     final var pos = children.indexOf(node);
     if (pos > 0) {
       for (int i = pos - 1; i >= 0; i--) {
-        final var prev = (BSLParserRuleContext) children.get(i);
+        final var prev = (ParserRuleContext) children.get(i);
         if (prev.getRuleIndex() == ruleStatement) {
           return prev;
         }

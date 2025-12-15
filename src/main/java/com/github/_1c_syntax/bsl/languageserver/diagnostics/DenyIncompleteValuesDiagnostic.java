@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.Register;
 import com.github._1c_syntax.bsl.mdo.children.Dimension;
@@ -59,12 +58,10 @@ public class DenyIncompleteValuesDiagnostic extends AbstractMetadataDiagnostic {
   @Override
   protected void checkMetadata(MD mdo) {
     if (mdo instanceof Register register) {
+      var mdoRefLocal = getMdoRefLocal(mdo);
       register.getDimensions().stream()
         .filter(dimension -> !dimension.isDenyIncompleteValues())
-        .forEach((Dimension dimension) -> {
-          var ownerMDOName = MdoRefBuilder.getLocaleOwnerMdoName(documentContext, mdo);
-          addDiagnostic(info.getMessage(dimension.getName(), ownerMDOName));
-        });
+        .forEach((Dimension dimension) -> addDiagnostic(info.getMessage(dimension.getName(), mdoRefLocal)));
     }
   }
 }

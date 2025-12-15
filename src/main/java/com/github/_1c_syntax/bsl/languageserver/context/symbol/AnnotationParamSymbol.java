@@ -36,6 +36,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Символ параметра аннотации.
+ * <p>
+ * Представляет параметр аннотации или директивы компиляции,
+ * содержащий имя и значение параметра.
+ */
 @Value
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

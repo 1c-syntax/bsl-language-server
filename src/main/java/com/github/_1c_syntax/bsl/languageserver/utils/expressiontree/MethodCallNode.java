@@ -27,7 +27,9 @@ import lombok.Value;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
- * Ветка дерева выражений, олицетворяющая вызов метода
+ * Узел вызова метода в дереве выражений.
+ * <p>
+ * Представляет вызов метода или функции: МойМетод(), obj.Метод(param).
  */
 @Value(staticConstructor = "create")
 @EqualsAndHashCode(callSuper = true)

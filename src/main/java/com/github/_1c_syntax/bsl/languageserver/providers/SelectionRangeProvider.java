@@ -25,12 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ public class SelectionRangeProvider {
    * @param params          параметры вызова.
    * @return список найденных диапазонов.
    */
-  public List<SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
+  public List<@Nullable SelectionRange> getSelectionRange(DocumentContext documentContext, SelectionRangeParams params) {
 
     var positions = params.getPositions();
     var ast = documentContext.getAst();
@@ -128,7 +127,8 @@ public class SelectionRangeProvider {
     return Optional.of(parent);
   }
 
-  private static BSLParserRuleContext getParentContext(ParseTree ctx) {
+  @Nullable
+  private static ParserRuleContext getParentContext(ParseTree ctx) {
     if (ctx instanceof BSLParser.StatementContext statementContext) {
       return getStatementParent(statementContext);
     }
@@ -137,11 +137,12 @@ public class SelectionRangeProvider {
   }
 
   @Nullable
-  private static BSLParserRuleContext getDefaultParent(ParseTree ctx) {
-    return (BSLParserRuleContext) ctx.getParent();
+  private static ParserRuleContext getDefaultParent(ParseTree ctx) {
+    return (ParserRuleContext) ctx.getParent();
   }
 
-  private static BSLParserRuleContext getStatementParent(BSLParser.StatementContext statement) {
+  @Nullable
+  private static ParserRuleContext getStatementParent(BSLParser.StatementContext statement) {
 
     var parent = getDefaultParent(statement);
 
@@ -156,7 +157,7 @@ public class SelectionRangeProvider {
     // Проверим узлы после текущего выражения.
     var localLine = statementLine;
     for (int i = currentPosition + 1; i < children.size(); i++) {
-      var child = (BSLParserRuleContext) children.get(i);
+      var child = (ParserRuleContext) children.get(i);
       if (child.getStart().getLine() == localLine + 1) {
         nearbyStatements.add(child);
         localLine++;
@@ -168,7 +169,7 @@ public class SelectionRangeProvider {
     // Проверим узлы перед текущим выражением
     localLine = statementLine;
     for (int i = currentPosition - 1; i >= 0; i--) {
-      var child = (BSLParserRuleContext) children.get(i);
+      var child = (ParserRuleContext) children.get(i);
       if (child.getStart().getLine() == localLine - 1) {
         nearbyStatements.add(child);
         localLine--;
@@ -179,7 +180,7 @@ public class SelectionRangeProvider {
 
     if (!nearbyStatements.isEmpty() && (nearbyStatements.size() + 1 != children.size())) {
 
-      var statementsBlock = new BSLParserRuleContext();
+      var statementsBlock = new ParserRuleContext();
       statementsBlock.setParent(parent);
 
       nearbyStatements.add(statement);
@@ -200,7 +201,7 @@ public class SelectionRangeProvider {
     return parent;
   }
 
-  private static boolean ifBranchMatchesIfStatement(BSLParserRuleContext ctx) {
+  private static boolean ifBranchMatchesIfStatement(ParserRuleContext ctx) {
     if (!(ctx instanceof BSLParser.IfBranchContext ifBranch)) {
       return false;
     }

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Objects;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -34,7 +35,7 @@ public class ControlFlowGraphWalker {
   private CfgVertex currentNode;
 
   public void start() {
-    currentNode = graph.getEntryPoint();
+    currentNode = Objects.requireNonNull(graph.getEntryPoint());
   }
 
   public Set<CfgEdge> availableRoutes() {
@@ -45,7 +46,9 @@ public class ControlFlowGraphWalker {
     var edges = availableRoutes();
     var edgeOrNot = edges.stream()
       .filter(x -> x.getType() == CfgEdgeType.DIRECT)
-      .findFirst();
+      .reduce((CfgEdge a, CfgEdge b) -> {
+        throw new IllegalStateException("Multiple DIRECT outgoing edges in " + currentNode);
+      });
 
     if (edgeOrNot.isPresent()) {
       currentNode = graph.getEdgeTarget(edgeOrNot.get());
@@ -60,7 +63,7 @@ public class ControlFlowGraphWalker {
       .filter(x -> x.getType() == edgeType)
       .findAny();
 
-    if(edgeOrNot.isPresent()) {
+    if (edgeOrNot.isPresent()) {
       currentNode = graph.getEdgeTarget(edgeOrNot.get());
       return edgeOrNot.get();
     }

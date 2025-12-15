@@ -21,7 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+/**
+ * Функциональный интерфейс поставщика, который может бросать исключения.
+ * <p>
+ * Аналог {@link java.util.function.Supplier}, но позволяет методу {@link #get()}
+ * бросать проверяемые исключения.
+ *
+ * @param <T> Тип возвращаемого значения
+ */
 @FunctionalInterface
 public interface ThrowingSupplier<T> {
+  /**
+   * Получить результат.
+   *
+   * @return Результат
+   * @throws Throwable Любое исключение, которое может возникнуть
+   */
   T get() throws Throwable;
 }

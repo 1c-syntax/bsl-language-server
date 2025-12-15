@@ -28,17 +28,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
+/**
+ * Базовый класс для узлов дерева выражений.
+ * <p>
+ * Представляет любой узел в дереве выражений BSL:
+ * литералы, идентификаторы, операции, вызовы методов.
+ */
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class BslExpression {
   private final ExpressionNodeType nodeType;
-  private ParseTree representingAst;
+  private @Nullable ParseTree representingAst;
 
   @ToString.Exclude
   @Setter(AccessLevel.PACKAGE)
-  private BslExpression parent;
+  private @Nullable BslExpression parent;
 
   /**
    * Синтаксический-помощник для более удобных downcast-ов

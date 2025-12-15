@@ -32,14 +32,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Value;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,22 +83,21 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private Pattern methodPattern = INSERT_ADD_METHOD_PATTERN;
 
   // ленивое вычисление всех полей, только в нужный момент
-  private BSLParser.CodeBlockContext codeBlock;
+  private BSLParser.CodeBlockContext codeBlock = new BSLParser.CodeBlockContext(null, 0);
+  @Nullable
   private Range blockRange;
+  @Nullable
   private List<AssignmentContext> blockAssignments;
-  private List<BSLParserRuleContext> blockBreakers;
+  @Nullable
+  private List<ParserRuleContext> blockBreakers;
+  @Nullable
   private List<CallParamContext> blockCallParams;
+  @Nullable
   private List<String> firstParamInnerIdentifiers;
 
-  @Value
-  private static class GroupingData {
-    BSLParser.CallStatementContext callStatement;
-    String collectionName;
-    String collectionNameWithDot;
-    String methodName;
-    String firstParamName;
-    String firstParamNameWithDot;
-    CallParamContext firstParamContext;
+  private record GroupingData(BSLParser.CallStatementContext callStatement, String collectionName,
+                              String collectionNameWithDot, String methodName, String firstParamName,
+                              String firstParamNameWithDot, CallParamContext firstParamContext) {
   }
 
   @Override
@@ -184,13 +182,13 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   private Stream<List<GroupingData>> explorePossibleDuplicateStatements(List<GroupingData> statements) {
     final var mapOfMapsByIdentifier = statements.stream()
       .collect(Collectors.groupingBy(
-        GroupingData::getCollectionName,
+        GroupingData::collectionName,
         CaseInsensitiveMap::new,
         Collectors.groupingBy(
-          GroupingData::getMethodName,
+          GroupingData::methodName,
           CaseInsensitiveMap::new,
           Collectors.groupingBy(
-            GroupingData::getFirstParamName,
+            GroupingData::firstParamName,
             CaseInsensitiveMap::new,
             Collectors.mapping(groupingData -> groupingData, Collectors.toList()))
         )
@@ -268,16 +266,16 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private boolean hasBreakersBetweenCalls(Range border) {
     return getBreakers().stream()
-      .filter(bslParserRuleContext -> Ranges.containsRange(border, Ranges.create(bslParserRuleContext)))
+      .filter(ruleContext -> Ranges.containsRange(border, Ranges.create(ruleContext)))
       .anyMatch(this::hasBreakerIntoCodeBlock);
   }
 
-  private boolean hasBreakerIntoCodeBlock(BSLParserRuleContext breakerContext) {
+  private boolean hasBreakerIntoCodeBlock(ParserRuleContext breakerContext) {
     if (breakerContext.getRuleIndex() == BSLParser.RULE_returnStatement) {
       return true;
     }
     final var rootParent = Trees.getRootParent(breakerContext, BREAKERS_ROOTS);
-    if (rootParent == null) {
+    if (rootParent == null || blockRange == null) {
       return true; // сюда должны попасть, только если модуль не по грамматике, но иначе ругань на возможный null
     }
     return !Ranges.containsRange(blockRange, Ranges.create(rootParent));
@@ -302,14 +300,14 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       .map(BSLParser.MemberContext::complexIdentifier)
       .filter(Objects::nonNull)
       .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .anyMatch(identifier -> usedIdentifiers(identifier, groupingData));
   }
 
   private void fireIssue(List<GroupingData> duplicates) {
     final var dataForIssue = duplicates.get(1);
     final var relatedInformationList = duplicates.stream()
-      .map(GroupingData::getCallStatement)
+      .map(GroupingData::callStatement)
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
         Ranges.create(context),
@@ -323,16 +321,14 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (blockAssignments == null) {
       blockAssignments = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_assignment).stream()
         .map(AssignmentContext.class::cast)
-        .collect(Collectors.toUnmodifiableList());
+        .toList();
     }
     return blockAssignments;
   }
 
-  private List<BSLParserRuleContext> getBreakers() {
+  private List<ParserRuleContext> getBreakers() {
     if (blockBreakers == null) {
-      blockBreakers = Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES).stream()
-        .map(BSLParserRuleContext.class::cast)
-        .collect(Collectors.toUnmodifiableList());
+      blockBreakers = List.copyOf(Trees.findAllRuleNodes(codeBlock, BREAKERS_INDEXES));
     }
     return blockBreakers;
   }
@@ -341,7 +337,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (blockCallParams == null) {
       blockCallParams = Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_callParam).stream()
         .map(CallParamContext.class::cast)
-        .collect(Collectors.toUnmodifiableList());
+        .toList();
     }
     return blockCallParams;
   }
@@ -372,7 +368,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
   }
 
   private void clearCodeBlockFields() {
-    codeBlock = null;
+    codeBlock = new BSLParser.CodeBlockContext(null, 0);
     blockRange = null;
     blockAssignments = null;
     blockBreakers = null;
@@ -381,7 +377,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
 
   private static String getFullIdentifier(String firstIdentifier, List<? extends BSLParser.ModifierContext> modifiers) {
     return modifiers.stream()
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .reduce(firstIdentifier, (x, y) -> x.concat(".").concat(y))
       .replace("..", ".");
   }

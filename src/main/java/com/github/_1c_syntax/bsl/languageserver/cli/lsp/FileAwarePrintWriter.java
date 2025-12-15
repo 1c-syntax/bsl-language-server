@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -47,6 +47,7 @@ import java.util.Objects;
 public class FileAwarePrintWriter extends PrintWriter {
 
   private boolean isEmpty = true;
+  @Nullable
   private File file;
 
   /**

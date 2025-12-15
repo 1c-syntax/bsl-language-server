@@ -29,12 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.IntervalSet;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ErrorNodeImpl;
-import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
@@ -54,10 +50,9 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
   @Override
   public void visitErrorNode(ErrorNode node) {
-
-    if (((ErrorNodeImpl) node).symbol.getTokenIndex() == -1) {
+    if (node.getSymbol().getTokenIndex() == -1) {
       diagnosticStorage.addDiagnostic(
-        ((BSLParserRuleContext) node.getParent()).getStart(),
+        ((ParserRuleContext) node.getParent()).getStart(),
         info.getMessage(node.getText())
       );
     }
@@ -65,22 +60,22 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
   @Override
   public void enterFile(BSLParser.FileContext ctx) {
-    BSLParser.FileContext ast = this.documentContext.getAst();
-    String initialExpectedString = info.getResourceString("expectedTokens") + " ";
+    var ast = this.documentContext.getAst();
+    var initialExpectedString = info.getResourceString("expectedTokens") + " ";
 
     Trees.getDescendants(ast).stream()
-      .filter(parseTree -> !(parseTree instanceof TerminalNodeImpl))
-      .map(parseTree -> (BSLParserRuleContext) parseTree)
+      .filter(ParserRuleContext.class::isInstance)
+      .map(ParserRuleContext.class::cast)
       .filter(node -> node.exception != null)
-      .forEach((BSLParserRuleContext node) -> {
-        IntervalSet expectedTokens = node.exception.getExpectedTokens();
-        StringJoiner sj = new StringJoiner(", ");
+      .forEach((ParserRuleContext node) -> {
+        var expectedTokens = node.exception.getExpectedTokens();
+        var sj = new StringJoiner(", ");
         expectedTokens.getIntervals().stream()
-          .flatMapToInt(interval -> IntStream.range(interval.a, interval.b))
+          .flatMapToInt(interval -> IntStream.rangeClosed(interval.a, interval.b))
           .mapToObj(ParseErrorDiagnostic::getTokenName)
           .forEachOrdered(sj::add);
 
-        Token errorToken = node.exception.getOffendingToken();
+        var errorToken = node.exception.getOffendingToken();
         if (errorToken.getType() == EOF) {
           errorToken = node.getStart();
         }

@@ -28,8 +28,22 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
 
+/**
+ * Интерфейс для диагностик, предоставляющих быстрые исправления.
+ * <p>
+ * Диагностика, реализующая этот интерфейс, может предложить автоматические исправления
+ * для найденных проблем в коде.
+ */
 public interface QuickFixProvider {
 
+  /**
+   * Получить список быстрых исправлений для диагностик.
+   *
+   * @param diagnostics Список диагностик для исправления
+   * @param params Параметры запроса code action
+   * @param documentContext Контекст документа
+   * @return Список code actions для автоматического исправления проблем
+   */
   List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,

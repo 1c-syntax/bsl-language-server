@@ -34,6 +34,12 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
+/**
+ * Вычислитель запросов СДБЛ в коде.
+ * <p>
+ * Извлекает запросы на языке СДБЛ (язык запросов 1С) из строковых литералов
+ * и преобразует их в токенизированное представление.
+ */
 public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<SDBLTokenizer>> {
 
   /**

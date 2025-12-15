@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.util.Preconditions;
 import org.eclipse.lsp4j.util.Positions;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -53,10 +54,24 @@ public final class Ranges {
     return create().equals(range);
   }
 
+  /**
+   * Создать пустой диапазон (0,0,0,0).
+   *
+   * @return Пустой диапазон
+   */
   public Range create() {
     return create(0, 0, 0, 0);
   }
 
+  /**
+   * Создать диапазон с указанными координатами.
+   *
+   * @param startLine Начальная строка
+   * @param startChar Начальный символ
+   * @param endLine Конечная строка
+   * @param endChar Конечный символ
+   * @return Созданный диапазон
+   */
   public Range create(int startLine, int startChar, int endLine, int endChar) {
     return new Range(new Position(startLine, startChar), new Position(endLine, endChar));
   }
@@ -73,15 +88,35 @@ public final class Ranges {
     return new Range(new Position(lineNo, startChar), new Position(lineNo, endChar));
   }
 
+  /**
+   * Создать диапазон из контекста правила парсера.
+   *
+   * @param ruleContext Контекст правила
+   * @return Диапазон, покрывающий весь контекст
+   */
   public Range create(ParserRuleContext ruleContext) {
     return create(ruleContext.getStart(), ruleContext.getStop());
   }
 
+  /**
+   * Создать диапазон от начала одного контекста до конца другого.
+   *
+   * @param startCtx Начальный контекст
+   * @param endCtx Конечный контекст
+   * @return Диапазон между контекстами
+   */
   public Range create(ParserRuleContext startCtx, ParserRuleContext endCtx) {
     return create(startCtx.getStart(), endCtx.getStop());
   }
 
-  public Range create(Token startToken, Token endToken) {
+  /**
+   * Создать диапазон из токенов.
+   *
+   * @param startToken Начальный токен
+   * @param endToken Конечный токен
+   * @return Диапазон между токенами
+   */
+  public Range create(Token startToken, @Nullable Token endToken) {
     int startLine = startToken.getLine() - 1;
     int startChar = startToken.getCharPositionInLine();
     var tokenToCalculateEnd = endToken == null ? startToken : endToken;
@@ -96,6 +131,12 @@ public final class Ranges {
     return create(startLine, startChar, endLine, endChar);
   }
 
+  /**
+   * Создать диапазон из списка токенов.
+   *
+   * @param tokens Список токенов
+   * @return Диапазон от первого до последнего токена
+   */
   public Range create(List<Token> tokens) {
     if (tokens.isEmpty()) {
       return Ranges.create();
@@ -106,14 +147,33 @@ public final class Ranges {
     return Ranges.create(firstElement, lastElement);
   }
 
+  /**
+   * Создать диапазон из терминального узла.
+   *
+   * @param terminalNode Терминальный узел
+   * @return Диапазон узла
+   */
   public Range create(TerminalNode terminalNode) {
     return create(terminalNode.getSymbol());
   }
 
+  /**
+   * Создать диапазон между двумя терминальными узлами.
+   *
+   * @param startTerminalNode Начальный узел
+   * @param stopTerminalNode Конечный узел
+   * @return Диапазон между узлами
+   */
   public Range create(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
     return create(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
 
+  /**
+   * Создать диапазон из токена.
+   *
+   * @param token Токен
+   * @return Диапазон токена
+   */
   public Range create(Token token) {
     int startLine = token.getLine() - 1;
     int startChar = token.getCharPositionInLine();

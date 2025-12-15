@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -78,14 +78,14 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     ));
 
     List<ComplexitySecondaryLocation> secondaryLocations =
-      documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
+      documentContext.getCognitiveComplexityData().methodsComplexitySecondaryLocations().get(methodSymbol);
 
     secondaryLocations.stream()
       .map((ComplexitySecondaryLocation secondaryLocation) ->
         RelatedInformation.create(
           documentContext.getUri(),
-          secondaryLocation.getRange(),
-          secondaryLocation.getMessage()
+          secondaryLocation.range(),
+          secondaryLocation.message()
         )
       )
       .collect(Collectors.toCollection(() -> relatedInformation));
@@ -97,7 +97,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> optionalMethodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
-      Integer methodComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity().get(methodSymbol);
+      Integer methodComplexity = documentContext.getCognitiveComplexityData().methodsComplexity().get(methodSymbol);
 
       if (methodComplexity > complexityThreshold) {
         diagnosticStorage.addDiagnostic(
@@ -125,12 +125,12 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private void checkFileCodeBlock(BSLParserRuleContext ctx) {
+  private void checkFileCodeBlock(ParserRuleContext ctx) {
     if (!checkModuleBody) {
       return;
     }
 
-    Integer fileCodeBlockComplexity = documentContext.getCognitiveComplexityData().getFileCodeBlockComplexity();
+    Integer fileCodeBlockComplexity = documentContext.getCognitiveComplexityData().fileCodeBlockComplexity();
 
     if (fileCodeBlockComplexity > complexityThreshold) {
 
@@ -143,14 +143,14 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
       ));
 
       List<ComplexitySecondaryLocation> secondaryLocations =
-        documentContext.getCognitiveComplexityData().getFileBlockComplexitySecondaryLocations();
+        documentContext.getCognitiveComplexityData().fileBlockComplexitySecondaryLocations();
 
       secondaryLocations.stream()
         .map((ComplexitySecondaryLocation secondaryLocation) ->
           RelatedInformation.create(
             documentContext.getUri(),
-            secondaryLocation.getRange(),
-            secondaryLocation.getMessage()
+            secondaryLocation.range(),
+            secondaryLocation.message()
           )
         )
         .collect(Collectors.toCollection(() -> relatedInformation));

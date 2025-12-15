@@ -27,10 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
@@ -68,7 +69,7 @@ public class UsingExternalCodeToolsDiagnostic extends AbstractVisitorDiagnostic 
     return super.visitComplexIdentifier(ctx);
   }
 
-  private void checkUseExternalCodeTools(BSLParserRuleContext ctx, TerminalNode identifier) {
+  private void checkUseExternalCodeTools(ParserRuleContext ctx, @Nullable TerminalNode identifier) {
     if (identifier != null
       && externalCodeToolsName.matcher(identifier.getText()).matches()
       && Trees.findAllRuleNodes(ctx, BSLParser.RULE_methodCall)

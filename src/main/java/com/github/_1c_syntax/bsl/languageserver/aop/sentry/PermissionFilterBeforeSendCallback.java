@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.SentryOptions.BeforeSendCallback;
@@ -38,6 +37,7 @@ import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
@@ -70,7 +70,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
   private final AtomicBoolean questionWasSend = new AtomicBoolean(false);
 
   @Override
-  public SentryEvent execute(SentryEvent event, Hint hint) {
+  public @Nullable SentryEvent execute(SentryEvent event, Hint hint) {
     if (sendToSentry()) {
       return event;
     }
@@ -131,8 +131,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     return languageClient.showMessageRequest(requestParams);
   }
 
-  @Nullable
-  private MessageActionItem waitForPermission(CompletableFuture<MessageActionItem> sendQuestion) {
+  @Nullable private MessageActionItem waitForPermission(CompletableFuture<MessageActionItem> sendQuestion) {
     try {
       return sendQuestion.get();
     } catch (InterruptedException e) {

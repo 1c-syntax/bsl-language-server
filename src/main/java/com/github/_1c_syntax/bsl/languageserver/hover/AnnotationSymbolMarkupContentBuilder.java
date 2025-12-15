@@ -78,10 +78,10 @@ public class AnnotationSymbolMarkupContentBuilder implements MarkupContentBuilde
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, examplesSection);
 
     // варианты вызова
-    String callOptionsSection = descriptionFormatter.getCallOptionsSection(methodSymbol);
+    var callOptionsSection = descriptionFormatter.getCallOptionsSection(methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
 
-    String content = markupBuilder.toString();
+    var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }

@@ -29,8 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -83,7 +83,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
     return super.visitMethodCall(ctx);
   }
 
-  private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, BSLParserRuleContext node) {
+  private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, ParserRuleContext node) {
     var parameters = doCallContext.callParamList().callParam();
     var methodCall = new MethodCall();
     methodCall.parameters = new Boolean[parameters.size()];
