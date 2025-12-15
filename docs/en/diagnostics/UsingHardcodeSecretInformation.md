@@ -10,7 +10,7 @@ It is prohibited to store any confidential information in the code. The confiden
 
 If the project uses SSL sub-system, then passwords should be stored in safe storage.
 
-### Addition
+### Additionally
 
 Strings with all symbols `*` are excluded from the check:
 
@@ -33,6 +33,6 @@ Passwords = CommonModule.ReadDataFromSafeStorage("StoringIdentifier", "Password"
 Password = Passwords.Password;
 ```
 
-## Sources
+## Reference
 
-* [Standard: Store passwords safe (RU)](https://its.1c.ru/db/v8std#content:740:hdoc)
+* [Standard: Store passwords safe](https://its.1c.ru/db/v8std#content:740:hdoc)
