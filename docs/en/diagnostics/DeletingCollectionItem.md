@@ -3,7 +3,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Don't delete elements of collection when iterating through collection using the operator **For each ... In ... Do**. Because it change index of next element.
+Don't delete elements of collection %s when iterating through collection using the operator **For each ... In ... Do**. Because it change index of next element.
 
 Example:
 
