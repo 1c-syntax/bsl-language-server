@@ -21,4 +21,4 @@ The refusal to support the launch of configuration in the ordinary application a
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Source: [Standard: General Configuration Requirements (RU)](https://its.1c.ru/db/v8std#content:467:hdoc)
+* Source: [Standard: General Configuration Requirements](https://its.1c.ru/db/v8std#content:467:hdoc)
