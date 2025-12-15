@@ -45,12 +45,12 @@ CI Recommendations:
 
 ```yaml
 - name: Cache BSL LS Typo
-uses: actions/cache@v3
-with:
-path: .bsl-ls-cache
-key: ${{ runner.os }}-bsl-typo-${{ hashFiles('**/*.bsl') }}
-restore-keys: |
-${{ runner.os }}-bsl-typo-
+  uses: actions/cache@v3
+  with:
+    path: .bsl-ls-cache
+    key: ${{ runner.os }}-bsl-typo-${{ hashFiles('**/*.bsl') }}
+    restore-keys: |
+      ${{ runner.os }}-bsl-typo-
 ```
 
 - GitLab CI
@@ -58,13 +58,13 @@ ${{ runner.os }}-bsl-typo-
 
 ```yaml
 variables:
-APP_CACHE_FULLPATH: ".bsl-ls-cache"
+  APP_CACHE_FULLPATH: ".bsl-ls-cache"
 
 cache:
-key: "bsl-ls-typo-cache"
-paths:
-- .bsl-ls-cache/
-policy: pull-push
+  key: "bsl-ls-typo-cache"
+  paths:
+  - .bsl-ls-cache/
+  policy: pull-push
 ```
 
 - If needed, set a unique `key` for different branches/runners.
