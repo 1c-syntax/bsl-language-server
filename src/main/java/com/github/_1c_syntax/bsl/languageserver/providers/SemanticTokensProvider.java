@@ -741,15 +741,17 @@ public class SemanticTokensProvider {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        addSdblToken(entries, token, token.getLine() - 1);  // ANTLR uses 1-indexed, convert to 0-indexed for Range
+        addSdblToken(entries, token);
       }
     }
   }
 
-  private void addSdblToken(List<TokenEntry> entries, Token token, int zeroIndexedLine) {
+  private void addSdblToken(List<TokenEntry> entries, Token token) {
     var tokenType = token.getType();
     var semanticTypeAndModifiers = getSdblTokenTypeAndModifiers(tokenType);
     if (semanticTypeAndModifiers != null) {
+      // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
+      int zeroIndexedLine = token.getLine() - 1;
       // Create range with corrected line number
       var range = new Range(
         new Position(zeroIndexedLine, token.getCharPositionInLine()),
