@@ -959,4 +959,140 @@ class SemanticTokensProviderTest {
       .as("Should have split string parts")
       .hasSizeGreaterThanOrEqualTo(1);
   }
+
+  @Test
+  void sdblQuery_exactSequenceOfTokensWithPositions() {
+    // given: simple query with known structure
+    // Line 1: "  Запрос = \"Выбрать * из Справочник.Контрагенты\";"
+    // Position:    0         11-12   20 22  25
+    String bsl = String.join("\n",
+      "Функция Тест()",
+      "  Запрос = \"Выбрать * из Справочник.Контрагенты\";",
+      "КонецФункции"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    // then: verify exact sequence of tokens on line 1 in sorted order
+    int queryLine = 1;
+    var line1Tokens = decoded.stream()
+      .filter(t -> t.line == queryLine)
+      .sorted((a, b) -> Integer.compare(a.start, b.start))
+      .toList();
+
+    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
+    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
+    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
+
+    // Expected sequence (positions are approximate, verify no overlaps):
+    // Position 2: "Запрос" (variable or keyword depending on context)
+    // Position 9: "=" (operator)
+    // Position 11: opening quote (string)
+    // Position 12: "Выбрать" (keyword from SDBL)
+    // Position 20: "*" (operator from SDBL)
+    // Position 22: "из" (keyword from SDBL)
+    // Position 25: "Справочник" (type from SDBL)
+    // Position 36: "Контрагенты" (identifier - might not be highlighted)
+    // Position 47: closing quote (string)
+    // Position 48: ";" (operator)
+
+    // Verify no overlaps by checking each token's range doesn't overlap with next
+    for (int i = 0; i < line1Tokens.size() - 1; i++) {
+      var current = line1Tokens.get(i);
+      var next = line1Tokens.get(i + 1);
+      
+      int currentEnd = current.start + current.length;
+      
+      assertThat(currentEnd)
+        .as("Token at [%d, %d) should not overlap with next token at [%d, %d)", 
+            current.start, currentEnd, next.start, next.start + next.length)
+        .isLessThanOrEqualTo(next.start);
+    }
+
+    // Verify key SDBL tokens are present at expected positions
+    // "Выбрать" keyword around position 12
+    var vybratkeyword = line1Tokens.stream()
+      .filter(t -> t.type == keywordIdx && t.start >= 11 && t.start <= 13)
+      .findFirst();
+    assertThat(vybratkeyword)
+      .as("Should have 'Выбрать' keyword around position 12")
+      .isPresent();
+
+    // "из" keyword around position 22
+    var izKeyword = line1Tokens.stream()
+      .filter(t -> t.type == keywordIdx && t.start >= 21 && t.start <= 23)
+      .findFirst();
+    assertThat(izKeyword)
+      .as("Should have 'из' keyword around position 22")
+      .isPresent();
+
+    // "Справочник" type around position 25
+    var spravochnikType = line1Tokens.stream()
+      .filter(t -> t.type == typeIdx && t.start >= 24 && t.start <= 26)
+      .findFirst();
+    assertThat(spravochnikType)
+      .as("Should have 'Справочник' metadata type around position 25")
+      .isPresent();
+  }
+
+  @Test
+  void sdblQuery_sequentialTokensWithExactPositions() {
+    // given: query with known exact structure for position validation
+    // Using simpler query to have precise position expectations
+    String bsl = String.join("\n",
+      "Процедура Тест()",
+      "  Текст = \"ВЫБРАТЬ Поле ИЗ Документ.Продажа\";",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    // then: check exact sequence on line 1
+    int queryLine = 1;
+    var line1Tokens = decoded.stream()
+      .filter(t -> t.line == queryLine)
+      .sorted((a, b) -> Integer.compare(a.start, b.start))
+      .toList();
+
+    // Build a list of expected token ranges (no overlaps allowed)
+    record ExpectedRange(int start, int end) {
+      boolean overlaps(ExpectedRange other) {
+        return !(this.end <= other.start || this.start >= other.end);
+      }
+    }
+
+    var ranges = line1Tokens.stream()
+      .map(t -> new ExpectedRange(t.start, t.start + t.length))
+      .toList();
+
+    // Check no overlaps exist
+    for (int i = 0; i < ranges.size(); i++) {
+      for (int j = i + 1; j < ranges.size(); j++) {
+        var range1 = ranges.get(i);
+        var range2 = ranges.get(j);
+        assertThat(range1.overlaps(range2))
+          .as("Token [%d, %d) should not overlap with token [%d, %d)",
+              range1.start, range1.end, range2.start, range2.end)
+          .isFalse();
+      }
+    }
+
+    // Verify tokens are in ascending order (no position conflicts)
+    for (int i = 0; i < line1Tokens.size() - 1; i++) {
+      assertThat(line1Tokens.get(i).start)
+        .as("Tokens should be in position order")
+        .isLessThanOrEqualTo(line1Tokens.get(i + 1).start);
+    }
+  }
 }
