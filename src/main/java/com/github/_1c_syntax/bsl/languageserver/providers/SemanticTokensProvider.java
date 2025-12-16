@@ -581,8 +581,105 @@ public class SemanticTokensProvider {
       return;
     }
 
-    // Simply add all SDBL tokens - they will override BSL string tokens via de-duplication
-    // in toDeltaEncoded which uses a Set to remove duplicates by (line, start) position
+    // Collect all SDBL tokens grouped by line
+    var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
+    for (var query : queries) {
+      for (Token token : query.getTokens()) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        sdblTokensByLine.computeIfAbsent(token.getLine(), k -> new ArrayList<>()).add(token);
+      }
+    }
+
+    if (sdblTokensByLine.isEmpty()) {
+      return;
+    }
+
+    // Collect BSL string tokens to identify overlaps
+    var bslStringTokens = documentContext.getTokensFromDefaultChannel().stream()
+      .filter(token -> STRING_TYPES.contains(token.getType()))
+      .collect(java.util.stream.Collectors.toList());
+
+    // Find and remove overlapping STRING tokens, split them around SDBL tokens
+    var stringTokensToRemove = new HashSet<TokenEntry>();
+    var stringTokensToAdd = new ArrayList<TokenEntry>();
+
+    for (Token bslString : bslStringTokens) {
+      var stringRange = Ranges.create(bslString);
+      int stringLine = stringRange.getStart().getLine();
+
+      var sdblTokensOnLine = sdblTokensByLine.get(stringLine);
+      if (sdblTokensOnLine == null || sdblTokensOnLine.isEmpty()) {
+        continue;
+      }
+
+      // Check if any SDBL tokens overlap with this string token
+      var overlappingTokens = sdblTokensOnLine.stream()
+        .filter(sdblToken -> {
+          var sdblRange = Ranges.create(sdblToken);
+          return Ranges.containsRange(stringRange, sdblRange);
+        })
+        .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
+        .toList();
+
+      if (overlappingTokens.isEmpty()) {
+        continue;
+      }
+
+      // Mark the original STRING token for removal
+      int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
+      if (stringTypeIdx >= 0) {
+        var stringEntry = new TokenEntry(
+          stringLine,
+          stringRange.getStart().getCharacter(),
+          stringRange.getEnd().getCharacter() - stringRange.getStart().getCharacter(),
+          stringTypeIdx,
+          0
+        );
+        stringTokensToRemove.add(stringEntry);
+      }
+
+      // Split the STRING token around SDBL tokens
+      int stringStart = stringRange.getStart().getCharacter();
+      int stringEnd = stringRange.getEnd().getCharacter();
+      int currentPos = stringStart;
+
+      for (Token sdblToken : overlappingTokens) {
+        int sdblStart = sdblToken.getCharPositionInLine();
+        int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
+
+        // Add string part before SDBL token
+        if (currentPos < sdblStart && stringTypeIdx >= 0) {
+          stringTokensToAdd.add(new TokenEntry(
+            stringLine,
+            currentPos,
+            sdblStart - currentPos,
+            stringTypeIdx,
+            0
+          ));
+        }
+
+        currentPos = sdblEnd;
+      }
+
+      // Add final string part after last SDBL token
+      if (currentPos < stringEnd && stringTypeIdx >= 0) {
+        stringTokensToAdd.add(new TokenEntry(
+          stringLine,
+          currentPos,
+          stringEnd - currentPos,
+          stringTypeIdx,
+          0
+        ));
+      }
+    }
+
+    // Remove overlapping STRING tokens and add split parts
+    entries.removeAll(stringTokensToRemove);
+    entries.addAll(stringTokensToAdd);
+
+    // Add all SDBL tokens
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
