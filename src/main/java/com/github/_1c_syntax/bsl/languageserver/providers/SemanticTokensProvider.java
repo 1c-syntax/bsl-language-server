@@ -163,6 +163,7 @@ public class SemanticTokensProvider {
 
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
+  private static final String[] DEFAULT_LIBRARY = new String[]{SemanticTokenModifiers.DefaultLibrary};
 
   private final SemanticTokensLegend legend;
   private final ReferenceResolver referenceResolver;
@@ -692,34 +693,42 @@ public class SemanticTokensProvider {
 
   private void addSdblToken(List<TokenEntry> entries, Token token) {
     var tokenType = token.getType();
-    String semanticType = getSdblTokenType(tokenType);
-    if (semanticType != null) {
-      addRange(entries, Ranges.create(token), semanticType);
+    var semanticTypeAndModifiers = getSdblTokenTypeAndModifiers(tokenType);
+    if (semanticTypeAndModifiers != null) {
+      addRange(entries, Ranges.create(token), semanticTypeAndModifiers.type, semanticTypeAndModifiers.modifiers);
     }
   }
 
   @Nullable
-  private String getSdblTokenType(int tokenType) {
+  private SdblTokenTypeAndModifiers getSdblTokenTypeAndModifiers(int tokenType) {
     if (SDBL_KEYWORDS.contains(tokenType)) {
-      return SemanticTokenTypes.Keyword;
-    } else if (SDBL_FUNCTIONS.contains(tokenType) || SDBL_METADATA_TYPES.contains(tokenType) 
-        || SDBL_VIRTUAL_TABLES.contains(tokenType) || SDBL_EDS.contains(tokenType)) {
-      // Functions, metadata types, virtual tables, and EDS as Type (closest to "keyword light")
-      return SemanticTokenTypes.Type;
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
+    } else if (SDBL_FUNCTIONS.contains(tokenType)) {
+      // Functions as Function type with defaultLibrary modifier (built-in SDBL functions)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Function, DEFAULT_LIBRARY);
+    } else if (SDBL_METADATA_TYPES.contains(tokenType) || SDBL_VIRTUAL_TABLES.contains(tokenType) || SDBL_EDS.contains(tokenType)) {
+      // Metadata types, virtual tables, and EDS as Type with defaultLibrary modifier (built-in SDBL types)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Type, DEFAULT_LIBRARY);
     } else if (SDBL_LITERALS.contains(tokenType)) {
-      return SemanticTokenTypes.Keyword;
+      // Literals as Keyword (matching YAML: constant.language.sdbl, no Constant type in LSP)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
     } else if (SDBL_OPERATORS.contains(tokenType)) {
-      return SemanticTokenTypes.Operator;
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Operator, NO_MODIFIERS);
     } else if (SDBL_STRINGS.contains(tokenType)) {
-      return SemanticTokenTypes.String;
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.String, NO_MODIFIERS);
     } else if (SDBL_COMMENTS.contains(tokenType)) {
-      return SemanticTokenTypes.Comment;
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Comment, NO_MODIFIERS);
     } else if (SDBL_PARAMETERS.contains(tokenType)) {
-      return SemanticTokenTypes.Parameter;
+      // Parameters as Parameter (matching YAML: variable.parameter.sdbl)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Parameter, NO_MODIFIERS);
     } else if (SDBL_NUMBERS.contains(tokenType)) {
-      return SemanticTokenTypes.Number;
+      // Numbers as Number (matching YAML: constant.numeric.sdbl)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Number, NO_MODIFIERS);
     }
     return null;
+  }
+
+  private record SdblTokenTypeAndModifiers(String type, String[] modifiers) {
   }
 
   // SDBL token type factory methods
