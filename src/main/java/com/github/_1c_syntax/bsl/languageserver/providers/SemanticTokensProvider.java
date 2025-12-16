@@ -42,11 +42,13 @@ import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.UseContext;
+import com.github._1c_syntax.bsl.parser.SDBLLexer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.Tokenizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -143,6 +145,23 @@ public class SemanticTokensProvider {
     BSLLexer.NULL
   );
 
+  // SDBL (Query Language) token types
+  private static final Set<Integer> SDBL_KEYWORDS = createSdblKeywords();
+  private static final Set<Integer> SDBL_FUNCTIONS = createSdblFunctions();
+  private static final Set<Integer> SDBL_METADATA_TYPES = createSdblMetadataTypes();
+  private static final Set<Integer> SDBL_VIRTUAL_TABLES = createSdblVirtualTables();
+  private static final Set<Integer> SDBL_LITERALS = createSdblLiterals();
+  private static final Set<Integer> SDBL_OPERATORS = createSdblOperators();
+  private static final Set<Integer> SDBL_STRINGS = Set.of(SDBLLexer.STR);
+  private static final Set<Integer> SDBL_COMMENTS = Set.of(SDBLLexer.LINE_COMMENT);
+  private static final Set<Integer> SDBL_PARAMETERS = Set.of(SDBLLexer.AMPERSAND, SDBLLexer.PARAMETER_IDENTIFIER);
+  private static final Set<Integer> SDBL_EDS = Set.of(
+    SDBLLexer.EDS_CUBE,
+    SDBLLexer.EDS_TABLE,
+    SDBLLexer.EDS_CUBE_DIMTABLE
+  );
+  private static final Set<Integer> SDBL_NUMBERS = Set.of(SDBLLexer.DECIMAL, SDBLLexer.FLOAT);
+
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
 
@@ -211,7 +230,10 @@ public class SemanticTokensProvider {
     // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
     addLexicalTokens(tokensFromDefaultChannel, entries);
 
-    // 5) Build delta-encoded data
+    // 5) SDBL (Query Language) tokens
+    addSdblTokens(documentContext, entries);
+
+    // 6) Build delta-encoded data
     List<Integer> data = toDeltaEncoded(entries);
     return new SemanticTokens(data);
   }
@@ -552,6 +574,317 @@ public class SemanticTokensProvider {
         addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
       }
     }
+  }
+
+  private void addSdblTokens(DocumentContext documentContext, List<TokenEntry> entries) {
+    var queries = documentContext.getQueries();
+    if (queries.isEmpty()) {
+      return;
+    }
+
+    // Collect all SDBL tokens grouped by line
+    var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
+    for (var query : queries) {
+      for (Token token : query.getTokens()) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        sdblTokensByLine.computeIfAbsent(token.getLine(), k -> new ArrayList<>()).add(token);
+      }
+    }
+
+    // Collect BSL string tokens that might overlap with SDBL tokens
+    var bslStringTokens = documentContext.getTokensFromDefaultChannel().stream()
+      .filter(token -> STRING_TYPES.contains(token.getType()))
+      .collect(java.util.stream.Collectors.groupingBy(Token::getLine));
+
+    // Process SDBL tokens and split BSL strings around them
+    sdblTokensByLine.forEach((line, sdblTokens) -> {
+      var bslStrings = bslStringTokens.get(line);
+      if (bslStrings == null || bslStrings.isEmpty()) {
+        // No BSL strings on this line, just add SDBL tokens
+        sdblTokens.forEach(token -> addSdblToken(entries, token));
+        return;
+      }
+
+      // Sort SDBL tokens by character position
+      sdblTokens.sort(Comparator.comparingInt(Token::getCharPositionInLine));
+
+      // For each BSL string on this line, check if it overlaps with SDBL tokens
+      for (Token bslString : bslStrings) {
+        var stringRange = Ranges.create(bslString);
+        var overlappingTokens = sdblTokens.stream()
+          .filter(sdblToken -> {
+            var sdblRange = Ranges.create(sdblToken);
+            return Ranges.containsRange(stringRange, sdblRange);
+          })
+          .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
+          .toList();
+
+        if (overlappingTokens.isEmpty()) {
+          continue;
+        }
+
+        // Split the BSL string around SDBL tokens
+        int lineNum = stringRange.getStart().getLine();
+        int stringStart = stringRange.getStart().getCharacter();
+        int stringEnd = stringRange.getEnd().getCharacter();
+        int currentPos = stringStart;
+
+        for (Token sdblToken : overlappingTokens) {
+          int sdblStart = sdblToken.getCharPositionInLine();
+          int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
+
+          // Add string part before SDBL token
+          if (currentPos < sdblStart) {
+            var partRange = new Range(
+              new Position(lineNum, currentPos),
+              new Position(lineNum, sdblStart)
+            );
+            addRange(entries, partRange, SemanticTokenTypes.String);
+          }
+
+          // Add SDBL token
+          addSdblToken(entries, sdblToken);
+
+          currentPos = sdblEnd;
+        }
+
+        // Add final string part after last SDBL token
+        if (currentPos < stringEnd) {
+          var partRange = new Range(
+            new Position(lineNum, currentPos),
+            new Position(lineNum, stringEnd)
+          );
+          addRange(entries, partRange, SemanticTokenTypes.String);
+        }
+      }
+    });
+  }
+
+  private void addSdblToken(List<TokenEntry> entries, Token token) {
+    var tokenType = token.getType();
+    String semanticType = getSdblTokenType(tokenType);
+    if (semanticType != null) {
+      addRange(entries, Ranges.create(token), semanticType);
+    }
+  }
+
+  @Nullable
+  private String getSdblTokenType(int tokenType) {
+    if (SDBL_KEYWORDS.contains(tokenType)) {
+      return SemanticTokenTypes.Keyword;
+    } else if (SDBL_FUNCTIONS.contains(tokenType) || SDBL_METADATA_TYPES.contains(tokenType) 
+        || SDBL_VIRTUAL_TABLES.contains(tokenType) || SDBL_EDS.contains(tokenType)) {
+      // Functions, metadata types, virtual tables, and EDS as Type (closest to "keyword light")
+      return SemanticTokenTypes.Type;
+    } else if (SDBL_LITERALS.contains(tokenType)) {
+      return SemanticTokenTypes.Keyword;
+    } else if (SDBL_OPERATORS.contains(tokenType)) {
+      return SemanticTokenTypes.Operator;
+    } else if (SDBL_STRINGS.contains(tokenType)) {
+      return SemanticTokenTypes.String;
+    } else if (SDBL_COMMENTS.contains(tokenType)) {
+      return SemanticTokenTypes.Comment;
+    } else if (SDBL_PARAMETERS.contains(tokenType)) {
+      return SemanticTokenTypes.Parameter;
+    } else if (SDBL_NUMBERS.contains(tokenType)) {
+      return SemanticTokenTypes.Number;
+    }
+    return null;
+  }
+
+  // SDBL token type factory methods
+  private static Set<Integer> createSdblKeywords() {
+    return Set.of(
+      SDBLLexer.ALL,
+      SDBLLexer.ALLOWED,
+      SDBLLexer.AND,
+      SDBLLexer.AS,
+      SDBLLexer.ASC,
+      SDBLLexer.AUTOORDER,
+      SDBLLexer.BETWEEN,
+      SDBLLexer.BY_EN,
+      SDBLLexer.CASE,
+      SDBLLexer.CAST,
+      SDBLLexer.DESC,
+      SDBLLexer.DISTINCT,
+      SDBLLexer.DROP,
+      SDBLLexer.ELSE,
+      SDBLLexer.END,
+      SDBLLexer.ESCAPE,
+      SDBLLexer.FOR,
+      SDBLLexer.FROM,
+      SDBLLexer.FULL,
+      SDBLLexer.GROUP,
+      SDBLLexer.HAVING,
+      SDBLLexer.HIERARCHY,
+      SDBLLexer.HIERARCHY_FOR_IN,
+      SDBLLexer.IN,
+      SDBLLexer.INDEX,
+      SDBLLexer.INNER,
+      SDBLLexer.INTO,
+      SDBLLexer.IS,
+      SDBLLexer.ISNULL,
+      SDBLLexer.JOIN,
+      SDBLLexer.LEFT,
+      SDBLLexer.LIKE,
+      SDBLLexer.NOT,
+      SDBLLexer.OF,
+      SDBLLexer.ONLY,
+      SDBLLexer.ON_EN,
+      SDBLLexer.OR,
+      SDBLLexer.ORDER,
+      SDBLLexer.OVERALL,
+      SDBLLexer.OUTER,
+      SDBLLexer.PERIODS,
+      SDBLLexer.PO_RU,
+      SDBLLexer.REFS,
+      SDBLLexer.RIGHT,
+      SDBLLexer.SELECT,
+      SDBLLexer.SET,
+      SDBLLexer.THEN,
+      SDBLLexer.TOP,
+      SDBLLexer.TOTALS,
+      SDBLLexer.UNION,
+      SDBLLexer.UPDATE,
+      SDBLLexer.WHEN,
+      SDBLLexer.WHERE,
+      SDBLLexer.EMPTYREF,
+      SDBLLexer.GROUPEDBY,
+      SDBLLexer.GROUPING
+    );
+  }
+
+  private static Set<Integer> createSdblFunctions() {
+    return Set.of(
+      SDBLLexer.AVG,
+      SDBLLexer.BEGINOFPERIOD,
+      SDBLLexer.BOOLEAN,
+      SDBLLexer.COUNT,
+      SDBLLexer.DATE,
+      SDBLLexer.DATEADD,
+      SDBLLexer.DATEDIFF,
+      SDBLLexer.DATETIME,
+      SDBLLexer.DAY,
+      SDBLLexer.DAYOFYEAR,
+      SDBLLexer.EMPTYTABLE,
+      SDBLLexer.ENDOFPERIOD,
+      SDBLLexer.HALFYEAR,
+      SDBLLexer.HOUR,
+      SDBLLexer.MAX,
+      SDBLLexer.MIN,
+      SDBLLexer.MINUTE,
+      SDBLLexer.MONTH,
+      SDBLLexer.NUMBER,
+      SDBLLexer.QUARTER,
+      SDBLLexer.PRESENTATION,
+      SDBLLexer.RECORDAUTONUMBER,
+      SDBLLexer.REFPRESENTATION,
+      SDBLLexer.SECOND,
+      SDBLLexer.STRING,
+      SDBLLexer.SUBSTRING,
+      SDBLLexer.SUM,
+      SDBLLexer.TENDAYS,
+      SDBLLexer.TYPE,
+      SDBLLexer.VALUE,
+      SDBLLexer.VALUETYPE,
+      SDBLLexer.WEEK,
+      SDBLLexer.WEEKDAY,
+      SDBLLexer.YEAR,
+      SDBLLexer.INT,
+      SDBLLexer.ACOS,
+      SDBLLexer.ASIN,
+      SDBLLexer.ATAN,
+      SDBLLexer.COS,
+      SDBLLexer.SIN,
+      SDBLLexer.TAN,
+      SDBLLexer.LOG,
+      SDBLLexer.LOG10,
+      SDBLLexer.EXP,
+      SDBLLexer.POW,
+      SDBLLexer.SQRT,
+      SDBLLexer.LOWER,
+      SDBLLexer.STRINGLENGTH,
+      SDBLLexer.TRIMALL,
+      SDBLLexer.TRIML,
+      SDBLLexer.TRIMR,
+      SDBLLexer.UPPER,
+      SDBLLexer.ROUND,
+      SDBLLexer.STOREDDATASIZE,
+      SDBLLexer.UUID,
+      SDBLLexer.STRFIND,
+      SDBLLexer.STRREPLACE
+    );
+  }
+
+  private static Set<Integer> createSdblMetadataTypes() {
+    return Set.of(
+      SDBLLexer.ACCOUNTING_REGISTER_TYPE,
+      SDBLLexer.ACCUMULATION_REGISTER_TYPE,
+      SDBLLexer.BUSINESS_PROCESS_TYPE,
+      SDBLLexer.CALCULATION_REGISTER_TYPE,
+      SDBLLexer.CATALOG_TYPE,
+      SDBLLexer.CHART_OF_ACCOUNTS_TYPE,
+      SDBLLexer.CHART_OF_CALCULATION_TYPES_TYPE,
+      SDBLLexer.CHART_OF_CHARACTERISTIC_TYPES_TYPE,
+      SDBLLexer.CONSTANT_TYPE,
+      SDBLLexer.DOCUMENT_TYPE,
+      SDBLLexer.DOCUMENT_JOURNAL_TYPE,
+      SDBLLexer.ENUM_TYPE,
+      SDBLLexer.EXCHANGE_PLAN_TYPE,
+      SDBLLexer.EXTERNAL_DATA_SOURCE_TYPE,
+      SDBLLexer.FILTER_CRITERION_TYPE,
+      SDBLLexer.INFORMATION_REGISTER_TYPE,
+      SDBLLexer.SEQUENCE_TYPE,
+      SDBLLexer.TASK_TYPE
+    );
+  }
+
+  private static Set<Integer> createSdblVirtualTables() {
+    return Set.of(
+      SDBLLexer.ACTUAL_ACTION_PERIOD_VT,
+      SDBLLexer.BALANCE_VT,
+      SDBLLexer.BALANCE_AND_TURNOVERS_VT,
+      SDBLLexer.BOUNDARIES_VT,
+      SDBLLexer.DR_CR_TURNOVERS_VT,
+      SDBLLexer.EXT_DIMENSIONS_VT,
+      SDBLLexer.RECORDS_WITH_EXT_DIMENSIONS_VT,
+      SDBLLexer.SCHEDULE_DATA_VT,
+      SDBLLexer.SLICEFIRST_VT,
+      SDBLLexer.SLICELAST_VT,
+      SDBLLexer.TASK_BY_PERFORMER_VT,
+      SDBLLexer.TURNOVERS_VT
+    );
+  }
+
+  private static Set<Integer> createSdblLiterals() {
+    return Set.of(
+      SDBLLexer.TRUE,
+      SDBLLexer.FALSE,
+      SDBLLexer.UNDEFINED,
+      SDBLLexer.NULL
+    );
+  }
+
+  private static Set<Integer> createSdblOperators() {
+    return Set.of(
+      SDBLLexer.SEMICOLON,
+      SDBLLexer.PLUS,
+      SDBLLexer.MINUS,
+      SDBLLexer.MUL,
+      SDBLLexer.QUOTIENT,
+      SDBLLexer.ASSIGN,
+      SDBLLexer.LESS_OR_EQUAL,
+      SDBLLexer.LESS,
+      SDBLLexer.NOT_EQUAL,
+      SDBLLexer.GREATER_OR_EQUAL,
+      SDBLLexer.GREATER,
+      SDBLLexer.COMMA,
+      SDBLLexer.BRACE,
+      SDBLLexer.BRACE_START,
+      SDBLLexer.NUMBER_SIGH
+    );
   }
 
   private record TokenEntry(int line, int start, int length, int type, int modifiers) {
