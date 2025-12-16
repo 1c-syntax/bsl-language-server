@@ -582,84 +582,16 @@ public class SemanticTokensProvider {
       return;
     }
 
-    // Collect all SDBL tokens grouped by line
-    var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
+    // Simply add all SDBL tokens - they will override BSL string tokens via de-duplication
+    // in toDeltaEncoded which uses a Set to remove duplicates by (line, start) position
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        sdblTokensByLine.computeIfAbsent(token.getLine(), k -> new ArrayList<>()).add(token);
+        addSdblToken(entries, token);
       }
     }
-
-    // Collect BSL string tokens that might overlap with SDBL tokens
-    var bslStringTokens = documentContext.getTokensFromDefaultChannel().stream()
-      .filter(token -> STRING_TYPES.contains(token.getType()))
-      .collect(java.util.stream.Collectors.groupingBy(Token::getLine));
-
-    // Process SDBL tokens and split BSL strings around them
-    sdblTokensByLine.forEach((line, sdblTokens) -> {
-      var bslStrings = bslStringTokens.get(line);
-      if (bslStrings == null || bslStrings.isEmpty()) {
-        // No BSL strings on this line, just add SDBL tokens
-        sdblTokens.forEach(token -> addSdblToken(entries, token));
-        return;
-      }
-
-      // Sort SDBL tokens by character position
-      sdblTokens.sort(Comparator.comparingInt(Token::getCharPositionInLine));
-
-      // For each BSL string on this line, check if it overlaps with SDBL tokens
-      for (Token bslString : bslStrings) {
-        var stringRange = Ranges.create(bslString);
-        var overlappingTokens = sdblTokens.stream()
-          .filter(sdblToken -> {
-            var sdblRange = Ranges.create(sdblToken);
-            return Ranges.containsRange(stringRange, sdblRange);
-          })
-          .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
-          .toList();
-
-        if (overlappingTokens.isEmpty()) {
-          continue;
-        }
-
-        // Split the BSL string around SDBL tokens
-        int lineNum = stringRange.getStart().getLine();
-        int stringStart = stringRange.getStart().getCharacter();
-        int stringEnd = stringRange.getEnd().getCharacter();
-        int currentPos = stringStart;
-
-        for (Token sdblToken : overlappingTokens) {
-          int sdblStart = sdblToken.getCharPositionInLine();
-          int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
-
-          // Add string part before SDBL token
-          if (currentPos < sdblStart) {
-            var partRange = new Range(
-              new Position(lineNum, currentPos),
-              new Position(lineNum, sdblStart)
-            );
-            addRange(entries, partRange, SemanticTokenTypes.String);
-          }
-
-          // Add SDBL token
-          addSdblToken(entries, sdblToken);
-
-          currentPos = sdblEnd;
-        }
-
-        // Add final string part after last SDBL token
-        if (currentPos < stringEnd) {
-          var partRange = new Range(
-            new Position(lineNum, currentPos),
-            new Position(lineNum, stringEnd)
-          );
-          addRange(entries, partRange, SemanticTokenTypes.String);
-        }
-      }
-    });
   }
 
   private void addSdblToken(List<TokenEntry> entries, Token token) {
