@@ -550,13 +550,13 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries, Set<TokenPosition> stringsToSkip) {
+  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries, Set<Token> stringsToSkip) {
     for (Token token : tokens) {
       var tokenType = token.getType();
       var tokenText = Objects.toString(token.getText(), "");
       if (!tokenText.isEmpty()) {
         // Skip string tokens that contain SDBL tokens - they'll be handled by addSdblTokens
-        if (STRING_TYPES.contains(tokenType) && stringsToSkip.contains(TokenPosition.from(token))) {
+        if (STRING_TYPES.contains(tokenType) && stringsToSkip.contains(token)) {
           continue;
         }
         selectAndAddSemanticToken(entries, token, tokenType);
@@ -585,18 +585,7 @@ public class SemanticTokensProvider {
     }
   }
 
-  private record TokenPosition(int line, int start, int length) {
-    static TokenPosition from(Token token) {
-      var range = Ranges.create(token);
-      return new TokenPosition(
-        range.getStart().getLine(),
-        range.getStart().getCharacter(),
-        range.getEnd().getCharacter() - range.getStart().getCharacter()
-      );
-    }
-  }
-
-  private Set<TokenPosition> collectStringsWithSdblTokens(DocumentContext documentContext) {
+  private Set<Token> collectStringsWithSdblTokens(DocumentContext documentContext) {
     var queries = documentContext.getQueries();
     if (queries.isEmpty()) {
       return Set.of();
@@ -624,7 +613,7 @@ public class SemanticTokensProvider {
       .filter(token -> STRING_TYPES.contains(token.getType()))
       .toList();
 
-    var stringsToSkip = new HashSet<TokenPosition>();
+    var stringsToSkip = new HashSet<Token>();
 
     for (Token bslString : bslStringTokens) {
       var stringRange = Ranges.create(bslString);
@@ -643,14 +632,14 @@ public class SemanticTokensProvider {
         });
 
       if (hasOverlappingTokens) {
-        stringsToSkip.add(TokenPosition.from(bslString));
+        stringsToSkip.add(bslString);
       }
     }
 
     return stringsToSkip;
   }
 
-  private void addSdblTokens(DocumentContext documentContext, List<TokenEntry> entries, Set<TokenPosition> stringsToSkip) {
+  private void addSdblTokens(DocumentContext documentContext, List<TokenEntry> entries, Set<Token> stringsToSkip) {
     var queries = documentContext.getQueries();
     if (queries.isEmpty()) {
       return;
@@ -676,8 +665,9 @@ public class SemanticTokensProvider {
     // For each BSL string token that was skipped, split it around SDBL tokens
     int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
     
-    for (TokenPosition stringPos : stringsToSkip) {
-      int stringLine = stringPos.line();
+    for (Token stringToken : stringsToSkip) {
+      var stringRange = Ranges.create(stringToken);
+      int stringLine = stringRange.getStart().getLine();
 
       var sdblTokensOnLine = sdblTokensByLine.get(stringLine);
       if (sdblTokensOnLine == null || sdblTokensOnLine.isEmpty()) {
@@ -685,8 +675,8 @@ public class SemanticTokensProvider {
       }
 
       // Check if any SDBL tokens overlap with this string token
-      int stringStart = stringPos.start();
-      int stringEnd = stringPos.start() + stringPos.length();
+      int stringStart = stringRange.getStart().getCharacter();
+      int stringEnd = stringRange.getEnd().getCharacter();
       
       var overlappingTokens = sdblTokensOnLine.stream()
         .filter(sdblToken -> {
