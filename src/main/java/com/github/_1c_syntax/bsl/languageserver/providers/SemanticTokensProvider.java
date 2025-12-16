@@ -602,14 +602,14 @@ public class SemanticTokensProvider {
     }
 
     // Collect all SDBL tokens grouped by line
-    // Note: SDBL tokens use 1-indexed line numbers, need to convert to 0-indexed for BSL
+    // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
     var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        int zeroIndexedLine = token.getLine() - 1;  // SDBL uses 1-indexed, convert to 0-indexed
+        int zeroIndexedLine = token.getLine() - 1;  // ANTLR uses 1-indexed, convert to 0-indexed for Range
         sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
       }
     }
@@ -656,14 +656,14 @@ public class SemanticTokensProvider {
     }
 
     // Collect all SDBL tokens grouped by line
-    // Note: SDBL tokens use 1-indexed line numbers, need to convert to 0-indexed for BSL
+    // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
     var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        int zeroIndexedLine = token.getLine() - 1;  // SDBL uses 1-indexed, convert to 0-indexed
+        int zeroIndexedLine = token.getLine() - 1;  // ANTLR uses 1-indexed, convert to 0-indexed for Range
         sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
       }
     }
@@ -740,7 +740,7 @@ public class SemanticTokensProvider {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        addSdblToken(entries, token, token.getLine() - 1);  // SDBL uses 1-indexed, convert to 0-indexed
+        addSdblToken(entries, token, token.getLine() - 1);  // ANTLR uses 1-indexed, convert to 0-indexed for Range
       }
     }
   }
