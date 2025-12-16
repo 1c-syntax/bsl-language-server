@@ -915,4 +915,48 @@ class SemanticTokensProviderTest {
         .isGreaterThan(sdblTokens.size());
     }
   }
+
+  @Test
+  void sdblQuery_noFullStringTokenWithSplitStrings() {
+    // given: query that should have string split
+    String bsl = String.join("\n",
+      "Функция Тест()",
+      "  Запрос = \"Выбрать * из Справочник.Контрагенты\";",
+      "КонецФункции"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    // then: verify we don't have both the full string token AND split string tokens
+    int queryLine = 1;
+    var line1Tokens = decoded.stream().filter(t -> t.line == queryLine).toList();
+
+    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
+    var strings = line1Tokens.stream().filter(t -> t.type == stringIdx).toList();
+
+    // The original string "Выбрать * из Справочник.Контрагенты" spans from position 11 to ~48
+    // If both full string and split strings exist, we'll have:
+    // 1. One large string token covering the whole query (BAD - should be removed)
+    // 2. Multiple smaller string tokens for parts between SDBL tokens (GOOD)
+    
+    // Check: no string token should cover the entire query range
+    // The full query is roughly 37 characters long
+    var largeStrings = strings.stream()
+      .filter(s -> s.length > 30)  // If we have a string token > 30 chars, it's likely the full token
+      .toList();
+
+    assertThat(largeStrings)
+      .as("Should not have full string token spanning entire query (indicates removal failed)")
+      .isEmpty();
+    
+    // Should have multiple smaller string parts instead
+    assertThat(strings)
+      .as("Should have split string parts")
+      .hasSizeGreaterThanOrEqualTo(1);
+  }
 }

@@ -227,11 +227,15 @@ public class SemanticTokensProvider {
     // 3.1) Method call occurrences as Method tokens
     addMethodCallTokens(entries, uri);
 
-    // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
-    addLexicalTokens(tokensFromDefaultChannel, entries);
+    // 4) SDBL (Query Language) tokens - process before lexical tokens to identify strings to skip
+    var stringsToSkip = collectStringsWithSdblTokens(documentContext);
 
-    // 5) SDBL (Query Language) tokens
-    addSdblTokens(documentContext, entries);
+    // 5) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
+    // Skip strings that contain SDBL tokens (they'll be split and added by addSdblTokens)
+    addLexicalTokens(tokensFromDefaultChannel, entries, stringsToSkip);
+
+    // 6) Add SDBL tokens and split string parts
+    addSdblTokens(documentContext, entries, stringsToSkip);
 
     // 6) Build delta-encoded data
     List<Integer> data = toDeltaEncoded(entries);
@@ -545,11 +549,15 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries) {
+  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries, Set<TokenPosition> stringsToSkip) {
     for (Token token : tokens) {
       var tokenType = token.getType();
       var tokenText = Objects.toString(token.getText(), "");
       if (!tokenText.isEmpty()) {
+        // Skip string tokens that contain SDBL tokens - they'll be handled by addSdblTokens
+        if (STRING_TYPES.contains(tokenType) && stringsToSkip.contains(TokenPosition.from(token))) {
+          continue;
+        }
         selectAndAddSemanticToken(entries, token, tokenType);
       }
     }
@@ -576,35 +584,46 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void addSdblTokens(DocumentContext documentContext, List<TokenEntry> entries) {
+  private record TokenPosition(int line, int start, int length) {
+    static TokenPosition from(Token token) {
+      var range = Ranges.create(token);
+      return new TokenPosition(
+        range.getStart().getLine(),
+        range.getStart().getCharacter(),
+        range.getEnd().getCharacter() - range.getStart().getCharacter()
+      );
+    }
+  }
+
+  private Set<TokenPosition> collectStringsWithSdblTokens(DocumentContext documentContext) {
     var queries = documentContext.getQueries();
     if (queries.isEmpty()) {
-      return;
+      return Set.of();
     }
 
     // Collect all SDBL tokens grouped by line
+    // Note: SDBL tokens use 1-indexed line numbers, need to convert to 0-indexed for BSL
     var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        sdblTokensByLine.computeIfAbsent(token.getLine(), k -> new ArrayList<>()).add(token);
+        int zeroIndexedLine = token.getLine() - 1;  // SDBL uses 1-indexed, convert to 0-indexed
+        sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
       }
     }
 
     if (sdblTokensByLine.isEmpty()) {
-      return;
+      return Set.of();
     }
 
-    // Collect BSL string tokens to identify overlaps
+    // Collect BSL string tokens that contain SDBL tokens
     var bslStringTokens = documentContext.getTokensFromDefaultChannel().stream()
       .filter(token -> STRING_TYPES.contains(token.getType()))
       .collect(java.util.stream.Collectors.toList());
 
-    // Find and remove overlapping STRING tokens, split them around SDBL tokens
-    var stringTokensToRemove = new HashSet<TokenEntry>();
-    var stringTokensToAdd = new ArrayList<TokenEntry>();
+    var stringsToSkip = new HashSet<TokenPosition>();
 
     for (Token bslString : bslStringTokens) {
       var stringRange = Ranges.create(bslString);
@@ -616,10 +635,64 @@ public class SemanticTokensProvider {
       }
 
       // Check if any SDBL tokens overlap with this string token
-      var overlappingTokens = sdblTokensOnLine.stream()
-        .filter(sdblToken -> {
+      var hasOverlappingTokens = sdblTokensOnLine.stream()
+        .anyMatch(sdblToken -> {
           var sdblRange = Ranges.create(sdblToken);
           return Ranges.containsRange(stringRange, sdblRange);
+        });
+
+      if (hasOverlappingTokens) {
+        stringsToSkip.add(TokenPosition.from(bslString));
+      }
+    }
+
+    return stringsToSkip;
+  }
+
+  private void addSdblTokens(DocumentContext documentContext, List<TokenEntry> entries, Set<TokenPosition> stringsToSkip) {
+    var queries = documentContext.getQueries();
+    if (queries.isEmpty()) {
+      return;
+    }
+
+    // Collect all SDBL tokens grouped by line
+    // Note: SDBL tokens use 1-indexed line numbers, need to convert to 0-indexed for BSL
+    var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
+    for (var query : queries) {
+      for (Token token : query.getTokens()) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        int zeroIndexedLine = token.getLine() - 1;  // SDBL uses 1-indexed, convert to 0-indexed
+        sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
+      }
+    }
+
+    if (sdblTokensByLine.isEmpty()) {
+      return;
+    }
+
+    // For each BSL string token that was skipped, split it around SDBL tokens
+    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
+    
+    for (TokenPosition stringPos : stringsToSkip) {
+      int stringLine = stringPos.line();
+
+      var sdblTokensOnLine = sdblTokensByLine.get(stringLine);
+      if (sdblTokensOnLine == null || sdblTokensOnLine.isEmpty()) {
+        continue;
+      }
+
+      // Check if any SDBL tokens overlap with this string token
+      int stringStart = stringPos.start();
+      int stringEnd = stringPos.start() + stringPos.length();
+      
+      var overlappingTokens = sdblTokensOnLine.stream()
+        .filter(sdblToken -> {
+          int sdblStart = sdblToken.getCharPositionInLine();
+          int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
+          // Token overlaps if it's within the string range
+          return sdblStart >= stringStart && sdblEnd <= stringEnd;
         })
         .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
         .toList();
@@ -628,22 +701,7 @@ public class SemanticTokensProvider {
         continue;
       }
 
-      // Mark the original STRING token for removal
-      int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-      if (stringTypeIdx >= 0) {
-        var stringEntry = new TokenEntry(
-          stringLine,
-          stringRange.getStart().getCharacter(),
-          stringRange.getEnd().getCharacter() - stringRange.getStart().getCharacter(),
-          stringTypeIdx,
-          0
-        );
-        stringTokensToRemove.add(stringEntry);
-      }
-
       // Split the STRING token around SDBL tokens
-      int stringStart = stringRange.getStart().getCharacter();
-      int stringEnd = stringRange.getEnd().getCharacter();
       int currentPos = stringStart;
 
       for (Token sdblToken : overlappingTokens) {
@@ -652,7 +710,7 @@ public class SemanticTokensProvider {
 
         // Add string part before SDBL token
         if (currentPos < sdblStart && stringTypeIdx >= 0) {
-          stringTokensToAdd.add(new TokenEntry(
+          entries.add(new TokenEntry(
             stringLine,
             currentPos,
             sdblStart - currentPos,
@@ -666,7 +724,7 @@ public class SemanticTokensProvider {
 
       // Add final string part after last SDBL token
       if (currentPos < stringEnd && stringTypeIdx >= 0) {
-        stringTokensToAdd.add(new TokenEntry(
+        entries.add(new TokenEntry(
           stringLine,
           currentPos,
           stringEnd - currentPos,
@@ -676,26 +734,27 @@ public class SemanticTokensProvider {
       }
     }
 
-    // Remove overlapping STRING tokens and add split parts
-    entries.removeAll(stringTokensToRemove);
-    entries.addAll(stringTokensToAdd);
-
-    // Add all SDBL tokens
+    // Add all SDBL tokens (with adjusted line numbers)
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        addSdblToken(entries, token);
+        addSdblToken(entries, token, token.getLine() - 1);  // SDBL uses 1-indexed, convert to 0-indexed
       }
     }
   }
 
-  private void addSdblToken(List<TokenEntry> entries, Token token) {
+  private void addSdblToken(List<TokenEntry> entries, Token token, int zeroIndexedLine) {
     var tokenType = token.getType();
     var semanticTypeAndModifiers = getSdblTokenTypeAndModifiers(tokenType);
     if (semanticTypeAndModifiers != null) {
-      addRange(entries, Ranges.create(token), semanticTypeAndModifiers.type, semanticTypeAndModifiers.modifiers);
+      // Create range with corrected line number
+      var range = new Range(
+        new Position(zeroIndexedLine, token.getCharPositionInLine()),
+        new Position(zeroIndexedLine, token.getCharPositionInLine() + (int) token.getText().codePoints().count())
+      );
+      addRange(entries, range, semanticTypeAndModifiers.type, semanticTypeAndModifiers.modifiers);
     }
   }
 
