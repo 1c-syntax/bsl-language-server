@@ -70,6 +70,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -603,7 +604,7 @@ public class SemanticTokensProvider {
 
     // Collect all SDBL tokens grouped by line
     // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
-    var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
+    var sdblTokensByLine = new HashMap<Integer, List<Token>>();
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
@@ -621,7 +622,7 @@ public class SemanticTokensProvider {
     // Collect BSL string tokens that contain SDBL tokens
     var bslStringTokens = documentContext.getTokensFromDefaultChannel().stream()
       .filter(token -> STRING_TYPES.contains(token.getType()))
-      .collect(java.util.stream.Collectors.toList());
+      .toList();
 
     var stringsToSkip = new HashSet<TokenPosition>();
 
@@ -657,7 +658,7 @@ public class SemanticTokensProvider {
 
     // Collect all SDBL tokens grouped by line
     // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
-    var sdblTokensByLine = new java.util.HashMap<Integer, List<Token>>();
+    var sdblTokensByLine = new HashMap<Integer, List<Token>>();
     for (var query : queries) {
       for (Token token : query.getTokens()) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
