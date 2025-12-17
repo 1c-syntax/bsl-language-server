@@ -967,6 +967,7 @@ public class SemanticTokensProvider {
   private static Set<Integer> createSdblOperators() {
     return Set.of(
       SDBLLexer.SEMICOLON,
+      SDBLLexer.DOT,  // Added for field access operator
       SDBLLexer.PLUS,
       SDBLLexer.MINUS,
       SDBLLexer.MUL,
