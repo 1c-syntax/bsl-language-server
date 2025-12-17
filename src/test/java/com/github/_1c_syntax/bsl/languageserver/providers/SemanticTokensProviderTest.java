@@ -625,10 +625,13 @@ class SemanticTokensProviderTest {
   }
 
   @Test
-  void parameterDefinition_isHighlightedAsParameter() {
+  void parameterAndVariableDeclarations_haveCorrectTokenTypes() {
     String bsl = String.join("\n",
       "Процедура Тест(Парам1, Парам2)",
       "  Перем ЛокальнаяПеременная;",
+      "  НеявнаяПеременная = 1;",
+      "  Для ПеременнаяЦикла = 1 По 10 Цикл",
+      "  КонецЦикла;",
       "КонецПроцедуры"
     );
 
@@ -649,10 +652,20 @@ class SemanticTokensProviderTest {
       .count();
     assertThat(paramsInSignature).isEqualTo(2);
 
-    long localVars = decoded.stream()
-      .filter(t -> t.type == varIdx)
+    long localVarDeclaration = decoded.stream()
+      .filter(t -> t.line == 1 && t.type == varIdx)
       .count();
-    assertThat(localVars).isGreaterThanOrEqualTo(1);
+    assertThat(localVarDeclaration).isEqualTo(1);
+
+    long implicitVarDeclaration = decoded.stream()
+      .filter(t -> t.line == 2 && t.type == varIdx)
+      .count();
+    assertThat(implicitVarDeclaration).isEqualTo(1);
+
+    long forLoopVar = decoded.stream()
+      .filter(t -> t.line == 3 && t.type == varIdx)
+      .count();
+    assertThat(forLoopVar).isEqualTo(1);
   }
 
   // helpers
