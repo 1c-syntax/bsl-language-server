@@ -240,61 +240,39 @@ public class SemanticTokensProvider {
   ) {
     var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Variable);
     
-    if (references.isEmpty()) {
-      for (var variableSymbol : symbolTree.getVariables()) {
-        var nameRange = variableSymbol.getVariableNameRange();
-        if (!Ranges.isEmpty(nameRange)) {
-          Position pos = nameRange.getStart();
-          boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), pos)
-            .map(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION)
-            .orElse(false);
-          
+    references.stream()
+      .filter(com.github._1c_syntax.bsl.languageserver.references.model.Reference::isSourceDefinedSymbolReference)
+      .forEach(reference -> reference.getSourceDefinedSymbol()
+        .filter(symbol -> symbol instanceof VariableSymbol)
+        .map(symbol -> (VariableSymbol) symbol)
+        .ifPresent(variableSymbol -> {
           var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
             ? SemanticTokenTypes.Parameter
             : SemanticTokenTypes.Variable;
           
-          if (isDefinition) {
-            addRange(entries, nameRange, tokenType, SemanticTokenModifiers.Definition);
+          if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
+            addRange(entries, reference.getSelectionRange(), tokenType, SemanticTokenModifiers.Definition);
           } else {
-            addRange(entries, nameRange, tokenType);
+            addRange(entries, reference.getSelectionRange(), tokenType);
           }
-        }
-        variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
-          processVariableDescription(descriptionRanges, documentationLines, description);
+        }));
 
-          description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
-            processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
-          );
-        });
+    for (var variableSymbol : symbolTree.getVariables()) {
+      var nameRange = variableSymbol.getVariableNameRange();
+      if (!Ranges.isEmpty(nameRange)) {
+        var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
+          ? SemanticTokenTypes.Parameter
+          : SemanticTokenTypes.Variable;
+        
+        addRange(entries, nameRange, tokenType, SemanticTokenModifiers.Definition);
       }
-    } else {
-      references.stream()
-        .filter(com.github._1c_syntax.bsl.languageserver.references.model.Reference::isSourceDefinedSymbolReference)
-        .forEach(reference -> reference.getSourceDefinedSymbol()
-          .filter(symbol -> symbol instanceof VariableSymbol)
-          .map(symbol -> (VariableSymbol) symbol)
-          .ifPresent(variableSymbol -> {
-            var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
-              ? SemanticTokenTypes.Parameter
-              : SemanticTokenTypes.Variable;
-            
-            if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
-              addRange(entries, reference.getSelectionRange(), tokenType, SemanticTokenModifiers.Definition);
-            } else {
-              addRange(entries, reference.getSelectionRange(), tokenType);
-            }
-          }));
+      variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
+        processVariableDescription(descriptionRanges, documentationLines, description);
 
-      symbolTree.getVariables().stream()
-        .filter(variableSymbol -> variableSymbol.getDescription().isPresent())
-        .forEach(variableSymbol ->
-          variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
-            processVariableDescription(descriptionRanges, documentationLines, description);
-
-            description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
-              processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
-            );
-          }));
+        description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
+          processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
+        );
+      });
     }
   }
 
