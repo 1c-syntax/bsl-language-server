@@ -245,9 +245,7 @@ public class SemanticTokensProvider {
           .map(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION)
           .orElse(false);
         
-        var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
-          ? SemanticTokenTypes.Parameter
-          : SemanticTokenTypes.Variable;
+        var tokenType = getSemanticTokenType(variableSymbol.getKind());
         
         if (isDefinition) {
           addRange(entries, nameRange, tokenType, SemanticTokenModifiers.Definition);
@@ -263,6 +261,12 @@ public class SemanticTokensProvider {
         );
       });
     }
+  }
+
+  private static String getSemanticTokenType(VariableKind kind) {
+    return kind == VariableKind.PARAMETER
+      ? SemanticTokenTypes.Parameter
+      : SemanticTokenTypes.Variable;
   }
 
   private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
@@ -534,10 +538,9 @@ public class SemanticTokensProvider {
       }
 
       reference.getSourceDefinedSymbol()
-        .filter(symbol -> symbol instanceof VariableSymbol)
-        .map(symbol -> (VariableSymbol) symbol)
-        .filter(variableSymbol -> variableSymbol.getKind() == VariableKind.PARAMETER)
-        .ifPresent(variableSymbol -> {
+        .filter(symbol -> symbol instanceof VariableSymbol variableSymbol 
+          && variableSymbol.getKind() == VariableKind.PARAMETER)
+        .ifPresent(symbol -> {
           if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
             addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
           } else {
