@@ -624,6 +624,37 @@ class SemanticTokensProviderTest {
     assertThat(methodsOnCallLine).isGreaterThanOrEqualTo(1);
   }
 
+  @Test
+  void parameterDefinition_isHighlightedAsParameter() {
+    String bsl = String.join("\n",
+      "Процедура Тест(Парам1, Парам2)",
+      "  Перем ЛокальнаяПеременная;",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int paramIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
+    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
+    assertThat(paramIdx).isGreaterThanOrEqualTo(0);
+    assertThat(varIdx).isGreaterThanOrEqualTo(0);
+
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    long paramsInSignature = decoded.stream()
+      .filter(t -> t.line == 0 && t.type == paramIdx)
+      .count();
+    assertThat(paramsInSignature).isEqualTo(2);
+
+    long localVars = decoded.stream()
+      .filter(t -> t.type == varIdx)
+      .count();
+    assertThat(localVars).isGreaterThanOrEqualTo(1);
+  }
+
   // helpers
   private record DecodedToken(int line, int start, int length, int type, int modifiers) {}
 

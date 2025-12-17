@@ -24,9 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
@@ -205,10 +207,9 @@ public class SemanticTokensProvider {
     addAnnotationsFromAst(entries, ast);
     addPreprocessorFromAst(entries, ast);
 
-    // 3.1) Method call occurrences as Method tokens
     addMethodCallTokens(entries, uri);
+    addParameterReferenceTokens(entries, uri);
 
-    // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
     addLexicalTokens(tokensFromDefaultChannel, entries);
 
     // 5) Build delta-encoded data
@@ -243,10 +244,15 @@ public class SemanticTokensProvider {
         boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), pos)
           .map(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION)
           .orElse(false);
+        
+        var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
+          ? SemanticTokenTypes.Parameter
+          : SemanticTokenTypes.Variable;
+        
         if (isDefinition) {
-          addRange(entries, nameRange, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition);
+          addRange(entries, nameRange, tokenType, SemanticTokenModifiers.Definition);
         } else {
-          addRange(entries, nameRange, SemanticTokenTypes.Variable);
+          addRange(entries, nameRange, tokenType);
         }
       }
       variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
@@ -263,9 +269,7 @@ public class SemanticTokensProvider {
     for (var method : symbolTree.getMethods()) {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
       addRange(entries, method.getSubNameRange(), semanticTokenType);
-      for (ParameterDefinition parameter : method.getParameters()) {
-        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
-      }
+      // Parameters are handled in addVariableSymbols via VariableSymbol with proper modifiers
       method.getDescription().ifPresent((MethodDescription description) ->
         processVariableDescription(descriptionRanges, documentationLines, description)
       );
@@ -520,6 +524,26 @@ public class SemanticTokensProvider {
 
       reference.getSourceDefinedSymbol()
         .ifPresent(symbol -> addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Method));
+    }
+  }
+
+  private void addParameterReferenceTokens(List<TokenEntry> entries, URI uri) {
+    for (var reference : referenceIndex.getReferencesFrom(uri, SymbolKind.Variable)) {
+      if (!reference.isSourceDefinedSymbolReference()) {
+        continue;
+      }
+
+      reference.getSourceDefinedSymbol()
+        .filter(symbol -> symbol instanceof VariableSymbol)
+        .map(symbol -> (VariableSymbol) symbol)
+        .filter(variableSymbol -> variableSymbol.getKind() == VariableKind.PARAMETER)
+        .ifPresent(variableSymbol -> {
+          if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
+            addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
+          } else {
+            addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Parameter);
+          }
+        });
     }
   }
 
