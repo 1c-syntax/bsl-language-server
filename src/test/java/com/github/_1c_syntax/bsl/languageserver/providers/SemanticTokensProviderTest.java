@@ -625,11 +625,13 @@ class SemanticTokensProviderTest {
   }
 
   @Test
-  void parameterAndVariableDeclarations_haveCorrectTokenTypes() {
+  void parameterAndVariableTokenTypes() {
     String bsl = String.join("\n",
       "Процедура Тест(Парам1, Парам2)",
       "  Перем ЛокальнаяПеременная;",
       "  НеявнаяПеременная = 1;",
+      "  ЛокальнаяПеременная2 = 2;",
+      "  Результат = 3;",
       "  Для ПеременнаяЦикла = 1 По 10 Цикл",
       "  КонецЦикла;",
       "КонецПроцедуры"
@@ -650,22 +652,42 @@ class SemanticTokensProviderTest {
     long paramsInSignature = decoded.stream()
       .filter(t -> t.line == 0 && t.type == paramIdx)
       .count();
-    assertThat(paramsInSignature).isEqualTo(2);
+    assertThat(paramsInSignature).as("Parameters in signature").isEqualTo(2);
 
     long localVarDeclaration = decoded.stream()
       .filter(t -> t.line == 1 && t.type == varIdx)
       .count();
-    assertThat(localVarDeclaration).isEqualTo(1);
+    assertThat(localVarDeclaration).as("Explicit variable declaration").isEqualTo(1);
 
-    long implicitVarDeclaration = decoded.stream()
+    long implicitVarDeclaration1 = decoded.stream()
       .filter(t -> t.line == 2 && t.type == varIdx)
       .count();
-    assertThat(implicitVarDeclaration).isEqualTo(1);
+    assertThat(implicitVarDeclaration1).as("First implicit variable declaration").isEqualTo(1);
 
-    long forLoopVar = decoded.stream()
+    long implicitVarDeclaration2 = decoded.stream()
       .filter(t -> t.line == 3 && t.type == varIdx)
       .count();
-    assertThat(forLoopVar).isEqualTo(1);
+    assertThat(implicitVarDeclaration2).as("Second implicit variable declaration").isEqualTo(1);
+
+    long implicitVarDeclaration3 = decoded.stream()
+      .filter(t -> t.line == 4 && t.type == varIdx)
+      .count();
+    assertThat(implicitVarDeclaration3).as("Third implicit variable declaration").isEqualTo(1);
+
+    long forLoopVar = decoded.stream()
+      .filter(t -> t.line == 5 && t.type == varIdx)
+      .count();
+    assertThat(forLoopVar).as("For loop variable").isEqualTo(1);
+
+    long allParams = decoded.stream()
+      .filter(t -> t.type == paramIdx)
+      .count();
+    assertThat(allParams).as("Total parameters").isEqualTo(2);
+
+    long allVars = decoded.stream()
+      .filter(t -> t.type == varIdx)
+      .count();
+    assertThat(allVars).as("Total variables").isEqualTo(5);
   }
 
   // helpers
