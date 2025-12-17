@@ -59,8 +59,9 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Decorator,
       SemanticTokenTypes.Operator,
       SemanticTokenTypes.Namespace,
-      SemanticTokenTypes.Type,  // Added for SDBL metadata types and virtual tables
-      SemanticTokenTypes.Property  // Added for SDBL field names
+      SemanticTokenTypes.Type,  // Added for general type references
+      SemanticTokenTypes.Property,  // Added for SDBL field names
+      SemanticTokenTypes.Class  // Added for SDBL metadata types (Справочник, РегистрСведений, etc.)
     );
 
     List<String> tokenModifiers = List.of(

@@ -690,7 +690,8 @@ class SemanticTokensProviderTest {
 
     int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
     int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
     int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
 
     // Line 1: `  Запрос = "Выбрать * из Справочник.Контрагенты";`
@@ -700,7 +701,8 @@ class SemanticTokensProviderTest {
     // - "Выбрать" at position 12 (keyword)
     // - "*" at position 20 (operator)
     // - "из" at position 22 (keyword)
-    // - "Справочник" at position 25 (metadata type)
+    // - "Справочник" at position 25 (namespace - metadata type)
+    // - "Контрагенты" (class - metadata object name)
 
     // Find keyword tokens (Выбрать, из)
     var keywords = line1Tokens.stream()
@@ -708,11 +710,17 @@ class SemanticTokensProviderTest {
       .toList();
     assertThat(keywords).hasSizeGreaterThanOrEqualTo(2);
 
-    // Find metadata type token (Справочник)
-    var types = line1Tokens.stream()
-      .filter(t -> t.type == typeIdx)
+    // Find metadata namespace token (Справочник)
+    var namespaces = line1Tokens.stream()
+      .filter(t -> t.type == namespaceIdx)
       .toList();
-    assertThat(types).hasSizeGreaterThanOrEqualTo(1);
+    assertThat(namespaces).hasSizeGreaterThanOrEqualTo(1);
+    
+    // Find metadata class token (Контрагенты)
+    var classes = line1Tokens.stream()
+      .filter(t -> t.type == classIdx)
+      .toList();
+    assertThat(classes).hasSizeGreaterThanOrEqualTo(1);
 
     // Verify no STRING token overlaps with SDBL tokens
     int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
@@ -746,7 +754,7 @@ class SemanticTokensProviderTest {
 
     int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
     int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
     int defaultLibraryMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.DefaultLibrary);
 
     // Expected tokens:
@@ -754,7 +762,7 @@ class SemanticTokensProviderTest {
     // - "СУММА" (function with defaultLibrary modifier)
     // - "как" (keyword)
     // - "из" (keyword)
-    // - "Документ" (metadata type with defaultLibrary modifier)
+    // - "Документ" (namespace - metadata type with defaultLibrary modifier)
 
     // Find function token (СУММА) with defaultLibrary modifier
     var functions = line1Tokens.stream()
@@ -764,12 +772,12 @@ class SemanticTokensProviderTest {
       .as("Should have SDBL function (СУММА) with defaultLibrary modifier")
       .hasSizeGreaterThanOrEqualTo(1);
 
-    // Find metadata type (Документ) with defaultLibrary modifier
-    var types = line1Tokens.stream()
-      .filter(t -> t.type == typeIdx && (t.modifiers & defaultLibraryMask) != 0)
+    // Find metadata namespace (Документ) with defaultLibrary modifier
+    var namespaces = line1Tokens.stream()
+      .filter(t -> t.type == namespaceIdx && (t.modifiers & defaultLibraryMask) != 0)
       .toList();
-    assertThat(types)
-      .as("Should have metadata type (Документ) with defaultLibrary modifier")
+    assertThat(namespaces)
+      .as("Should have metadata namespace (Документ) with defaultLibrary modifier")
       .hasSizeGreaterThanOrEqualTo(1);
 
     // Find keywords (Выбрать, как, из)
@@ -835,7 +843,7 @@ class SemanticTokensProviderTest {
     // then: verify tokens appear on correct lines
     int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
     int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
 
     // Line 2: "Выбрать" keyword
     var line2Keywords = decoded.stream()
@@ -861,12 +869,12 @@ class SemanticTokensProviderTest {
       .as("Should have 'из' keyword on line 4")
       .isNotEmpty();
 
-    // Line 5: "Справочник" metadata type
-    var line5Types = decoded.stream()
-      .filter(t -> t.line == 5 && t.type == typeIdx)
+    // Line 5: "Справочник" metadata namespace
+    var line5Namespaces = decoded.stream()
+      .filter(t -> t.line == 5 && t.type == namespaceIdx)
       .toList();
-    assertThat(line5Types)
-      .as("Should have 'Справочник' metadata type on line 5")
+    assertThat(line5Namespaces)
+      .as("Should have 'Справочник' metadata namespace on line 5")
       .isNotEmpty();
   }
 
@@ -892,18 +900,19 @@ class SemanticTokensProviderTest {
 
     int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
     int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
     int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
     int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
 
     var strings = line1Tokens.stream().filter(t -> t.type == stringIdx).toList();
     var sdblTokens = line1Tokens.stream()
-      .filter(t -> t.type == keywordIdx || t.type == typeIdx || t.type == functionIdx || t.type == operatorIdx)
+      .filter(t -> t.type == keywordIdx || t.type == namespaceIdx || t.type == classIdx || t.type == functionIdx || t.type == operatorIdx)
       .toList();
 
     // Verify SDBL tokens were added (this is the critical test - if highlighting doesn't work, this fails)
     assertThat(sdblTokens)
-      .as("SDBL tokens (keywords, types, functions, operators) should be present")
+      .as("SDBL tokens (keywords, namespaces, classes, functions, operators) should be present")
       .isNotEmpty();
 
     // If SDBL tokens exist, verify they don't have massive string token overlaps
@@ -987,7 +996,8 @@ class SemanticTokensProviderTest {
 
     int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
     int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
     int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
 
     // Expected sequence (positions are approximate, verify no overlaps):
@@ -997,8 +1007,8 @@ class SemanticTokensProviderTest {
     // Position 12: "Выбрать" (keyword from SDBL)
     // Position 20: "*" (operator from SDBL)
     // Position 22: "из" (keyword from SDBL)
-    // Position 25: "Справочник" (type from SDBL)
-    // Position 36: "Контрагенты" (identifier - might not be highlighted)
+    // Position 25: "Справочник" (namespace from SDBL - metadata type)
+    // Position 36: "Контрагенты" (class from SDBL - metadata object name)
     // Position 47: closing quote (string)
     // Position 48: ";" (operator)
 
@@ -1032,12 +1042,20 @@ class SemanticTokensProviderTest {
       .as("Should have 'из' keyword around position 22")
       .isPresent();
 
-    // "Справочник" type around position 25
-    var spravochnikType = line1Tokens.stream()
-      .filter(t -> t.type == typeIdx && t.start >= 24 && t.start <= 26)
+    // "Справочник" namespace around position 25
+    var spravochnikNamespace = line1Tokens.stream()
+      .filter(t -> t.type == namespaceIdx && t.start >= 24 && t.start <= 26)
       .findFirst();
-    assertThat(spravochnikType)
-      .as("Should have 'Справочник' metadata type around position 25")
+    assertThat(spravochnikNamespace)
+      .as("Should have 'Справочник' metadata namespace around position 25")
+      .isPresent();
+      
+    // "Контрагенты" class around position 36
+    var kontragenty = line1Tokens.stream()
+      .filter(t -> t.type == classIdx && t.start >= 35 && t.start <= 38)
+      .findFirst();
+    assertThat(kontragenty)
+      .as("Should have 'Контрагенты' metadata class around position 36")
       .isPresent();
   }
 

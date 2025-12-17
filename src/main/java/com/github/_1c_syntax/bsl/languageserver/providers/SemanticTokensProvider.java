@@ -767,8 +767,8 @@ public class SemanticTokensProvider {
       // Functions as Function type with defaultLibrary modifier (built-in SDBL functions)
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Function, DEFAULT_LIBRARY);
     } else if (SDBL_METADATA_TYPES.contains(tokenType) || SDBL_VIRTUAL_TABLES.contains(tokenType) || SDBL_EDS.contains(tokenType)) {
-      // Metadata types, virtual tables, and EDS as Type with defaultLibrary modifier (built-in SDBL types)
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Type, DEFAULT_LIBRARY);
+      // Metadata types (Справочник, РегистрСведений, etc.) as Namespace with defaultLibrary modifier
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Namespace, DEFAULT_LIBRARY);
     } else if (SDBL_LITERALS.contains(tokenType)) {
       // Literals as Keyword (matching YAML: constant.language.sdbl, no Constant type in LSP)
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
@@ -1043,8 +1043,20 @@ public class SemanticTokensProvider {
     @Override
     public Void visitMdo(SDBLParser.MdoContext ctx) {
       // Metadata type names (Справочник, РегистрСведений, etc.) are already handled
-      // by lexical token processing as Type with defaultLibrary modifier
-      // No need to add them again here
+      // by lexical token processing as Namespace with defaultLibrary modifier
+      
+      // Metadata object name (e.g., "Валюты" in "Справочник.Валюты") should be marked as Class
+      // Use Trees to find the identifier after the metadata type
+      var identifiers = Trees.getDescendants(ctx).stream()
+        .filter(SDBLParser.IdentifierContext.class::isInstance)
+        .map(SDBLParser.IdentifierContext.class::cast)
+        .toList();
+      if (!identifiers.isEmpty()) {
+        // The last identifier in MDO is the object name
+        int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
+        var lastIdentifier = identifiers.get(identifiers.size() - 1);
+        addToken(lastIdentifier.getStart(), classIdx, 0);
+      }
       
       return super.visitMdo(ctx);
     }
