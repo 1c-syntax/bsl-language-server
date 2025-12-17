@@ -762,7 +762,7 @@ class SemanticTokensProviderTest {
     // - "СУММА" (function with defaultLibrary modifier)
     // - "как" (keyword)
     // - "из" (keyword)
-    // - "Документ" (namespace - metadata type with defaultLibrary modifier)
+    // - "Документ" (namespace - metadata type with NO modifiers per JSON spec)
 
     // Find function token (СУММА) with defaultLibrary modifier
     var functions = line1Tokens.stream()
@@ -772,12 +772,12 @@ class SemanticTokensProviderTest {
       .as("Should have SDBL function (СУММА) with defaultLibrary modifier")
       .hasSizeGreaterThanOrEqualTo(1);
 
-    // Find metadata namespace (Документ) with defaultLibrary modifier
+    // Find metadata namespace (Документ) with NO modifiers (per JSON spec)
     var namespaces = line1Tokens.stream()
-      .filter(t -> t.type == namespaceIdx && (t.modifiers & defaultLibraryMask) != 0)
+      .filter(t -> t.type == namespaceIdx && t.modifiers == 0)
       .toList();
     assertThat(namespaces)
-      .as("Should have metadata namespace (Документ) with defaultLibrary modifier")
+      .as("Should have metadata namespace (Документ) with no modifiers (per JSON spec)")
       .hasSizeGreaterThanOrEqualTo(1);
 
     // Find keywords (Выбрать, как, из)

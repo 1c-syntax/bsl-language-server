@@ -767,8 +767,8 @@ public class SemanticTokensProvider {
       // Functions as Function type with defaultLibrary modifier (built-in SDBL functions)
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Function, DEFAULT_LIBRARY);
     } else if (SDBL_METADATA_TYPES.contains(tokenType) || SDBL_VIRTUAL_TABLES.contains(tokenType) || SDBL_EDS.contains(tokenType)) {
-      // Metadata types (Справочник, РегистрСведений, etc.) as Namespace with defaultLibrary modifier
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Namespace, DEFAULT_LIBRARY);
+      // Metadata types (Справочник, РегистрСведений, etc.) as Namespace with no modifiers (per JSON spec)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Namespace, NO_MODIFIERS);
     } else if (SDBL_LITERALS.contains(tokenType)) {
       // Literals as Keyword (matching YAML: constant.language.sdbl, no Constant type in LSP)
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
