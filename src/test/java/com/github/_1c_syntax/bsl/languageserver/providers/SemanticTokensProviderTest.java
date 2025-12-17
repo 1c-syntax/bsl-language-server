@@ -81,7 +81,6 @@ class SemanticTokensProviderTest {
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
     referenceIndexFiller.fill(documentContext);
-    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
