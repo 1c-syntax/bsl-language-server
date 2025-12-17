@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeR
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -241,7 +242,7 @@ public class SemanticTokensProvider {
     var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Variable);
     
     references.stream()
-      .filter(com.github._1c_syntax.bsl.languageserver.references.model.Reference::isSourceDefinedSymbolReference)
+      .filter(Reference::isSourceDefinedSymbolReference)
       .forEach(reference -> reference.getSourceDefinedSymbol()
         .filter(symbol -> symbol instanceof VariableSymbol)
         .map(symbol -> (VariableSymbol) symbol)
@@ -257,23 +258,15 @@ public class SemanticTokensProvider {
           }
         }));
 
-    for (var variableSymbol : symbolTree.getVariables()) {
-      var nameRange = variableSymbol.getVariableNameRange();
-      if (!Ranges.isEmpty(nameRange)) {
-        var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
-          ? SemanticTokenTypes.Parameter
-          : SemanticTokenTypes.Variable;
-        
-        addRange(entries, nameRange, tokenType, SemanticTokenModifiers.Definition);
-      }
-      variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
-        processVariableDescription(descriptionRanges, documentationLines, description);
+    symbolTree.getVariables().stream()
+      .forEach(variableSymbol ->
+        variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
+          processVariableDescription(descriptionRanges, documentationLines, description);
 
-        description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
-          processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
-        );
-      });
-    }
+          description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
+            processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
+          );
+        }));
   }
 
   private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
