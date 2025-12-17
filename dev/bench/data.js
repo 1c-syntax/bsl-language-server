@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765626838111,
+  "lastUpdate": 1765981493898,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32550,6 +32550,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7267984713558001",
             "extra": "mean: 91.22483277320862 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "198982749+Copilot@users.noreply.github.com",
+            "name": "Copilot",
+            "username": "Copilot"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ceec7b3465304d088be6181d38df4250f687986",
+          "message": "Mark parameter usages with SemanticTokenTypes.Parameter (#3674)\n\n* Add Parameter semantic token type for parameter usages\n\n- Modified addVariableSymbols to use SemanticTokenTypes.Parameter for variables with VariableKind.PARAMETER\n- Handle parameter and variable references from ReferenceIndex\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\nCo-authored-by: Nikita Fedkin <nixel2007@gmail.com>\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
+          "timestamp": "2025-12-17T14:15:09Z",
+          "tree_id": "a2fbf0689ef1a6167a976708cd98ef73e99e62cc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8ceec7b3465304d088be6181d38df4250f687986"
+        },
+        "date": 1765981488205,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.82578611373901,
+            "unit": "sec",
+            "range": "stddev: 0.4263692957014762",
+            "extra": "mean: 88.82578611373901 sec\nrounds: 3"
           }
         ]
       }
