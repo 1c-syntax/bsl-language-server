@@ -59,13 +59,15 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Decorator,
       SemanticTokenTypes.Operator,
       SemanticTokenTypes.Namespace,
-      SemanticTokenTypes.Type  // Added for SDBL metadata types and virtual tables
+      SemanticTokenTypes.Type,  // Added for SDBL metadata types and virtual tables
+      SemanticTokenTypes.Property  // Added for SDBL field names
     );
 
     List<String> tokenModifiers = List.of(
       SemanticTokenModifiers.Documentation,
       SemanticTokenModifiers.Definition,
-      SemanticTokenModifiers.DefaultLibrary  // Added for SDBL built-in functions and types
+      SemanticTokenModifiers.DefaultLibrary,  // Added for SDBL built-in functions and types
+      SemanticTokenModifiers.Declaration  // Added for SDBL alias declarations
     );
 
     return new SemanticTokensLegend(tokenTypes, tokenModifiers);

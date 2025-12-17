@@ -43,6 +43,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.UseContext;
 import com.github._1c_syntax.bsl.parser.SDBLLexer;
+import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -734,6 +736,12 @@ public class SemanticTokensProvider {
         addSdblToken(entries, token);
       }
     }
+    
+    // Add AST-based semantic tokens (aliases, field names, metadata names, etc.)
+    for (var query : queries) {
+      var visitor = new SdblSemanticTokensVisitor(entries, legend);
+      visitor.visit(query.getAst());
+    }
   }
 
   private void addSdblToken(List<TokenEntry> entries, Token token) {
@@ -977,5 +985,103 @@ public class SemanticTokensProvider {
   }
 
   private record TokenEntry(int line, int start, int length, int type, int modifiers) {
+  }
+
+  /**
+   * Visitor for SDBL AST to add semantic tokens based on context.
+   * Handles:
+   * - Table aliases → Variable
+   * - Field names (after dots) → Property
+   * - Metadata type names → Namespace  
+   * - Alias declarations (after AS/КАК) → Variable + Declaration
+   * - Operators (dots, commas) → Operator
+   */
+  private static class SdblSemanticTokensVisitor extends SDBLParserBaseVisitor<Void> {
+    private final List<TokenEntry> entries;
+    private final SemanticTokensLegend legend;
+    private final int variableIdx;
+    private final int propertyIdx;
+    private final int namespaceIdx;
+    private final int declarationModifierBit;
+    
+    public SdblSemanticTokensVisitor(List<TokenEntry> entries, SemanticTokensLegend legend) {
+      this.entries = entries;
+      this.legend = legend;
+      this.variableIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
+      this.propertyIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
+      this.namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+      this.declarationModifierBit = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Declaration);
+    }
+    
+    @Override
+    public Void visitDataSource(SDBLParser.DataSourceContext ctx) {
+      // Handle table sources and their aliases
+      var alias = ctx.alias();
+      if (alias != null && alias.identifier() != null) {
+        // Alias after AS/КАК → Variable + Declaration
+        var token = alias.identifier().getStart();
+        addToken(token, variableIdx, declarationModifierBit);
+      }
+      
+      return super.visitDataSource(ctx);
+    }
+    
+    @Override
+    public Void visitSelectedField(SDBLParser.SelectedFieldContext ctx) {
+      // Handle field selections and their aliases
+      var alias = ctx.alias();
+      if (alias != null && alias.identifier() != null) {
+        // Alias after AS/КАК → Variable + Declaration
+        var token = alias.identifier().getStart();
+        addToken(token, variableIdx, declarationModifierBit);
+      }
+      
+      return super.visitSelectedField(ctx);
+    }
+    
+    @Override
+    public Void visitMdo(SDBLParser.MdoContext ctx) {
+      // Metadata type names (Справочник, РегистрСведений, etc.) are already handled
+      // by lexical token processing as Type with defaultLibrary modifier
+      // No need to add them again here
+      
+      return super.visitMdo(ctx);
+    }
+    
+    @Override
+    public Void visitColumn(SDBLParser.ColumnContext ctx) {
+      // Handle field references: TableAlias.FieldName
+      var identifiers = ctx.identifier();
+      if (identifiers != null && !identifiers.isEmpty()) {
+        if (identifiers.size() == 1) {
+          // Single identifier - could be alias or field
+          // Context-dependent, treat as variable for now
+          addToken(identifiers.get(0).getStart(), variableIdx, 0);
+        } else if (identifiers.size() >= 2) {
+          // First identifier → Variable (table alias)
+          addToken(identifiers.get(0).getStart(), variableIdx, 0);
+          
+          // Dots are handled by lexical token processing
+          
+          // Last identifier → Property (field name)
+          addToken(identifiers.get(identifiers.size() - 1).getStart(), propertyIdx, 0);
+        }
+      }
+      
+      return super.visitColumn(ctx);
+    }
+    
+    private void addToken(Token token, int typeIdx, int modifiers) {
+      if (token == null || typeIdx < 0) {
+        return;
+      }
+      
+      // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
+      int zeroIndexedLine = token.getLine() - 1;
+      int start = token.getCharPositionInLine();
+      int length = (int) token.getText().codePoints().count();
+      
+      entries.add(new TokenEntry(zeroIndexedLine, start, length, typeIdx, modifiers));
+    }
   }
 }
