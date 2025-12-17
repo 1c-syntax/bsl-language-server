@@ -273,7 +273,9 @@ public class SemanticTokensProvider {
     for (var method : symbolTree.getMethods()) {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
       addRange(entries, method.getSubNameRange(), semanticTokenType);
-      // Parameters are handled in addVariableSymbols via VariableSymbol with proper modifiers
+      for (ParameterDefinition parameter : method.getParameters()) {
+        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
+      }
       method.getDescription().ifPresent((MethodDescription description) ->
         processVariableDescription(descriptionRanges, documentationLines, description)
       );
