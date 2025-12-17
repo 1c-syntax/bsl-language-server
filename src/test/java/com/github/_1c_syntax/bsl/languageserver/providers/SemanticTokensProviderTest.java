@@ -22,11 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
@@ -40,8 +39,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,14 +48,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 @SpringBootTest
-@DirtiesContext
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class SemanticTokensProviderTest {
 
   @Autowired
@@ -66,9 +57,6 @@ class SemanticTokensProviderTest {
 
   @Autowired
   private SemanticTokensLegend legend;
-
-  @MockitoBean
-  private ReferenceIndex referenceIndex;
 
   @Autowired
   private ReferenceIndexFiller referenceIndexFiller;
@@ -92,6 +80,8 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -131,6 +121,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -192,6 +183,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -247,6 +239,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -278,6 +271,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -312,6 +306,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -352,6 +347,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -381,6 +377,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -417,6 +414,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -452,6 +450,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -490,6 +489,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -528,6 +528,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -561,6 +562,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -586,35 +588,20 @@ class SemanticTokensProviderTest {
   void sameFileMethodCall_isHighlightedAsMethodTokenAtCallSite() {
     // given: a method and a call to another method in the same file
     String bsl = String.join("\n",
+      "Процедура CallMe()",
+      "КонецПроцедуры",
+      "",
       "Процедура Бар()",
       "  CallMe();",
       "КонецПроцедуры"
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
-    // compute selection range for 'CallMe' on line 1
-    int callLine = 1;
-    int callStart = bsl.split("\n")[callLine].indexOf("CallMe");
-    Range callRange = new Range(new Position(callLine, callStart), new Position(callLine, callStart + "CallMe".length()));
-
-    // mock a same-file reference pointing to a method symbol owned by this document
-    Reference ref = mock(Reference.class, RETURNS_DEEP_STUBS);
-    MethodSymbol toSymbol = MethodSymbol.builder()
-      .name("CallMe")
-      .owner(documentContext)
-      .function(false)
-      .range(new Range(new Position(0, 0), new Position(0, 0)))
-      .subNameRange(new Range(new Position(0, 0), new Position(0, 0)))
-      .build();
-
-    when(ref.isSourceDefinedSymbolReference()).thenReturn(true);
-    when(ref.getSourceDefinedSymbol()).thenReturn(java.util.Optional.of(toSymbol));
-    when(ref.getSelectionRange()).thenReturn(callRange);
-
-    when(referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method))
-      .thenReturn(List.of(ref));
+    // compute selection range for 'CallMe' on line 4
+    int callLine = 4;
 
     // when
     SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
@@ -622,7 +609,7 @@ class SemanticTokensProviderTest {
     int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
     assertThat(methodIdx).isGreaterThanOrEqualTo(0);
 
-    // then: there is a Method token on the call line (line 1)
+    // then: there is a Method token on the call line (line 4)
     List<DecodedToken> decoded = decode(tokens.getData());
     long methodsOnCallLine = decoded.stream().filter(t -> t.line == callLine && t.type == methodIdx).count();
     assertThat(methodsOnCallLine).isGreaterThanOrEqualTo(1);
@@ -642,6 +629,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
