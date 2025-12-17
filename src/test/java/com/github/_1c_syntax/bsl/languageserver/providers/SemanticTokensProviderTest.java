@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
@@ -39,8 +39,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -50,14 +48,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 @SpringBootTest
-@DirtiesContext
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class SemanticTokensProviderTest {
 
   @Autowired
@@ -66,8 +58,8 @@ class SemanticTokensProviderTest {
   @Autowired
   private SemanticTokensLegend legend;
 
-  @MockitoBean
-  private ReferenceIndex referenceIndex;
+  @Autowired
+  private ReferenceIndexFiller referenceIndexFiller;
 
   @BeforeEach
   void init() {
@@ -88,6 +80,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -127,6 +120,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -188,6 +182,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -243,6 +238,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -274,6 +270,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -308,6 +305,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -348,6 +346,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -377,6 +376,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -413,6 +413,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -448,6 +449,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -486,6 +488,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -524,6 +527,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -557,6 +561,7 @@ class SemanticTokensProviderTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
     // when
@@ -582,35 +587,20 @@ class SemanticTokensProviderTest {
   void sameFileMethodCall_isHighlightedAsMethodTokenAtCallSite() {
     // given: a method and a call to another method in the same file
     String bsl = String.join("\n",
+      "Процедура CallMe()",
+      "КонецПроцедуры",
+      "",
       "Процедура Бар()",
       "  CallMe();",
       "КонецПроцедуры"
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
-    // compute selection range for 'CallMe' on line 1
-    int callLine = 1;
-    int callStart = bsl.split("\n")[callLine].indexOf("CallMe");
-    Range callRange = new Range(new Position(callLine, callStart), new Position(callLine, callStart + "CallMe".length()));
-
-    // mock a same-file reference pointing to a method symbol owned by this document
-    Reference ref = mock(Reference.class, RETURNS_DEEP_STUBS);
-    MethodSymbol toSymbol = MethodSymbol.builder()
-      .name("CallMe")
-      .owner(documentContext)
-      .function(false)
-      .range(new Range(new Position(0, 0), new Position(0, 0)))
-      .subNameRange(new Range(new Position(0, 0), new Position(0, 0)))
-      .build();
-
-    when(ref.isSourceDefinedSymbolReference()).thenReturn(true);
-    when(ref.getSourceDefinedSymbol()).thenReturn(java.util.Optional.of(toSymbol));
-    when(ref.getSelectionRange()).thenReturn(callRange);
-
-    when(referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method))
-      .thenReturn(List.of(ref));
+    // compute selection range for 'CallMe' on line 4
+    int callLine = 4;
 
     // when
     SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
@@ -618,10 +608,170 @@ class SemanticTokensProviderTest {
     int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
     assertThat(methodIdx).isGreaterThanOrEqualTo(0);
 
-    // then: there is a Method token on the call line (line 1)
+    // then: there is a Method token on the call line (line 4)
     List<DecodedToken> decoded = decode(tokens.getData());
     long methodsOnCallLine = decoded.stream().filter(t -> t.line == callLine && t.type == methodIdx).count();
     assertThat(methodsOnCallLine).isGreaterThanOrEqualTo(1);
+  }
+
+  @Test
+  void parameterAndVariableTokenTypes() {
+    String bsl = String.join("\n",
+      "Процедура Тест(Парам1, Парам2)",
+      "  Перем ЛокальнаяПеременная;",
+      "  НеявнаяПеременная = 1;",
+      "  ЛокальнаяПеременная2 = 2;",
+      "  Результат = 3;",
+      "  Для ПеременнаяЦикла = 1 По 10 Цикл",
+      "  КонецЦикла;",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int paramIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
+    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
+    assertThat(paramIdx).isGreaterThanOrEqualTo(0);
+    assertThat(varIdx).isGreaterThanOrEqualTo(0);
+
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    long paramsInSignature = decoded.stream()
+      .filter(t -> t.line == 0 && t.type == paramIdx)
+      .count();
+    assertThat(paramsInSignature).as("Parameters in signature").isEqualTo(2);
+
+    long localVarDeclaration = decoded.stream()
+      .filter(t -> t.line == 1 && t.type == varIdx)
+      .count();
+    assertThat(localVarDeclaration).as("Explicit variable declaration").isEqualTo(1);
+
+    long implicitVarDeclaration1 = decoded.stream()
+      .filter(t -> t.line == 2 && t.type == varIdx)
+      .count();
+    assertThat(implicitVarDeclaration1).as("First implicit variable declaration").isEqualTo(1);
+
+    long implicitVarDeclaration2 = decoded.stream()
+      .filter(t -> t.line == 3 && t.type == varIdx)
+      .count();
+    assertThat(implicitVarDeclaration2).as("Second implicit variable declaration").isEqualTo(1);
+
+    long implicitVarDeclaration3 = decoded.stream()
+      .filter(t -> t.line == 4 && t.type == varIdx)
+      .count();
+    assertThat(implicitVarDeclaration3).as("Third implicit variable declaration").isEqualTo(1);
+
+    long forLoopVar = decoded.stream()
+      .filter(t -> t.line == 5 && t.type == varIdx)
+      .count();
+    assertThat(forLoopVar).as("For loop variable").isEqualTo(1);
+
+    long allParams = decoded.stream()
+      .filter(t -> t.type == paramIdx)
+      .count();
+    assertThat(allParams).as("Total parameters").isEqualTo(2);
+
+    long allVars = decoded.stream()
+      .filter(t -> t.type == varIdx)
+      .count();
+    assertThat(allVars).as("Total variables").isEqualTo(5);
+  }
+
+  @Test
+  void parameterAndVariableUsages() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/SemanticTokensProviderParameterTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    int paramIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
+    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
+    assertThat(paramIdx).isGreaterThanOrEqualTo(0);
+    assertThat(varIdx).isGreaterThanOrEqualTo(0);
+
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    long paramsLine0 = decoded.stream()
+      .filter(t -> t.line == 0 && t.type == paramIdx)
+      .count();
+    assertThat(paramsLine0).as("Parameters in signature (line 0)").isEqualTo(2);
+
+    long varsLine1 = decoded.stream()
+      .filter(t -> t.line == 1 && t.type == varIdx)
+      .count();
+    assertThat(varsLine1).as("Local variable declaration (line 1)").isEqualTo(1);
+
+    long varsLine3 = decoded.stream()
+      .filter(t -> t.line == 3 && t.type == varIdx)
+      .count();
+    assertThat(varsLine3).as("Variable usage on left side (line 3)").isEqualTo(1);
+
+    long paramsLine3 = decoded.stream()
+      .filter(t -> t.line == 3 && t.type == paramIdx)
+      .count();
+    assertThat(paramsLine3).as("Parameter usage on right side (line 3)").isEqualTo(1);
+
+    long varsLine4 = decoded.stream()
+      .filter(t -> t.line == 4 && t.type == varIdx)
+      .count();
+    assertThat(varsLine4).as("Variable usage (line 4)").isEqualTo(1);
+
+    long paramsLine4 = decoded.stream()
+      .filter(t -> t.line == 4 && t.type == paramIdx)
+      .count();
+    assertThat(paramsLine4).as("Parameter usages (line 4)").isEqualTo(2);
+
+    long paramsLine6 = decoded.stream()
+      .filter(t -> t.line == 6 && t.type == paramIdx)
+      .count();
+    assertThat(paramsLine6).as("Parameter in condition (line 6)").isEqualTo(1);
+
+    long paramsLine7 = decoded.stream()
+      .filter(t -> t.line == 7 && t.type == paramIdx)
+      .count();
+    assertThat(paramsLine7).as("Parameter in Сообщить (line 7)").isEqualTo(1);
+
+    long varsLine8 = decoded.stream()
+      .filter(t -> t.line == 8 && t.type == varIdx)
+      .count();
+    assertThat(varsLine8).as("Variable assignment (line 8)").isEqualTo(1);
+
+    long paramsLine8 = decoded.stream()
+      .filter(t -> t.line == 8 && t.type == paramIdx)
+      .count();
+    assertThat(paramsLine8).as("Parameters in expression (line 8)").isEqualTo(2);
+
+    long varsLine11 = decoded.stream()
+      .filter(t -> t.line == 11 && t.type == varIdx)
+      .count();
+    assertThat(varsLine11).as("For loop variable (line 11)").isEqualTo(1);
+
+    long paramsLine11 = decoded.stream()
+      .filter(t -> t.line == 11 && t.type == paramIdx)
+      .count();
+    assertThat(paramsLine11).as("Parameter in loop bound (line 11)").isEqualTo(1);
+
+    long varsLine12 = decoded.stream()
+      .filter(t -> t.line == 12 && t.type == varIdx)
+      .count();
+    assertThat(varsLine12).as("Loop variable usage (line 12)").isEqualTo(1);
+
+    long totalParams = decoded.stream()
+      .filter(t -> t.type == paramIdx)
+      .count();
+    assertThat(totalParams).as("Total parameter tokens").isGreaterThanOrEqualTo(10);
+
+    long totalVars = decoded.stream()
+      .filter(t -> t.type == varIdx)
+      .count();
+    assertThat(totalVars).as("Total variable tokens").isGreaterThanOrEqualTo(6);
   }
 
   // helpers
