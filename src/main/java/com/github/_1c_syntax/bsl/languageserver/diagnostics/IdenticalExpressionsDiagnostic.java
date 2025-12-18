@@ -235,6 +235,6 @@ public class IdenticalExpressionsDiagnostic extends AbstractExpressionTreeDiagno
   }
 
   private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {
-    return ctx.children.size() < MIN_EXPRESSION_SIZE;
+    return ctx.getChildCount() < MIN_EXPRESSION_SIZE;
   }
 }
