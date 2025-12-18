@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766060684876,
+  "lastUpdate": 1766089236840,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32674,6 +32674,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2277652780703239",
             "extra": "mean: 88.4008400440216 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ce91ab56d3ef69d4fc18529f048ac171648d1a54",
+          "message": "Merge pull request #3679 from 1c-syntax/copilot/fix-nullpointerexception-ctx-children\n\nFix NPE in IdenticalExpressionsDiagnostic when ctx.children is null",
+          "timestamp": "2025-12-18T21:10:41+01:00",
+          "tree_id": "ccc3c450402b942c71b08c6e0b8933e2692a2248",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ce91ab56d3ef69d4fc18529f048ac171648d1a54"
+        },
+        "date": 1766089231165,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.63927412033081,
+            "unit": "sec",
+            "range": "stddev: 1.1868008299624957",
+            "extra": "mean: 88.63927412033081 sec\nrounds: 3"
           }
         ]
       }
