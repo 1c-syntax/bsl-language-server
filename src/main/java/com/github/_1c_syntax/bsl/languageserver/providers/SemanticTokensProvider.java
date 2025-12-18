@@ -1111,12 +1111,15 @@ public class SemanticTokensProvider {
     @Override
     public Void visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
       // Virtual table methods like СрезПоследних, Обороты, etc.
-      // These appear after MDO: РегистрСведений.КурсыВалют.СрезПоследних
-      var identifier = ctx.identifier();
-      if (identifier != null) {
-        // The identifier is the virtual table method name
+      // Grammar: mdo DOT virtualTableName=(SLICELAST_VT | SLICEFIRST_VT | ...) ( parameters )?
+      // virtualTableName is a token, not an identifier context
+      
+      // Get virtualTableName token from context
+      // It's defined in grammar as virtualTableName=(SLICELAST_VT | SLICEFIRST_VT | ...)
+      var virtualTableNameToken = ctx.virtualTableName;
+      if (virtualTableNameToken != null) {
         int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-        addToken(identifier.getStart(), methodIdx, 0);
+        addToken(virtualTableNameToken, methodIdx, 0);
       }
       
       return super.visitVirtualTable(ctx);
