@@ -1068,36 +1068,55 @@ public class SemanticTokensProvider {
     @Override
     public Void visitMdo(SDBLParser.MdoContext ctx) {
       // Metadata type names (Справочник, РегистрСведений, etc.) are already handled
-      // by lexical token processing as Namespace with defaultLibrary modifier
+      // by lexical token processing as Namespace
       
-      // Handle MDO structure: MetadataType.ObjectName.VirtualTableMethod
-      // Example: РегистрСведений.КурсыВалют.СрезПоследних
+      // Handle MDO structure: MetadataType.ObjectName
+      // Example: РегистрСведений.КурсыВалют or Справочник.Валюты
       var identifiers = Trees.getDescendants(ctx).stream()
         .filter(SDBLParser.IdentifierContext.class::isInstance)
         .map(SDBLParser.IdentifierContext.class::cast)
         .toList();
       
-      if (identifiers.size() == 1) {
-        // Single identifier → Class (metadata object name)
+      if (!identifiers.isEmpty()) {
+        // The last identifier in MDO is the object name → Class
         int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-        addToken(identifiers.get(0).getStart(), classIdx, 0);
-      } else if (identifiers.size() == 2) {
-        // Two identifiers → first is Class (object name), second is Method (virtual table method)
-        int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-        int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-        addToken(identifiers.get(0).getStart(), classIdx, 0);
-        addToken(identifiers.get(1).getStart(), methodIdx, 0);
-      } else if (identifiers.size() > 2) {
-        // More than two → last one could be a method, second-to-last is the object name
-        int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-        int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-        // Second-to-last → Class (object name)
-        addToken(identifiers.get(identifiers.size() - 2).getStart(), classIdx, 0);
-        // Last → Method (virtual table method like СрезПоследних)
-        addToken(identifiers.get(identifiers.size() - 1).getStart(), methodIdx, 0);
+        addToken(identifiers.get(identifiers.size() - 1).getStart(), classIdx, 0);
       }
       
       return super.visitMdo(ctx);
+    }
+    
+    @Override
+    public Void visitFunctionCall(SDBLParser.FunctionCallContext ctx) {
+      // Check if this is a virtual table method call (appears after MDO reference)
+      // Example: СрезПоследних(&Период) in РегистрСведений.КурсыВалют.СрезПоследних(&Период)
+      
+      var identifiers = ctx.identifier();
+      if (identifiers != null && !identifiers.isEmpty()) {
+        // Get the first identifier (function name)
+        var identifier = identifiers.get(0);
+        var token = identifier.getStart();
+        
+        if (token != null) {
+          var functionName = token.getText();
+          
+          // Known virtual table methods in SDBL (common ones)
+          var virtualTableMethods = Set.of(
+            "СрезПоследних", "СрезПервых", "Срез",
+            "Обороты", "ОстаткиИОбороты", "Остатки",
+            "ОстаткиИОборотыДт", "ОстаткиИОборотыКт",
+            "ТочкаМаршрута", "ВложенныеДокументы"
+          );
+          
+          // If function name matches known virtual table methods, mark as Method
+          if (virtualTableMethods.contains(functionName)) {
+            int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
+            addToken(token, methodIdx, 0);
+          }
+        }
+      }
+      
+      return super.visitFunctionCall(ctx);
     }
     
     @Override
