@@ -1280,43 +1280,184 @@ class SemanticTokensProviderTest {
     SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
     List<DecodedToken> decoded = decode(tokens.getData());
 
-    // then: check that СрезПоследних is marked as Method
-    int queryLine = 1;
-    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-    int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
+    var legendTypes = legend.getTokenTypes();
+    int keywordIdx = legendTypes.indexOf(SemanticTokenTypes.Keyword);
+    int namespaceIdx = legendTypes.indexOf(SemanticTokenTypes.Namespace);
+    int classIdx = legendTypes.indexOf(SemanticTokenTypes.Class);
+    int methodIdx = legendTypes.indexOf(SemanticTokenTypes.Method);
+    int operatorIdx = legendTypes.indexOf(SemanticTokenTypes.Operator);
+    int parameterIdx = legendTypes.indexOf(SemanticTokenTypes.Parameter);
     
-    assertThat(namespaceIdx).isGreaterThanOrEqualTo(0);
-    assertThat(classIdx).isGreaterThanOrEqualTo(0);
-    assertThat(methodIdx).isGreaterThanOrEqualTo(0);
+    // Expected tokens for line 1: "ВЫБРАТЬ * ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период)"
+    record ExpectedToken(int line, int start, int type, String description) {}
+    var expected = List.of(
+      new ExpectedToken(1, 10, keywordIdx, "ВЫБРАТЬ"),
+      new ExpectedToken(1, 18, operatorIdx, "*"),
+      new ExpectedToken(1, 20, keywordIdx, "ИЗ"),
+      new ExpectedToken(1, 23, namespaceIdx, "РегистрСведений"),
+      new ExpectedToken(1, 39, operatorIdx, "."),
+      new ExpectedToken(1, 40, classIdx, "КурсыВалют"),
+      new ExpectedToken(1, 51, operatorIdx, "."),
+      new ExpectedToken(1, 52, methodIdx, "СрезПоследних"),
+      new ExpectedToken(1, 65, operatorIdx, "("),
+      new ExpectedToken(1, 66, parameterIdx, "&Период"),
+      new ExpectedToken(1, 73, operatorIdx, ")")
+    );
 
-    var line1Tokens = decoded.stream()
-      .filter(t -> t.line == queryLine)
+    var actualTokens = decoded.stream()
+      .filter(t -> t.line == 1)
+      .filter(t -> t.type != legendTypes.indexOf(SemanticTokenTypes.String))
       .sorted((a, b) -> Integer.compare(a.start, b.start))
       .toList();
 
-    // "РегистрСведений" should be Namespace
-    var registrSvedeniy = line1Tokens.stream()
-      .filter(t -> t.type == namespaceIdx)
-      .findFirst();
-    assertThat(registrSvedeniy)
-      .as("Should have 'РегистрСведений' as Namespace")
-      .isPresent();
+    assertThat(actualTokens).as("Number of tokens").hasSizeGreaterThanOrEqualTo(expected.size());
+    
+    for (int i = 0; i < expected.size(); i++) {
+      var exp = expected.get(i);
+      assertThat(actualTokens).hasSizeGreaterThan(i);
+      var act = actualTokens.get(i);
+      
+      assertThat(act.line).as("Token %d (%s): line", i, exp.description).isEqualTo(exp.line);
+      assertThat(act.start).as("Token %d (%s): start", i, exp.description).isEqualTo(exp.start);
+      assertThat(act.type).as("Token %d (%s): type", i, exp.description).isEqualTo(exp.type);
+    }
+  }
 
-    // "КурсыВалют" should be Class (metadata object name)
-    var kursyValyut = line1Tokens.stream()
-      .filter(t -> t.type == classIdx)
-      .findFirst();
-    assertThat(kursyValyut)
-      .as("Should have 'КурсыВалют' as Class")
-      .isPresent();
+  @Test
+  void sdblQuery_exactJSONSpecificationCompliance() {
+    // Test exact compliance with JSON specification from comment
+    // Query from specification:
+    // ВЫБРАТЬ
+    //     Курсы.Валюта КАК Валюта,
+    //     Курсы.Курс КАК Курс,
+    //     Курсы.Период КАК Период
+    // ПОМЕСТИТЬ ВТ_Курсы
+    // ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы
+    // ИНДЕКСИРОВАТЬ ПО Валюта, Период
+    String bsl = String.join("\n",
+      "Процедура Тест()",
+      "  Запрос = \"",
+      "  |ВЫБРАТЬ",
+      "  |    Курсы.Валюта КАК Валюта,",
+      "  |    Курсы.Курс КАК Курс,",
+      "  |    Курсы.Период КАК Период",
+      "  |ПОМЕСТИТЬ ВТ_Курсы",
+      "  |ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы",
+      "  |ИНДЕКСИРОВАТЬ ПО Валюта, Период\";",
+      "КонецПроцедуры"
+    );
 
-    // "СрезПоследних" should be Method (virtual table method)
-    var srezPoslednih = line1Tokens.stream()
-      .filter(t -> t.type == methodIdx)
-      .findFirst();
-    assertThat(srezPoslednih)
-      .as("Should have 'СрезПоследних' as Method")
-      .isPresent();
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    var legendTypes = legend.getTokenTypes();
+    var legendModifiers = legend.getTokenModifiers();
+    
+    int keywordIdx = legendTypes.indexOf(SemanticTokenTypes.Keyword);
+    int variableIdx = legendTypes.indexOf(SemanticTokenTypes.Variable);
+    int propertyIdx = legendTypes.indexOf(SemanticTokenTypes.Property);
+    int operatorIdx = legendTypes.indexOf(SemanticTokenTypes.Operator);
+    int namespaceIdx = legendTypes.indexOf(SemanticTokenTypes.Namespace);
+    int classIdx = legendTypes.indexOf(SemanticTokenTypes.Class);
+    int methodIdx = legendTypes.indexOf(SemanticTokenTypes.Method);
+    int parameterIdx = legendTypes.indexOf(SemanticTokenTypes.Parameter);
+    
+    int declarationBit = 1 << legendModifiers.indexOf(SemanticTokenModifiers.Declaration);
+
+    // Expected tokens (only SDBL query tokens, sorted by position)
+    // Base line = 2 (query starts after "Процедура Тест()" and "  Запрос = \"")
+    record ExpectedToken(int line, int start, int length, int type, int modifiers, String description) {}
+    
+    var expected = List.of(
+      // Line 2: "ВЫБРАТЬ"
+      new ExpectedToken(2, 0, 7, keywordIdx, 0, "ВЫБРАТЬ"),
+      
+      // Line 3: "    Курсы.Валюта КАК Валюта,"
+      new ExpectedToken(3, 4, 5, variableIdx, 0, "Курсы"),
+      new ExpectedToken(3, 9, 1, operatorIdx, 0, "."),
+      new ExpectedToken(3, 10, 6, propertyIdx, 0, "Валюта"),
+      new ExpectedToken(3, 17, 3, keywordIdx, 0, "КАК"),
+      new ExpectedToken(3, 21, 6, variableIdx, declarationBit, "Валюта (declaration)"),
+      new ExpectedToken(3, 27, 1, operatorIdx, 0, ","),
+      
+      // Line 4: "    Курсы.Курс КАК Курс,"
+      new ExpectedToken(4, 4, 5, variableIdx, 0, "Курсы"),
+      new ExpectedToken(4, 9, 1, operatorIdx, 0, "."),
+      new ExpectedToken(4, 10, 4, propertyIdx, 0, "Курс"),
+      new ExpectedToken(4, 15, 3, keywordIdx, 0, "КАК"),
+      new ExpectedToken(4, 19, 4, variableIdx, declarationBit, "Курс (declaration)"),
+      new ExpectedToken(4, 23, 1, operatorIdx, 0, ","),
+      
+      // Line 5: "    Курсы.Период КАК Период"
+      new ExpectedToken(5, 4, 5, variableIdx, 0, "Курсы"),
+      new ExpectedToken(5, 9, 1, operatorIdx, 0, "."),
+      new ExpectedToken(5, 10, 6, propertyIdx, 0, "Период"),
+      new ExpectedToken(5, 17, 3, keywordIdx, 0, "КАК"),
+      new ExpectedToken(5, 21, 6, variableIdx, declarationBit, "Период (declaration)"),
+      
+      // Line 6: "ПОМЕСТИТЬ ВТ_Курсы"
+      new ExpectedToken(6, 0, 9, keywordIdx, 0, "ПОМЕСТИТЬ"),
+      new ExpectedToken(6, 10, 8, variableIdx, declarationBit, "ВТ_Курсы (declaration)"),
+      
+      // Line 7: "ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы"
+      new ExpectedToken(7, 0, 2, keywordIdx, 0, "ИЗ"),
+      new ExpectedToken(7, 3, 16, namespaceIdx, 0, "РегистрСведений"),
+      new ExpectedToken(7, 19, 1, operatorIdx, 0, "."),
+      new ExpectedToken(7, 20, 11, classIdx, 0, "КурсыВалют"),
+      new ExpectedToken(7, 31, 1, operatorIdx, 0, "."),
+      new ExpectedToken(7, 32, 14, methodIdx, 0, "СрезПоследних"),
+      new ExpectedToken(7, 46, 1, operatorIdx, 0, "("),
+      new ExpectedToken(7, 47, 7, parameterIdx, 0, "&Период"),
+      new ExpectedToken(7, 54, 1, operatorIdx, 0, ")"),
+      new ExpectedToken(7, 56, 3, keywordIdx, 0, "КАК"),
+      new ExpectedToken(7, 60, 5, variableIdx, declarationBit, "Курсы (declaration)"),
+      
+      // Line 8: "ИНДЕКСИРОВАТЬ ПО Валюта, Период"
+      new ExpectedToken(8, 0, 13, keywordIdx, 0, "ИНДЕКСИРОВАТЬ"),
+      new ExpectedToken(8, 14, 2, keywordIdx, 0, "ПО"),
+      new ExpectedToken(8, 17, 6, variableIdx, 0, "Валюта"),
+      new ExpectedToken(8, 23, 1, operatorIdx, 0, ","),
+      new ExpectedToken(8, 25, 6, variableIdx, 0, "Период")
+    );
+
+    // Get actual SDBL tokens (filter out BSL tokens like STRING)
+    var actualSdblTokens = decoded.stream()
+      .filter(t -> t.line >= 2 && t.line <= 8) // Query lines only
+      .filter(t -> t.type != legendTypes.indexOf(SemanticTokenTypes.String)) // Exclude STRING tokens
+      .sorted((a, b) -> {
+        int lineCmp = Integer.compare(a.line, b.line);
+        return lineCmp != 0 ? lineCmp : Integer.compare(a.start, b.start);
+      })
+      .toList();
+
+    // Compare token by token
+    assertThat(actualSdblTokens).as("Number of SDBL tokens").hasSizeGreaterThanOrEqualTo(expected.size());
+    
+    for (int i = 0; i < expected.size(); i++) {
+      var exp = expected.get(i);
+      assertThat(actualSdblTokens).as("Should have enough tokens").hasSizeGreaterThan(i);
+      
+      var act = actualSdblTokens.get(i);
+      
+      assertThat(act.line)
+        .as("Token %d (%s): line", i, exp.description)
+        .isEqualTo(exp.line);
+      assertThat(act.start)
+        .as("Token %d (%s): start", i, exp.description)
+        .isEqualTo(exp.start);
+      assertThat(act.length)
+        .as("Token %d (%s): length", i, exp.description)
+        .isEqualTo(exp.length);
+      assertThat(act.type)
+        .as("Token %d (%s): type", i, exp.description)
+        .isEqualTo(exp.type);
+      assertThat(act.modifiers)
+        .as("Token %d (%s): modifiers", i, exp.description)
+        .isEqualTo(exp.modifiers);
+    }
   }
 }
