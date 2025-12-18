@@ -1046,7 +1046,7 @@ public class SemanticTokensProvider {
       if (alias != null && alias.identifier() != null) {
         // Alias after AS/КАК → Variable + Declaration
         var token = alias.identifier().getStart();
-        addSdblSemanticToken(token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
+        provider.addSdblTokenRange(entries, token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
       }
       
       return super.visitDataSource(ctx);
@@ -1059,7 +1059,7 @@ public class SemanticTokensProvider {
       if (alias != null && alias.identifier() != null) {
         // Alias after AS/КАК → Variable + Declaration
         var token = alias.identifier().getStart();
-        addSdblSemanticToken(token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
+        provider.addSdblTokenRange(entries, token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
       }
       
       return super.visitSelectedField(ctx);
@@ -1082,18 +1082,18 @@ public class SemanticTokensProvider {
       
       if (identifiers.size() == 1) {
         // Single identifier → Class (metadata object name)
-        addSdblSemanticToken(identifiers.get(0).getStart(), SemanticTokenTypes.Class);
+        provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Class);
       } else if (identifiers.size() == 2) {
         // Two identifiers → MetadataType.ObjectName
         // First is metadata type (already handled by lexical as Namespace)
         // Second is object name → Class
-        addSdblSemanticToken(identifiers.get(1).getStart(), SemanticTokenTypes.Class);
+        provider.addSdblTokenRange(entries, identifiers.get(1).getStart(), SemanticTokenTypes.Class);
       } else if (identifiers.size() > 2) {
         // More than two identifiers → MetadataType.ObjectName.VirtualTableMethod[.Method...]
         // Second-to-last is object name → Class
         // Last is virtual table method → Method
-        addSdblSemanticToken(identifiers.get(identifiers.size() - 2).getStart(), SemanticTokenTypes.Class);
-        addSdblSemanticToken(identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Method);
+        provider.addSdblTokenRange(entries, identifiers.get(identifiers.size() - 2).getStart(), SemanticTokenTypes.Class);
+        provider.addSdblTokenRange(entries, identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Method);
       }
       
       return super.visitMdo(ctx);
@@ -1109,7 +1109,7 @@ public class SemanticTokensProvider {
       // It's defined in grammar as virtualTableName=(SLICELAST_VT | SLICEFIRST_VT | ...)
       var virtualTableNameToken = ctx.virtualTableName;
       if (virtualTableNameToken != null) {
-        addSdblSemanticToken(virtualTableNameToken, SemanticTokenTypes.Method);
+        provider.addSdblTokenRange(entries, virtualTableNameToken, SemanticTokenTypes.Method);
       }
       
       return super.visitVirtualTable(ctx);
@@ -1123,37 +1123,42 @@ public class SemanticTokensProvider {
         if (identifiers.size() == 1) {
           // Single identifier - could be alias or field
           // Context-dependent, treat as variable for now
-          addSdblSemanticToken(identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
+          provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
         } else if (identifiers.size() >= 2) {
           // First identifier → Variable (table alias)
-          addSdblSemanticToken(identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
+          provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
           
           // Dots are handled by lexical token processing
           
           // Last identifier → Property (field name)
-          addSdblSemanticToken(identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Property);
+          provider.addSdblTokenRange(entries, identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Property);
         }
       }
       
       return super.visitColumn(ctx);
     }
     
-    private void addSdblSemanticToken(Token token, String type, String... modifiers) {
-      if (token == null) {
-        return;
-      }
-      
-      // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
-      int zeroIndexedLine = token.getLine() - 1;
-      int start = token.getCharPositionInLine();
-      int length = (int) token.getText().codePoints().count();
-      
-      var range = new Range(
-        new Position(zeroIndexedLine, start),
-        new Position(zeroIndexedLine, start + length)
-      );
-      
-      provider.addRange(entries, range, type, modifiers);
+  }
+  
+  /**
+   * Helper method to add semantic token from SDBL ANTLR token
+   * Handles conversion from ANTLR 1-indexed lines to LSP 0-indexed positions
+   */
+  private void addSdblTokenRange(List<TokenEntry> entries, Token token, String type, String... modifiers) {
+    if (token == null) {
+      return;
     }
+    
+    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
+    int zeroIndexedLine = token.getLine() - 1;
+    int start = token.getCharPositionInLine();
+    int length = (int) token.getText().codePoints().count();
+    
+    var range = new Range(
+      new Position(zeroIndexedLine, start),
+      new Position(zeroIndexedLine, start + length)
+    );
+    
+    addRange(entries, range, type, modifiers);
   }
 }
