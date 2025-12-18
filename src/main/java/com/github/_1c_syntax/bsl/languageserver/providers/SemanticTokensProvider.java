@@ -1070,17 +1070,31 @@ public class SemanticTokensProvider {
       // Metadata type names (Справочник, РегистрСведений, etc.) are already handled
       // by lexical token processing as Namespace with defaultLibrary modifier
       
-      // Metadata object name (e.g., "Валюты" in "Справочник.Валюты") should be marked as Class
-      // Use Trees to find the identifier after the metadata type
+      // Handle MDO structure: MetadataType.ObjectName.VirtualTableMethod
+      // Example: РегистрСведений.КурсыВалют.СрезПоследних
       var identifiers = Trees.getDescendants(ctx).stream()
         .filter(SDBLParser.IdentifierContext.class::isInstance)
         .map(SDBLParser.IdentifierContext.class::cast)
         .toList();
-      if (!identifiers.isEmpty()) {
-        // The last identifier in MDO is the object name
+      
+      if (identifiers.size() == 1) {
+        // Single identifier → Class (metadata object name)
         int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-        var lastIdentifier = identifiers.get(identifiers.size() - 1);
-        addToken(lastIdentifier.getStart(), classIdx, 0);
+        addToken(identifiers.get(0).getStart(), classIdx, 0);
+      } else if (identifiers.size() == 2) {
+        // Two identifiers → first is Class (object name), second is Method (virtual table method)
+        int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
+        int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
+        addToken(identifiers.get(0).getStart(), classIdx, 0);
+        addToken(identifiers.get(1).getStart(), methodIdx, 0);
+      } else if (identifiers.size() > 2) {
+        // More than two → last one could be a method, second-to-last is the object name
+        int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
+        int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
+        // Second-to-last → Class (object name)
+        addToken(identifiers.get(identifiers.size() - 2).getStart(), classIdx, 0);
+        // Last → Method (virtual table method like СрезПоследних)
+        addToken(identifiers.get(identifiers.size() - 1).getStart(), methodIdx, 0);
       }
       
       return super.visitMdo(ctx);

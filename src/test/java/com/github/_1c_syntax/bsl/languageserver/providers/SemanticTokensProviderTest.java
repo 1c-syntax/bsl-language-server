@@ -1263,4 +1263,60 @@ class SemanticTokensProviderTest {
         .isLessThanOrEqualTo(line1Tokens.get(i + 1).start);
     }
   }
+
+  @Test
+  void sdblQuery_virtualTableMethodHighlighting() {
+    // given: query with virtual table method (СрезПоследних)
+    String bsl = String.join("\n",
+      "Процедура Тест()",
+      "  Текст = \"ВЫБРАТЬ * ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период)\";",
+      "КонецПроцедуры"
+    );
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    List<DecodedToken> decoded = decode(tokens.getData());
+
+    // then: check that СрезПоследних is marked as Method
+    int queryLine = 1;
+    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
+    int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
+    
+    assertThat(namespaceIdx).isGreaterThanOrEqualTo(0);
+    assertThat(classIdx).isGreaterThanOrEqualTo(0);
+    assertThat(methodIdx).isGreaterThanOrEqualTo(0);
+
+    var line1Tokens = decoded.stream()
+      .filter(t -> t.line == queryLine)
+      .sorted((a, b) -> Integer.compare(a.start, b.start))
+      .toList();
+
+    // "РегистрСведений" should be Namespace
+    var registrSvedeniy = line1Tokens.stream()
+      .filter(t -> t.type == namespaceIdx)
+      .findFirst();
+    assertThat(registrSvedeniy)
+      .as("Should have 'РегистрСведений' as Namespace")
+      .isPresent();
+
+    // "КурсыВалют" should be Class (metadata object name)
+    var kursyValyut = line1Tokens.stream()
+      .filter(t -> t.type == classIdx)
+      .findFirst();
+    assertThat(kursyValyut)
+      .as("Should have 'КурсыВалют' as Class")
+      .isPresent();
+
+    // "СрезПоследних" should be Method (virtual table method)
+    var srezPoslednih = line1Tokens.stream()
+      .filter(t -> t.type == methodIdx)
+      .findFirst();
+    assertThat(srezPoslednih)
+      .as("Should have 'СрезПоследних' as Method")
+      .isPresent();
+  }
 }
