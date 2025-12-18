@@ -24,13 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -237,10 +240,13 @@ public class SemanticTokensProvider {
     BitSet documentationLines
   ) {
     for (var variableSymbol : symbolTree.getVariables()) {
+      if (variableSymbol.getKind() == VariableKind.PARAMETER) {
+        continue;
+      }
+      
       var nameRange = variableSymbol.getVariableNameRange();
       if (!Ranges.isEmpty(nameRange)) {
-        Position pos = nameRange.getStart();
-        boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), pos)
+        boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), nameRange.getStart())
           .map(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION)
           .orElse(false);
         if (isDefinition) {
@@ -249,6 +255,7 @@ public class SemanticTokensProvider {
           addRange(entries, nameRange, SemanticTokenTypes.Variable);
         }
       }
+      
       variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
         processVariableDescription(descriptionRanges, documentationLines, description);
 
@@ -257,6 +264,24 @@ public class SemanticTokensProvider {
         );
       });
     }
+    
+    var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Variable);
+    references.stream()
+      .filter(Reference::isSourceDefinedSymbolReference)
+      .forEach(reference -> reference.getSourceDefinedSymbol()
+        .filter(symbol -> symbol instanceof VariableSymbol)
+        .map(symbol -> (VariableSymbol) symbol)
+        .ifPresent(variableSymbol -> {
+          var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
+            ? SemanticTokenTypes.Parameter
+            : SemanticTokenTypes.Variable;
+          
+          if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
+            addRange(entries, reference.getSelectionRange(), tokenType, SemanticTokenModifiers.Definition);
+          } else {
+            addRange(entries, reference.getSelectionRange(), tokenType);
+          }
+        }));
   }
 
   private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
@@ -264,7 +289,7 @@ public class SemanticTokensProvider {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
       addRange(entries, method.getSubNameRange(), semanticTokenType);
       for (ParameterDefinition parameter : method.getParameters()) {
-        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter);
+        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
       }
       method.getDescription().ifPresent((MethodDescription description) ->
         processVariableDescription(descriptionRanges, documentationLines, description)
