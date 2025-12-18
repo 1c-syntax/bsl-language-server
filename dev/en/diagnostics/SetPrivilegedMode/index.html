@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1483,7 +1483,7 @@ For external code, such as code from external reports/data processors, this acti
 call to <code>SetPrivilegedMode(False)</code> is ignored</p>
 <p>Any export procedures and functions that perform any actions on the server with the privileged mode set unconditionally beforehand are potentially dangerous, as this disables checking the access rights of the current user. The export procedures and functions of the client API of the 1C:Enterprise server require special attention.</p>
 <p>For example, wrong:
-<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Export</span>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span>...<span class="p">)</span> <span class="k">Export</span>
 
 <span class="nb">SetPrivilegedMode</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span> <span class="c1">// Disable permission check</span>
 <span class="c1">// Change data in privileged mode</span>
@@ -1491,7 +1491,7 @@ call to <code>SetPrivilegedMode(False)</code> is ignored</p>
 <span class="k">EndProcedure</span>
 </code></pre></div>
 Correct:
-<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Export</span>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span>...<span class="p">)</span> <span class="k">Export</span>
 
 <span class="c1">// Changing data</span>
 <span class="c1">// (at the same time, if the user does not have enough rights to perform an operation on the data, an exception will be raised)</span>
@@ -1501,7 +1501,7 @@ Correct:
 The exception is when the action performed by the procedure must be allowed (or the return value of the function must be available) to absolutely all categories of users.</p>
 <p>If you still need to use privileged mode within a method, you must use manual access control using the <code>VerifyAccessRights</code> method.</p>
 <p>An example of pre-checking before performing actions in privileged mode:
-<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Export</span>
+<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">ChangeData</span><span class="p">(</span>...<span class="p">)</span> <span class="k">Export</span>
 
 <span class="nb">VerifyAccessRights</span><span class="p">(</span><span class="o">...</span><span class="p">);</span> <span class="c1">// If the user has insufficient rights, an exception will be thrown</span>
 <span class="nb">SetPrivilegedMode</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span> <span class="c1">// Disable permission check</span>
@@ -1616,10 +1616,10 @@ The exception is when the action performed by the procedure must be allowed (or 
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

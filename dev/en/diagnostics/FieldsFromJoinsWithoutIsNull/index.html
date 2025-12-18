@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1492,11 +1492,11 @@ It should be remembered that simple checks in a query are performed a little fas
 <p>Example showing NULL comparison problems - joining 2 tables incorrectly and showing different comparison methods
 <div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
   <span class="kd">CASE</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="err">=</span> <span class="nv">0</span> <span class="kd">THEN</span> <span class="s">&quot;Equals 0 - does not work&quot;</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="err">&lt;&gt;</span> <span class="nv">0</span> <span class="kd">THEN</span> <span class="s">&quot;NOT Equals 0 - does not work&quot;</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="err">=</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">&quot;Equals NULL - does not work&quot;</span>
-    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span> <span class="kd">IS</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">&quot;IS NULL - it works&quot;</span>
-    <span class="kd">WHEN</span> <span class="kd">ISNULL</span><span class="p">(</span><span class="nv">LeftTable</span><span class="err">.</span><span class="nv">Fld2</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="err">=</span> <span class="nv">0</span>  <span class="kd">THEN</span> <span class="s">&quot;ISNULL() - and this works too&quot;</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">=</span> <span class="m">0</span> <span class="kd">THEN</span> <span class="s">&quot;Equals 0 - does not work&quot;</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="kd">THEN</span> <span class="s">&quot;NOT Equals 0 - does not work&quot;</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="o">=</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">&quot;Equals NULL - does not work&quot;</span>
+    <span class="kd">WHEN</span> <span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span> <span class="kd">IS</span> <span class="kc">NULL</span> <span class="kd">THEN</span> <span class="s">&quot;IS NULL - it works&quot;</span>
+    <span class="kd">WHEN</span> <span class="nb">ISNULL</span><span class="p">(</span><span class="nv">LeftTable</span><span class="o">.</span><span class="nv">Fld2</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span>  <span class="kd">THEN</span> <span class="s">&quot;ISNULL() - and this works too&quot;</span>
     <span class="kd">ELSE</span> <span class="s">&quot;else&quot;</span>
   <span class="kd">END</span>
 <span class="kd">ИЗ</span>
@@ -1506,39 +1506,39 @@ It should be remembered that simple checks in a query are performed a little fas
 </code></pre></div></p>
 <p>Suspicious code for accessing an joined table attribute
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span> <span class="c1">// здесь ошибка</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span> <span class="c1">// здесь ошибка</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Correct
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="kd">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nb">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Also correct:
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="kd">ВЫБОР</span> <span class="kd">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">Есть</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="nv">0</span>
-  <span class="kd">ИНАЧЕ</span>  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> 
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="kd">ВЫБОР</span> <span class="kd">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">Есть</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="m">0</span>
+  <span class="kd">ИНАЧЕ</span>  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> 
   <span class="kd">КОНЕЦ</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Possible variant
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 <span class="kd">ГДЕ</span>
-    <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span> <span class="kd">ЕСТЬ</span> <span class="kd">НЕ</span> <span class="kc">NULL</span>
+    <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span> <span class="kd">ЕСТЬ</span> <span class="kd">НЕ</span> <span class="kc">NULL</span>
     <span class="c1">//или НЕ РегистрПродажи.Документ ЕСТЬ NULL</span>
 </code></pre></div>
 The last one is not the best, because it actually emulates an inner join.
@@ -1649,10 +1649,10 @@ It is more correct to explicitly specify <code>INNER JOIN</code> instead of usin
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

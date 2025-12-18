@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1481,12 +1481,12 @@
 <div class="highlight"><pre><span></span><code><span class="c1">// BanksToProcessing - contains an array of banks</span>
 
 <span class="nv">InidividualQuery</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Query</span><span class="p">(</span><span class="s">&quot;</span>
-  <span class="s">|SELECT</span>
-  <span class="s">| BankAccounts.Ref AS Account</span>
-  <span class="s">|FROM</span>
-  <span class="s">| Catalog.BankAccounts AS BankAccounts</span>
-  <span class="s">|WHERE</span>
-  <span class="s">| BankAccounts.Bank = &amp;Bank&quot;</span><span class="p">);</span>
+  <span class="s">|</span><span class="kd">SELECT</span>
+  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">Account</span>
+  <span class="s">|</span><span class="kd">FROM</span>
+  <span class="s">|</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">BankAccounts</span> <span class="kd">AS</span> <span class="nv">BankAccounts</span>
+  <span class="s">|</span><span class="kd">WHERE</span>
+  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Bank</span> <span class="o">=</span> <span class="no">&amp;Bank</span><span class="s">&quot;</span><span class="p">);</span>
 
 <span class="k">For</span> <span class="k">Each</span> <span class="nv">Bank</span> <span class="nv">From</span> <span class="nv">BanksToProcess</span> <span class="k">Do</span>
   <span class="nv">InidividualQuery</span> <span class="o">.</span><span class="nf">SetParameter</span><span class="p">(</span><span class="s">&quot;Bank&quot;</span><span class="p">,</span> <span class="nv">Bank</span><span class="p">);</span>
@@ -1500,12 +1500,12 @@
 <div class="highlight"><pre><span></span><code><span class="c1">// BanksToProcess - contains an array of banks</span>
 
 <span class="nv">MergedQuery</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Query</span><span class="p">(</span><span class="s">&quot;</span>
-  <span class="s">|SELECT</span>
-  <span class="s">| BankAccounts.Ref AS Account</span>
-  <span class="s">|FROM</span>
-  <span class="s">| Catalog.BankAccounts AS BankAccounts</span>
-  <span class="s">|WHERE</span>
-  <span class="s">| BankAccounts.Bank In(&amp;BanksToProcess)&quot;</span><span class="p">);</span>
+  <span class="s">|</span><span class="kd">SELECT</span>
+  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">Account</span>
+  <span class="s">|</span><span class="kd">FROM</span>
+  <span class="s">|</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">BankAccounts</span> <span class="kd">AS</span> <span class="nv">BankAccounts</span>
+  <span class="s">|</span><span class="kd">WHERE</span>
+  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Bank</span> <span class="kd">In</span><span class="p">(</span><span class="no">&amp;BanksToProcess</span><span class="p">)</span><span class="s">&quot;</span><span class="p">);</span>
 
 <span class="nv">MergedQuery</span><span class="o">.</span><span class="nf">SetParameter</span><span class="p">(</span><span class="s">&quot;BanksToProcess&quot;</span><span class="p">,</span> <span class="nv">BanksToProcess</span><span class="p">);</span>
 <span class="nv">AccountsSelection</span> <span class="o">=</span> <span class="nv">MergedQuery</span><span class="o">.</span><span class="nf">Execute</span><span class="p">()</span><span class="o">.</span><span class="nf">Select</span><span class="p">();</span>
@@ -1598,10 +1598,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       

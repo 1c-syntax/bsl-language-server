@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1481,17 +1481,17 @@ Also, errors can occur when you manually change queries, without checking with t
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Query for an already deleted register:
 <div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
-    <span class="nv">Table</span><span class="err">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
 <span class="kd">FROM</span>
-    <span class="nv">InformationRegister</span><span class="err">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">Table</span>
+    <span class="nv">InformationRegister</span><span class="o">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">Table</span>
 </code></pre></div>
 Query with a join to the renamed register:
 <div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
-    <span class="nv">Table</span><span class="err">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
 <span class="kd">FROM</span>
-     <span class="nv">InformationRegister</span><span class="err">.</span><span class="nv">InfoReg</span> <span class="kd">AS</span> <span class="nv">Table</span> 
-     <span class="kd">INNER</span> <span class="kd">JOIN</span> <span class="nv">InformationRegister</span><span class="err">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">FilterTable</span>
-     <span class="kd">ON</span> <span class="nv">FilterTable</span><span class="err">.</span><span class="nv">Field2</span> <span class="err">=</span> <span class="nv">Table</span><span class="err">.</span><span class="nv">Field2</span>
+     <span class="nv">InformationRegister</span><span class="o">.</span><span class="nv">InfoReg</span> <span class="kd">AS</span> <span class="nv">Table</span> 
+     <span class="kd">INNER</span> <span class="kd">JOIN</span> <span class="nv">InformationRegister</span><span class="o">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">FilterTable</span>
+     <span class="kd">ON</span> <span class="nv">FilterTable</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span>
 </code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -1589,10 +1589,10 @@ Query with a join to the renamed register:
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       
