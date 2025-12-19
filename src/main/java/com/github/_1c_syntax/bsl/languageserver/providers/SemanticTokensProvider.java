@@ -233,8 +233,11 @@ public class SemanticTokensProvider {
     addMethodSymbols(symbolTree, entries, descriptionRanges, documentationLines);
     addVariableSymbols(documentContext, symbolTree, entries, descriptionRanges, documentationLines);
 
-    // Note: We don't call addMultilineDescriptions here because BSL doc tokens
-    // will split description comments into parts (similar to how SDBL splits strings)
+    // Note: addMultilineDescriptions is not called here because BSL doc token handling
+    // (added in step 7) splits description comments into parts around BSL doc keywords,
+    // similar to how SDBL splits string tokens. Description comments are handled by
+    // addBslDocTokens which properly creates multiline tokens for contiguous lines
+    // without keywords and splits lines that contain keywords.
 
     // 2) Comments (lexer type LINE_COMMENT)
     addComments(comments, descriptionRanges, entries, documentationLines);
@@ -620,7 +623,11 @@ public class SemanticTokensProvider {
    * Only returns semantic types for BSL doc keywords and operators.
    * WORD tokens are not highlighted at the lexer level to avoid highlighting
    * all words in descriptions - proper highlighting of parameter names and types
-   * requires AST-level analysis.
+   * requires AST-level analysis using BSLMethodDescriptionParser.
+   * <p>
+   * Future enhancement: Use BSLMethodDescriptionParser AST to identify parameter
+   * names and types in the proper context (after "Параметры:", before "-", etc.)
+   * and highlight them as Parameter/Type tokens.
    *
    * @param tokenType BSLMethodDescriptionLexer token type
    * @return Semantic token type string, or null if not applicable
@@ -637,9 +644,8 @@ public class SemanticTokensProvider {
       // Sub-parameter marker
       return SemanticTokenTypes.Operator;
     }
-    // Note: WORD and DOTSWORD are not highlighted at lexer level
-    // because it would highlight all words in the description.
-    // Parameter names and types should be highlighted using AST analysis.
+    // WORD and DOTSWORD are not highlighted at lexer level to avoid
+    // highlighting all words in descriptions regardless of context.
     return null;
   }
 
