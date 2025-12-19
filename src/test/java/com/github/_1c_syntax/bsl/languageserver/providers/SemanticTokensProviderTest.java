@@ -60,7 +60,6 @@ class SemanticTokensProviderTest {
     provider.setMultilineTokenSupport(false);
   }
 
-
   // region Helper types and methods
 
   /**
