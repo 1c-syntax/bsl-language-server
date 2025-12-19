@@ -154,12 +154,10 @@ public class SemanticTokensProvider {
   private static final Set<Integer> SDBL_KEYWORDS = createSdblKeywords();
   private static final Set<Integer> SDBL_FUNCTIONS = createSdblFunctions();
   private static final Set<Integer> SDBL_METADATA_TYPES = createSdblMetadataTypes();
-  private static final Set<Integer> SDBL_VIRTUAL_TABLES = createSdblVirtualTables();
   private static final Set<Integer> SDBL_LITERALS = createSdblLiterals();
   private static final Set<Integer> SDBL_OPERATORS = createSdblOperators();
   private static final Set<Integer> SDBL_STRINGS = Set.of(SDBLLexer.STR);
   private static final Set<Integer> SDBL_COMMENTS = Set.of(SDBLLexer.LINE_COMMENT);
-  private static final Set<Integer> SDBL_PARAMETERS = Set.of(SDBLLexer.AMPERSAND, SDBLLexer.PARAMETER_IDENTIFIER);
   private static final Set<Integer> SDBL_EDS = Set.of(
     SDBLLexer.EDS_CUBE,
     SDBLLexer.EDS_TABLE,
@@ -798,10 +796,6 @@ public class SemanticTokensProvider {
       // Note: Virtual tables (SDBL_VIRTUAL_TABLES) are NOT included here because they should be
       // handled by AST visitor as Method tokens in visitMdo
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Namespace, NO_MODIFIERS);
-    } else if (SDBL_VIRTUAL_TABLES.contains(tokenType)) {
-      // Virtual table methods are skipped in lexical processing
-      // They will be handled by AST visitor as Method tokens
-      return null;
     } else if (SDBL_LITERALS.contains(tokenType)) {
       // Literals as Keyword (matching YAML: constant.language.sdbl, no Constant type in LSP)
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
@@ -811,10 +805,6 @@ public class SemanticTokensProvider {
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.String, NO_MODIFIERS);
     } else if (SDBL_COMMENTS.contains(tokenType)) {
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Comment, NO_MODIFIERS);
-    } else if (SDBL_PARAMETERS.contains(tokenType)) {
-      // Parameters are skipped in lexical processing
-      // They will be handled by AST visitor as combined &ParameterName tokens
-      return null;
     } else if (SDBL_NUMBERS.contains(tokenType)) {
       // Numbers as Number (matching YAML: constant.numeric.sdbl)
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Number, NO_MODIFIERS);
@@ -1230,7 +1220,7 @@ public class SemanticTokensProvider {
    * Helper method to add semantic token from SDBL ANTLR token
    * Handles conversion from ANTLR 1-indexed lines to LSP 0-indexed positions
    */
-  private void addSdblTokenRange(List<TokenEntry> entries, Token token, String type, String... modifiers) {
+  private void addSdblTokenRange(List<TokenEntry> entries, @Nullable Token token, String type, String... modifiers) {
     if (token == null) {
       return;
     }
