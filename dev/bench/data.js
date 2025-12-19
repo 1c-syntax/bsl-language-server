@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766089236840,
+  "lastUpdate": 1766129837398,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32705,6 +32705,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1868008299624957",
             "extra": "mean: 88.63927412033081 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "32eef8df87a2c2d9bcebff539a279ddef82780af",
+          "message": "Добавлена линза для отладки тестов (#3682)",
+          "timestamp": "2025-12-19T07:26:59Z",
+          "tree_id": "9843991267bc1f859647fbf4c3bfc33664d30d60",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/32eef8df87a2c2d9bcebff539a279ddef82780af"
+        },
+        "date": 1766129831980,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.81872566541035,
+            "unit": "sec",
+            "range": "stddev: 3.187665323578583",
+            "extra": "mean: 90.81872566541035 sec\nrounds: 3"
           }
         ]
       }
