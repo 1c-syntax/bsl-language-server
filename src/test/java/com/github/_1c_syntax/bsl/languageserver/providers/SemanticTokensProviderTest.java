@@ -451,6 +451,82 @@ class SemanticTokensProviderTest {
   }
 
   @Test
+  void bslDocKeywordsHighlighting() {
+    String bsl = """
+      // Описание функции
+      //
+      // Параметры:
+      //   Имя - Строка - имя пользователя
+      //   Возраст - Число - возраст
+      //
+      // Возвращаемое значение:
+      //   Булево - результат проверки
+      //
+      Функция ПроверитьДанные(Имя, Возраст) Экспорт
+        Возврат Истина;
+      КонецФункции
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // BSL doc keywords should be highlighted as Macro with Documentation modifier
+    var expectedTokens = List.of(
+      // "Параметры:" keyword on line 2
+      new ExpectedToken(2, 3, 10, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Параметры:"),
+      // Parameter name "Имя" on line 3
+      new ExpectedToken(3, 5, 3, SemanticTokenTypes.Variable, SemanticTokenModifiers.Documentation, "Имя"),
+      // Dash "-" on line 3
+      new ExpectedToken(3, 9, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Type "Строка" on line 3
+      new ExpectedToken(3, 11, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Documentation, "Строка"),
+      // "Возвращаемое значение:" keyword on line 6
+      new ExpectedToken(6, 3, 22, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Возвращаемое значение:")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void bslDocDeprecatedKeyword() {
+    String bsl = """
+      // Устарела. Используйте новый метод
+      Процедура СтарыйМетод()
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // DEPRECATE_KEYWORD should be highlighted
+    var expectedTokens = List.of(
+      new ExpectedToken(0, 3, 9, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Устарела.")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void bslDocExampleKeyword() {
+    String bsl = """
+      // Описание
+      //
+      // Пример:
+      //   Результат = МойМетод();
+      //
+      Процедура МойМетод()
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // EXAMPLE_KEYWORD should be highlighted
+    var expectedTokens = List.of(
+      new ExpectedToken(2, 3, 7, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Пример:")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
   void variableDefinition_hasDefinitionModifier() {
     String bsl = """
       Перем Перем1;

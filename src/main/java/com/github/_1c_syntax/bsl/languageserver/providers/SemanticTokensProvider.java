@@ -37,6 +37,8 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionLexer;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.CompilerDirectiveContext;
@@ -165,6 +167,17 @@ public class SemanticTokensProvider {
   );
   private static final Set<Integer> SDBL_NUMBERS = Set.of(SDBLLexer.DECIMAL, SDBLLexer.FLOAT);
 
+  // BSL doc (method/variable description) token types
+  private static final Set<Integer> BSLDOC_KEYWORDS = Set.of(
+    BSLMethodDescriptionLexer.PARAMETERS_KEYWORD,
+    BSLMethodDescriptionLexer.RETURNS_KEYWORD,
+    BSLMethodDescriptionLexer.EXAMPLE_KEYWORD,
+    BSLMethodDescriptionLexer.CALL_OPTIONS_KEYWORD,
+    BSLMethodDescriptionLexer.DEPRECATE_KEYWORD,
+    BSLMethodDescriptionLexer.SEE_KEYWORD,
+    BSLMethodDescriptionLexer.OF_KEYWORD
+  );
+
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
   private static final String[] DEFAULT_LIBRARY = new String[]{SemanticTokenModifiers.DefaultLibrary};
@@ -241,7 +254,10 @@ public class SemanticTokensProvider {
     // 6) Add SDBL tokens and split string parts
     addSdblTokens(documentContext, entries, stringsToSkip);
 
-    // 7) Build delta-encoded data
+    // 7) Add BSL doc tokens (syntax highlighting within method/variable descriptions)
+    addBslDocTokens(symbolTree, entries);
+
+    // 8) Build delta-encoded data
     List<Integer> data = toDeltaEncoded(entries);
     return new SemanticTokens(data);
   }
@@ -365,6 +381,104 @@ public class SemanticTokensProvider {
     int startLine = range.getStart().getLine();
     int endLine = range.getEnd().getLine();
     lines.set(startLine, endLine + 1); // inclusive end
+  }
+
+  /**
+   * Add BSL doc tokens for method and variable descriptions.
+   * This provides syntax highlighting within documentation comments (similar to JavaDoc).
+   */
+  private void addBslDocTokens(SymbolTree symbolTree, List<TokenEntry> entries) {
+    // Process method descriptions
+    for (var method : symbolTree.getMethods()) {
+      method.getDescription().ifPresent(description ->
+        addBslDocDescriptionTokens(entries, description)
+      );
+    }
+
+    // Process variable descriptions
+    for (var variable : symbolTree.getVariables()) {
+      variable.getDescription().ifPresent(description -> {
+        addBslDocDescriptionTokens(entries, description);
+        description.getTrailingDescription().ifPresent(trailing ->
+          addBslDocDescriptionTokens(entries, trailing)
+        );
+      });
+    }
+  }
+
+  /**
+   * Add semantic tokens for BSL doc elements within a description.
+   *
+   * @param entries     The list of token entries to add to
+   * @param description The description to process
+   */
+  private void addBslDocDescriptionTokens(List<TokenEntry> entries, SourceDefinedSymbolDescription description) {
+    var range = description.getRange();
+    if (Ranges.isEmpty(range)) {
+      return;
+    }
+
+    var descriptionText = description.getDescription();
+    if (descriptionText.isEmpty()) {
+      return;
+    }
+
+    // Parse the description text with BSLMethodDescriptionTokenizer
+    var tokenizer = new BSLMethodDescriptionTokenizer(descriptionText);
+    var tokens = tokenizer.getTokens();
+
+    // The description range start gives us the file position
+    int fileStartLine = range.getStart().getLine();
+
+    for (Token token : tokens) {
+      int tokenType = token.getType();
+
+      // Map BSL doc tokens to semantic token types
+      String semanticType = getBslDocSemanticType(tokenType);
+      if (semanticType == null) {
+        continue;
+      }
+
+      // Calculate file position
+      // Token line is 1-indexed within the description text
+      // Each line in the description corresponds to a comment line in the file
+      int descriptionLine = token.getLine() - 1; // Convert to 0-indexed
+      int fileLine = fileStartLine + descriptionLine;
+      int fileColumn = token.getCharPositionInLine();
+      int tokenLength = (int) token.getText().codePoints().count();
+
+      var tokenRange = new Range(
+        new Position(fileLine, fileColumn),
+        new Position(fileLine, fileColumn + tokenLength)
+      );
+
+      addRange(entries, tokenRange, semanticType, DOC_ONLY);
+    }
+  }
+
+  /**
+   * Map BSL doc token type to semantic token type.
+   *
+   * @param tokenType BSLMethodDescriptionLexer token type
+   * @return Semantic token type string, or null if not applicable
+   */
+  @Nullable
+  private static String getBslDocSemanticType(int tokenType) {
+    if (BSLDOC_KEYWORDS.contains(tokenType)) {
+      // Keywords like Параметры:, Возвращаемое значение:, Пример:, etc.
+      return SemanticTokenTypes.Macro;
+    } else if (tokenType == BSLMethodDescriptionLexer.WORD
+      || tokenType == BSLMethodDescriptionLexer.DOTSWORD) {
+      // Parameter names and type names
+      return SemanticTokenTypes.Variable;
+    } else if (tokenType == BSLMethodDescriptionLexer.DASH) {
+      // Separator between parameter name and description
+      return SemanticTokenTypes.Operator;
+    } else if (tokenType == BSLMethodDescriptionLexer.STAR) {
+      // Sub-parameter marker
+      return SemanticTokenTypes.Operator;
+    }
+    return null;
   }
 
   private void addAnnotationsFromAst(List<TokenEntry> entries, ParseTree parseTree) {
