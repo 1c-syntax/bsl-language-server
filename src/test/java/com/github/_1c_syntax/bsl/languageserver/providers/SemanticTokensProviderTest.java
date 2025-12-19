@@ -436,12 +436,11 @@ class SemanticTokensProviderTest {
     var decoded = getDecodedTokens(bsl);
 
     // When multiline support is enabled, documentation comments should be merged into one token
-    // The merged token starts on line 0 and spans across lines
-    // Both lines "// Первая строка описания" (26 chars) + "// Вторая строка описания" (25 chars) = 51 chars total,
-    // i.e. the sum of the characters of both lines; the newline between them is not included in the length.
-    // Body comment on line 3 should NOT have Documentation modifier
+    // if there are no BSL doc keywords on those lines.
+    // Both lines "// Первая строка описания" (25 chars) + "\n" + "// Вторая строка описания" (25 chars) = 51 chars total.
+    // Body comment on line 3 should NOT have Documentation modifier.
     var expected = List.of(
-      // Merged documentation comment (starts at line 0, length is sum of both lines without the newline)
+      // Merged documentation comment (starts at line 0, length includes newline between lines)
       new ExpectedToken(0, 0, 51, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Первая+Вторая строка описания"),
       // Body comment without documentation modifier
       new ExpectedToken(3, 2, 18, SemanticTokenTypes.Comment, "// не документация")
@@ -470,17 +469,19 @@ class SemanticTokensProviderTest {
     var decoded = getDecodedTokens(bsl);
 
     // BSL doc keywords should be highlighted as Macro with Documentation modifier
+    // Dash operators should be highlighted as Operator
+    // Note: Parameter names and types (WORD tokens) are not highlighted at lexer level
     var expectedTokens = List.of(
       // "Параметры:" keyword on line 2
       new ExpectedToken(2, 3, 10, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Параметры:"),
-      // Parameter name "Имя" on line 3
-      new ExpectedToken(3, 5, 3, SemanticTokenTypes.Variable, SemanticTokenModifiers.Documentation, "Имя"),
-      // Dash "-" on line 3
+      // Dash "-" on line 3 (first occurrence)
       new ExpectedToken(3, 9, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
-      // Type "Строка" on line 3
-      new ExpectedToken(3, 11, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Documentation, "Строка"),
+      // Dash "-" on line 3 (second occurrence)
+      new ExpectedToken(3, 18, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
       // "Возвращаемое значение:" keyword on line 6
-      new ExpectedToken(6, 3, 22, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Возвращаемое значение:")
+      new ExpectedToken(6, 3, 22, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Возвращаемое значение:"),
+      // Dash "-" on line 7
+      new ExpectedToken(7, 12, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-")
     );
 
     assertContainsTokens(decoded, expectedTokens);

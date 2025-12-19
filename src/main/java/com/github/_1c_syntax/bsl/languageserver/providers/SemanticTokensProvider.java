@@ -80,6 +80,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -232,7 +233,8 @@ public class SemanticTokensProvider {
     addMethodSymbols(symbolTree, entries, descriptionRanges, documentationLines);
     addVariableSymbols(documentContext, symbolTree, entries, descriptionRanges, documentationLines);
 
-    addMultilineDescriptions(documentContext, descriptionRanges, entries);
+    // Note: We don't call addMultilineDescriptions here because BSL doc tokens
+    // will split description comments into parts (similar to how SDBL splits strings)
 
     // 2) Comments (lexer type LINE_COMMENT)
     addComments(comments, descriptionRanges, entries, documentationLines);
@@ -408,6 +410,8 @@ public class SemanticTokensProvider {
 
   /**
    * Add semantic tokens for BSL doc elements within a description.
+   * Splits comment tokens around BSL doc elements (similar to how SDBL splits strings).
+   * When multiline token support is enabled, uses multiline tokens for contiguous comment ranges.
    *
    * @param entries     The list of token entries to add to
    * @param description The description to process
@@ -430,34 +434,193 @@ public class SemanticTokensProvider {
     // The description range start gives us the file position
     int fileStartLine = range.getStart().getLine();
 
+    // Group tokens by line for efficient processing
+    var tokensByLine = new HashMap<Integer, List<Token>>();
     for (Token token : tokens) {
-      int tokenType = token.getType();
-
-      // Map BSL doc tokens to semantic token types
-      String semanticType = getBslDocSemanticType(tokenType);
-      if (semanticType == null) {
-        continue;
-      }
-
-      // Calculate file position
-      // Token line is 1-indexed within the description text
-      // Each line in the description corresponds to a comment line in the file
       int descriptionLine = token.getLine() - 1; // Convert to 0-indexed
-      int fileLine = fileStartLine + descriptionLine;
-      int fileColumn = token.getCharPositionInLine();
-      int tokenLength = (int) token.getText().codePoints().count();
+      tokensByLine.computeIfAbsent(descriptionLine, k -> new ArrayList<>()).add(token);
+    }
 
-      var tokenRange = new Range(
-        new Position(fileLine, fileColumn),
-        new Position(fileLine, fileColumn + tokenLength)
-      );
+    // Get comment type index for adding Comment parts
+    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
+    int docModifierMask = computeDocModifierMask();
 
-      addRange(entries, tokenRange, semanticType, DOC_ONLY);
+    // Split the description text into lines to get line lengths
+    var lines = descriptionText.split("\n", -1);
+
+    if (multilineTokenSupport) {
+      // With multiline support: collect contiguous ranges without BSL doc tokens
+      // and emit them as multiline Comment tokens
+      addBslDocTokensWithMultilineSupport(entries, lines, tokensByLine, fileStartLine, commentTypeIdx, docModifierMask);
+    } else {
+      // Without multiline support: process each line independently
+      addBslDocTokensPerLine(entries, lines, tokensByLine, fileStartLine, commentTypeIdx, docModifierMask);
     }
   }
 
   /**
+   * Add BSL doc tokens with multiline token support.
+   * Contiguous lines without BSL doc keywords are merged into multiline Comment tokens.
+   */
+  private void addBslDocTokensWithMultilineSupport(
+    List<TokenEntry> entries,
+    String[] lines,
+    Map<Integer, List<Token>> tokensByLine,
+    int fileStartLine,
+    int commentTypeIdx,
+    int docModifierMask
+  ) {
+    int lineIdx = 0;
+    while (lineIdx < lines.length) {
+      int fileLine = fileStartLine + lineIdx;
+      String lineText = lines[lineIdx];
+
+      var lineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
+      var semanticTokens = lineTokens.stream()
+        .filter(t -> getBslDocSemanticType(t.getType()) != null)
+        .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
+        .toList();
+
+      if (semanticTokens.isEmpty()) {
+        // No BSL doc tokens on this line - try to collect contiguous lines without tokens
+        int startLineIdx = lineIdx;
+        int startLine = fileLine;
+
+        // Find the end of contiguous lines without BSL doc tokens
+        while (lineIdx < lines.length) {
+          var nextLineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
+          boolean hasSemanticTokens = nextLineTokens.stream()
+            .anyMatch(t -> getBslDocSemanticType(t.getType()) != null);
+
+          if (hasSemanticTokens) {
+            break;
+          }
+          lineIdx++;
+        }
+
+        // Calculate total length for multiline token
+        int endLineIdx = lineIdx - 1;
+        int endLine = fileStartLine + endLineIdx;
+
+        if (startLineIdx == endLineIdx) {
+          // Single line - add as simple token
+          int lineEnd = lines[startLineIdx].length();
+          if (lineEnd > 0 && commentTypeIdx >= 0) {
+            entries.add(new TokenEntry(startLine, 0, lineEnd, commentTypeIdx, docModifierMask));
+          }
+        } else {
+          // Multiple lines - calculate total length including newlines for multiline token
+          int totalLength = 0;
+          for (int i = startLineIdx; i <= endLineIdx; i++) {
+            totalLength += lines[i].length();
+            if (i < endLineIdx) {
+              totalLength += 1; // newline character
+            }
+          }
+
+          if (totalLength > 0 && commentTypeIdx >= 0) {
+            entries.add(new TokenEntry(startLine, 0, totalLength, commentTypeIdx, docModifierMask));
+          }
+        }
+      } else {
+        // Has BSL doc tokens - split this line
+        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, commentTypeIdx, docModifierMask);
+        lineIdx++;
+      }
+    }
+  }
+
+  /**
+   * Add BSL doc tokens without multiline support (per-line processing).
+   */
+  private void addBslDocTokensPerLine(
+    List<TokenEntry> entries,
+    String[] lines,
+    Map<Integer, List<Token>> tokensByLine,
+    int fileStartLine,
+    int commentTypeIdx,
+    int docModifierMask
+  ) {
+    for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      int fileLine = fileStartLine + lineIdx;
+      String lineText = lines[lineIdx];
+      int lineEnd = lineText.length();
+
+      var lineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
+      var semanticTokens = lineTokens.stream()
+        .filter(t -> getBslDocSemanticType(t.getType()) != null)
+        .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
+        .toList();
+
+      if (semanticTokens.isEmpty()) {
+        // No BSL doc tokens on this line - add the whole line as Comment+Documentation
+        if (lineEnd > 0 && commentTypeIdx >= 0) {
+          entries.add(new TokenEntry(fileLine, 0, lineEnd, commentTypeIdx, docModifierMask));
+        }
+      } else {
+        // Split the line around BSL doc tokens
+        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, commentTypeIdx, docModifierMask);
+      }
+    }
+  }
+
+  /**
+   * Add BSL doc tokens for a single line, splitting around semantic tokens.
+   */
+  private void addBslDocTokensForLine(
+    List<TokenEntry> entries,
+    int fileLine,
+    String lineText,
+    List<Token> semanticTokens,
+    int commentTypeIdx,
+    int docModifierMask
+  ) {
+    int lineEnd = lineText.length();
+    int currentPos = 0;
+
+    for (Token token : semanticTokens) {
+      int tokenStart = token.getCharPositionInLine();
+      int tokenLength = (int) token.getText().codePoints().count();
+      int tokenEnd = tokenStart + tokenLength;
+
+      // Add Comment part before this token
+      if (currentPos < tokenStart && commentTypeIdx >= 0) {
+        entries.add(new TokenEntry(fileLine, currentPos, tokenStart - currentPos, commentTypeIdx, docModifierMask));
+      }
+
+      // Add the BSL doc token
+      String semanticType = getBslDocSemanticType(token.getType());
+      if (semanticType != null) {
+        var tokenRange = new Range(
+          new Position(fileLine, tokenStart),
+          new Position(fileLine, tokenEnd)
+        );
+        addRange(entries, tokenRange, semanticType, DOC_ONLY);
+      }
+
+      currentPos = tokenEnd;
+    }
+
+    // Add Comment part after the last token
+    if (currentPos < lineEnd && commentTypeIdx >= 0) {
+      entries.add(new TokenEntry(fileLine, currentPos, lineEnd - currentPos, commentTypeIdx, docModifierMask));
+    }
+  }
+
+  /**
+   * Compute the modifier mask for Documentation modifier.
+   */
+  private int computeDocModifierMask() {
+    int idx = legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
+    return idx >= 0 ? (1 << idx) : 0;
+  }
+
+  /**
    * Map BSL doc token type to semantic token type.
+   * Only returns semantic types for BSL doc keywords and operators.
+   * WORD tokens are not highlighted at the lexer level to avoid highlighting
+   * all words in descriptions - proper highlighting of parameter names and types
+   * requires AST-level analysis.
    *
    * @param tokenType BSLMethodDescriptionLexer token type
    * @return Semantic token type string, or null if not applicable
@@ -467,10 +630,6 @@ public class SemanticTokensProvider {
     if (BSLDOC_KEYWORDS.contains(tokenType)) {
       // Keywords like Параметры:, Возвращаемое значение:, Пример:, etc.
       return SemanticTokenTypes.Macro;
-    } else if (tokenType == BSLMethodDescriptionLexer.WORD
-      || tokenType == BSLMethodDescriptionLexer.DOTSWORD) {
-      // Parameter names and type names
-      return SemanticTokenTypes.Variable;
     } else if (tokenType == BSLMethodDescriptionLexer.DASH) {
       // Separator between parameter name and description
       return SemanticTokenTypes.Operator;
@@ -478,6 +637,9 @@ public class SemanticTokensProvider {
       // Sub-parameter marker
       return SemanticTokenTypes.Operator;
     }
+    // Note: WORD and DOTSWORD are not highlighted at lexer level
+    // because it would highlight all words in the description.
+    // Parameter names and types should be highlighted using AST analysis.
     return null;
   }
 
