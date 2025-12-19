@@ -58,12 +58,19 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Macro,
       SemanticTokenTypes.Decorator,
       SemanticTokenTypes.Operator,
-      SemanticTokenTypes.Namespace
+      SemanticTokenTypes.Namespace,
+      SemanticTokenTypes.Type,  // Standard LSP token type for type names (identifiers of types)
+      SemanticTokenTypes.Property,  // Added for SDBL field names
+      SemanticTokenTypes.Class,  // Added for SDBL metadata object names (e.g. Справочник.Контрагенты, РегистрСведений.КурсыВалют)
+      SemanticTokenTypes.Enum,  // Added for SDBL enum types (Перечисление.Пол)
+      SemanticTokenTypes.EnumMember  // Added for predefined elements and enum values
     );
 
     List<String> tokenModifiers = List.of(
       SemanticTokenModifiers.Documentation,
-      SemanticTokenModifiers.Definition
+      SemanticTokenModifiers.Definition,
+      SemanticTokenModifiers.DefaultLibrary,  // Added for SDBL built-in functions and types
+      SemanticTokenModifiers.Declaration  // Added for SDBL alias declarations
     );
 
     return new SemanticTokensLegend(tokenTypes, tokenModifiers);
