@@ -1128,8 +1128,8 @@ public class SemanticTokensProvider {
       // e.g., Справочник.Пользователи.ГруппыДоступа → ГруппыДоступа is objectTableName
       var objectTableName = ctx.objectTableName;
       if (objectTableName != null) {
-        // Table part (табличная часть) → Property (it's a subordinate structure of the main object)
-        provider.addSdblTokenRange(entries, objectTableName.getStart(), SemanticTokenTypes.Property);
+        // Table part (табличная часть) → Class (it's a full table, subordinate to the main object)
+        provider.addSdblTokenRange(entries, objectTableName.getStart(), SemanticTokenTypes.Class);
       }
 
       return super.visitTable(ctx);

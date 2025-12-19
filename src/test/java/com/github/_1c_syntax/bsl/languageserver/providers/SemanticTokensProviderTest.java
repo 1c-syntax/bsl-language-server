@@ -864,7 +864,7 @@ class SemanticTokensProviderTest {
   @Test
   void sdblQuery_tableWithObjectTableName() {
     // Test: Справочник.Пользователи.ГруппыДоступа
-    // Справочник → Namespace, Пользователи → Class, ГруппыДоступа → Property (table part)
+    // Справочник → Namespace, Пользователи → Class, ГруппыДоступа → Class (table part is a full table)
     String bsl = """
       Процедура Тест()
         Запрос = "ВЫБРАТЬ * ИЗ Справочник.Пользователи.ГруппыДоступа";
@@ -878,8 +878,8 @@ class SemanticTokensProviderTest {
       new ExpectedToken(1, 25, 10, SemanticTokenTypes.Namespace, "Справочник"),
       // Пользователи → Class (metadata object) at position 36
       new ExpectedToken(1, 36, 12, SemanticTokenTypes.Class, "Пользователи"),
-      // ГруппыДоступа → Property (table part/subordinate table) at position 49
-      new ExpectedToken(1, 49, 13, SemanticTokenTypes.Property, "ГруппыДоступа")
+      // ГруппыДоступа → Class (table part is a full table) at position 49
+      new ExpectedToken(1, 49, 13, SemanticTokenTypes.Class, "ГруппыДоступа")
     );
 
     assertContainsTokens(decoded, expected);
