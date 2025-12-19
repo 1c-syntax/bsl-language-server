@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766129837398,
+  "lastUpdate": 1766146186480,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32736,6 +32736,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.187665323578583",
             "extra": "mean: 90.81872566541035 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "406c099cbbab0ddb86fbe79c754cc9e4ed3e6649",
+          "message": "Merge pull request #3673 from 1c-syntax/copilot/add-query-language-support\n\nAdd SDBL (query language) semantic token highlighting with AST-based analysis",
+          "timestamp": "2025-12-19T12:59:46+01:00",
+          "tree_id": "378affaa3ec2c40ef2d48ad3af93b7a3208c3855",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/406c099cbbab0ddb86fbe79c754cc9e4ed3e6649"
+        },
+        "date": 1766146180082,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.20525574684143,
+            "unit": "sec",
+            "range": "stddev: 1.247193579012618",
+            "extra": "mean: 89.20525574684143 sec\nrounds: 3"
           }
         ]
       }
