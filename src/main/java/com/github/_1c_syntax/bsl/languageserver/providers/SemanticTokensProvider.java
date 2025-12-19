@@ -241,7 +241,7 @@ public class SemanticTokensProvider {
     // 6) Add SDBL tokens and split string parts
     addSdblTokens(documentContext, entries, stringsToSkip);
 
-    // 6) Build delta-encoded data
+    // 7) Build delta-encoded data
     List<Integer> data = toDeltaEncoded(entries);
     return new SemanticTokens(data);
   }
@@ -1131,8 +1131,10 @@ public class SemanticTokensProvider {
       var identifiers = ctx.identifier();
       if (identifiers != null && !identifiers.isEmpty()) {
         if (identifiers.size() == 1) {
-          // Single identifier - could be alias or field
-          // Context-dependent, treat as variable for now
+          // Single identifier: in SDBL it may represent either a table alias or a field name.
+          // We intentionally highlight such ambiguous identifiers as "variable" for now,
+          // because distinguishing alias vs. field here would require deeper symbol resolution
+          // that is not performed in this visitor.
           provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
         } else if (identifiers.size() >= 2) {
           // First identifier → Variable (table alias)
@@ -1175,7 +1177,7 @@ public class SemanticTokensProvider {
       var type = ctx.type;
       var mdoName = ctx.mdoName;
       var predefinedName = ctx.predefinedName;
-      var emptyRef = ctx.emptyFer; // Note: grammar has typo "emptyFer" instead of "emptyRef"
+      var emptyRef = ctx.emptyFer; // Note: variable name matches grammar field 'emptyFer' (typo in grammar for 'emptyRef')
       var systemName = ctx.systemName;
 
       if (type != null && mdoName != null) {

@@ -59,9 +59,9 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Decorator,
       SemanticTokenTypes.Operator,
       SemanticTokenTypes.Namespace,
-      SemanticTokenTypes.Type,  // Added for general type references
+      SemanticTokenTypes.Type,  // Standard LSP token type for type names (identifiers of types)
       SemanticTokenTypes.Property,  // Added for SDBL field names
-      SemanticTokenTypes.Class,  // Added for SDBL metadata types (Справочник, РегистрСведений, etc.)
+      SemanticTokenTypes.Class,  // Added for SDBL metadata object names (e.g. Справочник.Контрагенты, РегистрСведений.КурсыВалют)
       SemanticTokenTypes.Enum,  // Added for SDBL enum types (Перечисление.Пол)
       SemanticTokenTypes.EnumMember  // Added for predefined elements and enum values
     );

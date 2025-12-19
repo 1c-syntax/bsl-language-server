@@ -437,10 +437,11 @@ class SemanticTokensProviderTest {
 
     // When multiline support is enabled, documentation comments should be merged into one token
     // The merged token starts on line 0 and spans across lines
-    // Both lines "// Первая строка описания" (26 chars) + "// Вторая строка описания" (25 chars) = 51 chars total
+    // Both lines "// Первая строка описания" (26 chars) + "// Вторая строка описания" (25 chars) = 51 chars total,
+    // i.e. the sum of the characters of both lines; the newline between them is not included in the length.
     // Body comment on line 3 should NOT have Documentation modifier
     var expected = List.of(
-      // Merged documentation comment (starts at line 0, length is sum of both lines)
+      // Merged documentation comment (starts at line 0, length is sum of both lines without the newline)
       new ExpectedToken(0, 0, 51, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Первая+Вторая строка описания"),
       // Body comment without documentation modifier
       new ExpectedToken(3, 2, 18, SemanticTokenTypes.Comment, "// не документация")
