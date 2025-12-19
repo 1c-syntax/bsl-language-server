@@ -25,14 +25,16 @@ import com.github._1c_syntax.bsl.languageserver.commands.ToggleCyclomaticComplex
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 /**
- * Сапплаер линз, показывающий когнитивную сложность методов.
+ * Сапплаер линз, показывающий цикломатическую сложность методов.
  */
 @Component
+@Order(5)
 public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
   public CyclomaticComplexityCodeLensSupplier(
