@@ -1084,33 +1084,13 @@ public class SemanticTokensProvider {
     
     @Override
     public Void visitMdo(SDBLParser.MdoContext ctx) {
-      // Metadata type names (Справочник, РегистрСведений, etc.) are already handled
-      // by lexical token processing as Namespace
-      
-      // Handle MDO structure:
-      // - MetadataType.ObjectName (2 identifiers) → Second is Class
-      // - MetadataType.ObjectName.VirtualTableMethod (3+ identifiers) → Second-to-last is Class, last is Method
-      // Example: РегистрСведений.КурсыВалют → КурсыВалют is Class
-      // Example: РегистрСведений.КурсыВалют.СрезПоследних → КурсыВалют is Class, СрезПоследних is Method
-      var identifiers = Trees.getDescendants(ctx).stream()
-        .filter(SDBLParser.IdentifierContext.class::isInstance)
-        .map(SDBLParser.IdentifierContext.class::cast)
-        .toList();
-      
-      if (identifiers.size() == 1) {
-        // Single identifier → Class (metadata object name)
-        provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Class);
-      } else if (identifiers.size() == 2) {
-        // Two identifiers → MetadataType.ObjectName
-        // First is metadata type (already handled by lexical as Namespace)
-        // Second is object name → Class
-        provider.addSdblTokenRange(entries, identifiers.get(1).getStart(), SemanticTokenTypes.Class);
-      } else if (identifiers.size() > 2) {
-        // More than two identifiers → MetadataType.ObjectName.VirtualTableMethod[.Method...]
-        // Second-to-last is object name → Class
-        // Last is virtual table method → Method
-        provider.addSdblTokenRange(entries, identifiers.get(identifiers.size() - 2).getStart(), SemanticTokenTypes.Class);
-        provider.addSdblTokenRange(entries, identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Method);
+      // Metadata object reference
+      // Grammar: mdo: type=(CATALOG_TYPE|...) DOT tableName=identifier
+      // type is already handled as Namespace by lexical processing
+      // tableName → Class (metadata object name, e.g., Пользователи in Справочник.Пользователи)
+      var tableName = ctx.tableName;
+      if (tableName != null) {
+        provider.addSdblTokenRange(entries, tableName.getStart(), SemanticTokenTypes.Class);
       }
       
       return super.visitMdo(ctx);
@@ -1136,11 +1116,20 @@ public class SemanticTokensProvider {
     public Void visitTable(SDBLParser.TableContext ctx) {
       // Handle table references
       // Grammar: table: mdo | mdo DOT objectTableName=identifier | tableName=identifier
-      // The third variant (tableName=identifier) is a temporary table reference
+
+      // tableName (third variant) is a temporary table reference
       var tableName = ctx.tableName;
       if (tableName != null) {
         // Temporary table reference (ИЗ ВТ_Курсы) → Variable
         provider.addSdblTokenRange(entries, tableName.getStart(), SemanticTokenTypes.Variable);
+      }
+
+      // objectTableName (second variant) is a table part/subordinate table
+      // e.g., Справочник.Пользователи.ГруппыДоступа → ГруппыДоступа is objectTableName
+      var objectTableName = ctx.objectTableName;
+      if (objectTableName != null) {
+        // Table part (табличная часть) → Property (it's a subordinate structure of the main object)
+        provider.addSdblTokenRange(entries, objectTableName.getStart(), SemanticTokenTypes.Property);
       }
 
       return super.visitTable(ctx);

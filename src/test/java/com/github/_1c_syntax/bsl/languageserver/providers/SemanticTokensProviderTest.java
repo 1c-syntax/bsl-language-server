@@ -861,6 +861,30 @@ class SemanticTokensProviderTest {
     assertContainsTokens(decoded, expected);
   }
 
+  @Test
+  void sdblQuery_tableWithObjectTableName() {
+    // Test: Справочник.Пользователи.ГруппыДоступа
+    // Справочник → Namespace, Пользователи → Class, ГруппыДоступа → Property (table part)
+    String bsl = """
+      Процедура Тест()
+        Запрос = "ВЫБРАТЬ * ИЗ Справочник.Пользователи.ГруппыДоступа";
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      // Справочник → Namespace (metadata type) at position 25
+      new ExpectedToken(1, 25, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      // Пользователи → Class (metadata object) at position 36
+      new ExpectedToken(1, 36, 12, SemanticTokenTypes.Class, "Пользователи"),
+      // ГруппыДоступа → Property (table part/subordinate table) at position 49
+      new ExpectedToken(1, 49, 13, SemanticTokenTypes.Property, "ГруппыДоступа")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
   // endregion
 }
 
