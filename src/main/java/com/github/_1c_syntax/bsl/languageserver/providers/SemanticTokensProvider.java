@@ -812,8 +812,9 @@ public class SemanticTokensProvider {
     } else if (SDBL_COMMENTS.contains(tokenType)) {
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Comment, NO_MODIFIERS);
     } else if (SDBL_PARAMETERS.contains(tokenType)) {
-      // Parameters as Parameter (matching YAML: variable.parameter.sdbl)
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Parameter, NO_MODIFIERS);
+      // Parameters are skipped in lexical processing
+      // They will be handled by AST visitor as combined &ParameterName tokens
+      return null;
     } else if (SDBL_NUMBERS.contains(tokenType)) {
       // Numbers as Number (matching YAML: constant.numeric.sdbl)
       return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Number, NO_MODIFIERS);
@@ -1028,6 +1029,8 @@ public class SemanticTokensProvider {
    * - Field names (after dots) → Property
    * - Metadata type names → Namespace  
    * - Alias declarations (after AS/КАК) → Variable + Declaration
+   * - Temporary table declarations (INTO tableName) → Variable + Declaration
+   * - Temporary table references (FROM tableName) → Variable
    * - Operators (dots, commas) → Operator
    */
   private static class SdblSemanticTokensVisitor extends SDBLParserBaseVisitor<Void> {
@@ -1039,6 +1042,20 @@ public class SemanticTokensProvider {
       this.entries = entries;
     }
     
+    @Override
+    public Void visitQuery(SDBLParser.QueryContext ctx) {
+      // Handle INTO temporaryTableName (ПОМЕСТИТЬ ВТ_Курсы)
+      // Grammar: (INTO temporaryTableName=temporaryTableIdentifier)?
+      // temporaryTableIdentifier: DOT? (NUMBER_SIGH+ | identifier | ((identifier | NUMBER_SIGH)+ DECIMAL*)+)
+      var temporaryTableName = ctx.temporaryTableName;
+      if (temporaryTableName != null) {
+        // Add the entire temporaryTableIdentifier as Variable + Declaration
+        provider.addSdblContextRange(entries, temporaryTableName, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
+      }
+
+      return super.visitQuery(ctx);
+    }
+
     @Override
     public Void visitDataSource(SDBLParser.DataSourceContext ctx) {
       // Handle table sources and their aliases
@@ -1116,6 +1133,20 @@ public class SemanticTokensProvider {
     }
     
     @Override
+    public Void visitTable(SDBLParser.TableContext ctx) {
+      // Handle table references
+      // Grammar: table: mdo | mdo DOT objectTableName=identifier | tableName=identifier
+      // The third variant (tableName=identifier) is a temporary table reference
+      var tableName = ctx.tableName;
+      if (tableName != null) {
+        // Temporary table reference (ИЗ ВТ_Курсы) → Variable
+        provider.addSdblTokenRange(entries, tableName.getStart(), SemanticTokenTypes.Variable);
+      }
+
+      return super.visitTable(ctx);
+    }
+
+    @Override
     public Void visitColumn(SDBLParser.ColumnContext ctx) {
       // Handle field references: TableAlias.FieldName
       var identifiers = ctx.identifier();
@@ -1137,7 +1168,22 @@ public class SemanticTokensProvider {
       
       return super.visitColumn(ctx);
     }
-    
+
+    @Override
+    public Void visitParameter(SDBLParser.ParameterContext ctx) {
+      // Handle query parameters: &ParameterName
+      // Grammar: parameter: AMPERSAND name=PARAMETER_IDENTIFIER;
+      // Combine both tokens into a single Parameter token with Readonly modifier
+      var ampersand = ctx.AMPERSAND();
+      var parameterName = ctx.name;
+      if (ampersand != null && parameterName != null) {
+        // Create range from start of AMPERSAND to end of PARAMETER_IDENTIFIER
+        provider.addSdblContextRange(entries, ctx, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Readonly);
+      }
+
+      return super.visitParameter(ctx);
+    }
+
   }
   
   /**
@@ -1154,6 +1200,35 @@ public class SemanticTokensProvider {
     int start = token.getCharPositionInLine();
     int length = (int) token.getText().codePoints().count();
     
+    var range = new Range(
+      new Position(zeroIndexedLine, start),
+      new Position(zeroIndexedLine, start + length)
+    );
+
+    addRange(entries, range, type, modifiers);
+  }
+
+  /**
+   * Helper method to add semantic token from SDBL ParserRuleContext
+   * Uses the entire range of the context (from start token to stop token)
+   */
+  private void addSdblContextRange(List<TokenEntry> entries, ParserRuleContext ctx, String type, String... modifiers) {
+    if (ctx == null || ctx.getStart() == null || ctx.getStop() == null) {
+      return;
+    }
+
+    var startToken = ctx.getStart();
+    var stopToken = ctx.getStop();
+
+    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
+    int zeroIndexedLine = startToken.getLine() - 1;
+    int start = startToken.getCharPositionInLine();
+
+    // Calculate length from start of first token to end of last token
+    // For single-line contexts, we can compute the total length
+    int stopEndPosition = stopToken.getCharPositionInLine() + (int) stopToken.getText().codePoints().count();
+    int length = stopEndPosition - start;
+
     var range = new Range(
       new Position(zeroIndexedLine, start),
       new Position(zeroIndexedLine, start + length)

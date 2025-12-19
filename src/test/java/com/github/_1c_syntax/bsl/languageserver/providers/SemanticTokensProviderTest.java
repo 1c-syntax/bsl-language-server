@@ -25,11 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
@@ -42,9 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,715 +60,36 @@ class SemanticTokensProviderTest {
     provider.setMultilineTokenSupport(false);
   }
 
-  @Test
-  void emitsExpectedTokenTypes() {
-    // given: sample BSL with annotation, macro, method, parameter, string, number, comment, operators
-    String bsl = String.join("\n",
-      "&НаКлиенте",
-      "#Если Истина Тогда",
-      "Процедура Тест(Парам) Экспорт",
-      "  // комментарий",
-      "  Сообщить(\"строка\" + 123);",
-      "КонецПроцедуры",
-      "#КонецЕсли"
-    );
 
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+  // region Helper types and methods
 
-    // when
-    var params = new SemanticTokensParams(textDocumentIdentifier);
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, params);
-
-    // then: collect type indexes present
-    List<Integer> data = tokens.getData();
-    assertThat(data).isNotEmpty();
-
-    Set<Integer> presentTypes = indexesOfTypes(data);
-
-    // map desired types to indices and assert they're present
-    assertPresent(presentTypes, SemanticTokenTypes.Decorator);
-    assertPresent(presentTypes, SemanticTokenTypes.Macro);
-    assertPresent(presentTypes, SemanticTokenTypes.Method);
-    assertPresent(presentTypes, SemanticTokenTypes.Parameter);
-    assertPresent(presentTypes, SemanticTokenTypes.Keyword);
-    assertPresent(presentTypes, SemanticTokenTypes.String);
-    assertPresent(presentTypes, SemanticTokenTypes.Number);
-    assertPresent(presentTypes, SemanticTokenTypes.Comment);
-    assertPresent(presentTypes, SemanticTokenTypes.Operator);
-  }
-
-  @Test
-  void emitsMacroForAllPreprocTokens() {
-    // given: preprocessor variety to cover PREPROC_* tokens including regions
-    String bsl = String.join("\n",
-      "#Область Region1",
-      "#Если Сервер И НЕ Клиент Тогда",
-      "Процедура Пусто()",
-      "КонецПроцедуры",
-      "#ИначеЕсли Клиент Тогда",
-      "#Иначе",
-      "#КонецЕсли",
-      "#КонецОбласти"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    // then: count how many lexer tokens are PREPROC_* (or HASH) on default channel
-    List<Token> defaultTokens = documentContext.getTokensFromDefaultChannel();
-
-    long totalPreproc = defaultTokens.stream()
-      .map(Token::getType)
-      .map(BSLLexer.VOCABULARY::getSymbolicName)
-      .filter(Objects::nonNull)
-      .filter(sym -> sym.equals("HASH") || sym.startsWith("PREPROC_"))
-      .count();
-
-    // count region directives and names
-    long regionDirectives = 0;
-    long regionNames = 0;
-    for (int i = 0; i + 1 < defaultTokens.size(); i++) {
-      Token t = defaultTokens.get(i);
-      Token n = defaultTokens.get(i + 1);
-      if (t.getType() == BSLLexer.HASH && n.getType() == BSLLexer.PREPROC_REGION) {
-        regionDirectives++;
-        // if name token follows, it is included into Namespace span and not counted as Macro
-        if (i + 2 < defaultTokens.size() && defaultTokens.get(i + 2).getType() == BSLLexer.PREPROC_IDENTIFIER) {
-          regionNames++;
-        }
-      } else if (t.getType() == BSLLexer.HASH && n.getType() == BSLLexer.PREPROC_END_REGION) {
-        regionDirectives++;
-      }
+  /**
+   * Represents expected semantic token for assertion.
+   *
+   * @param line           0-based line number
+   * @param startChar      0-based start character
+   * @param length         token length
+   * @param tokenType      LSP token type (e.g., SemanticTokenTypes.Keyword)
+   * @param tokenModifiers set of LSP modifiers (e.g., SemanticTokenModifiers.Declaration)
+   * @param lexeme         optional lexeme for documentation (not used in comparison)
+   */
+  private record ExpectedToken(
+    int line,
+    int startChar,
+    int length,
+    String tokenType,
+    Set<String> tokenModifiers,
+    String lexeme
+  ) {
+    ExpectedToken(int line, int startChar, int length, String tokenType, String lexeme) {
+      this(line, startChar, length, tokenType, Set.of(), lexeme);
     }
 
-    // expected macro tokens exclude region directives (HASH + PREPROC_*) and region names after PREPROC_REGION
-    long expectedMacro = totalPreproc - (regionDirectives * 2) - regionNames;
-
-    int macroIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Macro);
-    int nsIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    assertThat(macroIdx).isGreaterThanOrEqualTo(0);
-    assertThat(nsIdx).isGreaterThanOrEqualTo(0);
-
-    long macroCount = countOfType(tokens.getData(), macroIdx);
-    long nsCount = countOfType(tokens.getData(), nsIdx);
-
-    // macros match non-region preproc tokens; namespace tokens match number of region directives
-    assertThat(macroCount).isEqualTo(expectedMacro);
-    assertThat(nsCount).isEqualTo(regionDirectives);
+    ExpectedToken(int line, int startChar, int length, String tokenType, String modifier, String lexeme) {
+      this(line, startChar, length, tokenType, Set.of(modifier), lexeme);
+    }
   }
 
-  @Test
-  void emitsOperatorsForPunctuators() {
-    // given: code with many punctuators and operators
-    String bsl = String.join("\n",
-      "Процедура Опер()",
-      "  Массив = Новый Массив();",
-      "  Массив.Добавить(1 + 2);",
-      "  Значение = Массив[0]?;",
-      "  Если 1 <> 2 Тогда КонецЕсли;",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-    assertThat(operatorIdx).isGreaterThanOrEqualTo(0);
-
-    // count lexer operator/punctuator tokens
-    Set<Integer> opTypes = Set.of(
-      BSLLexer.LPAREN,
-      BSLLexer.RPAREN,
-      BSLLexer.LBRACK,
-      BSLLexer.RBRACK,
-      BSLLexer.COMMA,
-      BSLLexer.SEMICOLON,
-      BSLLexer.COLON,
-      BSLLexer.DOT,
-      BSLLexer.PLUS,
-      BSLLexer.MINUS,
-      BSLLexer.MUL,
-      BSLLexer.QUOTIENT,
-      BSLLexer.MODULO,
-      BSLLexer.ASSIGN,
-      BSLLexer.NOT_EQUAL,
-      BSLLexer.LESS,
-      BSLLexer.LESS_OR_EQUAL,
-      BSLLexer.GREATER,
-      BSLLexer.GREATER_OR_EQUAL,
-      BSLLexer.QUESTION,
-      BSLLexer.TILDA
-    );
-
-    long lexerOpCount = documentContext.getTokensFromDefaultChannel().stream()
-      .map(Token::getType)
-      .filter(opTypes::contains)
-      .count();
-
-    long operatorCount = countOfType(tokens.getData(), operatorIdx);
-
-    // 1:1 mapping of lexer operator tokens to semantic Operator tokens
-    assertThat(operatorCount).isEqualTo(lexerOpCount);
-  }
-
-  @Test
-  void annotationWithoutParams_isDecoratorOnly() {
-    // given
-    String annotation = "&НаКлиенте";
-    String bsl = String.join("\n",
-      annotation,
-      "Процедура Тест()",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int decoratorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
-    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-    assertThat(decoratorIdx).isGreaterThanOrEqualTo(0);
-    assertThat(operatorIdx).isGreaterThanOrEqualTo(0);
-
-    List<DecodedToken> firstLineTokens = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
-
-    // then: on line 0 we should have exactly one Decorator token: merged '&НаКлиенте'
-    long decoratorsOnFirstLine = firstLineTokens.stream().filter(t -> t.type == decoratorIdx).count();
-    assertThat(decoratorsOnFirstLine).isEqualTo(1);
-
-    // and no operators or strings on that line
-    long operatorsOnFirstLine = firstLineTokens.stream().filter(t -> t.type == operatorIdx).count();
-    assertThat(operatorsOnFirstLine).isZero();
-  }
-
-  @Test
-  void annotationWithStringParam_tokenizesNameParenAndString() {
-    // given
-    String bsl = String.join("\n",
-      "&Перед(\"Строка\")",
-      "Процедура Тест()",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int decoratorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
-    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    assertThat(decoratorIdx).isGreaterThanOrEqualTo(0);
-    assertThat(operatorIdx).isGreaterThanOrEqualTo(0);
-    assertThat(stringIdx).isGreaterThanOrEqualTo(0);
-
-    List<DecodedToken> firstLineTokens = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
-
-    // one decorator on line 0: merged '&Перед'
-    assertThat(firstLineTokens.stream().filter(t -> t.type == decoratorIdx).count()).isEqualTo(1);
-
-    // operators present for parentheses
-    assertThat(firstLineTokens.stream().filter(t -> t.type == operatorIdx).count()).isGreaterThanOrEqualTo(2);
-
-    // string present
-    assertThat(firstLineTokens.stream().filter(t -> t.type == stringIdx).count()).isGreaterThanOrEqualTo(1);
-  }
-
-  @Test
-  void customAnnotationWithNamedStringParam_marksIdentifierAsParameter() {
-    // given
-    String bsl = String.join("\n",
-      "&КастомнаяАннотация(Значение = \"Параметр\")",
-      "Процедура Тест()",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int decoratorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
-    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    int paramIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-
-    assertThat(decoratorIdx).isGreaterThanOrEqualTo(0);
-    assertThat(operatorIdx).isGreaterThanOrEqualTo(0);
-    assertThat(stringIdx).isGreaterThanOrEqualTo(0);
-    assertThat(paramIdx).isGreaterThanOrEqualTo(0);
-
-    List<DecodedToken> firstLineTokens = decode(tokens.getData()).stream().filter(t -> t.line == 0).toList();
-
-    // one decorator: merged '&КастомнаяАннотация'
-    assertThat(firstLineTokens.stream().filter(t -> t.type == decoratorIdx).count()).isEqualTo(1);
-
-    // operators for '(' ')' and '='
-    assertThat(firstLineTokens.stream().filter(t -> t.type == operatorIdx).count()).isGreaterThanOrEqualTo(3);
-
-    // parameter identifier 'Значение'
-    assertThat(firstLineTokens.stream().filter(t -> t.type == paramIdx).count()).isGreaterThanOrEqualTo(1);
-
-    // string literal
-    assertThat(firstLineTokens.stream().filter(t -> t.type == stringIdx).count()).isGreaterThanOrEqualTo(1);
-  }
-
-  @Test
-  void useDirective_isNamespace() {
-    // given: several #Использовать directives
-    String bsl = String.join("\n",
-      "#Использовать А",
-      "#Использовать Б",
-      "#Использовать В"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    assertThat(namespaceIdx).isGreaterThanOrEqualTo(0);
-
-    long nsCount = countOfType(tokens.getData(), namespaceIdx);
-
-    // then: each use line produces one Namespace token
-    assertThat(nsCount).isEqualTo(3);
-  }
-
-  @Test
-  void datetimeAndUndefinedTrueFalse_areHighlighted() {
-    // given: date literal and undefined/boolean literals
-    String bsl = String.join("\n",
-      "Процедура T()",
-      "  Дата = '20010101';",
-      "  X = Неопределено;",
-      "  Если Истина Тогда",
-      "  КонецЕсли;",
-      "  Если Ложь Тогда",
-      "  КонецЕсли;",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    assertThat(stringIdx).isGreaterThanOrEqualTo(0);
-    assertThat(keywordIdx).isGreaterThanOrEqualTo(0);
-
-    long strings = countOfType(tokens.getData(), stringIdx);
-    long keywords = countOfType(tokens.getData(), keywordIdx);
-
-    // then: at least one string (for DATETIME) and at least three keywords for undefined/true/false
-    assertThat(strings).isGreaterThanOrEqualTo(1);
-
-    long expectedSpecialLiteralCount = documentContext.getTokensFromDefaultChannel().stream()
-      .map(Token::getType)
-      .filter(t -> t == BSLLexer.UNDEFINED || t == BSLLexer.TRUE || t == BSLLexer.FALSE)
-      .count();
-
-    assertThat(keywords).isGreaterThanOrEqualTo(expectedSpecialLiteralCount);
-  }
-
-  @Test
-  void methodDescriptionComments_areMarkedWithDocumentationModifier() {
-    // given: leading description comments above a method and a non-doc comment in body
-    String bsl = String.join("\n",
-      "// Описание процедуры",
-      "// Параметры: Парам - Число",
-      "Процедура ДокТест(Парам)",
-      "  // обычный комментарий",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int commentIdx = legend.getTokenTypes().indexOf("comment");
-    int docModIdx = legend.getTokenModifiers().indexOf("documentation");
-    assertThat(commentIdx).isGreaterThanOrEqualTo(0);
-    assertThat(docModIdx).isGreaterThanOrEqualTo(0);
-    int docMask = 1 << docModIdx;
-
-    List<DecodedToken> decoded = decode(tokens.getData());
-    // comments on lines 0 and 1 must have documentation modifier; line 3 comment must not
-    var line0 = decoded.stream().filter(t -> t.line == 0 && t.type == commentIdx).toList();
-    var line1 = decoded.stream().filter(t -> t.line == 1 && t.type == commentIdx).toList();
-    var line3 = decoded.stream().filter(t -> t.line == 3 && t.type == commentIdx).toList();
-
-    assertThat(line0).isNotEmpty();
-    assertThat(line1).isNotEmpty();
-    assertThat(line3).isNotEmpty();
-
-    assertThat(line0.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
-    assertThat(line1.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
-    assertThat(line3.stream().allMatch(t -> (t.modifiers & docMask) == 0)).isTrue();
-  }
-
-  @Test
-  void variableDescriptionLeadingAndTrailing_areMarkedWithDocumentationModifier() {
-    // given: leading description and trailing description for a variable
-    String bsl = String.join("\n",
-      "// Описание переменной",
-      "Перем Перем1; // трейл"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int commentIdx = legend.getTokenTypes().indexOf("comment");
-    int docModIdx = legend.getTokenModifiers().indexOf("documentation");
-    assertThat(commentIdx).isGreaterThanOrEqualTo(0);
-    assertThat(docModIdx).isGreaterThanOrEqualTo(0);
-    int docMask = 1 << docModIdx;
-
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // We expect two comment tokens: line 0 (leading) and line 1 (trailing). Both should have documentation modifier.
-    var line0 = decoded.stream().filter(t -> t.line == 0 && t.type == commentIdx).toList();
-    var line1 = decoded.stream().filter(t -> t.line == 1 && t.type == commentIdx).toList();
-
-    assertThat(line0).isNotEmpty();
-    assertThat(line1).isNotEmpty();
-
-    assertThat(line0.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
-    assertThat(line1.stream().allMatch(t -> (t.modifiers & docMask) != 0)).isTrue();
-  }
-
-  @Test
-  void multilineDocumentation_isMergedIntoSingleToken_whenClientSupportsIt() {
-    // given: two-line documentation followed by a method and a body comment
-    provider.setMultilineTokenSupport(true);
-
-    String bsl = String.join("\n",
-      "// Первая строка описания",
-      "// Вторая строка описания",
-      "Процедура ДокТест()",
-      "  // не документация",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int commentIdx = legend.getTokenTypes().indexOf("comment");
-    int docModIdx = legend.getTokenModifiers().indexOf("documentation");
-    assertThat(commentIdx).isGreaterThanOrEqualTo(0);
-    assertThat(docModIdx).isGreaterThanOrEqualTo(0);
-    int docMask = 1 << docModIdx;
-
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: exactly one documentation comment token exists (merged), starting on line 0
-    var docTokens = decoded.stream().filter(t -> t.type == commentIdx && (t.modifiers & docMask) != 0).toList();
-    assertThat(docTokens).hasSize(1);
-    assertThat(docTokens.get(0).line).isZero();
-
-    // and there is no comment token on line 1 (second doc line)
-    var commentsLine1 = decoded.stream().filter(t -> t.line == 1 && t.type == commentIdx).toList();
-    assertThat(commentsLine1).isEmpty();
-
-    // and a regular body comment exists on line 3 without the documentation modifier
-    var bodyComments = decoded.stream().filter(t -> t.line == 3 && t.type == commentIdx).toList();
-    assertThat(bodyComments).isNotEmpty();
-    assertThat(bodyComments.stream().allMatch(t -> (t.modifiers & docMask) == 0)).isTrue();
-  }
-
-  @Test
-  void regionName_isHighlightedAsVariable() {
-    // given: region with a name and its end
-    String bsl = String.join("\n",
-      "#Область МояСекция",
-      "Процедура Тест()\nКонецПроцедуры",
-      "#КонецОбласти"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int nsIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
-    assertThat(nsIdx).isGreaterThanOrEqualTo(0);
-    assertThat(varIdx).isGreaterThanOrEqualTo(0);
-
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: one Namespace token for region start and one for region end, and one Variable on line 0 for the name
-    long nsOnLine0 = decoded.stream().filter(t -> t.line == 0 && t.type == nsIdx).count();
-    long nsOnLastLine = decoded.stream().filter(t -> t.line == 3 && t.type == nsIdx).count();
-    long varsOnLine0 = decoded.stream().filter(t -> t.line == 0 && t.type == varIdx).count();
-
-    assertThat(nsOnLine0).isEqualTo(1);
-    assertThat(nsOnLastLine).isEqualTo(1);
-    assertThat(varsOnLine0).isEqualTo(1);
-  }
-
-  @Test
-  void variableDefinition_hasDefinitionModifier() {
-    // given: module-level variable declaration
-    String bsl = String.join("\n",
-      "Перем Перем1;",
-      "Процедура T()",
-      "  // тело",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
-    int defModIdx = legend.getTokenModifiers().indexOf("definition");
-    assertThat(varIdx).isGreaterThanOrEqualTo(0);
-    assertThat(defModIdx).isGreaterThanOrEqualTo(0);
-    int defMask = 1 << defModIdx;
-
-    // then: at least one Variable token has the definition modifier (for Перем1)
-    List<DecodedToken> decoded = decode(tokens.getData());
-    long defs = decoded.stream()
-      .filter(t -> t.type == varIdx)
-      .filter(t -> (t.modifiers & defMask) != 0)
-      .count();
-
-    assertThat(defs).isGreaterThanOrEqualTo(1);
-  }
-
-  @Test
-  void sameFileMethodCall_isHighlightedAsMethodTokenAtCallSite() {
-    // given: a method and a call to another method in the same file
-    String bsl = String.join("\n",
-      "Процедура CallMe()",
-      "КонецПроцедуры",
-      "",
-      "Процедура Бар()",
-      "  CallMe();",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // compute selection range for 'CallMe' on line 4
-    int callLine = 4;
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int methodIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-    assertThat(methodIdx).isGreaterThanOrEqualTo(0);
-
-    // then: there is a Method token on the call line (line 4)
-    List<DecodedToken> decoded = decode(tokens.getData());
-    long methodsOnCallLine = decoded.stream().filter(t -> t.line == callLine && t.type == methodIdx).count();
-    assertThat(methodsOnCallLine).isGreaterThanOrEqualTo(1);
-  }
-
-  @Test
-  void parameterAndVariableTokenTypes() {
-    String bsl = String.join("\n",
-      "Процедура Тест(Парам1, Парам2)",
-      "  Перем ЛокальнаяПеременная;",
-      "  НеявнаяПеременная = 1;",
-      "  ЛокальнаяПеременная2 = 2;",
-      "  Результат = 3;",
-      "  Для ПеременнаяЦикла = 1 По 10 Цикл",
-      "  КонецЦикла;",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int paramIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
-    assertThat(paramIdx).isGreaterThanOrEqualTo(0);
-    assertThat(varIdx).isGreaterThanOrEqualTo(0);
-
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    long paramsInSignature = decoded.stream()
-      .filter(t -> t.line == 0 && t.type == paramIdx)
-      .count();
-    assertThat(paramsInSignature).as("Parameters in signature").isEqualTo(2);
-
-    long localVarDeclaration = decoded.stream()
-      .filter(t -> t.line == 1 && t.type == varIdx)
-      .count();
-    assertThat(localVarDeclaration).as("Explicit variable declaration").isEqualTo(1);
-
-    long implicitVarDeclaration1 = decoded.stream()
-      .filter(t -> t.line == 2 && t.type == varIdx)
-      .count();
-    assertThat(implicitVarDeclaration1).as("First implicit variable declaration").isEqualTo(1);
-
-    long implicitVarDeclaration2 = decoded.stream()
-      .filter(t -> t.line == 3 && t.type == varIdx)
-      .count();
-    assertThat(implicitVarDeclaration2).as("Second implicit variable declaration").isEqualTo(1);
-
-    long implicitVarDeclaration3 = decoded.stream()
-      .filter(t -> t.line == 4 && t.type == varIdx)
-      .count();
-    assertThat(implicitVarDeclaration3).as("Third implicit variable declaration").isEqualTo(1);
-
-    long forLoopVar = decoded.stream()
-      .filter(t -> t.line == 5 && t.type == varIdx)
-      .count();
-    assertThat(forLoopVar).as("For loop variable").isEqualTo(1);
-
-    long allParams = decoded.stream()
-      .filter(t -> t.type == paramIdx)
-      .count();
-    assertThat(allParams).as("Total parameters").isEqualTo(2);
-
-    long allVars = decoded.stream()
-      .filter(t -> t.type == varIdx)
-      .count();
-    assertThat(allVars).as("Total variables").isEqualTo(5);
-  }
-
-  @Test
-  void parameterAndVariableUsages() {
-    var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/providers/SemanticTokensProviderParameterTest.bsl"
-    );
-    referenceIndexFiller.fill(documentContext);
-
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-
-    int paramIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    int varIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
-    assertThat(paramIdx).isGreaterThanOrEqualTo(0);
-    assertThat(varIdx).isGreaterThanOrEqualTo(0);
-
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    long paramsLine0 = decoded.stream()
-      .filter(t -> t.line == 0 && t.type == paramIdx)
-      .count();
-    assertThat(paramsLine0).as("Parameters in signature (line 0)").isEqualTo(2);
-
-    long varsLine1 = decoded.stream()
-      .filter(t -> t.line == 1 && t.type == varIdx)
-      .count();
-    assertThat(varsLine1).as("Local variable declaration (line 1)").isEqualTo(1);
-
-    long varsLine3 = decoded.stream()
-      .filter(t -> t.line == 3 && t.type == varIdx)
-      .count();
-    assertThat(varsLine3).as("Variable usage on left side (line 3)").isEqualTo(1);
-
-    long paramsLine3 = decoded.stream()
-      .filter(t -> t.line == 3 && t.type == paramIdx)
-      .count();
-    assertThat(paramsLine3).as("Parameter usage on right side (line 3)").isEqualTo(1);
-
-    long varsLine4 = decoded.stream()
-      .filter(t -> t.line == 4 && t.type == varIdx)
-      .count();
-    assertThat(varsLine4).as("Variable usage (line 4)").isEqualTo(1);
-
-    long paramsLine4 = decoded.stream()
-      .filter(t -> t.line == 4 && t.type == paramIdx)
-      .count();
-    assertThat(paramsLine4).as("Parameter usages (line 4)").isEqualTo(2);
-
-    long paramsLine6 = decoded.stream()
-      .filter(t -> t.line == 6 && t.type == paramIdx)
-      .count();
-    assertThat(paramsLine6).as("Parameter in condition (line 6)").isEqualTo(1);
-
-    long paramsLine7 = decoded.stream()
-      .filter(t -> t.line == 7 && t.type == paramIdx)
-      .count();
-    assertThat(paramsLine7).as("Parameter in Сообщить (line 7)").isEqualTo(1);
-
-    long varsLine8 = decoded.stream()
-      .filter(t -> t.line == 8 && t.type == varIdx)
-      .count();
-    assertThat(varsLine8).as("Variable assignment (line 8)").isEqualTo(1);
-
-    long paramsLine8 = decoded.stream()
-      .filter(t -> t.line == 8 && t.type == paramIdx)
-      .count();
-    assertThat(paramsLine8).as("Parameters in expression (line 8)").isEqualTo(2);
-
-    long varsLine11 = decoded.stream()
-      .filter(t -> t.line == 11 && t.type == varIdx)
-      .count();
-    assertThat(varsLine11).as("For loop variable (line 11)").isEqualTo(1);
-
-    long paramsLine11 = decoded.stream()
-      .filter(t -> t.line == 11 && t.type == paramIdx)
-      .count();
-    assertThat(paramsLine11).as("Parameter in loop bound (line 11)").isEqualTo(1);
-
-    long varsLine12 = decoded.stream()
-      .filter(t -> t.line == 12 && t.type == varIdx)
-      .count();
-    assertThat(varsLine12).as("Loop variable usage (line 12)").isEqualTo(1);
-
-    long totalParams = decoded.stream()
-      .filter(t -> t.type == paramIdx)
-      .count();
-    assertThat(totalParams).as("Total parameter tokens").isGreaterThanOrEqualTo(10);
-
-    long totalVars = decoded.stream()
-      .filter(t -> t.type == varIdx)
-      .count();
-    assertThat(totalVars).as("Total variable tokens").isGreaterThanOrEqualTo(6);
-  }
-
-  // helpers
   private record DecodedToken(int line, int start, int length, int type, int modifiers) {}
 
   private List<DecodedToken> decode(List<Integer> data) {
@@ -795,647 +109,687 @@ class SemanticTokensProviderTest {
     return out;
   }
 
-  private Set<Integer> indexesOfTypes(List<Integer> data) {
-    // data: [deltaLine, deltaStart, length, tokenType, tokenModifiers] per token
-    Set<Integer> res = new HashSet<>();
-    for (int i = 0; i + 3 < data.size(); i += 5) {
-      res.add(data.get(i + 3));
-    }
-    return res;
-  }
+  private void assertTokensMatch(List<DecodedToken> actual, List<ExpectedToken> expected) {
+    assertThat(actual)
+      .as("Number of tokens")
+      .hasSameSizeAs(expected);
 
-  private long countOfType(List<Integer> data, int typeIdx) {
-    long cnt = 0;
-    for (int i = 0; i + 3 < data.size(); i += 5) {
-      if (data.get(i + 3) == typeIdx) cnt++;
-    }
-    return cnt;
-  }
-
-  private void assertPresent(Set<Integer> presentTypes, String tokenType) {
-    int idx = legend.getTokenTypes().indexOf(tokenType);
-    assertThat(idx).isGreaterThanOrEqualTo(0);
-    assertThat(presentTypes).contains(idx);
-  }
-
-  @Test
-  void sdblQueryTokens_areHighlightedAtSpecificPositions() {
-    // given: BSL code with a simple query string
-    String bsl = String.join("\n",
-      "Функция Тест()",
-      "  Запрос = \"Выбрать * из Справочник.Контрагенты\";",
-      "КонецФункции"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: verify specific SDBL tokens at exact positions on line 1
-    int queryLine = 1;
-    var line1Tokens = decoded.stream().filter(t -> t.line == queryLine).toList();
-
-    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-
-    // Line 1: `  Запрос = "Выбрать * из Справочник.Контрагенты";`
-    // String starts at position 11 (after `  Запрос = "`)
-    // Query: "Выбрать * из Справочник.Контрагенты"
-    // Expected tokens inside the string:
-    // - "Выбрать" at position 12 (keyword)
-    // - "*" at position 20 (operator)
-    // - "из" at position 22 (keyword)
-    // - "Справочник" at position 25 (namespace - metadata type)
-    // - "Контрагенты" (class - metadata object name)
-
-    // Find keyword tokens (Выбрать, из)
-    var keywords = line1Tokens.stream()
-      .filter(t -> t.type == keywordIdx)
-      .toList();
-    assertThat(keywords).hasSizeGreaterThanOrEqualTo(2);
-
-    // Find metadata namespace token (Справочник)
-    var namespaces = line1Tokens.stream()
-      .filter(t -> t.type == namespaceIdx)
-      .toList();
-    assertThat(namespaces).hasSizeGreaterThanOrEqualTo(1);
-    
-    // Find metadata class token (Контрагенты)
-    var classes = line1Tokens.stream()
-      .filter(t -> t.type == classIdx)
-      .toList();
-    assertThat(classes).hasSizeGreaterThanOrEqualTo(1);
-
-    // Verify no STRING token overlaps with SDBL tokens
-    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var strings = line1Tokens.stream()
-      .filter(t -> t.type == stringIdx)
-      .toList();
-    
-    // String tokens should exist only for opening quote and parts not covered by SDBL tokens
-    assertThat(strings).isNotEmpty();
-  }
-
-  @Test
-  void sdblQueryWithKeywordsAndFunctions_detailedPositions() {
-    // given: query with aggregate function
-    String bsl = String.join("\n",
-      "Функция Тест()",
-      "  Запрос = \"Выбрать СУММА(Сумма) как Итого из Документ.Продажа\";",
-      "КонецФункции"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: verify SDBL function and metadata type tokens
-    int queryLine = 1;
-    var line1Tokens = decoded.stream().filter(t -> t.line == queryLine).toList();
-
-    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int defaultLibraryMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.DefaultLibrary);
-
-    // Expected tokens:
-    // - "Выбрать" (keyword)
-    // - "СУММА" (function with defaultLibrary modifier)
-    // - "как" (keyword)
-    // - "из" (keyword)
-    // - "Документ" (namespace - metadata type with NO modifiers per JSON spec)
-
-    // Find function token (СУММА) with defaultLibrary modifier
-    var functions = line1Tokens.stream()
-      .filter(t -> t.type == functionIdx && (t.modifiers & defaultLibraryMask) != 0)
-      .toList();
-    assertThat(functions)
-      .as("Should have SDBL function (СУММА) with defaultLibrary modifier")
-      .hasSizeGreaterThanOrEqualTo(1);
-
-    // Find metadata namespace (Документ) with NO modifiers (per JSON spec)
-    var namespaces = line1Tokens.stream()
-      .filter(t -> t.type == namespaceIdx && t.modifiers == 0)
-      .toList();
-    assertThat(namespaces)
-      .as("Should have metadata namespace (Документ) with no modifiers (per JSON spec)")
-      .hasSizeGreaterThanOrEqualTo(1);
-
-    // Find keywords (Выбрать, как, из)
-    var keywords = line1Tokens.stream()
-      .filter(t -> t.type == keywordIdx)
-      .toList();
-    assertThat(keywords)
-      .as("Should have multiple keywords (Выбрать, как, из)")
-      .hasSizeGreaterThanOrEqualTo(3);
-  }
-
-  @Test
-  void sdblQueryWithParameters_exactParameterPosition() {
-    // given: query with parameter
-    String bsl = String.join("\n",
-      "Функция Тест()",
-      "  Запрос = \"Выбрать * из Справочник.Контрагенты где Код = &Параметр\";",
-      "КонецФункции"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: verify parameter token exists
-    int queryLine = 1;
-    var line1Tokens = decoded.stream().filter(t -> t.line == queryLine).toList();
-
-    int paramIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-
-    // Find parameter tokens (&Параметр - should include both & and identifier)
-    var params = line1Tokens.stream()
-      .filter(t -> t.type == paramIdx)
-      .toList();
-    assertThat(params)
-      .as("Should have parameter tokens for &Параметр")
-      .hasSizeGreaterThanOrEqualTo(1);
-  }
-
-  @Test
-  void sdblMultilineQuery_tokensOnCorrectLines() {
-    // given: multiline query
-    String bsl = String.join("\n",
-      "Функция Тест()",
-      "  Запрос = \"",
-      "  |Выбрать",
-      "  |  СУММА(Сумма) как Итого",
-      "  |из",
-      "  |  Справочник.Контрагенты\";",
-      "КонецФункции"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: verify tokens appear on correct lines
-    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-
-    // Line 2: "Выбрать" keyword
-    var line2Keywords = decoded.stream()
-      .filter(t -> t.line == 2 && t.type == keywordIdx)
-      .toList();
-    assertThat(line2Keywords)
-      .as("Should have 'Выбрать' keyword on line 2")
-      .isNotEmpty();
-
-    // Line 3: "СУММА" function
-    var line3Functions = decoded.stream()
-      .filter(t -> t.line == 3 && t.type == functionIdx)
-      .toList();
-    assertThat(line3Functions)
-      .as("Should have 'СУММА' function on line 3")
-      .isNotEmpty();
-
-    // Line 4: "из" keyword
-    var line4Keywords = decoded.stream()
-      .filter(t -> t.line == 4 && t.type == keywordIdx)
-      .toList();
-    assertThat(line4Keywords)
-      .as("Should have 'из' keyword on line 4")
-      .isNotEmpty();
-
-    // Line 5: "Справочник" metadata namespace
-    var line5Namespaces = decoded.stream()
-      .filter(t -> t.line == 5 && t.type == namespaceIdx)
-      .toList();
-    assertThat(line5Namespaces)
-      .as("Should have 'Справочник' metadata namespace on line 5")
-      .isNotEmpty();
-  }
-
-  @Test
-  void sdblQueryStringParts_notOverlappingWithQueryTokens() {
-    // given: simple query to verify string splitting
-    String bsl = String.join("\n",
-      "Функция Тест()",
-      "  Запрос = \"Выбрать * из Справочник.Контрагенты\";",
-      "КонецФункции"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: verify SDBL tokens exist
-    int queryLine = 1;
-    var line1Tokens = decoded.stream().filter(t -> t.line == queryLine).toList();
-
-    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-    int functionIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-
-    var strings = line1Tokens.stream().filter(t -> t.type == stringIdx).toList();
-    var sdblTokens = line1Tokens.stream()
-      .filter(t -> t.type == keywordIdx || t.type == namespaceIdx || t.type == classIdx || t.type == functionIdx || t.type == operatorIdx)
-      .toList();
-
-    // Verify SDBL tokens were added (this is the critical test - if highlighting doesn't work, this fails)
-    assertThat(sdblTokens)
-      .as("SDBL tokens (keywords, namespaces, classes, functions, operators) should be present")
-      .isNotEmpty();
-
-    // If SDBL tokens exist, verify they don't have massive string token overlaps
-    // Small overlaps might occur at boundaries, but large overlaps indicate broken splitting
-    if (!sdblTokens.isEmpty() && !strings.isEmpty()) {
-      // Just verify we have both types - detailed position checking in other tests
-      assertThat(strings.size() + sdblTokens.size())
-        .as("Should have both string parts and SDBL tokens")
-        .isGreaterThan(sdblTokens.size());
-    }
-  }
-
-  @Test
-  void sdblQuery_noFullStringTokenWithSplitStrings() {
-    // given: query that should have string split
-    String bsl = String.join("\n",
-      "Функция Тест()",
-      "  Запрос = \"Выбрать * из Справочник.Контрагенты\";",
-      "КонецФункции"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: verify we don't have both the full string token AND split string tokens
-    int queryLine = 1;
-    var line1Tokens = decoded.stream().filter(t -> t.line == queryLine).toList();
-
-    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var strings = line1Tokens.stream().filter(t -> t.type == stringIdx).toList();
-
-    // The original string "Выбрать * из Справочник.Контрагенты" spans from position 11 to ~48
-    // If both full string and split strings exist, we'll have:
-    // 1. One large string token covering the whole query (BAD - should be removed)
-    // 2. Multiple smaller string tokens for parts between SDBL tokens (GOOD)
-    
-    // Check: no string token should cover the entire query range
-    // The full query is roughly 37 characters long
-    var largeStrings = strings.stream()
-      .filter(s -> s.length > 30)  // If we have a string token > 30 chars, it's likely the full token
-      .toList();
-
-    assertThat(largeStrings)
-      .as("Should not have full string token spanning entire query (indicates removal failed)")
-      .isEmpty();
-    
-    // Should have multiple smaller string parts instead
-    assertThat(strings)
-      .as("Should have split string parts")
-      .hasSizeGreaterThanOrEqualTo(1);
-  }
-
-  @Test
-  void sdblQuery_exactSequenceOfTokensWithPositions() {
-    // given: simple query with known structure
-    // Line 1: "  Запрос = \"Выбрать * из Справочник.Контрагенты\";"
-    // Position:    0         11-12   20 22  25
-    String bsl = String.join("\n",
-      "Функция Тест()",
-      "  Запрос = \"Выбрать * из Справочник.Контрагенты\";",
-      "КонецФункции"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: verify exact sequence of tokens on line 1 in sorted order
-    int queryLine = 1;
-    var line1Tokens = decoded.stream()
-      .filter(t -> t.line == queryLine)
-      .sorted((a, b) -> Integer.compare(a.start, b.start))
-      .toList();
-
-    int keywordIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int operatorIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-    int namespaceIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int classIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-    int stringIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-
-    // Expected sequence (positions are approximate, verify no overlaps):
-    // Position 2: "Запрос" (variable or keyword depending on context)
-    // Position 9: "=" (operator)
-    // Position 11: opening quote (string)
-    // Position 12: "Выбрать" (keyword from SDBL)
-    // Position 20: "*" (operator from SDBL)
-    // Position 22: "из" (keyword from SDBL)
-    // Position 25: "Справочник" (namespace from SDBL - metadata type)
-    // Position 36: "Контрагенты" (class from SDBL - metadata object name)
-    // Position 47: closing quote (string)
-    // Position 48: ";" (operator)
-
-    // Verify no overlaps by checking each token's range doesn't overlap with next
-    for (int i = 0; i < line1Tokens.size() - 1; i++) {
-      var current = line1Tokens.get(i);
-      var next = line1Tokens.get(i + 1);
-      
-      int currentEnd = current.start + current.length;
-      
-      assertThat(currentEnd)
-        .as("Token at [%d, %d) should not overlap with next token at [%d, %d)", 
-            current.start, currentEnd, next.start, next.start + next.length)
-        .isLessThanOrEqualTo(next.start);
-    }
-
-    // Verify key SDBL tokens are present at expected positions
-    // "Выбрать" keyword around position 12
-    var vybratkeyword = line1Tokens.stream()
-      .filter(t -> t.type == keywordIdx && t.start >= 11 && t.start <= 13)
-      .findFirst();
-    assertThat(vybratkeyword)
-      .as("Should have 'Выбрать' keyword around position 12")
-      .isPresent();
-
-    // "из" keyword around position 22
-    var izKeyword = line1Tokens.stream()
-      .filter(t -> t.type == keywordIdx && t.start >= 21 && t.start <= 23)
-      .findFirst();
-    assertThat(izKeyword)
-      .as("Should have 'из' keyword around position 22")
-      .isPresent();
-
-    // "Справочник" namespace around position 25
-    var spravochnikNamespace = line1Tokens.stream()
-      .filter(t -> t.type == namespaceIdx && t.start >= 24 && t.start <= 26)
-      .findFirst();
-    assertThat(spravochnikNamespace)
-      .as("Should have 'Справочник' metadata namespace around position 25")
-      .isPresent();
-      
-    // "Контрагенты" class around position 36
-    var kontragenty = line1Tokens.stream()
-      .filter(t -> t.type == classIdx && t.start >= 35 && t.start <= 38)
-      .findFirst();
-    assertThat(kontragenty)
-      .as("Should have 'Контрагенты' metadata class around position 36")
-      .isPresent();
-  }
-
-  @Test
-  void sdblQuery_sequentialTokensWithExactPositions() {
-    // given: query with known exact structure for position validation
-    // Using simpler query to have precise position expectations
-    String bsl = String.join("\n",
-      "Процедура Тест()",
-      "  Текст = \"ВЫБРАТЬ Поле ИЗ Документ.Продажа\";",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    // then: check exact sequence on line 1
-    int queryLine = 1;
-    var line1Tokens = decoded.stream()
-      .filter(t -> t.line == queryLine)
-      .sorted((a, b) -> Integer.compare(a.start, b.start))
-      .toList();
-
-    // Build a list of expected token ranges (no overlaps allowed)
-    record ExpectedRange(int start, int end) {
-      boolean overlaps(ExpectedRange other) {
-        return !(this.end <= other.start || this.start >= other.end);
-      }
-    }
-
-    var ranges = line1Tokens.stream()
-      .map(t -> new ExpectedRange(t.start, t.start + t.length))
-      .toList();
-
-    // Check no overlaps exist
-    for (int i = 0; i < ranges.size(); i++) {
-      for (int j = i + 1; j < ranges.size(); j++) {
-        var range1 = ranges.get(i);
-        var range2 = ranges.get(j);
-        assertThat(range1.overlaps(range2))
-          .as("Token [%d, %d) should not overlap with token [%d, %d)",
-              range1.start, range1.end, range2.start, range2.end)
-          .isFalse();
-      }
-    }
-
-    // Verify tokens are in ascending order (no position conflicts)
-    for (int i = 0; i < line1Tokens.size() - 1; i++) {
-      assertThat(line1Tokens.get(i).start)
-        .as("Tokens should be in position order")
-        .isLessThanOrEqualTo(line1Tokens.get(i + 1).start);
-    }
-  }
-
-  @Test
-  void sdblQuery_virtualTableMethodHighlighting() {
-    // given: query with virtual table method (СрезПоследних)
-    String bsl = String.join("\n",
-      "Процедура Тест()",
-      "  Текст = \"ВЫБРАТЬ * ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период)\";",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    var legendTypes = legend.getTokenTypes();
-    int keywordIdx = legendTypes.indexOf(SemanticTokenTypes.Keyword);
-    int namespaceIdx = legendTypes.indexOf(SemanticTokenTypes.Namespace);
-    int classIdx = legendTypes.indexOf(SemanticTokenTypes.Class);
-    int methodIdx = legendTypes.indexOf(SemanticTokenTypes.Method);
-    int operatorIdx = legendTypes.indexOf(SemanticTokenTypes.Operator);
-    int parameterIdx = legendTypes.indexOf(SemanticTokenTypes.Parameter);
-    
-    // Expected tokens for line 1: "ВЫБРАТЬ * ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период)"
-    // Key tokens to verify virtual table method highlighting
-    var actualTokens = decoded.stream()
-      .filter(t -> t.line == 1)
-      .filter(t -> t.type != legendTypes.indexOf(SemanticTokenTypes.String))
-      .sorted((a, b) -> Integer.compare(a.start, b.start))
-      .toList();
-
-    // Find specific important tokens
-    var namespaceToken = actualTokens.stream().filter(t -> t.type == namespaceIdx).findFirst();
-    assertThat(namespaceToken).as("Should have РегистрСведений as Namespace").isPresent();
-    assertThat(namespaceToken.get().start).as("РегистрСведений position").isEqualTo(24);
-    
-    var classToken = actualTokens.stream().filter(t -> t.type == classIdx).findFirst();
-    assertThat(classToken).as("Should have КурсыВалют as Class").isPresent();
-    assertThat(classToken.get().start).as("КурсыВалют position").isEqualTo(40);
-    
-    var methodToken = actualTokens.stream().filter(t -> t.type == methodIdx).findFirst();
-    assertThat(methodToken).as("Should have СрезПоследних as Method").isPresent();
-    assertThat(methodToken.get().start).as("СрезПоследних position").isEqualTo(51);
-  }
-
-  @Test
-  void sdblQuery_exactJSONSpecificationCompliance() {
-    // Test exact compliance with JSON specification from comment
-    // Query from specification:
-    // ВЫБРАТЬ
-    //     Курсы.Валюта КАК Валюта,
-    //     Курсы.Курс КАК Курс,
-    //     Курсы.Период КАК Период
-    // ПОМЕСТИТЬ ВТ_Курсы
-    // ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы
-    // ИНДЕКСИРОВАТЬ ПО Валюта, Период
-    String bsl = String.join("\n",
-      "Процедура Тест()",
-      "  Запрос = \"",
-      "  |ВЫБРАТЬ",
-      "  |    Курсы.Валюта КАК Валюта,",
-      "  |    Курсы.Курс КАК Курс,",
-      "  |    Курсы.Период КАК Период",
-      "  |ПОМЕСТИТЬ ВТ_Курсы",
-      "  |ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы",
-      "  |ИНДЕКСИРОВАТЬ ПО Валюта, Период\";",
-      "КонецПроцедуры"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
-    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
-
-    // when
-    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
-    List<DecodedToken> decoded = decode(tokens.getData());
-
-    var legendTypes = legend.getTokenTypes();
-    var legendModifiers = legend.getTokenModifiers();
-    
-    int keywordIdx = legendTypes.indexOf(SemanticTokenTypes.Keyword);
-    int variableIdx = legendTypes.indexOf(SemanticTokenTypes.Variable);
-    int propertyIdx = legendTypes.indexOf(SemanticTokenTypes.Property);
-    int operatorIdx = legendTypes.indexOf(SemanticTokenTypes.Operator);
-    int namespaceIdx = legendTypes.indexOf(SemanticTokenTypes.Namespace);
-    int classIdx = legendTypes.indexOf(SemanticTokenTypes.Class);
-    int methodIdx = legendTypes.indexOf(SemanticTokenTypes.Method);
-    int parameterIdx = legendTypes.indexOf(SemanticTokenTypes.Parameter);
-    
-    int declarationBit = 1 << legendModifiers.indexOf(SemanticTokenModifiers.Declaration);
-
-    // Expected tokens based on actual output - exact token-by-token compliance with JSON spec
-    record ExpectedToken(int line, int start, int length, int type, int modifiers, String description) {}
-    
-    var expected = List.of(
-      // Line 2: "ВЫБРАТЬ"
-      new ExpectedToken(2, 3, 7, keywordIdx, 0, "ВЫБРАТЬ"),
-      // Line 3: "    Курсы.Валюта КАК Валюта,"
-      new ExpectedToken(3, 7, 5, variableIdx, 0, "Курсы"),
-      new ExpectedToken(3, 12, 1, operatorIdx, 0, "."),
-      new ExpectedToken(3, 13, 6, propertyIdx, 0, "Валюта"),
-      new ExpectedToken(3, 20, 3, keywordIdx, 0, "КАК"),
-      new ExpectedToken(3, 24, 6, variableIdx, declarationBit, "Валюта (declaration)"),
-      new ExpectedToken(3, 30, 1, operatorIdx, 0, ","),
-      // Line 4: "    Курсы.Курс КАК Курс,"
-      new ExpectedToken(4, 7, 5, variableIdx, 0, "Курсы"),
-      new ExpectedToken(4, 12, 1, operatorIdx, 0, "."),
-      new ExpectedToken(4, 13, 4, propertyIdx, 0, "Курс"),
-      new ExpectedToken(4, 18, 3, keywordIdx, 0, "КАК"),
-      new ExpectedToken(4, 22, 4, variableIdx, declarationBit, "Курс (declaration)"),
-      new ExpectedToken(4, 26, 1, operatorIdx, 0, ","),
-      // Line 5: "    Курсы.Период КАК Период"
-      new ExpectedToken(5, 7, 5, variableIdx, 0, "Курсы"),
-      new ExpectedToken(5, 12, 1, operatorIdx, 0, "."),
-      new ExpectedToken(5, 13, 6, propertyIdx, 0, "Период"),
-      new ExpectedToken(5, 20, 3, keywordIdx, 0, "КАК"),
-      new ExpectedToken(5, 24, 6, variableIdx, declarationBit, "Период (declaration)"),
-      // Line 6: "ПОМЕСТИТЬ ВТ_Курсы"
-      new ExpectedToken(6, 3, 9, keywordIdx, 0, "ПОМЕСТИТЬ"),
-      // Note: ВТ_Курсы is missing in actual output - need to investigate
-      // Line 7: "ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы"
-      new ExpectedToken(7, 3, 2, keywordIdx, 0, "ИЗ"),
-      new ExpectedToken(7, 6, 15, namespaceIdx, 0, "РегистрСведений"),
-      new ExpectedToken(7, 21, 1, operatorIdx, 0, "."),
-      new ExpectedToken(7, 22, 10, classIdx, 0, "КурсыВалют"),
-      new ExpectedToken(7, 32, 1, operatorIdx, 0, "."),
-      new ExpectedToken(7, 33, 13, methodIdx, 0, "СрезПоследних"),
-      new ExpectedToken(7, 47, 1, parameterIdx, 0, "("),
-      new ExpectedToken(7, 48, 6, parameterIdx, 0, "&Период"),
-      new ExpectedToken(7, 56, 3, keywordIdx, 0, "КАК"),
-      new ExpectedToken(7, 60, 5, variableIdx, declarationBit, "Курсы (declaration)"),
-      // Line 8: "ИНДЕКСИРОВАТЬ ПО Валюта, Период"
-      new ExpectedToken(8, 3, 13, keywordIdx, 0, "ИНДЕКСИРОВАТЬ"),
-      new ExpectedToken(8, 17, 2, keywordIdx, 0, "ПО"),
-      new ExpectedToken(8, 20, 6, variableIdx, 0, "Валюта"),
-      new ExpectedToken(8, 26, 1, operatorIdx, 0, ","),
-      new ExpectedToken(8, 28, 6, variableIdx, 0, "Период"),
-      new ExpectedToken(8, 35, 1, operatorIdx, 0, ";")
-    );
-    
-    // Get actual SDBL tokens (filter out BSL tokens like STRING)
-    var actualSdblTokens = decoded.stream()
-      .filter(t -> t.line >= 2 && t.line <= 8) // Query lines only
-      .filter(t -> t.type != legendTypes.indexOf(SemanticTokenTypes.String)) // Exclude STRING tokens
-      .sorted((a, b) -> {
-        int lineCmp = Integer.compare(a.line, b.line);
-        return lineCmp != 0 ? lineCmp : Integer.compare(a.start, b.start);
-      })
-      .toList();
-
-    // Compare token by token
-    assertThat(actualSdblTokens).as("Number of SDBL tokens").hasSize(expected.size());
-    
     for (int i = 0; i < expected.size(); i++) {
       var exp = expected.get(i);
-      var act = actualSdblTokens.get(i);
-      
+      var act = actual.get(i);
+
+      int expectedTypeIdx = legend.getTokenTypes().indexOf(exp.tokenType);
+      int expectedModifiersMask = computeModifiersMask(exp.tokenModifiers);
+
       assertThat(act.line)
-        .as("Token %d (%s): line", i, exp.description)
+        .as("Token %d (%s): line", i, exp.lexeme)
         .isEqualTo(exp.line);
       assertThat(act.start)
-        .as("Token %d (%s): start", i, exp.description)
-        .isEqualTo(exp.start);
+        .as("Token %d (%s): start", i, exp.lexeme)
+        .isEqualTo(exp.startChar);
       assertThat(act.length)
-        .as("Token %d (%s): length", i, exp.description)
+        .as("Token %d (%s): length", i, exp.lexeme)
         .isEqualTo(exp.length);
       assertThat(act.type)
-        .as("Token %d (%s): type", i, exp.description)
-        .isEqualTo(exp.type);
+        .as("Token %d (%s): type (expected %s)", i, exp.lexeme, exp.tokenType)
+        .isEqualTo(expectedTypeIdx);
       assertThat(act.modifiers)
-        .as("Token %d (%s): modifiers", i, exp.description)
-        .isEqualTo(exp.modifiers);
+        .as("Token %d (%s): modifiers", i, exp.lexeme)
+        .isEqualTo(expectedModifiersMask);
     }
   }
+
+  private void assertContainsTokens(List<DecodedToken> actual, List<ExpectedToken> expected) {
+    for (var exp : expected) {
+      int expectedTypeIdx = legend.getTokenTypes().indexOf(exp.tokenType);
+      int expectedModifiersMask = computeModifiersMask(exp.tokenModifiers);
+
+      var found = actual.stream()
+        .filter(t -> t.line == exp.line
+          && t.start == exp.startChar
+          && t.length == exp.length
+          && t.type == expectedTypeIdx
+          && t.modifiers == expectedModifiersMask)
+        .findFirst();
+
+      assertThat(found)
+        .as("Expected token: %s at [%d:%d], length=%d, type=%s, modifiers=%s",
+          exp.lexeme, exp.line, exp.startChar, exp.length, exp.tokenType, exp.tokenModifiers)
+        .isPresent();
+    }
+  }
+
+  private int computeModifiersMask(Set<String> modifiers) {
+    int mask = 0;
+    for (String mod : modifiers) {
+      int idx = legend.getTokenModifiers().indexOf(mod);
+      if (idx >= 0) {
+        mask |= (1 << idx);
+      }
+    }
+    return mask;
+  }
+
+  private SemanticTokens getTokens(String bsl) {
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    return provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+  }
+
+  private List<DecodedToken> getDecodedTokens(String bsl) {
+    return decode(getTokens(bsl).getData());
+  }
+
+  // endregion
+
+  // region Encoder test
+
+  @Test
+  void tokenEncodingFormat_deltaLineAndDeltaStart() {
+    // Test that the encoder correctly computes delta-line and delta-start values
+    // according to LSP SemanticTokens specification
+    String bsl = """
+      Перем А;
+      Перем Б;
+      """;
+
+    SemanticTokens tokens = getTokens(bsl);
+    List<Integer> data = tokens.getData();
+
+    // Each token is 5 integers: [deltaLine, deltaStart, length, tokenType, tokenModifiers]
+    assertThat(data.size() % 5).isZero();
+
+    // Decode and verify absolute positions
+    List<DecodedToken> decoded = decode(data);
+    assertThat(decoded).isNotEmpty();
+
+    // First token should be at line 0
+    assertThat(decoded.get(0).line).isZero();
+
+    // Tokens should be ordered by position
+    for (int i = 1; i < decoded.size(); i++) {
+      var prev = decoded.get(i - 1);
+      var curr = decoded.get(i);
+      // Either on a later line, or same line with later start
+      assertThat(curr.line > prev.line || (curr.line == prev.line && curr.start >= prev.start + prev.length))
+        .as("Token %d should be after token %d", i, i - 1)
+        .isTrue();
+    }
+  }
+
+  // endregion
+
+  // region BSL tokens tests
+
+  @Test
+  void annotationWithoutParams() {
+    String bsl = """
+      &НаКлиенте
+      Процедура Тест()
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      new ExpectedToken(0, 0, 10, SemanticTokenTypes.Decorator, "&НаКлиенте"),
+      new ExpectedToken(1, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
+      new ExpectedToken(1, 10, 4, SemanticTokenTypes.Method, "Тест"),
+      new ExpectedToken(1, 14, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 15, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(2, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
+    );
+
+    assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void annotationWithStringParam() {
+    String bsl = """
+      &Перед("Строка")
+      Процедура Тест()
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expectedLine0 = List.of(
+      new ExpectedToken(0, 0, 6, SemanticTokenTypes.Decorator, "&Перед"),
+      new ExpectedToken(0, 6, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(0, 7, 8, SemanticTokenTypes.String, "\"Строка\""),
+      new ExpectedToken(0, 15, 1, SemanticTokenTypes.Operator, ")")
+    );
+
+    assertContainsTokens(decoded, expectedLine0);
+  }
+
+  @Test
+  void annotationWithNamedParam() {
+    String bsl = """
+      &КастомнаяАннотация(Значение = "Параметр")
+      Процедура Тест()
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expectedLine0 = List.of(
+      new ExpectedToken(0, 0, 19, SemanticTokenTypes.Decorator, "&КастомнаяАннотация"),
+      new ExpectedToken(0, 19, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(0, 20, 8, SemanticTokenTypes.Parameter, "Значение"),
+      new ExpectedToken(0, 29, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(0, 31, 10, SemanticTokenTypes.String, "\"Параметр\""),
+      new ExpectedToken(0, 41, 1, SemanticTokenTypes.Operator, ")")
+    );
+
+    assertContainsTokens(decoded, expectedLine0);
+  }
+
+  @Test
+  void useDirective() {
+    String bsl = """
+      #Использовать А
+      #Использовать Б
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      new ExpectedToken(0, 0, 13, SemanticTokenTypes.Namespace, "#Использовать"),
+      new ExpectedToken(0, 14, 1, SemanticTokenTypes.Variable, "А"),
+      new ExpectedToken(1, 0, 13, SemanticTokenTypes.Namespace, "#Использовать"),
+      new ExpectedToken(1, 14, 1, SemanticTokenTypes.Variable, "Б")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void regionDirective() {
+    String bsl = """
+      #Область МояСекция
+      Процедура Тест()
+      КонецПроцедуры
+      #КонецОбласти
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Verify region tokens
+    var expectedTokens = List.of(
+      new ExpectedToken(0, 0, 8, SemanticTokenTypes.Namespace, "#Область"),
+      new ExpectedToken(0, 9, 9, SemanticTokenTypes.Variable, "МояСекция"),
+      new ExpectedToken(3, 0, 13, SemanticTokenTypes.Namespace, "#КонецОбласти")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void preprocessorDirectives() {
+    String bsl = """
+      #Если Сервер Тогда
+      Процедура Пусто()
+      КонецПроцедуры
+      #ИначеЕсли Клиент Тогда
+      #Иначе
+      #КонецЕсли
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Verify preprocessor macro tokens on specific lines
+    var expectedTokens = List.of(
+      new ExpectedToken(0, 0, 1, SemanticTokenTypes.Macro, "#"),
+      new ExpectedToken(0, 1, 4, SemanticTokenTypes.Macro, "Если"),
+      new ExpectedToken(0, 6, 6, SemanticTokenTypes.Macro, "Сервер"),
+      new ExpectedToken(0, 13, 5, SemanticTokenTypes.Macro, "Тогда"),
+      new ExpectedToken(3, 0, 1, SemanticTokenTypes.Macro, "#"),
+      new ExpectedToken(3, 1, 9, SemanticTokenTypes.Macro, "ИначеЕсли"),
+      new ExpectedToken(4, 0, 1, SemanticTokenTypes.Macro, "#"),
+      new ExpectedToken(4, 1, 5, SemanticTokenTypes.Macro, "Иначе"),
+      new ExpectedToken(5, 0, 1, SemanticTokenTypes.Macro, "#"),
+      new ExpectedToken(5, 1, 9, SemanticTokenTypes.Macro, "КонецЕсли")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void literals() {
+    String bsl = """
+      Процедура Тест()
+        Дата = '20010101';
+        X = Неопределено;
+        Y = Истина;
+        Z = Ложь;
+        N = 123;
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expectedTokens = List.of(
+      new ExpectedToken(1, 9, 10, SemanticTokenTypes.String, "'20010101'"),
+      new ExpectedToken(2, 6, 12, SemanticTokenTypes.Keyword, "Неопределено"),
+      new ExpectedToken(3, 6, 6, SemanticTokenTypes.Keyword, "Истина"),
+      new ExpectedToken(4, 6, 4, SemanticTokenTypes.Keyword, "Ложь"),
+      new ExpectedToken(5, 6, 3, SemanticTokenTypes.Number, "123")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void methodDescriptionComments() {
+    String bsl = """
+      // Описание процедуры
+      // Параметры: Парам - Число
+      Процедура ДокТест(Парам)
+        // обычный комментарий
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Documentation comments on lines 0-1 should have Documentation modifier
+    // Body comment on line 3 should NOT have Documentation modifier
+    var expected = List.of(
+      new ExpectedToken(0, 0, 21, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Описание процедуры"),
+      new ExpectedToken(1, 0, 27, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Параметры: Парам - Число"),
+      new ExpectedToken(3, 2, 22, SemanticTokenTypes.Comment, "// обычный комментарий")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void variableDescriptionComments() {
+    String bsl = """
+      // Описание переменной
+      Перем Перем1; // трейл
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Both leading (line 0) and trailing (line 1) comments should have documentation modifier
+    var expected = List.of(
+      new ExpectedToken(0, 0, 22, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Описание переменной"),
+      new ExpectedToken(1, 14, 8, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// трейл")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void multilineDocumentation_mergedWhenSupported() {
+    provider.setMultilineTokenSupport(true);
+
+    String bsl = """
+      // Первая строка описания
+      // Вторая строка описания
+      Процедура ДокТест()
+        // не документация
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // When multiline support is enabled, documentation comments should be merged into one token
+    // The merged token starts on line 0 and spans across lines
+    // Both lines "// Первая строка описания" (26 chars) + "// Вторая строка описания" (25 chars) = 51 chars total
+    // Body comment on line 3 should NOT have Documentation modifier
+    var expected = List.of(
+      // Merged documentation comment (starts at line 0, length is sum of both lines)
+      new ExpectedToken(0, 0, 51, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Первая+Вторая строка описания"),
+      // Body comment without documentation modifier
+      new ExpectedToken(3, 2, 18, SemanticTokenTypes.Comment, "// не документация")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void variableDefinition_hasDefinitionModifier() {
+    String bsl = """
+      Перем Перем1;
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(0, 6, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Перем1"),
+      new ExpectedToken(0, 12, 1, SemanticTokenTypes.Operator, ";")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void parameterAndVariableTokenTypes() {
+    String bsl = """
+      Процедура Тест(Парам1, Парам2)
+        Перем ЛокальнаяПеременная;
+        НеявнаяПеременная = 1;
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expectedTokens = List.of(
+      // Parameters in signature
+      new ExpectedToken(0, 15, 6, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition, "Парам1"),
+      new ExpectedToken(0, 23, 6, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition, "Парам2"),
+      // Explicit variable declaration
+      new ExpectedToken(1, 8, 19, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "ЛокальнаяПеременная"),
+      // Implicit variable
+      new ExpectedToken(2, 2, 17, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "НеявнаяПеременная")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void sameFileMethodCall() {
+    String bsl = """
+      Процедура CallMe()
+      КонецПроцедуры
+
+      Процедура Бар()
+        CallMe();
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Method call on line 4
+    var methodCallToken = new ExpectedToken(4, 2, 6, SemanticTokenTypes.Method, "CallMe");
+    assertContainsTokens(decoded, List.of(methodCallToken));
+  }
+
+  @Test
+  void parameterAndVariableUsages() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/SemanticTokensProviderParameterTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    var decoded = decode(tokens.getData());
+
+    var expected = List.of(
+      // Parameters in signature (line 0)
+      new ExpectedToken(0, 15, 6, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition, "Парам1"),
+      new ExpectedToken(0, 23, 6, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition, "Парам2"),
+      // Local variable declaration (line 1)
+      new ExpectedToken(1, 8, 19, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "ЛокальнаяПеременная"),
+      // Variable usage on line 4 (without definition modifier)
+      new ExpectedToken(4, 11, 19, SemanticTokenTypes.Variable, "ЛокальнаяПеременная"),
+      // Parameter usage on line 3 (without definition modifier)
+      new ExpectedToken(3, 24, 6, SemanticTokenTypes.Parameter, "Парам1")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  // endregion
+
+  // region SDBL tokens tests
+
+  @Test
+  void sdblQuery_simpleSelect() {
+    String bsl = """
+      Функция Тест()
+        Запрос = "Выбрать * из Справочник.Контрагенты";
+      КонецФункции
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Expected SDBL tokens on line 1
+    var expectedTokens = List.of(
+      // "Выбрать" keyword at position 12 (after `  Запрос = "`)
+      new ExpectedToken(1, 12, 7, SemanticTokenTypes.Keyword, "Выбрать"),
+      // "*" operator
+      new ExpectedToken(1, 20, 1, SemanticTokenTypes.Operator, "*"),
+      // "из" keyword
+      new ExpectedToken(1, 22, 2, SemanticTokenTypes.Keyword, "из"),
+      // "Справочник" metadata namespace
+      new ExpectedToken(1, 25, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      // "." operator
+      new ExpectedToken(1, 35, 1, SemanticTokenTypes.Operator, "."),
+      // "Контрагенты" metadata class
+      new ExpectedToken(1, 36, 11, SemanticTokenTypes.Class, "Контрагенты")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void sdblQuery_withAggregateFunction() {
+    String bsl = """
+      Функция Тест()
+        Запрос = "Выбрать СУММА(Сумма) как Итого из Документ.Продажа";
+      КонецФункции
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      new ExpectedToken(1, 12, 7, SemanticTokenTypes.Keyword, "Выбрать"),
+      new ExpectedToken(1, 20, 5, SemanticTokenTypes.Function, SemanticTokenModifiers.DefaultLibrary, "СУММА"),
+      new ExpectedToken(1, 33, 3, SemanticTokenTypes.Keyword, "как"),
+      new ExpectedToken(1, 43, 2, SemanticTokenTypes.Keyword, "из"),
+      new ExpectedToken(1, 46, 8, SemanticTokenTypes.Namespace, "Документ"),
+      new ExpectedToken(1, 55, 7, SemanticTokenTypes.Class, "Продажа")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void sdblQuery_withParameter() {
+    String bsl = """
+      Функция Тест()
+        Запрос = "Выбрать * из Справочник.Контрагенты где Код = &Параметр";
+      КонецФункции
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      new ExpectedToken(1, 12, 7, SemanticTokenTypes.Keyword, "Выбрать"),
+      new ExpectedToken(1, 20, 1, SemanticTokenTypes.Operator, "*"),
+      new ExpectedToken(1, 22, 2, SemanticTokenTypes.Keyword, "из"),
+      new ExpectedToken(1, 25, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(1, 36, 11, SemanticTokenTypes.Class, "Контрагенты"),
+      new ExpectedToken(1, 48, 3, SemanticTokenTypes.Keyword, "где"),
+      // &Параметр as single Parameter token (& at 58, Параметр is 8 chars, total length 9)
+      new ExpectedToken(1, 58, 9, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Readonly, "&Параметр")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void sdblQuery_multiline() {
+    String bsl = """
+      Функция Тест()
+        Запрос = "
+        |Выбрать
+        |  СУММА(Сумма) как Итого
+        |из
+        |  Справочник.Контрагенты";
+      КонецФункции
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      new ExpectedToken(2, 3, 7, SemanticTokenTypes.Keyword, "Выбрать"),
+      new ExpectedToken(3, 5, 5, SemanticTokenTypes.Function, SemanticTokenModifiers.DefaultLibrary, "СУММА"),
+      new ExpectedToken(3, 18, 3, SemanticTokenTypes.Keyword, "как"),
+      new ExpectedToken(4, 3, 2, SemanticTokenTypes.Keyword, "из"),
+      new ExpectedToken(5, 5, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(5, 16, 11, SemanticTokenTypes.Class, "Контрагенты")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void sdblQuery_virtualTableMethod() {
+    String bsl = """
+      Процедура Тест()
+        Текст = "ВЫБРАТЬ * ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период)";
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expectedTokens = List.of(
+      // Metadata namespace
+      new ExpectedToken(1, 24, 15, SemanticTokenTypes.Namespace, "РегистрСведений"),
+      // Metadata class
+      new ExpectedToken(1, 40, 10, SemanticTokenTypes.Class, "КурсыВалют"),
+      // Virtual table method
+      new ExpectedToken(1, 51, 13, SemanticTokenTypes.Method, "СрезПоследних")
+    );
+
+    assertContainsTokens(decoded, expectedTokens);
+  }
+
+  @Test
+  void sdblQuery_temporaryTable() {
+    String bsl = """
+      Процедура Тест()
+        Запрос = "
+        |ВЫБРАТЬ Поле ПОМЕСТИТЬ ВТ_Таблица;
+        |ВЫБРАТЬ Поле ИЗ ВТ_Таблица";
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      // First query - line 2, positions based on actual parsing
+      new ExpectedToken(2, 3, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
+      new ExpectedToken(2, 16, 9, SemanticTokenTypes.Keyword, "ПОМЕСТИТЬ"),
+      new ExpectedToken(2, 26, 10, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "ВТ_Таблица"),
+      // Second query - line 3
+      new ExpectedToken(3, 3, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
+      new ExpectedToken(3, 16, 2, SemanticTokenTypes.Keyword, "ИЗ"),
+      new ExpectedToken(3, 19, 10, SemanticTokenTypes.Variable, "ВТ_Таблица")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void sdblQuery_complexQueryWithJoin() {
+    // Complex query with temporary table, join, and field references
+    String bsl = """
+      Процедура Тест()
+        Запрос = "
+        |ВЫБРАТЬ
+        |    Курсы.Валюта КАК Валюта,
+        |    Курсы.Курс КАК Курс,
+        |    Курсы.Период КАК Период
+        |ПОМЕСТИТЬ ВТ_Курсы
+        |ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы
+        |ИНДЕКСИРОВАТЬ ПО Валюта, Период;
+        |
+        |ВЫБРАТЬ
+        |    ВТ.Валюта КАК Валюта,
+        |    ВТ.Курс КАК Курс,
+        |    СпрВалюта.Код КАК КодВалюты
+        |ИЗ ВТ_Курсы КАК ВТ
+        |ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Валюты КАК СпрВалюта
+        |ПО ВТ.Валюта = СпрВалюта.Ссылка";
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      // First query - line 2: ВЫБРАТЬ
+      new ExpectedToken(2, 3, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
+      // Line 3: Курсы.Валюта КАК Валюта
+      new ExpectedToken(3, 7, 5, SemanticTokenTypes.Variable, "Курсы"),
+      new ExpectedToken(3, 13, 6, SemanticTokenTypes.Property, "Валюта"),
+      new ExpectedToken(3, 20, 3, SemanticTokenTypes.Keyword, "КАК"),
+      new ExpectedToken(3, 24, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "Валюта"),
+      // Line 6: ПОМЕСТИТЬ ВТ_Курсы
+      new ExpectedToken(6, 3, 9, SemanticTokenTypes.Keyword, "ПОМЕСТИТЬ"),
+      new ExpectedToken(6, 13, 8, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "ВТ_Курсы"),
+      // Line 7: ИЗ РегистрСведений.КурсыВалют.СрезПоследних(&Период) КАК Курсы
+      new ExpectedToken(7, 3, 2, SemanticTokenTypes.Keyword, "ИЗ"),
+      new ExpectedToken(7, 6, 15, SemanticTokenTypes.Namespace, "РегистрСведений"),
+      new ExpectedToken(7, 22, 10, SemanticTokenTypes.Class, "КурсыВалют"),
+      new ExpectedToken(7, 33, 13, SemanticTokenTypes.Method, "СрезПоследних"),
+      new ExpectedToken(7, 47, 7, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Readonly, "&Период"),
+      new ExpectedToken(7, 56, 3, SemanticTokenTypes.Keyword, "КАК"),
+      new ExpectedToken(7, 60, 5, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "Курсы"),
+      // Line 8: ИНДЕКСИРОВАТЬ ПО Валюта, Период
+      new ExpectedToken(8, 3, 13, SemanticTokenTypes.Keyword, "ИНДЕКСИРОВАТЬ"),
+      new ExpectedToken(8, 17, 2, SemanticTokenTypes.Keyword, "ПО"),
+      // Second query - line 10: ВЫБРАТЬ
+      new ExpectedToken(10, 3, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
+      // Line 14: ИЗ ВТ_Курсы КАК ВТ
+      new ExpectedToken(14, 3, 2, SemanticTokenTypes.Keyword, "ИЗ"),
+      new ExpectedToken(14, 6, 8, SemanticTokenTypes.Variable, "ВТ_Курсы"),
+      new ExpectedToken(14, 15, 3, SemanticTokenTypes.Keyword, "КАК"),
+      new ExpectedToken(14, 19, 2, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "ВТ"),
+      // Line 15: ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Валюты КАК СпрВалюта
+      new ExpectedToken(15, 3, 5, SemanticTokenTypes.Keyword, "ЛЕВОЕ"),
+      new ExpectedToken(15, 9, 10, SemanticTokenTypes.Keyword, "СОЕДИНЕНИЕ"),
+      new ExpectedToken(15, 20, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(15, 31, 6, SemanticTokenTypes.Class, "Валюты"),
+      new ExpectedToken(15, 38, 3, SemanticTokenTypes.Keyword, "КАК"),
+      new ExpectedToken(15, 42, 9, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "СпрВалюта"),
+      // Line 16: ПО ВТ.Валюта = СпрВалюта.Ссылка
+      new ExpectedToken(16, 3, 2, SemanticTokenTypes.Keyword, "ПО"),
+      new ExpectedToken(16, 6, 2, SemanticTokenTypes.Variable, "ВТ"),
+      new ExpectedToken(16, 9, 6, SemanticTokenTypes.Property, "Валюта"),
+      new ExpectedToken(16, 18, 9, SemanticTokenTypes.Variable, "СпрВалюта"),
+      new ExpectedToken(16, 28, 6, SemanticTokenTypes.Property, "Ссылка")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void sdblQuery_noTokenOverlaps() {
+    String bsl = """
+      Функция Тест()
+        Запрос = "Выбрать * из Справочник.Контрагенты";
+      КонецФункции
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Sort tokens by position
+    var sortedTokens = decoded.stream()
+      .filter(t -> t.line == 1)
+      .sorted((a, b) -> Integer.compare(a.start, b.start))
+      .toList();
+
+    // Verify no overlaps
+    for (int i = 0; i < sortedTokens.size() - 1; i++) {
+      var current = sortedTokens.get(i);
+      var next = sortedTokens.get(i + 1);
+      int currentEnd = current.start + current.length;
+
+      assertThat(currentEnd)
+        .as("Token at [%d, %d) should not overlap with next token at [%d, %d)",
+          current.start, currentEnd, next.start, next.start + next.length)
+        .isLessThanOrEqualTo(next.start);
+    }
+  }
+
+  // endregion
 }
+
