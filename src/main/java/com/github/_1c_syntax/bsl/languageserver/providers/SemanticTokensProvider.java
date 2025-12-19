@@ -45,6 +45,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.UseContext;
+import com.github._1c_syntax.bsl.parser.SDBLLexer;
+import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -72,6 +75,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -146,8 +150,24 @@ public class SemanticTokensProvider {
     BSLLexer.NULL
   );
 
+  // SDBL (Query Language) token types
+  private static final Set<Integer> SDBL_KEYWORDS = createSdblKeywords();
+  private static final Set<Integer> SDBL_FUNCTIONS = createSdblFunctions();
+  private static final Set<Integer> SDBL_METADATA_TYPES = createSdblMetadataTypes();
+  private static final Set<Integer> SDBL_LITERALS = createSdblLiterals();
+  private static final Set<Integer> SDBL_OPERATORS = createSdblOperators();
+  private static final Set<Integer> SDBL_STRINGS = Set.of(SDBLLexer.STR);
+  private static final Set<Integer> SDBL_COMMENTS = Set.of(SDBLLexer.LINE_COMMENT);
+  private static final Set<Integer> SDBL_EDS = Set.of(
+    SDBLLexer.EDS_CUBE,
+    SDBLLexer.EDS_TABLE,
+    SDBLLexer.EDS_CUBE_DIMTABLE
+  );
+  private static final Set<Integer> SDBL_NUMBERS = Set.of(SDBLLexer.DECIMAL, SDBLLexer.FLOAT);
+
   private static final String[] NO_MODIFIERS = new String[0];
   private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
+  private static final String[] DEFAULT_LIBRARY = new String[]{SemanticTokenModifiers.DefaultLibrary};
 
   private final SemanticTokensLegend legend;
   private final ReferenceResolver referenceResolver;
@@ -211,10 +231,17 @@ public class SemanticTokensProvider {
     // 3.1) Method call occurrences as Method tokens
     addMethodCallTokens(entries, uri);
 
-    // 4) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
-    addLexicalTokens(tokensFromDefaultChannel, entries);
+    // 4) SDBL (Query Language) tokens - process before lexical tokens to identify strings to skip
+    var stringsToSkip = collectStringsWithSdblTokens(documentContext);
 
-    // 5) Build delta-encoded data
+    // 5) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
+    // Skip strings that contain SDBL tokens (they'll be split and added by addSdblTokens)
+    addLexicalTokens(tokensFromDefaultChannel, entries, stringsToSkip);
+
+    // 6) Add SDBL tokens and split string parts
+    addSdblTokens(documentContext, entries, stringsToSkip);
+
+    // 7) Build delta-encoded data
     List<Integer> data = toDeltaEncoded(entries);
     return new SemanticTokens(data);
   }
@@ -548,11 +575,15 @@ public class SemanticTokensProvider {
     }
   }
 
-  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries) {
+  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries, Set<Token> stringsToSkip) {
     for (Token token : tokens) {
       var tokenType = token.getType();
       var tokenText = Objects.toString(token.getText(), "");
       if (!tokenText.isEmpty()) {
+        // Skip string tokens that contain SDBL tokens - they'll be handled by addSdblTokens
+        if (STRING_TYPES.contains(tokenType) && stringsToSkip.contains(token)) {
+          continue;
+        }
         selectAndAddSemanticToken(entries, token, tokenType);
       }
     }
@@ -579,6 +610,662 @@ public class SemanticTokensProvider {
     }
   }
 
+  private Set<Token> collectStringsWithSdblTokens(DocumentContext documentContext) {
+    var queries = documentContext.getQueries();
+    if (queries.isEmpty()) {
+      return Set.of();
+    }
+
+    // Collect all SDBL tokens grouped by line
+    // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
+    var sdblTokensByLine = new HashMap<Integer, List<Token>>();
+    for (var query : queries) {
+      for (Token token : query.getTokens()) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        int zeroIndexedLine = token.getLine() - 1;  // ANTLR uses 1-indexed, convert to 0-indexed for Range
+        sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
+      }
+    }
+
+    if (sdblTokensByLine.isEmpty()) {
+      return Set.of();
+    }
+
+    // Collect BSL string tokens that contain SDBL tokens
+    var bslStringTokens = documentContext.getTokensFromDefaultChannel().stream()
+      .filter(token -> STRING_TYPES.contains(token.getType()))
+      .toList();
+
+    var stringsToSkip = new HashSet<Token>();
+
+    for (Token bslString : bslStringTokens) {
+      var stringRange = Ranges.create(bslString);
+      int stringLine = stringRange.getStart().getLine();
+
+      var sdblTokensOnLine = sdblTokensByLine.get(stringLine);
+      if (sdblTokensOnLine == null || sdblTokensOnLine.isEmpty()) {
+        continue;
+      }
+
+      // Check if any SDBL tokens overlap with this string token
+      var hasOverlappingTokens = sdblTokensOnLine.stream()
+        .anyMatch(sdblToken -> {
+          var sdblRange = Ranges.create(sdblToken);
+          return Ranges.containsRange(stringRange, sdblRange);
+        });
+
+      if (hasOverlappingTokens) {
+        stringsToSkip.add(bslString);
+      }
+    }
+
+    return stringsToSkip;
+  }
+
+  private void addSdblTokens(DocumentContext documentContext, List<TokenEntry> entries, Set<Token> stringsToSkip) {
+    var queries = documentContext.getQueries();
+    if (queries.isEmpty()) {
+      return;
+    }
+
+    // Collect all SDBL tokens grouped by line
+    // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
+    var sdblTokensByLine = new HashMap<Integer, List<Token>>();
+    for (var query : queries) {
+      for (Token token : query.getTokens()) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        int zeroIndexedLine = token.getLine() - 1;  // ANTLR uses 1-indexed, convert to 0-indexed for Range
+        sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
+      }
+    }
+
+    if (sdblTokensByLine.isEmpty()) {
+      return;
+    }
+
+    // For each BSL string token that was skipped, split it around SDBL tokens
+    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
+    
+    for (Token stringToken : stringsToSkip) {
+      var stringRange = Ranges.create(stringToken);
+      int stringLine = stringRange.getStart().getLine();
+
+      var sdblTokensOnLine = sdblTokensByLine.get(stringLine);
+      if (sdblTokensOnLine == null || sdblTokensOnLine.isEmpty()) {
+        continue;
+      }
+
+      // Check if any SDBL tokens overlap with this string token
+      int stringStart = stringRange.getStart().getCharacter();
+      int stringEnd = stringRange.getEnd().getCharacter();
+      
+      var overlappingTokens = sdblTokensOnLine.stream()
+        .filter(sdblToken -> {
+          int sdblStart = sdblToken.getCharPositionInLine();
+          int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
+          // Token overlaps if it's within the string range
+          return sdblStart >= stringStart && sdblEnd <= stringEnd;
+        })
+        .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
+        .toList();
+
+      if (overlappingTokens.isEmpty()) {
+        continue;
+      }
+
+      // Split the STRING token around SDBL tokens
+      int currentPos = stringStart;
+
+      for (Token sdblToken : overlappingTokens) {
+        int sdblStart = sdblToken.getCharPositionInLine();
+        int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
+
+        // Add string part before SDBL token
+        if (currentPos < sdblStart && stringTypeIdx >= 0) {
+          entries.add(new TokenEntry(
+            stringLine,
+            currentPos,
+            sdblStart - currentPos,
+            stringTypeIdx,
+            0
+          ));
+        }
+
+        currentPos = sdblEnd;
+      }
+
+      // Add final string part after last SDBL token
+      if (currentPos < stringEnd && stringTypeIdx >= 0) {
+        entries.add(new TokenEntry(
+          stringLine,
+          currentPos,
+          stringEnd - currentPos,
+          stringTypeIdx,
+          0
+        ));
+      }
+    }
+
+    // Add all SDBL tokens (with adjusted line numbers)
+    for (var query : queries) {
+      for (Token token : query.getTokens()) {
+        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+          continue;
+        }
+        addSdblToken(entries, token);
+      }
+    }
+    
+    // Add AST-based semantic tokens (aliases, field names, metadata names, etc.)
+    for (var query : queries) {
+      var visitor = new SdblSemanticTokensVisitor(this, entries);
+      visitor.visit(query.getAst());
+    }
+  }
+
+  private void addSdblToken(List<TokenEntry> entries, Token token) {
+    var tokenType = token.getType();
+    var semanticTypeAndModifiers = getSdblTokenTypeAndModifiers(tokenType);
+    if (semanticTypeAndModifiers != null) {
+      // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
+      int zeroIndexedLine = token.getLine() - 1;
+      int start = token.getCharPositionInLine();
+      int length = (int) token.getText().codePoints().count();
+      // Create range with corrected line number
+      var range = new Range(
+        new Position(zeroIndexedLine, start),
+        new Position(zeroIndexedLine, start + length)
+      );
+      addRange(entries, range, semanticTypeAndModifiers.type, semanticTypeAndModifiers.modifiers);
+    }
+  }
+
+  @Nullable
+  private SdblTokenTypeAndModifiers getSdblTokenTypeAndModifiers(int tokenType) {
+    if (SDBL_KEYWORDS.contains(tokenType)) {
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
+    } else if (SDBL_FUNCTIONS.contains(tokenType)) {
+      // Functions as Function type with defaultLibrary modifier (built-in SDBL functions)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Function, DEFAULT_LIBRARY);
+    } else if (SDBL_METADATA_TYPES.contains(tokenType) || SDBL_EDS.contains(tokenType)) {
+      // Metadata types (Справочник, РегистрСведений, etc.) as Namespace with no modifiers (per JSON spec)
+      // Note: Virtual tables (SDBL_VIRTUAL_TABLES) are NOT included here because they should be
+      // handled by AST visitor as Method tokens in visitMdo
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Namespace, NO_MODIFIERS);
+    } else if (SDBL_LITERALS.contains(tokenType)) {
+      // Literals as Keyword (matching YAML: constant.language.sdbl, no Constant type in LSP)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
+    } else if (SDBL_OPERATORS.contains(tokenType)) {
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Operator, NO_MODIFIERS);
+    } else if (SDBL_STRINGS.contains(tokenType)) {
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.String, NO_MODIFIERS);
+    } else if (SDBL_COMMENTS.contains(tokenType)) {
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Comment, NO_MODIFIERS);
+    } else if (SDBL_NUMBERS.contains(tokenType)) {
+      // Numbers as Number (matching YAML: constant.numeric.sdbl)
+      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Number, NO_MODIFIERS);
+    }
+    return null;
+  }
+
+  private record SdblTokenTypeAndModifiers(String type, String[] modifiers) {
+  }
+
+  // SDBL token type factory methods
+  private static Set<Integer> createSdblKeywords() {
+    return Set.of(
+      SDBLLexer.ALL,
+      SDBLLexer.ALLOWED,
+      SDBLLexer.AND,
+      SDBLLexer.AS,
+      SDBLLexer.ASC,
+      SDBLLexer.AUTOORDER,
+      SDBLLexer.BETWEEN,
+      SDBLLexer.BY_EN,
+      SDBLLexer.CASE,
+      SDBLLexer.CAST,
+      SDBLLexer.DESC,
+      SDBLLexer.DISTINCT,
+      SDBLLexer.DROP,
+      SDBLLexer.ELSE,
+      SDBLLexer.END,
+      SDBLLexer.ESCAPE,
+      SDBLLexer.FOR,
+      SDBLLexer.FROM,
+      SDBLLexer.FULL,
+      SDBLLexer.GROUP,
+      SDBLLexer.HAVING,
+      SDBLLexer.HIERARCHY,
+      SDBLLexer.HIERARCHY_FOR_IN,
+      SDBLLexer.IN,
+      SDBLLexer.INDEX,
+      SDBLLexer.INNER,
+      SDBLLexer.INTO,
+      SDBLLexer.IS,
+      SDBLLexer.JOIN,
+      SDBLLexer.LEFT,
+      SDBLLexer.LIKE,
+      SDBLLexer.NOT,
+      SDBLLexer.OF,
+      SDBLLexer.ONLY,
+      SDBLLexer.ON_EN,
+      SDBLLexer.OR,
+      SDBLLexer.ORDER,
+      SDBLLexer.OVERALL,
+      SDBLLexer.OUTER,
+      SDBLLexer.PERIODS,
+      SDBLLexer.PO_RU,
+      SDBLLexer.REFS,
+      SDBLLexer.RIGHT,
+      SDBLLexer.SELECT,
+      SDBLLexer.SET,
+      SDBLLexer.THEN,
+      SDBLLexer.TOP,
+      SDBLLexer.TOTALS,
+      SDBLLexer.UNION,
+      SDBLLexer.UPDATE,
+      SDBLLexer.WHEN,
+      SDBLLexer.WHERE,
+      SDBLLexer.EMPTYREF,
+      SDBLLexer.GROUPEDBY,
+      SDBLLexer.GROUPING
+    );
+  }
+
+  private static Set<Integer> createSdblFunctions() {
+    return Set.of(
+      SDBLLexer.AVG,
+      SDBLLexer.BEGINOFPERIOD,
+      SDBLLexer.BOOLEAN,
+      SDBLLexer.COUNT,
+      SDBLLexer.DATE,
+      SDBLLexer.DATEADD,
+      SDBLLexer.DATEDIFF,
+      SDBLLexer.DATETIME,
+      SDBLLexer.DAY,
+      SDBLLexer.DAYOFYEAR,
+      SDBLLexer.EMPTYTABLE,
+      SDBLLexer.ENDOFPERIOD,
+      SDBLLexer.HALFYEAR,
+      SDBLLexer.HOUR,
+      SDBLLexer.ISNULL,
+      SDBLLexer.MAX,
+      SDBLLexer.MIN,
+      SDBLLexer.MINUTE,
+      SDBLLexer.MONTH,
+      SDBLLexer.NUMBER,
+      SDBLLexer.QUARTER,
+      SDBLLexer.PRESENTATION,
+      SDBLLexer.RECORDAUTONUMBER,
+      SDBLLexer.REFPRESENTATION,
+      SDBLLexer.SECOND,
+      SDBLLexer.STRING,
+      SDBLLexer.SUBSTRING,
+      SDBLLexer.SUM,
+      SDBLLexer.TENDAYS,
+      SDBLLexer.TYPE,
+      SDBLLexer.VALUE,
+      SDBLLexer.VALUETYPE,
+      SDBLLexer.WEEK,
+      SDBLLexer.WEEKDAY,
+      SDBLLexer.YEAR,
+      SDBLLexer.INT,
+      SDBLLexer.ACOS,
+      SDBLLexer.ASIN,
+      SDBLLexer.ATAN,
+      SDBLLexer.COS,
+      SDBLLexer.SIN,
+      SDBLLexer.TAN,
+      SDBLLexer.LOG,
+      SDBLLexer.LOG10,
+      SDBLLexer.EXP,
+      SDBLLexer.POW,
+      SDBLLexer.SQRT,
+      SDBLLexer.LOWER,
+      SDBLLexer.STRINGLENGTH,
+      SDBLLexer.TRIMALL,
+      SDBLLexer.TRIML,
+      SDBLLexer.TRIMR,
+      SDBLLexer.UPPER,
+      SDBLLexer.ROUND,
+      SDBLLexer.STOREDDATASIZE,
+      SDBLLexer.UUID,
+      SDBLLexer.STRFIND,
+      SDBLLexer.STRREPLACE
+    );
+  }
+
+  private static Set<Integer> createSdblMetadataTypes() {
+    return Set.of(
+      SDBLLexer.ACCOUNTING_REGISTER_TYPE,
+      SDBLLexer.ACCUMULATION_REGISTER_TYPE,
+      SDBLLexer.BUSINESS_PROCESS_TYPE,
+      SDBLLexer.CALCULATION_REGISTER_TYPE,
+      SDBLLexer.CATALOG_TYPE,
+      SDBLLexer.CHART_OF_ACCOUNTS_TYPE,
+      SDBLLexer.CHART_OF_CALCULATION_TYPES_TYPE,
+      SDBLLexer.CHART_OF_CHARACTERISTIC_TYPES_TYPE,
+      SDBLLexer.CONSTANT_TYPE,
+      SDBLLexer.DOCUMENT_TYPE,
+      SDBLLexer.DOCUMENT_JOURNAL_TYPE,
+      SDBLLexer.ENUM_TYPE,
+      SDBLLexer.EXCHANGE_PLAN_TYPE,
+      SDBLLexer.EXTERNAL_DATA_SOURCE_TYPE,
+      SDBLLexer.FILTER_CRITERION_TYPE,
+      SDBLLexer.INFORMATION_REGISTER_TYPE,
+      SDBLLexer.SEQUENCE_TYPE,
+      SDBLLexer.TASK_TYPE
+    );
+  }
+
+  private static Set<Integer> createSdblVirtualTables() {
+    return Set.of(
+      SDBLLexer.ACTUAL_ACTION_PERIOD_VT,
+      SDBLLexer.BALANCE_VT,
+      SDBLLexer.BALANCE_AND_TURNOVERS_VT,
+      SDBLLexer.BOUNDARIES_VT,
+      SDBLLexer.DR_CR_TURNOVERS_VT,
+      SDBLLexer.EXT_DIMENSIONS_VT,
+      SDBLLexer.RECORDS_WITH_EXT_DIMENSIONS_VT,
+      SDBLLexer.SCHEDULE_DATA_VT,
+      SDBLLexer.SLICEFIRST_VT,
+      SDBLLexer.SLICELAST_VT,
+      SDBLLexer.TASK_BY_PERFORMER_VT,
+      SDBLLexer.TURNOVERS_VT
+    );
+  }
+
+  private static Set<Integer> createSdblLiterals() {
+    return Set.of(
+      SDBLLexer.TRUE,
+      SDBLLexer.FALSE,
+      SDBLLexer.UNDEFINED,
+      SDBLLexer.NULL
+    );
+  }
+
+  private static Set<Integer> createSdblOperators() {
+    return Set.of(
+      SDBLLexer.SEMICOLON,
+      SDBLLexer.DOT,  // Added for field access operator
+      SDBLLexer.PLUS,
+      SDBLLexer.MINUS,
+      SDBLLexer.MUL,
+      SDBLLexer.QUOTIENT,
+      SDBLLexer.ASSIGN,
+      SDBLLexer.LESS_OR_EQUAL,
+      SDBLLexer.LESS,
+      SDBLLexer.NOT_EQUAL,
+      SDBLLexer.GREATER_OR_EQUAL,
+      SDBLLexer.GREATER,
+      SDBLLexer.COMMA,
+      SDBLLexer.BRACE,
+      SDBLLexer.BRACE_START,
+      SDBLLexer.NUMBER_SIGH
+    );
+  }
+
   private record TokenEntry(int line, int start, int length, int type, int modifiers) {
+  }
+
+  /**
+   * Visitor for SDBL AST to add semantic tokens based on context.
+   * Handles:
+   * - Table aliases → Variable
+   * - Field names (after dots) → Property
+   * - Metadata type names → Namespace  
+   * - Alias declarations (after AS/КАК) → Variable + Declaration
+   * - Temporary table declarations (INTO tableName) → Variable + Declaration
+   * - Temporary table references (FROM tableName) → Variable
+   * - Operators (dots, commas) → Operator
+   */
+  private static class SdblSemanticTokensVisitor extends SDBLParserBaseVisitor<Void> {
+    private final SemanticTokensProvider provider;
+    private final List<TokenEntry> entries;
+    
+    public SdblSemanticTokensVisitor(SemanticTokensProvider provider, List<TokenEntry> entries) {
+      this.provider = provider;
+      this.entries = entries;
+    }
+    
+    @Override
+    public Void visitQuery(SDBLParser.QueryContext ctx) {
+      // Handle INTO temporaryTableName (ПОМЕСТИТЬ ВТ_Курсы)
+      // Grammar: (INTO temporaryTableName=temporaryTableIdentifier)?
+      // temporaryTableIdentifier: DOT? (NUMBER_SIGH+ | identifier | ((identifier | NUMBER_SIGH)+ DECIMAL*)+)
+      var temporaryTableName = ctx.temporaryTableName;
+      if (temporaryTableName != null) {
+        // Add the entire temporaryTableIdentifier as Variable + Declaration
+        provider.addSdblContextRange(entries, temporaryTableName, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
+      }
+
+      return super.visitQuery(ctx);
+    }
+
+    @Override
+    public Void visitDataSource(SDBLParser.DataSourceContext ctx) {
+      // Handle table sources and their aliases
+      var alias = ctx.alias();
+      if (alias != null && alias.identifier() != null) {
+        // Alias after AS/КАК → Variable + Declaration
+        var token = alias.identifier().getStart();
+        provider.addSdblTokenRange(entries, token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
+      }
+      
+      return super.visitDataSource(ctx);
+    }
+    
+    @Override
+    public Void visitSelectedField(SDBLParser.SelectedFieldContext ctx) {
+      // Handle field selections and their aliases
+      var alias = ctx.alias();
+      if (alias != null && alias.identifier() != null) {
+        // Alias after AS/КАК → Variable + Declaration
+        var token = alias.identifier().getStart();
+        provider.addSdblTokenRange(entries, token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
+      }
+      
+      return super.visitSelectedField(ctx);
+    }
+    
+    @Override
+    public Void visitMdo(SDBLParser.MdoContext ctx) {
+      // Metadata object reference
+      // Grammar: mdo: type=(CATALOG_TYPE|...) DOT tableName=identifier
+      // type is already handled as Namespace by lexical processing
+      // tableName → Class (metadata object name, e.g., Пользователи in Справочник.Пользователи)
+      var tableName = ctx.tableName;
+      if (tableName != null) {
+        provider.addSdblTokenRange(entries, tableName.getStart(), SemanticTokenTypes.Class);
+      }
+      
+      return super.visitMdo(ctx);
+    }
+    
+    @Override
+    public Void visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
+      // Virtual table methods like СрезПоследних, Обороты, etc.
+      // Grammar: mdo DOT virtualTableName=(SLICELAST_VT | SLICEFIRST_VT | ...) ( parameters )?
+      // virtualTableName is a token, not an identifier context
+      
+      // Get virtualTableName token from context
+      // It's defined in grammar as virtualTableName=(SLICELAST_VT | SLICEFIRST_VT | ...)
+      var virtualTableNameToken = ctx.virtualTableName;
+      if (virtualTableNameToken != null) {
+        provider.addSdblTokenRange(entries, virtualTableNameToken, SemanticTokenTypes.Method);
+      }
+      
+      return super.visitVirtualTable(ctx);
+    }
+    
+    @Override
+    public Void visitTable(SDBLParser.TableContext ctx) {
+      // Handle table references
+      // Grammar: table: mdo | mdo DOT objectTableName=identifier | tableName=identifier
+
+      // tableName (third variant) is a temporary table reference
+      var tableName = ctx.tableName;
+      if (tableName != null) {
+        // Temporary table reference (ИЗ ВТ_Курсы) → Variable
+        provider.addSdblTokenRange(entries, tableName.getStart(), SemanticTokenTypes.Variable);
+      }
+
+      // objectTableName (second variant) is a table part/subordinate table
+      // e.g., Справочник.Пользователи.ГруппыДоступа → ГруппыДоступа is objectTableName
+      var objectTableName = ctx.objectTableName;
+      if (objectTableName != null) {
+        // Table part (табличная часть) → Class (it's a full table, subordinate to the main object)
+        provider.addSdblTokenRange(entries, objectTableName.getStart(), SemanticTokenTypes.Class);
+      }
+
+      return super.visitTable(ctx);
+    }
+
+    @Override
+    public Void visitColumn(SDBLParser.ColumnContext ctx) {
+      // Handle field references: TableAlias.FieldName
+      var identifiers = ctx.identifier();
+      if (identifiers != null && !identifiers.isEmpty()) {
+        if (identifiers.size() == 1) {
+          // Single identifier: in SDBL it may represent either a table alias or a field name.
+          // We intentionally highlight such ambiguous identifiers as "variable" for now,
+          // because distinguishing alias vs. field here would require deeper symbol resolution
+          // that is not performed in this visitor.
+          provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
+        } else if (identifiers.size() >= 2) {
+          // First identifier → Variable (table alias)
+          provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
+          
+          // Dots are handled by lexical token processing
+          
+          // Last identifier → Property (field name)
+          provider.addSdblTokenRange(entries, identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Property);
+        }
+      }
+      
+      return super.visitColumn(ctx);
+    }
+
+    @Override
+    public Void visitParameter(SDBLParser.ParameterContext ctx) {
+      // Handle query parameters: &ParameterName
+      // Grammar: parameter: AMPERSAND name=PARAMETER_IDENTIFIER;
+      // Combine both tokens into a single Parameter token with Readonly modifier
+      var ampersand = ctx.AMPERSAND();
+      var parameterName = ctx.name;
+      if (ampersand != null && parameterName != null) {
+        // Create range from start of AMPERSAND to end of PARAMETER_IDENTIFIER
+        provider.addSdblContextRange(entries, ctx, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Readonly);
+      }
+
+      return super.visitParameter(ctx);
+    }
+
+    @Override
+    public Void visitValueFunction(SDBLParser.ValueFunctionContext ctx) {
+      // Handle VALUE function: Значение(...)
+      // Grammar variants:
+      // 1. type DOT mdoName DOT emptyRef=EMPTYREF (e.g., Справочник.Валюты.ПустаяСсылка)
+      // 2. type DOT mdoName DOT predefinedName (e.g., Справочник.Валюты.Рубль, Перечисление.Пол.Мужской)
+      // 3. systemName DOT predefinedName (e.g., for system enums)
+      // 4. mdo DOT (empty reference via mdo)
+
+      var type = ctx.type;
+      var mdoName = ctx.mdoName;
+      var predefinedName = ctx.predefinedName;
+      var emptyRef = ctx.emptyFer; // Note: variable name matches grammar field 'emptyFer' (typo in grammar for 'emptyRef')
+      var systemName = ctx.systemName;
+
+      if (type != null && mdoName != null) {
+        // Handle: type.mdoName.predefinedName or type.mdoName.EMPTYREF
+        // type is already handled as Namespace by lexical processing
+
+        // mdoName → Class or Enum depending on type
+        if (type.getType() == SDBLLexer.ENUM_TYPE) {
+          // For Перечисление.Пол → Пол is Enum
+          provider.addSdblTokenRange(entries, mdoName.getStart(), SemanticTokenTypes.Enum);
+        } else {
+          // For Справочник.Валюты, ПланВидовХарактеристик.XXX, etc. → Class
+          provider.addSdblTokenRange(entries, mdoName.getStart(), SemanticTokenTypes.Class);
+        }
+
+        // predefinedName or EMPTYREF → EnumMember
+        if (predefinedName != null) {
+          provider.addSdblTokenRange(entries, predefinedName.getStart(), SemanticTokenTypes.EnumMember);
+        } else if (emptyRef != null) {
+          provider.addSdblTokenRange(entries, emptyRef, SemanticTokenTypes.EnumMember);
+        }
+      } else if (systemName != null && predefinedName != null) {
+        // Handle system enum: systemName.predefinedName
+        // systemName → Enum
+        provider.addSdblTokenRange(entries, systemName.getStart(), SemanticTokenTypes.Enum);
+        // predefinedName → EnumMember
+        provider.addSdblTokenRange(entries, predefinedName.getStart(), SemanticTokenTypes.EnumMember);
+      }
+
+      // Handle routePointName for business processes
+      var routePointName = ctx.routePointName;
+      if (routePointName != null) {
+        provider.addSdblTokenRange(entries, routePointName.getStart(), SemanticTokenTypes.EnumMember);
+      }
+
+      return super.visitValueFunction(ctx);
+    }
+
+  }
+  
+  /**
+   * Helper method to add semantic token from SDBL ANTLR token
+   * Handles conversion from ANTLR 1-indexed lines to LSP 0-indexed positions
+   */
+  private void addSdblTokenRange(List<TokenEntry> entries, @Nullable Token token, String type, String... modifiers) {
+    if (token == null) {
+      return;
+    }
+    
+    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
+    int zeroIndexedLine = token.getLine() - 1;
+    int start = token.getCharPositionInLine();
+    int length = (int) token.getText().codePoints().count();
+    
+    var range = new Range(
+      new Position(zeroIndexedLine, start),
+      new Position(zeroIndexedLine, start + length)
+    );
+
+    addRange(entries, range, type, modifiers);
+  }
+
+  /**
+   * Helper method to add semantic token from SDBL ParserRuleContext
+   * Uses the entire range of the context (from start token to stop token)
+   */
+  private void addSdblContextRange(List<TokenEntry> entries, ParserRuleContext ctx, String type, String... modifiers) {
+    if (ctx == null || ctx.getStart() == null || ctx.getStop() == null) {
+      return;
+    }
+
+    var startToken = ctx.getStart();
+    var stopToken = ctx.getStop();
+
+    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
+    int zeroIndexedLine = startToken.getLine() - 1;
+    int start = startToken.getCharPositionInLine();
+
+    // Calculate length from start of first token to end of last token
+    // For single-line contexts, we can compute the total length
+    int stopEndPosition = stopToken.getCharPositionInLine() + (int) stopToken.getText().codePoints().count();
+    int length = stopEndPosition - start;
+
+    var range = new Range(
+      new Position(zeroIndexedLine, start),
+      new Position(zeroIndexedLine, start + length)
+    );
+    
+    addRange(entries, range, type, modifiers);
   }
 }

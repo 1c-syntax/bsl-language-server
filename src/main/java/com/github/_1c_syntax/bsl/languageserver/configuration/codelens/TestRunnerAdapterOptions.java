@@ -83,6 +83,10 @@ public class TestRunnerAdapterOptions {
    */
   private String runTestArguments = "-run %s %s";
   /**
+   * Аргументы для отладки одного теста.
+   */
+  private String debugTestArguments = "";
+  /**
    * Аргументы для запуска всех тестов.
    */
   private String runAllTestsArguments = "-run %s";

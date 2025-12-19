@@ -144,6 +144,7 @@ public class TestRunnerAdapter {
       .map(getTestsRegex::matcher)
       .filter(Matcher::matches)
       .map(matcher -> matcher.group(1))
+      .distinct()
       .toList();
   }
 
