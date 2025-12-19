@@ -790,6 +790,78 @@ class SemanticTokensProviderTest {
     }
   }
 
+  @Test
+  void sdblQuery_valueFunctionWithPredefinedElement() {
+    // Test: Значение(Справочник.Валюты.Рубль)
+    // Справочник → Namespace, Валюты → Class, Рубль → EnumMember
+    String bsl = """
+      Процедура Тест()
+        Запрос = "ВЫБРАТЬ * ГДЕ Валюта = Значение(Справочник.Валюты.Рубль)";
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      // Справочник → Namespace (metadata type) at position 44
+      new ExpectedToken(1, 44, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      // Валюты → Class (metadata object) at position 55
+      new ExpectedToken(1, 55, 6, SemanticTokenTypes.Class, "Валюты"),
+      // Рубль → EnumMember (predefined element) at position 62
+      new ExpectedToken(1, 62, 5, SemanticTokenTypes.EnumMember, "Рубль")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void sdblQuery_valueFunctionWithEmptyRef() {
+    // Test: Значение(Справочник.Валюты.ПустаяСсылка)
+    // Справочник → Namespace, Валюты → Class, ПустаяСсылка → EnumMember
+    String bsl = """
+      Процедура Тест()
+        Запрос = "ВЫБРАТЬ * ГДЕ Валюта = Значение(Справочник.Валюты.ПустаяСсылка)";
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      // Справочник → Namespace at position 44
+      new ExpectedToken(1, 44, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      // Валюты → Class at position 55
+      new ExpectedToken(1, 55, 6, SemanticTokenTypes.Class, "Валюты"),
+      // ПустаяСсылка → EnumMember at position 62
+      new ExpectedToken(1, 62, 12, SemanticTokenTypes.EnumMember, "ПустаяСсылка")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void sdblQuery_valueFunctionWithEnum() {
+    // Test: Значение(Перечисление.Пол.Мужской)
+    // Перечисление → Namespace, Пол → Enum, Мужской → EnumMember
+    String bsl = """
+      Процедура Тест()
+        Запрос = "ВЫБРАТЬ * ГДЕ Пол = Значение(Перечисление.Пол.Мужской)";
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    var expected = List.of(
+      // Перечисление → Namespace (metadata type) at position 41
+      new ExpectedToken(1, 41, 12, SemanticTokenTypes.Namespace, "Перечисление"),
+      // Пол → Enum (enum object) at position 54
+      new ExpectedToken(1, 54, 3, SemanticTokenTypes.Enum, "Пол"),
+      // Мужской → EnumMember (enum value) at position 58
+      new ExpectedToken(1, 58, 7, SemanticTokenTypes.EnumMember, "Мужской")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
   // endregion
 }
 

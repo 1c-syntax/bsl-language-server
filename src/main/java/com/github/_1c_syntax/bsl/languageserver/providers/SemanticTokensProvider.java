@@ -1184,6 +1184,57 @@ public class SemanticTokensProvider {
       return super.visitParameter(ctx);
     }
 
+    @Override
+    public Void visitValueFunction(SDBLParser.ValueFunctionContext ctx) {
+      // Handle VALUE function: Значение(...)
+      // Grammar variants:
+      // 1. type DOT mdoName DOT emptyRef=EMPTYREF (e.g., Справочник.Валюты.ПустаяСсылка)
+      // 2. type DOT mdoName DOT predefinedName (e.g., Справочник.Валюты.Рубль, Перечисление.Пол.Мужской)
+      // 3. systemName DOT predefinedName (e.g., for system enums)
+      // 4. mdo DOT (empty reference via mdo)
+
+      var type = ctx.type;
+      var mdoName = ctx.mdoName;
+      var predefinedName = ctx.predefinedName;
+      var emptyRef = ctx.emptyFer; // Note: grammar has typo "emptyFer" instead of "emptyRef"
+      var systemName = ctx.systemName;
+
+      if (type != null && mdoName != null) {
+        // Handle: type.mdoName.predefinedName or type.mdoName.EMPTYREF
+        // type is already handled as Namespace by lexical processing
+
+        // mdoName → Class or Enum depending on type
+        if (type.getType() == SDBLLexer.ENUM_TYPE) {
+          // For Перечисление.Пол → Пол is Enum
+          provider.addSdblTokenRange(entries, mdoName.getStart(), SemanticTokenTypes.Enum);
+        } else {
+          // For Справочник.Валюты, ПланВидовХарактеристик.XXX, etc. → Class
+          provider.addSdblTokenRange(entries, mdoName.getStart(), SemanticTokenTypes.Class);
+        }
+
+        // predefinedName or EMPTYREF → EnumMember
+        if (predefinedName != null) {
+          provider.addSdblTokenRange(entries, predefinedName.getStart(), SemanticTokenTypes.EnumMember);
+        } else if (emptyRef != null) {
+          provider.addSdblTokenRange(entries, emptyRef, SemanticTokenTypes.EnumMember);
+        }
+      } else if (systemName != null && predefinedName != null) {
+        // Handle system enum: systemName.predefinedName
+        // systemName → Enum
+        provider.addSdblTokenRange(entries, systemName.getStart(), SemanticTokenTypes.Enum);
+        // predefinedName → EnumMember
+        provider.addSdblTokenRange(entries, predefinedName.getStart(), SemanticTokenTypes.EnumMember);
+      }
+
+      // Handle routePointName for business processes
+      var routePointName = ctx.routePointName;
+      if (routePointName != null) {
+        provider.addSdblTokenRange(entries, routePointName.getStart(), SemanticTokenTypes.EnumMember);
+      }
+
+      return super.visitValueFunction(ctx);
+    }
+
   }
   
   /**

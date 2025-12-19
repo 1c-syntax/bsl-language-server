@@ -61,7 +61,9 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Namespace,
       SemanticTokenTypes.Type,  // Added for general type references
       SemanticTokenTypes.Property,  // Added for SDBL field names
-      SemanticTokenTypes.Class  // Added for SDBL metadata types (Справочник, РегистрСведений, etc.)
+      SemanticTokenTypes.Class,  // Added for SDBL metadata types (Справочник, РегистрСведений, etc.)
+      SemanticTokenTypes.Enum,  // Added for SDBL enum types (Перечисление.Пол)
+      SemanticTokenTypes.EnumMember  // Added for predefined elements and enum values
     );
 
     List<String> tokenModifiers = List.of(
