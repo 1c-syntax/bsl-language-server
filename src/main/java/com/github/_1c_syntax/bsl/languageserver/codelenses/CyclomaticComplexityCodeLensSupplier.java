@@ -31,7 +31,9 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Сапплаер линз, показывающий когнитивную сложность методов.
+/**
+ * Сапплаер линз, показывающий цикломатическую сложность методов.
+ */
  */
 @Component
 @Order(5)
