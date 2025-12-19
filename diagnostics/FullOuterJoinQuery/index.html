@@ -1483,16 +1483,16 @@
 <div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">Тест1</span><span class="p">()</span>
 
     <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
-    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;ВЫБРАТЬ</span>
-                   <span class="s">|    Товары.Номенклатура КАК Номенклатура,</span>
-                   <span class="s">|    ЕСТЬNULL(ПланПродаж.Сумма, 0) КАК СуммаПлан,</span>
-                   <span class="s">|    ЕСТЬNULL(ФактическиеПродажи.Сумма, 0) КАК СуммаФакт</span>
-                   <span class="s">|ИЗ</span>
-                   <span class="s">|    Товары КАК Товары</span>
-                   <span class="s">|        ЛЕВОЕ СОЕДИНЕНИЕ ПланПродаж КАК ПланПродаж</span>
-                   <span class="s">|            ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ ФактическиеПродажи КАК ФактическиеПродажи // Диагностика должна сработать здесь</span>
-                   <span class="s">|            ПО ПланПродаж.Номенклатура = ФактическиеПродажи.Номенклатура</span>
-                   <span class="s">|        ПО Товары.Номенклатура = ПланПродаж.Номенклатура&quot;</span><span class="p">;</span>
+    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+                   <span class="s">|</span>    <span class="nv">Товары</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="kd">КАК</span> <span class="nv">Номенклатура</span><span class="p">,</span>
+                   <span class="s">|</span>    <span class="nb">ЕСТЬNULL</span><span class="p">(</span><span class="nv">ПланПродаж</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">СуммаПлан</span><span class="p">,</span>
+                   <span class="s">|</span>    <span class="nb">ЕСТЬNULL</span><span class="p">(</span><span class="nv">ФактическиеПродажи</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">СуммаФакт</span>
+                   <span class="s">|</span><span class="kd">ИЗ</span>
+                   <span class="s">|</span>    <span class="nv">Товары</span> <span class="kd">КАК</span> <span class="nv">Товары</span>
+                   <span class="s">|</span>        <span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nv">ПланПродаж</span> <span class="kd">КАК</span> <span class="nv">ПланПродаж</span>
+                   <span class="s">|</span>            <span class="kd">ПОЛНОЕ</span> <span class="kd">ВНЕШНЕЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nv">ФактическиеПродажи</span> <span class="kd">КАК</span> <span class="nv">ФактическиеПродажи</span> <span class="c1">// Диагностика должна сработать здесь</span>
+                   <span class="s">|</span>            <span class="kd">ПО</span> <span class="nv">ПланПродаж</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="o">=</span> <span class="nv">ФактическиеПродажи</span><span class="o">.</span><span class="nv">Номенклатура</span>
+                   <span class="s">|</span>        <span class="kd">ПО</span> <span class="nv">Товары</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="o">=</span> <span class="nv">ПланПродаж</span><span class="o">.</span><span class="nv">Номенклатура</span><span class="s">&quot;</span><span class="p">;</span>
 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div></p>

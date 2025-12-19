@@ -1482,19 +1482,19 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>For example, a query uses the <code>WHERE</code> section to filter virtual table data:
-<div class="highlight"><pre><span></span><code><span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
-<span class="s">| Good</span>
-<span class="s">|FROM</span>
-<span class="s">| AccumulationRegister.MyGoods.Turnovers()</span>
-<span class="s">|WHERE</span>
-<span class="s">| Warehouse = &amp;Warehouse&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">SELECT</span>
+<span class="s">|</span> <span class="nv">Good</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span> <span class="nv">AccumulationRegister</span><span class="o">.</span><span class="nv">MyGoods</span><span class="o">.</span><span class="nv">Turnovers</span><span class="p">()</span>
+<span class="s">|</span><span class="kd">WHERE</span>
+<span class="s">|</span> <span class="nv">Warehouse</span> <span class="o">=</span> <span class="no">&amp;Warehouse</span><span class="s">&quot;</span><span class="p">;</span>
 </code></pre></div>
 When executing this query, first all records of the virtual table will be selected, then the part corresponding to the specified condition will be selected from them.</p>
 <p>It is recommended that you limit the number of selected records as early as possible. To do this, pass conditions to the parameters of the virtual table.</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
-<span class="s">| Good</span>
-<span class="s">|FROM</span>
-<span class="s">| AccumulationRegister.MyGoods.Turnovers(, Warehouse = &amp;Warehouse)&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">SELECT</span>
+<span class="s">|</span> <span class="nv">Good</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span> <span class="nv">AccumulationRegister</span><span class="o">.</span><span class="nv">MyGoods</span><span class="o">.</span><span class="nv">Turnovers</span><span class="p">(,</span> <span class="nv">Warehouse</span> <span class="o">=</span> <span class="no">&amp;Warehouse</span><span class="p">)</span><span class="s">&quot;</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

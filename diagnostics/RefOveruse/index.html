@@ -1480,10 +1480,10 @@
 при этом не несет никакой ценности, а только генерирует избыточную нагрузку на СУБД.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-<div class="highlight"><pre><span></span><code><span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;ВЫБРАТЬ Файлы.Файл.Ссылка, // ошибка</span>
-   <span class="s">| Файлы.Файл</span>
-   <span class="s">| ИЗ</span>
-   <span class="s">| СлужебныеФайлы КАК Файлы&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span> <span class="nv">Файлы</span><span class="o">.</span><span class="nv">Файл</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// ошибка</span>
+   <span class="s">|</span> <span class="nv">Файлы</span><span class="o">.</span><span class="nv">Файл</span>
+   <span class="s">|</span> <span class="kd">ИЗ</span>
+   <span class="s">|</span> <span class="nv">СлужебныеФайлы</span> <span class="kd">КАК</span> <span class="nv">Файлы</span><span class="s">&quot;</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

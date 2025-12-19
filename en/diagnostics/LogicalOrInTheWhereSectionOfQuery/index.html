@@ -1506,7 +1506,7 @@
 </code></pre></div>
 <p>because can be rewritten using the <code>IN</code> operator (you don’t need to specifically rewrite it, you can leave it as it is):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field</span> <span class="nf">IN</span> <span class="p">(</span><span class="nd">&amp;Value)</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field</span> <span class="k">IN</span> <span class="p">(</span><span class="nd">&amp;Value)</span>
 </code></pre></div>
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
@@ -1540,8 +1540,8 @@
 </code></pre></div>
 <p>because can be rewritten using 'IN' (no special rewriting needed, can be left as is):</p>
 <div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
-    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="nf">IN</span> <span class="p">(</span><span class="nd">&amp;Value1)   // Main condition</span>
-    <span class="k">AND</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="nf">IN</span> <span class="p">(</span><span class="nd">&amp;Value2) // Additional condition (or vice versa)</span>
+    <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="k">IN</span> <span class="p">(</span><span class="nd">&amp;Value1)   // Main condition</span>
+    <span class="k">AND</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span> <span class="k">IN</span> <span class="p">(</span><span class="nd">&amp;Value2) // Additional condition (or vice versa)</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

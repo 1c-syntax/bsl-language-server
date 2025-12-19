@@ -1483,18 +1483,18 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Неправильно</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ТекстЗапроса</span> <span class="o">=</span> <span class="s">&quot;ВЫБРАТЬ</span>
-<span class="s">| Номенклатура.Наименование  КАК Наименование ,</span>
-<span class="s">| Номенклатура. &quot;</span> <span class="o">+</span> <span class="nv">ИмяПоляКод</span> <span class="o">+</span> <span class="s">&quot; КАК КодАртикул</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ТекстЗапроса</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+<span class="s">|</span> <span class="nv">Номенклатура</span><span class="o">.</span><span class="nv">Наименование</span>  <span class="kd">КАК</span> <span class="nv">Наименование</span> <span class="p">,</span>
+<span class="s">|</span> <span class="nv">Номенклатура</span><span class="o">.</span> <span class="s">&quot;</span> <span class="o">+</span> <span class="nv">ИмяПоляКод</span> <span class="o">+</span> <span class="s">&quot; КАК КодАртикул</span>
 <span class="s">|ИЗ</span>
 <span class="s">| Справочник.Номенклатура КАК Номенклатура&quot;</span><span class="p">;</span>
 </code></pre></div>
 <p>Правильно</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ТекстЗапроса</span> <span class="o">=</span> <span class="s">&quot;ВЫБРАТЬ</span>
-<span class="s">| Номенклатура.Наименование  КАК Наименование ,</span>
-<span class="s">| &amp;ИмяПоляЗапроса КАК КодАртикул</span>
-<span class="s">|ИЗ</span>
-<span class="s">| Справочник.Номенклатура КАК Номенклатура&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ТекстЗапроса</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+<span class="s">|</span> <span class="nv">Номенклатура</span><span class="o">.</span><span class="nv">Наименование</span>  <span class="kd">КАК</span> <span class="nv">Наименование</span> <span class="p">,</span>
+<span class="s">|</span> <span class="no">&amp;ИмяПоляЗапроса</span> <span class="kd">КАК</span> <span class="nv">КодАртикул</span>
+<span class="s">|</span><span class="kd">ИЗ</span>
+<span class="s">|</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="kd">КАК</span> <span class="nv">Номенклатура</span><span class="s">&quot;</span><span class="p">;</span>
 
 <span class="nv">ТекстЗапроса</span> <span class="o">=</span> <span class="nb">СтрЗаменить</span><span class="p">(</span><span class="nv">ТекстЗапроса</span><span class="p">,</span> 
                             <span class="s">&quot;&amp;ИмяПоляКод&quot;</span><span class="p">,</span> 

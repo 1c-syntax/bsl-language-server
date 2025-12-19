@@ -1483,14 +1483,14 @@
 
 <p>In the example below, the selection will have two fields instead of three.</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Query</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
-<span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
-<span class="s">|   OrderGoods.Cargo AS Cargo,</span>
-<span class="s">|   ISNULL(OrderGoods.Cargo.Code, </span><span class="se">&quot;&quot;</span><span class="s">) AS CargoCode, // quote error here, should be </span><span class="se">&quot;&quot;&quot;&quot;</span>
-<span class="s">|   ISNULL(OrderGoods.Cargo.Name, </span><span class="se">&quot;&quot;</span><span class="s">) AS CargoName</span>
-<span class="s">|FROM</span>
-<span class="s">|   Document.Order.Goods AS OrderGoods</span>
-<span class="s">|WHERE</span>
-<span class="s">|   OrderGoods.Ref = &amp;Ref&quot;</span><span class="p">;</span>
+<span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">SELECT</span>
+<span class="s">|</span>   <span class="nv">OrderGoods</span><span class="o">.</span><span class="nv">Cargo</span> <span class="kd">AS</span> <span class="nv">Cargo</span><span class="p">,</span>
+<span class="s">|</span>   <span class="nb">ISNULL</span><span class="p">(</span><span class="nv">OrderGoods</span><span class="o">.</span><span class="nv">Cargo</span><span class="o">.</span><span class="nv">Code</span><span class="p">,</span> <span class="se">&quot;&quot;</span><span class="p">)</span> <span class="kd">AS</span> <span class="nv">CargoCode</span><span class="p">,</span> <span class="o">//</span> <span class="nv">quote</span> <span class="nv">error</span> <span class="nv">here</span><span class="p">,</span> <span class="nv">should</span> <span class="nv">be</span> <span class="se">&quot;&quot;&quot;&quot;</span>
+<span class="s">|</span>   <span class="nb">ISNULL</span><span class="p">(</span><span class="nv">OrderGoods</span><span class="o">.</span><span class="nv">Cargo</span><span class="o">.</span><span class="nv">Name</span><span class="p">,</span> <span class="se">&quot;&quot;</span><span class="p">)</span> <span class="kd">AS</span> <span class="nv">CargoName</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span>   <span class="nv">Document</span><span class="o">.</span><span class="nv">Order</span><span class="o">.</span><span class="nv">Goods</span> <span class="kd">AS</span> <span class="nv">OrderGoods</span>
+<span class="s">|</span><span class="kd">WHERE</span>
+<span class="s">|</span>   <span class="nv">OrderGoods</span><span class="o">.</span><span class="nv">Ref</span> <span class="o">=</span> <span class="no">&amp;Ref</span><span class="s">&quot;</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

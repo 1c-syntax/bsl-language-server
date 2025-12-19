@@ -1653,7 +1653,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
         <span class="nv">ElseIf</span> <span class="k">NOT</span> <span class="nv">NeedPost</span> <span class="k">Then</span>                                                                <span class="c1">// +1, alternative branch, nesting not taken into account</span>
             <span class="nv">DocumentObject</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">DocumentWriteMode</span><span class="o">.</span><span class="nv">Write</span><span class="p">);</span>
         <span class="k">Else</span>                                                                                    <span class="c1">// +1, default branch, nesting not taken into account</span>
-            <span class="k">Raise</span> <span class="s">&quot;Why?&quot;</span><span class="p">;</span>
+            <span class="ne">Raise</span> <span class="s">&quot;Why?&quot;</span><span class="p">;</span>
         <span class="k">EndIf</span><span class="p">;</span>
     <span class="k">Except</span>                                                                                      <span class="c1">// +1, except processing</span>
         <span class="nv">RetryWrite</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">;</span>
@@ -1661,7 +1661,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
             <span class="k">If</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Posted</span> <span class="k">Then</span>                                                       <span class="c1">// +3, nested condition, nesting 2</span>
                 <span class="nv">DocumentObject</span><span class="o">.</span><span class="nf">Write</span><span class="p">(</span><span class="nv">DocumentWriteMode</span><span class="o">.</span><span class="nv">Write</span><span class="p">);</span>
             <span class="k">EndIf</span><span class="p">;</span>
-        <span class="k">Raise</span>                                                                                   <span class="c1">// +2, except processing, nesting 1</span>
+        <span class="ne">Raise</span>                                                                                   <span class="c1">// +2, except processing, nesting 1</span>
             <span class="nv">RetryWrite</span> <span class="o">=</span> <span class="kc">ИСТИНА</span><span class="p">;</span>
         <span class="k">EndTry</span><span class="p">;</span>
         <span class="k">If</span> <span class="k">NOT</span> <span class="nv">RetryWrite</span> <span class="k">Then</span>                                                                  <span class="c1">// +2, nested condition, nesting 1</span>
@@ -1669,7 +1669,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
                 <span class="nf">CancelTransaction</span><span class="p">();</span>
             <span class="k">EndDo</span><span class="p">;</span>
         <span class="k">EndIf</span><span class="p">;</span>
-        <span class="k">Raise</span> <span class="s">&quot;Error&quot;</span>
+        <span class="ne">Raise</span> <span class="s">&quot;Error&quot;</span>
     <span class="k">EndTry</span><span class="p">;</span>
 
     <span class="nl">~Label</span><span class="p">:</span>

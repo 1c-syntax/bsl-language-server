@@ -1492,11 +1492,11 @@
 <p>Пример, показывающий проблемы сравнения с NULL - в примере 2 таблицы соединяются заведомо неверно и приведены разные способы сравнения
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span>
   <span class="kd">ВЫБОР</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="err">=</span> <span class="nv">0</span> <span class="kd">ТОГДА</span> <span class="s">&quot;Равно 0 - не работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="err">&lt;&gt;</span> <span class="nv">0</span> <span class="kd">ТОГДА</span> <span class="s">&quot;НЕ Равно 0 - не работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="err">=</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">&quot;Равно NULL - не работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span> <span class="kd">ЕСТЬ</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">&quot;ЕСТЬ NULL - этот вариант работает&quot;</span>
-    <span class="kd">КОГДА</span> <span class="kd">ЕСТЬNULL</span><span class="p">(</span><span class="nv">Левая</span><span class="err">.</span><span class="nv">Поле2</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="err">=</span> <span class="nv">0</span>  <span class="kd">ТОГДА</span> <span class="s">&quot;ЕСТЬNULL() - этот вариант также работает&quot;</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="m">0</span> <span class="kd">ТОГДА</span> <span class="s">&quot;Равно 0 - не работает&quot;</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="kd">ТОГДА</span> <span class="s">&quot;НЕ Равно 0 - не работает&quot;</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">&quot;Равно NULL - не работает&quot;</span>
+    <span class="kd">КОГДА</span> <span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span> <span class="kd">ЕСТЬ</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="s">&quot;ЕСТЬ NULL - этот вариант работает&quot;</span>
+    <span class="kd">КОГДА</span> <span class="nb">ЕСТЬNULL</span><span class="p">(</span><span class="nv">Левая</span><span class="o">.</span><span class="nv">Поле2</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span>  <span class="kd">ТОГДА</span> <span class="s">&quot;ЕСТЬNULL() - этот вариант также работает&quot;</span>
     <span class="kd">ИНАЧЕ</span> <span class="s">&quot;Иначе&quot;</span>
   <span class="kd">КОНЕЦ</span>
 <span class="kd">ИЗ</span>
@@ -1506,39 +1506,39 @@
 </code></pre></div></p>
 <p>Подозрительный код обращения к реквизиту присоединенной таблицы
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span> <span class="c1">// здесь ошибка</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span> <span class="c1">// здесь ошибка</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Правильно
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="kd">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="nv">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nb">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Также правильно
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="kd">ВЫБОР</span> <span class="kd">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">Есть</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="nv">0</span>
-  <span class="kd">ИНАЧЕ</span>  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> 
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="kd">ВЫБОР</span> <span class="kd">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">Есть</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="m">0</span>
+  <span class="kd">ИНАЧЕ</span>  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> 
   <span class="kd">КОНЕЦ</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 И еще возможный вариант
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
-  <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="err">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="err">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
-<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="err">.</span><span class="nv">Ссылка</span> <span class="err">=</span> <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span>
+  <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
+  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+<span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 <span class="kd">ГДЕ</span>
-    <span class="nv">РегистрПродажи</span><span class="err">.</span><span class="nv">Документ</span> <span class="kd">ЕСТЬ</span> <span class="kd">НЕ</span> <span class="kc">NULL</span>
+    <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span> <span class="kd">ЕСТЬ</span> <span class="kd">НЕ</span> <span class="kc">NULL</span>
     <span class="c1">//или НЕ РегистрПродажи.Документ ЕСТЬ NULL</span>
 </code></pre></div>
 Последний вариант - не самый лучший, т.к. в нем фактически эмулируется внутреннее соединение. 

@@ -1476,9 +1476,9 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Compilation directives:</p>
-<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtClient (&amp;НаКлиенте)</span>
-<span class="nd">&amp;AtServer (&amp;НаСервере)</span>
-<span class="nd">&amp;AtServerNoContext (&amp;НаСервереБезКонтекста)</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtClient</span><span class="p">(</span>&amp;<span class="nv">НаКлиенте</span><span class="p">)</span>
+<span class="nd">&amp;AtServer</span><span class="p">(</span>&amp;<span class="nv">НаСервере</span><span class="p">)</span>
+<span class="nd">&amp;AtServerNoContext</span><span class="p">(</span>&amp;<span class="nv">НаСервереБезКонтекста</span><span class="p">)</span>
 </code></pre></div>
 <p>Must be used only in the code of managed form modules and in the code of command modules. In other modules, we recommend use instructions to the preprocessor.</p>
 <p>In server or client common modules, the execution context is obvious, so there is no sense in compilation directives. In common modules with client and server attributes, using compilation directives makes it difficult to understand which ones are procedures (functions) are available eventually.</p>

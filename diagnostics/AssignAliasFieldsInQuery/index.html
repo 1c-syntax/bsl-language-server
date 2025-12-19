@@ -1493,49 +1493,49 @@
 
 <div class="highlight"><pre><span></span><code>    <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
     <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
-    <span class="s">&quot;ВЫБРАТЬ</span>
-    <span class="s">|   Валюты.Ссылка, // Неправильно</span>
-    <span class="s">|   Валюты.Ссылка КАК ПсевдонимПоляСсылка, // Правильно</span>
-    <span class="s">|   Валюты.Код Код // Неправильно</span>
-    <span class="s">|ИЗ</span>
-    <span class="s">|   Справочник.Валюты КАК Валюты // Игнорируется</span>
+    <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Неправильно</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ПсевдонимПоляСсылка</span><span class="p">,</span> <span class="c1">// Правильно</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Код</span> <span class="nv">Код</span> <span class="c1">// Неправильно</span>
+    <span class="s">|</span><span class="kd">ИЗ</span>
+    <span class="s">|</span>   <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span> <span class="c1">// Игнорируется</span>
     <span class="s">|</span>
-    <span class="s">|ОБЪЕДИНИТЬ ВСЕ</span>
+    <span class="s">|</span><span class="kd">ОБЪЕДИНИТЬ</span> <span class="kd">ВСЕ</span>
     <span class="s">|</span>
-    <span class="s">|ВЫБРАТЬ</span>
-    <span class="s">|   Валюты.Ссылка, // Игнорируется</span>
-    <span class="s">|   Валюты.Ссылка, // Игнорируется</span>
-    <span class="s">|   Валюты.Код // Игнорируется</span>
-    <span class="s">|ИЗ</span>
-    <span class="s">|   Справочник.Валюты КАК Валюты // Игнорируется</span>
-    <span class="s">|;</span>
+    <span class="s">|</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Код</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span><span class="kd">ИЗ</span>
+    <span class="s">|</span>   <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span><span class="p">;</span>
     <span class="s">|</span>
-    <span class="s">|////////////////////////////////////////////////////////////////////////////////</span>
-    <span class="s">|ВЫБРАТЬ</span>
-    <span class="s">|   Валюты.Ссылка, // Неправильно</span>
-    <span class="s">|   Валюты.Ссылка КАК ПсевдонимПоляСсылка, // Правильно</span>
-    <span class="s">|   Валюты.Код Код // Неправильно</span>
-    <span class="s">|ИЗ</span>
-    <span class="s">|   Справочник.Валюты КАК Валюты // Игнорируется</span>
+    <span class="s">|</span><span class="c1">////////////////////////////////////////////////////////////////////////////////</span>
+    <span class="s">|</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Неправильно</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ПсевдонимПоляСсылка</span><span class="p">,</span> <span class="c1">// Правильно</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Код</span> <span class="nv">Код</span> <span class="c1">// Неправильно</span>
+    <span class="s">|</span><span class="kd">ИЗ</span>
+    <span class="s">|</span>   <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span> <span class="c1">// Игнорируется</span>
     <span class="s">|</span>
-    <span class="s">|ОБЪЕДИНИТЬ ВСЕ</span>
+    <span class="s">|</span><span class="kd">ОБЪЕДИНИТЬ</span> <span class="kd">ВСЕ</span>
     <span class="s">|</span>
-    <span class="s">|ВЫБРАТЬ</span>
-    <span class="s">|   Валюты.Ссылка, // Игнорируется</span>
-    <span class="s">|   Валюты.Ссылка, // Игнорируется</span>
-    <span class="s">|   Валюты.Код // Игнорируется</span>
-    <span class="s">|ИЗ</span>
-    <span class="s">|   Справочник.Валюты КАК Валюты&quot;</span><span class="p">;</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">,</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span>   <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Код</span> <span class="c1">// Игнорируется</span>
+    <span class="s">|</span><span class="kd">ИЗ</span>
+    <span class="s">|</span>   <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Игнорируется</span>
 
     <span class="nv">Запрос1</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
     <span class="nv">Запрос1</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
-    <span class="s">&quot;ВЫБРАТЬ</span>
-    <span class="s">|   ВложенныйЗапрос.Ссылка КАК Ссылка // Правильно</span>
-    <span class="s">|ИЗ</span>
-    <span class="s">|   (ВЫБРАТЬ</span>
-    <span class="s">|       Валюты.Ссылка // Неправильно</span>
-    <span class="s">|   ИЗ</span>
-    <span class="s">|       Справочник.Валюты КАК Валюты) КАК ВложенныйЗапрос&quot;</span><span class="p">;</span> <span class="c1">// Игнорируется </span>
+    <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">|</span>   <span class="nv">ВложенныйЗапрос</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">Ссылка</span> <span class="c1">// Правильно</span>
+    <span class="s">|</span><span class="kd">ИЗ</span>
+    <span class="s">|</span>   <span class="p">(</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">|</span>       <span class="nv">Валюты</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="c1">// Неправильно</span>
+    <span class="s">|</span>   <span class="kd">ИЗ</span>
+    <span class="s">|</span>       <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Валюты</span> <span class="kd">КАК</span> <span class="nv">Валюты</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">ВложенныйЗапрос</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Игнорируется </span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

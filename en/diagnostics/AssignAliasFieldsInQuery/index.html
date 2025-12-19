@@ -1493,49 +1493,49 @@ then changing the attribute name will only change the request text.</p>
 
 <div class="highlight"><pre><span></span><code>    <span class="nv">Query</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
 <span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span>
-<span class="s">&quot;SELECT</span>
-<span class="s">|   Currencies.Ref, // Incorrectly</span>
-<span class="s">|   Currencies.Ref AS AliasFieldsRef, // Correctly</span>
-<span class="s">|   Currencies.Code Code // Incorrectly</span>
-<span class="s">|FROM</span>
-<span class="s">|   Catalog.Currencies AS Currencies // Ignored</span>
+<span class="s">&quot;</span><span class="kd">SELECT</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Incorrectly</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">AliasFieldsRef</span><span class="p">,</span> <span class="c1">// Correctly</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Code</span> <span class="nv">Code</span> <span class="c1">// Incorrectly</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span>   <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span> <span class="c1">// Ignored</span>
 <span class="s">|</span>
-<span class="s">|UNION ALL</span>
+<span class="s">|</span><span class="kd">UNION</span> <span class="kd">ALL</span>
 <span class="s">|</span>
-<span class="s">|SELECT</span>
-<span class="s">|   Currencies.Ref, // Ignored</span>
-<span class="s">|   Currencies.Ref, // Ignored</span>
-<span class="s">|   Currencies.Code // Ignored</span>
-<span class="s">|FROM</span>
-<span class="s">|   Catalog.Currencies AS Currencies // Ignored</span>
-<span class="s">|;</span>
+<span class="s">|</span><span class="kd">SELECT</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Ignored</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Ignored</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Code</span> <span class="c1">// Ignored</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span>   <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span> <span class="c1">// Ignored</span>
+<span class="s">|</span><span class="p">;</span>
 <span class="s">|</span>
-<span class="s">|////////////////////////////////////////////////////////////////////////////////</span>
-<span class="s">|SELECT</span>
-<span class="s">|   Currencies.Ref, // Incorrectly</span>
-<span class="s">|   Currencies.Ref AS AliasFieldsRef, // Correctly</span>
-<span class="s">|   Currencies.Code Code // Incorrectly</span>
-<span class="s">|FROM</span>
-<span class="s">|   Catalog.Currencies AS Currencies // Ignored</span>
+<span class="s">|</span><span class="c1">////////////////////////////////////////////////////////////////////////////////</span>
+<span class="s">|</span><span class="kd">SELECT</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Incorrectly</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">AliasFieldsRef</span><span class="p">,</span> <span class="c1">// Correctly</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Code</span> <span class="nv">Code</span> <span class="c1">// Incorrectly</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span>   <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span> <span class="c1">// Ignored</span>
 <span class="s">|</span>
-<span class="s">|UNION ALL</span>
+<span class="s">|</span><span class="kd">UNION</span> <span class="kd">ALL</span>
 <span class="s">|</span>
-<span class="s">|SELECT</span>
-<span class="s">|   Currencies.Ref, // Ignored</span>
-<span class="s">|   Currencies.Ref, // Ignored</span>
-<span class="s">|   Currencies.Code // Ignored</span>
-<span class="s">|FROM</span>
-<span class="s">|   Catalog.Currencies AS Currencies&quot;</span><span class="p">;</span> <span class="c1">// Ignored</span>
+<span class="s">|</span><span class="kd">SELECT</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Ignored</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span><span class="p">,</span> <span class="c1">// Ignored</span>
+<span class="s">|</span>   <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Code</span> <span class="c1">// Ignored</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span>   <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Ignored</span>
 
 <span class="nv">Query1</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
 <span class="nv">Query1</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span>
-<span class="s">&quot;SELECT</span>
-<span class="s">|   NestedRequest.Ref AS Ref // Correctly</span>
-<span class="s">|FROM</span>
-<span class="s">|   (SELECT</span>
-<span class="s">|       Currencies.Ref // Incorrectly</span>
-<span class="s">|   FROM</span>
-<span class="s">|       Catalog.Currencies AS Currencies) AS NestedRequest&quot;</span><span class="p">;</span> <span class="c1">// Ignored </span>
+<span class="s">&quot;</span><span class="kd">SELECT</span>
+<span class="s">|</span>   <span class="nv">NestedRequest</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">Ref</span> <span class="c1">// Correctly</span>
+<span class="s">|</span><span class="kd">FROM</span>
+<span class="s">|</span>   <span class="p">(</span><span class="kd">SELECT</span>
+<span class="s">|</span>       <span class="nv">Currencies</span><span class="o">.</span><span class="nv">Ref</span> <span class="c1">// Incorrectly</span>
+<span class="s">|</span>   <span class="kd">FROM</span>
+<span class="s">|</span>       <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Currencies</span> <span class="kd">AS</span> <span class="nv">Currencies</span><span class="p">)</span> <span class="kd">AS</span> <span class="nv">NestedRequest</span><span class="s">&quot;</span><span class="p">;</span> <span class="c1">// Ignored </span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

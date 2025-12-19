@@ -1653,7 +1653,7 @@
         <span class="k">ИначеЕсли</span> <span class="k">НЕ</span> <span class="nv">НадоПровести</span> <span class="k">Тогда</span>                                                              <span class="c1">// +1, альтернативная ветвь, вложенность не учитывается</span>
             <span class="nv">ДокументОбъект</span><span class="o">.</span><span class="nf">Записать</span><span class="p">(</span><span class="nv">РежимЗаписиДокумента</span><span class="o">.</span><span class="nv">Запись</span><span class="p">);</span>
         <span class="k">Иначе</span>                                                                                        <span class="c1">// +1, ветвь по-умолчанию, вложенность не учитывается</span>
-            <span class="k">ВызватьИсключение</span> <span class="s">&quot;Как так-то?&quot;</span><span class="p">;</span>
+            <span class="ne">ВызватьИсключение</span> <span class="s">&quot;Как так-то?&quot;</span><span class="p">;</span>
         <span class="k">КонецЕсли</span><span class="p">;</span>
     <span class="k">Исключение</span>                                                                                       <span class="c1">// +1, обработка исключения</span>
         <span class="nv">ПовторнаяЗапись</span> <span class="o">=</span> <span class="kc">ЛОЖЬ</span><span class="p">;</span>
@@ -1669,7 +1669,7 @@
                 <span class="nb">ОтменитьТранзакцию</span><span class="p">();</span>
             <span class="k">КонецЦикла</span><span class="p">;</span>
         <span class="k">КонецЕсли</span><span class="p">;</span>
-        <span class="k">ВызватьИсключение</span> <span class="s">&quot;Ошибка&quot;</span>
+        <span class="ne">ВызватьИсключение</span> <span class="s">&quot;Ошибка&quot;</span>
     <span class="k">КонецПопытки</span><span class="p">;</span>
 
     <span class="nl">~Метка</span><span class="p">:</span>

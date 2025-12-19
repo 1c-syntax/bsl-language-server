@@ -1483,12 +1483,12 @@
 <span class="k">Для</span> <span class="nv">индекс</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="nv">СписокДокументов</span><span class="o">.</span><span class="nf">ВГраница</span><span class="p">()</span> <span class="k">Цикл</span>
     <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
     <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> 
-        <span class="s">&quot;ВЫБРАТЬ</span>
-        <span class="s">|   ПоступлениеТоваровУслуг.СуммаДокумента</span>
-        <span class="s">|ИЗ</span>
-        <span class="s">|   Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг</span>
-        <span class="s">|ГДЕ</span>
-        <span class="s">|   ПоступлениеТоваровУслуг.Ссылка = &amp;Ссылка&quot;</span><span class="p">;</span>
+        <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+        <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">СуммаДокумента</span>
+        <span class="s">|</span><span class="kd">ИЗ</span>
+        <span class="s">|</span>   <span class="nv">Документ</span><span class="o">.</span><span class="nv">ПоступлениеТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ПоступлениеТоваровУслуг</span>
+        <span class="s">|</span><span class="kd">ГДЕ</span>
+        <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="no">&amp;Ссылка</span><span class="s">&quot;</span><span class="p">;</span>
 
     <span class="nv">Запрос</span><span class="o">.</span><span class="nf">УстановитьПараметр</span><span class="p">(</span><span class="s">&quot;Ссылка&quot;</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">[</span><span class="nv">индекс</span><span class="p">]);</span>
 
@@ -1507,12 +1507,12 @@
 
 <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
 <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> 
-    <span class="s">&quot;ВЫБРАТЬ</span>
-    <span class="s">|   СУММА(ПоступлениеТоваровУслуг.СуммаДокумента) КАК СуммаДокумента</span>
-    <span class="s">|ИЗ</span>
-    <span class="s">|   Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг</span>
-    <span class="s">|ГДЕ</span>
-    <span class="s">|   ПоступлениеТоваровУслуг.Ссылка В(&amp;СписокДокументов)&quot;</span><span class="p">;</span>
+    <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
+    <span class="s">|</span>   <span class="nb">СУММА</span><span class="p">(</span><span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">СуммаДокумента</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">СуммаДокумента</span>
+    <span class="s">|</span><span class="kd">ИЗ</span>
+    <span class="s">|</span>   <span class="nv">Документ</span><span class="o">.</span><span class="nv">ПоступлениеТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ПоступлениеТоваровУслуг</span>
+    <span class="s">|</span><span class="kd">ГДЕ</span>
+    <span class="s">|</span>   <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">В</span><span class="p">(</span><span class="no">&amp;СписокДокументов</span><span class="p">)</span><span class="s">&quot;</span><span class="p">;</span>
 
 <span class="nv">Запрос</span><span class="o">.</span><span class="nf">УстановитьПараметр</span><span class="p">(</span><span class="s">&quot;Ссылка&quot;</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">);</span>
 

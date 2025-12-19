@@ -1499,7 +1499,7 @@
 <div class="highlight"><pre><span></span><code><span class="k">Try</span>
     <span class="c1">// code causing exception</span>
     <span class="o">....</span>
-<span class="k">Raise</span> <span class="c1">// catch any exception</span>
+<span class="ne">Raise</span> <span class="c1">// catch any exception</span>
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
 <p>As a rule, such a design hides a real problem, which is subsequently impossible to diagnose.</p>
@@ -1507,7 +1507,7 @@
 <div class="highlight"><pre><span></span><code><span class="k">Try</span>
     <span class="c1">// code causing exception</span>
     <span class="o">....</span>
-<span class="k">Raise</span>
+<span class="ne">Raise</span>
     <span class="c1">// Explanation why catching all exceptions untraceable for enduser.</span>
     <span class="c1">// ....</span>
     <span class="c1">// Write to log for system administrator.</span>

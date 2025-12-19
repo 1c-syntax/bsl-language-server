@@ -1483,7 +1483,7 @@
   вызов <code>УстановитьПривилегированныйРежим(Ложь)</code> игнорируется</p>
 <p>Потенциально опасны любые экспортные процедуры и функции, которые выполняют на сервере какие-либо действия с предварительной безусловной установкой привилегированного режима, так как это отключает проверку прав доступа текущего пользователя. Особого внимания требуют экспортные процедуры и функции клиентского прикладного программного интерфейса сервера 1С:Предприятия.</p>
 <p>Например, неправильно:
-<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ИзменитьИлиУдалитьДанные</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Экспорт</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ИзменитьИлиУдалитьДанные</span><span class="p">(</span>...<span class="p">)</span> <span class="k">Экспорт</span>
 
 <span class="nb">УстановитьПривилегированныйРежим</span><span class="p">(</span><span class="kc">Истина</span><span class="p">);</span> <span class="c1">// Отключаем проверку прав доступа</span>
 <span class="c1">// Изменяем данные в привилегированном режиме</span>
@@ -1491,7 +1491,7 @@
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 Правильно:
-<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ИзменитьИлиУдалитьДанные</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Экспорт</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ИзменитьИлиУдалитьДанные</span><span class="p">(</span>...<span class="p">)</span> <span class="k">Экспорт</span>
 
 <span class="c1">// Изменяем данные</span>
 <span class="c1">// (при этом если у пользователя недостаточно прав для выполнения операции над данными, то будет вызвано исключение)</span>
@@ -1502,7 +1502,7 @@
 Исключение составляют случаи, когда действие, выполняемое процедурой, должно быть разрешено (или возвращаемое значение функции должно быть доступно) абсолютно всем категориям пользователей.</p>
 <p>Если все-таки необходимо использовать привилегированный режим внутри метода, следует использовать проверку прав доступа вручную, следует использовать метод <code>ВыполнитьПроверкуПравДоступа</code>.</p>
 <p>Пример предварительной проверки перед выполнением действий в привилегированном режиме:
-<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ИзменитьИлиУдалитьДанные</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">Экспорт</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nf">ИзменитьИлиУдалитьДанные</span><span class="p">(</span>...<span class="p">)</span> <span class="k">Экспорт</span>
 
 <span class="nb">ВыполнитьПроверкуПравДоступа</span><span class="p">(</span><span class="o">...</span><span class="p">);</span> <span class="c1">// Если у пользователя недостаточно прав, то будет вызвано исключение</span>
 <span class="nb">УстановитьПривилегированныйРежим</span><span class="p">(</span><span class="kc">Истина</span><span class="p">);</span> <span class="c1">// Отключаем проверку прав доступа</span>

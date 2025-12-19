@@ -1483,16 +1483,16 @@
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Test1</span><span class="p">()</span>
 
     <span class="nv">Query</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">;</span>
-    <span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;SELECT</span>
-                   <span class="s">|    Goods.Product AS Product,</span>
-                   <span class="s">|    ISNULL(SalesPlan.Sum, 0) AS PlanSum,</span>
-                   <span class="s">|    ISNULL(SalesActual.Sum, 0) AS ActualSum</span>
-                   <span class="s">|FROM</span>
-                   <span class="s">|    Goods AS Goods</span>
-                   <span class="s">|        LEFT JOIN SalesPlan AS SalesPlan</span>
-                   <span class="s">|            FULL OUTER JOIN SalesActual AS SalesActual // Should trigger here</span>
-                   <span class="s">|            ON SalesPlan.Product = SalesActual.Product</span>
-                   <span class="s">|        ON Goods.Product = SalesPlan.Product&quot;</span><span class="p">;</span>
+    <span class="nv">Query</span><span class="o">.</span><span class="nv">Text</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">SELECT</span>
+                   <span class="s">|</span>    <span class="nv">Goods</span><span class="o">.</span><span class="nv">Product</span> <span class="kd">AS</span> <span class="nv">Product</span><span class="p">,</span>
+                   <span class="s">|</span>    <span class="nb">ISNULL</span><span class="p">(</span><span class="nv">SalesPlan</span><span class="o">.</span><span class="nv">Sum</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">AS</span> <span class="nv">PlanSum</span><span class="p">,</span>
+                   <span class="s">|</span>    <span class="nb">ISNULL</span><span class="p">(</span><span class="nv">SalesActual</span><span class="o">.</span><span class="nv">Sum</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">AS</span> <span class="nv">ActualSum</span>
+                   <span class="s">|</span><span class="kd">FROM</span>
+                   <span class="s">|</span>    <span class="nv">Goods</span> <span class="kd">AS</span> <span class="nv">Goods</span>
+                   <span class="s">|</span>        <span class="kd">LEFT</span> <span class="kd">JOIN</span> <span class="nv">SalesPlan</span> <span class="kd">AS</span> <span class="nv">SalesPlan</span>
+                   <span class="s">|</span>            <span class="kd">FULL</span> <span class="kd">OUTER</span> <span class="kd">JOIN</span> <span class="nv">SalesActual</span> <span class="kd">AS</span> <span class="nv">SalesActual</span> <span class="c1">// Should trigger here</span>
+                   <span class="s">|</span>            <span class="kd">ON</span> <span class="nv">SalesPlan</span><span class="o">.</span><span class="nv">Product</span> <span class="o">=</span> <span class="nv">SalesActual</span><span class="o">.</span><span class="nv">Product</span>
+                   <span class="s">|</span>        <span class="kd">ON</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Product</span> <span class="o">=</span> <span class="nv">SalesPlan</span><span class="o">.</span><span class="nv">Product</span><span class="s">&quot;</span><span class="p">;</span>
 
 <span class="k">EndProcedure</span>
 </code></pre></div></p>

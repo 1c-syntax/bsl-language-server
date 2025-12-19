@@ -1481,17 +1481,17 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Запрос к уже удаленному регистру:
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span>
-    <span class="nv">Таблица</span><span class="err">.</span><span class="nv">РесурсЧисло</span> <span class="kd">КАК</span> <span class="nv">РесурсЧисло</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">РесурсЧисло</span> <span class="kd">КАК</span> <span class="nv">РесурсЧисло</span>
 <span class="kd">ИЗ</span>
-    <span class="nv">РегистрСведений</span><span class="err">.</span><span class="nv">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
+    <span class="nv">РегистрСведений</span><span class="o">.</span><span class="nv">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
 </code></pre></div>
 Запрос с соединением к переименованному регистру:
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span>
-    <span class="nv">Таблица</span><span class="err">.</span><span class="nv">РесурсЧисло</span> <span class="kd">КАК</span> <span class="nv">РесурсЧисло</span>
+    <span class="nv">Таблица</span><span class="o">.</span><span class="nv">РесурсЧисло</span> <span class="kd">КАК</span> <span class="nv">РесурсЧисло</span>
 <span class="kd">ИЗ</span>
-    <span class="nv">РегистрСведений</span><span class="err">.</span><span class="nv">Регистр1</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
-    <span class="kd">ВНУТРЕННЕЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nv">РегистрСведений</span><span class="err">.</span><span class="nv">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">ТаблицаФильтр</span>
-    <span class="kd">ПО</span> <span class="nv">ТаблицаФильтр</span><span class="err">.</span><span class="nv">Регистратор</span> <span class="err">=</span> <span class="nv">Таблица</span><span class="err">.</span><span class="nv">Регистратор</span>
+    <span class="nv">РегистрСведений</span><span class="o">.</span><span class="nv">Регистр1</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
+    <span class="kd">ВНУТРЕННЕЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nv">РегистрСведений</span><span class="o">.</span><span class="nv">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">ТаблицаФильтр</span>
+    <span class="kd">ПО</span> <span class="nv">ТаблицаФильтр</span><span class="o">.</span><span class="nv">Регистратор</span> <span class="o">=</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Регистратор</span>
 </code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

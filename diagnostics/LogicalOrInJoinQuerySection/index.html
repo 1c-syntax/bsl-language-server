@@ -1486,13 +1486,13 @@
 <p>1) Ошибка не будет зафиксирована при использовании <code>ИЛИ</code> над вариантами одного поля</p>
 <p><div class="highlight"><pre><span></span><code><span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">ВидыНоменклатуры</span> <span class="nv">КАК</span> <span class="nv">ВидыНоменклатуры</span> <span class="c1">//Тест работы на вложенном соединении</span>
 <span class="k">ПО</span> <span class="nv">СправочникНоменклатура</span><span class="o">.</span><span class="nv">ВидНоменклатуры</span> <span class="o">=</span> <span class="nv">ВидыНоменклатуры</span><span class="o">.</span><span class="nv">Ссылка</span>
-   <span class="nf">И</span> <span class="p">(</span><span class="nv">СправочникНоменклатура</span><span class="o">.</span><span class="nv">СрокГодности</span> <span class="o">&gt;</span> <span class="m">1</span>
+   <span class="k">И</span> <span class="p">(</span><span class="nv">СправочникНоменклатура</span><span class="o">.</span><span class="nv">СрокГодности</span> <span class="o">&gt;</span> <span class="m">1</span>
      <span class="k">ИЛИ</span> <span class="nv">СправочникНоменклатура</span><span class="o">.</span><span class="nv">СрокГодности</span> <span class="o">&lt;</span> <span class="m">10</span><span class="p">)</span>
 </code></pre></div>
 2) При использовании оператора <code>ИЛИ</code> над различными полями ошибка будет зафиксирована для каждого вхождения оператора</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ВНУТРЕННЕЕ</span> <span class="nv">СОЕДИНЕНИЕ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="nv">КАК</span> <span class="nv">РеализацияТоваровУслуг</span>
 <span class="k">ПО</span> <span class="nv">РеализацияТоваровУслугТовары</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РеализацияТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span>
-   <span class="nf">И</span> <span class="p">(</span><span class="nv">РеализацияТоваровУслугТовары</span><span class="o">.</span><span class="nv">Сумма</span> <span class="o">&gt;</span> <span class="m">0</span> 
+   <span class="k">И</span> <span class="p">(</span><span class="nv">РеализацияТоваровУслугТовары</span><span class="o">.</span><span class="nv">Сумма</span> <span class="o">&gt;</span> <span class="m">0</span> 
    <span class="k">ИЛИ</span> <span class="nv">РеализацияТоваровУслугТовары</span><span class="o">.</span><span class="nv">СуммаНДС</span> <span class="o">&gt;</span> <span class="m">0</span> 
    <span class="k">ИЛИ</span> <span class="nv">РеализацияТоваровУслугТовары</span><span class="o">.</span><span class="nv">СуммаСНДС</span> <span class="o">&gt;</span> <span class="m">0</span><span class="p">)</span>
 </code></pre></div>
@@ -1526,7 +1526,7 @@
 <span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Номенклатура</span> <span class="nv">КАК</span> <span class="nv">СправочникНоменклатура</span>
     <span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">ВидыНоменклатуры</span> <span class="nv">КАК</span> <span class="nv">ВидыНоменклатуры</span> <span class="c1">//Тест работы на вложенном соединении</span>
     <span class="k">ПО</span> <span class="nv">СправочникНоменклатура</span><span class="o">.</span><span class="nv">ВидНоменклатуры</span> <span class="o">=</span> <span class="nv">ВидыНоменклатуры</span><span class="o">.</span><span class="nv">Ссылка</span>
-        <span class="nf">И</span> <span class="p">(</span><span class="nv">СправочникНоменклатура</span><span class="o">.</span><span class="nv">СрокГодности</span> <span class="o">&gt;</span> <span class="m">1</span>
+        <span class="k">И</span> <span class="p">(</span><span class="nv">СправочникНоменклатура</span><span class="o">.</span><span class="nv">СрокГодности</span> <span class="o">&gt;</span> <span class="m">1</span>
          <span class="k">ИЛИ</span> <span class="nv">ВидыНоменклатуры</span><span class="o">.</span><span class="nv">ЗапрещенаПродажаЧерезПатент</span> <span class="o">=</span> <span class="kc">ИСТИНА</span><span class="p">)</span>
 </code></pre></div>
 Рекомендуется исправление аналогично п.2 заменой вложенного соединения на соединение с созданием промежуточной временной таблицы</p>

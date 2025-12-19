@@ -1520,7 +1520,7 @@
       <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s">&quot;ru = &#39;Выполнение операции&#39;&quot;</span><span class="p">),</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
          <span class="nv">ТекстОшибки</span><span class="p">);</span>
 
-      <span class="k">ВызватьИсключение</span><span class="p">;</span>
+      <span class="ne">ВызватьИсключение</span><span class="p">;</span>
     <span class="k">КонецПопытки</span><span class="p">;</span>
 </code></pre></div>
 В то же время, если во внешней попытке делается запись в ЖР, то во вложенной делать её повторно уже не нужно:
@@ -1539,7 +1539,7 @@
         <span class="nb">ЗафиксироватьТранзакцию</span><span class="p">();</span>
     <span class="k">Исключение</span>
         <span class="nb">ОтменитьТранзакцию</span><span class="p">();</span>
-        <span class="k">ВызватьИсключение</span><span class="p">;</span> <span class="c1">// &lt;- вложенная попытка, запись в ЖР не требуется</span>
+        <span class="ne">ВызватьИсключение</span><span class="p">;</span> <span class="c1">// &lt;- вложенная попытка, запись в ЖР не требуется</span>
     <span class="k">КонецПопытки</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div></p>

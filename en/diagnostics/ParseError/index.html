@@ -1494,14 +1494,14 @@
 
 <span class="k">If</span> <span class="o">&lt;...&gt;</span> <span class="k">Then</span>
     <span class="c1">// ...</span>
-<span class="cp">#If webClient Then // If-Then block split</span>
+<span class="cp">#If</span> <span class="cp">webClient</span> <span class="cp">Then</span> <span class="cp">//</span> <span class="cp">If-Then</span> <span class="cp">block</span> <span class="cp">split</span>
 <span class="k">Else</span>
     <span class="c1">// ...</span>
 <span class="cp">#EndIf</span>
 <span class="k">EndIf</span><span class="p">;</span>
 
 <span class="nv">Result</span> <span class="o">=</span> <span class="nf">Example4</span><span class="p">(</span><span class="nv">Parameter1</span><span class="p">,</span>
-<span class="cp">#If Client Then</span>
+<span class="cp">#If</span> <span class="cp">Client</span> <span class="cp">Then</span>
   <span class="nv">Parameter2</span><span class="p">,</span> <span class="c1">// incorrect function call</span>
 <span class="cp">#EndIf</span>
   <span class="nv">Parameter3</span><span class="p">);</span>

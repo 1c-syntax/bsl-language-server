@@ -749,8 +749,14 @@
                         "runTestArguments": {
                             "$id": "#/properties/codeLens/testRunner/runTestArguments",
                             "type": "string",
-                            "title": "Arguments to pass to test runner executable to run test method. %s will be replaced with path to current file, %m will be replaced with test method name.",
+                            "title": "Arguments to pass to test runner executable to run test method. First %s will be replaced with path to current file, second %s will be replaced with test method name.",
                             "default": "-run %s %s"
+                        },
+                        "debugTestArguments": {
+                            "$id": "#/properties/codeLens/testRunner/debugTestArguments",
+                            "type": "string",
+                            "title": "Arguments to pass to test runner executable to debug test method. First %s will be replaced with path to current file, second %s will be replaced with test method name.",
+                            "default": ""
                         },
                         "runAllTestsArguments": {
                             "$id": "#/properties/codeLens/testRunner/runAllTestsArguments",
