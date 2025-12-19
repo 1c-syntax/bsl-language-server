@@ -80,6 +80,11 @@ public class MethodDescription implements SourceDefinedSymbolDescription {
    * Диапазон, в котором располагается описание.
    */
   Range range;
+  /**
+   * Токены описания из BSLMethodDescriptionTokenizer.
+   * Используются для подсветки синтаксиса BSL doc.
+   */
+  List<Token> descriptionTokens;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
@@ -97,6 +102,7 @@ public class MethodDescription implements SourceDefinedSymbolDescription {
     examples = DescriptionReader.readExamples(ast);
     parameters = DescriptionReader.readParameters(ast);
     returnedValue = DescriptionReader.readReturnedValue(ast);
+    descriptionTokens = tokenizer.getTokens();
 
     if (comments.isEmpty()) {
       range = Ranges.create();

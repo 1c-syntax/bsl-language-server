@@ -30,6 +30,7 @@ import lombok.Value;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -74,6 +75,12 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
    */
   Range range;
 
+  /**
+   * Токены описания из BSLMethodDescriptionTokenizer.
+   * Используются для подсветки синтаксиса BSL doc.
+   */
+  List<Token> descriptionTokens;
+
   Optional<VariableDescription> trailingDescription;
 
   public VariableDescription(List<Token> comments) {
@@ -93,6 +100,7 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
     link = DescriptionReader.readLink(ast);
     deprecated = ast.deprecate() != null;
     deprecationInfo = DescriptionReader.readDeprecationInfo(ast);
+    descriptionTokens = tokenizer.getTokens();
     trailingDescription = trailingComment.map(List::of).map(VariableDescription::new);
   }
 
@@ -103,6 +111,7 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
     purposeDescription = "";
     range = Ranges.create();
     link = param.link();
+    descriptionTokens = Collections.emptyList();
     trailingDescription = Optional.empty();
   }
 }

@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
+
+import java.util.List;
 
 /**
  * Интерфейс описания символов, определенных в исходном коде.
@@ -62,4 +65,10 @@ public interface SourceDefinedSymbolDescription {
    * Диапазон, в котором располагается описание.
    */
   Range getRange();
+
+  /**
+   * Токены описания из BSLMethodDescriptionTokenizer.
+   * Используются для подсветки синтаксиса BSL doc.
+   */
+  List<Token> getDescriptionTokens();
 }

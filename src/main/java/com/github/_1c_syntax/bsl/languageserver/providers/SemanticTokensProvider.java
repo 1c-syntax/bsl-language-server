@@ -38,7 +38,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionLexer;
-import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.CompilerDirectiveContext;
@@ -233,13 +232,9 @@ public class SemanticTokensProvider {
     addMethodSymbols(symbolTree, entries, descriptionRanges, documentationLines);
     addVariableSymbols(documentContext, symbolTree, entries, descriptionRanges, documentationLines);
 
-    // Note: addMultilineDescriptions is not called here because BSL doc token handling
-    // (added in step 7) splits description comments into parts around BSL doc keywords,
-    // similar to how SDBL splits string tokens. Description comments are handled by
-    // addBslDocTokens which properly creates multiline tokens for contiguous lines
-    // without keywords and splits lines that contain keywords.
-
     // 2) Comments (lexer type LINE_COMMENT)
+    // Regular comments are added here; description comments are skipped
+    // (they are handled by addBslDocTokens in step 7)
     addComments(comments, descriptionRanges, entries, documentationLines);
 
     // 3) AST-driven annotations and compiler directives
@@ -430,9 +425,8 @@ public class SemanticTokensProvider {
       return;
     }
 
-    // Parse the description text with BSLMethodDescriptionTokenizer
-    var tokenizer = new BSLMethodDescriptionTokenizer(descriptionText);
-    var tokens = tokenizer.getTokens();
+    // Use tokens stored in the description (already parsed during description creation)
+    var tokens = description.getDescriptionTokens();
 
     // The description range start gives us the file position
     int fileStartLine = range.getStart().getLine();
@@ -444,20 +438,16 @@ public class SemanticTokensProvider {
       tokensByLine.computeIfAbsent(descriptionLine, k -> new ArrayList<>()).add(token);
     }
 
-    // Get comment type index for adding Comment parts
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-    int docModifierMask = computeDocModifierMask();
-
     // Split the description text into lines to get line lengths
     var lines = descriptionText.split("\n", -1);
 
     if (multilineTokenSupport) {
       // With multiline support: collect contiguous ranges without BSL doc tokens
       // and emit them as multiline Comment tokens
-      addBslDocTokensWithMultilineSupport(entries, lines, tokensByLine, fileStartLine, commentTypeIdx, docModifierMask);
+      addBslDocTokensWithMultilineSupport(entries, lines, tokensByLine, fileStartLine);
     } else {
       // Without multiline support: process each line independently
-      addBslDocTokensPerLine(entries, lines, tokensByLine, fileStartLine, commentTypeIdx, docModifierMask);
+      addBslDocTokensPerLine(entries, lines, tokensByLine, fileStartLine);
     }
   }
 
@@ -469,9 +459,7 @@ public class SemanticTokensProvider {
     List<TokenEntry> entries,
     String[] lines,
     Map<Integer, List<Token>> tokensByLine,
-    int fileStartLine,
-    int commentTypeIdx,
-    int docModifierMask
+    int fileStartLine
   ) {
     int lineIdx = 0;
     while (lineIdx < lines.length) {
@@ -503,13 +491,12 @@ public class SemanticTokensProvider {
 
         // Calculate total length for multiline token
         int endLineIdx = lineIdx - 1;
-        int endLine = fileStartLine + endLineIdx;
 
         if (startLineIdx == endLineIdx) {
-          // Single line - add as simple token
-          int lineEnd = lines[startLineIdx].length();
-          if (lineEnd > 0 && commentTypeIdx >= 0) {
-            entries.add(new TokenEntry(startLine, 0, lineEnd, commentTypeIdx, docModifierMask));
+          // Single line - add as Comment+Documentation
+          int lineLength = lines[startLineIdx].length();
+          if (lineLength > 0) {
+            addDocCommentRange(entries, startLine, 0, lineLength);
           }
         } else {
           // Multiple lines - calculate total length including newlines for multiline token
@@ -521,13 +508,13 @@ public class SemanticTokensProvider {
             }
           }
 
-          if (totalLength > 0 && commentTypeIdx >= 0) {
-            entries.add(new TokenEntry(startLine, 0, totalLength, commentTypeIdx, docModifierMask));
+          if (totalLength > 0) {
+            addDocCommentRange(entries, startLine, 0, totalLength);
           }
         }
       } else {
         // Has BSL doc tokens - split this line
-        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, commentTypeIdx, docModifierMask);
+        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens);
         lineIdx++;
       }
     }
@@ -540,14 +527,12 @@ public class SemanticTokensProvider {
     List<TokenEntry> entries,
     String[] lines,
     Map<Integer, List<Token>> tokensByLine,
-    int fileStartLine,
-    int commentTypeIdx,
-    int docModifierMask
+    int fileStartLine
   ) {
     for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       int fileLine = fileStartLine + lineIdx;
       String lineText = lines[lineIdx];
-      int lineEnd = lineText.length();
+      int lineLength = lineText.length();
 
       var lineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
       var semanticTokens = lineTokens.stream()
@@ -557,12 +542,12 @@ public class SemanticTokensProvider {
 
       if (semanticTokens.isEmpty()) {
         // No BSL doc tokens on this line - add the whole line as Comment+Documentation
-        if (lineEnd > 0 && commentTypeIdx >= 0) {
-          entries.add(new TokenEntry(fileLine, 0, lineEnd, commentTypeIdx, docModifierMask));
+        if (lineLength > 0) {
+          addDocCommentRange(entries, fileLine, 0, lineLength);
         }
       } else {
         // Split the line around BSL doc tokens
-        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, commentTypeIdx, docModifierMask);
+        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens);
       }
     }
   }
@@ -574,9 +559,7 @@ public class SemanticTokensProvider {
     List<TokenEntry> entries,
     int fileLine,
     String lineText,
-    List<Token> semanticTokens,
-    int commentTypeIdx,
-    int docModifierMask
+    List<Token> semanticTokens
   ) {
     int lineEnd = lineText.length();
     int currentPos = 0;
@@ -587,8 +570,8 @@ public class SemanticTokensProvider {
       int tokenEnd = tokenStart + tokenLength;
 
       // Add Comment part before this token
-      if (currentPos < tokenStart && commentTypeIdx >= 0) {
-        entries.add(new TokenEntry(fileLine, currentPos, tokenStart - currentPos, commentTypeIdx, docModifierMask));
+      if (currentPos < tokenStart) {
+        addDocCommentRange(entries, fileLine, currentPos, tokenStart - currentPos);
       }
 
       // Add the BSL doc token
@@ -605,8 +588,19 @@ public class SemanticTokensProvider {
     }
 
     // Add Comment part after the last token
-    if (currentPos < lineEnd && commentTypeIdx >= 0) {
-      entries.add(new TokenEntry(fileLine, currentPos, lineEnd - currentPos, commentTypeIdx, docModifierMask));
+    if (currentPos < lineEnd) {
+      addDocCommentRange(entries, fileLine, currentPos, lineEnd - currentPos);
+    }
+  }
+
+  /**
+   * Add a documentation comment range (Comment with Documentation modifier).
+   */
+  private void addDocCommentRange(List<TokenEntry> entries, int line, int start, int length) {
+    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
+    int docModifierMask = computeDocModifierMask();
+    if (commentTypeIdx >= 0) {
+      entries.add(new TokenEntry(line, start, length, commentTypeIdx, docModifierMask));
     }
   }
 
