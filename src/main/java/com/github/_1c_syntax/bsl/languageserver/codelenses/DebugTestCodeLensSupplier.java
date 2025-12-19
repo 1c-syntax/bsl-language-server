@@ -47,16 +47,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Поставщик линз для запуска теста по конкретному тестовому методу.
- */
 @Component
 @Slf4j
-@Order(2)
-public class RunTestCodeLensSupplier
-  extends AbstractRunTestsCodeLensSupplier<RunTestCodeLensSupplier.RunTestCodeLensData> {
+@Order(3)
+public class DebugTestCodeLensSupplier
+  extends AbstractRunTestsCodeLensSupplier<DebugTestCodeLensSupplier.DebugTestCodeLensData> {
 
-  private static final String COMMAND_ID = "language-1c-bsl.languageServer.runTest";
+  private static final String COMMAND_ID = "language-1c-bsl.languageServer.debugTest";
 
   private final TestRunnerAdapter testRunnerAdapter;
   private final Resources resources;
@@ -66,9 +63,9 @@ public class RunTestCodeLensSupplier
   @Lazy
   @Getter
   @SuppressWarnings("NullAway.Init")
-  private RunTestCodeLensSupplier self;
+  private DebugTestCodeLensSupplier self;
 
-  public RunTestCodeLensSupplier(
+  public DebugTestCodeLensSupplier(
     LanguageServerConfiguration configuration,
     TestRunnerAdapter testRunnerAdapter,
     Resources resources
@@ -88,6 +85,12 @@ public class RunTestCodeLensSupplier
       return Collections.emptyList();
     }
 
+    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
+
+    if (options.getDebugTestArguments().isEmpty()) {
+      return Collections.emptyList();
+    }
+
     var testIds = testRunnerAdapter.getTestIds(documentContext);
     var symbolTree = documentContext.getSymbolTree();
 
@@ -102,37 +105,38 @@ public class RunTestCodeLensSupplier
    * {@inheritDoc}
    */
   @Override
-  public Class<RunTestCodeLensData> getCodeLensDataClass() {
-    return RunTestCodeLensData.class;
+  public Class<DebugTestCodeLensSupplier.DebugTestCodeLensData> getCodeLensDataClass() {
+    return DebugTestCodeLensSupplier.DebugTestCodeLensData.class;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, RunTestCodeLensData data) {
+  public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, DebugTestCodeLensData data) {
 
     var path = Paths.get(documentContext.getUri());
     var testId = data.getTestId();
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
-    String runText = executable + " " + options.getRunTestArguments();
+    String runText = executable + " " + options.getDebugTestArguments();
     runText = String.format(runText, path, testId);
 
     var command = new Command();
-    command.setTitle(resources.getResourceString(getClass(), "runTest"));
+    command.setTitle(resources.getResourceString(getClass(), "title"));
     command.setCommand(COMMAND_ID);
     command.setArguments(List.of(Map.of("text", runText)));
 
     unresolved.setCommand(command);
 
     return unresolved;
+
   }
 
   private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
     var testId = method.getName();
-    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), getId(), testId);
+    var codeLensData = new DebugTestCodeLensSupplier.DebugTestCodeLensData(documentContext.getUri(), getId(), testId);
 
     var codeLens = new CodeLens(method.getSubNameRange());
     codeLens.setData(codeLensData);
@@ -141,12 +145,12 @@ public class RunTestCodeLensSupplier
   }
 
   /**
-   * DTO для хранения данных линз для запуска теста.
+   * DTO для хранения данных линз для отладки теста.
    */
   @Value
   @EqualsAndHashCode(callSuper = true)
   @ToString(callSuper = true)
-  public static class RunTestCodeLensData extends DefaultCodeLensData {
+  public static class DebugTestCodeLensData extends DefaultCodeLensData {
     /**
      * Имя метода.
      */
@@ -158,9 +162,10 @@ public class RunTestCodeLensSupplier
      * @param testId Идентификатор теста.
      */
     @ConstructorProperties({"uri", "id", "testId"})
-    public RunTestCodeLensData(URI uri, String id, String testId) {
+    public DebugTestCodeLensData(URI uri, String id, String testId) {
       super(uri, id);
       this.testId = testId;
     }
   }
+
 }

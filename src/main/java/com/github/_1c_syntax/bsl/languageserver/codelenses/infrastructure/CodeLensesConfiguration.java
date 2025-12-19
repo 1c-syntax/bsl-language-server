@@ -29,10 +29,14 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.OrderUtils;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -77,6 +81,8 @@ public class CodeLensesConfiguration {
     var parameters = configuration.getCodeLensOptions().getParameters();
     return codeLensSuppliersById.values().stream()
       .filter(supplier -> supplierIsEnabled(supplier.getId(), parameters))
+      .sorted(Comparator.comparing(o ->
+        Objects.requireNonNullElse(OrderUtils.getOrder(o.getClass()), Ordered.LOWEST_PRECEDENCE)))
       .collect(Collectors.toList());
   }
 
