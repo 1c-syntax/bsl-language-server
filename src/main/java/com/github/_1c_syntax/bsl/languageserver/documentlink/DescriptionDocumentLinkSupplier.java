@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.documentlink;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.Position;
@@ -30,19 +32,22 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Supplier for forming links to URLs found in method and variable descriptions.
+ * Supplier for forming links from "см." (see) references found in method and variable descriptions.
  */
 @Component
 @RequiredArgsConstructor
 public class DescriptionDocumentLinkSupplier implements DocumentLinkSupplier {
 
-  private static final Pattern URL_PATTERN = Pattern.compile(
-    "(https?|ftp)://[^\\s\"'<>]+",
+  private static final Pattern SEE_REFERENCE_PATTERN = Pattern.compile(
+    "(?:см|См)\\.\\s+([А-Яа-яA-Za-z0-9_.()]+)",
     Pattern.CASE_INSENSITIVE
   );
+
+  private final ReferenceResolver referenceResolver;
 
   @Override
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
@@ -54,7 +59,9 @@ public class DescriptionDocumentLinkSupplier implements DocumentLinkSupplier {
       .filter(method -> method.getDescription().isPresent())
       .forEach(method -> {
         var description = method.getDescription().get();
-        documentLinks.addAll(extractLinksFromRange(contentList, description.getRange()));
+        if (!description.getLink().isEmpty()) {
+          documentLinks.addAll(extractSeeReferences(documentContext, contentList, description.getRange()));
+        }
       });
 
     // Process variable descriptions
@@ -62,29 +69,47 @@ public class DescriptionDocumentLinkSupplier implements DocumentLinkSupplier {
       .filter(variable -> variable.getDescription().isPresent())
       .forEach(variable -> {
         var description = variable.getDescription().get();
-        documentLinks.addAll(extractLinksFromRange(contentList, description.getRange()));
+        if (!description.getLink().isEmpty()) {
+          documentLinks.addAll(extractSeeReferences(documentContext, contentList, description.getRange()));
+        }
       });
 
     return documentLinks;
   }
 
-  private List<DocumentLink> extractLinksFromRange(String[] contentList, Range range) {
+  private List<DocumentLink> extractSeeReferences(DocumentContext documentContext, String[] contentList, Range range) {
     var links = new ArrayList<DocumentLink>();
     int startLine = range.getStart().getLine();
     int endLine = range.getEnd().getLine();
 
     for (int lineNumber = startLine; lineNumber <= endLine && lineNumber < contentList.length; lineNumber++) {
       var line = contentList[lineNumber];
-      var matcher = URL_PATTERN.matcher(line);
+      Matcher matcher = SEE_REFERENCE_PATTERN.matcher(line);
 
       while (matcher.find()) {
-        var url = matcher.group();
-        var linkRange = new Range(
-          new Position(lineNumber, matcher.start()),
-          new Position(lineNumber, matcher.end())
-        );
+        // Extract the reference text (after "см." or "См.")
+        String referenceText = matcher.group(1);
+        int referenceStart = matcher.start(1);
+        int referenceEnd = matcher.end(1);
 
-        links.add(new DocumentLink(linkRange, url));
+        // Try to find the middle position of the reference text to use with ReferenceResolver
+        int middleChar = referenceStart + (referenceEnd - referenceStart) / 2;
+        Position position = new Position(lineNumber, middleChar);
+
+        // Try to resolve the reference
+        var reference = referenceResolver.findReference(documentContext.getUri(), position);
+        
+        if (reference.isPresent() && reference.get().isSourceDefinedSymbolReference()) {
+          var symbol = (SourceDefinedSymbol) reference.get().getSymbol();
+          var targetUri = symbol.getOwner().getUri().toString();
+
+          var linkRange = new Range(
+            new Position(lineNumber, referenceStart),
+            new Position(lineNumber, referenceEnd)
+          );
+
+          links.add(new DocumentLink(linkRange, targetUri));
+        }
       }
     }
 
