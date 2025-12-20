@@ -512,6 +512,8 @@ class SemanticTokensProviderTest {
     var decoded = getDecodedTokens(bsl);
 
     // BSL doc keywords should be highlighted as Macro with Documentation modifier
+    // Parameter names should be highlighted as Parameter
+    // Type names should be highlighted as Type
     // Dash operators should be highlighted as Operator
     // Comment parts around keywords/operators are Comment+Documentation
     var expected = List.of(
@@ -523,22 +525,38 @@ class SemanticTokensProviderTest {
       new ExpectedToken(2, 0, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
       // Line 2: "Параметры:" keyword
       new ExpectedToken(2, 3, 10, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Параметры:"),
-      // Line 3: "//   Имя " before dash
-      new ExpectedToken(3, 0, 9, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   Имя "),
+      // Line 3: "//   " before parameter name
+      new ExpectedToken(3, 0, 5, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   "),
+      // Line 3: "Имя" parameter name
+      new ExpectedToken(3, 5, 3, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation, "Имя"),
+      // Line 3: " " before dash
+      new ExpectedToken(3, 8, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
       // Line 3: first "-" operator
       new ExpectedToken(3, 9, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
-      // Line 3: " Строка " between dashes
-      new ExpectedToken(3, 10, 8, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " Строка "),
+      // Line 3: " " after dash
+      new ExpectedToken(3, 10, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 3: "Строка" type
+      new ExpectedToken(3, 11, 6, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "Строка"),
+      // Line 3: " " before dash
+      new ExpectedToken(3, 17, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
       // Line 3: second "-" operator
       new ExpectedToken(3, 18, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
       // Line 3: " имя пользователя" after dash
       new ExpectedToken(3, 19, 17, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " имя пользователя"),
-      // Line 4: "//   Возраст " before dash
-      new ExpectedToken(4, 0, 13, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   Возраст "),
+      // Line 4: "//   " before parameter name
+      new ExpectedToken(4, 0, 5, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   "),
+      // Line 4: "Возраст" parameter name
+      new ExpectedToken(4, 5, 7, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation, "Возраст"),
+      // Line 4: " " before dash
+      new ExpectedToken(4, 12, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
       // Line 4: first "-" operator
       new ExpectedToken(4, 13, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
-      // Line 4: " Число " between dashes
-      new ExpectedToken(4, 14, 7, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " Число "),
+      // Line 4: " " after dash
+      new ExpectedToken(4, 14, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 4: "Число" type
+      new ExpectedToken(4, 15, 5, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "Число"),
+      // Line 4: " " before dash
+      new ExpectedToken(4, 20, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
       // Line 4: second "-" operator
       new ExpectedToken(4, 21, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
       // Line 4: " возраст" after dash
@@ -549,8 +567,12 @@ class SemanticTokensProviderTest {
       new ExpectedToken(6, 0, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
       // Line 6: "Возвращаемое значение:" keyword
       new ExpectedToken(6, 3, 22, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Возвращаемое значение:"),
-      // Line 7: "//   Булево " before dash
-      new ExpectedToken(7, 0, 12, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   Булево "),
+      // Line 7: "//   " before type
+      new ExpectedToken(7, 0, 5, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   "),
+      // Line 7: "Булево" type
+      new ExpectedToken(7, 5, 6, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "Булево"),
+      // Line 7: " " before dash
+      new ExpectedToken(7, 11, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
       // Line 7: "-" operator
       new ExpectedToken(7, 12, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
       // Line 7: " результат проверки" after dash

@@ -38,6 +38,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionLexer;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.CompilerDirectiveContext;
@@ -394,41 +396,184 @@ public class SemanticTokensProvider {
       return;
     }
 
-    // Use tokens stored in the description (already parsed during description creation)
-    var tokens = description.getDescriptionTokens();
+    // Re-parse description to get AST for parameter names and types
+    var tokenizer = new BSLMethodDescriptionTokenizer(descriptionText);
+    var ast = tokenizer.getAst();
+    var tokens = tokenizer.getTokens();
 
     // The description range start gives us the file position
     int fileStartLine = range.getStart().getLine();
     int fileStartChar = range.getStart().getCharacter();
 
-    // Group tokens by line for efficient processing
-    var tokensByLine = new HashMap<Integer, List<Token>>();
+    // Collect semantic elements from AST (parameter names, types)
+    var semanticElements = new ArrayList<BslDocSemanticElement>();
+    if (ast != null) {
+      collectBslDocSemanticElements(ast, semanticElements);
+    }
+
+    // Also collect keyword and operator tokens from lexer
     for (Token token : tokens) {
-      int descriptionLine = token.getLine() - 1; // Convert to 0-indexed
-      tokensByLine.computeIfAbsent(descriptionLine, k -> new ArrayList<>()).add(token);
+      String semanticType = getBslDocSemanticType(token.getType());
+      if (semanticType != null) {
+        int line = token.getLine() - 1; // 0-indexed
+        int charPos = token.getCharPositionInLine();
+        int length = (int) token.getText().codePoints().count();
+        semanticElements.add(new BslDocSemanticElement(line, charPos, length, semanticType));
+      }
+    }
+
+    // Sort elements by position
+    semanticElements.sort(Comparator.comparingInt(BslDocSemanticElement::line)
+      .thenComparingInt(BslDocSemanticElement::charPosition));
+
+    // Group elements by line
+    var elementsByLine = new HashMap<Integer, List<BslDocSemanticElement>>();
+    for (var element : semanticElements) {
+      elementsByLine.computeIfAbsent(element.line(), k -> new ArrayList<>()).add(element);
     }
 
     // Split the description text into lines to get line lengths
     var lines = descriptionText.split("\n", -1);
 
     if (multilineTokenSupport) {
-      // With multiline support: collect contiguous ranges without BSL doc tokens
-      // and emit them as multiline Comment tokens
-      addBslDocTokensWithMultilineSupport(entries, lines, tokensByLine, fileStartLine, fileStartChar);
+      addBslDocTokensWithMultilineSupportV2(entries, lines, elementsByLine, fileStartLine, fileStartChar);
     } else {
-      // Without multiline support: process each line independently
-      addBslDocTokensPerLine(entries, lines, tokensByLine, fileStartLine, fileStartChar);
+      addBslDocTokensPerLineV2(entries, lines, elementsByLine, fileStartLine, fileStartChar);
     }
   }
 
   /**
-   * Add BSL doc tokens with multiline token support.
-   * Contiguous lines without BSL doc keywords are merged into multiline Comment tokens.
+   * Semantic element extracted from BSL doc AST.
    */
-  private void addBslDocTokensWithMultilineSupport(
+  private record BslDocSemanticElement(int line, int charPosition, int length, String semanticType) {}
+
+  /**
+   * Collect semantic elements (parameter names, types) from BSL doc AST.
+   */
+  private void collectBslDocSemanticElements(
+    BSLMethodDescriptionParser.MethodDescriptionContext ast,
+    List<BslDocSemanticElement> elements
+  ) {
+    // Process parameters section
+    var parameters = ast.parameters();
+    if (parameters != null && parameters.parameterString() != null) {
+      for (var paramString : parameters.parameterString()) {
+        if (paramString.parameter() != null) {
+          collectParameterElements(paramString.parameter(), elements);
+        }
+        if (paramString.subParameter() != null) {
+          collectSubParameterElements(paramString.subParameter(), elements);
+        }
+      }
+    }
+
+    // Process return values section
+    var returnsValues = ast.returnsValues();
+    if (returnsValues != null && returnsValues.returnsValuesString() != null) {
+      for (var returnString : returnsValues.returnsValuesString()) {
+        if (returnString.returnsValue() != null) {
+          var type = returnString.returnsValue().type();
+          if (type != null) {
+            addTypeElement(type, elements);
+          }
+        }
+        if (returnString.typesBlock() != null) {
+          var type = returnString.typesBlock().type();
+          if (type != null) {
+            addTypeElement(type, elements);
+          }
+        }
+        if (returnString.subParameter() != null) {
+          collectSubParameterElements(returnString.subParameter(), elements);
+        }
+      }
+    }
+  }
+
+  /**
+   * Collect elements from a parameter definition.
+   */
+  private void collectParameterElements(
+    BSLMethodDescriptionParser.ParameterContext parameter,
+    List<BslDocSemanticElement> elements
+  ) {
+    // Parameter name
+    var paramName = parameter.parameterName();
+    if (paramName != null) {
+      addElementFromContext(paramName, SemanticTokenTypes.Parameter, elements);
+    }
+
+    // Parameter type
+    var typesBlock = parameter.typesBlock();
+    if (typesBlock != null && typesBlock.type() != null) {
+      addTypeElement(typesBlock.type(), elements);
+    }
+  }
+
+  /**
+   * Collect elements from a sub-parameter definition.
+   */
+  private void collectSubParameterElements(
+    BSLMethodDescriptionParser.SubParameterContext subParameter,
+    List<BslDocSemanticElement> elements
+  ) {
+    // Sub-parameter name
+    var paramName = subParameter.parameterName();
+    if (paramName != null) {
+      addElementFromContext(paramName, SemanticTokenTypes.Parameter, elements);
+    }
+
+    // Sub-parameter type
+    var typesBlock = subParameter.typesBlock();
+    if (typesBlock != null && typesBlock.type() != null) {
+      addTypeElement(typesBlock.type(), elements);
+    }
+  }
+
+  /**
+   * Add type element from TypeContext.
+   */
+  private void addTypeElement(
+    BSLMethodDescriptionParser.TypeContext type,
+    List<BslDocSemanticElement> elements
+  ) {
+    // Type can be a simple name or a complex expression
+    // Get the start and stop tokens to determine the range
+    var start = type.getStart();
+    var stop = type.getStop();
+    if (start != null && stop != null) {
+      int line = start.getLine() - 1;
+      int charPos = start.getCharPositionInLine();
+      int length = stop.getStopIndex() - start.getStartIndex() + 1;
+      elements.add(new BslDocSemanticElement(line, charPos, length, SemanticTokenTypes.Type));
+    }
+  }
+
+  /**
+   * Add element from a parser rule context.
+   */
+  private void addElementFromContext(
+    ParserRuleContext ctx,
+    String semanticType,
+    List<BslDocSemanticElement> elements
+  ) {
+    var start = ctx.getStart();
+    var stop = ctx.getStop();
+    if (start != null && stop != null) {
+      int line = start.getLine() - 1;
+      int charPos = start.getCharPositionInLine();
+      int length = stop.getStopIndex() - start.getStartIndex() + 1;
+      elements.add(new BslDocSemanticElement(line, charPos, length, semanticType));
+    }
+  }
+
+  /**
+   * Add BSL doc tokens with multiline support using semantic elements.
+   */
+  private void addBslDocTokensWithMultilineSupportV2(
     List<TokenEntry> entries,
     String[] lines,
-    Map<Integer, List<Token>> tokensByLine,
+    Map<Integer, List<BslDocSemanticElement>> elementsByLine,
     int fileStartLine,
     int fileStartChar
   ) {
@@ -436,71 +581,57 @@ public class SemanticTokensProvider {
     while (lineIdx < lines.length) {
       int fileLine = fileStartLine + lineIdx;
       String lineText = lines[lineIdx];
-      // First line starts at fileStartChar, subsequent lines start at 0
       int charOffset = (lineIdx == 0) ? fileStartChar : 0;
 
-      var lineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
-      var semanticTokens = lineTokens.stream()
-        .filter(t -> getBslDocSemanticType(t.getType()) != null)
-        .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
-        .toList();
+      var lineElements = elementsByLine.getOrDefault(lineIdx, List.of());
 
-      if (semanticTokens.isEmpty()) {
-        // No BSL doc tokens on this line - try to collect contiguous lines without tokens
+      if (lineElements.isEmpty()) {
+        // No semantic elements on this line - collect contiguous lines
         int startLineIdx = lineIdx;
 
-        // Find the end of contiguous lines without BSL doc tokens
         while (lineIdx < lines.length) {
-          var nextLineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
-          boolean hasSemanticTokens = nextLineTokens.stream()
-            .anyMatch(t -> getBslDocSemanticType(t.getType()) != null);
-
-          if (hasSemanticTokens) {
+          var nextLineElements = elementsByLine.getOrDefault(lineIdx, List.of());
+          if (!nextLineElements.isEmpty()) {
             break;
           }
           lineIdx++;
         }
 
-        // Calculate total length for multiline token
         int endLineIdx = lineIdx - 1;
         int startLine = fileStartLine + startLineIdx;
         int startChar = (startLineIdx == 0) ? fileStartChar : 0;
 
         if (startLineIdx == endLineIdx) {
-          // Single line - add as Comment+Documentation
           int lineLength = lines[startLineIdx].length();
           if (lineLength > 0) {
             addDocCommentRange(entries, startLine, startChar, lineLength);
           }
         } else {
-          // Multiple lines - calculate total length including newlines for multiline token
           int totalLength = 0;
           for (int i = startLineIdx; i <= endLineIdx; i++) {
             totalLength += lines[i].length();
             if (i < endLineIdx) {
-              totalLength += 1; // newline character
+              totalLength += 1;
             }
           }
-
           if (totalLength > 0) {
             addDocCommentRange(entries, startLine, startChar, totalLength);
           }
         }
       } else {
-        // Has BSL doc tokens - split this line
-        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, charOffset);
+        addBslDocTokensForLineV2(entries, fileLine, lineText, lineElements, charOffset);
         lineIdx++;
       }
     }
   }
 
   /**
-   * Add BSL doc tokens without multiline support (per-line processing).
+   * Add BSL doc tokens per line using semantic elements.
    */
-  private void addBslDocTokensPerLine(
+  private void addBslDocTokensPerLineV2(
     List<TokenEntry> entries,
     String[] lines,
-    Map<Integer, List<Token>> tokensByLine,
+    Map<Integer, List<BslDocSemanticElement>> elementsByLine,
     int fileStartLine,
     int fileStartChar
   ) {
@@ -508,70 +639,54 @@ public class SemanticTokensProvider {
       int fileLine = fileStartLine + lineIdx;
       String lineText = lines[lineIdx];
       int lineLength = lineText.length();
-      // First line starts at fileStartChar, subsequent lines start at 0
       int charOffset = (lineIdx == 0) ? fileStartChar : 0;
 
-      var lineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
-      var semanticTokens = lineTokens.stream()
-        .filter(t -> getBslDocSemanticType(t.getType()) != null)
-        .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
-        .toList();
+      var lineElements = elementsByLine.getOrDefault(lineIdx, List.of());
 
-      if (semanticTokens.isEmpty()) {
-        // No BSL doc tokens on this line - add the whole line as Comment+Documentation
+      if (lineElements.isEmpty()) {
         if (lineLength > 0) {
           addDocCommentRange(entries, fileLine, charOffset, lineLength);
         }
       } else {
-        // Split the line around BSL doc tokens
-        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, charOffset);
+        addBslDocTokensForLineV2(entries, fileLine, lineText, lineElements, charOffset);
       }
     }
   }
 
   /**
-   * Add BSL doc tokens for a single line, splitting around semantic tokens.
-   *
-   * @param entries The list of token entries
-   * @param fileLine The line number in the file (0-indexed)
-   * @param lineText The text of the line
-   * @param semanticTokens BSL doc tokens to process
-   * @param charOffset Character offset for token positions (non-zero for trailing comments)
+   * Add BSL doc tokens for a single line using semantic elements.
    */
-  private void addBslDocTokensForLine(
+  private void addBslDocTokensForLineV2(
     List<TokenEntry> entries,
     int fileLine,
     String lineText,
-    List<Token> semanticTokens,
+    List<BslDocSemanticElement> elements,
     int charOffset
   ) {
     int lineEnd = lineText.length();
     int currentPos = 0;
 
-    for (Token token : semanticTokens) {
-      int tokenStart = token.getCharPositionInLine();
-      int tokenLength = (int) token.getText().codePoints().count();
-      int tokenEnd = tokenStart + tokenLength;
+    for (var element : elements) {
+      int elementStart = element.charPosition();
+      int elementLength = element.length();
+      int elementEnd = elementStart + elementLength;
 
-      // Add Comment part before this token
-      if (currentPos < tokenStart) {
-        addDocCommentRange(entries, fileLine, charOffset + currentPos, tokenStart - currentPos);
+      // Add Comment part before this element
+      if (currentPos < elementStart) {
+        addDocCommentRange(entries, fileLine, charOffset + currentPos, elementStart - currentPos);
       }
 
-      // Add the BSL doc token
-      String semanticType = getBslDocSemanticType(token.getType());
-      if (semanticType != null) {
-        var tokenRange = new Range(
-          new Position(fileLine, charOffset + tokenStart),
-          new Position(fileLine, charOffset + tokenEnd)
-        );
-        addRange(entries, tokenRange, semanticType, DOC_ONLY);
-      }
+      // Add the semantic element token
+      var tokenRange = new Range(
+        new Position(fileLine, charOffset + elementStart),
+        new Position(fileLine, charOffset + elementEnd)
+      );
+      addRange(entries, tokenRange, element.semanticType(), DOC_ONLY);
 
-      currentPos = tokenEnd;
+      currentPos = elementEnd;
     }
 
-    // Add Comment part after the last token
+    // Add Comment part after the last element
     if (currentPos < lineEnd) {
       addDocCommentRange(entries, fileLine, charOffset + currentPos, lineEnd - currentPos);
     }
