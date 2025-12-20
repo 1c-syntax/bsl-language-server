@@ -59,6 +59,16 @@ class DescriptionDocumentLinkSupplierTest {
       .contains("ftp://files.example.com/docs")
       .contains("https://main.example.com/docs")
       .contains("http://additional.example.org/info");
+    
+    // Verify the ranges are correct
+    var firstLink = documentLinks.stream()
+      .filter(link -> link.getTarget().equals("https://example.com/info"))
+      .findFirst()
+      .orElseThrow();
+    
+    assertThat(firstLink.getRange().getStart().getLine()).isEqualTo(1);
+    assertThat(firstLink.getRange().getStart().getCharacter()).isGreaterThanOrEqualTo(0);
+    assertThat(firstLink.getRange().getEnd().getLine()).isEqualTo(1);
   }
 
   @Test
