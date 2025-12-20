@@ -83,4 +83,17 @@ class DescriptionDocumentLinkSupplierTest {
     // then - should have no links from descriptions
     assertThat(documentLinks).isEmpty();
   }
+
+  @Test
+  void testNoUrlsInDescriptionsWithReferences() {
+    // given - file with "см." references but no HTTP/HTTPS/FTP URLs
+    var filePath = "./src/test/resources/context/symbol/MethodDescription.bsl";
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+
+    // when
+    var documentLinks = supplier.getDocumentLinks(documentContext);
+
+    // then - should have no links because "см." references are not URLs
+    assertThat(documentLinks).isEmpty();
+  }
 }
