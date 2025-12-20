@@ -74,7 +74,6 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -219,7 +218,6 @@ public class SemanticTokensProvider {
 
     // collect description ranges for describable symbols
     List<Range> descriptionRanges = new ArrayList<>();
-    var documentationLines = new BitSet();
 
     var symbolTree = documentContext.getSymbolTree();
     var ast = documentContext.getAst();
@@ -229,13 +227,13 @@ public class SemanticTokensProvider {
 
     // 1) Symbols: methods/functions, variables, parameters
 
-    addMethodSymbols(symbolTree, entries, descriptionRanges, documentationLines);
-    addVariableSymbols(documentContext, symbolTree, entries, descriptionRanges, documentationLines);
+    addMethodSymbols(symbolTree, entries, descriptionRanges);
+    addVariableSymbols(documentContext, symbolTree, entries, descriptionRanges);
 
     // 2) Comments (lexer type LINE_COMMENT)
     // Regular comments are added here; description comments are skipped
     // (they are handled by addBslDocTokens in step 7)
-    addComments(comments, descriptionRanges, entries, documentationLines);
+    addComments(comments, descriptionRanges, entries);
 
     // 3) AST-driven annotations and compiler directives
     addAnnotationsFromAst(entries, ast);
@@ -262,25 +260,12 @@ public class SemanticTokensProvider {
     return new SemanticTokens(data);
   }
 
-  private void addMultilineDescriptions(
-    DocumentContext documentContext, List<Range> descriptionRanges, List<TokenEntry> entries) {
-    if (!multilineTokenSupport) {
-      return;
-    }
-
-    for (Range r : descriptionRanges) {
-      // compute multi-line token length using document text
-      int length = documentContext.getText(r).length();
-      addRange(entries, r, length, SemanticTokenTypes.Comment, DOC_ONLY);
-    }
-  }
 
   private void addVariableSymbols(
     DocumentContext documentContext,
     SymbolTree symbolTree,
     List<TokenEntry> entries,
-    List<Range> descriptionRanges,
-    BitSet documentationLines
+    List<Range> descriptionRanges
   ) {
     for (var variableSymbol : symbolTree.getVariables()) {
       if (variableSymbol.getKind() == VariableKind.PARAMETER) {
@@ -300,10 +285,10 @@ public class SemanticTokensProvider {
       }
       
       variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
-        processVariableDescription(descriptionRanges, documentationLines, description);
+        processVariableDescription(descriptionRanges, description);
 
         description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
-          processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
+          processVariableDescription(descriptionRanges, trailingDescription)
         );
       });
     }
@@ -327,7 +312,7 @@ public class SemanticTokensProvider {
         }));
   }
 
-  private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
+  private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges) {
     for (var method : symbolTree.getMethods()) {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
       addRange(entries, method.getSubNameRange(), semanticTokenType);
@@ -335,14 +320,13 @@ public class SemanticTokensProvider {
         addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
       }
       method.getDescription().ifPresent((MethodDescription description) ->
-        processVariableDescription(descriptionRanges, documentationLines, description)
+        processVariableDescription(descriptionRanges, description)
       );
     }
   }
 
   private void processVariableDescription(
     List<Range> descriptionRanges,
-    BitSet documentationLines,
     SourceDefinedSymbolDescription description
   ) {
     var range = description.getRange();
@@ -351,36 +335,21 @@ public class SemanticTokensProvider {
     }
 
     descriptionRanges.add(range);
-    if (!multilineTokenSupport) {
-      markLines(documentationLines, range);
-    }
   }
 
-  private void addComments(List<Token> comments, List<Range> descriptionRanges, List<TokenEntry> entries, BitSet documentationLines) {
+  private void addComments(List<Token> comments, List<Range> descriptionRanges, List<TokenEntry> entries) {
     for (var commentToken : comments) {
       var commentRange = Ranges.create(commentToken);
-      if (multilineTokenSupport) {
-        boolean insideDescription = descriptionRanges.stream().anyMatch(r -> Ranges.containsRange(r, commentRange));
-        if (insideDescription) {
-          continue;
-        }
-        addRange(entries, commentRange, SemanticTokenTypes.Comment);
-      } else {
-        int commentLine = commentToken.getLine() - 1;
-        boolean isDocumentation = documentationLines.get(commentLine);
-        if (isDocumentation) {
-          addRange(entries, commentRange, SemanticTokenTypes.Comment, DOC_ONLY);
-        } else {
-          addRange(entries, commentRange, SemanticTokenTypes.Comment);
-        }
-      }
-    }
-  }
 
-  private static void markLines(BitSet lines, Range range) {
-    int startLine = range.getStart().getLine();
-    int endLine = range.getEnd().getLine();
-    lines.set(startLine, endLine + 1); // inclusive end
+      // Skip comments that are inside method/variable descriptions - they are handled by addBslDocTokens
+      boolean insideDescription = descriptionRanges.stream().anyMatch(r -> Ranges.containsRange(r, commentRange));
+      if (insideDescription) {
+        continue;
+      }
+
+      // Regular comments (not inside descriptions)
+      addRange(entries, commentRange, SemanticTokenTypes.Comment);
+    }
   }
 
   /**
@@ -430,6 +399,7 @@ public class SemanticTokensProvider {
 
     // The description range start gives us the file position
     int fileStartLine = range.getStart().getLine();
+    int fileStartChar = range.getStart().getCharacter();
 
     // Group tokens by line for efficient processing
     var tokensByLine = new HashMap<Integer, List<Token>>();
@@ -444,10 +414,10 @@ public class SemanticTokensProvider {
     if (multilineTokenSupport) {
       // With multiline support: collect contiguous ranges without BSL doc tokens
       // and emit them as multiline Comment tokens
-      addBslDocTokensWithMultilineSupport(entries, lines, tokensByLine, fileStartLine);
+      addBslDocTokensWithMultilineSupport(entries, lines, tokensByLine, fileStartLine, fileStartChar);
     } else {
       // Without multiline support: process each line independently
-      addBslDocTokensPerLine(entries, lines, tokensByLine, fileStartLine);
+      addBslDocTokensPerLine(entries, lines, tokensByLine, fileStartLine, fileStartChar);
     }
   }
 
@@ -459,12 +429,15 @@ public class SemanticTokensProvider {
     List<TokenEntry> entries,
     String[] lines,
     Map<Integer, List<Token>> tokensByLine,
-    int fileStartLine
+    int fileStartLine,
+    int fileStartChar
   ) {
     int lineIdx = 0;
     while (lineIdx < lines.length) {
       int fileLine = fileStartLine + lineIdx;
       String lineText = lines[lineIdx];
+      // First line starts at fileStartChar, subsequent lines start at 0
+      int charOffset = (lineIdx == 0) ? fileStartChar : 0;
 
       var lineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
       var semanticTokens = lineTokens.stream()
@@ -475,7 +448,6 @@ public class SemanticTokensProvider {
       if (semanticTokens.isEmpty()) {
         // No BSL doc tokens on this line - try to collect contiguous lines without tokens
         int startLineIdx = lineIdx;
-        int startLine = fileLine;
 
         // Find the end of contiguous lines without BSL doc tokens
         while (lineIdx < lines.length) {
@@ -491,12 +463,14 @@ public class SemanticTokensProvider {
 
         // Calculate total length for multiline token
         int endLineIdx = lineIdx - 1;
+        int startLine = fileStartLine + startLineIdx;
+        int startChar = (startLineIdx == 0) ? fileStartChar : 0;
 
         if (startLineIdx == endLineIdx) {
           // Single line - add as Comment+Documentation
           int lineLength = lines[startLineIdx].length();
           if (lineLength > 0) {
-            addDocCommentRange(entries, startLine, 0, lineLength);
+            addDocCommentRange(entries, startLine, startChar, lineLength);
           }
         } else {
           // Multiple lines - calculate total length including newlines for multiline token
@@ -509,12 +483,12 @@ public class SemanticTokensProvider {
           }
 
           if (totalLength > 0) {
-            addDocCommentRange(entries, startLine, 0, totalLength);
+            addDocCommentRange(entries, startLine, startChar, totalLength);
           }
         }
       } else {
         // Has BSL doc tokens - split this line
-        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens);
+        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, charOffset);
         lineIdx++;
       }
     }
@@ -527,12 +501,15 @@ public class SemanticTokensProvider {
     List<TokenEntry> entries,
     String[] lines,
     Map<Integer, List<Token>> tokensByLine,
-    int fileStartLine
+    int fileStartLine,
+    int fileStartChar
   ) {
     for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       int fileLine = fileStartLine + lineIdx;
       String lineText = lines[lineIdx];
       int lineLength = lineText.length();
+      // First line starts at fileStartChar, subsequent lines start at 0
+      int charOffset = (lineIdx == 0) ? fileStartChar : 0;
 
       var lineTokens = tokensByLine.getOrDefault(lineIdx, List.of());
       var semanticTokens = lineTokens.stream()
@@ -543,23 +520,30 @@ public class SemanticTokensProvider {
       if (semanticTokens.isEmpty()) {
         // No BSL doc tokens on this line - add the whole line as Comment+Documentation
         if (lineLength > 0) {
-          addDocCommentRange(entries, fileLine, 0, lineLength);
+          addDocCommentRange(entries, fileLine, charOffset, lineLength);
         }
       } else {
         // Split the line around BSL doc tokens
-        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens);
+        addBslDocTokensForLine(entries, fileLine, lineText, semanticTokens, charOffset);
       }
     }
   }
 
   /**
    * Add BSL doc tokens for a single line, splitting around semantic tokens.
+   *
+   * @param entries The list of token entries
+   * @param fileLine The line number in the file (0-indexed)
+   * @param lineText The text of the line
+   * @param semanticTokens BSL doc tokens to process
+   * @param charOffset Character offset for token positions (non-zero for trailing comments)
    */
   private void addBslDocTokensForLine(
     List<TokenEntry> entries,
     int fileLine,
     String lineText,
-    List<Token> semanticTokens
+    List<Token> semanticTokens,
+    int charOffset
   ) {
     int lineEnd = lineText.length();
     int currentPos = 0;
@@ -571,15 +555,15 @@ public class SemanticTokensProvider {
 
       // Add Comment part before this token
       if (currentPos < tokenStart) {
-        addDocCommentRange(entries, fileLine, currentPos, tokenStart - currentPos);
+        addDocCommentRange(entries, fileLine, charOffset + currentPos, tokenStart - currentPos);
       }
 
       // Add the BSL doc token
       String semanticType = getBslDocSemanticType(token.getType());
       if (semanticType != null) {
         var tokenRange = new Range(
-          new Position(fileLine, tokenStart),
-          new Position(fileLine, tokenEnd)
+          new Position(fileLine, charOffset + tokenStart),
+          new Position(fileLine, charOffset + tokenEnd)
         );
         addRange(entries, tokenRange, semanticType, DOC_ONLY);
       }
@@ -589,7 +573,7 @@ public class SemanticTokensProvider {
 
     // Add Comment part after the last token
     if (currentPos < lineEnd) {
-      addDocCommentRange(entries, fileLine, currentPos, lineEnd - currentPos);
+      addDocCommentRange(entries, fileLine, charOffset + currentPos, lineEnd - currentPos);
     }
   }
 
@@ -756,9 +740,8 @@ public class SemanticTokensProvider {
       addRange(entries, Ranges.create(hashNode, useNode), SemanticTokenTypes.Namespace);
     } else if (hashNode != null) {
       addRange(entries, Ranges.create(hashNode), SemanticTokenTypes.Namespace);
-    } else {
-      // no-op
     }
+    // else: neither hashNode nor useNode present - nothing to add
 
     Optional.ofNullable(useCtx.usedLib())
       .map(BSLParser.UsedLibContext::PREPROC_IDENTIFIER)
@@ -866,6 +849,11 @@ public class SemanticTokensProvider {
   }
 
   private void selectAndAddSemanticToken(List<TokenEntry> entries, Token token, int tokenType) {
+    // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
+    if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
+      return;
+    }
+
     if (STRING_TYPES.contains(tokenType)) { // strings
       addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
     } else if (tokenType == BSLLexer.DATETIME) { // date literals in single quotes
@@ -874,8 +862,6 @@ public class SemanticTokensProvider {
       addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
     } else if (OPERATOR_TYPES.contains(tokenType)) { // operators and punctuators
       addRange(entries, Ranges.create(token), SemanticTokenTypes.Operator);
-    } else if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
-      // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
     } else if (SPEC_LITERALS.contains(tokenType)) { // specific literals as keywords: undefined/boolean/null
       addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
     } else {      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
@@ -1238,22 +1224,6 @@ public class SemanticTokensProvider {
     );
   }
 
-  private static Set<Integer> createSdblVirtualTables() {
-    return Set.of(
-      SDBLLexer.ACTUAL_ACTION_PERIOD_VT,
-      SDBLLexer.BALANCE_VT,
-      SDBLLexer.BALANCE_AND_TURNOVERS_VT,
-      SDBLLexer.BOUNDARIES_VT,
-      SDBLLexer.DR_CR_TURNOVERS_VT,
-      SDBLLexer.EXT_DIMENSIONS_VT,
-      SDBLLexer.RECORDS_WITH_EXT_DIMENSIONS_VT,
-      SDBLLexer.SCHEDULE_DATA_VT,
-      SDBLLexer.SLICEFIRST_VT,
-      SDBLLexer.SLICELAST_VT,
-      SDBLLexer.TASK_BY_PERFORMER_VT,
-      SDBLLexer.TURNOVERS_VT
-    );
-  }
 
   private static Set<Integer> createSdblLiterals() {
     return Set.of(
@@ -1412,7 +1382,8 @@ public class SemanticTokensProvider {
           // because distinguishing alias vs. field here would require deeper symbol resolution
           // that is not performed in this visitor.
           provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
-        } else if (identifiers.size() >= 2) {
+        } else {
+          // Two or more identifiers: first is table alias, last is field name
           // First identifier → Variable (table alias)
           provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
           
@@ -1521,7 +1492,7 @@ public class SemanticTokensProvider {
    * Uses the entire range of the context (from start token to stop token)
    */
   private void addSdblContextRange(List<TokenEntry> entries, ParserRuleContext ctx, String type, String... modifiers) {
-    if (ctx == null || ctx.getStart() == null || ctx.getStop() == null) {
+    if (ctx.getStart() == null || ctx.getStop() == null) {
       return;
     }
 
