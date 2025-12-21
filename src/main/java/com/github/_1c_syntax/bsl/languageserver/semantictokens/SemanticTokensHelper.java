@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokensLegend;
@@ -68,7 +68,7 @@ public class SemanticTokensHelper {
    */
   public void addRange(List<SemanticTokenEntry> entries, Range range, String type, String... modifiers) {
     int explicitLength = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
-    addRange(entries, range, explicitLength, type, modifiers);
+    addEntry(entries, range.getStart().getLine(), range.getStart().getCharacter(), explicitLength, type, modifiers);
   }
 
   /**
@@ -81,26 +81,42 @@ public class SemanticTokensHelper {
    * @param modifiers      Модификаторы токена (из SemanticTokenModifiers)
    */
   public void addRange(List<SemanticTokenEntry> entries, Range range, int explicitLength, String type, String[] modifiers) {
-    if (Ranges.isEmpty(range)) {
+    addEntry(entries, range.getStart().getLine(), range.getStart().getCharacter(), explicitLength, type, modifiers);
+  }
+
+  /**
+   * Добавить токен по позиции и длине без модификаторов.
+   *
+   * @param entries Список токенов для наполнения
+   * @param line    Номер строки (0-индексированный)
+   * @param start   Начальная позиция в строке
+   * @param length  Длина токена
+   * @param type    Тип токена (из SemanticTokenTypes)
+   */
+  public void addEntry(List<SemanticTokenEntry> entries, int line, int start, int length, String type) {
+    addEntry(entries, line, start, length, type, NO_MODIFIERS);
+  }
+
+  /**
+   * Добавить токен по позиции и длине с модификаторами.
+   *
+   * @param entries   Список токенов для наполнения
+   * @param line      Номер строки (0-индексированный)
+   * @param start     Начальная позиция в строке
+   * @param length    Длина токена
+   * @param type      Тип токена (из SemanticTokenTypes)
+   * @param modifiers Модификаторы токена (из SemanticTokenModifiers)
+   */
+  public void addEntry(List<SemanticTokenEntry> entries, int line, int start, int length, String type, String... modifiers) {
+    if (length <= 0) {
       return;
     }
     int typeIdx = legend.getTokenTypes().indexOf(type);
     if (typeIdx < 0) {
       return;
     }
-    int line = range.getStart().getLine();
-    int start = range.getStart().getCharacter();
-    int length = Math.max(0, explicitLength);
-    if (length > 0) {
-      var modifierMask = 0;
-      for (String mod : modifiers) {
-        int idx = legend.getTokenModifiers().indexOf(mod);
-        if (idx >= 0) {
-          modifierMask |= (1 << idx);
-        }
-      }
-      entries.add(new SemanticTokenEntry(line, start, length, typeIdx, modifierMask));
-    }
+    var modifierMask = computeModifierMask(modifiers);
+    entries.add(new SemanticTokenEntry(line, start, length, typeIdx, modifierMask));
   }
 
   /**
@@ -138,6 +154,20 @@ public class SemanticTokensHelper {
     );
 
     addRange(entries, range, type, modifiers);
+  }
+
+  /**
+   * Добавить токен из TerminalNode с явно указанным типом и модификаторами.
+   *
+   * @param entries   Список токенов для наполнения
+   * @param node      Терминальный узел AST
+   * @param type      Тип семантического токена (из SemanticTokenTypes)
+   * @param modifiers Модификаторы токена (из SemanticTokenModifiers)
+   */
+  public void addTerminalNodeRange(List<SemanticTokenEntry> entries, @Nullable TerminalNode node, String type, String... modifiers) {
+    if (node != null) {
+      addTokenRange(entries, node.getSymbol(), type, modifiers);
+    }
   }
 
   /**
