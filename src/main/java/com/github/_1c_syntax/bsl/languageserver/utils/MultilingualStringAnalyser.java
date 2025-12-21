@@ -29,39 +29,132 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Анализатор многоязычных строк НСтр (NStr).
+ * Анализатор многоязычных строк НСтр (NStr) и строковых шаблонов СтрШаблон (StrTemplate).
  * <p>
  * Проверяет наличие всех объявленных языков в многоязычных строках
  * и анализирует использование в шаблонах.
+ * <p>
+ * Также предоставляет статические методы для поиска языковых ключей и плейсхолдеров
+ * в строках для целей семантической подсветки.
  */
 public final class MultilingualStringAnalyser {
 
-  private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
-  private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)";
+  private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)$";
+  private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)$";
   private static final String NSTR_LANG_REGEX = "\\w+\\s*=\\s*['|\"{2}]";
   private static final String NSTR_LANG_CUT_REGEX = "\\s*=\\s*['|\"{2}]";
   private static final String WHITE_SPACE_REGEX = "\\s";
-  private static final Pattern NSTR_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
+
+  /**
+   * Паттерн для распознавания вызова метода НСтр/NStr.
+   */
+  public static final Pattern NSTR_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
     NSTR_METHOD_NAME
   );
-  private static final Pattern TEMPLATE_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
+
+  /**
+   * Паттерн для распознавания вызова метода СтрШаблон/StrTemplate.
+   */
+  public static final Pattern TEMPLATE_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
     TEMPLATE_METHOD_NAME
   );
-  private static final Pattern NSTR_LANG_PATTERN = CaseInsensitivePattern.compile(
+
+  /**
+   * Паттерн для поиска языковых ключей в строках НСтр (например, ru=', en=").
+   */
+  public static final Pattern NSTR_LANG_PATTERN = CaseInsensitivePattern.compile(
     NSTR_LANG_REGEX
   );
+
+  /**
+   * Паттерн для поиска плейсхолдеров в строках СтрШаблон (%1-%10 или %(1)-%(10)).
+   * Учитывает экранирование %%.
+   */
+  public static final Pattern STR_TEMPLATE_PLACEHOLDER_PATTERN = Pattern.compile(
+    "(?<!%)%(?:(10|[1-9])(?!\\d)|\\((10|[1-9])\\))"
+  );
+
   private static final Pattern NSTR_LANG_CUT_PATTERN = CaseInsensitivePattern.compile(
     NSTR_LANG_CUT_REGEX
   );
   private static final Pattern WHITE_SPACE_PATTERN = CaseInsensitivePattern.compile(
     WHITE_SPACE_REGEX
   );
+
+  /**
+   * Запись для хранения позиции совпадения в строке.
+   *
+   * @param start  Начальная позиция совпадения
+   * @param length Длина совпадения
+   * @param value  Значение совпадения (языковой ключ или плейсхолдер)
+   */
+  public record MatchPosition(int start, int length, String value) {
+  }
+
+  /**
+   * Проверить, является ли вызов метода вызовом НСтр/NStr.
+   *
+   * @param ctx Контекст вызова глобального метода
+   * @return true, если это вызов НСтр/NStr
+   */
+  public static boolean isNStrCall(BSLParser.GlobalMethodCallContext ctx) {
+    return NSTR_METHOD_NAME_PATTERN.matcher(ctx.methodName().getText()).matches();
+  }
+
+  /**
+   * Проверить, является ли вызов метода вызовом СтрШаблон/StrTemplate.
+   *
+   * @param ctx Контекст вызова глобального метода
+   * @return true, если это вызов СтрШаблон/StrTemplate
+   */
+  public static boolean isStrTemplateCall(BSLParser.GlobalMethodCallContext ctx) {
+    return TEMPLATE_METHOD_NAME_PATTERN.matcher(ctx.methodName().getText()).matches();
+  }
+
+  /**
+   * Найти позиции всех языковых ключей в строке НСтр.
+   *
+   * @param text Текст строки
+   * @return Список позиций языковых ключей
+   */
+  public static List<MatchPosition> findLanguageKeyPositions(String text) {
+    List<MatchPosition> positions = new ArrayList<>();
+    Matcher matcher = NSTR_LANG_PATTERN.matcher(text);
+
+    while (matcher.find()) {
+      Matcher cutMatcher = NSTR_LANG_CUT_PATTERN.matcher(matcher.group());
+      String langKey = cutMatcher.replaceAll("");
+      int keyStart = matcher.start();
+      positions.add(new MatchPosition(keyStart, langKey.length(), langKey));
+    }
+
+    return positions;
+  }
+
+  /**
+   * Найти позиции всех плейсхолдеров в строке СтрШаблон.
+   *
+   * @param text Текст строки
+   * @return Список позиций плейсхолдеров
+   */
+  public static List<MatchPosition> findPlaceholderPositions(String text) {
+    List<MatchPosition> positions = new ArrayList<>();
+    Matcher matcher = STR_TEMPLATE_PLACEHOLDER_PATTERN.matcher(text);
+
+    while (matcher.find()) {
+      String placeholder = matcher.group();
+      positions.add(new MatchPosition(matcher.start(), placeholder.length(), placeholder));
+    }
+
+    return positions;
+  }
 
   @SuppressWarnings("NullAway.Init")
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
@@ -85,7 +178,7 @@ public final class MultilingualStringAnalyser {
     String firstParameterMultilingualString = getMultilingualString(globalMethodCallContext);
 
     return !(firstParameterMultilingualString.isEmpty() || firstParameterMultilingualString.startsWith("\""))
-      || !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
+      || !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).matches();
   }
 
   private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
@@ -103,7 +196,7 @@ public final class MultilingualStringAnalyser {
   }
 
   private static boolean isTemplate(BSLParser.GlobalMethodCallContext parent) {
-    return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).find();
+    return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).matches();
   }
 
   private static @Nullable String getVariableName(BSLParser.GlobalMethodCallContext ctx) {

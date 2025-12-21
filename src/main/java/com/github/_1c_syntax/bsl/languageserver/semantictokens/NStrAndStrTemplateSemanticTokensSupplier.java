@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.SemanticTokenTypes;
@@ -34,8 +34,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Сапплаер семантических токенов для функций НСтр (NStr) и СтрШаблон (StrTemplate).
@@ -47,16 +45,6 @@ import java.util.regex.Pattern;
 @Component
 @RequiredArgsConstructor
 public class NStrAndStrTemplateSemanticTokensSupplier implements SemanticTokensSupplier {
-
-  private static final Pattern NSTR_METHOD_PATTERN = CaseInsensitivePattern.compile("^(НСтр|NStr)$");
-  private static final Pattern TEMPLATE_METHOD_PATTERN = CaseInsensitivePattern.compile("^(СтрШаблон|StrTemplate)$");
-
-  // Pattern for NStr language keys like "ru='..." or "en='..."
-  // Matches language code followed by = and either ' or "
-  private static final Pattern NSTR_LANG_KEY_PATTERN = Pattern.compile("(\\w+)\\s*=\\s*['\"]");
-
-  // Pattern for StrTemplate placeholders: %1-%10 or %(1)-%(10)
-  private static final Pattern STR_TEMPLATE_PLACEHOLDER_PATTERN = Pattern.compile("%(?:(10|[1-9])|\\((10|[1-9])\\))");
 
   private static final Set<Integer> STRING_TOKEN_TYPES = Set.of(
     BSLParser.STRING,
@@ -91,11 +79,9 @@ public class NStrAndStrTemplateSemanticTokensSupplier implements SemanticTokensS
 
     @Override
     public Void visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-      String methodName = ctx.methodName().getText();
-
-      if (NSTR_METHOD_PATTERN.matcher(methodName).matches()) {
+      if (MultilingualStringAnalyser.isNStrCall(ctx)) {
         processNStrCall(ctx);
-      } else if (TEMPLATE_METHOD_PATTERN.matcher(methodName).matches()) {
+      } else if (MultilingualStringAnalyser.isStrTemplateCall(ctx)) {
         processStrTemplateCall(ctx);
       }
 
@@ -117,19 +103,14 @@ public class NStrAndStrTemplateSemanticTokensSupplier implements SemanticTokensS
         int tokenLine = token.getLine() - 1; // Convert to 0-indexed
         int tokenStart = token.getCharPositionInLine();
 
-        // Find language keys in the string
-        Matcher matcher = NSTR_LANG_KEY_PATTERN.matcher(tokenText);
-        while (matcher.find()) {
-          String langKey = matcher.group(1);
-          int keyStart = matcher.start(1);
-          int keyLength = langKey.length();
-
-          // Add semantic token for the language key
+        // Find language keys in the string using MultilingualStringAnalyser
+        var positions = MultilingualStringAnalyser.findLanguageKeyPositions(tokenText);
+        for (var position : positions) {
           helper.addEntry(
             entries,
             tokenLine,
-            tokenStart + keyStart,
-            keyLength,
+            tokenStart + position.start(),
+            position.length(),
             SemanticTokenTypes.Property
           );
         }
@@ -151,18 +132,14 @@ public class NStrAndStrTemplateSemanticTokensSupplier implements SemanticTokensS
         int tokenLine = token.getLine() - 1; // Convert to 0-indexed
         int tokenStart = token.getCharPositionInLine();
 
-        // Find placeholders in the string
-        Matcher matcher = STR_TEMPLATE_PLACEHOLDER_PATTERN.matcher(tokenText);
-        while (matcher.find()) {
-          int placeholderStart = matcher.start();
-          int placeholderLength = matcher.group().length();
-
-          // Add semantic token for the placeholder
+        // Find placeholders in the string using MultilingualStringAnalyser
+        var positions = MultilingualStringAnalyser.findPlaceholderPositions(tokenText);
+        for (var position : positions) {
           helper.addEntry(
             entries,
             tokenLine,
-            tokenStart + placeholderStart,
-            placeholderLength,
+            tokenStart + position.start(),
+            position.length(),
             SemanticTokenTypes.Parameter
           );
         }
