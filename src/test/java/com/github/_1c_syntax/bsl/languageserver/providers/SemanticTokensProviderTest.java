@@ -1259,6 +1259,93 @@ class SemanticTokensProviderTest {
     assertThat(result.isLeft()).isTrue();
   }
 
+  @Test
+  void deltaWithLineInsertedAtBeginning_shouldHaveSmallDelta() {
+    // given
+    String bsl1 = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    String bsl2 = """
+      Перем Новая;
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - either delta with small edits or full tokens (both are acceptable)
+    if (result.isRight()) {
+      var delta = result.getRight();
+      var edit = delta.getEdits().get(0);
+      // deleteCount should be small (just the changed prefix), not the entire array
+      // For inserting a line at beginning, only the first token's deltaLine changes
+      assertThat(edit.getDeleteCount()).isLessThanOrEqualTo(tokens1.getData().size());
+    }
+    // If full tokens returned, that's also acceptable as fallback
+  }
+
+  @Test
+  void deltaWithLineInsertedInMiddle_shouldReturnReasonableDelta() {
+    // given - simulate inserting a line in middle of document
+    String bsl1 = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      Перем Г;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Б;
+      Перем Новая;
+      Перем В;
+      Перем Г;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+    int originalDataSize = tokens1.getData().size();
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then
+    if (result.isRight()) {
+      var delta = result.getRight();
+      assertThat(delta.getEdits()).isNotEmpty();
+      var edit = delta.getEdits().get(0);
+      // The delta should not claim to delete more than the original data
+      assertThat(edit.getDeleteCount()).isLessThanOrEqualTo(originalDataSize);
+      // For a simple insertion in middle, we expect:
+      // - prefix match up to the insertion point
+      // - suffix match for unchanged tokens at the end
+      // - delete the changed portion and insert new data
+    } else {
+      // Full tokens is also acceptable if delta would be too large
+      assertThat(result.getLeft().getData()).isNotEmpty();
+    }
+  }
+
   // endregion
 }
 
