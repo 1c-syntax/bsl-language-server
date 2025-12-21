@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766146816069,
+  "lastUpdate": 1766311730621,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32798,6 +32798,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0924097855215804",
             "extra": "mean: 89.01034228006999 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d80ae403bae36404b5c6c05fe90faea64ac74b6e",
+          "message": "Merge pull request #3690 from 1c-syntax/copilot/add-syntax-highlighting-docs\n\nAdd BSL doc syntax highlighting for method/variable descriptions",
+          "timestamp": "2025-12-21T10:58:30+01:00",
+          "tree_id": "0992df7d6e28794abeff9e6be1481f8a42f252ad",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d80ae403bae36404b5c6c05fe90faea64ac74b6e"
+        },
+        "date": 1766311724276,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.28017727533977,
+            "unit": "sec",
+            "range": "stddev: 2.6509460832793486",
+            "extra": "mean: 90.28017727533977 sec\nrounds: 3"
           }
         ]
       }
