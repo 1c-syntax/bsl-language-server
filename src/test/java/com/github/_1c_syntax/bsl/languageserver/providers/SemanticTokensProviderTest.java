@@ -31,7 +31,6 @@ import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,11 +53,6 @@ class SemanticTokensProviderTest {
 
   @Autowired
   private ReferenceIndexFiller referenceIndexFiller;
-
-  @BeforeEach
-  void init() {
-    provider.setMultilineTokenSupport(false);
-  }
 
   // region Helper types and methods
 
@@ -451,43 +445,6 @@ class SemanticTokensProviderTest {
       new ExpectedToken(1, 14, 8, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// трейл")
     );
 
-    assertTokensMatch(decoded, expected);
-  }
-
-  @Test
-  void multilineDocumentation_mergedWhenSupported() {
-    provider.setMultilineTokenSupport(true);
-
-    String bsl = """
-      // Первая строка описания
-      // Вторая строка описания
-      Процедура ДокТест()
-        // не документация
-      КонецПроцедуры
-      """;
-
-    var decoded = getDecodedTokens(bsl);
-
-    // When multiline support is enabled, documentation comments should be merged into one token
-    // if there are no BSL doc keywords on those lines.
-    // Both lines "// Первая строка описания" (25 chars) + "\n" + "// Вторая строка описания" (25 chars) = 51 chars total.
-    // Body comment on line 3 should NOT have Documentation modifier.
-    var expected = List.of(
-      // Merged documentation comment (starts at line 0, length includes newline between lines)
-      new ExpectedToken(0, 0, 51, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Первая+Вторая строка описания"),
-      // Line 2: Процедура keyword
-      new ExpectedToken(2, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
-      // Line 2: ДокТест method name
-      new ExpectedToken(2, 10, 7, SemanticTokenTypes.Method, "ДокТест"),
-      // Line 2: ( operator
-      new ExpectedToken(2, 17, 1, SemanticTokenTypes.Operator, "("),
-      // Line 2: ) operator
-      new ExpectedToken(2, 18, 1, SemanticTokenTypes.Operator, ")"),
-      // Line 3: body comment (no Documentation modifier)
-      new ExpectedToken(3, 2, 18, SemanticTokenTypes.Comment, "// не документация"),
-      // Line 4: КонецПроцедуры keyword
-      new ExpectedToken(4, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
-    );
 
     assertTokensMatch(decoded, expected);
   }
