@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensEdit;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -146,12 +149,35 @@ public class SemanticTokensProvider {
   }
 
   /**
-   * Clear cached token data for a specific document.
-   * Should be called when a document is closed.
+   * Обрабатывает событие закрытия документа в контексте сервера.
+   * <p>
+   * При закрытии документа очищает кэшированные данные семантических токенов.
    *
-   * @param uri URI of the document to clear cache for
+   * @param event событие закрытия документа
    */
-  public void clearCache(URI uri) {
+  @EventListener
+  public void handleDocumentClosed(ServerContextDocumentClosedEvent event) {
+    clearCache(event.getDocumentContext().getUri());
+  }
+
+  /**
+   * Обрабатывает событие удаления документа из контекста сервера.
+   * <p>
+   * При удалении документа очищает кэшированные данные семантических токенов.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    clearCache(event.getUri());
+  }
+
+  /**
+   * Очищает кэшированные данные токенов для указанного документа.
+   *
+   * @param uri URI документа, для которого нужно очистить кэш
+   */
+  protected void clearCache(URI uri) {
     tokenCache.entrySet().removeIf(entry -> entry.getValue().uri().equals(uri));
   }
 

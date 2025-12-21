@@ -1250,7 +1250,7 @@ class SemanticTokensProviderTest {
       new SemanticTokensParams(textDocumentIdentifier)
     );
 
-    // Clear cache
+    // Clear cache directly
     provider.clearCache(documentContext.getUri());
 
     // Request delta with the old result ID
