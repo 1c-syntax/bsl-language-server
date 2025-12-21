@@ -514,6 +514,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       }
     }
 
+    // Clear cached semantic tokens for this document
+    semanticTokensProvider.clearCache(uri);
+
     context.closeDocument(documentContext);
 
     diagnosticProvider.publishEmptyDiagnosticList(documentContext);
