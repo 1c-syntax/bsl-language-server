@@ -70,7 +70,8 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenModifiers.Documentation,
       SemanticTokenModifiers.Definition,
       SemanticTokenModifiers.DefaultLibrary,  // Added for SDBL built-in functions and types
-      SemanticTokenModifiers.Declaration  // Added for SDBL alias declarations
+      SemanticTokenModifiers.Declaration,  // Added for SDBL alias declarations
+      SemanticTokenModifiers.Readonly  // Added for SDBL parameters
     );
 
     return new SemanticTokensLegend(tokenTypes, tokenModifiers);

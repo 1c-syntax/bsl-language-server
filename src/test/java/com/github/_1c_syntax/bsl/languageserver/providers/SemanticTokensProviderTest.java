@@ -31,7 +31,6 @@ import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,11 +53,6 @@ class SemanticTokensProviderTest {
 
   @Autowired
   private ReferenceIndexFiller referenceIndexFiller;
-
-  @BeforeEach
-  void init() {
-    provider.setMultilineTokenSupport(false);
-  }
 
   // region Helper types and methods
 
@@ -384,7 +378,8 @@ class SemanticTokensProviderTest {
   void methodDescriptionComments() {
     String bsl = """
       // Описание процедуры
-      // Параметры: Парам - Число
+      // Параметры:
+      //  Парам - Число - описание
       Процедура ДокТест(Парам)
         // обычный комментарий
       КонецПроцедуры
@@ -392,15 +387,53 @@ class SemanticTokensProviderTest {
 
     var decoded = getDecodedTokens(bsl);
 
-    // Documentation comments on lines 0-1 should have Documentation modifier
-    // Body comment on line 3 should NOT have Documentation modifier
+    // Documentation comments are now split around BSL doc keywords and operators.
+    // Line 0: "// Описание процедуры" - no BSL doc elements, full line as Comment+Documentation
+    // Line 1: "// Параметры:" - keyword in structural position
+    // Line 2: "//  Парам - Число - описание" - parameter name, type, operator, description
+    // Body comment on line 4 should NOT have Documentation modifier
     var expected = List.of(
+      // Line 0: full line as Comment+Documentation
       new ExpectedToken(0, 0, 21, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Описание процедуры"),
-      new ExpectedToken(1, 0, 27, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Параметры: Парам - Число"),
-      new ExpectedToken(3, 2, 22, SemanticTokenTypes.Comment, "// обычный комментарий")
+      // Line 1: "// " before keyword
+      new ExpectedToken(1, 0, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
+      // Line 1: "Параметры:" keyword
+      new ExpectedToken(1, 3, 10, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Параметры:"),
+      // Line 2: "//  " before param name
+      new ExpectedToken(2, 0, 4, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//  "),
+      // Line 2: "Парам" parameter name
+      new ExpectedToken(2, 4, 5, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation, "Парам"),
+      // Line 2: " " between param name and dash
+      new ExpectedToken(2, 9, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 2: "-" operator
+      new ExpectedToken(2, 10, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Line 2: " " between dash and type
+      new ExpectedToken(2, 11, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 2: "Число" type
+      new ExpectedToken(2, 12, 5, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "Число"),
+      // Line 2: " " between type and second dash
+      new ExpectedToken(2, 17, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 2: "-" second operator
+      new ExpectedToken(2, 18, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Line 2: " описание" description text
+      new ExpectedToken(2, 19, 9, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " описание"),
+      // Line 3: Процедура keyword
+      new ExpectedToken(3, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
+      // Line 3: ДокТест method name
+      new ExpectedToken(3, 10, 7, SemanticTokenTypes.Method, "ДокТест"),
+      // Line 3: ( operator
+      new ExpectedToken(3, 17, 1, SemanticTokenTypes.Operator, "("),
+      // Line 3: Парам parameter definition
+      new ExpectedToken(3, 18, 5, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition, "Парам"),
+      // Line 3: ) operator
+      new ExpectedToken(3, 23, 1, SemanticTokenTypes.Operator, ")"),
+      // Line 4: body comment (no Documentation modifier)
+      new ExpectedToken(4, 2, 22, SemanticTokenTypes.Comment, "// обычный комментарий"),
+      // Line 5: КонецПроцедуры keyword
+      new ExpectedToken(5, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
     );
 
-    assertContainsTokens(decoded, expected);
+    assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -412,42 +445,218 @@ class SemanticTokensProviderTest {
 
     var decoded = getDecodedTokens(bsl);
 
-    // Both leading (line 0) and trailing (line 1) comments should have documentation modifier
+    // Leading comment on line 0 and trailing comment on line 1 should have documentation modifier
     var expected = List.of(
+      // Line 0: leading comment as Comment+Documentation
       new ExpectedToken(0, 0, 22, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Описание переменной"),
+      // Line 1: Перем keyword
+      new ExpectedToken(1, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      // Line 1: Перем1 variable definition
+      new ExpectedToken(1, 6, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Перем1"),
+      // Line 1: ; operator
+      new ExpectedToken(1, 12, 1, SemanticTokenTypes.Operator, ";"),
+      // Line 1: trailing comment as Comment+Documentation
       new ExpectedToken(1, 14, 8, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// трейл")
     );
 
-    assertContainsTokens(decoded, expected);
+
+    assertTokensMatch(decoded, expected);
   }
 
   @Test
-  void multilineDocumentation_mergedWhenSupported() {
-    provider.setMultilineTokenSupport(true);
-
+  void bslDocKeywordsHighlighting() {
     String bsl = """
-      // Первая строка описания
-      // Вторая строка описания
-      Процедура ДокТест()
-        // не документация
+      // Описание функции
+      //
+      // Параметры:
+      //   Имя - Строка - имя пользователя
+      //   Возраст - Число - возраст
+      //
+      // Возвращаемое значение:
+      //   Булево - результат проверки
+      //
+      Функция ПроверитьДанные(Имя, Возраст) Экспорт
+        Возврат Истина;
+      КонецФункции
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // BSL doc keywords should be highlighted as Macro with Documentation modifier
+    // Parameter names should be highlighted as Parameter
+    // Type names should be highlighted as Type
+    // Dash operators should be highlighted as Operator
+    // Comment parts around keywords/operators are Comment+Documentation
+    var expected = List.of(
+      // Line 0: full comment
+      new ExpectedToken(0, 0, 19, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Описание функции"),
+      // Line 1: empty comment "//"
+      new ExpectedToken(1, 0, 2, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//"),
+      // Line 2: "// " before keyword
+      new ExpectedToken(2, 0, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
+      // Line 2: "Параметры:" keyword
+      new ExpectedToken(2, 3, 10, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Параметры:"),
+      // Line 3: "//   " before parameter name
+      new ExpectedToken(3, 0, 5, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   "),
+      // Line 3: "Имя" parameter name
+      new ExpectedToken(3, 5, 3, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation, "Имя"),
+      // Line 3: " " before dash
+      new ExpectedToken(3, 8, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 3: first "-" operator
+      new ExpectedToken(3, 9, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Line 3: " " after dash
+      new ExpectedToken(3, 10, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 3: "Строка" type
+      new ExpectedToken(3, 11, 6, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "Строка"),
+      // Line 3: " " before dash
+      new ExpectedToken(3, 17, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 3: second "-" operator
+      new ExpectedToken(3, 18, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Line 3: " имя пользователя" after dash
+      new ExpectedToken(3, 19, 17, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " имя пользователя"),
+      // Line 4: "//   " before parameter name
+      new ExpectedToken(4, 0, 5, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   "),
+      // Line 4: "Возраст" parameter name
+      new ExpectedToken(4, 5, 7, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation, "Возраст"),
+      // Line 4: " " before dash
+      new ExpectedToken(4, 12, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 4: first "-" operator
+      new ExpectedToken(4, 13, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Line 4: " " after dash
+      new ExpectedToken(4, 14, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 4: "Число" type
+      new ExpectedToken(4, 15, 5, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "Число"),
+      // Line 4: " " before dash
+      new ExpectedToken(4, 20, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 4: second "-" operator
+      new ExpectedToken(4, 21, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Line 4: " возраст" after dash
+      new ExpectedToken(4, 22, 8, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " возраст"),
+      // Line 5: empty comment "//"
+      new ExpectedToken(5, 0, 2, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//"),
+      // Line 6: "// " before keyword
+      new ExpectedToken(6, 0, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
+      // Line 6: "Возвращаемое значение:" keyword
+      new ExpectedToken(6, 3, 22, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Возвращаемое значение:"),
+      // Line 7: "//   " before type
+      new ExpectedToken(7, 0, 5, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   "),
+      // Line 7: "Булево" type
+      new ExpectedToken(7, 5, 6, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation, "Булево"),
+      // Line 7: " " before dash
+      new ExpectedToken(7, 11, 1, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " "),
+      // Line 7: "-" operator
+      new ExpectedToken(7, 12, 1, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation, "-"),
+      // Line 7: " результат проверки" after dash
+      new ExpectedToken(7, 13, 19, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " результат проверки"),
+      // Line 8: empty comment "//"
+      new ExpectedToken(8, 0, 2, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//"),
+      // Line 9: Функция keyword
+      new ExpectedToken(9, 0, 7, SemanticTokenTypes.Keyword, "Функция"),
+      // Line 9: ПроверитьДанные function name
+      new ExpectedToken(9, 8, 15, SemanticTokenTypes.Function, "ПроверитьДанные"),
+      // Line 9: ( operator
+      new ExpectedToken(9, 23, 1, SemanticTokenTypes.Operator, "("),
+      // Line 9: Имя parameter definition
+      new ExpectedToken(9, 24, 3, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition, "Имя"),
+      // Line 9: , operator
+      new ExpectedToken(9, 27, 1, SemanticTokenTypes.Operator, ","),
+      // Line 9: Возраст parameter definition
+      new ExpectedToken(9, 29, 7, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition, "Возраст"),
+      // Line 9: ) operator
+      new ExpectedToken(9, 36, 1, SemanticTokenTypes.Operator, ")"),
+      // Line 9: Экспорт keyword
+      new ExpectedToken(9, 38, 7, SemanticTokenTypes.Keyword, "Экспорт"),
+      // Line 10: Возврат keyword
+      new ExpectedToken(10, 2, 7, SemanticTokenTypes.Keyword, "Возврат"),
+      // Line 10: Истина keyword (literal)
+      new ExpectedToken(10, 10, 6, SemanticTokenTypes.Keyword, "Истина"),
+      // Line 10: ; operator
+      new ExpectedToken(10, 16, 1, SemanticTokenTypes.Operator, ";"),
+      // Line 11: КонецФункции keyword
+      new ExpectedToken(11, 0, 12, SemanticTokenTypes.Keyword, "КонецФункции")
+    );
+
+    assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void bslDocDeprecatedKeyword() {
+    String bsl = """
+      // Устарела. Используйте новый метод
+      Процедура СтарыйМетод()
       КонецПроцедуры
       """;
 
     var decoded = getDecodedTokens(bsl);
 
-    // When multiline support is enabled, documentation comments should be merged into one token
-    // The merged token starts on line 0 and spans across lines
-    // Both lines "// Первая строка описания" (26 chars) + "// Вторая строка описания" (25 chars) = 51 chars total,
-    // i.e. the sum of the characters of both lines; the newline between them is not included in the length.
-    // Body comment on line 3 should NOT have Documentation modifier
+    // Line 0: "// " Comment, "Устарела." Macro, " Используйте новый метод" Comment
     var expected = List.of(
-      // Merged documentation comment (starts at line 0, length is sum of both lines without the newline)
-      new ExpectedToken(0, 0, 51, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Первая+Вторая строка описания"),
-      // Body comment without documentation modifier
-      new ExpectedToken(3, 2, 18, SemanticTokenTypes.Comment, "// не документация")
+      // Line 0: "// " before keyword
+      new ExpectedToken(0, 0, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
+      // Line 0: "Устарела." keyword
+      new ExpectedToken(0, 3, 9, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Устарела."),
+      // Line 0: " Используйте новый метод" after keyword
+      new ExpectedToken(0, 12, 24, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, " Используйте новый метод"),
+      // Line 1: Процедура keyword
+      new ExpectedToken(1, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
+      // Line 1: СтарыйМетод method name
+      new ExpectedToken(1, 10, 11, SemanticTokenTypes.Method, "СтарыйМетод"),
+      // Line 1: ( operator
+      new ExpectedToken(1, 21, 1, SemanticTokenTypes.Operator, "("),
+      // Line 1: ) operator
+      new ExpectedToken(1, 22, 1, SemanticTokenTypes.Operator, ")"),
+      // Line 2: КонецПроцедуры keyword
+      new ExpectedToken(2, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
     );
 
-    assertContainsTokens(decoded, expected);
+    assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void bslDocExampleKeyword() {
+    String bsl = """
+      // Описание
+      //
+      // Пример:
+      //   Результат = МойМетод();
+      //
+      Процедура МойМетод()
+      КонецПроцедуры
+      """;
+
+    var decoded = getDecodedTokens(bsl);
+
+    // Line 0: full line as Comment+Documentation
+    // Line 1: "//" as Comment+Documentation
+    // Line 2: "// " Comment, "Пример:" Macro
+    // Line 3: full line as Comment+Documentation
+    // Line 4: "//" as Comment+Documentation
+    var expected = List.of(
+      // Line 0: full comment
+      new ExpectedToken(0, 0, 11, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// Описание"),
+      // Line 1: empty comment "//"
+      new ExpectedToken(1, 0, 2, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//"),
+      // Line 2: "// " before keyword
+      new ExpectedToken(2, 0, 3, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "// "),
+      // Line 2: "Пример:" keyword
+      new ExpectedToken(2, 3, 7, SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation, "Пример:"),
+      // Line 3: full comment
+      new ExpectedToken(3, 0, 28, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//   Результат = МойМетод();"),
+      // Line 4: empty comment "//"
+      new ExpectedToken(4, 0, 2, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation, "//"),
+      // Line 5: Процедура keyword
+      new ExpectedToken(5, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
+      // Line 5: МойМетод method name
+      new ExpectedToken(5, 10, 8, SemanticTokenTypes.Method, "МойМетод"),
+      // Line 5: ( operator
+      new ExpectedToken(5, 18, 1, SemanticTokenTypes.Operator, "("),
+      // Line 5: ) operator
+      new ExpectedToken(5, 19, 1, SemanticTokenTypes.Operator, ")"),
+      // Line 6: КонецПроцедуры keyword
+      new ExpectedToken(6, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
+    );
+
+    assertTokensMatch(decoded, expected);
   }
 
   @Test
