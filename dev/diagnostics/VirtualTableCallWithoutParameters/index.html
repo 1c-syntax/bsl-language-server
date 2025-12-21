@@ -1485,16 +1485,16 @@
 <div class="highlight"><pre><span></span><code><span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
 <span class="s">|</span> <span class="nv">Номенклатура</span>
 <span class="s">|</span><span class="kd">ИЗ</span>
-<span class="s">|</span> <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">ТоварыНаСкладах</span><span class="o">.</span><span class="nv">Остатки</span><span class="p">()</span>
+<span class="s">|</span> <span class="nn">РегистрНакопления</span><span class="o">.</span><span class="nc">ТоварыНаСкладах</span><span class="o">.</span><span class="nf">Остатки</span><span class="p">()</span>
 <span class="s">|</span><span class="kd">ГДЕ</span>
-<span class="s">|</span> <span class="nv">Склад</span> <span class="o">=</span> <span class="no">&amp;Склад</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="s">|</span> <span class="nv">Склад</span> <span class="o">=</span> <span class="si">&amp;Склад</span><span class="s">&quot;</span><span class="p">;</span>
 </code></pre></div>
 Возможно, что в результате выполнения этого запроса сначала будут выбраны все записи виртуальной таблицы, а затем из них будет отобрана часть, соответствующая заданному условию.</p>
 <p>Рекомендуется ограничивать количество выбираемых записей на самом раннем этапе обработки запроса. Для этого следует передать условия в параметры виртуальной таблицы. </p>
 <div class="highlight"><pre><span></span><code><span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s">&quot;</span><span class="kd">ВЫБРАТЬ</span>
 <span class="s">|</span> <span class="nv">Номенклатура</span>
 <span class="s">|</span><span class="kd">ИЗ</span>
-<span class="s">|</span> <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">ТоварыНаСкладах</span><span class="o">.</span><span class="nv">Остатки</span><span class="p">(,</span> <span class="nv">Склад</span> <span class="o">=</span> <span class="no">&amp;Склад</span><span class="p">)</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="s">|</span> <span class="nn">РегистрНакопления</span><span class="o">.</span><span class="nc">ТоварыНаСкладах</span><span class="o">.</span><span class="nf">Остатки</span><span class="p">(,</span> <span class="nv">Склад</span> <span class="o">=</span> <span class="si">&amp;Склад</span><span class="p">)</span><span class="s">&quot;</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

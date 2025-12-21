@@ -1511,12 +1511,12 @@
 <p>Неправильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">СтруктураВложений</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span>
  <span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Наименование</span><span class="p">,</span>
- <span class="k">Новый</span> <span class="nf">Картинка</span><span class="p">(</span><span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span>
+ <span class="k">Новый</span> <span class="nc">Картинка</span><span class="p">(</span><span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span>
   <span class="nv">ПрисоединенныеФайлы</span><span class="o">.</span><span class="nf">ПолучитьДанныеФайла</span><span class="p">(</span><span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">)</span><span class="o">.</span><span class="nv">СсылкаНаДвоичныеДанныеФайла</span><span class="p">)));</span>
 </code></pre></div>
 <p>Правильно разбивать такие вызовы на отдельные операторы с помощью вспомогательных локальных переменных:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">АдресФайлаИзображения</span> <span class="o">=</span> <span class="nv">ПрисоединенныеФайлы</span><span class="o">.</span><span class="nf">ПолучитьДанныеФайла</span><span class="p">(</span><span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">)</span><span class="o">.</span><span class="nv">СсылкаНаДвоичныеДанныеФайла</span><span class="p">;</span>
-<span class="nv">ДанныеИзображения</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Картинка</span><span class="p">(</span><span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресФайлаИзображения</span><span class="p">));</span>
+<span class="nv">ДанныеИзображения</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Картинка</span><span class="p">(</span><span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресФайлаИзображения</span><span class="p">));</span>
 <span class="nv">СтруктураВложений</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Наименование</span><span class="p">,</span> <span class="nv">ДанныеИзображения</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>

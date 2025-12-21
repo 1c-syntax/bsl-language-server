@@ -1486,18 +1486,18 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Неправильно:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Справочник без контроля уникальности</span>
-<span class="nv">СправочникБезКонтроля</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">СправочникБезКонтроляУникальности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
+<span class="nv">СправочникБезКонтроля</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">СправочникБезКонтроляУникальности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">// Справочник с сериями кодов &quot;В пределах подчинения&quot;</span>
-<span class="nv">СправочникССериями</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">СправочникССериямиПодчинения</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
+<span class="nv">СправочникССериями</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">СправочникССериямиПодчинения</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
 </code></pre></div>
 <p>Правильно:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Использование метода НайтиПоКоду() для справочника с контролем уникальности</span>
 <span class="c1">// и сериями кодов по всему справочнику</span>
-<span class="nv">СправочникСКонтролем</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">СправочникСКонтролемУникальности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
+<span class="nv">СправочникСКонтролем</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">СправочникСКонтролемУникальности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">// Альтернативный вариант - использовать метод НайтиПоНаименованию() или другие методы поиска</span>
-<span class="nv">Справочник</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">СправочникБезКонтроляУникальности</span><span class="o">.</span><span class="nf">НайтиПоНаименованию</span><span class="p">(</span><span class="s">&quot;Элемент&quot;</span><span class="p">);</span>
+<span class="nv">Справочник</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">СправочникБезКонтроляУникальности</span><span class="o">.</span><span class="nf">НайтиПоНаименованию</span><span class="p">(</span><span class="s">&quot;Элемент&quot;</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

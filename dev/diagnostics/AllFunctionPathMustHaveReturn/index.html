@@ -1509,12 +1509,12 @@
 <span class="c1">// это может быть, как запланированное поведение, </span>
 <span class="c1">// так и ошибка проверки прочих вариантов.</span>
 <span class="k">Функция</span> <span class="nf">ОпределитьСтавкуНДС</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">Ставка</span><span class="p">)</span>
-    <span class="k">Если</span> <span class="nv">Ставка</span> <span class="o">=</span> <span class="nc">Перечисления</span><span class="o">.</span><span class="nv">СтавкиНДС</span><span class="o">.</span><span class="nv">НДС20</span> <span class="k">Тогда</span>
+    <span class="k">Если</span> <span class="nv">Ставка</span> <span class="o">=</span> <span class="nn">Перечисления</span><span class="o">.</span><span class="nc">СтавкиНДС</span><span class="o">.</span><span class="nv">НДС20</span> <span class="k">Тогда</span>
         <span class="k">Возврат</span> <span class="m">20</span><span class="p">;</span>
-    <span class="k">ИначеЕсли</span> <span class="nv">Ставка</span> <span class="o">=</span> <span class="nc">Перечисления</span><span class="o">.</span><span class="nv">СтавкиНДС</span><span class="o">.</span><span class="nv">НДС10</span> <span class="k">Тогда</span>
+    <span class="k">ИначеЕсли</span> <span class="nv">Ставка</span> <span class="o">=</span> <span class="nn">Перечисления</span><span class="o">.</span><span class="nc">СтавкиНДС</span><span class="o">.</span><span class="nv">НДС10</span> <span class="k">Тогда</span>
         <span class="k">Возврат</span> <span class="m">10</span><span class="p">;</span>
     <span class="k">ИначеЕсли</span> <span class="k">Не</span> <span class="nb">ЗначениеЗаполнено</span><span class="p">(</span><span class="nv">Ставка</span><span class="p">)</span> <span class="k">Тогда</span>
-        <span class="k">Возврат</span> <span class="nc">Константы</span><span class="o">.</span><span class="nv">СтавкаНДСПоУмолчанию</span><span class="o">.</span><span class="nf">Получить</span><span class="p">();</span>
+        <span class="k">Возврат</span> <span class="nn">Константы</span><span class="o">.</span><span class="nc">СтавкаНДСПоУмолчанию</span><span class="o">.</span><span class="nf">Получить</span><span class="p">();</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
 
     <span class="c1">// здесь будет неявный возврат Неопределено</span>

@@ -1480,21 +1480,21 @@
 <p>Неправильно</p>
 <div class="highlight"><pre><span></span><code><span class="nv">НоменклатураСервер</span><span class="o">.</span><span class="nf">ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции</span><span class="p">(</span>
   <span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="p">,</span>
-  <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span>
+  <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span>
   <span class="s">&quot;ЗаполнитьПризнакХарактеристикиИспользуются,</span>
   <span class="s">|ЗаполнитьПризнакТипНоменклатуры, ЗаполнитьПризнакВариантОформленияПродажи&quot;</span><span class="p">,</span>
-   <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ХарактеристикиИспользуются&quot;</span><span class="p">),</span>
-   <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ТипНоменклатуры&quot;</span><span class="p">),</span>
-   <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ВариантОформленияПродажи&quot;</span><span class="p">)</span>
+   <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ХарактеристикиИспользуются&quot;</span><span class="p">),</span>
+   <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ТипНоменклатуры&quot;</span><span class="p">),</span>
+   <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ВариантОформленияПродажи&quot;</span><span class="p">)</span>
   <span class="p">)</span>
  <span class="p">);</span>
 </code></pre></div>
 <p>Правильно</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыЗаполненияРеквизитов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыЗаполненияРеквизитов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">;</span>
 <span class="nv">ПараметрыЗаполненияРеквизитов</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;ЗаполнитьПризнакХарактеристикиИспользуются&quot;</span><span class="p">,</span>
-                                                          <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ХарактеристикиИспользуются&quot;</span><span class="p">));</span>
+                                                          <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ХарактеристикиИспользуются&quot;</span><span class="p">));</span>
 <span class="nv">ПараметрыЗаполненияРеквизитов</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;ЗаполнитьПризнакТипНоменклатуры&quot;</span><span class="p">,</span>
-                                                          <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ТипНоменклатуры&quot;</span><span class="p">));</span>
+                                                          <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Номенклатура&quot;</span><span class="p">,</span> <span class="s">&quot;ТипНоменклатуры&quot;</span><span class="p">));</span>
 <span class="nv">НоменклатураСервер</span><span class="o">.</span><span class="nf">ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции</span><span class="p">(</span><span class="nv">Объект</span><span class="o">.</span><span class="nv">Товары</span><span class="p">,</span> 
                                                           <span class="nv">ПараметрыЗаполненияРеквизитов</span><span class="p">);</span>
 </code></pre></div>

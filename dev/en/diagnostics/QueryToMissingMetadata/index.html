@@ -1483,14 +1483,14 @@ Also, errors can occur when you manually change queries, without checking with t
 <div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
 <span class="kd">FROM</span>
-    <span class="nv">InformationRegister</span><span class="o">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">Table</span>
+    <span class="nn">InformationRegister</span><span class="o">.</span><span class="nc">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">Table</span>
 </code></pre></div>
 Query with a join to the renamed register:
 <div class="highlight"><pre><span></span><code><span class="kd">SELECT</span>
     <span class="nv">Table</span><span class="o">.</span><span class="nv">Field1</span> <span class="kd">AS</span> <span class="nv">Field1</span>
 <span class="kd">FROM</span>
-     <span class="nv">InformationRegister</span><span class="o">.</span><span class="nv">InfoReg</span> <span class="kd">AS</span> <span class="nv">Table</span> 
-     <span class="kd">INNER</span> <span class="kd">JOIN</span> <span class="nv">InformationRegister</span><span class="o">.</span><span class="nv">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">FilterTable</span>
+     <span class="nn">InformationRegister</span><span class="o">.</span><span class="nc">InfoReg</span> <span class="kd">AS</span> <span class="nv">Table</span> 
+     <span class="kd">INNER</span> <span class="kd">JOIN</span> <span class="nn">InformationRegister</span><span class="o">.</span><span class="nc">InfoRegOld</span> <span class="kd">AS</span> <span class="nv">FilterTable</span>
      <span class="kd">ON</span> <span class="nv">FilterTable</span><span class="o">.</span><span class="nv">Field2</span> <span class="o">=</span> <span class="nv">Table</span><span class="o">.</span><span class="nv">Field2</span>
 </code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>

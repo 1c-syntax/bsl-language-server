@@ -1482,20 +1482,20 @@
 <p>Константные значения данных из ИБ рекомендуется указывать в константах ИБ, предопределенных элементах метаданных.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно:
-<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nf">НайтиПоНаименованию</span><span class="p">(</span><span class="s">&quot;Ведущий бухгалтер&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">Должности</span><span class="o">.</span><span class="nf">НайтиПоНаименованию</span><span class="p">(</span><span class="s">&quot;Ведущий бухгалтер&quot;</span><span class="p">);</span>
 </code></pre></div>
 или
-<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nc">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;00-0000001&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nn">Справочники</span><span class="o">.</span><span class="nc">Должности</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="s">&quot;00-0000001&quot;</span><span class="p">);</span>
 </code></pre></div></p>
 <p>или</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ОбъектНазначения</span> <span class="o">=</span> <span class="nc">Документы</span><span class="o">.</span><span class="nv">ПередачаТоваровМеждуОрганизациями</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="s">&quot;0000-000001&quot;</span><span class="p">,</span> <span class="nb">ТекущаяДата</span><span class="p">());</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ОбъектНазначения</span> <span class="o">=</span> <span class="nn">Документы</span><span class="o">.</span><span class="nc">ПередачаТоваровМеждуОрганизациями</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="s">&quot;0000-000001&quot;</span><span class="p">,</span> <span class="nb">ТекущаяДата</span><span class="p">());</span>
 </code></pre></div>
 <p>Допустимо использование:
-<div class="highlight"><pre><span></span><code><span class="nc">Справочники</span><span class="o">.</span><span class="nv">Валюты</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">КодВалютыЦифровой</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nn">Справочники</span><span class="o">.</span><span class="nc">Валюты</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">КодВалютыЦифровой</span><span class="p">);</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="nc">Справочники</span><span class="o">.</span><span class="nv">КлассификаторБанков</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="nv">СведенияОБанке</span><span class="o">.</span><span class="nv">БИК</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nn">Справочники</span><span class="o">.</span><span class="nc">КлассификаторБанков</span><span class="o">.</span><span class="nf">НайтиПоКоду</span><span class="p">(</span><span class="nv">СведенияОБанке</span><span class="o">.</span><span class="nv">БИК</span><span class="p">);</span>
 </code></pre></div></p>
-<div class="highlight"><pre><span></span><code><span class="nc">Документы</span><span class="o">.</span><span class="nv">Реализация</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="nv">НомерДокумента</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nn">Документы</span><span class="o">.</span><span class="nc">Реализация</span><span class="o">.</span><span class="nf">НайтиПоНомеру</span><span class="p">(</span><span class="nv">НомерДокумента</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

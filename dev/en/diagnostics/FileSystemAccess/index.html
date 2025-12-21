@@ -1505,13 +1505,13 @@
 <p>The found sections of the code must be analyzed, a manual audit of the code must be performed for its correctness and safety.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-<div class="highlight"><pre><span></span><code>    <span class="nv">Текст</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ЧтениеТекста</span><span class="p">(</span><span class="nv">ПутьФайла</span><span class="p">,</span> <span class="nv">КодировкаТекста</span><span class="o">.</span><span class="nv">ANSI</span><span class="p">);</span> <span class="c1">// есть замечание</span>
-    <span class="nv">Текст</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ЗаписьТекста</span><span class="p">(</span><span class="nv">ПутьФайла</span><span class="p">,</span> <span class="nv">КодировкаТекста</span><span class="o">.</span><span class="nv">ANSI</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+<div class="highlight"><pre><span></span><code>    <span class="nv">Текст</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ЧтениеТекста</span><span class="p">(</span><span class="nv">ПутьФайла</span><span class="p">,</span> <span class="nv">КодировкаТекста</span><span class="o">.</span><span class="nv">ANSI</span><span class="p">);</span> <span class="c1">// есть замечание</span>
+    <span class="nv">Текст</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ЗаписьТекста</span><span class="p">(</span><span class="nv">ПутьФайла</span><span class="p">,</span> <span class="nv">КодировкаТекста</span><span class="o">.</span><span class="nv">ANSI</span><span class="p">);</span> <span class="c1">// есть замечание</span>
 
     <span class="nb">ЗначениеВФайл</span><span class="p">(</span><span class="nv">ПутьФайла</span><span class="p">,</span> <span class="nv">ЛичныеДанные</span><span class="p">);</span> <span class="c1">// есть замечание</span>
     <span class="nb">КопироватьФайл</span><span class="p">(</span><span class="nv">ПутьФайла</span><span class="p">,</span> <span class="nv">ДругойПутьФайла</span><span class="p">);</span> <span class="c1">// есть замечание</span>
 
-    <span class="nv">МассивИмен</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Массив</span><span class="p">();</span>
+    <span class="nv">МассивИмен</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Массив</span><span class="p">();</span>
     <span class="nv">МассивИмен</span><span class="o">.</span><span class="nf">Добавить</span><span class="p">(</span><span class="nv">ПутьФайла</span><span class="p">);</span>
     <span class="nb">ОбъединитьФайлы</span><span class="p">(</span><span class="nv">МассивИмен</span><span class="p">,</span> <span class="nv">ДругойПутьФайла</span><span class="p">);</span> <span class="c1">// есть замечание</span>
 

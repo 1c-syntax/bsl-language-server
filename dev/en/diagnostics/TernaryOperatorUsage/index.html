@@ -1493,12 +1493,12 @@
 </code></pre></div>
 <p>Bad:</p>
 <p><div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="err">?</span><span class="p">(</span><span class="nv">P</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nv">P</span><span class="o">.</span><span class="nv">Emp_emptype</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
-      <span class="nv">Status</span> <span class="o">=</span> <span class="s">&quot;Done&quot;</span><span class="p">;</span>
+      <span class="nb">Status</span> <span class="o">=</span> <span class="s">&quot;Done&quot;</span><span class="p">;</span>
 <span class="k">EndIf</span><span class="p">;</span>
 </code></pre></div>
 Good:</p>
 <div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nv">P</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span> <span class="k">OR</span> <span class="nv">P</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
-      <span class="nv">Status</span> <span class="o">=</span> <span class="s">&quot;Done&quot;</span><span class="p">;</span>
+      <span class="nb">Status</span> <span class="o">=</span> <span class="s">&quot;Done&quot;</span><span class="p">;</span>
 <span class="nv">End</span> <span class="k">If</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>

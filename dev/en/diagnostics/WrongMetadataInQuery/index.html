@@ -1486,14 +1486,14 @@
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">РесурсЧисло</span> <span class="kd">КАК</span> <span class="nv">РесурсЧисло</span>
 <span class="kd">ИЗ</span>
-    <span class="nv">РегистрСведений</span><span class="o">.</span><span class="nv">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
+    <span class="nn">РегистрСведений</span><span class="o">.</span><span class="nc">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
 </code></pre></div>
 или пример запроса с неверным именем таблицы внутри соединения
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">РесурсЧисло</span> <span class="kd">КАК</span> <span class="nv">РесурсЧисло</span>
 <span class="kd">ИЗ</span>
-    <span class="nv">РегистрСведений</span><span class="o">.</span><span class="nv">Регистр1</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
-    <span class="kd">ВНУТРЕННЕЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nv">РегистрСведений</span><span class="o">.</span><span class="nv">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">ТаблицаФильтр</span>
+    <span class="nn">РегистрСведений</span><span class="o">.</span><span class="nc">Регистр1</span> <span class="kd">КАК</span> <span class="nv">Таблица</span>
+    <span class="kd">ВНУТРЕННЕЕ</span> <span class="kd">СОЕДИНЕНИЕ</span> <span class="nn">РегистрСведений</span><span class="o">.</span><span class="nc">УстаревшееИмяРегистра</span> <span class="kd">КАК</span> <span class="nv">ТаблицаФильтр</span>
     <span class="kd">ПО</span> <span class="nv">ТаблицаФильтр</span><span class="o">.</span><span class="nv">Регистратор</span> <span class="o">=</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Регистратор</span>
 </code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>

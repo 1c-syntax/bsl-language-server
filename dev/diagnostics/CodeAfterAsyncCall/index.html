@@ -1485,8 +1485,8 @@
 <p>Неверный код
 <div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
-    <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
-    <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
+    <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
+    <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
     <span class="nb">ПоказатьВводЧисла</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="m">1</span><span class="p">,</span> <span class="s">&quot;Введите количество&quot;</span><span class="p">,</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">,</span> <span class="m">2</span><span class="p">);</span>
 
     <span class="nb">Сообщить</span><span class="p">(</span><span class="s">&quot;Введенное количество равно &quot;</span> <span class="o">+</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">);</span> <span class="c1">// неверно, т.к. всегда будет 10</span>
@@ -1502,8 +1502,8 @@
 <p>Правильный код
 <div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
-    <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
-    <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
+    <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
+    <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
     <span class="nb">ПоказатьВводЧисла</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="m">1</span><span class="p">,</span> <span class="s">&quot;Введите количество&quot;</span><span class="p">,</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">,</span> <span class="m">2</span><span class="p">);</span>
 
 <span class="k">КонецПроцедуры</span>
@@ -1529,9 +1529,9 @@
 Пример:
 <div class="highlight"><pre><span></span><code><span class="nd">&amp;НаКлиенте</span>
 <span class="k">Процедура</span> <span class="nf">Команда1</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
-    <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
+    <span class="nv">ДополнительныеПараметры</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span><span class="s">&quot;Результат&quot;</span><span class="p">,</span> <span class="m">10</span><span class="p">);</span>
     <span class="k">Если</span> <span class="nv">Условие</span> <span class="k">Тогда</span>
-        <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
+        <span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВводаКоличества&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
         <span class="nb">ПоказатьВводЧисла</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="m">1</span><span class="p">,</span> <span class="s">&quot;Введите количество&quot;</span><span class="p">,</span> <span class="nv">ДополнительныеПараметры</span><span class="o">.</span><span class="nv">Результат</span><span class="p">,</span> <span class="m">2</span><span class="p">);</span>
     <span class="k">Иначе</span>
         <span class="c1">// какой-то код</span>
