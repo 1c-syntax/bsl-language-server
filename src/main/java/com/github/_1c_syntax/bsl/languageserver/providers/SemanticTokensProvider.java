@@ -136,17 +136,6 @@ public class SemanticTokensProvider {
     // Compute delta edits
     List<SemanticTokensEdit> edits = computeEdits(previousData.data(), currentData);
 
-    // Calculate delta size (sum of all edit data sizes + deleteCount overhead)
-    int deltaSize = edits.stream()
-      .mapToInt(edit -> (edit.getData() != null ? edit.getData().size() : 0) + 2) // +2 for start and deleteCount
-      .sum();
-
-    // If delta is larger than full data, return full tokens instead
-    if (deltaSize >= currentData.size()) {
-      cacheTokenData(resultId, documentContext.getUri(), currentData);
-      return Either.forLeft(new SemanticTokens(resultId, currentData));
-    }
-
     // Cache the new data
     cacheTokenData(resultId, documentContext.getUri(), currentData);
 

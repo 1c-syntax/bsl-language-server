@@ -1287,19 +1287,18 @@ class SemanticTokensProviderTest {
     var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
     var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
 
-    // then - either delta with small edits or full tokens (both are acceptable)
-    if (result.isRight()) {
-      var delta = result.getRight();
-      var edit = delta.getEdits().get(0);
-      // deleteCount should be small (just the changed prefix), not the entire array
-      // For inserting a line at beginning, only the first token's deltaLine changes
-      assertThat(edit.getDeleteCount()).isLessThanOrEqualTo(tokens1.getData().size());
-    }
-    // If full tokens returned, that's also acceptable as fallback
+    // then - should return delta with small edits (just the new token + changed deltaLine)
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    var edit = delta.getEdits().get(0);
+    // For inserting at beginning: prefix=0, suffix should match most of the old data
+    // deleteCount should be small (just the first deltaLine that changed)
+    // insertData should be the new token + updated first deltaLine
+    assertThat(edit.getDeleteCount()).isLessThan(tokens1.getData().size());
   }
 
   @Test
-  void deltaWithLineInsertedInMiddle_shouldReturnReasonableDelta() {
+  void deltaWithLineInsertedInMiddle_shouldReturnOptimalDelta() {
     // given - simulate inserting a line in middle of document
     String bsl1 = """
       Перем А;
@@ -1329,21 +1328,17 @@ class SemanticTokensProviderTest {
     var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
     var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
 
-    // then
-    if (result.isRight()) {
-      var delta = result.getRight();
-      assertThat(delta.getEdits()).isNotEmpty();
-      var edit = delta.getEdits().get(0);
-      // The delta should not claim to delete more than the original data
-      assertThat(edit.getDeleteCount()).isLessThanOrEqualTo(originalDataSize);
-      // For a simple insertion in middle, we expect:
-      // - prefix match up to the insertion point
-      // - suffix match for unchanged tokens at the end
-      // - delete the changed portion and insert new data
-    } else {
-      // Full tokens is also acceptable if delta would be too large
-      assertThat(result.getLeft().getData()).isNotEmpty();
-    }
+    // then - should return delta, not full tokens
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getEdits()).isNotEmpty();
+    var edit = delta.getEdits().get(0);
+    // For insertion in middle: 
+    // - prefix matches up to insertion point
+    // - suffix matches tokens after insertion (they have same relative deltaLine)
+    // - The edit should be smaller than the full data
+    int editSize = edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0);
+    assertThat(editSize).isLessThan(originalDataSize);
   }
 
   // endregion
