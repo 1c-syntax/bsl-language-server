@@ -30,7 +30,6 @@
  * Пакет содержит:
  * <ul>
  *   <li>{@link com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier} - базовый интерфейс для сапплаеров токенов</li>
- *   <li>{@link com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensContext} - контекст для вычисления токенов</li>
  *   <li>{@link com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry} - запись семантического токена</li>
  *   <li>{@link com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensHelper} - вспомогательные методы</li>
  *   <li>Сапплаеры для различных типов токенов (символы, комментарии, запросы и т.д.)</li>
