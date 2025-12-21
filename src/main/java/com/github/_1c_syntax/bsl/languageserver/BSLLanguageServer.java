@@ -56,6 +56,7 @@ import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensServerFull;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
@@ -379,7 +380,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private SemanticTokensWithRegistrationOptions getSemanticTokensProvider() {
     var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
-    semanticTokensProvider.setFull(Boolean.TRUE);
+
+    var fullOptions = new SemanticTokensServerFull();
+    fullOptions.setDelta(Boolean.TRUE);
+    semanticTokensProvider.setFull(fullOptions);
+
     semanticTokensProvider.setRange(Boolean.FALSE);
     return semanticTokensProvider;
   }

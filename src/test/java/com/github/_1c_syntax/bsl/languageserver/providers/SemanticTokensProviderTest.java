@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -1093,6 +1095,170 @@ class SemanticTokensProviderTest {
     );
 
     assertContainsTokens(decoded, expected);
+  }
+
+  // endregion
+
+  // region Delta tokens tests
+
+  @Test
+  void fullTokensReturnsResultId() {
+    String bsl = """
+      Перем А;
+      """;
+
+    SemanticTokens tokens = getTokens(bsl);
+    assertThat(tokens.getResultId()).isNotNull();
+    assertThat(tokens.getResultId()).isNotEmpty();
+  }
+
+  @Test
+  void deltaWithSameDocument_returnsEmptyEdits() {
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Get initial tokens
+    SemanticTokens initialTokens = provider.getSemanticTokensFull(
+      documentContext,
+      new SemanticTokensParams(textDocumentIdentifier)
+    );
+    assertThat(initialTokens.getResultId()).isNotNull();
+
+    // Request delta with same document (unchanged)
+    var deltaParams = new SemanticTokensDeltaParams(textDocumentIdentifier, initialTokens.getResultId());
+    var result = provider.getSemanticTokensFullDelta(documentContext, deltaParams);
+
+    // Should return delta with empty edits since document is unchanged
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getResultId()).isNotNull();
+    assertThat(delta.getResultId()).isNotEqualTo(initialTokens.getResultId());
+    assertThat(delta.getEdits()).isEmpty();
+  }
+
+  @Test
+  void deltaWithUnknownPreviousResultId_returnsFullTokens() {
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request delta with unknown previous result ID
+    var deltaParams = new SemanticTokensDeltaParams(textDocumentIdentifier, "unknown-result-id");
+    var result = provider.getSemanticTokensFullDelta(documentContext, deltaParams);
+
+    // Should return full tokens (left side of Either)
+    assertThat(result.isLeft()).isTrue();
+    var fullTokens = result.getLeft();
+    assertThat(fullTokens.getResultId()).isNotNull();
+    assertThat(fullTokens.getData()).isNotEmpty();
+  }
+
+  @Test
+  void deltaWithChangedDocument_returnsEdits() {
+    String bsl1 = """
+      Перем А;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Б;
+      """;
+
+    // Get tokens for first version
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    // Create a second document context with a DIFFERENT URI
+    URI differentUri = URI.create("file:///fake/different-document.bsl");
+    DocumentContext context2 = TestUtils.getDocumentContext(differentUri, bsl2);
+    referenceIndexFiller.fill(context2);
+    TextDocumentIdentifier textDocId2 = TestUtils.getTextDocumentIdentifier(context2.getUri());
+
+    // Request delta using the first result ID but on a different document
+    var deltaParams = new SemanticTokensDeltaParams(textDocId2, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // Since URI is different, should return full tokens (left side of Either)
+    assertThat(result.isLeft()).isTrue();
+    var fullTokens = result.getLeft();
+    assertThat(fullTokens.getResultId()).isNotNull();
+  }
+
+  @Test
+  void deltaWithModifiedSameDocument_returnsEdits() {
+    String bsl1 = """
+      Перем А;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Б;
+      """;
+
+    // Get tokens for first version
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+    int originalSize = tokens1.getData().size();
+
+    // Simulate document being modified (same URI, different content)
+    // Use the same URI to simulate updating the same document
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+
+    // Request delta using the first result ID
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // Should return delta with edits since document was modified (same URI)
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getResultId()).isNotNull();
+    // There should be at least one edit since we added a new line
+    assertThat(delta.getEdits()).isNotEmpty();
+    // Verify that the edit adds new token data (for "Перем Б;")
+    var edit = delta.getEdits().get(0);
+    assertThat(edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0))
+      .isGreaterThan(0);
+  }
+
+  @Test
+  void clearCache_removesCachedTokenData() {
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Get initial tokens (this caches the result)
+    SemanticTokens initialTokens = provider.getSemanticTokensFull(
+      documentContext,
+      new SemanticTokensParams(textDocumentIdentifier)
+    );
+
+    // Clear cache
+    provider.clearCache(documentContext.getUri());
+
+    // Request delta with the old result ID
+    var deltaParams = new SemanticTokensDeltaParams(textDocumentIdentifier, initialTokens.getResultId());
+    var result = provider.getSemanticTokensFullDelta(documentContext, deltaParams);
+
+    // Should return full tokens because cache was cleared
+    assertThat(result.isLeft()).isTrue();
   }
 
   // endregion

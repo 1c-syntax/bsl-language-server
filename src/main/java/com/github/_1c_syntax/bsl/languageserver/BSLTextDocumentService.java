@@ -97,6 +97,8 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensDelta;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -341,7 +343,20 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     );
   }
 
+  @Override
+  public CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>> semanticTokensFullDelta(
+    SemanticTokensDeltaParams params
+  ) {
+    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
 
+    return withFreshDocumentContext(
+      documentContext,
+      () -> semanticTokensProvider.getSemanticTokensFullDelta(documentContext, params)
+    );
+  }
 
   @Override
   public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
