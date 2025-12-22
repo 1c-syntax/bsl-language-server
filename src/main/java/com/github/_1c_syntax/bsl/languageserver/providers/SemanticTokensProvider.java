@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDelta;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
@@ -54,6 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">Semantic Tokens specification</a>
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
@@ -129,12 +131,23 @@ public class SemanticTokensProvider {
 
     // If previous data is not available or belongs to a different document, return full tokens
     if (previousData == null || !previousData.uri().equals(documentContext.getUri())) {
+      LOGGER.debug("Returning full tokens: previousData={}, uri match={}",
+        previousData != null, previousData != null && previousData.uri().equals(documentContext.getUri()));
       cacheTokenData(resultId, documentContext.getUri(), currentData);
       return Either.forLeft(new SemanticTokens(resultId, currentData));
     }
 
     // Compute delta edits
     List<SemanticTokensEdit> edits = computeEdits(previousData.data(), currentData);
+
+    // Log delta statistics for debugging
+    if (!edits.isEmpty()) {
+      var edit = edits.get(0);
+      LOGGER.debug("Delta computed: previousSize={}, currentSize={}, start={}, deleteCount={}, dataSize={}",
+        previousData.data().size(), currentData.size(),
+        edit.getStart(), edit.getDeleteCount(),
+        edit.getData() != null ? edit.getData().size() : 0);
+    }
 
     // Cache the new data
     cacheTokenData(resultId, documentContext.getUri(), currentData);
