@@ -83,6 +83,7 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
@@ -198,6 +199,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       documentContext,
       () -> Either.forRight(definitionProvider.getDefinition(documentContext, params))
     );
+  }
+
+  @Override
+  public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(
+    ImplementationParams params
+  ) {
+    return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
   }
 
   @Override
