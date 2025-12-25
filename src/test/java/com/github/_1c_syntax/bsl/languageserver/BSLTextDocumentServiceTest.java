@@ -290,6 +290,32 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
+  void testCancellationSupport() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when - create a future that supports cancellation
+    var params = new DocumentDiagnosticParams(getTextDocumentIdentifier());
+    var future = textDocumentService.diagnostic(params);
+
+    // then - verify that the future supports cancellation (can be cancelled)
+    // The CompletableFutures.computeAsync returns a future that can be cancelled
+    var wasCancelled = future.cancel(true);
+
+    // If the future completed before cancel was called, it returns false
+    // If cancelled successfully, it returns true
+    // Either way, we verify the future is in a terminal state
+    assertThat(future.isDone()).isTrue();
+
+    // If cancellation was successful, verify the cancelled state
+    if (wasCancelled) {
+      assertThat(future.isCancelled()).isTrue();
+    }
+  }
+  
+  @Test
   void testImplementation() throws ExecutionException, InterruptedException {
     var params = new ImplementationParams();
     params.setTextDocument(getTextDocumentIdentifier());

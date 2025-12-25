@@ -104,6 +104,7 @@ import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -755,9 +756,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       waitFuture = CompletableFuture.completedFuture(null);
     }
 
-    return waitFuture.thenApplyAsync(
-      ignored -> supplier.get(),
-      executorService
+    return waitFuture.thenCompose(ignored ->
+      CompletableFutures.computeAsync(
+        executorService,
+        cancelChecker -> {
+          cancelChecker.checkCanceled();
+          return supplier.get();
+        }
+      )
     );
   }
 }
