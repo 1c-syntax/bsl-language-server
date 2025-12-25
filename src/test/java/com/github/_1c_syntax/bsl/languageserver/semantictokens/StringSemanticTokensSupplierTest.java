@@ -271,6 +271,131 @@ class StringSemanticTokensSupplierTest {
     assertThat(parameterTokens).hasSize(2);
   }
 
+  // ==================== Combined NStr + StrTemplate Tests ====================
+
+  @Test
+  void testNStrInsideStrTemplate() {
+    // given - НСтр внутри СтрШаблон: СтрШаблон(НСтр("ru = 'Текст %1'"), Параметр)
+    String bsl = """
+      Процедура Тест()
+        Сообщить(СтрШаблон(НСтр("ru = 'Сценарий %1'"), Параметр));
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(bsl);
+
+    // when
+    var tokens = supplier.getSemanticTokens(documentContext);
+
+    // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
+    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
+    var propertyTokens = tokens.stream()
+      .filter(t -> t.type() == propertyTypeIdx)
+      .toList();
+    // ru
+    assertThat(propertyTokens).hasSize(1);
+
+    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
+    var parameterTokens = tokens.stream()
+      .filter(t -> t.type() == parameterTypeIdx)
+      .toList();
+    // %1
+    assertThat(parameterTokens).hasSize(1);
+  }
+
+  @Test
+  void testNStrInsideStrTemplateMultiple() {
+    // given - НСтр с несколькими языками и несколькими плейсхолдерами
+    String bsl = """
+      Процедура Тест()
+        Результат = СтрШаблон(НСтр("ru = 'Привет %1'; en = 'Hello %2'"), Имя, Name);
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(bsl);
+
+    // when
+    var tokens = supplier.getSemanticTokens(documentContext);
+
+    // then
+    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
+    var propertyTokens = tokens.stream()
+      .filter(t -> t.type() == propertyTypeIdx)
+      .toList();
+    // ru, en
+    assertThat(propertyTokens).hasSize(2);
+
+    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
+    var parameterTokens = tokens.stream()
+      .filter(t -> t.type() == parameterTypeIdx)
+      .toList();
+    // %1, %2
+    assertThat(parameterTokens).hasSize(2);
+  }
+
+  @Test
+  void testNStrVariableInStrTemplate() {
+    // given - НСтр присвоен переменной, которая затем используется в СтрШаблон
+    String bsl = """
+      Процедура Тест()
+        Шаблон = НСтр("ru = 'Сценарий %1'");
+        ТекстПредупреждения = СтрШаблон(Шаблон, Параметр);
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(bsl);
+
+    // when
+    var tokens = supplier.getSemanticTokens(documentContext);
+
+    // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
+    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
+    var propertyTokens = tokens.stream()
+      .filter(t -> t.type() == propertyTypeIdx)
+      .toList();
+    // ru
+    assertThat(propertyTokens).hasSize(1);
+
+    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
+    var parameterTokens = tokens.stream()
+      .filter(t -> t.type() == parameterTypeIdx)
+      .toList();
+    // %1
+    assertThat(parameterTokens).hasSize(1);
+  }
+
+  @Test
+  void testNStrVariableInStrTemplateMultiple() {
+    // given - НСтр с несколькими языками и плейсхолдерами в переменной
+    String bsl = """
+      Процедура Тест()
+        Шаблон = НСтр("ru = 'Привет %1 и %2'; en = 'Hello %1 and %2'");
+        Результат = СтрШаблон(Шаблон, Имя1, Имя2);
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(bsl);
+
+    // when
+    var tokens = supplier.getSemanticTokens(documentContext);
+
+    // then
+    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
+    var propertyTokens = tokens.stream()
+      .filter(t -> t.type() == propertyTypeIdx)
+      .toList();
+    // ru, en
+    assertThat(propertyTokens).hasSize(2);
+
+    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
+    var parameterTokens = tokens.stream()
+      .filter(t -> t.type() == parameterTypeIdx)
+      .toList();
+    // %1, %2 (по одному разу в каждой подстроке, но токен один - значит 4 плейсхолдера)
+    // Нет, здесь один строковый токен, внутри которого 4 вхождения %N
+    assertThat(parameterTokens).hasSize(4);
+  }
+
   // ==================== Query String Tests ====================
 
   @Test

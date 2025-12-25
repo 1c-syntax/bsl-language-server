@@ -88,7 +88,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
         }
 
         for (Token token : stringTokens) {
-          contexts.put(token, context);
+          contexts.merge(token, context, StringContext::combine);
         }
       }
     }
@@ -118,6 +118,13 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
    * Результат = СтрШаблон(НовыйШаблон, А, Б);
    * </pre>
    * найдёт строку "%1 %2" и вернёт её токены.
+   * <p>
+   * Также поддерживает случай:
+   * <pre>
+   * Шаблон = НСтр("ru = 'Сценарий %1'");
+   * Результат = СтрШаблон(Шаблон, Параметр);
+   * </pre>
+   * найдёт строку "ru = 'Сценарий %1'" и вернёт её токены.
    */
   private List<Token> findStringTokensFromVariable(
     BSLParser.CallParamContext callParam,
@@ -130,13 +137,13 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     }
 
     // Ищем присвоение этой переменной выше по коду
-    var assignmentString = findAssignedString(varName, callContext);
-    if (assignmentString == null) {
+    var assignmentExpression = findAssignedExpression(varName, callContext);
+    if (assignmentExpression == null) {
       return List.of();
     }
 
     // Извлекаем строковые токены из присвоения
-    return getStringTokensFromContext(assignmentString);
+    return extractStringTokensFromExpression(assignmentExpression);
   }
 
   @Nullable
@@ -152,7 +159,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       .orElse(null);
   }
 
-  private BSLParser.@Nullable StringContext findAssignedString(String varName, ParserRuleContext callContext) {
+  private BSLParser.@Nullable ExpressionContext findAssignedExpression(String varName, ParserRuleContext callContext) {
     // Находим statement, содержащий вызов СтрШаблон
     var currentStatement = Trees.getRootParent(callContext, BSLParser.RULE_statement);
     if (currentStatement == null) {
@@ -164,8 +171,8 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     while (prevStatement != null) {
       var assignment = prevStatement.assignment();
       if (assignment != null && isAssignmentForVar(varName, assignment)) {
-        // Нашли присвоение - извлекаем строку
-        return extractStringFromExpression(assignment.expression());
+        // Нашли присвоение - возвращаем выражение
+        return assignment.expression();
       }
       prevStatement = getPreviousStatement(prevStatement);
     }
@@ -204,14 +211,41 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     return identifier != null && identifier.getText().equalsIgnoreCase(varName);
   }
 
-  private BSLParser.@Nullable StringContext extractStringFromExpression(BSLParser.ExpressionContext expression) {
-    return Optional.of(expression)
+  /**
+   * Извлекает строковые токены из выражения.
+   * Поддерживает как простые строковые литералы, так и вызовы НСтр.
+   */
+  private List<Token> extractStringTokensFromExpression(BSLParser.ExpressionContext expression) {
+    // Пробуем получить простую строку
+    var stringContext = Optional.of(expression)
       .map(BSLParser.ExpressionContext::member)
       .filter(members -> members.size() == 1)
       .map(members -> members.get(0))
       .map(BSLParser.MemberContext::constValue)
       .map(BSLParser.ConstValueContext::string)
       .orElse(null);
+
+    if (stringContext != null) {
+      return getStringTokensFromContext(stringContext);
+    }
+
+    // Пробуем получить вызов НСтр
+    var globalMethodCall = Optional.of(expression)
+      .map(BSLParser.ExpressionContext::member)
+      .filter(members -> members.size() == 1)
+      .map(members -> members.get(0))
+      .map(BSLParser.MemberContext::complexIdentifier)
+      .map(BSLParser.ComplexIdentifierContext::globalMethodCall)
+      .orElse(null);
+
+    if (globalMethodCall != null && MultilingualStringAnalyser.isNStrCall(globalMethodCall)) {
+      var callParams = globalMethodCall.doCall().callParamList().callParam();
+      if (!callParams.isEmpty()) {
+        return getStringTokensFromParam(callParams.get(0));
+      }
+    }
+
+    return List.of();
   }
 
   private List<Token> getStringTokensFromContext(BSLParser.StringContext stringContext) {

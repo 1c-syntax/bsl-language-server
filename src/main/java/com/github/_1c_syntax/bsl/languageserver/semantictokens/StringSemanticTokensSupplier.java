@@ -230,7 +230,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
     List<SubToken> subTokens = new ArrayList<>();
 
-    if (context == StringContext.NSTR) {
+    if (context == StringContext.NSTR || context == StringContext.NSTR_AND_STR_TEMPLATE) {
       var positions = MultilingualStringAnalyser.findLanguageKeyPositions(tokenText);
       for (var position : positions) {
         subTokens.add(new SubToken(
@@ -239,7 +239,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
           SemanticTokenTypes.Property
         ));
       }
-    } else if (context == StringContext.STR_TEMPLATE) {
+    }
+
+    if (context == StringContext.STR_TEMPLATE || context == StringContext.NSTR_AND_STR_TEMPLATE) {
       var positions = MultilingualStringAnalyser.findPlaceholderPositions(tokenText);
       for (var position : positions) {
         subTokens.add(new SubToken(
