@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766658092148,
+  "lastUpdate": 1766678586694,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32860,6 +32860,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.347559336569422",
             "extra": "mean: 88.36857883135478 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "00c6440d10f9fe36acbd036896664f924ad434e0",
+          "message": "Merge pull request #3700 from 1c-syntax/copilot/support-cancellation-notification\n\nAdd LSP cancellation support in BSLTextDocumentService",
+          "timestamp": "2025-12-25T16:53:15+01:00",
+          "tree_id": "c99d30c643a31f850d59f00d5db57e6873f923e6",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/00c6440d10f9fe36acbd036896664f924ad434e0"
+        },
+        "date": 1766678580932,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.47029376029968,
+            "unit": "sec",
+            "range": "stddev: 1.8203678080626298",
+            "extra": "mean: 88.47029376029968 sec\nrounds: 3"
           }
         ]
       }
