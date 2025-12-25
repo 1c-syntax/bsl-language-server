@@ -748,13 +748,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       waitFuture = CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFutures.computeAsync(
-      executorService,
-      cancelChecker -> {
-        waitFuture.join();
-        cancelChecker.checkCanceled();
-        return supplier.get();
-      }
+    return waitFuture.thenCompose(ignored ->
+      CompletableFutures.computeAsync(
+        executorService,
+        cancelChecker -> {
+          cancelChecker.checkCanceled();
+          return supplier.get();
+        }
+      )
     );
   }
 }
