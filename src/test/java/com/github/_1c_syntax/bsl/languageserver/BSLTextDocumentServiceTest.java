@@ -49,6 +49,7 @@ import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -286,6 +287,24 @@ class BSLTextDocumentServiceTest {
     var result = textDocumentService.prepareRename(params);
 
     assertThat(result).isNotNull();
+  }
+
+  @Test
+  void testCancellationSupport() throws IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when
+    var params = new DocumentDiagnosticParams(getTextDocumentIdentifier());
+    var future = textDocumentService.diagnostic(params);
+
+    // Cancel the future before it completes
+    future.cancel(true);
+
+    // then - future should be cancelled
+    assertThat(future.isCancelled()).isTrue();
   }
 
   private File getTestFile() {
