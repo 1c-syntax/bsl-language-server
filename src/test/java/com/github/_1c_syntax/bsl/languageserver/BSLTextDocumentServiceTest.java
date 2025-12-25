@@ -31,6 +31,7 @@ import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentDiagnosticParams;
+import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.RenameParams;
@@ -312,6 +313,19 @@ class BSLTextDocumentServiceTest {
     if (wasCancelled) {
       assertThat(future.isCancelled()).isTrue();
     }
+  }
+  
+  @Test
+  void testImplementation() throws ExecutionException, InterruptedException {
+    var params = new ImplementationParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setPosition(new Position(0, 0));
+
+    var result = textDocumentService.implementation(params).get();
+
+    assertThat(result).isNotNull();
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight()).isEmpty();
   }
 
   private File getTestFile() {
