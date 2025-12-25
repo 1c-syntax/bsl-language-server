@@ -65,6 +65,8 @@ class LexicalSemanticTokensSupplierTest {
 
   @Test
   void testStrings() {
+    // Note: STRING tokens are now handled by StringSemanticTokensSupplier
+    // This test verifies that LexicalSemanticTokensSupplier does NOT process regular strings
     // given
     String bsl = """
       Процедура Тест()
@@ -82,7 +84,8 @@ class LexicalSemanticTokensSupplierTest {
     var stringTokens = tokens.stream()
       .filter(t -> t.type() == stringTypeIdx)
       .toList();
-    assertThat(stringTokens).hasSize(1);
+    // String tokens are handled by StringSemanticTokensSupplier, so should be 0
+    assertThat(stringTokens).isEmpty();
   }
 
   @Test

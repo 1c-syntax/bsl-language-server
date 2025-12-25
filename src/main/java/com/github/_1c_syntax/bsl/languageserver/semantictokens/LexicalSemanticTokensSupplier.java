@@ -30,15 +30,14 @@ import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * Сапплаер семантических токенов для лексических элементов: строк, чисел, операторов и ключевых слов.
+ * Сапплаер семантических токенов для лексических элементов: чисел, операторов и ключевых слов.
  * <p>
- * Исключает строки, которые содержат запросы SDBL (они обрабатываются в {@link QuerySemanticTokensSupplier}).
+ * Строки обрабатываются в {@link StringSemanticTokensSupplier}.
  */
 @Component
 @RequiredArgsConstructor
@@ -53,8 +52,7 @@ public class LexicalSemanticTokensSupplier implements SemanticTokensSupplier {
     BSLLexer.STRING,
     BSLLexer.STRINGPART,
     BSLLexer.STRINGSTART,
-    BSLLexer.STRINGTAIL,
-    BSLLexer.PREPROC_STRING
+    BSLLexer.STRINGTAIL
   );
 
   private static final Set<Integer> OPERATOR_TYPES = Set.of(
@@ -107,14 +105,13 @@ public class LexicalSemanticTokensSupplier implements SemanticTokensSupplier {
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     List<SemanticTokenEntry> entries = new ArrayList<>();
     var tokensFromDefaultChannel = documentContext.getTokensFromDefaultChannel();
-    var stringsWithQueries = collectStringsWithQueries(documentContext);
 
     for (Token token : tokensFromDefaultChannel) {
       var tokenType = token.getType();
       var tokenText = Objects.toString(token.getText(), "");
       if (!tokenText.isEmpty()) {
-        // Skip string tokens that contain SDBL tokens - they'll be handled by QuerySemanticTokensSupplier
-        if (STRING_TYPES.contains(tokenType) && stringsWithQueries.contains(token)) {
+        // Skip STRING tokens - they are handled by StringSemanticTokensSupplier
+        if (STRING_TYPES.contains(tokenType)) {
           continue;
         }
         selectAndAddSemanticToken(entries, token, tokenType);
@@ -124,46 +121,15 @@ public class LexicalSemanticTokensSupplier implements SemanticTokensSupplier {
     return entries;
   }
 
-  private Set<Token> collectStringsWithQueries(DocumentContext documentContext) {
-    var queries = documentContext.getQueries();
-    if (queries.isEmpty()) {
-      return Set.of();
-    }
-
-    var stringsToSkip = new HashSet<Token>();
-    for (var query : queries) {
-      for (Token queryToken : query.getTokens()) {
-        if (queryToken.getChannel() != Token.DEFAULT_CHANNEL) {
-          continue;
-        }
-        int queryLine = queryToken.getLine();
-        for (var bslToken : documentContext.getTokensFromDefaultChannel()) {
-          if (!STRING_TYPES.contains(bslToken.getType())) {
-            continue;
-          }
-          if (bslToken.getLine() == queryLine) {
-            var bslRange = Ranges.create(bslToken);
-            int queryStart = queryToken.getCharPositionInLine();
-            int queryEnd = queryStart + queryToken.getText().length();
-            if (queryStart >= bslRange.getStart().getCharacter() && queryEnd <= bslRange.getEnd().getCharacter()) {
-              stringsToSkip.add(bslToken);
-            }
-          }
-        }
-      }
-    }
-    return stringsToSkip;
-  }
-
   private void selectAndAddSemanticToken(List<SemanticTokenEntry> entries, Token token, int tokenType) {
     // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
     if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
       return;
     }
 
-    if (STRING_TYPES.contains(tokenType)) {
+    if (tokenType == BSLLexer.DATETIME) {
       helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
-    } else if (tokenType == BSLLexer.DATETIME) {
+    } else if (tokenType == BSLLexer.PREPROC_STRING) {
       helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
     } else if (NUMBER_TYPES.contains(tokenType)) {
       helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
