@@ -152,8 +152,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       .orElse(null);
   }
 
-  @Nullable
-  private BSLParser.StringContext findAssignedString(String varName, ParserRuleContext callContext) {
+  private BSLParser.@Nullable StringContext findAssignedString(String varName, ParserRuleContext callContext) {
     // Находим statement, содержащий вызов СтрШаблон
     var currentStatement = Trees.getRootParent(callContext, BSLParser.RULE_statement);
     if (currentStatement == null) {
@@ -174,8 +173,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     return null;
   }
 
-  @Nullable
-  private BSLParser.StatementContext getPreviousStatement(BSLParser.StatementContext statement) {
+  private BSLParser.@Nullable StatementContext getPreviousStatement(BSLParser.StatementContext statement) {
     var parent = statement.getParent();
     if (parent == null) {
       return null;
@@ -206,8 +204,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     return identifier != null && identifier.getText().equalsIgnoreCase(varName);
   }
 
-  @Nullable
-  private BSLParser.StringContext extractStringFromExpression(BSLParser.ExpressionContext expression) {
+  private BSLParser.@Nullable StringContext extractStringFromExpression(BSLParser.ExpressionContext expression) {
     return Optional.of(expression)
       .map(BSLParser.ExpressionContext::member)
       .filter(members -> members.size() == 1)
