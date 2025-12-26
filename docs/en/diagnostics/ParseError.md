@@ -9,7 +9,7 @@ Separate grammatical constructions, expressions, as well as declarations and pla
 
 ## Examples
 
-Incorrect:
+Wrong:
 
 ```bsl
 Procedure Example1()

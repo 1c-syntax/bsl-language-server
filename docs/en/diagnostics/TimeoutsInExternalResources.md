@@ -40,7 +40,7 @@ ConnectiomTimeout = 180;
 HTTPConnection = New HTTPConnection("zabbix.localhost", 80,,,, ConnectiomTimeout);
 ```
 
-## Sources
+## Reference
 
-* [Timeouts when working with external resources (RU)](https://its.1c.ru/db/v8std#content:748:hdoc)
-* [InternetMail Profilehas a default timeout (RU)](https://its.1c.ru/db/metod8dev/content/2358/hdoc)
+* [Timeouts when working with external resources](https://its.1c.ru/db/v8std#content:748:hdoc)
+* [InternetMail Profilehas a default timeout](https://its.1c.ru/db/metod8dev/content/2358/hdoc)

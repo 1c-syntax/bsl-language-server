@@ -3,8 +3,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-After you finished working with temporary file or folder, you need to delete it yourself. 
-You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
+After you finished working with temporary file or folder, you need to delete it yourself. You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
 
 ## Examples
 
@@ -16,7 +15,7 @@ Data.Write(TempFileName);
 // Not delete temporary file
 ```
 
-Correct:
+Сorrect:
 
 ```bsl
 TempFileName = GetTempFileName("xml");
@@ -33,7 +32,7 @@ Catch
 EndTry;
 ```
 
-## Nuances
+## Peculiarities
 
 Diagnostics determines the correctness of working with temporary files by the presence of methods for deleting or moving.
 
@@ -49,4 +48,4 @@ and so on.
 
 ## Sources
 
-* [File system access from application code (RU)](https://its.1c.ru/db/v8std#content:542:hdoc)
+* [File system access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)

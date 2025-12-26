@@ -21,8 +21,7 @@ Option 2 - no values are passed at all, except for a formatted string due to the
 
   - `StrTemplate(NStr("en='Name (version %1)'", Version()));`
 
-Here mistake not closed parenthesis for `NStr`. As a result, the expression after evaluating `NStr` becomes empty. 
-It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.
+Here mistake not closed parenthesis for `NStr</ 0>. As a result, the expression after evaluating <code>NStr` becomes empty. It is rather difficult to detect such an error by reading the code due to the presence of parentheses. And you can only catch it at runtime by getting an exception.
 
 Correct option
   - `StrTemplate(NStr("en='Name (version %1)'"), Version());`
@@ -38,4 +37,4 @@ Option 3 - correct example of passing digits immediately after a template value
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Standard: Localization Requirements (RU)](https://its.1c.ru/db/v8std/content/763/hdoc)
+- [Standard: Localization Requirements](https://its.1c.ru/db/v8std/content/763/hdoc)

@@ -4,12 +4,11 @@ This document contains general guidelines for writing code in the BSL Language S
 
 Try to stick to them and the code review process will be simple.
 
-## Null values
+## Обработка null
 
 If a method can legally return `null`, it is recommended that you return `Optional<T>` instead of explicitly returning `null`. Exceptions (eg. high frequency or performance functions) are negotiated separately.
 
-The description of the `package-info.java` package must indicate that the NonNull API is used by default in the package.
-To do this, the annotation `@NullMarked` is added above the package name
+The description of the `package-info.java` package must indicate that the NonNull API is used by default in the package. To do this, the annotation `@NullMarked` is added above the package name
 
 Example:
 ```java

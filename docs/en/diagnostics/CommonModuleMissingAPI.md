@@ -11,7 +11,7 @@ A common module must have at least one export method and region "Public" or "Int
 
 Incorrect
 
-```bsl
+```Bsl
 // Start module
 Procedure Test(A)
     A = A + 1;
@@ -21,7 +21,7 @@ EndProcedure
 
 Correct
 
-```bsl
+```Bsl
 // Start module
 #Region Internal
 Procedure Test(A) Export
@@ -34,4 +34,4 @@ EndProcedure
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
+Source: [Standard: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)

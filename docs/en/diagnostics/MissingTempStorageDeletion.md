@@ -1,13 +1,4 @@
-# Missing temporary storage data deletion after using (MissingTempStorageDeletion)
-
-<!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
 # Отсутствует удаление данных из временного хранилища после использования (MissingTempStorageDeletion)
-
-|     Type     |        Scope        |  Severity  | Activated by default | Minutes<br> to fix |                           Tags                           |
-|:------------:|:-------------------:|:----------:|:--------------------:|:------------------------:|:--------------------------------------------------------:|
-| `Code smell` | `BSL`<br>`OS` | `Critical` |         `No`         |           `3`            | `standard`<br>`performance`<br>`badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Diagnostics description
@@ -29,7 +20,7 @@ Remember that when a value is retrieved from the temporary storage on the server
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
+  
 1 - Example of correct code:
 ```bsl
 &НаКлиенте
@@ -51,11 +42,11 @@ Remember that when a value is retrieved from the temporary storage on the server
 
 2 - Consider this recommendation when working with background jobs
 
-Incorrect:
+Wrong:
 - Each time a background job is executed, its result is placed in temporary storage for the lifetime of the form:
 ```bsl
-Parameters = LongOperations.FunctionParameters(UUID);
-LongOperations.ExecFunction(Pframeters, BackgroundJobParameter);
+ПараметрыВыполнения = ДлительныеОперации.ПараметрыВыполненияФункции(УникальныйИдентификатор);
+ДлительныеОперации.ВыполнитьФункцию(ПараметрыВыполнения, ПараметрФоновогоЗадания);
 ```
 
 - If a long operation is performed by the user multiple times, then temporary storage accumulates, which causes an increase in memory consumption.
@@ -69,10 +60,10 @@ Correct:
 
 - If the result of a background job needs to be saved over several server calls, then it is necessary to transfer a fixed address of a previously initialized temporary storage:
 ```bsl
-&AtServer
+&НаСервере
 Процедура ПриСозданииНаСервере(Отказ)
     АдресРезультатаФоновогоЗадания = ПоместитьВоВременноеХранилище(Неопределено, УникальныйИдентификатор); // Резервируем адрес временного хранилища
-EndProcedure
+КонецПроцедуры
 
 &НаСервере
 Функция НачатьПоискНастроекУчетнойЗаписи()
@@ -82,7 +73,7 @@ EndProcedure
     Возврат ДлительныеОперации.ВыполнитьФункцию(ПараметрыВыполнения,
         "Справочники.УчетныеЗаписиЭлектроннойПочты.ОпределитьНастройкиУчетнойЗаписи",
         АдресЭлектроннойПочты, Пароль);
-EndFunction
+КонецФункции
 ```
 
 3 - Another example of preliminary initialization of temporary storage for reuse

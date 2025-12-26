@@ -10,14 +10,14 @@ The function must have no output parameters. All output must be in the return va
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
-// Incorrect:
+// Wrong:
 ServiceURL = "";
 UserName = "";
 UserPassword = "";
 
 FillConnectionParameters(ServiceURL, UserName, UserPassword);
 
-// Correct:
+// Correctly:
 ConnectionParameters = NewConnectionParameters();
 // Returned value - Structure:
 //     Service URL  - String

@@ -7,19 +7,19 @@ It's forbidden to store in code:
 
 * Paths to files and folders (Windows, Unix)
 
-There are several ways to correctly store this information:
+There are several ways to properly store such information:
 
 * Store in Constants.
 * Store in Information registers.
 * Store in separate module, where this diagnostic is disabled (not recommended).
 * Store in Catalog, Exchange plan node and etc.
 
-### Nuances
+### Implementation features
 
 When search for Windows / Unix  paths, also check for URL in a string. URL search keywords:
-* ``http``
-* ``https``
-* ``ftp``
+* `http`
+* `https`
+* `ftp`
 
 ## Examples
 

@@ -12,14 +12,11 @@ Using the `ProceedWithCall` function outside of extension methods with the `&Aro
 ```bsl
 &AtClient
 Procedure Test()
-
-    // copy-past from extension
-    ProceedWithCall(); // Срабатывание здесь
-
+    ProceedWithCall(); // there is error    
 EndProcedure
 ```
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Extensions. Functionality -> Modules (RU)](https://its.1c.ru/db/pubextensions#content:54:1)
+Source: [Extensions. Functionality -> Modules](https://its.1c.ru/db/pubextensions#content:54:1)

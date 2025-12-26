@@ -1,44 +1,55 @@
 # Rewrite method parameter (RewriteMethodParameter)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-It is wrong to write methods in which their arguments are overwritten immediately on entry.
 
-It is necessary to correct this deficiency by removing the parameters, converting them to local variables.
+## Description
+
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+Иногда разработчик пишут функции таким образом, когда аргументы функции перезаписываются сразу на входе в функцию/процедуру.
+
+Такое поведение вводит в заблуждение других разработчиков, которые вызывают подобные функции/процедуры.
+Эти функции нужно исправить. It is necessary to correct this deficiency by removing the parameters, converting them to local variables.
 
 ## Examples
+
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
 Suspicious code
+
 ```bsl
-Procedure Configor(Val ConnectionString, Val User = "", Val Pass = "") Export
-  ConnectionString = "/F""" + DataBaseDir + """"; // Error
+Функция Конфигуратор(Знач СтрокаПодключения, Знач Пользователь = "", Знач Пароль = "") Экспорт
+  СтрокаПодключения = "/F""" + КаталогБазы + """"; // Здесь
 ...
-EndProcedure
+КонецФункции
 ```
 
-Сorrected:
+Исправленный код
+
 ```bsl
-Procedure Configor(Val DataBaseDir, Val User = "", Val Pass = "") Export
-ConnectionString = "/F""" + DataBaseDir + """"; // No error
+Функция Конфигуратор(Знач КаталогБазы, Знач Пользователь = "", Знач Пароль = "") Экспорт
+  СтрокаПодключения = "/F""" + КаталогБазы + """"; // Здесь
 ...
-EndProcedure
+КонецФункции
 ```
+
 or
-```bsl
-Procedure Configor(Val DataBaseDir, Val User = "", Val Pass = "") Export
- If Not EmpyString(DataBaseDir) Then
-NewConnectionString = "/F""" + DataBaseDir + """";
-Else
-NewConnectionString = ConnectionString; // Hmm, where is this from?
-EndIf;
 
+```bsl
+Функция Конфигуратор(Знач КаталогБазы, Знач Пользователь = "", Знач Пароль = "") Экспорт
+  Если Не ПустаяСтрока(КаталогБазы) Тогда
+   НоваяСтрокаПодключения = "/F""" + КаталогБазы + """";
+  Иначе
+   НоваяСтрокаПодключения = СтрокаПодключения;
+  КонецЕсли;
 ...
-EndProcedure
+КонецФункции
 ```
 
 ## Sources
+
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
 <!-- Примеры источников
 
 * [PVS-Studio V763. Parameter is always rewritten in function body before being used](https://pvs-studio.com/ru/docs/warnings/v6023)

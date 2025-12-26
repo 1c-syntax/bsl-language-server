@@ -10,7 +10,7 @@ This is necessary so that no business logic of the object is executed when writi
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Incorrect:
+Bad:
 ```bsl
 Procedure BeforeWrite(Cancel) 
 
@@ -24,7 +24,7 @@ Procedure BeforeWrite(Cancel)
 
 EndProcedure
 ```
-Correct:
+Good:
 ```bsl
 Procedure BeforeWrite(Cancel) 
 

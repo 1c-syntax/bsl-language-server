@@ -7,4 +7,4 @@ If the line length is grater than 120 characters you should you line break. It i
 
 ## Sources
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)

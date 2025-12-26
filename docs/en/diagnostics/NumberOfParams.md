@@ -12,9 +12,9 @@ If need to pass many parameters to a function, it is recommended to group same-t
 Incorrect:
 
 ```bsl
-// Create an item in catalog "Goods"
-Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
-// ... 
+// Create item in catalog "Goods"
+Procedure CreateNewGoods(Description, Goods, Units, Weight, Check = True)
+
 EndProcedure
 ```
 
@@ -24,9 +24,10 @@ Group parameters, having goods item properties into Structure Values.
 ```bsl
 // Create item in catalog "Goods"
 Procedure CreateNewGoods(Values, Check = True)
+
 EndProcedure
 ```
 
 ## Sources
 
-* [Standard: Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
+* [Standard: Procedure and function parameters (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)

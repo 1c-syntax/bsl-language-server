@@ -27,5 +27,5 @@ EndProcedure
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* [Restricting the use of the "FULL OUTER JOINT" construct in queries (RU)](https://its.1c.ru/db/v8std#content:435:hdoc)
-* [Administrator's Guide: Peculiarities of Using PostgreSQL (RU)](https://its.1c.ru/db/metod8dev#content:1556:hdoc)
+* [Ограничение на использование конструкции "ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ" в запросах (RU)](https://its.1c.ru/db/v8std#content:435:hdoc)
+* [Руководство администратора, особенности использования PostgreSQL (RU)](https://its.1c.ru/db/metod8dev#content:1556:hdoc)

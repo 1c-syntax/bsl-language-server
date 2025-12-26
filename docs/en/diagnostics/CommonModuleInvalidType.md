@@ -7,10 +7,10 @@ When developing common modules, you should choose one of four code execution con
 
 | Common module type              | Naming example                 | Server call | Server | External connection | Client (Ordinary application) | Client (Managed application) |
 | ------------------------------- | ------------------------------ | ----------- | ------ | ------------------- | ----------------------------- | ---------------------------- |
-| Server-side                     | Common (or CommonServer)       |             | +      | +                   | +                             |                              |
-| Server-side to call from client | CommonServerCall               | +           | +      |                     |                               |                              |
-| Client-side                     | CommonClient (or CommonGlobal) |             |        |                     | +                             | +                            |
-| Client-server                   | CommonClientServer             |             | +      | +                   | +                             | +                            |
+| Server-side                     | Common (or CommonServer)       |             | +      | +                   | +                             |                              |
+| Server-side to call from client | CommonServerCall               | +           | +      |                     |                               |                              |
+| Client-side                     | CommonClient (or CommonGlobal) |             |        |                     | +                             | +                            |
+| Client-server                   | CommonClientServer             |             | +      | +                   | +                             | +                            |
 
 
 ## Examples

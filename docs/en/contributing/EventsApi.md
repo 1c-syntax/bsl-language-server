@@ -49,8 +49,7 @@ The `EventPublisherAspect` aspect of the `com.github._1c_syntax.bsl.languageserv
 
 > Brief information about aspect-oriented programming you can find in page https://www.baeldung.com/aspectj.
 
-To intercept events in an aspect, advice can be declared to intercept method calls and/or accesses to object properties. 
-An event object must be created in the advice body and published via [`ApplicationEventPublisher`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationEventPublisher.html).
+To intercept events in an aspect, advice can be declared to intercept method calls and/or accesses to object properties. An event object must be created in the advice body and published via [`ApplicationEventPublisher`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationEventPublisher.html).
 
 > To form a pointcut expression, you need to use templates in the `Pointcuts` class of the `com.github._1c_syntax.bsl.languageserver.aop` package
 

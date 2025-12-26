@@ -2,7 +2,6 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 In source text, multi-line constants can be initialized in two ways:
@@ -18,8 +17,8 @@ The second method complicates the perception; when using it, it is easy to make 
 Difficulty understanding:
 
 ```bsl
-String = "BBB" "CC"
-"F";
+Строка = "ВВВ" "СС"
+"Ф";
 ```
 
 Classic variant:

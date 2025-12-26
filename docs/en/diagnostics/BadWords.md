@@ -1,13 +1,11 @@
 # Prohibited words (BadWords)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-Software modules should not contain prohibited words.
-The list of forbidden words is set by a regular expression.
-The search is case-insensitive.
+## Diagnostics description
+There should be no forbidden words in the text of the modules. The list of forbidden words is given by a regular expression. The search is made case-insensitive.
 
-**For example:**
+**Sample setup:**
 
-"singularity|avada kedavra|Donald"
+"редиска|лопух|экзистенциальность"
 
-"transcenden(tal|ce)"
+"ло(х|шара|шпед)"

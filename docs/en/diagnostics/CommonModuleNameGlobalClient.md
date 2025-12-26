@@ -9,11 +9,9 @@ For global modules, the "Global" (rus. "Глобальный") postfix is added 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Incorrect:
-InfobaseUpdateGlobalClient
+Incorrect: InfobaseUpdateGlobalClient
 
-Correct: 
-InfobaseUpdateGlobal
+Correct: InfobaseUpdateGlobal
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

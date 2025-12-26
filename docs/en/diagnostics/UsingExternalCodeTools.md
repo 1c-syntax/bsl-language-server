@@ -12,7 +12,7 @@ Examples of invalid execution of "external" code in unsafe mode:
 * external reports and processings (print forms, etc.)
 * configuration extensions
 
-### Restrictions
+### Diagnostic ignorance in code
 
 At the moment, the server context is not analyzed, so diagnostic works both at client and server contexts
 
@@ -23,4 +23,4 @@ At the moment, the server context is not analyzed, so diagnostic works both at c
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 
-* [Restriction on the execution of "external" code (RU)](https://its.1c.ru/db/v8std#content:669:hdoc)
+* [Restriction on the execution of "external" code](https://its.1c.ru/db/v8std#content:669:hdoc)

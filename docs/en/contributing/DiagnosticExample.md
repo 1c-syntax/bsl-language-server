@@ -178,4 +178,4 @@ To describe the created diagnostics, create two files `SemicolonPresence.md`: in
 
 The help index is updated automatically when the documentation site is built, so you don't have to do anything by hand.
 
-Before finishing development, you need to run `gradlew precommit` from the command line or `precommit` from the Gradle taskbar in the IDE.
+Before finishing development, you need to run `gradlew precommit` from the command line or `precommit` from the Gradle taskbar in the IDE. 

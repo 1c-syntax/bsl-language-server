@@ -9,13 +9,13 @@ In most algorithms, it is possible to do without using the operator `LIKE`, and 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-### Correct
+### Diagnostic ignorance in code
 
 ```bsl
 Property LIKE "123%"
 ```
 
-### Incorrect:
+### Parameter for config
 
 ```bsl
 Property LIKE Table.Template
@@ -29,5 +29,5 @@ Property LIKE Table.Template
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Standard. Features of use in operator requests LIKE (RU)](https://its.1c.ru/db/v8std#content:726:hdoc)
-- [Developers guide. Pattern-like string validation operator  (RU)](https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000506)
+- [Standard. Features of use in operator requests LIKE](https://its.1c.ru/db/v8std#content:726:hdoc)
+- [Developers guide. Pattern-like string validation operator](https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000506)

@@ -14,4 +14,4 @@ The set of sections for each type of module (form module, object module, common 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 
-* Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
+* Reference: [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)

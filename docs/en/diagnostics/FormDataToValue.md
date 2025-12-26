@@ -17,4 +17,4 @@ EndProcedure
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Using of FormAttributeToValue and FormDataToValue methods (RU)](https://its.1c.ru/db/v8std#content:409:hdoc)
+Source: [Using of FormAttributeToValue and FormDataToValue methods](https://its.1c.ru/db/v8std#content:409:hdoc)

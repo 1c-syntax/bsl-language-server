@@ -15,4 +15,4 @@ Types of style elements:
 
 ## Sources
 System of standards
-* Source: [Standard: Style Elements (RU)](https://its.1c.ru/db/v8std#content:667:hdoc)
+* Source: [Standard: Style Elements](https://its.1c.ru/db/v8std#content:667:hdoc)

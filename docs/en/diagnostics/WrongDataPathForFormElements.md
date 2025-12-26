@@ -1,15 +1,6 @@
 # Form fields do not have a data path (WrongDataPathForFormElements)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-
-# Form fields do not have a data path (WrongDataPathForFormElements)
-
-|  Type   | Scope |  Severity  | Activated<br>by default | Minutes<br> to fix |      Tags       |
-|:-------:|:-----:|:----------:|:-----------------------------:|:------------------------:|:---------------:|
-| `Error` | `BSL` | `Critical` |             `Yes`             |           `5`            | `unpredictable` |
-
-<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Diagnostics description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 When actively reworking a form or associated metadata, there may be elements on the form that do not have an associated data element. Problems can arise after deleting metadata or metadata attributes, or when changing the main form attribute. As a result, such a form field will not be displayed. Errors occur with forms when extended validation is enabled in the 1C Configurator.
@@ -31,7 +22,7 @@ For command bar buttons associated with the "Data" property with a standard dyna
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 - [General requirements - Standards 1C (RU)](https://its.1c.ru/db/v8std#content:467:hdoc)

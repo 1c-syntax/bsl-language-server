@@ -1,4 +1,4 @@
-# Incorrect use of the method "WriteLogEvent" (UsageWriteLogEvent)
+# Incorrect use of the method (UsageWriteLogEvent)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

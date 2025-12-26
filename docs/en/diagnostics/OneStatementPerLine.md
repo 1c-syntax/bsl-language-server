@@ -9,4 +9,4 @@ Module texts are formatted according to the "one statement in one line" principl
 
 ## Sources
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)

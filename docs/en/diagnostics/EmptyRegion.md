@@ -14,4 +14,4 @@ Module should not contain empty regions.
 
 ## Sources
 
-* Source: [Standard: Module structure (RU)](https://its.1c.ru/db/v8std#content:455:hdoc)
+* Source: [Standard: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)

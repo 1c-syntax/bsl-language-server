@@ -23,4 +23,4 @@ EndTry;
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-[Transactions: Rules of Use (RU)](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)
+Standard: [Transactions: rules of use](https://its.1c.ru/db/v8std#content:783:hdoc:_top)

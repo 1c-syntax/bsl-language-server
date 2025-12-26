@@ -8,7 +8,7 @@ A built-in language constructs, keywords must be written canonically.
 ### Keywords
 
 | RU                 | EN            |
-|--------------------|---------------|
+| ------------------ | ------------- |
 | ВызватьИсключение  | Raise         |
 | Выполнить          | Execute       |
 | ДобавитьОбработчик | AddHandler    |
@@ -47,7 +47,7 @@ A built-in language constructs, keywords must be written canonically.
 ### Preprocessor instrutions
 
 | RU                                 | EN                             |
-|------------------------------------|--------------------------------|
+| ---------------------------------- | ------------------------------ |
 | ВебКлиент                          | WebClient                      |
 | ВнешнееСоединение                  | ExternalConnection             |
 | Если                               | If                             |
@@ -74,7 +74,7 @@ A built-in language constructs, keywords must be written canonically.
 ### Compilation directives
 
 | RU                             | EN                        |
-|--------------------------------|---------------------------|
+| ------------------------------ | ------------------------- |
 | НаКлиенте                      | AtClient                  |
 | НаСервере                      | AtServer                  |
 | НаСервереБезКонтекста          | AtServerNoContext         |

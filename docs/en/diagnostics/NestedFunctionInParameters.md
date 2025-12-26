@@ -12,7 +12,7 @@ At the same time, if the code with nested calls is compact (does not require the
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Incorrect:
+Wrong:
 
 ```bsl
 Attachments.Insert(  AttachedFile.Description,  New Picture(GetFromTempStorage(   AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData)));

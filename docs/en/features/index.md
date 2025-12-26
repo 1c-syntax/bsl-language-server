@@ -4,4 +4,4 @@ Additional features BSL Language Server
 
 * [Configuration](ConfigurationFile.md)
 * [Diagnostic ignorance](DiagnosticIgnorance.md)
-* [Monitoring](Monitoring.md)
+* [Мониторинг и отправка ошибок](Monitoring.md)

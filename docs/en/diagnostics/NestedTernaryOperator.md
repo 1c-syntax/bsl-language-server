@@ -16,7 +16,7 @@ Result = ?(X%15 <> 0, ?(X%5 <> 0, ?(X%3 <> 0, x, "Fizz"), "Buzz"), "FizzBuzz");
 ```bsl
 If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
 
-      Status = "Done";
+      Status = "Done";
 
 EndIf;
 ```
@@ -38,7 +38,7 @@ EndIf;
 ```bsl
 If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
 
-      Status = "Done";
+      Status = "Done";
 
 End If;
 ```

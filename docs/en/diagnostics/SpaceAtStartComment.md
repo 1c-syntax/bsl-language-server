@@ -9,4 +9,4 @@ Exception from the rule is _**comments-annotations**_, comments starting with sp
 
 ## Sources
 
-* Source: [Standard: Modules (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)

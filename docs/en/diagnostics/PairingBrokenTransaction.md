@@ -51,6 +51,6 @@ EndProcedure
 
 ```
 
-## Sources
+## Reference
 
-* [Transactions: Rules of Use (RU)](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)
+* [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)

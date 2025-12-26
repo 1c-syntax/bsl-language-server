@@ -7,7 +7,7 @@ It is an error to specify multiple compilation directives to a module method or 
 
 ## Examples
 
-Incorrect:
+Wrong
 
 ```bsl
 &AtServer

@@ -20,14 +20,13 @@ At startup, a list of available diagnostic tags is displayed. You must enter 1-3
 
 5. To develop
 6. After completion of the development of diagnostics: it is necessary to check the changes (after testing), and also perform a number of service tasks.  
-To simplify, a special command has been created that can be run in the console `gradlew precommit` or from the Gradle taskbar `precommit`. Task includes subtasks
-Sub Commands
+   To simplify, a special command has been created that can be run in the console `gradlew precommit` or from the Gradle taskbar `precommit`. Task includes subtasks
 
 - check - checking and testing the entire project
-- licenseFormat - set license block in java source files
-- updateJsonSchema - update the json schema of the configuration file
+- licenseFormat - installation of a license block in java source files
+- updateJsonSchema - json schema update
 
 7. If everything is done correctly, you need to commit the changes and push to your remote repository.
 8. You need to create `Pull request` from your feature branch to the `develop` branch of the primary repository and fill in the information in the description.
-9. Before closing the `pull request`, the maintainers will check the code and make comments. Bug fixes must be done in the same feature branch, github will automatically add the changes to the generated `pull request`.
-10. Closing a `pull request` confirms the completion of the task.
+9. Before closing `Pull request`, the maintainers will conduct a Code review. Correction of errors must be done in the same feature branch, GitHub will automatically add changes to the created `Pull request`.
+10. Closing `Pull request` confirms the completion of the task.

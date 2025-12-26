@@ -1,6 +1,7 @@
 # Double negatives (DoubleNegatives)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 Using double negatives makes the code harder to understand and can lead to errors when the developer mentally computes False instead of True, or vice versa.
@@ -25,6 +26,7 @@ EndIf;
 ```
 
 ## Sources
+
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Source: [Remove double negative](https://www.refactoring.com/catalog/removeDoubleNegative.html)
+- Source: [Remove double negative](https://www.refactoring.com/catalog/removeDoubleNegative.html)
