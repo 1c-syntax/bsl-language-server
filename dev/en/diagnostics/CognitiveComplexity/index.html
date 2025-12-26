@@ -1530,7 +1530,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 <span class="k">EndIf</span><span class="p">;</span>
 
 <span class="c1">// ternary operator</span>
-<span class="nv">Value</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Condition</span><span class="p">,</span> <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>         <span class="c1">// +1</span>
+<span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition</span><span class="p">,</span> <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>         <span class="c1">// +1</span>
 
 <span class="k">Try</span>
 <span class="c1">// Exception handling</span>
@@ -1552,7 +1552,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 
 <span class="k">EndIf</span><span class="p">;</span>
 
-<span class="nv">Value</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Condition1</span> <span class="k">Or</span> <span class="nv">Condition2</span> <span class="k">Or</span> <span class="k">Not</span> <span class="nv">Condition3</span><span class="p">,</span><span class="c1">// +3</span>
+<span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition1</span> <span class="k">Or</span> <span class="nv">Condition2</span> <span class="k">Or</span> <span class="k">Not</span> <span class="nv">Condition3</span><span class="p">,</span><span class="c1">// +3</span>
                 <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>
 
 <span class="nv">Value</span> <span class="o">=</span> <span class="nv">First</span> <span class="k">Or</span> <span class="nb">Second</span><span class="p">;</span>                             <span class="c1">// +1</span>
@@ -1577,7 +1577,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 <span class="k">EndIf</span><span class="p">;</span>
 
 <span class="c1">// ternary operator</span>
-<span class="nv">Value</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Condition</span><span class="p">,</span> <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>
+<span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition</span><span class="p">,</span> <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>
 
 <span class="k">Try</span>
 <span class="c1">// Exception handling</span>
@@ -1625,8 +1625,8 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nf">Example2</span><span class="p">(</span><span class="nv">Document</span><span class="p">)</span>
     <span class="nf">StartTransaction</span><span class="p">();</span>
-    <span class="nv">NeedPost</span> <span class="o">=</span> <span class="err">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">Posted</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span>                                                         <span class="c1">// +1, ternary operator</span>
-                                        <span class="err">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">DeletionMark</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span> <span class="kc">TRUE</span><span class="p">));</span>                  <span class="c1">// +2, nested ternary operator, nesting 1</span>
+    <span class="nv">NeedPost</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">Posted</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span>                                                         <span class="c1">// +1, ternary operator</span>
+                                        <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">DeletionMark</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span> <span class="kc">TRUE</span><span class="p">));</span>                  <span class="c1">// +2, nested ternary operator, nesting 1</span>
     <span class="k">Try</span>                                                                                          <span class="c1">// +0, try increases nesting level</span>
         <span class="nv">DocumentObject</span> <span class="o">=</span> <span class="nv">Document</span><span class="o">.</span><span class="nf">GetObject</span><span class="p">();</span>
         <span class="k">If</span> <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Posted</span> <span class="k">Then</span>                                                            <span class="c1">// +2, nested condition, nesting 1</span>
