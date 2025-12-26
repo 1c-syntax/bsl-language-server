@@ -354,4 +354,123 @@ class BSLTextDocumentServiceTest {
     params.setTextDocument(getTextDocumentItem());
     textDocumentService.didOpen(params);
   }
+
+  // Tests for getOffset method
+
+  @Test
+  void getOffset_emptyContent() {
+    // Empty content should return 0 for any position
+    assertThat(BSLTextDocumentService.getOffset("", 0, 0)).isZero();
+    assertThat(BSLTextDocumentService.getOffset("", 0, 5)).isZero();
+    assertThat(BSLTextDocumentService.getOffset("", 1, 0)).isZero();
+    assertThat(BSLTextDocumentService.getOffset("", 5, 10)).isZero();
+  }
+
+  @Test
+  void getOffset_singleLineContent() {
+    var content = "Hello, World!";
+    // Line 0 with various character positions
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 0)).isZero();
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 5)).isEqualTo(5);
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 13)).isEqualTo(13);
+    // Character position beyond line length should be capped
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 100)).isEqualTo(13);
+    // Line beyond content should return end of content
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 0)).isEqualTo(13);
+  }
+
+  @Test
+  void getOffset_multiLineWithLF() {
+    var content = "Line1\nLine2\nLine3";
+    // Line 0
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 0)).isZero();
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 3)).isEqualTo(3);
+    // Line 1 starts at position 6 (after "Line1\n")
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 0)).isEqualTo(6);
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 3)).isEqualTo(9);
+    // Line 2 starts at position 12 (after "Line1\nLine2\n")
+    assertThat(BSLTextDocumentService.getOffset(content, 2, 0)).isEqualTo(12);
+    assertThat(BSLTextDocumentService.getOffset(content, 2, 5)).isEqualTo(17);
+    // Line beyond content
+    assertThat(BSLTextDocumentService.getOffset(content, 3, 0)).isEqualTo(17);
+  }
+
+  @Test
+  void getOffset_multiLineWithCRLF() {
+    var content = "Line1\r\nLine2\r\nLine3";
+    // Line 0
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 0)).isZero();
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 3)).isEqualTo(3);
+    // Line 1 starts at position 7 (after "Line1\r\n")
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 0)).isEqualTo(7);
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 3)).isEqualTo(10);
+    // Line 2 starts at position 14 (after "Line1\r\nLine2\r\n")
+    assertThat(BSLTextDocumentService.getOffset(content, 2, 0)).isEqualTo(14);
+    assertThat(BSLTextDocumentService.getOffset(content, 2, 5)).isEqualTo(19);
+  }
+
+  @Test
+  void getOffset_multiLineWithCR() {
+    var content = "Line1\rLine2\rLine3";
+    // Line 0
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 0)).isZero();
+    // Line 1 starts at position 6 (after "Line1\r")
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 0)).isEqualTo(6);
+    // Line 2 starts at position 12 (after "Line1\rLine2\r")
+    assertThat(BSLTextDocumentService.getOffset(content, 2, 0)).isEqualTo(12);
+  }
+
+  @Test
+  void getOffset_onlyLineBreaks() {
+    // Content with only LF line breaks
+    var lfOnly = "\n\n\n";
+    assertThat(BSLTextDocumentService.getOffset(lfOnly, 0, 0)).isZero();
+    assertThat(BSLTextDocumentService.getOffset(lfOnly, 1, 0)).isEqualTo(1);
+    assertThat(BSLTextDocumentService.getOffset(lfOnly, 2, 0)).isEqualTo(2);
+    assertThat(BSLTextDocumentService.getOffset(lfOnly, 3, 0)).isEqualTo(3);
+    assertThat(BSLTextDocumentService.getOffset(lfOnly, 4, 0)).isEqualTo(3);
+
+    // Content with only CRLF line breaks
+    var crlfOnly = "\r\n\r\n";
+    assertThat(BSLTextDocumentService.getOffset(crlfOnly, 0, 0)).isZero();
+    assertThat(BSLTextDocumentService.getOffset(crlfOnly, 1, 0)).isEqualTo(2);
+    assertThat(BSLTextDocumentService.getOffset(crlfOnly, 2, 0)).isEqualTo(4);
+    assertThat(BSLTextDocumentService.getOffset(crlfOnly, 3, 0)).isEqualTo(4);
+  }
+
+  @Test
+  void getOffset_characterBeyondLineLength() {
+    var content = "AB\nCD\nEF";
+    // Line 0 has length 2, character 10 should be capped to content length
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 10)).isEqualTo(8);
+    // Line 1 starts at 3, character 10 would be 13, capped to 8
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 10)).isEqualTo(8);
+    // Line 2 starts at 6, character 10 would be 16, capped to 8
+    assertThat(BSLTextDocumentService.getOffset(content, 2, 10)).isEqualTo(8);
+  }
+
+  @Test
+  void getOffset_lineBeyondDocumentLength() {
+    var content = "Only one line";
+    // Line 0 exists
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 0)).isZero();
+    // Lines 1, 5, 100 don't exist, should return end of content
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 0)).isEqualTo(13);
+    assertThat(BSLTextDocumentService.getOffset(content, 5, 0)).isEqualTo(13);
+    assertThat(BSLTextDocumentService.getOffset(content, 100, 0)).isEqualTo(13);
+  }
+
+  @Test
+  void getOffset_mixedLineEndings() {
+    // Mixed: LF, then CRLF, then CR
+    var content = "A\nB\r\nC\rD";
+    // Line 0: starts at 0
+    assertThat(BSLTextDocumentService.getOffset(content, 0, 0)).isZero();
+    // Line 1: starts at 2 (after "A\n")
+    assertThat(BSLTextDocumentService.getOffset(content, 1, 0)).isEqualTo(2);
+    // Line 2: starts at 5 (after "A\nB\r\n")
+    assertThat(BSLTextDocumentService.getOffset(content, 2, 0)).isEqualTo(5);
+    // Line 3: starts at 7 (after "A\nB\r\nC\r")
+    assertThat(BSLTextDocumentService.getOffset(content, 3, 0)).isEqualTo(7);
+  }
 }
