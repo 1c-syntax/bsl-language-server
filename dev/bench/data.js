@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766743608185,
+  "lastUpdate": 1766748422540,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32922,6 +32922,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.156385371182564",
             "extra": "mean: 88.36138796806335 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a92fe5c13e7629f9c4e0a85d3e5614cc4a00629d",
+          "message": "Merge pull request #3697 from 1c-syntax/copilot/resolve-coloring-nstr-strshablon\n\nAdd semantic highlighting for NStr and StrTemplate functions",
+          "timestamp": "2025-12-26T12:17:39+01:00",
+          "tree_id": "4bd58bffb9deb1cf1469095cc08ce86b7f4f7b08",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a92fe5c13e7629f9c4e0a85d3e5614cc4a00629d"
+        },
+        "date": 1766748416524,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.37597036361694,
+            "unit": "sec",
+            "range": "stddev: 0.44173437957644107",
+            "extra": "mean: 81.37597036361694 sec\nrounds: 3"
           }
         ]
       }
