@@ -43,6 +43,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -275,7 +276,7 @@ public class ReferenceIndex {
 
     return getSourceDefinedSymbol(symbolOccurrence.symbol())
       .map((SourceDefinedSymbol symbol) -> {
-        var from = getFromSymbol(symbolOccurrence);
+        SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
       .filter(ReferenceIndex::isReferenceAccessible);
@@ -306,12 +307,20 @@ public class ReferenceIndex {
   }
 
   private SourceDefinedSymbol getFromSymbol(SymbolOccurrence symbolOccurrence) {
+
     var uri = symbolOccurrence.location().getUri();
     var position = symbolOccurrence.location().getRange().getStart();
 
-    return Optional.ofNullable(serverContext.getDocument(uri))
-      .map(DocumentContext::getSymbolTree)
-      .map(symbolTree -> symbolTree.getSymbolAtPosition(position))
+    var symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
+      .map(DocumentContext::getSymbolTree);
+    return symbolTree
+      .map(SymbolTree::getChildrenFlat)
+      .stream()
+      .flatMap(Collection::stream)
+      .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() != SymbolKind.Namespace)
+      .filter(symbol -> Ranges.containsPosition(symbol.getRange(), position))
+      .findFirst()
+      .or(() -> symbolTree.map(SymbolTree::getModule))
       .orElseThrow();
   }
 
