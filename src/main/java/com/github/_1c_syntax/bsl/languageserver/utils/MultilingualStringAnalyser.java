@@ -88,6 +88,25 @@ public final class MultilingualStringAnalyser {
     WHITE_SPACE_REGEX
   );
 
+  @SuppressWarnings("NullAway.Init")
+  private BSLParser.GlobalMethodCallContext globalMethodCallContext;
+  private boolean isParentTemplate;
+  private @Nullable String variableName;
+  private final ArrayList<String> expectedLanguages;
+  private final Set<String> expandedMultilingualString = new HashSet<>();
+  private ArrayList<String> missingLanguages = new ArrayList<>();
+
+  /**
+   * Создать анализатор многоязычных строк.
+   *
+   * @param declaredLanguages Строка с объявленными языками через запятую
+   */
+  public MultilingualStringAnalyser(String declaredLanguages) {
+    Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
+    this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
+  }
+
+
   /**
    * Запись для хранения позиции совпадения в строке.
    *
@@ -154,24 +173,6 @@ public final class MultilingualStringAnalyser {
     }
 
     return positions;
-  }
-
-  @SuppressWarnings("NullAway.Init")
-  private BSLParser.GlobalMethodCallContext globalMethodCallContext;
-  private boolean isParentTemplate;
-  private @Nullable String variableName;
-  private final ArrayList<String> expectedLanguages;
-  private final Set<String> expandedMultilingualString = new HashSet<>();
-  private ArrayList<String> missingLanguages = new ArrayList<>();
-
-  /**
-   * Создать анализатор многоязычных строк.
-   *
-   * @param declaredLanguages Строка с объявленными языками через запятую
-   */
-  public MultilingualStringAnalyser(String declaredLanguages) {
-    Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
-    this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
@@ -291,10 +292,10 @@ public final class MultilingualStringAnalyser {
    */
   public boolean isParentTemplate() {
     Objects.requireNonNull(globalMethodCallContext, "Call parse method first");
-    return isParentTemplate || istVariableUsingInTemplate();
+    return isParentTemplate || isVariableUsedInTemplate();
   }
 
-  private boolean istVariableUsingInTemplate() {
+  private boolean isVariableUsedInTemplate() {
     if (variableName == null) {
       return false;
     }

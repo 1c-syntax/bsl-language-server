@@ -29,6 +29,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -41,6 +43,22 @@ class StringSemanticTokensSupplierTest {
   @Autowired
   private SemanticTokensLegend legend;
 
+  private List<SemanticTokenEntry> tokens(String bsl) {
+    var documentContext = TestUtils.getDocumentContext(bsl);
+    return supplier.getSemanticTokens(documentContext);
+  }
+
+  private int typeIndex(String semanticTokenType) {
+    return legend.getTokenTypes().indexOf(semanticTokenType);
+  }
+
+  private List<SemanticTokenEntry> tokensOfType(List<SemanticTokenEntry> tokens, String semanticTokenType) {
+    int typeIdx = typeIndex(semanticTokenType);
+    return tokens.stream()
+      .filter(t -> t.type() == typeIdx)
+      .toList();
+  }
+
   // ==================== Regular String Tests ====================
 
   @Test
@@ -52,16 +70,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
     assertThat(stringTokens).hasSize(1);
   }
 
@@ -76,16 +89,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
     // STRINGSTART, 2x STRINGPART, or STRINGTAIL
     assertThat(stringTokens).hasSizeGreaterThanOrEqualTo(3);
   }
@@ -101,24 +109,16 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     // ru, en
     assertThat(propertyTokens).hasSize(2);
 
     // Check that string parts are also present
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
     assertThat(stringTokens).isNotEmpty();
   }
 
@@ -131,16 +131,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     // ru, en
     assertThat(propertyTokens).hasSize(2);
   }
@@ -156,24 +151,16 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %1, %2
     assertThat(parameterTokens).hasSize(2);
 
     // Check that string parts are also present
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
     assertThat(stringTokens).isNotEmpty();
   }
 
@@ -186,16 +173,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %1, %2
     assertThat(parameterTokens).hasSize(2);
   }
@@ -209,16 +191,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %(1), %(2)
     assertThat(parameterTokens).hasSize(2);
   }
@@ -233,16 +210,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then - плейсхолдеры в строке-присвоении должны подсвечиваться
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %1, %2 из строки НовыйШаблон = "%1 %2"
     assertThat(parameterTokens).hasSize(2);
   }
@@ -257,16 +229,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %(1), %(2)
     assertThat(parameterTokens).hasSize(2);
   }
@@ -282,23 +249,15 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     // ru
     assertThat(propertyTokens).hasSize(1);
 
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %1
     assertThat(parameterTokens).hasSize(1);
   }
@@ -312,23 +271,15 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     // ru, en
     assertThat(propertyTokens).hasSize(2);
 
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %1, %2
     assertThat(parameterTokens).hasSize(2);
   }
@@ -343,23 +294,15 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     // ru
     assertThat(propertyTokens).hasSize(1);
 
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %1
     assertThat(parameterTokens).hasSize(1);
   }
@@ -374,23 +317,15 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     // ru, en
     assertThat(propertyTokens).hasSize(2);
 
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     // %1, %2 (по одному разу в каждой подстроке, но токен один - значит 4 плейсхолдера)
     // Нет, здесь один строковый токен, внутри которого 4 вхождения %N
     assertThat(parameterTokens).hasSize(4);
@@ -407,17 +342,12 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
     // String parts should be split around query tokens
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
 
     // Should have multiple string parts (quotes and spaces around keywords)
     assertThat(stringTokens).hasSizeGreaterThan(1);
@@ -435,16 +365,11 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
 
     // Should have string parts on each line
     assertThat(stringTokens).isNotEmpty();
@@ -462,23 +387,15 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     // ru from NStr
     assertThat(propertyTokens).hasSize(1);
 
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
     // Should have string parts from both NStr and query
     assertThat(stringTokens).hasSizeGreaterThan(2);
   }
@@ -492,30 +409,19 @@ class StringSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
     // Single string token for the whole string
     assertThat(stringTokens).hasSize(1);
 
     // No Property or Parameter tokens
-    int propertyTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Property);
-    var propertyTokens = tokens.stream()
-      .filter(t -> t.type() == propertyTypeIdx)
-      .toList();
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
     assertThat(propertyTokens).isEmpty();
 
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
     assertThat(parameterTokens).isEmpty();
   }
 
@@ -530,19 +436,13 @@ class StringSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int keywordTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int classTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-
-    var keywordTokens = tokens.stream().filter(t -> t.type() == keywordTypeIdx).toList();
-    var namespaceTokens = tokens.stream().filter(t -> t.type() == namespaceTypeIdx).toList();
-    var classTokens = tokens.stream().filter(t -> t.type() == classTypeIdx).toList();
+    var keywordTokens = tokensOfType(tokens, SemanticTokenTypes.Keyword);
+    var namespaceTokens = tokensOfType(tokens, SemanticTokenTypes.Namespace);
+    var classTokens = tokensOfType(tokens, SemanticTokenTypes.Class);
 
     // Выбрать, из
     assertThat(keywordTokens).hasSizeGreaterThanOrEqualTo(2);
@@ -561,14 +461,11 @@ class StringSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    var parameterTokens = tokens.stream().filter(t -> t.type() == parameterTypeIdx).toList();
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
 
     // &Параметр - один объединённый токен
     assertThat(parameterTokens).hasSize(1);
@@ -584,14 +481,11 @@ class StringSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int methodTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-    var methodTokens = tokens.stream().filter(t -> t.type() == methodTypeIdx).toList();
+    var methodTokens = tokensOfType(tokens, SemanticTokenTypes.Method);
 
     // СрезПоследних
     assertThat(methodTokens).hasSize(1);
@@ -606,19 +500,13 @@ class StringSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int classTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-    int enumMemberTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.EnumMember);
-
-    var namespaceTokens = tokens.stream().filter(t -> t.type() == namespaceTypeIdx).toList();
-    var classTokens = tokens.stream().filter(t -> t.type() == classTypeIdx).toList();
-    var enumMemberTokens = tokens.stream().filter(t -> t.type() == enumMemberTypeIdx).toList();
+    var namespaceTokens = tokensOfType(tokens, SemanticTokenTypes.Namespace);
+    var classTokens = tokensOfType(tokens, SemanticTokenTypes.Class);
+    var enumMemberTokens = tokensOfType(tokens, SemanticTokenTypes.EnumMember);
 
     // Справочник
     assertThat(namespaceTokens).hasSize(1);
@@ -637,17 +525,12 @@ class StringSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int enumTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Enum);
-    int enumMemberTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.EnumMember);
-
-    var enumTokens = tokens.stream().filter(t -> t.type() == enumTypeIdx).toList();
-    var enumMemberTokens = tokens.stream().filter(t -> t.type() == enumMemberTypeIdx).toList();
+    var enumTokens = tokensOfType(tokens, SemanticTokenTypes.Enum);
+    var enumMemberTokens = tokensOfType(tokens, SemanticTokenTypes.EnumMember);
 
     // Пол (enum)
     assertThat(enumTokens).hasSize(1);
@@ -664,14 +547,11 @@ class StringSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var tokens = tokens(bsl);
 
     // then
-    int functionTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
-    var functionTokens = tokens.stream().filter(t -> t.type() == functionTypeIdx).toList();
+    var functionTokens = tokensOfType(tokens, SemanticTokenTypes.Function);
 
     // Количество
     assertThat(functionTokens).hasSize(1);
