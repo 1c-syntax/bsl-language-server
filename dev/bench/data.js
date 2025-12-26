@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766678586694,
+  "lastUpdate": 1766743608185,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32891,6 +32891,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8203678080626298",
             "extra": "mean: 88.47029376029968 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "50382d6a3006eba9e1414b6ab33733ceb5e80439",
+          "message": "Merge pull request #3703 from 1c-syntax/copilot/fix-method-description-highlighting\n\nFix semantic token highlighting for multi-type parameters in BSL documentation",
+          "timestamp": "2025-12-26T10:56:45+01:00",
+          "tree_id": "307060d2ea6e89a3bbb9e66437c545297059793f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/50382d6a3006eba9e1414b6ab33733ceb5e80439"
+        },
+        "date": 1766743601712,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.36138796806335,
+            "unit": "sec",
+            "range": "stddev: 1.156385371182564",
+            "extra": "mean: 88.36138796806335 sec\nrounds: 3"
           }
         ]
       }
