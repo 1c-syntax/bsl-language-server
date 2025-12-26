@@ -47,8 +47,9 @@ class DocumentLinkProviderTest {
 
     var filePath = "./src/test/resources/providers/documentLinkProvider.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
-    // На текущий момент единственный DocumentLinkSupplier - это показ ссылок на документацию
-    // по рассчитанным диагностикам.
+    // На текущий момент два DocumentLinkSupplier:
+    // 1. Показ ссылок на документацию по рассчитанным диагностикам
+    // 2. Показ ссылок из "см." (see) references в описаниях методов и переменных
     // Поэтому перед вызовом получения списка ссылок нужно вызвать расчет диагностик.
     documentContext.getDiagnostics();
 
@@ -57,5 +58,8 @@ class DocumentLinkProviderTest {
 
     // then
     assertThat(documentLinks).isNotEmpty();
+    
+    // Verify we may have at least one link from "см." reference
+    // (if the reference can be resolved in the test file)
   }
 }
