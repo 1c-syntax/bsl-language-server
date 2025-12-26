@@ -167,6 +167,12 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
           if (paramString.parameter() != null) {
             collectParameterElements(paramString.parameter(), elements);
           }
+          if (paramString.typesBlock() != null) {
+            var type = paramString.typesBlock().type();
+            if (type != null) {
+              helper.addContextRange(elements, type, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation);
+            }
+          }
           if (paramString.subParameter() != null) {
             collectSubParameterElements(paramString.subParameter(), elements);
           }
