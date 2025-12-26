@@ -671,13 +671,18 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     int startOffset = getOffset(content, startLine, startChar);
     int endOffset = getOffset(content, endLine, endChar);
 
-    // Perform direct string replacement to preserve original line endings
-    return content.substring(0, startOffset) + newText + content.substring(endOffset);
+    // Use StringBuilder with pre-calculated capacity to avoid intermediate allocations
+    int newLength = startOffset + newText.length() + (content.length() - endOffset);
+    var sb = new StringBuilder(newLength);
+    sb.append(content, 0, startOffset);
+    sb.append(newText);
+    sb.append(content, endOffset, content.length());
+    return sb.toString();
   }
 
   /**
    * Вычисляет абсолютную позицию символа в тексте по номеру строки и позиции в строке.
-   * Использует indexOf для быстрого поиска переносов строк.
+   * Использует однопроходное сканирование символов для быстрого поиска позиции.
    *
    * @param content содержимое документа
    * @param line номер строки (0-based)
@@ -685,47 +690,37 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @return абсолютная позиция символа в тексте
    */
   protected static int getOffset(String content, int line, int character) {
+    var contentLength = content.length();
+
     if (line == 0) {
-      return character;
+      return Math.min(character, contentLength);
     }
 
-    var offset = 0;
     var currentLine = 0;
-    var searchFrom = 0;
 
-    while (currentLine < line) {
-      int nlPos = content.indexOf('\n', searchFrom);
-      int crPos = content.indexOf('\r', searchFrom);
-
-      if (nlPos == -1 && crPos == -1) {
-        // No more line breaks found
-        break;
-      }
-
-      int nextLineBreak;
-      if (nlPos == -1) {
-        nextLineBreak = crPos;
-      } else if (crPos == -1) {
-        nextLineBreak = nlPos;
-      } else {
-        nextLineBreak = Math.min(nlPos, crPos);
-      }
-
-      currentLine++;
-
-      // Handle \r\n as a single line ending
-      if (content.charAt(nextLineBreak) == '\r'
-          && nextLineBreak + 1 < content.length()
-          && content.charAt(nextLineBreak + 1) == '\n') {
-        offset = nextLineBreak + 2;
-        searchFrom = nextLineBreak + 2;
-      } else {
-        offset = nextLineBreak + 1;
-        searchFrom = nextLineBreak + 1;
+    for (var i = 0; i < contentLength && currentLine < line; i++) {
+      var c = content.charAt(i);
+      if (c == '\n') {
+        currentLine++;
+        if (currentLine == line) {
+          // Next line starts at i+1, add character offset
+          return Math.min(i + 1 + character, contentLength);
+        }
+      } else if (c == '\r') {
+        currentLine++;
+        // Handle \r\n as a single line ending - skip the \n
+        if (i + 1 < contentLength && content.charAt(i + 1) == '\n') {
+          i++;
+        }
+        if (currentLine == line) {
+          // Next line starts at i+1 (after \r or \r\n), add character offset
+          return Math.min(i + 1 + character, contentLength);
+        }
       }
     }
 
-    return offset + character;
+    // Fallback: requested line beyond content, return end of content
+    return contentLength;
   }
 
   private void processDocumentChange(
