@@ -83,6 +83,7 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
+import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
@@ -103,6 +104,7 @@ import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -198,6 +200,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       documentContext,
       () -> Either.forRight(definitionProvider.getDefinition(documentContext, params))
     );
+  }
+
+  @Override
+  public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(
+    ImplementationParams params
+  ) {
+    return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
   }
 
   @Override
@@ -747,9 +756,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       waitFuture = CompletableFuture.completedFuture(null);
     }
 
-    return waitFuture.thenApplyAsync(
-      ignored -> supplier.get(),
-      executorService
+    return waitFuture.thenCompose(ignored ->
+      CompletableFutures.computeAsync(
+        executorService,
+        cancelChecker -> {
+          cancelChecker.checkCanceled();
+          return supplier.get();
+        }
+      )
     );
   }
 }
