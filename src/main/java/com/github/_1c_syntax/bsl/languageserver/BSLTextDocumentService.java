@@ -690,34 +690,37 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    * @return абсолютная позиция символа в тексте
    */
   protected static int getOffset(String content, int line, int character) {
+    var contentLength = content.length();
+
     if (line == 0) {
-      return character;
+      return Math.min(character, contentLength);
     }
 
     var currentLine = 0;
-    var contentLength = content.length();
 
     for (var i = 0; i < contentLength && currentLine < line; i++) {
       var c = content.charAt(i);
       if (c == '\n') {
         currentLine++;
         if (currentLine == line) {
-          return i + 1 + character;
+          // Next line starts at i+1, add character offset
+          return Math.min(i + 1 + character, contentLength);
         }
       } else if (c == '\r') {
         currentLine++;
-        // Handle \r\n as a single line ending
+        // Handle \r\n as a single line ending - skip the \n
         if (i + 1 < contentLength && content.charAt(i + 1) == '\n') {
           i++;
         }
         if (currentLine == line) {
-          return i + 1 + character;
+          // Next line starts at i+1 (after \r or \r\n), add character offset
+          return Math.min(i + 1 + character, contentLength);
         }
       }
     }
 
-    // Fallback for edge cases (e.g., requested line beyond content)
-    return contentLength + character;
+    // Fallback: requested line beyond content, return end of content
+    return contentLength;
   }
 
   private void processDocumentChange(
