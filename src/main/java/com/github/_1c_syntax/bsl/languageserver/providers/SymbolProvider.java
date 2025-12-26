@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -60,7 +61,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SymbolProvider {
 
-  private final ServerContext context;
+  private final ServerContextProvider serverContextProvider;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -79,7 +80,9 @@ public class SymbolProvider {
       return Collections.emptyList();
     }
 
-    return context.getDocuments().values().stream()
+    // Search for symbols in all workspace contexts
+    return serverContextProvider.getAllContexts().stream()
+      .flatMap(serverContext -> serverContext.getDocuments().values().stream())
       .flatMap(SymbolProvider::getSymbolPairs)
       .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
       .map(SymbolProvider::createWorkspaceSymbol)

@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.File;
 import java.net.URI;
 import java.nio.file.Paths;
 
@@ -45,13 +48,17 @@ class SymbolProviderTest {
   @Autowired
   private ServerContext context;
   @Autowired
+  private ServerContextProvider serverContextProvider;
+  @Autowired
   private SymbolProvider symbolProvider;
 
   @BeforeEach
   void before() {
-    var configurationRoot = Absolute.path(PATH_TO_METADATA);
-    context.setConfigurationRoot(configurationRoot);
-    context.populateContext();
+    // Register workspace for metadata resources
+    var metadataPath = new File(PATH_TO_METADATA).getAbsoluteFile();
+    var workspaceFolder = new WorkspaceFolder(metadataPath.toURI().toString(), "test-workspace");
+    var workspaceContext = serverContextProvider.addWorkspace(workspaceFolder);
+    workspaceContext.populateContext();
   }
 
   @Test

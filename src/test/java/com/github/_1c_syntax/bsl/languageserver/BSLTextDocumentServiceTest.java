@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -39,6 +40,8 @@ import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceFolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,8 +64,16 @@ class BSLTextDocumentServiceTest {
 
   @Autowired
   private BSLTextDocumentService textDocumentService;
-  @MockitoSpyBean
-  private ServerContext serverContext;
+  @Autowired
+  private ServerContextProvider serverContextProvider;
+
+  @BeforeEach
+  void setUp() {
+    // Register workspace for test resources
+    var testResourcesPath = new File("./src/test/resources").getAbsoluteFile();
+    var workspaceFolder = new WorkspaceFolder(testResourcesPath.toURI().toString(), "test-workspace");
+    serverContextProvider.addWorkspace(workspaceFolder);
+  }
 
   @Test
   void didOpen() throws IOException {
@@ -95,13 +106,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var uri = com.github._1c_syntax.utils.Absolute.uri(textDocumentItem.getUri());
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: insert text at position
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     var range = Ranges.create(0, 0, 0, 0);
     var changeEvent = new TextDocumentContentChangeEvent(range, "// Комментарий\n");
@@ -123,13 +135,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var uri = com.github._1c_syntax.utils.Absolute.uri(textDocumentItem.getUri());
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
 
     // when - multiple incremental changes
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
     
@@ -157,13 +170,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var uri = com.github._1c_syntax.utils.Absolute.uri(textDocumentItem.getUri());
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: delete text
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     var range = Ranges.create(0, 0, 0, 5);
     var changeEvent = new TextDocumentContentChangeEvent(range, "");

@@ -23,14 +23,17 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbol;
@@ -54,6 +57,7 @@ import java.util.concurrent.Executors;
  * запросы на уровне всей рабочей области (поиск символов, изменение конфигурации,
  * выполнение команд и мониторинг изменений файлов).
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BSLWorkspaceService implements WorkspaceService {
@@ -61,7 +65,7 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final LanguageServerConfiguration configuration;
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
-  private final ServerContext serverContext;
+  private final ServerContextProvider serverContextProvider;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
 
@@ -115,6 +119,29 @@ public class BSLWorkspaceService implements WorkspaceService {
     );
   }
 
+  @Override
+  public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        var event = params.getEvent();
+        
+        // Remove old workspace folders
+        event.getRemoved().forEach(serverContextProvider::removeWorkspace);
+        
+        // Add new workspace folders
+        event.getAdded().forEach(folder -> {
+          var serverContext = serverContextProvider.addWorkspace(folder);
+          // Async population of context for new workspace
+          CompletableFuture.runAsync(serverContext::populateContext);
+        });
+        
+        LOGGER.info("Workspace folders changed. Added: {}, Removed: {}",
+          event.getAdded().size(), event.getRemoved().size());
+      },
+      executorService
+    );
+  }
+
   /**
    * Обрабатывает событие удаления файла из файловой системы.
    * <p>
@@ -124,16 +151,17 @@ public class BSLWorkspaceService implements WorkspaceService {
    * @param uri URI удаленного файла
    */
   private void handleDeletedFileEvent(URI uri) {
-    var documentContext = serverContext.getDocument(uri);
+    var context = getContextForDocument(uri);
+    var documentContext = context.getDocument(uri);
     if (documentContext == null) {
       return;
     }
 
-    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (isDocumentOpened) {
-      serverContext.closeDocument(documentContext);
+      context.closeDocument(documentContext);
     }
-    serverContext.removeDocument(uri);
+    context.removeDocument(uri);
   }
 
   /**
@@ -147,12 +175,13 @@ public class BSLWorkspaceService implements WorkspaceService {
    * @param uri URI созданного файла
    */
   private void handleCreatedFileEvent(URI uri) {
-    var documentContext = serverContext.addDocument(uri);
+    var context = getContextForDocument(uri);
+    var documentContext = context.addDocument(uri);
 
-    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      serverContext.rebuildDocument(documentContext);
-      serverContext.tryClearDocument(documentContext);
+      context.rebuildDocument(documentContext);
+      context.tryClearDocument(documentContext);
     }
   }
 
@@ -169,15 +198,27 @@ public class BSLWorkspaceService implements WorkspaceService {
    * @param uri URI измененного файла
    */
   private void handleChangedFileEvent(URI uri) {
-    var documentContext = serverContext.getDocument(uri);
+    var context = getContextForDocument(uri);
+    var documentContext = context.getDocument(uri);
     if (documentContext == null) {
-      documentContext = serverContext.addDocument(uri);
+      documentContext = context.addDocument(uri);
     }
 
-    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      serverContext.rebuildDocument(documentContext);
-      serverContext.tryClearDocument(documentContext);
+      context.rebuildDocument(documentContext);
+      context.tryClearDocument(documentContext);
     }
+  }
+
+  /**
+   * Получить контекст сервера для документа.
+   *
+   * @param uri URI документа
+   * @return контекст сервера
+   */
+  private ServerContext getContextForDocument(URI uri) {
+    return serverContextProvider.getServerContext(uri)
+      .orElseThrow(() -> new IllegalStateException("No workspace found for document: " + uri));
   }
 }

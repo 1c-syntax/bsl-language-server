@@ -28,6 +28,7 @@ import org.jspecify.annotations.Nullable;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.io.File;
 import java.net.URI;
@@ -38,6 +39,15 @@ public class TestUtils {
 
   public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake-uri.bsl");
   public static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+
+  /**
+   * Получить новый экземпляр ServerContext для тестов.
+   * Использует ObjectProvider для получения prototype scope bean.
+   */
+  private static ServerContext getServerContext() {
+    ObjectProvider<ServerContext> provider = TestApplicationContext.getBeanProvider(ServerContext.class);
+    return provider.getObject();
+  }
 
   @SneakyThrows
   public static DocumentContext getDocumentContextFromFile(String filePath) {
@@ -51,7 +61,7 @@ public class TestUtils {
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent) {
-    return getDocumentContext(uri, fileContent, TestApplicationContext.getBean(ServerContext.class));
+    return getDocumentContext(uri, fileContent, getServerContext());
   }
 
   public static DocumentContext getDocumentContext(String fileContent) {
@@ -61,7 +71,7 @@ public class TestUtils {
   public static DocumentContext getDocumentContext(String fileContent, @Nullable ServerContext context) {
     ServerContext passedContext = context;
     if (passedContext == null) {
-      passedContext = TestApplicationContext.getBean(ServerContext.class);
+      passedContext = getServerContext();
     }
 
     return getDocumentContext(FAKE_DOCUMENT_URI, fileContent, passedContext);
