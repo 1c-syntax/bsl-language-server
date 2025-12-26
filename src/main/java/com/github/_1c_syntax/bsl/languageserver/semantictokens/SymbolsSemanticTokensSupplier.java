@@ -26,8 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -45,7 +45,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
 
-  private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final SemanticTokensHelper helper;
 
@@ -64,32 +63,24 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
       }
     }
 
-    // Add variable symbols
+    // Add explicit variable declarations from SymbolTree
     for (var variableSymbol : symbolTree.getVariables()) {
       if (variableSymbol.getKind() == VariableKind.PARAMETER) {
         continue;
       }
-
       var nameRange = variableSymbol.getVariableNameRange();
       if (!Ranges.isEmpty(nameRange)) {
-        boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), nameRange.getStart())
-          .map(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION)
-          .orElse(false);
-        if (isDefinition) {
-          helper.addRange(entries, nameRange, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition);
-        } else {
-          helper.addRange(entries, nameRange, SemanticTokenTypes.Variable);
-        }
+        helper.addRange(entries, nameRange, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition);
       }
     }
 
-    // Add variable references from ReferenceIndex
+    // Add variable references from ReferenceIndex (includes both definitions and usages)
     var references = referenceIndex.getReferencesFrom(uri, SymbolKind.Variable);
     references.stream()
-      .filter(reference -> reference.isSourceDefinedSymbolReference())
+      .filter(Reference::isSourceDefinedSymbolReference)
       .forEach(reference -> reference.getSourceDefinedSymbol()
-        .filter(symbol -> symbol instanceof VariableSymbol)
-        .map(symbol -> (VariableSymbol) symbol)
+        .filter(VariableSymbol.class::isInstance)
+        .map(VariableSymbol.class::cast)
         .ifPresent(variableSymbol -> {
           var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
             ? SemanticTokenTypes.Parameter

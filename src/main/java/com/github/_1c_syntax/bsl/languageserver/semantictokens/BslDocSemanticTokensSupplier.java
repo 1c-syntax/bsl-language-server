@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -167,6 +168,9 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
           if (paramString.parameter() != null) {
             collectParameterElements(paramString.parameter(), elements);
           }
+          if (paramString.typesBlock() != null) {
+            collectTypesBlockElements(paramString.typesBlock(), elements);
+          }
           if (paramString.subParameter() != null) {
             collectSubParameterElements(paramString.subParameter(), elements);
           }
@@ -187,10 +191,7 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
             }
           }
           if (returnString.typesBlock() != null) {
-            var type = returnString.typesBlock().type();
-            if (type != null) {
-              helper.addContextRange(elements, type, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation);
-            }
+            collectTypesBlockElements(returnString.typesBlock(), elements);
           }
           if (returnString.subParameter() != null) {
             collectSubParameterElements(returnString.subParameter(), elements);
@@ -227,10 +228,7 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       helper.addContextRange(elements, paramName, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation);
     }
 
-    var typesBlock = parameter.typesBlock();
-    if (typesBlock != null && typesBlock.type() != null) {
-      helper.addContextRange(elements, typesBlock.type(), SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation);
-    }
+    collectTypesBlockElements(parameter.typesBlock(), elements);
   }
 
   private void collectSubParameterElements(
@@ -242,7 +240,13 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       helper.addContextRange(elements, paramName, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation);
     }
 
-    var typesBlock = subParameter.typesBlock();
+    collectTypesBlockElements(subParameter.typesBlock(), elements);
+  }
+
+  private void collectTypesBlockElements(
+    BSLMethodDescriptionParser.@Nullable TypesBlockContext typesBlock,
+    List<SemanticTokenEntry> elements
+  ) {
     if (typesBlock != null && typesBlock.type() != null) {
       helper.addContextRange(elements, typesBlock.type(), SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation);
     }

@@ -208,6 +208,66 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
+  void testMultipleTypesOnSeparateLines() {
+    // given - parameter with multiple types on separate lines
+    String bsl = """
+      // Описание метода
+      // Параметры:
+      //  Параметр - СправочникСсылка
+      //                  - ДокументСсылка
+      //                  - ПеречислениеСсылка - описание параметра
+      Процедура Тест(Параметр)
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(bsl);
+
+    // when
+    var tokens = supplier.getSemanticTokens(documentContext);
+
+    // then - All three types should be Type with Documentation modifier
+    int typeTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
+
+    var typeTokens = tokens.stream()
+      .filter(t -> t.type() == typeTypeIdx && (t.modifiers() & docModifierMask) != 0)
+      .toList();
+
+    // Should have 3 type tokens: СправочникСсылка, ДокументСсылка, ПеречислениеСсылка
+    assertThat(typeTokens).hasSize(3);
+  }
+
+  @Test
+  void testMultipleReturnTypesOnSeparateLines() {
+    // given - return value with multiple types on separate lines
+    String bsl = """
+      // Описание функции
+      // Возвращаемое значение:
+      //  СправочникСсылка
+      //  - ДокументСсылка - результат
+      Функция Тест()
+        Возврат Неопределено;
+      КонецФункции
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(bsl);
+
+    // when
+    var tokens = supplier.getSemanticTokens(documentContext);
+
+    // then - Both types should be Type with Documentation modifier
+    int typeTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
+
+    var typeTokens = tokens.stream()
+      .filter(t -> t.type() == typeTypeIdx && (t.modifiers() & docModifierMask) != 0)
+      .toList();
+
+    // Should have 2 type tokens: СправочникСсылка, ДокументСсылка
+    assertThat(typeTokens).hasSize(2);
+  }
+
+  @Test
   void testMultilineSupport() {
     // given
     String bsl = """
