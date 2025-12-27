@@ -124,6 +124,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода closeDocument.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* closeDocument(..))")
+  public void isCloseDocumentCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода update.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* update(..))")

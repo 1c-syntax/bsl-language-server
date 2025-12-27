@@ -98,6 +98,8 @@ import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensDelta;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -176,7 +178,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<@Nullable Hover> hover(HoverParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -191,7 +193,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
     DefinitionParams params
   ) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
     }
@@ -211,7 +213,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -226,7 +228,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
     DocumentSymbolParams params
   ) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -241,7 +243,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -254,7 +256,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -268,7 +270,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   @Override
   public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
     var data = codeLensProvider.extractData(unresolved);
-    var documentContext = context.getDocument(data.getUri());
+    var documentContext = context.getDocumentUnsafe(data.getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(unresolved);
     }
@@ -280,7 +282,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -293,7 +295,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -306,7 +308,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -320,7 +322,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   @Override
   public CompletableFuture<@Nullable List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
     // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -339,7 +341,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -350,13 +352,26 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     );
   }
 
+  @Override
+  public CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>> semanticTokensFullDelta(
+    SemanticTokensDeltaParams params
+  ) {
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
 
+    return withFreshDocumentContext(
+      documentContext,
+      () -> semanticTokensProvider.getSemanticTokensFullDelta(documentContext, params)
+    );
+  }
 
   @Override
   public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
     CallHierarchyIncomingCallsParams params
   ) {
-    var documentContext = context.getDocument(params.getItem().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getItem().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -371,7 +386,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<List<CallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
     CallHierarchyOutgoingCallsParams params
   ) {
-    var documentContext = context.getDocument(params.getItem().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getItem().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -384,7 +399,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<@Nullable SelectionRange>> selectionRange(SelectionRangeParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -397,7 +412,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<ColorInformation>> documentColor(DocumentColorParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -410,7 +425,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<ColorPresentation>> colorPresentation(ColorPresentationParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -423,7 +438,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
@@ -459,7 +474,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
@@ -486,7 +501,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public void didClose(DidCloseTextDocumentParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
@@ -515,7 +530,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
@@ -527,7 +542,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -540,7 +555,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Diagnostics.EMPTY);
     }
@@ -563,7 +578,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<DocumentDiagnosticReport> diagnostic(DocumentDiagnosticParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(
         new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(Collections.emptyList()))
@@ -578,7 +593,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>> prepareRename(PrepareRenameParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
@@ -591,7 +606,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
-    var documentContext = context.getDocument(params.getTextDocument().getUri());
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }

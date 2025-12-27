@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -1093,6 +1095,250 @@ class SemanticTokensProviderTest {
     );
 
     assertContainsTokens(decoded, expected);
+  }
+
+  // endregion
+
+  // region Delta tokens tests
+
+  @Test
+  void fullTokensReturnsResultId() {
+    // given
+    String bsl = """
+      Перем А;
+      """;
+
+    // when
+    SemanticTokens tokens = getTokens(bsl);
+
+    // then
+    assertThat(tokens.getResultId()).isNotNull();
+    assertThat(tokens.getResultId()).isNotEmpty();
+  }
+
+  @Test
+  void deltaWithSameDocument_returnsEmptyEdits() {
+    // given
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    SemanticTokens initialTokens = provider.getSemanticTokensFull(
+      documentContext,
+      new SemanticTokensParams(textDocumentIdentifier)
+    );
+    assertThat(initialTokens.getResultId()).isNotNull();
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocumentIdentifier, initialTokens.getResultId());
+    var result = provider.getSemanticTokensFullDelta(documentContext, deltaParams);
+
+    // then
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getResultId()).isNotNull();
+    assertThat(delta.getResultId()).isNotEqualTo(initialTokens.getResultId());
+    assertThat(delta.getEdits()).isEmpty();
+  }
+
+  @Test
+  void deltaWithUnknownPreviousResultId_returnsFullTokens() {
+    // given
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocumentIdentifier, "unknown-result-id");
+    var result = provider.getSemanticTokensFullDelta(documentContext, deltaParams);
+
+    // then
+    assertThat(result.isLeft()).isTrue();
+    var fullTokens = result.getLeft();
+    assertThat(fullTokens.getResultId()).isNotNull();
+    assertThat(fullTokens.getData()).isNotEmpty();
+  }
+
+  @Test
+  void deltaWithChangedDocument_returnsEdits() {
+    // given
+    String bsl1 = """
+      Перем А;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Б;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    URI differentUri = URI.create("file:///fake/different-document.bsl");
+    DocumentContext context2 = TestUtils.getDocumentContext(differentUri, bsl2);
+    referenceIndexFiller.fill(context2);
+    TextDocumentIdentifier textDocId2 = TestUtils.getTextDocumentIdentifier(context2.getUri());
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId2, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then
+    assertThat(result.isLeft()).isTrue();
+    var fullTokens = result.getLeft();
+    assertThat(fullTokens.getResultId()).isNotNull();
+  }
+
+  @Test
+  void deltaWithModifiedSameDocument_returnsEdits() {
+    // given
+    String bsl1 = """
+      Перем А;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Б;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getResultId()).isNotNull();
+    assertThat(delta.getEdits()).isNotEmpty();
+    var edit = delta.getEdits().get(0);
+    assertThat(edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0))
+      .isGreaterThan(0);
+  }
+
+  @Test
+  void clearCache_removesCachedTokenData() {
+    // given
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    SemanticTokens initialTokens = provider.getSemanticTokensFull(
+      documentContext,
+      new SemanticTokensParams(textDocumentIdentifier)
+    );
+
+    // when
+    provider.clearCache(documentContext.getUri());
+
+    var deltaParams = new SemanticTokensDeltaParams(textDocumentIdentifier, initialTokens.getResultId());
+    var result = provider.getSemanticTokensFullDelta(documentContext, deltaParams);
+
+    // then
+    assertThat(result.isLeft()).isTrue();
+  }
+
+  @Test
+  void deltaWithLineInsertedAtBeginning_shouldHaveSmallDelta() {
+    // given
+    String bsl1 = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    String bsl2 = """
+      Перем Новая;
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - should return delta with small edits (just the new token + changed deltaLine)
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    var edit = delta.getEdits().get(0);
+    // For inserting at beginning: prefix=0, suffix should match most of the old data
+    // deleteCount should be small (just the first deltaLine that changed)
+    // insertData should be the new token + updated first deltaLine
+    assertThat(edit.getDeleteCount()).isLessThan(tokens1.getData().size());
+  }
+
+  @Test
+  void deltaWithLineInsertedInMiddle_shouldReturnOptimalDelta() {
+    // given - simulate inserting a line in middle of document
+    String bsl1 = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      Перем Г;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Б;
+      Перем Новая;
+      Перем В;
+      Перем Г;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+    int originalDataSize = tokens1.getData().size();
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - should return delta, not full tokens
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getEdits()).isNotEmpty();
+    var edit = delta.getEdits().get(0);
+    // For insertion in middle: 
+    // - prefix matches up to insertion point
+    // - suffix matches tokens after insertion (they have same relative deltaLine)
+    // - The edit should be smaller than the full data
+    int editSize = edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0);
+    assertThat(editSize).isLessThan(originalDataSize);
   }
 
   // endregion

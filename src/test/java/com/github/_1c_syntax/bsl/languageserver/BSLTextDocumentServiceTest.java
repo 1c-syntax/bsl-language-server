@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
@@ -95,7 +96,7 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: insert text at position
@@ -123,7 +124,7 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
     assertThat(documentContext).isNotNull();
 
     // when - multiple incremental changes
@@ -157,7 +158,7 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: delete text
@@ -334,7 +335,7 @@ class BSLTextDocumentServiceTest {
 
   private TextDocumentItem getTextDocumentItem() throws IOException {
     File file = getTestFile();
-    String uri = file.toURI().toString();
+    String uri = Absolute.uri(file).toString();
 
     String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
 
@@ -344,7 +345,7 @@ class BSLTextDocumentServiceTest {
   private TextDocumentIdentifier getTextDocumentIdentifier() {
     // TODO: Переделать на TestUtils.getTextDocumentIdentifier();
     File file = getTestFile();
-    String uri = file.toURI().toString();
+    String uri = Absolute.uri(file).toString();
 
     return new TextDocumentIdentifier(uri);
   }
