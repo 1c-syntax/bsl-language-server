@@ -95,7 +95,7 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: insert text at position
@@ -123,7 +123,7 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
     assertThat(documentContext).isNotNull();
 
     // when - multiple incremental changes
@@ -157,7 +157,7 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocument(textDocumentItem.getUri());
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
     assertThat(documentContext).isNotNull();
 
     // when - incremental change: delete text

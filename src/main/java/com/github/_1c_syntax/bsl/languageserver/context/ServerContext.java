@@ -147,24 +147,6 @@ public class ServerContext {
     return Collections.unmodifiableMap(documents);
   }
 
-  @Nullable
-  public DocumentContext getDocument(String uri) {
-    return getDocument(URI.create(uri));
-  }
-
-  /**
-   * Получить документ по строковому URI с нормализацией.
-   * <p>
-   * Используется для внешних вызовов (CLI, Service), где URI может быть не нормализован.
-   *
-   * @param uri строковый URI документа
-   * @return Контекст документа или {@code null}, если документ не найден
-   */
-  @Nullable
-  public DocumentContext getDocumentUnsafe(String uri) {
-    return getDocumentUnsafe(URI.create(uri));
-  }
-
   public Optional<DocumentContext> getDocument(String mdoRef, ModuleType moduleType) {
     var documentsGroup = documentsByMDORef.get(mdoRef);
     if (documentsGroup != null) {
@@ -196,6 +178,20 @@ public class ServerContext {
    */
   @Nullable
   public DocumentContext getDocumentUnsafe(URI uri) {
+    return getDocument(Absolute.uri(uri));
+  }
+
+
+  /**
+   * Получить документ по строковому URI с нормализацией.
+   * <p>
+   * Используется для внешних вызовов (CLI, Service), где URI может быть не нормализован.
+   *
+   * @param uri строковый URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocumentUnsafe(String uri) {
     return getDocument(Absolute.uri(uri));
   }
 
