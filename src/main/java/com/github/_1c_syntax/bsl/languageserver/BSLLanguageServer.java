@@ -385,7 +385,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     fullOptions.setDelta(Boolean.TRUE);
     semanticTokensProvider.setFull(fullOptions);
 
-    semanticTokensProvider.setRange(Boolean.FALSE);
+    semanticTokensProvider.setRange(Boolean.TRUE);
     return semanticTokensProvider;
   }
 
