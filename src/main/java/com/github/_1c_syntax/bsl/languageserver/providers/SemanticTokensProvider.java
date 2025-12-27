@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.SemanticTokens;
@@ -39,6 +42,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -46,7 +50,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Провайдер для предоставления семантических токенов.
@@ -60,6 +67,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
 
+  @SuppressWarnings("NullAway.Init")
+  private ExecutorService executorService;
+
   private final List<SemanticTokensSupplier> suppliers;
 
   /**
@@ -67,6 +77,17 @@ public class SemanticTokensProvider {
    * Key: resultId, Value: token data list
    */
   private final Map<String, CachedTokenData> tokenCache = new ConcurrentHashMap<>();
+
+  @PostConstruct
+  private void init() {
+    var factory = new NamedForkJoinWorkerThreadFactory("semantic-tokens-");
+    executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+  }
+
+  @PreDestroy
+  private void onDestroy() {
+    executorService.shutdown();
+  }
 
   /**
    * Cached semantic token data associated with a document.
@@ -88,11 +109,8 @@ public class SemanticTokensProvider {
     DocumentContext documentContext,
     @SuppressWarnings("unused") SemanticTokensParams params
   ) {
-    // Collect tokens from all suppliers
-    List<SemanticTokenEntry> entries = suppliers.stream()
-      .map(supplier -> supplier.getSemanticTokens(documentContext))
-      .flatMap(Collection::stream)
-      .toList();
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
 
     // Build delta-encoded data
     List<Integer> data = toDeltaEncoded(entries);
@@ -118,12 +136,10 @@ public class SemanticTokensProvider {
     String previousResultId = params.getPreviousResultId();
     CachedTokenData previousData = tokenCache.get(previousResultId);
 
-    // Calculate current tokens
-    List<SemanticTokenEntry> entries = suppliers.stream()
-      .map(supplier -> supplier.getSemanticTokens(documentContext))
-      .flatMap(Collection::stream)
-      .toList();
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
 
+    // Build delta-encoded data
     List<Integer> currentData = toDeltaEncoded(entries);
 
     // Generate new resultId
@@ -131,7 +147,7 @@ public class SemanticTokensProvider {
 
     // If previous data is not available or belongs to a different document, return full tokens
     if (previousData == null || !previousData.uri().equals(documentContext.getUri())) {
-      LOGGER.debug("Returning full tokens: previousData={}, uri match={}",
+      LOGGER.info("Returning full tokens: previousData={}, uri match={}",
         previousData != null, previousData != null && previousData.uri().equals(documentContext.getUri()));
       cacheTokenData(resultId, documentContext.getUri(), currentData);
       return Either.forLeft(new SemanticTokens(resultId, currentData));
@@ -143,7 +159,7 @@ public class SemanticTokensProvider {
     // Log delta statistics for debugging
     if (!edits.isEmpty()) {
       var edit = edits.get(0);
-      LOGGER.debug("Delta computed: previousSize={}, currentSize={}, start={}, deleteCount={}, dataSize={}",
+      LOGGER.info("Delta computed: previousSize={}, currentSize={}, start={}, deleteCount={}, dataSize={}",
         previousData.data().size(), currentData.size(),
         edit.getStart(), edit.getDeleteCount(),
         edit.getData() != null ? edit.getData().size() : 0);
@@ -251,6 +267,21 @@ public class SemanticTokensProvider {
     return List.of(edit);
   }
 
+  /**
+   * Collect tokens from all suppliers in parallel using ForkJoinPool.
+   */
+  private List<SemanticTokenEntry> collectTokens(DocumentContext documentContext) {
+    return CompletableFuture
+      .supplyAsync(
+        () -> suppliers.parallelStream()
+          .map(supplier -> supplier.getSemanticTokens(documentContext))
+          .flatMap(Collection::stream)
+          .toList(),
+        executorService
+      )
+      .join();
+  }
+
   private static List<Integer> toDeltaEncoded(List<SemanticTokenEntry> entries) {
     // de-dup and sort
     Set<SemanticTokenEntry> uniq = new HashSet<>(entries);
@@ -259,9 +290,11 @@ public class SemanticTokensProvider {
       .comparingInt(SemanticTokenEntry::line)
       .thenComparingInt(SemanticTokenEntry::start));
 
-    List<Integer> data = new ArrayList<>(sorted.size() * 5);
+    // Use int[] to avoid boxing overhead during computation
+    int[] data = new int[sorted.size() * 5];
     var prevLine = 0;
     var prevChar = 0;
+    var index = 0;
     var first = true;
 
     for (SemanticTokenEntry tokenEntry : sorted) {
@@ -269,16 +302,18 @@ public class SemanticTokensProvider {
       int prevCharOrZero = (deltaLine == 0) ? prevChar : 0;
       int deltaStart = first ? tokenEntry.start() : (tokenEntry.start() - prevCharOrZero);
 
-      data.add(deltaLine);
-      data.add(deltaStart);
-      data.add(tokenEntry.length());
-      data.add(tokenEntry.type());
-      data.add(tokenEntry.modifiers());
+      data[index++] = deltaLine;
+      data[index++] = deltaStart;
+      data[index++] = tokenEntry.length();
+      data[index++] = tokenEntry.type();
+      data[index++] = tokenEntry.modifiers();
 
       prevLine = tokenEntry.line();
       prevChar = tokenEntry.start();
       first = false;
     }
-    return data;
+
+    // Convert to List<Integer> for LSP4J API
+    return Arrays.stream(data).boxed().toList();
   }
 }
