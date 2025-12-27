@@ -68,7 +68,8 @@ public class TestUtils {
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent, ServerContext context) {
-    var documentContext = context.addDocument(uri);
+    var normalizedUri = Absolute.uri(uri);
+    var documentContext = context.addDocument(normalizedUri);
     context.rebuildDocument(documentContext, fileContent, 0);
     return documentContext;
   }
