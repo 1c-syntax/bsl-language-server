@@ -1362,7 +1362,7 @@ class SemanticTokensProviderTest {
     referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
-    // Request range covering only lines 1-2 (0-based: lines 1 and 2)
+    // Request range covering lines 1-2 (0-based, end-exclusive: from line 1 to line 3 means lines 1 and 2)
     Range range = new Range(new Position(1, 0), new Position(3, 0));
     var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
 
@@ -1372,11 +1372,11 @@ class SemanticTokensProviderTest {
     // then
     var decoded = decode(tokens.getData());
 
-    // Should contain tokens only from lines 1-2
+    // Should contain tokens only from lines 1-2 (the range is end-exclusive, so line 3 is excluded)
     assertThat(decoded).allMatch(t -> t.line >= 1 && t.line <= 2,
       "All tokens should be within the requested range (lines 1-2)");
 
-    // Should not contain tokens from line 0 or line 3
+    // Should not contain tokens from line 0 (before range) or line 3 (at or after range end)
     assertThat(decoded).noneMatch(t -> t.line == 0 || t.line == 3,
       "No tokens should be from lines outside the range");
   }
