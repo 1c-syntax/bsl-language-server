@@ -195,7 +195,7 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   @SneakyThrows
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
-    var documentContext = context.addDocument(file.toURI());
+    var documentContext = context.addDocument(Absolute.uri(file));
     context.rebuildDocument(documentContext);
 
     var filePath = srcDir.relativize(Absolute.path(file));

@@ -146,7 +146,7 @@ public class FormatCommand implements Callable<Integer> {
 
   @SneakyThrows
   private void formatFile(File file) {
-    var uri = file.toURI();
+    var uri = Absolute.uri(file);
 
     var documentContext = serverContext.addDocument(uri);
     serverContext.rebuildDocument(documentContext);
