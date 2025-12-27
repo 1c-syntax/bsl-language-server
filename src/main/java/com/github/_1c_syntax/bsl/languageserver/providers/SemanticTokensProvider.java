@@ -197,6 +197,10 @@ public class SemanticTokensProvider {
    * Фильтрует токены, оставляя только те, которые попадают в указанный диапазон.
    * <p>
    * Токен считается попадающим в диапазон, если он хотя бы частично пересекается с ним.
+   * <p>
+   * Оптимизация: сначала выполняется быстрая фильтрация по строкам (простое сравнение целых чисел),
+   * затем для граничных строк проверяются позиции символов. Использует параллельную обработку
+   * для больших объемов данных.
    *
    * @param entries Список токенов
    * @param range   Диапазон для фильтрации
@@ -208,17 +212,23 @@ public class SemanticTokensProvider {
     int endLine = range.getEnd().getLine();
     int endChar = range.getEnd().getCharacter();
 
-    return entries.stream()
-      .filter(token -> isTokenInRange(token, startLine, startChar, endLine, endChar))
+    // Use parallel stream for large collections to leverage multiple cores
+    var stream = entries.size() > 1000 ? entries.parallelStream() : entries.stream();
+
+    return stream
+      // Quick line-based pre-filter (simple integer comparison)
+      .filter(token -> token.line() >= startLine && token.line() <= endLine)
+      // Detailed check for boundary lines only
+      .filter(token -> isTokenInRangeDetailed(token, startLine, startChar, endLine, endChar))
       .toList();
   }
 
   /**
-   * Проверяет, попадает ли токен в указанный диапазон.
+   * Проверяет позицию символов для токенов на граничных строках.
    * <p>
-   * Токен попадает в диапазон, если он хотя бы частично пересекается с ним.
+   * Предполагается, что токен уже прошел проверку по строкам (находится между startLine и endLine).
    */
-  private static boolean isTokenInRange(
+  private static boolean isTokenInRangeDetailed(
     SemanticTokenEntry token,
     int startLine,
     int startChar,
@@ -229,13 +239,13 @@ public class SemanticTokensProvider {
     int tokenStart = token.start();
     int tokenEnd = tokenStart + token.length();
 
-    // Token ends before range starts
-    if (tokenLine < startLine || (tokenLine == startLine && tokenEnd <= startChar)) {
+    // Token is on the start line - check if it ends after range start
+    if (tokenLine == startLine && tokenEnd <= startChar) {
       return false;
     }
 
-    // Token starts after range ends
-    if (tokenLine > endLine || (tokenLine == endLine && tokenStart >= endChar)) {
+    // Token is on the end line - check if it starts before range end
+    if (tokenLine == endLine && tokenStart >= endChar) {
       return false;
     }
 
