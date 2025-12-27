@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766777084157,
+  "lastUpdate": 1766843621073,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -32984,6 +32984,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2496616298388474",
             "extra": "mean: 81.04225039482117 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e09504b43f4f04e0d20a37660794e6d2be2bfdb",
+          "message": "Merge pull request #3696 from 1c-syntax/copilot/support-semantic-tokens-delta\n\nSupport textDocument/semanticTokens/full/delta",
+          "timestamp": "2025-12-27T14:44:56+01:00",
+          "tree_id": "96f986209506e7d0faa83b25b4b25ca01341b607",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6e09504b43f4f04e0d20a37660794e6d2be2bfdb"
+        },
+        "date": 1766843615192,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.29402383168538,
+            "unit": "sec",
+            "range": "stddev: 0.32503587389658567",
+            "extra": "mean: 73.29402383168538 sec\nrounds: 3"
           }
         ]
       }
