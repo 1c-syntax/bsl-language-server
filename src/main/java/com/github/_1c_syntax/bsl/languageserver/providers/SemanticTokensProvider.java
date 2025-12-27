@@ -68,6 +68,11 @@ import java.util.concurrent.ForkJoinPool;
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
 
+  /**
+   * Порог количества токенов, при превышении которого используется параллельная обработка.
+   */
+  private static final int PARALLEL_PROCESSING_THRESHOLD = 1000;
+
   @SuppressWarnings("NullAway.Init")
   private ExecutorService executorService;
 
@@ -213,7 +218,9 @@ public class SemanticTokensProvider {
     int endChar = range.getEnd().getCharacter();
 
     // Use parallel stream for large collections to leverage multiple cores
-    var stream = entries.size() > 1000 ? entries.parallelStream() : entries.stream();
+    var stream = entries.size() > PARALLEL_PROCESSING_THRESHOLD
+      ? entries.parallelStream()
+      : entries.stream();
 
     return stream
       // Quick line-based pre-filter (simple integer comparison)
