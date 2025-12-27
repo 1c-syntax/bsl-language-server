@@ -25,12 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1339,6 +1342,218 @@ class SemanticTokensProviderTest {
     // - The edit should be smaller than the full data
     int editSize = edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0);
     assertThat(editSize).isLessThan(originalDataSize);
+  }
+
+  // endregion
+
+  // region Range tokens tests
+
+  @Test
+  void rangeTokens_returnsOnlyTokensInRange() {
+    // given - multi-line document
+    String bsl = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      Перем Г;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering only lines 1-2 (0-based: lines 1 and 2)
+    Range range = new Range(new Position(1, 0), new Position(3, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    // Should contain tokens only from lines 1-2
+    assertThat(decoded).allMatch(t -> t.line >= 1 && t.line <= 2,
+      "All tokens should be within the requested range (lines 1-2)");
+
+    // Should not contain tokens from line 0 or line 3
+    assertThat(decoded).noneMatch(t -> t.line == 0 || t.line == 3,
+      "No tokens should be from lines outside the range");
+  }
+
+  @Test
+  void rangeTokens_singleLine() {
+    // given
+    String bsl = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering only line 1
+    Range range = new Range(new Position(1, 0), new Position(2, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    // Should contain tokens only from line 1
+    assertThat(decoded).allMatch(t -> t.line == 1,
+      "All tokens should be from line 1");
+
+    var expected = List.of(
+      new ExpectedToken(1, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(1, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Б"),
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
+
+    assertContainsTokens(decoded, expected);
+  }
+
+  @Test
+  void rangeTokens_partialLine() {
+    // given
+    String bsl = """
+      Процедура Тест()
+        Перем А; Перем Б;
+      КонецПроцедуры
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering part of line 1 (middle section)
+    Range range = new Range(new Position(1, 8), new Position(1, 18));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    // Should contain tokens that overlap with the range (A; and Перем Б)
+    assertThat(decoded).isNotEmpty();
+    assertThat(decoded).allMatch(t -> t.line == 1,
+      "All tokens should be from line 1");
+  }
+
+  @Test
+  void rangeTokens_emptyRangeReturnsNoTokens() {
+    // given
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range at end of document where no tokens exist
+    Range range = new Range(new Position(5, 0), new Position(10, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    assertThat(tokens.getData()).isEmpty();
+  }
+
+  @Test
+  void rangeTokens_fullDocumentRange() {
+    // given
+    String bsl = """
+      Перем А;
+      Перем Б;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering entire document
+    Range range = new Range(new Position(0, 0), new Position(100, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens rangeTokens = provider.getSemanticTokensRange(documentContext, params);
+    SemanticTokens fullTokens = provider.getSemanticTokensFull(
+      documentContext,
+      new SemanticTokensParams(textDocumentIdentifier)
+    );
+
+    // then - range tokens should contain same tokens as full request
+    assertThat(rangeTokens.getData()).isEqualTo(fullTokens.getData());
+  }
+
+  @Test
+  void rangeTokens_doesNotHaveResultId() {
+    // given - per LSP spec, range requests don't use resultId
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    Range range = new Range(new Position(0, 0), new Position(1, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then - resultId should be null for range requests
+    assertThat(tokens.getResultId()).isNull();
+  }
+
+  @Test
+  void rangeTokens_withSdblQuery() {
+    // given - test that SDBL tokens are also filtered correctly
+    String bsl = """
+      Процедура Тест()
+        А = 1;
+        Запрос = "Выбрать * из Справочник.Контрагенты";
+        Б = 2;
+      КонецПроцедуры
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering only line 2 (the query line)
+    Range range = new Range(new Position(2, 0), new Position(3, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    // Should contain tokens only from line 2
+    assertThat(decoded).isNotEmpty();
+    assertThat(decoded).allMatch(t -> t.line == 2,
+      "All tokens should be from line 2");
+
+    // Should contain SDBL keyword tokens (Выбрать, из) as well as Namespace and Class
+    int keywordTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
+    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    int classTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
+
+    assertThat(decoded).anyMatch(t -> t.type == keywordTypeIdx, "Should contain keyword tokens");
+    assertThat(decoded).anyMatch(t -> t.type == namespaceTypeIdx, "Should contain namespace token for Справочник");
+    assertThat(decoded).anyMatch(t -> t.type == classTypeIdx, "Should contain class token for Контрагенты");
   }
 
   // endregion

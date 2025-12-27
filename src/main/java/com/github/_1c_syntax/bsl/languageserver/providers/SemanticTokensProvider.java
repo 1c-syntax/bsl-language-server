@@ -30,11 +30,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadF
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDelta;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensEdit;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -57,7 +59,8 @@ import java.util.concurrent.ForkJoinPool;
 /**
  * Провайдер для предоставления семантических токенов.
  * <p>
- * Обрабатывает запросы {@code textDocument/semanticTokens/full} и {@code textDocument/semanticTokens/full/delta}.
+ * Обрабатывает запросы {@code textDocument/semanticTokens/full}, {@code textDocument/semanticTokens/full/delta}
+ * и {@code textDocument/semanticTokens/range}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">Semantic Tokens specification</a>
  */
@@ -162,6 +165,81 @@ public class SemanticTokensProvider {
     delta.setResultId(resultId);
     delta.setEdits(edits);
     return Either.forRight(delta);
+  }
+
+  /**
+   * Получить семантические токены для указанного диапазона документа.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса с диапазоном
+   * @return Семантические токены для указанного диапазона в дельта-кодированном формате
+   */
+  public SemanticTokens getSemanticTokensRange(
+    DocumentContext documentContext,
+    SemanticTokensRangeParams params
+  ) {
+    Range range = params.getRange();
+
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
+
+    // Filter tokens that fall within the specified range
+    var filteredEntries = filterTokensByRange(entries, range);
+
+    // Build delta-encoded data
+    List<Integer> data = toDeltaEncoded(filteredEntries);
+
+    // Range requests do not use resultId caching as per LSP specification
+    return new SemanticTokens(data);
+  }
+
+  /**
+   * Фильтрует токены, оставляя только те, которые попадают в указанный диапазон.
+   * <p>
+   * Токен считается попадающим в диапазон, если он хотя бы частично пересекается с ним.
+   *
+   * @param entries Список токенов
+   * @param range   Диапазон для фильтрации
+   * @return Отфильтрованный список токенов
+   */
+  private static List<SemanticTokenEntry> filterTokensByRange(List<SemanticTokenEntry> entries, Range range) {
+    int startLine = range.getStart().getLine();
+    int startChar = range.getStart().getCharacter();
+    int endLine = range.getEnd().getLine();
+    int endChar = range.getEnd().getCharacter();
+
+    return entries.stream()
+      .filter(token -> isTokenInRange(token, startLine, startChar, endLine, endChar))
+      .toList();
+  }
+
+  /**
+   * Проверяет, попадает ли токен в указанный диапазон.
+   * <p>
+   * Токен попадает в диапазон, если он хотя бы частично пересекается с ним.
+   */
+  private static boolean isTokenInRange(
+    SemanticTokenEntry token,
+    int startLine,
+    int startChar,
+    int endLine,
+    int endChar
+  ) {
+    int tokenLine = token.line();
+    int tokenStart = token.start();
+    int tokenEnd = tokenStart + token.length();
+
+    // Token ends before range starts
+    if (tokenLine < startLine || (tokenLine == startLine && tokenEnd <= startChar)) {
+      return false;
+    }
+
+    // Token starts after range ends
+    if (tokenLine > endLine || (tokenLine == endLine && tokenStart >= endChar)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
