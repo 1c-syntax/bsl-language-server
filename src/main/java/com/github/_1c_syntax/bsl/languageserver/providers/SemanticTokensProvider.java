@@ -191,11 +191,11 @@ public class SemanticTokensProvider {
     // Filter tokens that fall within the specified range
     var filteredEntries = filterTokensByRange(entries, range);
 
-    // Build delta-encoded data
-    List<Integer> data = toDeltaEncoded(filteredEntries);
+    // Build delta-encoded data as int array
+    int[] data = toDeltaEncodedArray(filteredEntries);
 
     // Range requests do not use resultId caching as per LSP specification
-    return new SemanticTokens(data);
+    return new SemanticTokens(toList(data));
   }
 
   /**
