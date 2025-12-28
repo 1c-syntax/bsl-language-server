@@ -1375,10 +1375,10 @@ class SemanticTokensProviderTest {
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
     assertThat(delta.getEdits()).hasSize(1);
-    
+
     var edit = delta.getEdits().get(0);
     List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
-    
+
     assertThat(appliedData)
       .as("Applying delta edit to previous data should produce current data")
       .isEqualTo(tokens2.getData());
@@ -1416,7 +1416,6 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     var edit = delta.getEdits().get(0);
     List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
-    
     assertThat(appliedData)
       .as("Applying delta edit should produce expected data")
       .isEqualTo(tokens2.getData());
@@ -1456,7 +1455,6 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     var edit = delta.getEdits().get(0);
     List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
-    
     assertThat(appliedData)
       .as("Applying delta edit should produce expected data")
       .isEqualTo(tokens2.getData());
@@ -1491,7 +1489,6 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     var edit = delta.getEdits().get(0);
     List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
-    
     assertThat(appliedData)
       .as("Applying delta edit for same-line insertion should produce expected data")
       .isEqualTo(tokens2.getData());
@@ -1517,11 +1514,10 @@ class SemanticTokensProviderTest {
     if (insertData != null && !insertData.isEmpty()) {
       result.addAll(start, insertData);
     }
-    
+
     return result;
   }
 
   // endregion
 }
-
 
