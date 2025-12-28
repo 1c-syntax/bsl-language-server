@@ -1358,9 +1358,29 @@ class SemanticTokensProviderTest {
     TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
     SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
 
+    // Verify original tokens structure
+    var decoded1 = decode(tokens1.getData());
+    var expected1 = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(0, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(0, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
+    assertTokensMatch(decoded1, expected1);
+
     DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
     referenceIndexFiller.fill(context2);
     SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // Verify modified tokens structure
+    var decoded2 = decode(tokens2.getData());
+    var expected2 = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(0, 6, 5, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Новая"),
+      new ExpectedToken(0, 11, 1, SemanticTokenTypes.Operator, ","),
+      new ExpectedToken(0, 13, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(0, 14, 1, SemanticTokenTypes.Operator, ";")
+    );
+    assertTokensMatch(decoded2, expected2);
 
     // when
     var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
@@ -1372,11 +1392,8 @@ class SemanticTokensProviderTest {
     assertThat(delta.getEdits()).isNotEmpty();
     
     // Verify the delta is computed correctly
-    // Original tokens: "Перем" (keyword), "А" (variable), ";" (operator)
-    // New tokens: "Перем" (keyword), "Новая" (variable), "," (operator), "А" (variable), ";" (operator)
     // Since lineOffset=0 (no line change), the algorithm should detect this as an inline edit
-    // The "Перем" token should match, and ";" should match (though its deltaStart changes)
-    
+    // The "Перем" token should match as prefix, and ";" should match as suffix (though its deltaStart changes)
     // The edit should be significantly smaller than sending all new tokens
     int editSize = delta.getEdits().get(0).getDeleteCount() + 
                    (delta.getEdits().get(0).getData() != null ? delta.getEdits().get(0).getData().size() : 0);
