@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766843621073,
+  "lastUpdate": 1766932901228,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33015,6 +33015,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.32503587389658567",
             "extra": "mean: 73.29402383168538 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "116269d9999843f4f125c2b3628f46d17555bed9",
+          "message": "Merge pull request #3706 from 1c-syntax/feature/optimize-delta-semantic-tokens\n\nОптимизация хранения семантических токенов, фикс расчёта дельт",
+          "timestamp": "2025-12-28T15:32:56+01:00",
+          "tree_id": "e80e134a83e4b415f8d4e79d78face2e5e3f33a5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/116269d9999843f4f125c2b3628f46d17555bed9"
+        },
+        "date": 1766932893998,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.32033896446228,
+            "unit": "sec",
+            "range": "stddev: 1.0188853253449612",
+            "extra": "mean: 72.32033896446228 sec\nrounds: 3"
           }
         ]
       }
