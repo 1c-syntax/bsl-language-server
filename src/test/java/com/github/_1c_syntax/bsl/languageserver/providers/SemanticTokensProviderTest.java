@@ -1357,7 +1357,6 @@ class SemanticTokensProviderTest {
     referenceIndexFiller.fill(context1);
     TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
     SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
-    int originalDataSize = tokens1.getData().size();
 
     DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
     referenceIndexFiller.fill(context2);
@@ -1378,10 +1377,10 @@ class SemanticTokensProviderTest {
     // Since lineOffset=0 (no line change), the algorithm should detect this as an inline edit
     // The "Перем" token should match, and ";" should match (though its deltaStart changes)
     
-    // The edit should be smaller than resending all tokens
+    // The edit should be significantly smaller than sending all new tokens
     int editSize = delta.getEdits().get(0).getDeleteCount() + 
                    (delta.getEdits().get(0).getData() != null ? delta.getEdits().get(0).getData().size() : 0);
-    assertThat(editSize).isLessThan(originalDataSize + tokens2.getData().size());
+    assertThat(editSize).isLessThan(tokens2.getData().size());
   }
 
   // endregion
