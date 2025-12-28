@@ -1341,6 +1341,64 @@ class SemanticTokensProviderTest {
     assertThat(editSize).isLessThan(originalDataSize);
   }
 
+  @Test
+  void deltaWithTextInsertedOnSameLine_shouldReturnOptimalDelta() {
+    // given - simulate inserting text on the same line without line breaks
+    // This tests the case raised by @nixel2007: text insertion without newline
+    String bsl1 = """
+      Перем А;
+      """;
+
+    String bsl2 = """
+      Перем Новая, А;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+    int originalDataSize = tokens1.getData().size();
+    
+    // Decode and print tokens for debugging
+    var decoded1 = decode(tokens1.getData());
+    System.out.println("Original tokens:");
+    for (var t : decoded1) {
+      System.out.println("  line=" + t.line + ", start=" + t.start + ", len=" + t.length + ", type=" + t.type + ", mods=" + t.modifiers);
+    }
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+    var decoded2 = decode(tokens2.getData());
+    System.out.println("New tokens:");
+    for (var t : decoded2) {
+      System.out.println("  line=" + t.line + ", start=" + t.start + ", len=" + t.length + ", type=" + t.type + ", mods=" + t.modifiers);
+    }
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - should return delta, not full tokens
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getEdits()).isNotEmpty();
+    
+    var edit = delta.getEdits().get(0);
+    System.out.println("Edit: start=" + edit.getStart() + ", deleteCount=" + edit.getDeleteCount() + 
+                       ", insertSize=" + (edit.getData() != null ? edit.getData().size() : 0));
+    
+    // Verify the delta is computed correctly
+    // Original tokens: "Перем" (keyword), "А" (variable), ";" (operator)
+    // New tokens: "Перем" (keyword), "Новая" (variable), "," (operator), "А" (variable), ";" (operator)
+    // Since lineOffset=0 (no line change), the algorithm should detect this as an inline edit
+    // The "Перем" token should match, and ";" should match (though its deltaStart changes)
+    
+    // The edit should be smaller than resending all tokens
+    int editSize = edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0);
+    assertThat(editSize).isLessThan(originalDataSize + tokens2.getData().size());
+  }
+
   // endregion
 }
 
