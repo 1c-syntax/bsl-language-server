@@ -1390,13 +1390,32 @@ class SemanticTokensProviderTest {
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
     assertThat(delta.getEdits()).isNotEmpty();
+    assertThat(delta.getEdits()).hasSize(1);
     
-    // Verify the delta is computed correctly
-    // Since lineOffset=0 (no line change), the algorithm should detect this as an inline edit
-    // The "Перем" token should match as prefix, and ";" should match as suffix (though its deltaStart changes)
-    // The edit should be significantly smaller than sending all new tokens
-    int editSize = delta.getEdits().get(0).getDeleteCount() + 
-                   (delta.getEdits().get(0).getData() != null ? delta.getEdits().get(0).getData().size() : 0);
+    // Verify the delta edit details
+    // Original: [Перем, А, ;] - 3 tokens = 15 integers
+    // Modified: [Перем, Новая, ,, А, ;] - 5 tokens = 25 integers
+    // 
+    // With lineOffset=0 inline edit handling:
+    // - Prefix match: "Перем" (1 token = 5 integers)
+    // - Suffix match: "А" and ";" (2 tokens = 10 integers)
+    //   Note: "А" matches because the algorithm allows deltaStart to differ when lineOffset=0
+    // - Edit deletes: nothing (0 integers)
+    // - Edit inserts: "Новая" and "," (2 tokens = 10 integers)
+    var edit = delta.getEdits().get(0);
+    assertThat(edit.getStart())
+      .as("Edit should start after the prefix match (Перем = 5 integers)")
+      .isEqualTo(5);
+    assertThat(edit.getDeleteCount())
+      .as("Edit should delete nothing (suffix match includes А and ;)")
+      .isEqualTo(0);
+    assertThat(edit.getData())
+      .as("Edit should insert Новая and , tokens (2 tokens = 10 integers)")
+      .isNotNull()
+      .hasSize(10);
+    
+    // Verify the edit is optimal (smaller than sending all new tokens)
+    int editSize = edit.getDeleteCount() + edit.getData().size();
     assertThat(editSize).isLessThan(tokens2.getData().size());
   }
 
