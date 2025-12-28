@@ -91,9 +91,9 @@ public class SemanticTokensProvider {
    * Cached semantic token data associated with a document.
    *
    * @param uri  URI of the document
-   * @param data token data list
+   * @param data token data as int array (more efficient than List<Integer>)
    */
-  private record CachedTokenData(URI uri, List<Integer> data) {
+  private record CachedTokenData(URI uri, int[] data) {
   }
 
   /**
@@ -110,14 +110,14 @@ public class SemanticTokensProvider {
     // Collect tokens from all suppliers in parallel
     var entries = collectTokens(documentContext);
 
-    // Build delta-encoded data
-    List<Integer> data = toDeltaEncoded(entries);
+    // Build delta-encoded data as int array
+    int[] data = toDeltaEncodedArray(entries);
 
     // Generate a unique resultId and cache the data
     String resultId = generateResultId();
     cacheTokenData(resultId, documentContext.getUri(), data);
 
-    return new SemanticTokens(resultId, data);
+    return new SemanticTokens(resultId, toList(data));
   }
 
   /**
@@ -137,8 +137,8 @@ public class SemanticTokensProvider {
     // Collect tokens from all suppliers in parallel
     var entries = collectTokens(documentContext);
 
-    // Build delta-encoded data
-    List<Integer> currentData = toDeltaEncoded(entries);
+    // Build delta-encoded data as int array
+    int[] currentData = toDeltaEncodedArray(entries);
 
     // Generate new resultId
     String resultId = generateResultId();
@@ -146,7 +146,7 @@ public class SemanticTokensProvider {
     // If previous data is not available or belongs to a different document, return full tokens
     if (previousData == null || !previousData.uri().equals(documentContext.getUri())) {
       cacheTokenData(resultId, documentContext.getUri(), currentData);
-      return Either.forLeft(new SemanticTokens(resultId, currentData));
+      return Either.forLeft(new SemanticTokens(resultId, toList(currentData)));
     }
 
     // Compute delta edits
@@ -207,51 +207,157 @@ public class SemanticTokensProvider {
   /**
    * Cache token data with the given resultId.
    */
-  private void cacheTokenData(String resultId, URI uri, List<Integer> data) {
+  private void cacheTokenData(String resultId, URI uri, int[] data) {
     tokenCache.put(resultId, new CachedTokenData(uri, data));
   }
 
   /**
    * Compute edits to transform previousData into currentData.
-   * Uses a simple algorithm that produces a single edit covering the entire change.
+   * <p>
+   * Учитывает структуру семантических токенов (группы по 5 элементов: deltaLine, deltaStart, length, type, modifiers)
+   * и смещение строк при вставке/удалении строк в документе.
    */
-  private static List<SemanticTokensEdit> computeEdits(List<Integer> previousData, List<Integer> currentData) {
-    // Find the first differing index
-    int minSize = Math.min(previousData.size(), currentData.size());
-    int prefixMatch = 0;
-    while (prefixMatch < minSize && previousData.get(prefixMatch).equals(currentData.get(prefixMatch))) {
-      prefixMatch++;
-    }
+  private static List<SemanticTokensEdit> computeEdits(int[] prev, int[] curr) {
+    final int TOKEN_SIZE = 5;
 
-    // If both are identical, return empty edits
-    if (prefixMatch == previousData.size() && prefixMatch == currentData.size()) {
+    int prevTokenCount = prev.length / TOKEN_SIZE;
+    int currTokenCount = curr.length / TOKEN_SIZE;
+
+    if (prevTokenCount == 0 && currTokenCount == 0) {
       return List.of();
     }
 
-    // Find the last differing index (from the end)
-    int suffixMatch = 0;
-    while (suffixMatch < minSize - prefixMatch
-      && previousData.get(previousData.size() - 1 - suffixMatch)
-      .equals(currentData.get(currentData.size() - 1 - suffixMatch))) {
-      suffixMatch++;
+    // Находим первый отличающийся токен и одновременно вычисляем сумму deltaLine для prefix
+    int firstDiffToken = 0;
+    int prefixAbsLine = 0;
+    int minTokens = Math.min(prevTokenCount, currTokenCount);
+
+    outer:
+    for (int i = 0; i < minTokens; i++) {
+      int base = i * TOKEN_SIZE;
+      for (int j = 0; j < TOKEN_SIZE; j++) {
+        if (prev[base + j] != curr[base + j]) {
+          firstDiffToken = i;
+          break outer;
+        }
+      }
+      prefixAbsLine += prev[base]; // накапливаем deltaLine
+      firstDiffToken = i + 1;
     }
 
-    // Calculate the range to replace
-    int deleteStart = prefixMatch;
-    int deleteCount = previousData.size() - prefixMatch - suffixMatch;
-    int insertEnd = currentData.size() - suffixMatch;
+    // Если все токены одинаковые
+    if (firstDiffToken == minTokens && prevTokenCount == currTokenCount) {
+      return List.of();
+    }
 
-    // Extract the data to insert
-    List<Integer> insertData = currentData.subList(prefixMatch, insertEnd);
+    // Вычисляем смещение строк инкрементально от prefixAbsLine
+    int prevSuffixAbsLine = prefixAbsLine;
+    for (int i = firstDiffToken; i < prevTokenCount; i++) {
+      prevSuffixAbsLine += prev[i * TOKEN_SIZE];
+    }
+    int currSuffixAbsLine = prefixAbsLine;
+    for (int i = firstDiffToken; i < currTokenCount; i++) {
+      currSuffixAbsLine += curr[i * TOKEN_SIZE];
+    }
+    int lineOffset = currSuffixAbsLine - prevSuffixAbsLine;
+
+    // Находим последний отличающийся токен с учётом смещения строк
+    int suffixMatchTokens = findSuffixMatchWithOffset(prev, curr, firstDiffToken, lineOffset, TOKEN_SIZE);
+
+    // Вычисляем границы редактирования
+    int deleteEndToken = prevTokenCount - suffixMatchTokens;
+    int insertEndToken = currTokenCount - suffixMatchTokens;
+
+    int deleteStart = firstDiffToken * TOKEN_SIZE;
+    int deleteCount = (deleteEndToken - firstDiffToken) * TOKEN_SIZE;
+    int insertEnd = insertEndToken * TOKEN_SIZE;
+
+    if (deleteCount == 0 && deleteStart == insertEnd) {
+      return List.of();
+    }
+
+    // Создаём список для вставки из среза массива
+    List<Integer> insertData = toList(Arrays.copyOfRange(curr, deleteStart, insertEnd));
 
     var edit = new SemanticTokensEdit();
     edit.setStart(deleteStart);
     edit.setDeleteCount(deleteCount);
     if (!insertData.isEmpty()) {
-      edit.setData(new ArrayList<>(insertData));
+      edit.setData(insertData);
     }
 
     return List.of(edit);
+  }
+
+  /**
+   * Находит количество совпадающих токенов с конца, учитывая смещение строк.
+   * <p>
+   * При дельта-кодировании токены после точки вставки идентичны,
+   * кроме первого токена, у которого deltaLine смещён на lineOffset.
+   * При вставке текста без перевода строки (lineOffset == 0), первый токен
+   * может иметь смещённый deltaStart.
+   */
+  private static int findSuffixMatchWithOffset(int[] prev, int[] curr, int firstDiffToken, int lineOffset, int tokenSize) {
+    final int DELTA_LINE_INDEX = 0;
+    final int DELTA_START_INDEX = 1;
+    
+    int prevTokenCount = prev.length / tokenSize;
+    int currTokenCount = curr.length / tokenSize;
+
+    int maxPrevSuffix = prevTokenCount - firstDiffToken;
+    int maxCurrSuffix = currTokenCount - firstDiffToken;
+    int maxSuffix = Math.min(maxPrevSuffix, maxCurrSuffix);
+
+    int suffixMatch = 0;
+    boolean foundBoundary = false;
+
+    for (int i = 0; i < maxSuffix; i++) {
+      int prevIdx = (prevTokenCount - 1 - i) * tokenSize;
+      int currIdx = (currTokenCount - 1 - i) * tokenSize;
+
+      // Для граничного токена при inline-редактировании (lineOffset == 0)
+      // разрешаем различие в deltaStart
+      int firstFieldToCheck = (!foundBoundary && lineOffset == 0) ? DELTA_START_INDEX + 1 : DELTA_START_INDEX;
+      
+      // Проверяем поля кроме deltaLine (и возможно deltaStart для граничного токена)
+      boolean otherFieldsMatch = true;
+      for (int j = firstFieldToCheck; j < tokenSize; j++) {
+        if (prev[prevIdx + j] != curr[currIdx + j]) {
+          otherFieldsMatch = false;
+          break;
+        }
+      }
+
+      if (!otherFieldsMatch) {
+        break;
+      }
+
+      // Теперь проверяем deltaLine
+      int prevDeltaLine = prev[prevIdx + DELTA_LINE_INDEX];
+      int currDeltaLine = curr[currIdx + DELTA_LINE_INDEX];
+
+      if (prevDeltaLine == currDeltaLine) {
+        // Полное совпадение (или совпадение с учётом deltaStart при inline-редактировании)
+        suffixMatch++;
+        // Если это был граничный токен при inline-редактировании, отмечаем его найденным
+        if (!foundBoundary && lineOffset == 0) {
+          int prevDeltaStart = prev[prevIdx + DELTA_START_INDEX];
+          int currDeltaStart = curr[currIdx + DELTA_START_INDEX];
+          if (prevDeltaStart != currDeltaStart) {
+            foundBoundary = true;
+          }
+        }
+      } else if (!foundBoundary && currDeltaLine - prevDeltaLine == lineOffset) {
+        // Граничный токен — deltaLine отличается ровно на lineOffset
+        suffixMatch++;
+        foundBoundary = true;
+      } else {
+        // Не совпадает
+        break;
+      }
+    }
+
+    return suffixMatch;
   }
 
   /**
@@ -269,7 +375,7 @@ public class SemanticTokensProvider {
       .join();
   }
 
-  private static List<Integer> toDeltaEncoded(List<SemanticTokenEntry> entries) {
+  private static int[] toDeltaEncodedArray(List<SemanticTokenEntry> entries) {
     // de-dup and sort
     Set<SemanticTokenEntry> uniq = new HashSet<>(entries);
     List<SemanticTokenEntry> sorted = new ArrayList<>(uniq);
@@ -300,7 +406,10 @@ public class SemanticTokensProvider {
       first = false;
     }
 
-    // Convert to List<Integer> for LSP4J API
-    return Arrays.stream(data).boxed().toList();
+    return data;
+  }
+
+  private static List<Integer> toList(int[] array) {
+    return Arrays.stream(array).boxed().toList();
   }
 }
