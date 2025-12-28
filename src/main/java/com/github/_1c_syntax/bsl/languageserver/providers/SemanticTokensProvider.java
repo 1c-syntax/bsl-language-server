@@ -65,6 +65,11 @@ import java.util.concurrent.ForkJoinPool;
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
 
+  /**
+   * Number of integers per semantic token (deltaLine, deltaStart, length, type, modifiers).
+   */
+  private static final int TOKEN_SIZE = 5;
+
   @SuppressWarnings("NullAway.Init")
   private ExecutorService executorService;
 
@@ -218,8 +223,6 @@ public class SemanticTokensProvider {
    * и смещение строк при вставке/удалении строк в документе.
    */
   private static List<SemanticTokensEdit> computeEdits(int[] prev, int[] curr) {
-    final int TOKEN_SIZE = 5;
-
     int prevTokenCount = prev.length / TOKEN_SIZE;
     int currTokenCount = curr.length / TOKEN_SIZE;
 
@@ -232,13 +235,13 @@ public class SemanticTokensProvider {
     int prefixAbsLine = 0;
     int minTokens = Math.min(prevTokenCount, currTokenCount);
 
-    outer:
+    findFirstDifference:
     for (int i = 0; i < minTokens; i++) {
       int base = i * TOKEN_SIZE;
       for (int j = 0; j < TOKEN_SIZE; j++) {
         if (prev[base + j] != curr[base + j]) {
           firstDiffToken = i;
-          break outer;
+          break findFirstDifference;
         }
       }
       prefixAbsLine += prev[base]; // накапливаем deltaLine
@@ -262,7 +265,7 @@ public class SemanticTokensProvider {
     int lineOffset = currSuffixAbsLine - prevSuffixAbsLine;
 
     // Находим последний отличающийся токен с учётом смещения строк
-    int suffixMatchTokens = findSuffixMatchWithOffset(prev, curr, firstDiffToken, lineOffset, TOKEN_SIZE);
+    int suffixMatchTokens = findSuffixMatchWithOffset(prev, curr, firstDiffToken, lineOffset);
 
     // Вычисляем границы редактирования
     int deleteEndToken = prevTokenCount - suffixMatchTokens;
@@ -271,10 +274,6 @@ public class SemanticTokensProvider {
     int deleteStart = firstDiffToken * TOKEN_SIZE;
     int deleteCount = (deleteEndToken - firstDiffToken) * TOKEN_SIZE;
     int insertEnd = insertEndToken * TOKEN_SIZE;
-
-    if (deleteCount == 0 && deleteStart == insertEnd) {
-      return List.of();
-    }
 
     // Создаём список для вставки из среза массива
     List<Integer> insertData = toList(Arrays.copyOfRange(curr, deleteStart, insertEnd));
@@ -295,9 +294,9 @@ public class SemanticTokensProvider {
    * При дельта-кодировании токены после точки вставки идентичны,
    * кроме первого токена, у которого deltaLine смещён на lineOffset.
    */
-  private static int findSuffixMatchWithOffset(int[] prev, int[] curr, int firstDiffToken, int lineOffset, int tokenSize) {
-    int prevTokenCount = prev.length / tokenSize;
-    int currTokenCount = curr.length / tokenSize;
+  private static int findSuffixMatchWithOffset(int[] prev, int[] curr, int firstDiffToken, int lineOffset) {
+    int prevTokenCount = prev.length / TOKEN_SIZE;
+    int currTokenCount = curr.length / TOKEN_SIZE;
 
     int maxPrevSuffix = prevTokenCount - firstDiffToken;
     int maxCurrSuffix = currTokenCount - firstDiffToken;
@@ -307,12 +306,12 @@ public class SemanticTokensProvider {
     boolean foundBoundary = false;
 
     for (int i = 0; i < maxSuffix; i++) {
-      int prevIdx = (prevTokenCount - 1 - i) * tokenSize;
-      int currIdx = (currTokenCount - 1 - i) * tokenSize;
+      int prevIdx = (prevTokenCount - 1 - i) * TOKEN_SIZE;
+      int currIdx = (currTokenCount - 1 - i) * TOKEN_SIZE;
 
       // Сначала проверяем все поля кроме deltaLine
       boolean otherFieldsMatch = true;
-      for (int j = 1; j < tokenSize; j++) {
+      for (int j = 1; j < TOKEN_SIZE; j++) {
         if (prev[prevIdx + j] != curr[currIdx + j]) {
           otherFieldsMatch = false;
           break;

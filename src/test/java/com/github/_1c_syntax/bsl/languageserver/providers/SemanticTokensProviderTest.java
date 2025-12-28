@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
+import org.eclipse.lsp4j.SemanticTokensEdit;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -1341,6 +1342,186 @@ class SemanticTokensProviderTest {
     assertThat(editSize).isLessThan(originalDataSize);
   }
 
+  @Test
+  void deltaEdit_appliedToPreviousData_producesCurrentData() {
+    // given - simulate modifying document
+    String bsl1 = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Новая;
+      Перем Б;
+      Перем В;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - applying edit to previous data should produce current data
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getEdits()).hasSize(1);
+    
+    var edit = delta.getEdits().get(0);
+    List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
+    
+    assertThat(appliedData)
+      .as("Applying delta edit to previous data should produce current data")
+      .isEqualTo(tokens2.getData());
+  }
+
+  @Test
+  void deltaEdit_withLineInsertionAtStart_appliedCorrectly() {
+    // given
+    String bsl1 = """
+      Перем А;
+      Перем Б;
+      """;
+
+    String bsl2 = """
+      Перем Новая;
+      Перем А;
+      Перем Б;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    var edit = delta.getEdits().get(0);
+    List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
+    
+    assertThat(appliedData)
+      .as("Applying delta edit should produce expected data")
+      .isEqualTo(tokens2.getData());
+  }
+
+  @Test
+  void deltaEdit_withLineDeletion_appliedCorrectly() {
+    // given
+    String bsl1 = """
+      Перем А;
+      Перем Удаляемая;
+      Перем Б;
+      Перем В;
+      """;
+
+    String bsl2 = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    var edit = delta.getEdits().get(0);
+    List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
+    
+    assertThat(appliedData)
+      .as("Applying delta edit should produce expected data")
+      .isEqualTo(tokens2.getData());
+  }
+
+  @Test
+  void deltaEdit_withTextInsertionOnSameLine_appliedCorrectly() {
+    // given - adding text on the same line (no new line)
+    String bsl1 = """
+      Перем А;
+      """;
+
+    String bsl2 = """
+      Перем А, Б;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    var edit = delta.getEdits().get(0);
+    List<Integer> appliedData = applyEdit(tokens1.getData(), edit);
+    
+    assertThat(appliedData)
+      .as("Applying delta edit for same-line insertion should produce expected data")
+      .isEqualTo(tokens2.getData());
+  }
+
+  /**
+   * Helper method to apply a semantic tokens edit to previous data.
+   * Simulates what the LSP client does when receiving a delta.
+   */
+  private List<Integer> applyEdit(List<Integer> previousData, SemanticTokensEdit edit) {
+    List<Integer> result = new ArrayList<>(previousData);
+    
+    int start = edit.getStart();
+    int deleteCount = edit.getDeleteCount();
+    List<Integer> insertData = edit.getData();
+    
+    // Remove deleteCount elements starting at start
+    for (int i = 0; i < deleteCount; i++) {
+      result.remove(start);
+    }
+    
+    // Insert new data at start position
+    if (insertData != null && !insertData.isEmpty()) {
+      result.addAll(start, insertData);
+    }
+    
+    return result;
+  }
+
   // endregion
 }
+
 
