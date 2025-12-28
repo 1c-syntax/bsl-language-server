@@ -1450,13 +1450,18 @@ class SemanticTokensProviderTest {
     // then
     var decoded = decode(tokens.getData());
 
-    // Should contain tokens only from lines 1-2 (the range is end-exclusive, so line 3 is excluded)
-    assertThat(decoded).allMatch(t -> t.line >= 1 && t.line <= 2,
-      "All tokens should be within the requested range (lines 1-2)");
+    var expected = List.of(
+      // Line 1: Перем Б;
+      new ExpectedToken(1, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(1, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Б"),
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, ";"),
+      // Line 2: Перем В;
+      new ExpectedToken(2, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(2, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "В"),
+      new ExpectedToken(2, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
 
-    // Should not contain tokens from line 0 (before range) or line 3 (at or after range end)
-    assertThat(decoded).noneMatch(t -> t.line == 0 || t.line == 3,
-      "No tokens should be from lines outside the range");
+    assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -1482,17 +1487,13 @@ class SemanticTokensProviderTest {
     // then
     var decoded = decode(tokens.getData());
 
-    // Should contain tokens only from line 1
-    assertThat(decoded).allMatch(t -> t.line == 1,
-      "All tokens should be from line 1");
-
     var expected = List.of(
       new ExpectedToken(1, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
       new ExpectedToken(1, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Б"),
       new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, ";")
     );
 
-    assertContainsTokens(decoded, expected);
+    assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -1508,7 +1509,10 @@ class SemanticTokensProviderTest {
     referenceIndexFiller.fill(documentContext);
     TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
 
-    // Request range covering part of line 1 (middle section)
+    // Request range covering part of line 1 (middle section: characters 8-18)
+    // Line content: "  Перем А; Перем Б;"
+    // Positions:     01234567890123456789
+    // Range [8,18) covers: "А; Перем Б" - tokens А (at 8), ; (at 9), Перем (at 11), Б (at 17)
     Range range = new Range(new Position(1, 8), new Position(1, 18));
     var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
 
@@ -1518,10 +1522,15 @@ class SemanticTokensProviderTest {
     // then
     var decoded = decode(tokens.getData());
 
-    // Should contain tokens that overlap with the range (A; and Перем Б)
-    assertThat(decoded).isNotEmpty();
-    assertThat(decoded).allMatch(t -> t.line == 1,
-      "All tokens should be from line 1");
+    // Tokens that overlap with range [8,18): А at 8, ; at 9, Перем at 11-15, Б at 17
+    var expected = List.of(
+      new ExpectedToken(1, 8, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(1, 9, 1, SemanticTokenTypes.Operator, ";"),
+      new ExpectedToken(1, 11, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(1, 17, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Б")
+    );
+
+    assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -1543,7 +1552,8 @@ class SemanticTokensProviderTest {
     SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
 
     // then
-    assertThat(tokens.getData()).isEmpty();
+    var decoded = decode(tokens.getData());
+    assertThat(decoded).isEmpty();
   }
 
   @Test
@@ -1592,6 +1602,15 @@ class SemanticTokensProviderTest {
 
     // then - resultId should be null for range requests
     assertThat(tokens.getResultId()).isNull();
+
+    // Also verify exact tokens returned
+    var decoded = decode(tokens.getData());
+    var expected = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(0, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(0, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
+    assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -1619,19 +1638,26 @@ class SemanticTokensProviderTest {
     // then
     var decoded = decode(tokens.getData());
 
-    // Should contain tokens only from line 2
-    assertThat(decoded).isNotEmpty();
-    assertThat(decoded).allMatch(t -> t.line == 2,
-      "All tokens should be from line 2");
+    // Line 2: "  Запрос = "Выбрать * из Справочник.Контрагенты";"
+    // The SDBL query is parsed with interleaved string tokens for spaces between keywords
+    var expected = List.of(
+      new ExpectedToken(2, 2, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Запрос"),
+      new ExpectedToken(2, 9, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(2, 11, 1, SemanticTokenTypes.String, "\""),
+      new ExpectedToken(2, 12, 7, SemanticTokenTypes.Keyword, "Выбрать"),
+      new ExpectedToken(2, 19, 1, SemanticTokenTypes.String, " "),
+      new ExpectedToken(2, 20, 1, SemanticTokenTypes.Operator, "*"),
+      new ExpectedToken(2, 21, 1, SemanticTokenTypes.String, " "),
+      new ExpectedToken(2, 22, 2, SemanticTokenTypes.Keyword, "из"),
+      new ExpectedToken(2, 24, 1, SemanticTokenTypes.String, " "),
+      new ExpectedToken(2, 25, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(2, 35, 1, SemanticTokenTypes.Operator, "."),
+      new ExpectedToken(2, 36, 11, SemanticTokenTypes.Class, "Контрагенты"),
+      new ExpectedToken(2, 47, 1, SemanticTokenTypes.String, "\""),
+      new ExpectedToken(2, 48, 1, SemanticTokenTypes.Operator, ";")
+    );
 
-    // Should contain SDBL keyword tokens (Выбрать, из) as well as Namespace and Class
-    int keywordTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int classTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Class);
-
-    assertThat(decoded).anyMatch(t -> t.type == keywordTypeIdx, "Should contain keyword tokens");
-    assertThat(decoded).anyMatch(t -> t.type == namespaceTypeIdx, "Should contain namespace token for Справочник");
-    assertThat(decoded).anyMatch(t -> t.type == classTypeIdx, "Should contain class token for Контрагенты");
+    assertTokensMatch(decoded, expected);
   }
 
   // endregion
