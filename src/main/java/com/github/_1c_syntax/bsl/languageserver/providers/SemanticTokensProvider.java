@@ -294,8 +294,13 @@ public class SemanticTokensProvider {
    * <p>
    * При дельта-кодировании токены после точки вставки идентичны,
    * кроме первого токена, у которого deltaLine смещён на lineOffset.
+   * При вставке текста без перевода строки (lineOffset == 0), первый токен
+   * может иметь смещённый deltaStart.
    */
   private static int findSuffixMatchWithOffset(int[] prev, int[] curr, int firstDiffToken, int lineOffset, int tokenSize) {
+    final int DELTA_LINE_INDEX = 0;
+    final int DELTA_START_INDEX = 1;
+    
     int prevTokenCount = prev.length / tokenSize;
     int currTokenCount = curr.length / tokenSize;
 
@@ -310,9 +315,13 @@ public class SemanticTokensProvider {
       int prevIdx = (prevTokenCount - 1 - i) * tokenSize;
       int currIdx = (currTokenCount - 1 - i) * tokenSize;
 
-      // Сначала проверяем все поля кроме deltaLine
+      // Для граничного токена при inline-редактировании (lineOffset == 0)
+      // разрешаем различие в deltaStart
+      int firstFieldToCheck = (!foundBoundary && lineOffset == 0) ? DELTA_START_INDEX + 1 : DELTA_START_INDEX;
+      
+      // Проверяем поля кроме deltaLine (и возможно deltaStart для граничного токена)
       boolean otherFieldsMatch = true;
-      for (int j = 1; j < tokenSize; j++) {
+      for (int j = firstFieldToCheck; j < tokenSize; j++) {
         if (prev[prevIdx + j] != curr[currIdx + j]) {
           otherFieldsMatch = false;
           break;
@@ -324,12 +333,20 @@ public class SemanticTokensProvider {
       }
 
       // Теперь проверяем deltaLine
-      int prevDeltaLine = prev[prevIdx];
-      int currDeltaLine = curr[currIdx];
+      int prevDeltaLine = prev[prevIdx + DELTA_LINE_INDEX];
+      int currDeltaLine = curr[currIdx + DELTA_LINE_INDEX];
 
       if (prevDeltaLine == currDeltaLine) {
-        // Полное совпадение
+        // Полное совпадение (или совпадение с учётом deltaStart при inline-редактировании)
         suffixMatch++;
+        // Если это был граничный токен при inline-редактировании, отмечаем его найденным
+        if (!foundBoundary && lineOffset == 0) {
+          int prevDeltaStart = prev[prevIdx + DELTA_START_INDEX];
+          int currDeltaStart = curr[currIdx + DELTA_START_INDEX];
+          if (prevDeltaStart != currDeltaStart) {
+            foundBoundary = true;
+          }
+        }
       } else if (!foundBoundary && currDeltaLine - prevDeltaLine == lineOffset) {
         // Граничный токен — deltaLine отличается ровно на lineOffset
         suffixMatch++;

@@ -1341,6 +1341,84 @@ class SemanticTokensProviderTest {
     assertThat(editSize).isLessThan(originalDataSize);
   }
 
+  @Test
+  void deltaWithTextInsertedOnSameLine_shouldReturnOptimalDelta() {
+    // given - simulate inserting text on the same line without line breaks
+    // This tests the case raised by @nixel2007: text insertion without newline
+    String bsl1 = """
+      Перем А;
+      """;
+
+    String bsl2 = """
+      Перем Новая, А;
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    // Verify original tokens structure
+    var decoded1 = decode(tokens1.getData());
+    var expected1 = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(0, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(0, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
+    assertTokensMatch(decoded1, expected1);
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // Verify modified tokens structure
+    var decoded2 = decode(tokens2.getData());
+    var expected2 = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(0, 6, 5, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Новая"),
+      new ExpectedToken(0, 11, 1, SemanticTokenTypes.Operator, ","),
+      new ExpectedToken(0, 13, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(0, 14, 1, SemanticTokenTypes.Operator, ";")
+    );
+    assertTokensMatch(decoded2, expected2);
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - should return delta, not full tokens
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getEdits()).isNotEmpty();
+    assertThat(delta.getEdits()).hasSize(1);
+    
+    // Verify the delta edit details
+    // Original: [Перем, А, ;] - 3 tokens = 15 integers
+    // Modified: [Перем, Новая, ,, А, ;] - 5 tokens = 25 integers
+    // 
+    // With lineOffset=0 inline edit handling:
+    // - Prefix match: "Перем" (1 token = 5 integers)
+    // - Suffix match: "А" and ";" (2 tokens = 10 integers)
+    //   Note: "А" matches because the algorithm allows deltaStart to differ when lineOffset=0
+    // - Edit deletes: nothing (0 integers)
+    // - Edit inserts: "Новая" and "," (2 tokens = 10 integers)
+    var edit = delta.getEdits().get(0);
+    assertThat(edit.getStart())
+      .as("Edit should start after the prefix match (Перем = 5 integers)")
+      .isEqualTo(5);
+    assertThat(edit.getDeleteCount())
+      .as("Edit should delete nothing (suffix match includes А and ;)")
+      .isEqualTo(0);
+    assertThat(edit.getData())
+      .as("Edit should insert Новая and , tokens (2 tokens = 10 integers)")
+      .isNotNull()
+      .hasSize(10);
+    
+    // Verify the edit is optimal (smaller than sending all new tokens)
+    int editSize = edit.getDeleteCount() + edit.getData().size();
+    assertThat(editSize).isLessThan(tokens2.getData().size());
+  }
+
   // endregion
 }
 
