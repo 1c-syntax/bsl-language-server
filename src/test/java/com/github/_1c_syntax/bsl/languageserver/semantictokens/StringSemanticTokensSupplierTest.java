@@ -556,5 +556,107 @@ class StringSemanticTokensSupplierTest {
     // Количество
     assertThat(functionTokens).hasSize(1);
   }
+
+  // ==================== Configurable Template Function Tests ====================
+
+  @Test
+  void testSubstituteParametersToStringPlaceholders() {
+    // given - СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку like СтрШаблон
+    String bsl = """
+      Процедура Тест()
+        Текст = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var tokens = tokens(bsl);
+
+    // then
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
+    // %1, %2
+    assertThat(parameterTokens).hasSize(2);
+
+    // Check that string parts are also present
+    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
+    assertThat(stringTokens).isNotEmpty();
+  }
+
+  @Test
+  void testSubstituteParametersToStringEnglish() {
+    // given - English variant of the function
+    String bsl = """
+      Процедура Тест()
+        Text = StringFunctionsClientServer.SubstituteParametersToString("Name: %1, version: %2", Name, Version);
+      КонецПроцедуры
+      """;
+
+    // when
+    var tokens = tokens(bsl);
+
+    // then
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
+    // %1, %2
+    assertThat(parameterTokens).hasSize(2);
+  }
+
+  @Test
+  void testSubstituteParametersToStringLocal() {
+    // given - Local call without module prefix (configured in defaults)
+    String bsl = """
+      Процедура Тест()
+        Текст = ПодставитьПараметрыВСтроку("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var tokens = tokens(bsl);
+
+    // then
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
+    // %1, %2
+    assertThat(parameterTokens).hasSize(2);
+  }
+
+  @Test
+  void testSubstituteParametersToStringWithVariable() {
+    // given - template stored in variable, then used in module function call
+    String bsl = """
+      Процедура Тест()
+        Шаблон = "%1 + %2 = %3";
+        Текст = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(Шаблон, А, Б, В);
+      КонецПроцедуры
+      """;
+
+    // when
+    var tokens = tokens(bsl);
+
+    // then - placeholders in the assigned string should be highlighted
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
+    // %1, %2, %3
+    assertThat(parameterTokens).hasSize(3);
+  }
+
+  @Test
+  void testNStrWithSubstituteParametersToString() {
+    // given - НСтр combined with ПодставитьПараметрыВСтроку
+    String bsl = """
+      Процедура Тест()
+        Шаблон = НСтр("ru = 'Привет %1'");
+        Текст = СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(Шаблон, Имя);
+      КонецПроцедуры
+      """;
+
+    // when
+    var tokens = tokens(bsl);
+
+    // then - should have both language keys (ru) and placeholders (%1)
+    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
+    // ru
+    assertThat(propertyTokens).hasSize(1);
+
+    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
+    // %1
+    assertThat(parameterTokens).hasSize(1);
+  }
 }
 

@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.Docum
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
@@ -101,6 +102,10 @@ public class LanguageServerConfiguration {
   @JsonProperty("references")
   @Setter(value = AccessLevel.NONE)
   private ReferencesOptions referencesOptions = new ReferencesOptions();
+
+  @JsonProperty("semanticTokens")
+  @Setter(value = AccessLevel.NONE)
+  private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
@@ -217,5 +222,6 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
     PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
+    PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
   }
 }
