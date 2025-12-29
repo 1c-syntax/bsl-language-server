@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767000935322,
+  "lastUpdate": 1767036872352,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33139,6 +33139,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6050967805949696",
             "extra": "mean: 73.51961708068848 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "11a5848ef8a191901850fd34e2d83c74e5a2c6b1",
+          "message": "Merge pull request #3715 from 1c-syntax/copilot/highlight-namespace-in-modules\n\nfeat: Add semantic token highlighting for common module names as namespace",
+          "timestamp": "2025-12-29T20:25:51+01:00",
+          "tree_id": "130a854e39fe6d405a39e65d4b373e88f816010e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/11a5848ef8a191901850fd34e2d83c74e5a2c6b1"
+        },
+        "date": 1767036866653,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.79696981112163,
+            "unit": "sec",
+            "range": "stddev: 0.8920205657163297",
+            "extra": "mean: 73.79696981112163 sec\nrounds: 3"
           }
         ]
       }
