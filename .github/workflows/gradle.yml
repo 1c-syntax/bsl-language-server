@@ -67,7 +67,7 @@ jobs:
       pull-requests: write
       contents: read
       issues: read
-    if: always()
+    if: always() && needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v7
