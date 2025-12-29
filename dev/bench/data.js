@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766992740704,
+  "lastUpdate": 1767000409959,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33077,6 +33077,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.796294211292098",
             "extra": "mean: 73.45577732721965 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "182aea9e3c43152a6cf9ce4739dd1818d913cbba",
+          "message": "Merge pull request #3710 from 1c-syntax/feature/optimize-location-range\n\nRefactor Location and Reference classes to use record type and improve range handling methods",
+          "timestamp": "2025-12-29T09:58:33+01:00",
+          "tree_id": "93dc23336fe284fb0b151d3235c4a324adeb5ccd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/182aea9e3c43152a6cf9ce4739dd1818d913cbba"
+        },
+        "date": 1767000404597,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.74992728233337,
+            "unit": "sec",
+            "range": "stddev: 0.207379459694438",
+            "extra": "mean: 73.74992728233337 sec\nrounds: 3"
           }
         ]
       }
