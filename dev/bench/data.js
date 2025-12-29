@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1766932901228,
+  "lastUpdate": 1766992740704,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33046,6 +33046,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0188853253449612",
             "extra": "mean: 72.32033896446228 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "18c093fe8984aea3ec7fa8d41ccbaca2355f1a31",
+          "message": "Merge pull request #3705 from 1c-syntax/copilot/add-semantic-tokens-support-again\n\nAdd support for textDocument/semanticTokens/range",
+          "timestamp": "2025-12-29T08:10:10+01:00",
+          "tree_id": "6c39d8011a84329da0d61a02dd9d088c185552fa",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/18c093fe8984aea3ec7fa8d41ccbaca2355f1a31"
+        },
+        "date": 1766992735076,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.45577732721965,
+            "unit": "sec",
+            "range": "stddev: 1.796294211292098",
+            "extra": "mean: 73.45577732721965 sec\nrounds: 3"
           }
         ]
       }
