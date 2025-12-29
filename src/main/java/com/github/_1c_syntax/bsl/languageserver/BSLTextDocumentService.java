@@ -101,6 +101,7 @@ import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDelta;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
@@ -364,6 +365,19 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContext(
       documentContext,
       () -> semanticTokensProvider.getSemanticTokensFullDelta(documentContext, params)
+    );
+  }
+
+  @Override
+  public CompletableFuture<SemanticTokens> semanticTokensRange(SemanticTokensRangeParams params) {
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> semanticTokensProvider.getSemanticTokensRange(documentContext, params)
     );
   }
 

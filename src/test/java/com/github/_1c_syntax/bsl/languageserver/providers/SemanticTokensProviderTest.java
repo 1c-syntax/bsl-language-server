@@ -25,12 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1417,6 +1420,244 @@ class SemanticTokensProviderTest {
     // Verify the edit is optimal (smaller than sending all new tokens)
     int editSize = edit.getDeleteCount() + edit.getData().size();
     assertThat(editSize).isLessThan(tokens2.getData().size());
+  }
+
+  // endregion
+
+  // region Range tokens tests
+
+  @Test
+  void rangeTokens_returnsOnlyTokensInRange() {
+    // given - multi-line document
+    String bsl = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      Перем Г;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering lines 1-2 (0-based, end-exclusive: from line 1 to line 3 means lines 1 and 2)
+    Range range = new Range(new Position(1, 0), new Position(3, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    var expected = List.of(
+      // Line 1: Перем Б;
+      new ExpectedToken(1, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(1, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Б"),
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, ";"),
+      // Line 2: Перем В;
+      new ExpectedToken(2, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(2, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "В"),
+      new ExpectedToken(2, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
+
+    assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void rangeTokens_singleLine() {
+    // given
+    String bsl = """
+      Перем А;
+      Перем Б;
+      Перем В;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering only line 1
+    Range range = new Range(new Position(1, 0), new Position(2, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    var expected = List.of(
+      new ExpectedToken(1, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(1, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Б"),
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
+
+    assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void rangeTokens_partialLine() {
+    // given
+    String bsl = """
+      Процедура Тест()
+        Перем А; Перем Б;
+      КонецПроцедуры
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering part of line 1 (middle section: characters 8-18)
+    // Line content: "  Перем А; Перем Б;"
+    // Positions:     01234567890123456789
+    // Range [8,18) covers: "А; Перем Б" - tokens А (at 8), ; (at 9), Перем (at 11), Б (at 17)
+    Range range = new Range(new Position(1, 8), new Position(1, 18));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    // Tokens that overlap with range [8,18): А at 8, ; at 9, Перем at 11-15, Б at 17
+    var expected = List.of(
+      new ExpectedToken(1, 8, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(1, 9, 1, SemanticTokenTypes.Operator, ";"),
+      new ExpectedToken(1, 11, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(1, 17, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Б")
+    );
+
+    assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void rangeTokens_emptyRangeReturnsNoTokens() {
+    // given
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range at end of document where no tokens exist
+    Range range = new Range(new Position(5, 0), new Position(10, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+    assertThat(decoded).isEmpty();
+  }
+
+  @Test
+  void rangeTokens_fullDocumentRange() {
+    // given
+    String bsl = """
+      Перем А;
+      Перем Б;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering entire document
+    Range range = new Range(new Position(0, 0), new Position(100, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens rangeTokens = provider.getSemanticTokensRange(documentContext, params);
+    SemanticTokens fullTokens = provider.getSemanticTokensFull(
+      documentContext,
+      new SemanticTokensParams(textDocumentIdentifier)
+    );
+
+    // then - range tokens should contain same tokens as full request
+    assertThat(rangeTokens.getData()).isEqualTo(fullTokens.getData());
+  }
+
+  @Test
+  void rangeTokens_doesNotHaveResultId() {
+    // given - per LSP spec, range requests don't use resultId
+    String bsl = """
+      Перем А;
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    Range range = new Range(new Position(0, 0), new Position(1, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then - resultId should be null for range requests
+    assertThat(tokens.getResultId()).isNull();
+
+    // Also verify exact tokens returned
+    var decoded = decode(tokens.getData());
+    var expected = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Keyword, "Перем"),
+      new ExpectedToken(0, 6, 1, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "А"),
+      new ExpectedToken(0, 7, 1, SemanticTokenTypes.Operator, ";")
+    );
+    assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void rangeTokens_withSdblQuery() {
+    // given - test that SDBL tokens are also filtered correctly
+    String bsl = """
+      Процедура Тест()
+        А = 1;
+        Запрос = "Выбрать * из Справочник.Контрагенты";
+        Б = 2;
+      КонецПроцедуры
+      """;
+
+    DocumentContext documentContext = TestUtils.getDocumentContext(bsl);
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+
+    // Request range covering only line 2 (the query line)
+    Range range = new Range(new Position(2, 0), new Position(3, 0));
+    var params = new SemanticTokensRangeParams(textDocumentIdentifier, range);
+
+    // when
+    SemanticTokens tokens = provider.getSemanticTokensRange(documentContext, params);
+
+    // then
+    var decoded = decode(tokens.getData());
+
+    // Line 2: "  Запрос = "Выбрать * из Справочник.Контрагенты";"
+    // The SDBL query is parsed with interleaved string tokens for spaces between keywords
+    var expected = List.of(
+      new ExpectedToken(2, 2, 6, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition, "Запрос"),
+      new ExpectedToken(2, 9, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(2, 11, 1, SemanticTokenTypes.String, "\""),
+      new ExpectedToken(2, 12, 7, SemanticTokenTypes.Keyword, "Выбрать"),
+      new ExpectedToken(2, 19, 1, SemanticTokenTypes.String, " "),
+      new ExpectedToken(2, 20, 1, SemanticTokenTypes.Operator, "*"),
+      new ExpectedToken(2, 21, 1, SemanticTokenTypes.String, " "),
+      new ExpectedToken(2, 22, 2, SemanticTokenTypes.Keyword, "из"),
+      new ExpectedToken(2, 24, 1, SemanticTokenTypes.String, " "),
+      new ExpectedToken(2, 25, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(2, 35, 1, SemanticTokenTypes.Operator, "."),
+      new ExpectedToken(2, 36, 11, SemanticTokenTypes.Class, "Контрагенты"),
+      new ExpectedToken(2, 47, 1, SemanticTokenTypes.String, "\""),
+      new ExpectedToken(2, 48, 1, SemanticTokenTypes.Operator, ";")
+    );
+
+    assertTokensMatch(decoded, expected);
   }
 
   // endregion

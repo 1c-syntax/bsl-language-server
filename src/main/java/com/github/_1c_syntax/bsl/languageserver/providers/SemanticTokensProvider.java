@@ -30,11 +30,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadF
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensDelta;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensEdit;
 import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -57,13 +59,19 @@ import java.util.concurrent.ForkJoinPool;
 /**
  * Провайдер для предоставления семантических токенов.
  * <p>
- * Обрабатывает запросы {@code textDocument/semanticTokens/full} и {@code textDocument/semanticTokens/full/delta}.
+ * Обрабатывает запросы {@code textDocument/semanticTokens/full}, {@code textDocument/semanticTokens/full/delta}
+ * и {@code textDocument/semanticTokens/range}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">Semantic Tokens specification</a>
  */
 @Component
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
+
+  /**
+   * Порог количества токенов, при превышении которого используется параллельная обработка.
+   */
+  private static final int PARALLEL_PROCESSING_THRESHOLD = 1000;
 
   @SuppressWarnings("NullAway.Init")
   private ExecutorService executorService;
@@ -162,6 +170,93 @@ public class SemanticTokensProvider {
     delta.setResultId(resultId);
     delta.setEdits(edits);
     return Either.forRight(delta);
+  }
+
+  /**
+   * Получить семантические токены для указанного диапазона документа.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса с диапазоном
+   * @return Семантические токены для указанного диапазона в дельта-кодированном формате
+   */
+  public SemanticTokens getSemanticTokensRange(
+    DocumentContext documentContext,
+    SemanticTokensRangeParams params
+  ) {
+    Range range = params.getRange();
+
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
+
+    // Filter tokens that fall within the specified range
+    var filteredEntries = filterTokensByRange(entries, range);
+
+    // Build delta-encoded data as int array
+    int[] data = toDeltaEncodedArray(filteredEntries);
+
+    // Range requests do not use resultId caching as per LSP specification
+    return new SemanticTokens(toList(data));
+  }
+
+  /**
+   * Фильтрует токены, оставляя только те, которые попадают в указанный диапазон.
+   * <p>
+   * Токен считается попадающим в диапазон, если он хотя бы частично пересекается с ним.
+   * <p>
+   * Оптимизация: сначала выполняется быстрая фильтрация по строкам (простое сравнение целых чисел),
+   * затем для граничных строк проверяются позиции символов. Использует параллельную обработку
+   * для больших объемов данных.
+   *
+   * @param entries Список токенов
+   * @param range   Диапазон для фильтрации
+   * @return Отфильтрованный список токенов
+   */
+  private static List<SemanticTokenEntry> filterTokensByRange(List<SemanticTokenEntry> entries, Range range) {
+    int startLine = range.getStart().getLine();
+    int startChar = range.getStart().getCharacter();
+    int endLine = range.getEnd().getLine();
+    int endChar = range.getEnd().getCharacter();
+
+    // Use parallel stream for large collections to leverage multiple cores
+    var stream = entries.size() > PARALLEL_PROCESSING_THRESHOLD
+      ? entries.parallelStream()
+      : entries.stream();
+
+    return stream
+      // Quick line-based pre-filter (simple integer comparison)
+      .filter(token -> token.line() >= startLine && token.line() <= endLine)
+      // Detailed check for boundary lines only
+      .filter(token -> isTokenInRangeDetailed(token, startLine, startChar, endLine, endChar))
+      .toList();
+  }
+
+  /**
+   * Проверяет позицию символов для токенов на граничных строках.
+   * <p>
+   * Предполагается, что токен уже прошел проверку по строкам (находится между startLine и endLine).
+   */
+  private static boolean isTokenInRangeDetailed(
+    SemanticTokenEntry token,
+    int startLine,
+    int startChar,
+    int endLine,
+    int endChar
+  ) {
+    int tokenLine = token.line();
+    int tokenStart = token.start();
+    int tokenEnd = tokenStart + token.length();
+
+    // Token is on the start line - check if it ends after range start
+    if (tokenLine == startLine && tokenEnd <= startChar) {
+      return false;
+    }
+
+    // Token is on the end line - check if it starts before range end
+    if (tokenLine == endLine && tokenStart >= endChar) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
