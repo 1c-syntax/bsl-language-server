@@ -181,7 +181,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   private boolean isAssignedParam(MethodSymbol method, ParameterDefinition parameterDefinition) {
     return getVariableByParameter(method, parameterDefinition)
       .noneMatch(variableSymbol -> referenceIndex.getReferencesTo(variableSymbol).stream()
-        .anyMatch(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION));
+        .anyMatch(ref -> ref.occurrenceType() == OccurrenceType.DEFINITION));
   }
 
   private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
@@ -198,13 +198,13 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   private List<Reference> getRefsFromClientCalls(MethodSymbol method) {
     return referenceIndex.getReferencesTo(method).stream()
       // в будущем могут появиться и другие виды ссылок
-      .filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE)
+      .filter(ref -> ref.occurrenceType() == OccurrenceType.REFERENCE)
       .filter(TransferringParametersBetweenClientAndServerDiagnostic::isClientCall)
       .toList();
   }
 
   private static boolean isClientCall(Reference ref) {
-    return Optional.of(ref.getFrom())
+    return Optional.of(ref.from())
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast)
       .filter(TransferringParametersBetweenClientAndServerDiagnostic::isEqualCompilerDirective)
@@ -231,7 +231,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
 
   private static List<DiagnosticRelatedInformation> getRelatedInformation(List<Reference> references) {
     return references.stream()
-      .map(reference -> RelatedInformation.create(reference.getUri(), reference.getSelectionRange(), "+1"))
+      .map(reference -> RelatedInformation.create(reference.uri(), reference.selectionRange(), "+1"))
       .collect(Collectors.toList());
   }
 

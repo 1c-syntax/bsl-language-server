@@ -152,7 +152,7 @@ public class ReferenceIndex {
    */
   public List<Reference> getReferencesFrom(SourceDefinedSymbol symbol) {
     return getReferencesFrom(symbol.getOwner().getUri()).stream()
-      .filter(reference -> reference.getFrom().equals(symbol))
+      .filter(reference -> reference.from().equals(symbol))
       .collect(Collectors.toList());
   }
 
@@ -326,7 +326,7 @@ public class ReferenceIndex {
     }
 
     var to = reference.getSourceDefinedSymbol().orElseThrow();
-    var from = reference.getFrom();
+    var from = reference.from();
     if (to.getOwner().equals(from.getOwner())) {
       return true;
     }

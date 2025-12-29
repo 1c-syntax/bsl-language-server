@@ -67,7 +67,7 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
       .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
       .filter(variable -> !variable.isExport())
       .filter(variable -> referenceIndex.getReferencesTo(variable).stream()
-        .filter(ref -> ref.getOccurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty()
+        .filter(ref -> ref.occurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty()
       )
       .forEach(variable -> diagnosticStorage.addDiagnostic(
         variable.getSelectionRange(), info.getMessage(variable.getName()))

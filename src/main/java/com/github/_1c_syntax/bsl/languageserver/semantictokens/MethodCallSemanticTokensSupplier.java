@@ -52,7 +52,7 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
       }
 
       reference.getSourceDefinedSymbol()
-        .ifPresent(symbol -> helper.addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Method));
+        .ifPresent(symbol -> helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method));
     }
 
     return entries;

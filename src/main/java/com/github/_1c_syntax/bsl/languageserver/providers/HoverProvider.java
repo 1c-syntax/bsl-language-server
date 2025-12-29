@@ -62,8 +62,8 @@ public final class HoverProvider {
 
     return referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap((Reference reference) -> {
-        var symbol = reference.getSymbol();
-        var range = reference.getSelectionRange();
+        var symbol = reference.symbol();
+        var range = reference.selectionRange();
 
         return Optional.ofNullable(markupContentBuilders.get(symbol.getSymbolKind()))
           .map(markupContentBuilder -> markupContentBuilder.getContent(symbol))

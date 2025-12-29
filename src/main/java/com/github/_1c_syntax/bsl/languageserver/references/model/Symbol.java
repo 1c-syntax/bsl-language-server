@@ -28,6 +28,8 @@ import lombok.Builder;
 import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Comparator.comparing;
+
 /**
  * Облегченные данные символа для поиска без кросс-ссылок между файлами.
  *
@@ -59,7 +61,7 @@ public record Symbol(
       return 1;
     }
 
-    return java.util.Comparator.comparing(Symbol::mdoRef)
+    return comparing(Symbol::mdoRef)
       .thenComparing(Symbol::moduleType)
       .thenComparing(Symbol::scopeName)
       .thenComparing(Symbol::symbolKind)

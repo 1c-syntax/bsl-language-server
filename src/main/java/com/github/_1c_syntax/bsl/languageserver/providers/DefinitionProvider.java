@@ -65,13 +65,13 @@ public class DefinitionProvider {
   }
 
   private static LocationLink toLocationLink(Reference reference) {
-    SourceDefinedSymbol symbol = (SourceDefinedSymbol) reference.getSymbol();
+    SourceDefinedSymbol symbol = (SourceDefinedSymbol) reference.symbol();
 
     return new LocationLink(
       symbol.getOwner().getUri().toString(),
       symbol.getRange(),
       symbol.getSelectionRange(),
-      reference.getSelectionRange()
+      reference.selectionRange()
     );
   }
 }

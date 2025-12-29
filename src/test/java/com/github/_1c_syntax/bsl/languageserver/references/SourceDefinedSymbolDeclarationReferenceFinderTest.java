@@ -48,9 +48,9 @@ class SourceDefinedSymbolDeclarationReferenceFinderTest {
     // then
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol()).isEqualTo(method))
-      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(method.getSelectionRange()))
+      .hasValueSatisfying(reference -> assertThat(reference.from()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol()).isEqualTo(method))
+      .hasValueSatisfying(reference -> assertThat(reference.selectionRange()).isEqualTo(method.getSelectionRange()))
     ;
   }
 

@@ -69,7 +69,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
     var range = params.getRange();
     return referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
-      .filter(reference -> Ranges.containsPosition(range, reference.getSelectionRange().getStart()))
+      .filter(reference -> Ranges.containsPosition(range, reference.selectionRange().getStart()))
       .filter(Reference::isSourceDefinedSymbolReference)
       .map(this::toInlayHints)
       .flatMap(Collection::stream)
@@ -78,10 +78,10 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
   private List<InlayHint> toInlayHints(Reference reference) {
 
-    var methodSymbol = (MethodSymbol) reference.getSymbol();
+    var methodSymbol = (MethodSymbol) reference.symbol();
     var parameters = methodSymbol.getParameters();
 
-    var ast = reference.getFrom().getOwner().getAst();
+    var ast = reference.from().getOwner().getAst();
     var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
 
     return doCalls.stream()
@@ -185,7 +185,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
 
   private static boolean isRightMethod(ParserRuleContext doCallParent, Reference reference) {
-    var selectionRange = reference.getSelectionRange();
+    var selectionRange = reference.selectionRange();
 
     if (doCallParent instanceof BSLParser.MethodCallContext methodCallContext) {
       return selectionRange.equals(Ranges.create(methodCallContext.methodName()));
