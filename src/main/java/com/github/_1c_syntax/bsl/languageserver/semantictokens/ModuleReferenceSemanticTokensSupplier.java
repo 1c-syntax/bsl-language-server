@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +61,7 @@ public class ModuleReferenceSemanticTokensSupplier implements SemanticTokensSupp
     return entries;
   }
 
-  private static boolean isCommonModuleReference(com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol symbol) {
+  private static boolean isCommonModuleReference(Symbol symbol) {
     if (!(symbol instanceof ModuleSymbol moduleSymbol)) {
       return false;
     }
