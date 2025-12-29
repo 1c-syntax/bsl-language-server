@@ -49,12 +49,7 @@ public class ModuleReferenceSemanticTokensSupplier implements SemanticTokensSupp
     var uri = documentContext.getUri();
 
     for (var reference : referenceIndex.getReferencesFrom(uri, SymbolKind.Module)) {
-      if (!reference.isSourceDefinedSymbolReference()) {
-        continue;
-      }
-
-      reference.getSourceDefinedSymbol()
-        .ifPresent(symbol -> helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Namespace));
+      helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Namespace);
     }
 
     return entries;
