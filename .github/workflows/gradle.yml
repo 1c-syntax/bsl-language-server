@@ -55,7 +55,7 @@ jobs:
         path: "**/test-results/test/**/*.xml"
     - name: Publish Test report
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
         path: build/reports/tests/test    
