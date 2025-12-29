@@ -1505,17 +1505,17 @@
 </ul>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">HTTPСоединение</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">HTTPСоединение</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">);</span>
 </code></pre></div>
 <p>или</p>
-<div class="highlight"><pre><span></span><code><span class="nv">FTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">FTPСоединение</span><span class="p">(</span><span class="nv">Сервер</span><span class="p">,</span> <span class="nv">Порт</span><span class="p">,</span> <span class="nv">Пользователь</span><span class="p">,</span> <span class="nv">Пароль</span><span class="p">,</span> <span class="nv">Прокси</span><span class="p">,</span> <span class="nv">ПассивныйРежим</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">FTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">FTPСоединение</span><span class="p">(</span><span class="nv">Сервер</span><span class="p">,</span> <span class="nv">Порт</span><span class="p">,</span> <span class="nv">Пользователь</span><span class="p">,</span> <span class="nv">Пароль</span><span class="p">,</span> <span class="nv">Прокси</span><span class="p">,</span> <span class="nv">ПассивныйРежим</span><span class="p">);</span>
 </code></pre></div>
 <p>Правильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">HTTPСоединение</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">,,,,</span> <span class="m">1</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">HTTPСоединение</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">,,,,</span> <span class="m">1</span><span class="p">);</span>
 </code></pre></div>
 <p>или</p>
 <div class="highlight"><pre><span></span><code><span class="nv">ТаймаутСоединения</span> <span class="o">=</span> <span class="m">180</span><span class="p">;</span>
-<span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">HTTPСоединение</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">,,,,</span> <span class="nv">ТаймаутСоединения</span><span class="p">);</span>
+<span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">HTTPСоединение</span><span class="p">(</span><span class="s">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">,,,,</span> <span class="nv">ТаймаутСоединения</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <ul>

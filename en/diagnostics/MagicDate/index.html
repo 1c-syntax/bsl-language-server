@@ -1513,7 +1513,7 @@ constant</p>
     <span class="k">Return</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span>
 <span class="k">EndFunction</span>
 
-<span class="k">If</span> <span class="nv">CurrentDate</span> <span class="o">&lt;</span> <span class="nf">DateInventionHover</span><span class="p">()</span> <span class="k">Then</span>
+<span class="k">If</span> <span class="nb">CurrentDate</span> <span class="o">&lt;</span> <span class="nf">DateInventionHover</span><span class="p">()</span> <span class="k">Then</span>
     <span class="nv">HoverBoardWillBeInvented</span> <span class="o">=</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="k">EndIf</span><span class="p">;</span>
 </code></pre></div>
@@ -1536,7 +1536,7 @@ constant</p>
 <span class="c1">// Fixed structure - no error</span>
 <span class="nv">FixedStructure</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">FixedStructure</span><span class="p">(</span><span class="s">&quot;Value&quot;</span><span class="p">,</span> <span class="ld">&#39;20240101&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
 
-<span class="c1">// Correspondence - no error (both key and value)</span>
+<span class="c1">// </span><span class="nv">Correspondence</span><span class="p"> - </span><span class="c1">no error (both key and value)</span>
 <span class="nv">Correspondence</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Correspondence</span><span class="p">;</span>
 <span class="nv">Correspondence</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="s">&quot;Code&quot;</span><span class="p">,</span> <span class="ld">&#39;20230101&#39;</span><span class="p">);</span> <span class="c1">// No error</span>
 <span class="nv">Correspondence</span><span class="o">.</span><span class="nf">Insert</span><span class="p">(</span><span class="ld">&#39;19800101&#39;</span><span class="p">,</span> <span class="s">&quot;Olympics in Moscow&quot;</span><span class="p">);</span> <span class="c1">// No error</span>

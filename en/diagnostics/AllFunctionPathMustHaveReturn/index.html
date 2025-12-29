@@ -1513,7 +1513,7 @@
     <span class="k">ElsIf</span> <span class="nv">Rate</span> <span class="o">=</span> <span class="nc">Enums</span><span class="o">.</span><span class="nv">TaxRates</span><span class="o">.</span><span class="nv">Tax10</span> <span class="k">Then</span>
         <span class="k">Return</span> <span class="m">10</span><span class="p">;</span>
     <span class="k">ElsIf</span> <span class="k">Not</span> <span class="nb">ValueIsFilled</span><span class="p">(</span><span class="nv">Rate</span><span class="p">)</span> <span class="k">Then</span>
-        <span class="k">Return</span> <span class="nc">Constants</span><span class="o">.</span><span class="nv">DefaultTaxRate</span><span class="o">.</span><span class="nf">Get</span><span class="p">();</span>
+        <span class="k">Return</span> <span class="nn">Constants</span><span class="o">.</span><span class="nc">DefaultTaxRate</span><span class="o">.</span><span class="nf">Get</span><span class="p">();</span>
     <span class="k">EndIf</span><span class="p">;</span>
 
     <span class="c1">// implicit return Undefined</span>

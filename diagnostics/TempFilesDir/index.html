@@ -1487,7 +1487,7 @@
 
 <p>Неправильно:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Каталог</span> <span class="o">=</span> <span class="nb">КаталогВременныхФайлов</span><span class="p">();</span>
-<span class="nv">ИмяФайла</span> <span class="o">=</span> <span class="nb">Строка</span><span class="p">(</span><span class="k">Новый</span> <span class="nv">УникальныйИдентификатор</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.xml&quot;</span><span class="p">;</span>
+<span class="nv">ИмяФайла</span> <span class="o">=</span> <span class="nb">Строка</span><span class="p">(</span><span class="k">Новый</span> <span class="nc">УникальныйИдентификатор</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;.xml&quot;</span><span class="p">;</span>
 <span class="nv">ИмяПромежуточногоФайла</span> <span class="o">=</span> <span class="nv">Каталог</span> <span class="o">+</span> <span class="nv">ИмяФайла</span><span class="p">;</span>
 <span class="nv">Данные</span><span class="o">.</span><span class="nf">Записать</span><span class="p">(</span><span class="nv">ИмяПромежуточногоФайла</span><span class="p">);</span>
 </code></pre></div>
@@ -1497,13 +1497,13 @@
 </code></pre></div>
 <p>Для создания временного каталога рекомендуется также использовать имя, полученное при помощи метода ПолучитьИмяВременногоФайла (исключение составляет веб-клиент).</p>
 <p>Неправильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Архив</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ЧтениеZipФайла</span><span class="p">(</span><span class="nv">ИмяФайлаАрхива</span><span class="p">);</span> 
+<div class="highlight"><pre><span></span><code><span class="nv">Архив</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ЧтениеZipФайла</span><span class="p">(</span><span class="nv">ИмяФайлаАрхива</span><span class="p">);</span> 
 <span class="nv">КаталогАрхива</span> <span class="o">=</span> <span class="nb">КаталогВременныхФайлов</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;main_zip\&quot;</span><span class="p">;</span>
 <span class="nb">СоздатьКаталог</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>
 <span class="nv">Архив</span><span class="o">.</span><span class="nf">ИзвлечьВсе</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>
 </code></pre></div>
 <p>Правильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">Архив</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nf">ЧтениеZipФайла</span><span class="p">(</span><span class="nv">ИмяФайлаАрхива</span><span class="p">);</span> 
+<div class="highlight"><pre><span></span><code><span class="nv">Архив</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ЧтениеZipФайла</span><span class="p">(</span><span class="nv">ИмяФайлаАрхива</span><span class="p">);</span> 
 <span class="nv">КаталогАрхива</span> <span class="o">=</span> <span class="nb">ПолучитьИмяВременногоФайла</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;\main_zip\&quot;</span><span class="p">;</span>
 <span class="nb">СоздатьКаталог</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>
 <span class="nv">Архив</span><span class="o">.</span><span class="nf">ИзвлечьВсе</span><span class="p">(</span><span class="nv">КаталогАрхива</span><span class="p">);</span>

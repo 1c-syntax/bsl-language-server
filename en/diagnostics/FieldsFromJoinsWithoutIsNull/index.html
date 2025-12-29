@@ -1507,38 +1507,38 @@ It should be remembered that simple checks in a query are performed a little fas
 <p>Suspicious code for accessing an joined table attribute
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
   <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span> <span class="c1">// здесь ошибка</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="nv">Сумма</span> <span class="c1">// здесь ошибка</span>
+<span class="kd">ИЗ</span> <span class="nn">Документ</span><span class="o">.</span><span class="nc">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nn">РегистрНакопления</span><span class="o">.</span><span class="nc">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
 <span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Correct
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
   <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="nb">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+  <span class="nb">ЕстьNULL</span><span class="p">(</span><span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nn">Документ</span><span class="o">.</span><span class="nc">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nn">РегистрНакопления</span><span class="o">.</span><span class="nc">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
 <span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Also correct:
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
   <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="kd">ВЫБОР</span> <span class="kd">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">Есть</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="m">0</span>
+  <span class="kd">ВЫБОР</span> <span class="kd">КОГДА</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="ow">Есть</span> <span class="kc">NULL</span> <span class="kd">ТОГДА</span> <span class="m">0</span>
   <span class="kd">ИНАЧЕ</span>  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> 
-  <span class="kd">КОНЕЦ</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+  <span class="kd">КОНЕЦ</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nn">Документ</span><span class="o">.</span><span class="nc">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nn">РегистрНакопления</span><span class="o">.</span><span class="nc">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
 <span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 </code></pre></div>
 Possible variant
 <div class="highlight"><pre><span></span><code><span class="kd">ВЫБРАТЬ</span> 
   <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="kd">КАК</span> <span class="nv">ДокПродажи</span><span class="p">,</span>
-  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="kd">Сумма</span>
-<span class="kd">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
-<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
+  <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Сумма</span> <span class="kd">КАК</span> <span class="nv">Сумма</span>
+<span class="kd">ИЗ</span> <span class="nn">Документ</span><span class="o">.</span><span class="nc">РеализацияТоваровУслуг</span> <span class="kd">КАК</span> <span class="nv">ДокументыПродажи</span>
+<span class="kd">ЛЕВОЕ</span> <span class="kd">СОЕДИНЕНИЕ</span>  <span class="nn">РегистрНакопления</span><span class="o">.</span><span class="nc">Продажи</span> <span class="kd">КАК</span> <span class="nv">РегистрПродажи</span>
 <span class="kd">ПО</span> <span class="nv">ДокументыПродажи</span><span class="o">.</span><span class="nv">Ссылка</span> <span class="o">=</span> <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span>
 <span class="kd">ГДЕ</span>
-    <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span> <span class="kd">ЕСТЬ</span> <span class="kd">НЕ</span> <span class="kc">NULL</span>
+    <span class="nv">РегистрПродажи</span><span class="o">.</span><span class="nv">Документ</span> <span class="ow">ЕСТЬ</span> <span class="ow">НЕ</span> <span class="kc">NULL</span>
     <span class="c1">//или НЕ РегистрПродажи.Документ ЕСТЬ NULL</span>
 </code></pre></div>
 The last one is not the best, because it actually emulates an inner join.

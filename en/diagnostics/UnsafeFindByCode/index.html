@@ -1486,18 +1486,18 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Incorrect:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Catalog without uniqueness control</span>
-<span class="nv">CatalogWithoutControl</span> <span class="o">=</span> <span class="nc">Catalogs</span><span class="o">.</span><span class="nv">CatalogWithoutUniquenessControl</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
+<span class="nv">CatalogWithoutControl</span> <span class="o">=</span> <span class="nn">Catalogs</span><span class="o">.</span><span class="nc">CatalogWithoutUniquenessControl</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">// Catalog with code series &quot;Within subordination&quot;</span>
-<span class="nv">CatalogWithSeries</span> <span class="o">=</span> <span class="nc">Catalogs</span><span class="o">.</span><span class="nv">CatalogWithSubordinationSeries</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
+<span class="nv">CatalogWithSeries</span> <span class="o">=</span> <span class="nn">Catalogs</span><span class="o">.</span><span class="nc">CatalogWithSubordinationSeries</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
 </code></pre></div>
 <p>Correct:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">// Using FindByCode() method for catalog with uniqueness control</span>
 <span class="c1">// and code series for the entire catalog</span>
-<span class="nv">CatalogWithControl</span> <span class="o">=</span> <span class="nc">Catalogs</span><span class="o">.</span><span class="nv">CatalogWithUniquenessControl</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
+<span class="nv">CatalogWithControl</span> <span class="o">=</span> <span class="nn">Catalogs</span><span class="o">.</span><span class="nc">CatalogWithUniquenessControl</span><span class="o">.</span><span class="nf">FindByCode</span><span class="p">(</span><span class="s">&quot;001&quot;</span><span class="p">);</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">// Alternative option - use FindByName() method or other search methods</span>
-<span class="nv">Catalog</span> <span class="o">=</span> <span class="nc">Catalogs</span><span class="o">.</span><span class="nv">CatalogWithoutUniquenessControl</span><span class="o">.</span><span class="nf">FindByName</span><span class="p">(</span><span class="s">&quot;Element&quot;</span><span class="p">);</span>
+<span class="nv">Catalog</span> <span class="o">=</span> <span class="nn">Catalogs</span><span class="o">.</span><span class="nc">CatalogWithoutUniquenessControl</span><span class="o">.</span><span class="nf">FindByName</span><span class="p">(</span><span class="s">&quot;Element&quot;</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

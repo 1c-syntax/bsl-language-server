@@ -1484,7 +1484,7 @@
 
 <p>For example, query:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Description</span> <span class="nv">FROM</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Goods</span> <span class="nv">AS</span> <span class="nv">Goods</span> 
-<span class="nv">WHERE</span> <span class="nv">Code</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span> <span class="k">OR</span> <span class="nv">Cost</span> <span class="o">=</span> <span class="m">10</span>
+<span class="nv">WHERE</span> <span class="nv">Code</span> <span class="o">=</span> <span class="s">&quot;001&quot;</span><span class="gr"> OR Cost = 10</span>
 </code></pre></div>
 <p>should instead of a query:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="nv">Goods</span><span class="o">.</span><span class="nv">Description</span> <span class="nv">FROM</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">Goods</span> <span class="nv">AS</span> <span class="nv">Goods</span> 
@@ -1533,7 +1533,7 @@
     <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="nd">&amp;Value2 OR Table.Filed3 = &amp;Value3)</span>
 </code></pre></div>
 <p>Correct:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">WHERE</span>
+<div class="highlight"><pre><span></span><code><span class="nf">WHERE</span>
     <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed1</span> <span class="o">=</span> <span class="nd">&amp;Value1 OR Table.Filed1 = &amp;Value2)</span>
     <span class="k">AND</span>
     <span class="p">(</span><span class="nv">Table</span><span class="o">.</span><span class="nv">Filed2</span> <span class="o">=</span> <span class="nd">&amp;Value3 OR Table.Filed2 = &amp;Value4)</span>

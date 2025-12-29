@@ -1498,7 +1498,7 @@
 Вместо этого рекомендуется использовать метод Вставить или присваивать значения свойствам явным образом</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nf">Структура</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">(</span>
    <span class="s">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных,</span>
    <span class="s">|НеРедактироватьСхемуКомпоновкиДанных,</span>
    <span class="s">|НеНастраиватьУсловноеОформление,</span>
@@ -1514,14 +1514,14 @@
    <span class="kc">Истина</span><span class="p">,</span>
    <span class="kc">Истина</span><span class="p">,</span>
    <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресСхемыКомпоновкиДанных</span><span class="p">,</span>
-   <span class="err">?</span><span class="p">(</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span><span class="p">,</span>
+   <span class="o">?</span><span class="p">(</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span><span class="p">,</span>
         <span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">,</span>
         <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">),</span>
    <span class="nv">УникальныйИдентификатор</span><span class="p">,</span>
    <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">));</span>
 </code></pre></div>
 <p>Правильно:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nc">Структура</span><span class="p">;</span>
 
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;НеРедактироватьСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
@@ -1529,7 +1529,7 @@
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;НеНастраиватьВыбор&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;НеНастраиватьПорядок&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;АдресСхемыКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресСхемыКомпоновкиДанных</span><span class="p">);</span>
-<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;АдресНастроекКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="err">?</span><span class="p">(</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span><span class="p">,</span>
+<span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;АдресНастроекКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span><span class="p">,</span>
                                                                                                                          <span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">,</span>
                                                                                                                          <span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">АдресНастроекСхемыКомпоновкиДанных</span><span class="p">));</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nf">Вставить</span><span class="p">(</span><span class="s">&quot;УникальныйИдентификатор &quot;</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span>

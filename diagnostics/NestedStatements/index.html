@@ -1498,13 +1498,13 @@
 <p>Такой код трудно читать, рефакторить и поддерживать.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно</p>
-<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">Чтото</span> <span class="k">Тогда</span>                  <span class="c1">// Допустимо - уровень = 1</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">Чтото</span> <span class="k">Тогда</span>                  <span class="c1">// </span><span class="nv">Допустимо</span><span class="p"> - </span><span class="c1">уровень = 1</span>
   <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-  <span class="k">Если</span> <span class="nv">ЧтоТоЕще</span> <span class="k">Тогда</span>             <span class="c1">// Допустимо - уровень = 2</span>
+  <span class="k">Если</span> <span class="nv">ЧтоТоЕще</span> <span class="k">Тогда</span>             <span class="c1">// </span><span class="nv">Допустимо</span><span class="p"> - </span><span class="c1">уровень = 2</span>
     <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-    <span class="k">Для</span> <span class="nv">Ном</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="m">10</span> <span class="k">Цикл</span>          <span class="c1">// Допустимо - уровень = 3</span>
+    <span class="k">Для</span> <span class="nv">Ном</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="m">10</span> <span class="k">Цикл</span>          <span class="c1">// </span><span class="nv">Допустимо</span><span class="p"> - </span><span class="c1">уровень = 3</span>
       <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-      <span class="k">Если</span> <span class="nv">ОпятьУсловие</span> <span class="k">Тогда</span>       <span class="c1">// Допустимо - уровень = 4, лимит достигнут, но не превышен</span>
+      <span class="k">Если</span> <span class="nv">ОпятьУсловие</span> <span class="k">Тогда</span>       <span class="c1">// </span><span class="nv">Допустимо</span><span class="p"> - </span><span class="c1">уровень = 4, лимит достигнут, но не превышен</span>
         <span class="k">Если</span> <span class="nv">ЕщеЧтото</span> <span class="k">Тогда</span>        <span class="c1">// Уровень = 5, Превышен лимит</span>
           <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
         <span class="k">КонецЕсли</span><span class="p">;</span>

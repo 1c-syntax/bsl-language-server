@@ -1478,15 +1478,15 @@
 <p>Execution query in cycle.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect</p>
-<div class="highlight"><pre><span></span><code><span class="c1">// BanksToProcessing - contains an array of banks</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// </span><span class="nv">BanksToProcessing</span><span class="p"> - </span><span class="c1">contains an array of banks</span>
 
 <span class="nv">InidividualQuery</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Query</span><span class="p">(</span><span class="s">&quot;</span>
   <span class="s">|</span><span class="kd">SELECT</span>
   <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">Account</span>
   <span class="s">|</span><span class="kd">FROM</span>
-  <span class="s">|</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">BankAccounts</span> <span class="kd">AS</span> <span class="nv">BankAccounts</span>
+  <span class="s">|</span> <span class="nn">Catalog</span><span class="o">.</span><span class="nc">BankAccounts</span> <span class="kd">AS</span> <span class="nv">BankAccounts</span>
   <span class="s">|</span><span class="kd">WHERE</span>
-  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Bank</span> <span class="o">=</span> <span class="no">&amp;Bank</span><span class="s">&quot;</span><span class="p">);</span>
+  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Bank</span> <span class="o">=</span> <span class="si">&amp;Bank</span><span class="s">&quot;</span><span class="p">);</span>
 
 <span class="k">For</span> <span class="k">Each</span> <span class="nv">Bank</span> <span class="nv">From</span> <span class="nv">BanksToProcess</span> <span class="k">Do</span>
   <span class="nv">InidividualQuery</span> <span class="o">.</span><span class="nf">SetParameter</span><span class="p">(</span><span class="s">&quot;Bank&quot;</span><span class="p">,</span> <span class="nv">Bank</span><span class="p">);</span>
@@ -1497,15 +1497,15 @@
 <span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
 <p>Correct</p>
-<div class="highlight"><pre><span></span><code><span class="c1">// BanksToProcess - contains an array of banks</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// </span><span class="nv">BanksToProcess</span><span class="p"> - </span><span class="c1">contains an array of banks</span>
 
 <span class="nv">MergedQuery</span> <span class="o">=</span> <span class="k">New</span> <span class="nf">Query</span><span class="p">(</span><span class="s">&quot;</span>
   <span class="s">|</span><span class="kd">SELECT</span>
   <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Ref</span> <span class="kd">AS</span> <span class="nv">Account</span>
   <span class="s">|</span><span class="kd">FROM</span>
-  <span class="s">|</span> <span class="nv">Catalog</span><span class="o">.</span><span class="nv">BankAccounts</span> <span class="kd">AS</span> <span class="nv">BankAccounts</span>
+  <span class="s">|</span> <span class="nn">Catalog</span><span class="o">.</span><span class="nc">BankAccounts</span> <span class="kd">AS</span> <span class="nv">BankAccounts</span>
   <span class="s">|</span><span class="kd">WHERE</span>
-  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Bank</span> <span class="kd">In</span><span class="p">(</span><span class="no">&amp;BanksToProcess</span><span class="p">)</span><span class="s">&quot;</span><span class="p">);</span>
+  <span class="s">|</span> <span class="nv">BankAccounts</span><span class="o">.</span><span class="nv">Bank</span> <span class="kd">In</span><span class="p">(</span><span class="si">&amp;BanksToProcess</span><span class="p">)</span><span class="s">&quot;</span><span class="p">);</span>
 
 <span class="nv">MergedQuery</span><span class="o">.</span><span class="nf">SetParameter</span><span class="p">(</span><span class="s">&quot;BanksToProcess&quot;</span><span class="p">,</span> <span class="nv">BanksToProcess</span><span class="p">);</span>
 <span class="nv">AccountsSelection</span> <span class="o">=</span> <span class="nv">MergedQuery</span><span class="o">.</span><span class="nf">Execute</span><span class="p">()</span><span class="o">.</span><span class="nf">Select</span><span class="p">();</span>

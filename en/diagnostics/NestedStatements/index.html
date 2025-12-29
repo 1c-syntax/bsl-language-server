@@ -1498,13 +1498,13 @@
 <p>Such code is hard for reading, refactoring and support.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect</p>
-<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c1">// Allowed - level = 1</span>
+<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c1">// </span><span class="nv">Allowed</span><span class="p"> - </span><span class="c1">level = 1</span>
   <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-  <span class="k">If</span> <span class="nv">Some</span> <span class="k">Then</span>             <span class="c1">// Allowed - level = 2</span>
+  <span class="k">If</span> <span class="nv">Some</span> <span class="k">Then</span>             <span class="c1">// </span><span class="nv">Allowed</span><span class="p"> - </span><span class="c1">level = 2</span>
     <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-    <span class="k">For</span> <span class="nv">Num</span> <span class="o">=</span> <span class="m">0</span> <span class="k">To</span> <span class="m">10</span> <span class="k">Do</span>          <span class="c1">// Allowed - level = 3</span>
+    <span class="k">For</span> <span class="nv">Num</span> <span class="o">=</span> <span class="m">0</span> <span class="k">To</span> <span class="m">10</span> <span class="k">Do</span>          <span class="c1">// </span><span class="nv">Allowed</span><span class="p"> - </span><span class="c1">level = 3</span>
       <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
-      <span class="k">If</span> <span class="nv">OneMoreCondition</span> <span class="k">Then</span>     <span class="c1">// Acceptable - level = 4, limit is reached, not yet breached</span>
+      <span class="k">If</span> <span class="nv">OneMoreCondition</span> <span class="k">Then</span>     <span class="c1">// </span><span class="nv">Acceptable</span><span class="p"> - </span><span class="c1">level = 4, limit is reached, not yet breached</span>
         <span class="k">If</span> <span class="nv">SomethingElse</span> <span class="k">Then</span>        <span class="c1">// Level = 5, Limit is breached</span>
           <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
         <span class="k">EndIf</span><span class="p">;</span>
