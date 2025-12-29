@@ -125,7 +125,7 @@ public class ServerContext {
 
         workDoneProgressReporter.tick();
 
-        var uri = file.toURI();
+        var uri = Absolute.uri(file.toURI());
         var documentContext = getDocument(uri);
         if (documentContext == null) {
           documentContext = createDocumentContext(uri);
@@ -147,11 +147,6 @@ public class ServerContext {
     return Collections.unmodifiableMap(documents);
   }
 
-  @Nullable
-  public DocumentContext getDocument(String uri) {
-    return getDocument(URI.create(uri));
-  }
-
   public Optional<DocumentContext> getDocument(String mdoRef, ModuleType moduleType) {
     var documentsGroup = documentsByMDORef.get(mdoRef);
     if (documentsGroup != null) {
@@ -160,15 +155,58 @@ public class ServerContext {
     return Optional.empty();
   }
 
+  /**
+   * Получить документ по URI.
+   * <p>
+   * URI должен быть уже нормализован (например, получен из DocumentContext или через Absolute.uri).
+   *
+   * @param uri нормализованный URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
   @Nullable
   public DocumentContext getDocument(URI uri) {
-    return documents.get(Absolute.uri(uri));
+    return documents.get(uri);
+  }
+
+  /**
+   * Получить документ по URI с нормализацией.
+   * <p>
+   * Используется для внешних вызовов (CLI, Service), где URI может быть не нормализован.
+   *
+   * @param uri URI документа (будет нормализован)
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocumentUnsafe(URI uri) {
+    return getDocument(Absolute.uri(uri));
+  }
+
+
+  /**
+   * Получить документ по строковому URI с нормализацией.
+   * <p>
+   * Используется для внешних вызовов (CLI, Service), где URI может быть не нормализован.
+   *
+   * @param uri строковый URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocumentUnsafe(String uri) {
+    return getDocument(Absolute.uri(uri));
   }
 
   public Map<ModuleType, DocumentContext> getDocuments(String mdoRef) {
     return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
+  /**
+   * Добавить документ в контекст.
+   * <p>
+   * URI должен быть уже нормализован.
+   *
+   * @param uri нормализованный URI документа
+   * @return Контекст документа
+   */
   public DocumentContext addDocument(URI uri) {
     contextLock.readLock().lock();
 
@@ -181,16 +219,22 @@ public class ServerContext {
     return documentContext;
   }
 
+  /**
+   * Удалить документ из контекста.
+   * <p>
+   * URI должен быть уже нормализован.
+   *
+   * @param uri нормализованный URI документа
+   */
   public void removeDocument(URI uri) {
-    var absoluteURI = Absolute.uri(uri);
-    var documentContext = documents.get(absoluteURI);
+    var documentContext = documents.get(uri);
     if (openedDocuments.contains(documentContext)) {
-      throw new IllegalStateException(String.format("Document %s is opened", absoluteURI));
+      throw new IllegalStateException(String.format("Document %s is opened", uri));
     }
 
-    removeDocumentMdoRefByUri(absoluteURI);
+    removeDocumentMdoRefByUri(uri);
     states.remove(documentContext);
-    documents.remove(absoluteURI);
+    documents.remove(uri);
   }
 
   public void clear() {
@@ -295,12 +339,10 @@ public class ServerContext {
   }
 
   private DocumentContext createDocumentContext(URI uri) {
-    var absoluteURI = Absolute.uri(uri);
+    var documentContext = documentContextProvider.getObject(uri);
 
-    var documentContext = documentContextProvider.getObject(absoluteURI);
-
-    documents.put(absoluteURI, documentContext);
-    addMdoRefByUri(absoluteURI, documentContext);
+    documents.put(uri, documentContext);
+    addMdoRefByUri(uri, documentContext);
 
     return documentContext;
   }

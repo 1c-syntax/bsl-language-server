@@ -58,10 +58,10 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     // then
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ТестоваяАннотация"))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.Interface))
-      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 0, 76)))
+      .hasValueSatisfying(reference -> assertThat(reference.from()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("ТестоваяАннотация"))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getSymbolKind()).isEqualTo(SymbolKind.Interface))
+      .hasValueSatisfying(reference -> assertThat(reference.selectionRange()).isEqualTo(Ranges.create(0, 0, 76)))
       .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
     ;
   }
@@ -80,10 +80,10 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     // then
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ВторойПараметр"))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
-      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 19, 33)))
+      .hasValueSatisfying(reference -> assertThat(reference.from()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("ВторойПараметр"))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
+      .hasValueSatisfying(reference -> assertThat(reference.selectionRange()).isEqualTo(Ranges.create(0, 19, 33)))
       .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
     ;
   }
@@ -102,10 +102,10 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     // then
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("Значение"))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
-      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(0, 56, 75)))
+      .hasValueSatisfying(reference -> assertThat(reference.from()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("Значение"))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
+      .hasValueSatisfying(reference -> assertThat(reference.selectionRange()).isEqualTo(Ranges.create(0, 56, 75)))
       .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
     ;
   }
@@ -145,10 +145,10 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     // then
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("Значение"))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
-      .hasValueSatisfying(reference -> assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(selectionRangeStartLine, selectionRangeStartCharacter, selectionRangeEndLine, selectionRangeEndCharacter)))
+      .hasValueSatisfying(reference -> assertThat(reference.from()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("Значение"))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter))
+      .hasValueSatisfying(reference -> assertThat(reference.selectionRange()).isEqualTo(Ranges.create(selectionRangeStartLine, selectionRangeStartCharacter, selectionRangeEndLine, selectionRangeEndCharacter)))
       .hasValueSatisfying(reference -> assertThat(reference.getSourceDefinedSymbol().orElseThrow().getSelectionRange()).isEqualTo(Ranges.create(7, 10, 28)))
     ;
   }
@@ -183,7 +183,7 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     var referenceAfter = referenceFinder.findReference(documentContext.getUri(), new Position(0, 2));
     assertThat(referenceAfter)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ТестоваяАннотация"));
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("ТестоваяАннотация"));
   }
 
   @Test
@@ -225,7 +225,7 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     var referenceAfter = referenceFinder.findReference(documentContext.getUri(), new Position(0, 2));
     assertThat(referenceAfter)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ТестоваяАннотация"));
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("ТестоваяАннотация"));
   }
 
   @Test
@@ -241,7 +241,7 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     // then - проверяем что первая аннотация найдена
     assertThat(reference1)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("ТестоваяАннотация"));
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("ТестоваяАннотация"));
 
     // Вторая аннотация может не найтись из-за особенностей регистрации аннотаций при populateContext
     // Это известная проблема, описанная в комментарии к методу findAndRegisterAnnotation
@@ -319,9 +319,9 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
     // then - должна найтись ссылка на параметр "Параметр" внешней аннотации ТестоваяАннотация
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getFrom()).isEqualTo(module))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getName()).isEqualTo("Параметр"))
-      .hasValueSatisfying(reference -> assertThat(reference.getSymbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter));
+      .hasValueSatisfying(reference -> assertThat(reference.from()).isEqualTo(module))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getName()).isEqualTo("Параметр"))
+      .hasValueSatisfying(reference -> assertThat(reference.symbol().getSymbolKind()).isEqualTo(SymbolKind.TypeParameter));
   }
 
   @Test

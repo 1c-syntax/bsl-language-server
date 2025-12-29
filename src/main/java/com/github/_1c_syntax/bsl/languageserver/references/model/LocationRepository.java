@@ -56,7 +56,7 @@ public class LocationRepository {
    * @param symbolOccurrence Обращение к символу.
    */
   public void updateLocation(SymbolOccurrence symbolOccurrence) {
-    locations.computeIfAbsent(symbolOccurrence.location().getUri(), uri -> ConcurrentHashMap.newKeySet())
+    locations.computeIfAbsent(symbolOccurrence.location().uri(), uri -> ConcurrentHashMap.newKeySet())
       .add(symbolOccurrence);
   }
 

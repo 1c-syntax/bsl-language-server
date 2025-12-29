@@ -22,70 +22,45 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParser.AnnotationContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.CompilerDirectiveContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.Preproc_nativeContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.PreprocessorContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.RegionEndContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.RegionStartContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.UseContext;
-import com.github._1c_syntax.bsl.parser.SDBLLexer;
-import com.github._1c_syntax.bsl.parser.SDBLParser;
-import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
-import lombok.AccessLevel;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
+import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
+import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.InitializeParams;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SemanticTokenModifiers;
-import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokens;
-import org.eclipse.lsp4j.SemanticTokensCapabilities;
-import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensDelta;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
+import org.eclipse.lsp4j.SemanticTokensEdit;
 import org.eclipse.lsp4j.SemanticTokensParams;
-import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
-import org.jspecify.annotations.Nullable;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.BitSet;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Провайдер для предоставления семантических токенов.
  * <p>
- * Обрабатывает запросы {@code textDocument/semanticTokens/full}.
+ * Обрабатывает запросы {@code textDocument/semanticTokens/full}, {@code textDocument/semanticTokens/full/delta}
+ * и {@code textDocument/semanticTokens/range}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">Semantic Tokens specification</a>
  */
@@ -93,105 +68,40 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SemanticTokensProvider {
 
-  private static final Set<Integer> NUMBER_TYPES = Set.of(
-    BSLLexer.DECIMAL,
-    BSLLexer.FLOAT
-  );
+  /**
+   * Порог количества токенов, при превышении которого используется параллельная обработка.
+   */
+  private static final int PARALLEL_PROCESSING_THRESHOLD = 1000;
 
-  private static final Set<Integer> STRING_TYPES = Set.of(
-    BSLLexer.STRING,
-    BSLLexer.STRINGPART,
-    BSLLexer.STRINGSTART,
-    BSLLexer.STRINGTAIL,
-    BSLLexer.PREPROC_STRING
-  );
+  @SuppressWarnings("NullAway.Init")
+  private ExecutorService executorService;
 
-  private static final Set<Integer> OPERATOR_TYPES = Set.of(
-    BSLLexer.LPAREN,
-    BSLLexer.RPAREN,
-    BSLLexer.LBRACK,
-    BSLLexer.RBRACK,
-    BSLLexer.COMMA,
-    BSLLexer.SEMICOLON,
-    BSLLexer.COLON,
-    BSLLexer.DOT,
-    BSLLexer.PLUS,
-    BSLLexer.MINUS,
-    BSLLexer.MUL,
-    BSLLexer.QUOTIENT,
-    BSLLexer.MODULO,
-    BSLLexer.ASSIGN,
-    BSLLexer.NOT_EQUAL,
-    BSLLexer.LESS,
-    BSLLexer.LESS_OR_EQUAL,
-    BSLLexer.GREATER,
-    BSLLexer.GREATER_OR_EQUAL,
-    BSLLexer.QUESTION,
-    BSLLexer.TILDA
-  );
-
-  private static final Set<Integer> ANNOTATION_TOKENS = Set.of(
-    BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
-    BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
-    BSLLexer.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
-    BSLLexer.ANNOTATION_ATCLIENT_SYMBOL,
-    BSLLexer.ANNOTATION_ATSERVER_SYMBOL,
-    BSLLexer.ANNOTATION_BEFORE_SYMBOL,
-    BSLLexer.ANNOTATION_AFTER_SYMBOL,
-    BSLLexer.ANNOTATION_AROUND_SYMBOL,
-    BSLLexer.ANNOTATION_CHANGEANDVALIDATE_SYMBOL,
-    BSLLexer.ANNOTATION_CUSTOM_SYMBOL
-  );
-
-  private static final Set<Integer> SPEC_LITERALS = Set.of(
-    BSLLexer.UNDEFINED,
-    BSLLexer.TRUE,
-    BSLLexer.FALSE,
-    BSLLexer.NULL
-  );
-
-  // SDBL (Query Language) token types
-  private static final Set<Integer> SDBL_KEYWORDS = createSdblKeywords();
-  private static final Set<Integer> SDBL_FUNCTIONS = createSdblFunctions();
-  private static final Set<Integer> SDBL_METADATA_TYPES = createSdblMetadataTypes();
-  private static final Set<Integer> SDBL_LITERALS = createSdblLiterals();
-  private static final Set<Integer> SDBL_OPERATORS = createSdblOperators();
-  private static final Set<Integer> SDBL_STRINGS = Set.of(SDBLLexer.STR);
-  private static final Set<Integer> SDBL_COMMENTS = Set.of(SDBLLexer.LINE_COMMENT);
-  private static final Set<Integer> SDBL_EDS = Set.of(
-    SDBLLexer.EDS_CUBE,
-    SDBLLexer.EDS_TABLE,
-    SDBLLexer.EDS_CUBE_DIMTABLE
-  );
-  private static final Set<Integer> SDBL_NUMBERS = Set.of(SDBLLexer.DECIMAL, SDBLLexer.FLOAT);
-
-  private static final String[] NO_MODIFIERS = new String[0];
-  private static final String[] DOC_ONLY = new String[]{SemanticTokenModifiers.Documentation};
-  private static final String[] DEFAULT_LIBRARY = new String[]{SemanticTokenModifiers.DefaultLibrary};
-
-  private final SemanticTokensLegend legend;
-  private final ReferenceResolver referenceResolver;
-  private final ReferenceIndex referenceIndex;
-
-  @Setter(AccessLevel.PROTECTED)
-  private boolean multilineTokenSupport;
+  private final List<SemanticTokensSupplier> suppliers;
 
   /**
-   * Обработчик события инициализации языкового сервера.
-   * <p>
-   * Проверяет возможности клиента и определяет, поддерживаются ли многострочные токены.
-   *
-   * @param event Событие инициализации сервера
+   * Cache for storing previous token data by resultId.
+   * Key: resultId, Value: token data list
    */
-  @EventListener
-  public void onClientCapabilitiesChanged(LanguageServerInitializeRequestReceivedEvent event) {
-    multilineTokenSupport = Optional.of(event)
-      .map(LanguageServerInitializeRequestReceivedEvent::getParams)
-      .map(InitializeParams::getCapabilities)
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getSemanticTokens)
-      .map(SemanticTokensCapabilities::getMultilineTokenSupport)
-      .orElse(false);
+  private final Map<String, CachedTokenData> tokenCache = new ConcurrentHashMap<>();
+
+  @PostConstruct
+  private void init() {
+    var factory = new NamedForkJoinWorkerThreadFactory("semantic-tokens-");
+    executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+  }
+
+  @PreDestroy
+  private void onDestroy() {
+    executorService.shutdown();
+  }
+
+  /**
+   * Cached semantic token data associated with a document.
+   *
+   * @param uri  URI of the document
+   * @param data token data as int array (more efficient than List<Integer>)
+   */
+  private record CachedTokenData(URI uri, int[] data) {
   }
 
   /**
@@ -201,1071 +111,400 @@ public class SemanticTokensProvider {
    * @param params          Параметры запроса
    * @return Семантические токены в дельта-кодированном формате
    */
-  public SemanticTokens getSemanticTokensFull(DocumentContext documentContext, @SuppressWarnings("unused") SemanticTokensParams params) {
-    List<TokenEntry> entries = new ArrayList<>();
-
-    // collect description ranges for describable symbols
-    List<Range> descriptionRanges = new ArrayList<>();
-    var documentationLines = new BitSet();
-
-    var symbolTree = documentContext.getSymbolTree();
-    var ast = documentContext.getAst();
-    var uri = documentContext.getUri();
-    var comments = documentContext.getComments();
-    var tokensFromDefaultChannel = documentContext.getTokensFromDefaultChannel();
-
-    // 1) Symbols: methods/functions, variables, parameters
-
-    addMethodSymbols(symbolTree, entries, descriptionRanges, documentationLines);
-    addVariableSymbols(documentContext, symbolTree, entries, descriptionRanges, documentationLines);
-
-    addMultilineDescriptions(documentContext, descriptionRanges, entries);
-
-    // 2) Comments (lexer type LINE_COMMENT)
-    addComments(comments, descriptionRanges, entries, documentationLines);
-
-    // 3) AST-driven annotations and compiler directives
-    addAnnotationsFromAst(entries, ast);
-    addPreprocessorFromAst(entries, ast);
-
-    // 3.1) Method call occurrences as Method tokens
-    addMethodCallTokens(entries, uri);
-
-    // 4) SDBL (Query Language) tokens - process before lexical tokens to identify strings to skip
-    var stringsToSkip = collectStringsWithSdblTokens(documentContext);
-
-    // 5) Lexical tokens on default channel: strings, numbers, macros, operators, keywords
-    // Skip strings that contain SDBL tokens (they'll be split and added by addSdblTokens)
-    addLexicalTokens(tokensFromDefaultChannel, entries, stringsToSkip);
-
-    // 6) Add SDBL tokens and split string parts
-    addSdblTokens(documentContext, entries, stringsToSkip);
-
-    // 7) Build delta-encoded data
-    List<Integer> data = toDeltaEncoded(entries);
-    return new SemanticTokens(data);
-  }
-
-  private void addMultilineDescriptions(
-    DocumentContext documentContext, List<Range> descriptionRanges, List<TokenEntry> entries) {
-    if (!multilineTokenSupport) {
-      return;
-    }
-
-    for (Range r : descriptionRanges) {
-      // compute multi-line token length using document text
-      int length = documentContext.getText(r).length();
-      addRange(entries, r, length, SemanticTokenTypes.Comment, DOC_ONLY);
-    }
-  }
-
-  private void addVariableSymbols(
+  public SemanticTokens getSemanticTokensFull(
     DocumentContext documentContext,
-    SymbolTree symbolTree,
-    List<TokenEntry> entries,
-    List<Range> descriptionRanges,
-    BitSet documentationLines
+    @SuppressWarnings("unused") SemanticTokensParams params
   ) {
-    for (var variableSymbol : symbolTree.getVariables()) {
-      if (variableSymbol.getKind() == VariableKind.PARAMETER) {
-        continue;
-      }
-      
-      var nameRange = variableSymbol.getVariableNameRange();
-      if (!Ranges.isEmpty(nameRange)) {
-        boolean isDefinition = referenceResolver.findReference(documentContext.getUri(), nameRange.getStart())
-          .map(ref -> ref.getOccurrenceType() == OccurrenceType.DEFINITION)
-          .orElse(false);
-        if (isDefinition) {
-          addRange(entries, nameRange, SemanticTokenTypes.Variable, SemanticTokenModifiers.Definition);
-        } else {
-          addRange(entries, nameRange, SemanticTokenTypes.Variable);
-        }
-      }
-      
-      variableSymbol.getDescription().ifPresent((VariableDescription description) -> {
-        processVariableDescription(descriptionRanges, documentationLines, description);
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
 
-        description.getTrailingDescription().ifPresent((VariableDescription trailingDescription) ->
-          processVariableDescription(descriptionRanges, documentationLines, trailingDescription)
-        );
-      });
-    }
-    
-    var references = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Variable);
-    references.stream()
-      .filter(Reference::isSourceDefinedSymbolReference)
-      .forEach(reference -> reference.getSourceDefinedSymbol()
-        .filter(symbol -> symbol instanceof VariableSymbol)
-        .map(symbol -> (VariableSymbol) symbol)
-        .ifPresent(variableSymbol -> {
-          var tokenType = variableSymbol.getKind() == VariableKind.PARAMETER
-            ? SemanticTokenTypes.Parameter
-            : SemanticTokenTypes.Variable;
-          
-          if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
-            addRange(entries, reference.getSelectionRange(), tokenType, SemanticTokenModifiers.Definition);
-          } else {
-            addRange(entries, reference.getSelectionRange(), tokenType);
-          }
-        }));
+    // Build delta-encoded data as int array
+    int[] data = toDeltaEncodedArray(entries);
+
+    // Generate a unique resultId and cache the data
+    String resultId = generateResultId();
+    cacheTokenData(resultId, documentContext.getUri(), data);
+
+    return new SemanticTokens(resultId, toList(data));
   }
 
-  private void addMethodSymbols(SymbolTree symbolTree, List<TokenEntry> entries, List<Range> descriptionRanges, BitSet documentationLines) {
-    for (var method : symbolTree.getMethods()) {
-      var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
-      addRange(entries, method.getSubNameRange(), semanticTokenType);
-      for (ParameterDefinition parameter : method.getParameters()) {
-        addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
-      }
-      method.getDescription().ifPresent((MethodDescription description) ->
-        processVariableDescription(descriptionRanges, documentationLines, description)
-      );
-    }
-  }
-
-  private void processVariableDescription(
-    List<Range> descriptionRanges,
-    BitSet documentationLines,
-    SourceDefinedSymbolDescription description
+  /**
+   * Получить дельту семантических токенов относительно предыдущего результата.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса с previousResultId
+   * @return Либо дельту токенов, либо полные токены, если предыдущий результат недоступен
+   */
+  public Either<SemanticTokens, SemanticTokensDelta> getSemanticTokensFullDelta(
+    DocumentContext documentContext,
+    SemanticTokensDeltaParams params
   ) {
-    var range = description.getRange();
-    if (Ranges.isEmpty(range)) {
-      return;
+    String previousResultId = params.getPreviousResultId();
+    CachedTokenData previousData = tokenCache.get(previousResultId);
+
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
+
+    // Build delta-encoded data as int array
+    int[] currentData = toDeltaEncodedArray(entries);
+
+    // Generate new resultId
+    String resultId = generateResultId();
+
+    // If previous data is not available or belongs to a different document, return full tokens
+    if (previousData == null || !previousData.uri().equals(documentContext.getUri())) {
+      cacheTokenData(resultId, documentContext.getUri(), currentData);
+      return Either.forLeft(new SemanticTokens(resultId, toList(currentData)));
     }
 
-    descriptionRanges.add(range);
-    if (!multilineTokenSupport) {
-      markLines(documentationLines, range);
-    }
+    // Compute delta edits
+    List<SemanticTokensEdit> edits = computeEdits(previousData.data(), currentData);
+
+    // Cache the new data
+    cacheTokenData(resultId, documentContext.getUri(), currentData);
+
+    // Remove the old cached data
+    tokenCache.remove(previousResultId);
+
+    var delta = new SemanticTokensDelta();
+    delta.setResultId(resultId);
+    delta.setEdits(edits);
+    return Either.forRight(delta);
   }
 
-  private void addComments(List<Token> comments, List<Range> descriptionRanges, List<TokenEntry> entries, BitSet documentationLines) {
-    for (var commentToken : comments) {
-      var commentRange = Ranges.create(commentToken);
-      if (multilineTokenSupport) {
-        boolean insideDescription = descriptionRanges.stream().anyMatch(r -> Ranges.containsRange(r, commentRange));
-        if (insideDescription) {
-          continue;
-        }
-        addRange(entries, commentRange, SemanticTokenTypes.Comment);
-      } else {
-        int commentLine = commentToken.getLine() - 1;
-        boolean isDocumentation = documentationLines.get(commentLine);
-        if (isDocumentation) {
-          addRange(entries, commentRange, SemanticTokenTypes.Comment, DOC_ONLY);
-        } else {
-          addRange(entries, commentRange, SemanticTokenTypes.Comment);
-        }
-      }
-    }
+  /**
+   * Получить семантические токены для указанного диапазона документа.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса с диапазоном
+   * @return Семантические токены для указанного диапазона в дельта-кодированном формате
+   */
+  public SemanticTokens getSemanticTokensRange(
+    DocumentContext documentContext,
+    SemanticTokensRangeParams params
+  ) {
+    Range range = params.getRange();
+
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
+
+    // Filter tokens that fall within the specified range
+    var filteredEntries = filterTokensByRange(entries, range);
+
+    // Build delta-encoded data as int array
+    int[] data = toDeltaEncodedArray(filteredEntries);
+
+    // Range requests do not use resultId caching as per LSP specification
+    return new SemanticTokens(toList(data));
   }
 
-  private static void markLines(BitSet lines, Range range) {
+  /**
+   * Фильтрует токены, оставляя только те, которые попадают в указанный диапазон.
+   * <p>
+   * Токен считается попадающим в диапазон, если он хотя бы частично пересекается с ним.
+   * <p>
+   * Оптимизация: сначала выполняется быстрая фильтрация по строкам (простое сравнение целых чисел),
+   * затем для граничных строк проверяются позиции символов. Использует параллельную обработку
+   * для больших объемов данных.
+   *
+   * @param entries Список токенов
+   * @param range   Диапазон для фильтрации
+   * @return Отфильтрованный список токенов
+   */
+  private static List<SemanticTokenEntry> filterTokensByRange(List<SemanticTokenEntry> entries, Range range) {
     int startLine = range.getStart().getLine();
+    int startChar = range.getStart().getCharacter();
     int endLine = range.getEnd().getLine();
-    lines.set(startLine, endLine + 1); // inclusive end
+    int endChar = range.getEnd().getCharacter();
+
+    // Use parallel stream for large collections to leverage multiple cores
+    var stream = entries.size() > PARALLEL_PROCESSING_THRESHOLD
+      ? entries.parallelStream()
+      : entries.stream();
+
+    return stream
+      // Quick line-based pre-filter (simple integer comparison)
+      .filter(token -> token.line() >= startLine && token.line() <= endLine)
+      // Detailed check for boundary lines only
+      .filter(token -> isTokenInRangeDetailed(token, startLine, startChar, endLine, endChar))
+      .toList();
   }
 
-  private void addAnnotationsFromAst(List<TokenEntry> entries, ParseTree parseTree) {
-    // compiler directives: single Decorator from '&' through directive symbol
-    for (var compilerDirective : Trees.<CompilerDirectiveContext>findAllRuleNodes(parseTree, BSLParser.RULE_compilerDirective)) {
-      addAmpersandRange(entries, compilerDirective.AMPERSAND(), compilerDirective.compilerDirectiveSymbol());
+  /**
+   * Проверяет позицию символов для токенов на граничных строках.
+   * <p>
+   * Предполагается, что токен уже прошел проверку по строкам (находится между startLine и endLine).
+   */
+  private static boolean isTokenInRangeDetailed(
+    SemanticTokenEntry token,
+    int startLine,
+    int startChar,
+    int endLine,
+    int endChar
+  ) {
+    int tokenLine = token.line();
+    int tokenStart = token.start();
+    int tokenEnd = tokenStart + token.length();
+
+    // Token is on the start line - check if it ends after range start
+    if (tokenLine == startLine && tokenEnd <= startChar) {
+      return false;
     }
 
-    // annotations: single Decorator from '&' through annotation name; params identifiers as Parameter
-    for (var annotation : Trees.<AnnotationContext>findAllRuleNodes(parseTree, BSLParser.RULE_annotation)) {
-      addAmpersandRange(entries, annotation.AMPERSAND(), annotation.annotationName());
+    // Token is on the end line - check if it starts before range end
+    if (tokenLine == endLine && tokenStart >= endChar) {
+      return false;
+    }
 
-      var annotationParams = annotation.annotationParams();
-      if (annotationParams == null) {
-        continue;
-      }
+    return true;
+  }
 
-      for (var annotationParam : annotationParams.annotationParam()) {
-        var annotationParamName = annotationParam.annotationParamName();
-        if (annotationParamName != null) {
-          addRange(entries, Ranges.create(annotationParamName.IDENTIFIER()), SemanticTokenTypes.Parameter);
+  /**
+   * Обрабатывает событие закрытия документа в контексте сервера.
+   * <p>
+   * При закрытии документа очищает кэшированные данные семантических токенов.
+   *
+   * @param event событие закрытия документа
+   */
+  @EventListener
+  public void handleDocumentClosed(ServerContextDocumentClosedEvent event) {
+    clearCache(event.getDocumentContext().getUri());
+  }
+
+  /**
+   * Обрабатывает событие удаления документа из контекста сервера.
+   * <p>
+   * При удалении документа очищает кэшированные данные семантических токенов.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    clearCache(event.getUri());
+  }
+
+  /**
+   * Очищает кэшированные данные токенов для указанного документа.
+   *
+   * @param uri URI документа, для которого нужно очистить кэш
+   */
+  protected void clearCache(URI uri) {
+    tokenCache.entrySet().removeIf(entry -> entry.getValue().uri().equals(uri));
+  }
+
+  /**
+   * Generate a unique result ID for caching.
+   */
+  private static String generateResultId() {
+    return UUID.randomUUID().toString();
+  }
+
+  /**
+   * Cache token data with the given resultId.
+   */
+  private void cacheTokenData(String resultId, URI uri, int[] data) {
+    tokenCache.put(resultId, new CachedTokenData(uri, data));
+  }
+
+  /**
+   * Compute edits to transform previousData into currentData.
+   * <p>
+   * Учитывает структуру семантических токенов (группы по 5 элементов: deltaLine, deltaStart, length, type, modifiers)
+   * и смещение строк при вставке/удалении строк в документе.
+   */
+  private static List<SemanticTokensEdit> computeEdits(int[] prev, int[] curr) {
+    final int TOKEN_SIZE = 5;
+
+    int prevTokenCount = prev.length / TOKEN_SIZE;
+    int currTokenCount = curr.length / TOKEN_SIZE;
+
+    if (prevTokenCount == 0 && currTokenCount == 0) {
+      return List.of();
+    }
+
+    // Находим первый отличающийся токен и одновременно вычисляем сумму deltaLine для prefix
+    int firstDiffToken = 0;
+    int prefixAbsLine = 0;
+    int minTokens = Math.min(prevTokenCount, currTokenCount);
+
+    outer:
+    for (int i = 0; i < minTokens; i++) {
+      int base = i * TOKEN_SIZE;
+      for (int j = 0; j < TOKEN_SIZE; j++) {
+        if (prev[base + j] != curr[base + j]) {
+          firstDiffToken = i;
+          break outer;
         }
       }
+      prefixAbsLine += prev[base]; // накапливаем deltaLine
+      firstDiffToken = i + 1;
     }
+
+    // Если все токены одинаковые
+    if (firstDiffToken == minTokens && prevTokenCount == currTokenCount) {
+      return List.of();
+    }
+
+    // Вычисляем смещение строк инкрементально от prefixAbsLine
+    int prevSuffixAbsLine = prefixAbsLine;
+    for (int i = firstDiffToken; i < prevTokenCount; i++) {
+      prevSuffixAbsLine += prev[i * TOKEN_SIZE];
+    }
+    int currSuffixAbsLine = prefixAbsLine;
+    for (int i = firstDiffToken; i < currTokenCount; i++) {
+      currSuffixAbsLine += curr[i * TOKEN_SIZE];
+    }
+    int lineOffset = currSuffixAbsLine - prevSuffixAbsLine;
+
+    // Находим последний отличающийся токен с учётом смещения строк
+    int suffixMatchTokens = findSuffixMatchWithOffset(prev, curr, firstDiffToken, lineOffset, TOKEN_SIZE);
+
+    // Вычисляем границы редактирования
+    int deleteEndToken = prevTokenCount - suffixMatchTokens;
+    int insertEndToken = currTokenCount - suffixMatchTokens;
+
+    int deleteStart = firstDiffToken * TOKEN_SIZE;
+    int deleteCount = (deleteEndToken - firstDiffToken) * TOKEN_SIZE;
+    int insertEnd = insertEndToken * TOKEN_SIZE;
+
+    if (deleteCount == 0 && deleteStart == insertEnd) {
+      return List.of();
+    }
+
+    // Создаём список для вставки из среза массива
+    List<Integer> insertData = toList(Arrays.copyOfRange(curr, deleteStart, insertEnd));
+
+    var edit = new SemanticTokensEdit();
+    edit.setStart(deleteStart);
+    edit.setDeleteCount(deleteCount);
+    if (!insertData.isEmpty()) {
+      edit.setData(insertData);
+    }
+
+    return List.of(edit);
   }
 
-  private void addPreprocessorFromAst(List<TokenEntry> entries, ParseTree parseTree) {
-    addRegionsNamespaces(entries, parseTree);
-    addDirectives(entries, parseTree);
-    addOtherPreprocs(entries, parseTree);
-  }
+  /**
+   * Находит количество совпадающих токенов с конца, учитывая смещение строк.
+   * <p>
+   * При дельта-кодировании токены после точки вставки идентичны,
+   * кроме первого токена, у которого deltaLine смещён на lineOffset.
+   * При вставке текста без перевода строки (lineOffset == 0), первый токен
+   * может иметь смещённый deltaStart.
+   */
+  private static int findSuffixMatchWithOffset(int[] prev, int[] curr, int firstDiffToken, int lineOffset, int tokenSize) {
+    final int DELTA_LINE_INDEX = 0;
+    final int DELTA_START_INDEX = 1;
+    
+    int prevTokenCount = prev.length / tokenSize;
+    int currTokenCount = curr.length / tokenSize;
 
-  // Regions as Namespace: handle all regionStart and regionEnd nodes explicitly
-  private void addRegionsNamespaces(List<TokenEntry> entries, ParseTree parseTree) {
-    for (var regionStart : Trees.<RegionStartContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionStart)) {
-      // Namespace only for '#'+keyword part to avoid overlap with region name token
-      var preprocessor = Trees.<PreprocessorContext>getAncestorByRuleIndex(regionStart, BSLParser.RULE_preprocessor);
-      if (preprocessor != null && regionStart.PREPROC_REGION() != null) {
-        addRange(entries,
-          Ranges.create(preprocessor.getStart(), regionStart.PREPROC_REGION().getSymbol()),
-          SemanticTokenTypes.Namespace);
+    int maxPrevSuffix = prevTokenCount - firstDiffToken;
+    int maxCurrSuffix = currTokenCount - firstDiffToken;
+    int maxSuffix = Math.min(maxPrevSuffix, maxCurrSuffix);
+
+    int suffixMatch = 0;
+    boolean foundBoundary = false;
+
+    for (int i = 0; i < maxSuffix; i++) {
+      int prevIdx = (prevTokenCount - 1 - i) * tokenSize;
+      int currIdx = (currTokenCount - 1 - i) * tokenSize;
+
+      // Для граничного токена при inline-редактировании (lineOffset == 0)
+      // разрешаем различие в deltaStart
+      int firstFieldToCheck = (!foundBoundary && lineOffset == 0) ? DELTA_START_INDEX + 1 : DELTA_START_INDEX;
+      
+      // Проверяем поля кроме deltaLine (и возможно deltaStart для граничного токена)
+      boolean otherFieldsMatch = true;
+      for (int j = firstFieldToCheck; j < tokenSize; j++) {
+        if (prev[prevIdx + j] != curr[currIdx + j]) {
+          otherFieldsMatch = false;
+          break;
+        }
+      }
+
+      if (!otherFieldsMatch) {
+        break;
+      }
+
+      // Теперь проверяем deltaLine
+      int prevDeltaLine = prev[prevIdx + DELTA_LINE_INDEX];
+      int currDeltaLine = curr[currIdx + DELTA_LINE_INDEX];
+
+      if (prevDeltaLine == currDeltaLine) {
+        // Полное совпадение (или совпадение с учётом deltaStart при inline-редактировании)
+        suffixMatch++;
+        // Если это был граничный токен при inline-редактировании, отмечаем его найденным
+        if (!foundBoundary && lineOffset == 0) {
+          int prevDeltaStart = prev[prevIdx + DELTA_START_INDEX];
+          int currDeltaStart = curr[currIdx + DELTA_START_INDEX];
+          if (prevDeltaStart != currDeltaStart) {
+            foundBoundary = true;
+          }
+        }
+      } else if (!foundBoundary && currDeltaLine - prevDeltaLine == lineOffset) {
+        // Граничный токен — deltaLine отличается ровно на lineOffset
+        suffixMatch++;
+        foundBoundary = true;
       } else {
-        addNamespaceForPreprocessorNode(entries, regionStart);
-      }
-      // region name highlighted as Variable (consistent with #Использовать <libName>)
-      if (regionStart.regionName() != null) {
-        addRange(entries, Ranges.create(regionStart.regionName()), SemanticTokenTypes.Variable);
+        // Не совпадает
+        break;
       }
     }
-    for (var regionEnd : Trees.<RegionEndContext>findAllRuleNodes(parseTree, BSLParser.RULE_regionEnd)) {
-      addNamespaceForPreprocessorNode(entries, regionEnd);
-    }
+
+    return suffixMatch;
   }
 
-  // Use directives as Namespace: #Использовать ...
-  // Native directives as Macro: #native
-  private void addDirectives(List<TokenEntry> entries, ParseTree parseTree) {
-    for (var use : Trees.<UseContext>findAllRuleNodes(parseTree, BSLParser.RULE_use)) {
-      addNamespaceForUse(entries, use);
-    }
-
-    for (var nativeCtx : Trees.<Preproc_nativeContext>findAllRuleNodes(parseTree, BSLParser.RULE_preproc_native)) {
-      var hash = nativeCtx.HASH();
-      var nativeKw = nativeCtx.PREPROC_NATIVE();
-      if (hash != null) {
-        addRange(entries, Ranges.create(hash), SemanticTokenTypes.Macro);
-      }
-      if (nativeKw != null) {
-        addRange(entries, Ranges.create(nativeKw), SemanticTokenTypes.Macro);
-      }
-    }
+  /**
+   * Collect tokens from all suppliers in parallel using ForkJoinPool.
+   */
+  private List<SemanticTokenEntry> collectTokens(DocumentContext documentContext) {
+    return CompletableFuture
+      .supplyAsync(
+        () -> suppliers.parallelStream()
+          .map(supplier -> supplier.getSemanticTokens(documentContext))
+          .flatMap(Collection::stream)
+          .toList(),
+        executorService
+      )
+      .join();
   }
 
-  // Other preprocessor directives: Macro for each HASH and PREPROC_* token,
-  // excluding region start/end, native, use (handled as Namespace)
-  private void addOtherPreprocs(List<TokenEntry> entries, ParseTree parseTree) {
-    for (var preprocessor : Trees.<PreprocessorContext>findAllRuleNodes(parseTree, BSLParser.RULE_preprocessor)) {
-      boolean containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
-      if (containsRegion) {
-        continue; // region handled as Namespace above
-      }
-
-      for (Token token : Trees.getTokens(preprocessor)) {
-        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-          continue;
-        }
-        String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
-        if (token.getType() == BSLLexer.HASH || (symbolicName != null && symbolicName.startsWith("PREPROC_"))) {
-          addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
-        }
-      }
-    }
-  }
-
-  private void addNamespaceForPreprocessorNode(List<TokenEntry> entries, ParserRuleContext preprocessorChildNode) {
-    var preprocessor = Trees.<PreprocessorContext>getAncestorByRuleIndex(preprocessorChildNode, BSLParser.RULE_preprocessor);
-    if (preprocessor == null) {
-      return;
-    }
-    var hashToken = preprocessor.getStart();
-    if (hashToken == null) {
-      return;
-    }
-    var endToken = preprocessorChildNode.getStop();
-    addRange(entries, Ranges.create(hashToken, endToken), SemanticTokenTypes.Namespace);
-  }
-
-  private void addNamespaceForUse(List<TokenEntry> entries, UseContext useCtx) {
-    var hashNode = useCtx.HASH();
-    var useNode = useCtx.PREPROC_USE_KEYWORD();
-
-    if (hashNode != null && useNode != null) {
-      addRange(entries, Ranges.create(hashNode, useNode), SemanticTokenTypes.Namespace);
-    } else if (hashNode != null) {
-      addRange(entries, Ranges.create(hashNode), SemanticTokenTypes.Namespace);
-    } else {
-      // no-op
-    }
-
-    Optional.ofNullable(useCtx.usedLib())
-      .map(BSLParser.UsedLibContext::PREPROC_IDENTIFIER)
-      .ifPresent(id -> addRange(entries, Ranges.create(id), SemanticTokenTypes.Variable));
-  }
-
-  // общий для аннотаций и директив компиляции способ добавления
-  private void addAmpersandRange(List<TokenEntry> entries, TerminalNode node, @Nullable ParserRuleContext name) {
-    var ampersand = node.getSymbol(); // '&'
-    if (name != null) {
-      var symbolToken = name.getStart();
-      addRange(entries, Ranges.create(ampersand, symbolToken), SemanticTokenTypes.Decorator);
-    } else {
-      addRange(entries, Ranges.create(ampersand), SemanticTokenTypes.Decorator);
-    }
-  }
-
-  private void addRange(List<TokenEntry> entries, Range range, String type) {
-    addRange(entries, range, type, NO_MODIFIERS);
-  }
-
-  private void addRange(List<TokenEntry> entries, Range range, String type, String... modifiers) {
-    int explicitLength = Math.max(0, range.getEnd().getCharacter() - range.getStart().getCharacter());
-    addRange(entries, range, explicitLength, type, modifiers);
-  }
-
-  // overload to add token with explicit precomputed length (used for multi-line tokens)
-  private void addRange(List<TokenEntry> entries, Range range, int explicitLength, String type, String[] modifiers) {
-    if (Ranges.isEmpty(range)) {
-      return;
-    }
-    int typeIdx = legend.getTokenTypes().indexOf(type);
-    if (typeIdx < 0) {
-      return;
-    }
-    int line = range.getStart().getLine();
-    int start = range.getStart().getCharacter();
-    int length = Math.max(0, explicitLength);
-    if (length > 0) {
-      var modifierMask = 0;
-      for (String mod : modifiers) {
-        int idx = legend.getTokenModifiers().indexOf(mod);
-        if (idx >= 0) {
-          modifierMask |= (1 << idx);
-        }
-      }
-      entries.add(new TokenEntry(line, start, length, typeIdx, modifierMask));
-    }
-  }
-
-  private static List<Integer> toDeltaEncoded(List<TokenEntry> entries) {
+  private static int[] toDeltaEncodedArray(List<SemanticTokenEntry> entries) {
     // de-dup and sort
-    Set<TokenEntry> uniq = new HashSet<>(entries);
-    List<TokenEntry> sorted = new ArrayList<>(uniq);
+    Set<SemanticTokenEntry> uniq = new HashSet<>(entries);
+    List<SemanticTokenEntry> sorted = new ArrayList<>(uniq);
     sorted.sort(Comparator
-      .comparingInt(TokenEntry::line)
-      .thenComparingInt(TokenEntry::start));
+      .comparingInt(SemanticTokenEntry::line)
+      .thenComparingInt(SemanticTokenEntry::start));
 
-    List<Integer> data = new ArrayList<>(sorted.size() * 5);
+    // Use int[] to avoid boxing overhead during computation
+    int[] data = new int[sorted.size() * 5];
     var prevLine = 0;
     var prevChar = 0;
+    var index = 0;
     var first = true;
 
-    for (TokenEntry tokenEntry : sorted) {
-      int deltaLine = first ? tokenEntry.line : (tokenEntry.line - prevLine);
+    for (SemanticTokenEntry tokenEntry : sorted) {
+      int deltaLine = first ? tokenEntry.line() : (tokenEntry.line() - prevLine);
       int prevCharOrZero = (deltaLine == 0) ? prevChar : 0;
-      int deltaStart = first ? tokenEntry.start : (tokenEntry.start - prevCharOrZero);
+      int deltaStart = first ? tokenEntry.start() : (tokenEntry.start() - prevCharOrZero);
 
-      data.add(deltaLine);
-      data.add(deltaStart);
-      data.add(tokenEntry.length);
-      data.add(tokenEntry.type);
-      data.add(tokenEntry.modifiers);
+      data[index++] = deltaLine;
+      data[index++] = deltaStart;
+      data[index++] = tokenEntry.length();
+      data[index++] = tokenEntry.type();
+      data[index++] = tokenEntry.modifiers();
 
-      prevLine = tokenEntry.line;
-      prevChar = tokenEntry.start;
+      prevLine = tokenEntry.line();
+      prevChar = tokenEntry.start();
       first = false;
     }
+
     return data;
   }
 
-  private void addMethodCallTokens(List<TokenEntry> entries, URI uri) {
-    for (var reference : referenceIndex.getReferencesFrom(uri, SymbolKind.Method)) {
-      if (!reference.isSourceDefinedSymbolReference()) {
-        continue;
-      }
-
-      reference.getSourceDefinedSymbol()
-        .ifPresent(symbol -> addRange(entries, reference.getSelectionRange(), SemanticTokenTypes.Method));
-    }
-  }
-
-  private void addLexicalTokens(List<Token> tokens, List<TokenEntry> entries, Set<Token> stringsToSkip) {
-    for (Token token : tokens) {
-      var tokenType = token.getType();
-      var tokenText = Objects.toString(token.getText(), "");
-      if (!tokenText.isEmpty()) {
-        // Skip string tokens that contain SDBL tokens - they'll be handled by addSdblTokens
-        if (STRING_TYPES.contains(tokenType) && stringsToSkip.contains(token)) {
-          continue;
-        }
-        selectAndAddSemanticToken(entries, token, tokenType);
-      }
-    }
-  }
-
-  private void selectAndAddSemanticToken(List<TokenEntry> entries, Token token, int tokenType) {
-    if (STRING_TYPES.contains(tokenType)) { // strings
-      addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
-    } else if (tokenType == BSLLexer.DATETIME) { // date literals in single quotes
-      addRange(entries, Ranges.create(token), SemanticTokenTypes.String);
-    } else if (NUMBER_TYPES.contains(tokenType)) { // numbers
-      addRange(entries, Ranges.create(token), SemanticTokenTypes.Number);
-    } else if (OPERATOR_TYPES.contains(tokenType)) { // operators and punctuators
-      addRange(entries, Ranges.create(token), SemanticTokenTypes.Operator);
-    } else if (tokenType == BSLLexer.AMPERSAND || ANNOTATION_TOKENS.contains(tokenType)) {
-      // Skip '&' and all ANNOTATION_* symbol tokens here to avoid duplicate Decorator emission (handled via AST)
-    } else if (SPEC_LITERALS.contains(tokenType)) { // specific literals as keywords: undefined/boolean/null
-      addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
-    } else {      // keywords (by symbolic name suffix), skip PREPROC_* (handled via AST)
-      String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
-      if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
-        addRange(entries, Ranges.create(token), SemanticTokenTypes.Keyword);
-      }
-    }
-  }
-
-  private Set<Token> collectStringsWithSdblTokens(DocumentContext documentContext) {
-    var queries = documentContext.getQueries();
-    if (queries.isEmpty()) {
-      return Set.of();
-    }
-
-    // Collect all SDBL tokens grouped by line
-    // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
-    var sdblTokensByLine = new HashMap<Integer, List<Token>>();
-    for (var query : queries) {
-      for (Token token : query.getTokens()) {
-        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-          continue;
-        }
-        int zeroIndexedLine = token.getLine() - 1;  // ANTLR uses 1-indexed, convert to 0-indexed for Range
-        sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
-      }
-    }
-
-    if (sdblTokensByLine.isEmpty()) {
-      return Set.of();
-    }
-
-    // Collect BSL string tokens that contain SDBL tokens
-    var bslStringTokens = documentContext.getTokensFromDefaultChannel().stream()
-      .filter(token -> STRING_TYPES.contains(token.getType()))
-      .toList();
-
-    var stringsToSkip = new HashSet<Token>();
-
-    for (Token bslString : bslStringTokens) {
-      var stringRange = Ranges.create(bslString);
-      int stringLine = stringRange.getStart().getLine();
-
-      var sdblTokensOnLine = sdblTokensByLine.get(stringLine);
-      if (sdblTokensOnLine == null || sdblTokensOnLine.isEmpty()) {
-        continue;
-      }
-
-      // Check if any SDBL tokens overlap with this string token
-      var hasOverlappingTokens = sdblTokensOnLine.stream()
-        .anyMatch(sdblToken -> {
-          var sdblRange = Ranges.create(sdblToken);
-          return Ranges.containsRange(stringRange, sdblRange);
-        });
-
-      if (hasOverlappingTokens) {
-        stringsToSkip.add(bslString);
-      }
-    }
-
-    return stringsToSkip;
-  }
-
-  private void addSdblTokens(DocumentContext documentContext, List<TokenEntry> entries, Set<Token> stringsToSkip) {
-    var queries = documentContext.getQueries();
-    if (queries.isEmpty()) {
-      return;
-    }
-
-    // Collect all SDBL tokens grouped by line
-    // Note: ANTLR tokens use 1-indexed line numbers, convert to 0-indexed for LSP Range
-    var sdblTokensByLine = new HashMap<Integer, List<Token>>();
-    for (var query : queries) {
-      for (Token token : query.getTokens()) {
-        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-          continue;
-        }
-        int zeroIndexedLine = token.getLine() - 1;  // ANTLR uses 1-indexed, convert to 0-indexed for Range
-        sdblTokensByLine.computeIfAbsent(zeroIndexedLine, k -> new ArrayList<>()).add(token);
-      }
-    }
-
-    if (sdblTokensByLine.isEmpty()) {
-      return;
-    }
-
-    // For each BSL string token that was skipped, split it around SDBL tokens
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    
-    for (Token stringToken : stringsToSkip) {
-      var stringRange = Ranges.create(stringToken);
-      int stringLine = stringRange.getStart().getLine();
-
-      var sdblTokensOnLine = sdblTokensByLine.get(stringLine);
-      if (sdblTokensOnLine == null || sdblTokensOnLine.isEmpty()) {
-        continue;
-      }
-
-      // Check if any SDBL tokens overlap with this string token
-      int stringStart = stringRange.getStart().getCharacter();
-      int stringEnd = stringRange.getEnd().getCharacter();
-      
-      var overlappingTokens = sdblTokensOnLine.stream()
-        .filter(sdblToken -> {
-          int sdblStart = sdblToken.getCharPositionInLine();
-          int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
-          // Token overlaps if it's within the string range
-          return sdblStart >= stringStart && sdblEnd <= stringEnd;
-        })
-        .sorted(Comparator.comparingInt(Token::getCharPositionInLine))
-        .toList();
-
-      if (overlappingTokens.isEmpty()) {
-        continue;
-      }
-
-      // Split the STRING token around SDBL tokens
-      int currentPos = stringStart;
-
-      for (Token sdblToken : overlappingTokens) {
-        int sdblStart = sdblToken.getCharPositionInLine();
-        int sdblEnd = sdblStart + (int) sdblToken.getText().codePoints().count();
-
-        // Add string part before SDBL token
-        if (currentPos < sdblStart && stringTypeIdx >= 0) {
-          entries.add(new TokenEntry(
-            stringLine,
-            currentPos,
-            sdblStart - currentPos,
-            stringTypeIdx,
-            0
-          ));
-        }
-
-        currentPos = sdblEnd;
-      }
-
-      // Add final string part after last SDBL token
-      if (currentPos < stringEnd && stringTypeIdx >= 0) {
-        entries.add(new TokenEntry(
-          stringLine,
-          currentPos,
-          stringEnd - currentPos,
-          stringTypeIdx,
-          0
-        ));
-      }
-    }
-
-    // Add all SDBL tokens (with adjusted line numbers)
-    for (var query : queries) {
-      for (Token token : query.getTokens()) {
-        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-          continue;
-        }
-        addSdblToken(entries, token);
-      }
-    }
-    
-    // Add AST-based semantic tokens (aliases, field names, metadata names, etc.)
-    for (var query : queries) {
-      var visitor = new SdblSemanticTokensVisitor(this, entries);
-      visitor.visit(query.getAst());
-    }
-  }
-
-  private void addSdblToken(List<TokenEntry> entries, Token token) {
-    var tokenType = token.getType();
-    var semanticTypeAndModifiers = getSdblTokenTypeAndModifiers(tokenType);
-    if (semanticTypeAndModifiers != null) {
-      // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
-      int zeroIndexedLine = token.getLine() - 1;
-      int start = token.getCharPositionInLine();
-      int length = (int) token.getText().codePoints().count();
-      // Create range with corrected line number
-      var range = new Range(
-        new Position(zeroIndexedLine, start),
-        new Position(zeroIndexedLine, start + length)
-      );
-      addRange(entries, range, semanticTypeAndModifiers.type, semanticTypeAndModifiers.modifiers);
-    }
-  }
-
-  @Nullable
-  private SdblTokenTypeAndModifiers getSdblTokenTypeAndModifiers(int tokenType) {
-    if (SDBL_KEYWORDS.contains(tokenType)) {
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
-    } else if (SDBL_FUNCTIONS.contains(tokenType)) {
-      // Functions as Function type with defaultLibrary modifier (built-in SDBL functions)
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Function, DEFAULT_LIBRARY);
-    } else if (SDBL_METADATA_TYPES.contains(tokenType) || SDBL_EDS.contains(tokenType)) {
-      // Metadata types (Справочник, РегистрСведений, etc.) as Namespace with no modifiers (per JSON spec)
-      // Note: Virtual tables (SDBL_VIRTUAL_TABLES) are NOT included here because they should be
-      // handled by AST visitor as Method tokens in visitMdo
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Namespace, NO_MODIFIERS);
-    } else if (SDBL_LITERALS.contains(tokenType)) {
-      // Literals as Keyword (matching YAML: constant.language.sdbl, no Constant type in LSP)
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Keyword, NO_MODIFIERS);
-    } else if (SDBL_OPERATORS.contains(tokenType)) {
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Operator, NO_MODIFIERS);
-    } else if (SDBL_STRINGS.contains(tokenType)) {
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.String, NO_MODIFIERS);
-    } else if (SDBL_COMMENTS.contains(tokenType)) {
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Comment, NO_MODIFIERS);
-    } else if (SDBL_NUMBERS.contains(tokenType)) {
-      // Numbers as Number (matching YAML: constant.numeric.sdbl)
-      return new SdblTokenTypeAndModifiers(SemanticTokenTypes.Number, NO_MODIFIERS);
-    }
-    return null;
-  }
-
-  private record SdblTokenTypeAndModifiers(String type, String[] modifiers) {
-  }
-
-  // SDBL token type factory methods
-  private static Set<Integer> createSdblKeywords() {
-    return Set.of(
-      SDBLLexer.ALL,
-      SDBLLexer.ALLOWED,
-      SDBLLexer.AND,
-      SDBLLexer.AS,
-      SDBLLexer.ASC,
-      SDBLLexer.AUTOORDER,
-      SDBLLexer.BETWEEN,
-      SDBLLexer.BY_EN,
-      SDBLLexer.CASE,
-      SDBLLexer.CAST,
-      SDBLLexer.DESC,
-      SDBLLexer.DISTINCT,
-      SDBLLexer.DROP,
-      SDBLLexer.ELSE,
-      SDBLLexer.END,
-      SDBLLexer.ESCAPE,
-      SDBLLexer.FOR,
-      SDBLLexer.FROM,
-      SDBLLexer.FULL,
-      SDBLLexer.GROUP,
-      SDBLLexer.HAVING,
-      SDBLLexer.HIERARCHY,
-      SDBLLexer.HIERARCHY_FOR_IN,
-      SDBLLexer.IN,
-      SDBLLexer.INDEX,
-      SDBLLexer.INNER,
-      SDBLLexer.INTO,
-      SDBLLexer.IS,
-      SDBLLexer.JOIN,
-      SDBLLexer.LEFT,
-      SDBLLexer.LIKE,
-      SDBLLexer.NOT,
-      SDBLLexer.OF,
-      SDBLLexer.ONLY,
-      SDBLLexer.ON_EN,
-      SDBLLexer.OR,
-      SDBLLexer.ORDER,
-      SDBLLexer.OVERALL,
-      SDBLLexer.OUTER,
-      SDBLLexer.PERIODS,
-      SDBLLexer.PO_RU,
-      SDBLLexer.REFS,
-      SDBLLexer.RIGHT,
-      SDBLLexer.SELECT,
-      SDBLLexer.SET,
-      SDBLLexer.THEN,
-      SDBLLexer.TOP,
-      SDBLLexer.TOTALS,
-      SDBLLexer.UNION,
-      SDBLLexer.UPDATE,
-      SDBLLexer.WHEN,
-      SDBLLexer.WHERE,
-      SDBLLexer.EMPTYREF,
-      SDBLLexer.GROUPEDBY,
-      SDBLLexer.GROUPING
-    );
-  }
-
-  private static Set<Integer> createSdblFunctions() {
-    return Set.of(
-      SDBLLexer.AVG,
-      SDBLLexer.BEGINOFPERIOD,
-      SDBLLexer.BOOLEAN,
-      SDBLLexer.COUNT,
-      SDBLLexer.DATE,
-      SDBLLexer.DATEADD,
-      SDBLLexer.DATEDIFF,
-      SDBLLexer.DATETIME,
-      SDBLLexer.DAY,
-      SDBLLexer.DAYOFYEAR,
-      SDBLLexer.EMPTYTABLE,
-      SDBLLexer.ENDOFPERIOD,
-      SDBLLexer.HALFYEAR,
-      SDBLLexer.HOUR,
-      SDBLLexer.ISNULL,
-      SDBLLexer.MAX,
-      SDBLLexer.MIN,
-      SDBLLexer.MINUTE,
-      SDBLLexer.MONTH,
-      SDBLLexer.NUMBER,
-      SDBLLexer.QUARTER,
-      SDBLLexer.PRESENTATION,
-      SDBLLexer.RECORDAUTONUMBER,
-      SDBLLexer.REFPRESENTATION,
-      SDBLLexer.SECOND,
-      SDBLLexer.STRING,
-      SDBLLexer.SUBSTRING,
-      SDBLLexer.SUM,
-      SDBLLexer.TENDAYS,
-      SDBLLexer.TYPE,
-      SDBLLexer.VALUE,
-      SDBLLexer.VALUETYPE,
-      SDBLLexer.WEEK,
-      SDBLLexer.WEEKDAY,
-      SDBLLexer.YEAR,
-      SDBLLexer.INT,
-      SDBLLexer.ACOS,
-      SDBLLexer.ASIN,
-      SDBLLexer.ATAN,
-      SDBLLexer.COS,
-      SDBLLexer.SIN,
-      SDBLLexer.TAN,
-      SDBLLexer.LOG,
-      SDBLLexer.LOG10,
-      SDBLLexer.EXP,
-      SDBLLexer.POW,
-      SDBLLexer.SQRT,
-      SDBLLexer.LOWER,
-      SDBLLexer.STRINGLENGTH,
-      SDBLLexer.TRIMALL,
-      SDBLLexer.TRIML,
-      SDBLLexer.TRIMR,
-      SDBLLexer.UPPER,
-      SDBLLexer.ROUND,
-      SDBLLexer.STOREDDATASIZE,
-      SDBLLexer.UUID,
-      SDBLLexer.STRFIND,
-      SDBLLexer.STRREPLACE
-    );
-  }
-
-  private static Set<Integer> createSdblMetadataTypes() {
-    return Set.of(
-      SDBLLexer.ACCOUNTING_REGISTER_TYPE,
-      SDBLLexer.ACCUMULATION_REGISTER_TYPE,
-      SDBLLexer.BUSINESS_PROCESS_TYPE,
-      SDBLLexer.CALCULATION_REGISTER_TYPE,
-      SDBLLexer.CATALOG_TYPE,
-      SDBLLexer.CHART_OF_ACCOUNTS_TYPE,
-      SDBLLexer.CHART_OF_CALCULATION_TYPES_TYPE,
-      SDBLLexer.CHART_OF_CHARACTERISTIC_TYPES_TYPE,
-      SDBLLexer.CONSTANT_TYPE,
-      SDBLLexer.DOCUMENT_TYPE,
-      SDBLLexer.DOCUMENT_JOURNAL_TYPE,
-      SDBLLexer.ENUM_TYPE,
-      SDBLLexer.EXCHANGE_PLAN_TYPE,
-      SDBLLexer.EXTERNAL_DATA_SOURCE_TYPE,
-      SDBLLexer.FILTER_CRITERION_TYPE,
-      SDBLLexer.INFORMATION_REGISTER_TYPE,
-      SDBLLexer.SEQUENCE_TYPE,
-      SDBLLexer.TASK_TYPE
-    );
-  }
-
-  private static Set<Integer> createSdblVirtualTables() {
-    return Set.of(
-      SDBLLexer.ACTUAL_ACTION_PERIOD_VT,
-      SDBLLexer.BALANCE_VT,
-      SDBLLexer.BALANCE_AND_TURNOVERS_VT,
-      SDBLLexer.BOUNDARIES_VT,
-      SDBLLexer.DR_CR_TURNOVERS_VT,
-      SDBLLexer.EXT_DIMENSIONS_VT,
-      SDBLLexer.RECORDS_WITH_EXT_DIMENSIONS_VT,
-      SDBLLexer.SCHEDULE_DATA_VT,
-      SDBLLexer.SLICEFIRST_VT,
-      SDBLLexer.SLICELAST_VT,
-      SDBLLexer.TASK_BY_PERFORMER_VT,
-      SDBLLexer.TURNOVERS_VT
-    );
-  }
-
-  private static Set<Integer> createSdblLiterals() {
-    return Set.of(
-      SDBLLexer.TRUE,
-      SDBLLexer.FALSE,
-      SDBLLexer.UNDEFINED,
-      SDBLLexer.NULL
-    );
-  }
-
-  private static Set<Integer> createSdblOperators() {
-    return Set.of(
-      SDBLLexer.SEMICOLON,
-      SDBLLexer.DOT,  // Added for field access operator
-      SDBLLexer.PLUS,
-      SDBLLexer.MINUS,
-      SDBLLexer.MUL,
-      SDBLLexer.QUOTIENT,
-      SDBLLexer.ASSIGN,
-      SDBLLexer.LESS_OR_EQUAL,
-      SDBLLexer.LESS,
-      SDBLLexer.NOT_EQUAL,
-      SDBLLexer.GREATER_OR_EQUAL,
-      SDBLLexer.GREATER,
-      SDBLLexer.COMMA,
-      SDBLLexer.BRACE,
-      SDBLLexer.BRACE_START,
-      SDBLLexer.NUMBER_SIGH
-    );
-  }
-
-  private record TokenEntry(int line, int start, int length, int type, int modifiers) {
-  }
-
-  /**
-   * Visitor for SDBL AST to add semantic tokens based on context.
-   * Handles:
-   * - Table aliases → Variable
-   * - Field names (after dots) → Property
-   * - Metadata type names → Namespace  
-   * - Alias declarations (after AS/КАК) → Variable + Declaration
-   * - Temporary table declarations (INTO tableName) → Variable + Declaration
-   * - Temporary table references (FROM tableName) → Variable
-   * - Operators (dots, commas) → Operator
-   */
-  private static class SdblSemanticTokensVisitor extends SDBLParserBaseVisitor<Void> {
-    private final SemanticTokensProvider provider;
-    private final List<TokenEntry> entries;
-    
-    public SdblSemanticTokensVisitor(SemanticTokensProvider provider, List<TokenEntry> entries) {
-      this.provider = provider;
-      this.entries = entries;
-    }
-    
-    @Override
-    public Void visitQuery(SDBLParser.QueryContext ctx) {
-      // Handle INTO temporaryTableName (ПОМЕСТИТЬ ВТ_Курсы)
-      // Grammar: (INTO temporaryTableName=temporaryTableIdentifier)?
-      // temporaryTableIdentifier: DOT? (NUMBER_SIGH+ | identifier | ((identifier | NUMBER_SIGH)+ DECIMAL*)+)
-      var temporaryTableName = ctx.temporaryTableName;
-      if (temporaryTableName != null) {
-        // Add the entire temporaryTableIdentifier as Variable + Declaration
-        provider.addSdblContextRange(entries, temporaryTableName, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
-      }
-
-      return super.visitQuery(ctx);
-    }
-
-    @Override
-    public Void visitDataSource(SDBLParser.DataSourceContext ctx) {
-      // Handle table sources and their aliases
-      var alias = ctx.alias();
-      if (alias != null && alias.identifier() != null) {
-        // Alias after AS/КАК → Variable + Declaration
-        var token = alias.identifier().getStart();
-        provider.addSdblTokenRange(entries, token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
-      }
-      
-      return super.visitDataSource(ctx);
-    }
-    
-    @Override
-    public Void visitSelectedField(SDBLParser.SelectedFieldContext ctx) {
-      // Handle field selections and their aliases
-      var alias = ctx.alias();
-      if (alias != null && alias.identifier() != null) {
-        // Alias after AS/КАК → Variable + Declaration
-        var token = alias.identifier().getStart();
-        provider.addSdblTokenRange(entries, token, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration);
-      }
-      
-      return super.visitSelectedField(ctx);
-    }
-    
-    @Override
-    public Void visitMdo(SDBLParser.MdoContext ctx) {
-      // Metadata object reference
-      // Grammar: mdo: type=(CATALOG_TYPE|...) DOT tableName=identifier
-      // type is already handled as Namespace by lexical processing
-      // tableName → Class (metadata object name, e.g., Пользователи in Справочник.Пользователи)
-      var tableName = ctx.tableName;
-      if (tableName != null) {
-        provider.addSdblTokenRange(entries, tableName.getStart(), SemanticTokenTypes.Class);
-      }
-      
-      return super.visitMdo(ctx);
-    }
-    
-    @Override
-    public Void visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
-      // Virtual table methods like СрезПоследних, Обороты, etc.
-      // Grammar: mdo DOT virtualTableName=(SLICELAST_VT | SLICEFIRST_VT | ...) ( parameters )?
-      // virtualTableName is a token, not an identifier context
-      
-      // Get virtualTableName token from context
-      // It's defined in grammar as virtualTableName=(SLICELAST_VT | SLICEFIRST_VT | ...)
-      var virtualTableNameToken = ctx.virtualTableName;
-      if (virtualTableNameToken != null) {
-        provider.addSdblTokenRange(entries, virtualTableNameToken, SemanticTokenTypes.Method);
-      }
-      
-      return super.visitVirtualTable(ctx);
-    }
-    
-    @Override
-    public Void visitTable(SDBLParser.TableContext ctx) {
-      // Handle table references
-      // Grammar: table: mdo | mdo DOT objectTableName=identifier | tableName=identifier
-
-      // tableName (third variant) is a temporary table reference
-      var tableName = ctx.tableName;
-      if (tableName != null) {
-        // Temporary table reference (ИЗ ВТ_Курсы) → Variable
-        provider.addSdblTokenRange(entries, tableName.getStart(), SemanticTokenTypes.Variable);
-      }
-
-      // objectTableName (second variant) is a table part/subordinate table
-      // e.g., Справочник.Пользователи.ГруппыДоступа → ГруппыДоступа is objectTableName
-      var objectTableName = ctx.objectTableName;
-      if (objectTableName != null) {
-        // Table part (табличная часть) → Class (it's a full table, subordinate to the main object)
-        provider.addSdblTokenRange(entries, objectTableName.getStart(), SemanticTokenTypes.Class);
-      }
-
-      return super.visitTable(ctx);
-    }
-
-    @Override
-    public Void visitColumn(SDBLParser.ColumnContext ctx) {
-      // Handle field references: TableAlias.FieldName
-      var identifiers = ctx.identifier();
-      if (identifiers != null && !identifiers.isEmpty()) {
-        if (identifiers.size() == 1) {
-          // Single identifier: in SDBL it may represent either a table alias or a field name.
-          // We intentionally highlight such ambiguous identifiers as "variable" for now,
-          // because distinguishing alias vs. field here would require deeper symbol resolution
-          // that is not performed in this visitor.
-          provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
-        } else if (identifiers.size() >= 2) {
-          // First identifier → Variable (table alias)
-          provider.addSdblTokenRange(entries, identifiers.get(0).getStart(), SemanticTokenTypes.Variable);
-          
-          // Dots are handled by lexical token processing
-          
-          // Last identifier → Property (field name)
-          provider.addSdblTokenRange(entries, identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Property);
-        }
-      }
-      
-      return super.visitColumn(ctx);
-    }
-
-    @Override
-    public Void visitParameter(SDBLParser.ParameterContext ctx) {
-      // Handle query parameters: &ParameterName
-      // Grammar: parameter: AMPERSAND name=PARAMETER_IDENTIFIER;
-      // Combine both tokens into a single Parameter token with Readonly modifier
-      var ampersand = ctx.AMPERSAND();
-      var parameterName = ctx.name;
-      if (ampersand != null && parameterName != null) {
-        // Create range from start of AMPERSAND to end of PARAMETER_IDENTIFIER
-        provider.addSdblContextRange(entries, ctx, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Readonly);
-      }
-
-      return super.visitParameter(ctx);
-    }
-
-    @Override
-    public Void visitValueFunction(SDBLParser.ValueFunctionContext ctx) {
-      // Handle VALUE function: Значение(...)
-      // Grammar variants:
-      // 1. type DOT mdoName DOT emptyRef=EMPTYREF (e.g., Справочник.Валюты.ПустаяСсылка)
-      // 2. type DOT mdoName DOT predefinedName (e.g., Справочник.Валюты.Рубль, Перечисление.Пол.Мужской)
-      // 3. systemName DOT predefinedName (e.g., for system enums)
-      // 4. mdo DOT (empty reference via mdo)
-
-      var type = ctx.type;
-      var mdoName = ctx.mdoName;
-      var predefinedName = ctx.predefinedName;
-      var emptyRef = ctx.emptyFer; // Note: variable name matches grammar field 'emptyFer' (typo in grammar for 'emptyRef')
-      var systemName = ctx.systemName;
-
-      if (type != null && mdoName != null) {
-        // Handle: type.mdoName.predefinedName or type.mdoName.EMPTYREF
-        // type is already handled as Namespace by lexical processing
-
-        // mdoName → Class or Enum depending on type
-        if (type.getType() == SDBLLexer.ENUM_TYPE) {
-          // For Перечисление.Пол → Пол is Enum
-          provider.addSdblTokenRange(entries, mdoName.getStart(), SemanticTokenTypes.Enum);
-        } else {
-          // For Справочник.Валюты, ПланВидовХарактеристик.XXX, etc. → Class
-          provider.addSdblTokenRange(entries, mdoName.getStart(), SemanticTokenTypes.Class);
-        }
-
-        // predefinedName or EMPTYREF → EnumMember
-        if (predefinedName != null) {
-          provider.addSdblTokenRange(entries, predefinedName.getStart(), SemanticTokenTypes.EnumMember);
-        } else if (emptyRef != null) {
-          provider.addSdblTokenRange(entries, emptyRef, SemanticTokenTypes.EnumMember);
-        }
-      } else if (systemName != null && predefinedName != null) {
-        // Handle system enum: systemName.predefinedName
-        // systemName → Enum
-        provider.addSdblTokenRange(entries, systemName.getStart(), SemanticTokenTypes.Enum);
-        // predefinedName → EnumMember
-        provider.addSdblTokenRange(entries, predefinedName.getStart(), SemanticTokenTypes.EnumMember);
-      }
-
-      // Handle routePointName for business processes
-      var routePointName = ctx.routePointName;
-      if (routePointName != null) {
-        provider.addSdblTokenRange(entries, routePointName.getStart(), SemanticTokenTypes.EnumMember);
-      }
-
-      return super.visitValueFunction(ctx);
-    }
-
-  }
-  
-  /**
-   * Helper method to add semantic token from SDBL ANTLR token
-   * Handles conversion from ANTLR 1-indexed lines to LSP 0-indexed positions
-   */
-  private void addSdblTokenRange(List<TokenEntry> entries, @Nullable Token token, String type, String... modifiers) {
-    if (token == null) {
-      return;
-    }
-    
-    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
-    int zeroIndexedLine = token.getLine() - 1;
-    int start = token.getCharPositionInLine();
-    int length = (int) token.getText().codePoints().count();
-    
-    var range = new Range(
-      new Position(zeroIndexedLine, start),
-      new Position(zeroIndexedLine, start + length)
-    );
-
-    addRange(entries, range, type, modifiers);
-  }
-
-  /**
-   * Helper method to add semantic token from SDBL ParserRuleContext
-   * Uses the entire range of the context (from start token to stop token)
-   */
-  private void addSdblContextRange(List<TokenEntry> entries, ParserRuleContext ctx, String type, String... modifiers) {
-    if (ctx == null || ctx.getStart() == null || ctx.getStop() == null) {
-      return;
-    }
-
-    var startToken = ctx.getStart();
-    var stopToken = ctx.getStop();
-
-    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
-    int zeroIndexedLine = startToken.getLine() - 1;
-    int start = startToken.getCharPositionInLine();
-
-    // Calculate length from start of first token to end of last token
-    // For single-line contexts, we can compute the total length
-    int stopEndPosition = stopToken.getCharPositionInLine() + (int) stopToken.getText().codePoints().count();
-    int length = stopEndPosition - start;
-
-    var range = new Range(
-      new Position(zeroIndexedLine, start),
-      new Position(zeroIndexedLine, start + length)
-    );
-    
-    addRange(entries, range, type, modifiers);
+  private static List<Integer> toList(int[] array) {
+    return Arrays.stream(array).boxed().toList();
   }
 }

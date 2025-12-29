@@ -27,7 +27,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.Getter;
 import lombok.Value;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -196,6 +198,35 @@ public class SymbolTree {
     return Optional.ofNullable(
       getVariablesByName().getOrDefault(scopeSymbol, Collections.emptyMap()).get(variableName)
     );
+  }
+
+  /**
+   * Поиск самого вложенного символа, содержащего указанную позицию.
+   * <p>
+   * Использует иерархический спуск по дереву символов вместо линейного поиска.
+   *
+   * @param position Позиция в документе.
+   * @return Символ, содержащий позицию, или символ модуля, если позиция вне всех символов.
+   */
+  public SourceDefinedSymbol getSymbolAtPosition(Position position) {
+    return findSymbolAtPosition(module, position);
+  }
+
+  private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
+    // Ищем среди детей символ, содержащий позицию
+    for (var child : parent.getChildren()) {
+      if (Ranges.containsPosition(child.getRange(), position)) {
+        // Рекурсивно ищем более вложенный символ
+        var found = findSymbolAtPosition(child, position);
+        // Пропускаем Namespace (Region) - ищем дальше или возвращаем parent
+        if (found.getSymbolKind() == SymbolKind.Namespace) {
+          continue;
+        }
+        return found;
+      }
+    }
+    // Если среди детей не нашли — возвращаем текущий символ
+    return parent;
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {

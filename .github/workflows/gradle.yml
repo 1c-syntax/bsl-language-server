@@ -53,6 +53,12 @@ jobs:
       with:
         name: Test Results (Java ${{ matrix.java_version }}.${{ matrix.os }})
         path: "**/test-results/test/**/*.xml"
+    - name: Publish Test report
+      if: failure()
+      uses: actions/upload-artifact@v5
+      with:
+        name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
+        path: build/reports/tests/test    
   publish-test-results:
     needs: [gatekeeper, check-pr-exists, build]
     runs-on: ubuntu-latest
@@ -61,7 +67,7 @@ jobs:
       pull-requests: write
       contents: read
       issues: read
-    if: always()
+    if: always() && needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v7
@@ -71,3 +77,4 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           junit_files: "artifacts/**/*.xml"
+          

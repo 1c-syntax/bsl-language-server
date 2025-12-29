@@ -43,7 +43,6 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -108,7 +107,12 @@ public class ReferenceIndex {
    */
   public Optional<Reference> getReference(URI uri, Position position) {
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .filter(symbolOccurrence -> Ranges.containsPosition(symbolOccurrence.location().getRange(), position))
+      .filter((SymbolOccurrence symbolOccurrence) -> {
+        var location = symbolOccurrence.location();
+        return Ranges.containsPosition(
+          location.startLine(), location.startCharacter(), location.endLine(), location.endCharacter(),
+          position);
+      })
       .findAny()
       .flatMap(this::buildReference);
   }
@@ -148,7 +152,7 @@ public class ReferenceIndex {
    */
   public List<Reference> getReferencesFrom(SourceDefinedSymbol symbol) {
     return getReferencesFrom(symbol.getOwner().getUri()).stream()
-      .filter(reference -> reference.getFrom().equals(symbol))
+      .filter(reference -> reference.from().equals(symbol))
       .collect(Collectors.toList());
   }
 
@@ -270,13 +274,13 @@ public class ReferenceIndex {
     SymbolOccurrence symbolOccurrence
   ) {
 
-    var uri = symbolOccurrence.location().getUri();
+    var uri = symbolOccurrence.location().uri();
     var range = symbolOccurrence.location().getRange();
     var occurrenceType = symbolOccurrence.occurrenceType();
 
     return getSourceDefinedSymbol(symbolOccurrence.symbol())
       .map((SourceDefinedSymbol symbol) -> {
-        SourceDefinedSymbol from = getFromSymbol(symbolOccurrence);
+        var from = getFromSymbol(symbolOccurrence);
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
       .filter(ReferenceIndex::isReferenceAccessible);
@@ -307,20 +311,12 @@ public class ReferenceIndex {
   }
 
   private SourceDefinedSymbol getFromSymbol(SymbolOccurrence symbolOccurrence) {
+    var uri = symbolOccurrence.location().uri();
+    var position = symbolOccurrence.location().getStart();
 
-    var uri = symbolOccurrence.location().getUri();
-    var position = symbolOccurrence.location().getRange().getStart();
-
-    var symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
-      .map(DocumentContext::getSymbolTree);
-    return symbolTree
-      .map(SymbolTree::getChildrenFlat)
-      .stream()
-      .flatMap(Collection::stream)
-      .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() != SymbolKind.Namespace)
-      .filter(symbol -> Ranges.containsPosition(symbol.getRange(), position))
-      .findFirst()
-      .or(() -> symbolTree.map(SymbolTree::getModule))
+    return Optional.ofNullable(serverContext.getDocument(uri))
+      .map(DocumentContext::getSymbolTree)
+      .map(symbolTree -> symbolTree.getSymbolAtPosition(position))
       .orElseThrow();
   }
 
@@ -330,7 +326,7 @@ public class ReferenceIndex {
     }
 
     var to = reference.getSourceDefinedSymbol().orElseThrow();
-    var from = reference.getFrom();
+    var from = reference.from();
     if (to.getOwner().equals(from.getOwner())) {
       return true;
     }

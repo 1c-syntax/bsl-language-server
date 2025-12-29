@@ -22,57 +22,31 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
 
 /**
  * Месторасположение появления символа.
+ *
+ * @param uri            URI файла, в котором расположен символ.
+ * @param startLine      Строка, в которой начинается символ.
+ * @param startCharacter Столбец, в котором начинается символ.
+ * @param endLine        Строка, в которой заканчивается символ.
+ * @param endCharacter   Столбец, в котором заканчивается символ.
  */
-@Value
-@AllArgsConstructor
-@Builder
-public class Location {
-
-  /**
-   * URI файла, в котором расположен символ.
-   */
-  URI uri;
-
-  /**
-   * Строка, в которой начинается символ.
-   */
-  int startLine;
-
-  /**
-   * Столбец, в котором начинается символ.
-   */
-  int startCharacter;
-
-  /**
-   * Строка, в которой заканчивается символ.
-   */
-  int endLine;
-
-  /**
-   * Столбец, в котором заканчивается символ.
-   */
-  int endCharacter;
+public record Location(URI uri, int startLine, int startCharacter, int endLine, int endCharacter) {
 
   public Location(URI uri, Range range) {
-    this.uri = uri;
-    var start = range.getStart();
-    var end = range.getEnd();
-    startLine = start.getLine();
-    startCharacter = start.getCharacter();
-    endLine = end.getLine();
-    endCharacter = end.getCharacter();
+    this(uri, range.getStart().getLine(), range.getStart().getCharacter(), range.getEnd().getLine(), range.getEnd().getCharacter());
   }
-  
+
   public Range getRange() {
     return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
+  public Position getStart() {
+    return new Position(startLine, startCharacter);
   }
 }

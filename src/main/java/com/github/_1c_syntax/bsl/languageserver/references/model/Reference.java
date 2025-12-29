@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import lombok.Value;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
@@ -32,34 +31,20 @@ import java.util.Optional;
 
 /**
  * Ссылка на символ.
+ *
+ * @param from           Символ, в котором располагается данная ссылка.
+ * @param symbol         Символ, на который указывает ссылка.
+ * @param uri            URI, в котором находится ссылка.
+ * @param selectionRange Диапазон, в котором располагается ссылка.
+ * @param occurrenceType Тип обращения к символу в ссылке.
  */
-@Value
-public class Reference {
-
-  /**
-   * Символ, в котором располагается данная ссылка.
-   */
-  SourceDefinedSymbol from;
-
-  /**
-   * Символ, на который указывает ссылка.
-   */
-  Symbol symbol;
-
-  /**
-   * URI, в котором находится ссылка.
-   */
-  URI uri;
-
-  /**
-   * Диапазон, в котором располагается ссылка.
-   */
-  Range selectionRange;
-
-  /**
-   * Тип обращения к символу в ссылке.
-   */
-  OccurrenceType occurrenceType;
+public record Reference(
+  SourceDefinedSymbol from,
+  Symbol symbol,
+  URI uri,
+  Range selectionRange,
+  OccurrenceType occurrenceType
+) {
 
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)

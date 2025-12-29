@@ -90,7 +90,7 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean isReferenceToModules(Reference reference) {
-    if (!validateNestedCalls && reference.getUri().equals(documentContext.getUri())) {
+    if (!validateNestedCalls && reference.uri().equals(documentContext.getUri())) {
       return false;
     }
     return reference.getSourceDefinedSymbol()
@@ -102,7 +102,7 @@ public class PrivilegedModuleMethodCallDiagnostic extends AbstractDiagnostic {
   }
 
   private void fireIssue(Reference reference) {
-    diagnosticStorage.addDiagnostic(reference.getSelectionRange(),
-      info.getMessage(reference.getSymbol().getName()));
+    diagnosticStorage.addDiagnostic(reference.selectionRange(),
+      info.getMessage(reference.symbol().getName()));
   }
 }
