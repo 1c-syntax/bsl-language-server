@@ -54,10 +54,9 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
   private final LocationRepository locationRepository;
 
-  private static String getMethodNameByLocation(ParserRuleContext node, Range range) {
+  private static Optional<String> getMethodNameByLocation(ParserRuleContext node, Range range) {
     return Trees.findTerminalNodeContainsPosition(node, range.getStart())
-      .map(ParseTree::getText)
-      .orElseThrow();
+      .map(ParseTree::getText);
   }
 
   @Override
@@ -88,9 +87,9 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     if (methodSymbol.isEmpty()) {
       final var location = symbolOccurrence.location();
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
-      return Optional.of(
-        new CallData(mdObject.get().getName(),
-          getMethodNameByLocation(documentContext.getAst(), location.getRange()),
+      return getMethodNameByLocation(documentContext.getAst(), location.getRange())
+        .map(methodName -> new CallData(mdObject.get().getName(),
+          methodName,
           location.getRange(), false, false));
     }
     // вызовы приватных методов внутри самого модуля пропускаем
