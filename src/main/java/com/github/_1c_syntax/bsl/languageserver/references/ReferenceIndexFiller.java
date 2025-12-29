@@ -330,6 +330,7 @@ public class ReferenceIndexFiller {
     public ParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
       findVariableSymbol(ctx.var_name().getText()).ifPresent(s -> {
         if (notVariableInitialization(ctx, s)) {
+
           addVariableUsage(
             s.getRootParent(SymbolKind.Method),
             ctx.var_name().getText(),

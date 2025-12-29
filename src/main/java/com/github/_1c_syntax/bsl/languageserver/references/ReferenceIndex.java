@@ -107,7 +107,12 @@ public class ReferenceIndex {
    */
   public Optional<Reference> getReference(URI uri, Position position) {
     return locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .filter(symbolOccurrence -> Ranges.containsPosition(symbolOccurrence.location().getRange(), position))
+      .filter((SymbolOccurrence symbolOccurrence) -> {
+        var location = symbolOccurrence.location();
+        return Ranges.containsPosition(
+          location.startLine(), location.startCharacter(), location.endLine(), location.endCharacter(),
+          position);
+      })
       .findAny()
       .flatMap(this::buildReference);
   }
@@ -269,7 +274,7 @@ public class ReferenceIndex {
     SymbolOccurrence symbolOccurrence
   ) {
 
-    var uri = symbolOccurrence.location().getUri();
+    var uri = symbolOccurrence.location().uri();
     var range = symbolOccurrence.location().getRange();
     var occurrenceType = symbolOccurrence.occurrenceType();
 
@@ -306,8 +311,8 @@ public class ReferenceIndex {
   }
 
   private SourceDefinedSymbol getFromSymbol(SymbolOccurrence symbolOccurrence) {
-    var uri = symbolOccurrence.location().getUri();
-    var position = symbolOccurrence.location().getRange().getStart();
+    var uri = symbolOccurrence.location().uri();
+    var position = symbolOccurrence.location().getStart();
 
     return Optional.ofNullable(serverContext.getDocument(uri))
       .map(DocumentContext::getSymbolTree)
