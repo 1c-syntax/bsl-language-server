@@ -94,12 +94,19 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     var localMethods = new HashSet<String>();
     var moduleMethodPairs = new HashMap<String, Set<String>>();
 
+    if (strTemplateMethods == null) {
+      return new ParsedStrTemplateMethods(localMethods, moduleMethodPairs);
+    }
+
     for (var pattern : strTemplateMethods) {
+      if (pattern == null || pattern.isBlank()) {
+        continue;
+      }
       var patternLower = pattern.toLowerCase(Locale.ENGLISH);
 
       if (patternLower.contains(".")) {
         var parts = patternLower.split("\\.", 2);
-        if (parts.length == 2) {
+        if (parts.length == 2 && !parts[0].isEmpty() && !parts[1].isEmpty()) {
           moduleMethodPairs
             .computeIfAbsent(parts[0], k -> new HashSet<>())
             .add(parts[1]);

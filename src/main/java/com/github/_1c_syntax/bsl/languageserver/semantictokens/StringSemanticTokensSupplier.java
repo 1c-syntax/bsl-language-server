@@ -81,7 +81,10 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   @PostConstruct
   private void init() {
-    var strTemplateMethods = configuration.getSemanticTokensOptions().getStrTemplateMethods();
+    var semanticTokensOptions = configuration.getSemanticTokensOptions();
+    var strTemplateMethods = semanticTokensOptions != null
+      ? semanticTokensOptions.getStrTemplateMethods()
+      : null;
     parsedStrTemplateMethods = SpecialContextVisitor.parseStrTemplateMethods(strTemplateMethods);
   }
 
