@@ -86,10 +86,10 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
             ? SemanticTokenTypes.Parameter
             : SemanticTokenTypes.Variable;
 
-          if (reference.getOccurrenceType() == OccurrenceType.DEFINITION) {
-            helper.addRange(entries, reference.getSelectionRange(), tokenType, SemanticTokenModifiers.Definition);
+          if (reference.occurrenceType() == OccurrenceType.DEFINITION) {
+            helper.addRange(entries, reference.selectionRange(), tokenType, SemanticTokenModifiers.Definition);
           } else {
-            helper.addRange(entries, reference.getSelectionRange(), tokenType);
+            helper.addRange(entries, reference.selectionRange(), tokenType);
           }
         }));
 

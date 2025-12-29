@@ -106,10 +106,10 @@ class ReferenceIndexReferenceFinderTest {
     var reference = referenceFinder.findReference(uri, position).orElseThrow();
 
     // then
-    assertThat(reference.getUri()).isEqualTo(uri);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(2, 22, 41));
+    assertThat(reference.uri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(2, 22, 41));
   }
 
   @Test
@@ -127,10 +127,10 @@ class ReferenceIndexReferenceFinderTest {
     var reference = referenceFinder.findReference(uri, position).orElseThrow();
 
     // then
-    assertThat(reference.getUri()).isEqualTo(uri);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(3, 38, 57));
+    assertThat(reference.uri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(3, 38, 57));
   }
 
   @Test

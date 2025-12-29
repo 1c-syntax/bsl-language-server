@@ -60,7 +60,7 @@ class ReferenceResolverTest {
     // then
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getUri()).isEqualTo(uri))
+      .hasValueSatisfying(reference -> assertThat(reference.uri()).isEqualTo(uri))
     ;
 
     // when
@@ -69,7 +69,7 @@ class ReferenceResolverTest {
     // then
     assertThat(optionalReference)
       .isPresent()
-      .hasValueSatisfying(reference -> assertThat(reference.getUri()).isEqualTo(uri))
+      .hasValueSatisfying(reference -> assertThat(reference.uri()).isEqualTo(uri))
     ;
 
     // when
@@ -108,7 +108,7 @@ class ReferenceResolverTest {
         return Optional.empty();
       }
       var reference = mock(Reference.class);
-      when(reference.getUri()).thenReturn(uri);
+      when(reference.uri()).thenReturn(uri);
       return Optional.of(reference);
     }
   }

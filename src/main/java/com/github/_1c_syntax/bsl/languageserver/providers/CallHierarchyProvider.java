@@ -111,8 +111,8 @@ public class CallHierarchyProvider {
       .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
       .collect(groupingBy(
-        Reference::getFrom,
-        mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
+        Reference::from,
+        mapping(Reference::selectionRange, toCollection(ArrayList::new)))
       )
       .entrySet()
       .stream()
@@ -141,10 +141,10 @@ public class CallHierarchyProvider {
       .map(referenceIndex::getReferencesFrom)
       .flatMap(Collection::stream)
       .filter(Reference::isSourceDefinedSymbolReference)
-      .filter(reference -> isSymbolSupported(reference.getSymbol()))
+      .filter(reference -> isSymbolSupported(reference.symbol()))
       .collect(groupingBy(
         reference -> reference.getSourceDefinedSymbol().orElseThrow(),
-        mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
+        mapping(Reference::selectionRange, toCollection(ArrayList::new)))
       )
       .entrySet()
       .stream()

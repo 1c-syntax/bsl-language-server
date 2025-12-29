@@ -214,6 +214,69 @@ public final class Ranges {
   }
 
   /**
+   * Проверяет, содержит ли диапазон указанную позицию.
+   *
+   * @param startLine      - начальная строка диапазона
+   * @param startCharacter - начальный символ диапазона
+   * @param endLine        - конечная строка диапазона
+   * @param endCharacter   - конечный символ диапазона
+   * @param position       - позиция для проверки
+   * @return true, если позиция находится внутри диапазона (включая начало, исключая конец)
+   */
+  public boolean containsPosition(
+    int startLine, int startCharacter, int endLine, int endCharacter,
+    Position position
+  ) {
+    return containsPosition(startLine, startCharacter, endLine, endCharacter,
+      position.getLine(), position.getCharacter());
+  }
+
+  /**
+   * Проверяет, содержит ли диапазон указанную позицию.
+   *
+   * @param startLine      - начальная строка диапазона
+   * @param startCharacter - начальный символ диапазона
+   * @param endLine        - конечная строка диапазона
+   * @param endCharacter   - конечный символ диапазона
+   * @param line           - строка позиции
+   * @param character      - символ позиции
+   * @return true, если позиция находится внутри диапазона (включая начало, исключая конец)
+   */
+  public boolean containsPosition(
+    int startLine, int startCharacter, int endLine, int endCharacter,
+    int line, int character
+  ) {
+    // Позиция равна началу диапазона
+    if (line == startLine && character == startCharacter) {
+      return true;
+    }
+    // Позиция после начала и до конца
+    return isBefore(startLine, startCharacter, line, character)
+      && isBefore(line, character, endLine, endCharacter);
+  }
+
+  /**
+   * Проверяет, что первая позиция строго раньше второй.
+   *
+   * @param line1      - строка первой позиции
+   * @param character1 - символ первой позиции
+   * @param line2      - строка второй позиции
+   * @param character2 - символ второй позиции
+   * @return true, если первая позиция строго раньше второй
+   */
+  private boolean isBefore(int line1, int character1, int line2, int character2) {
+    if (line1 < line2) {
+      return true;
+    }
+    if (line1 > line2) {
+      return false;
+    }
+    return character1 < character2;
+  }
+
+
+
+  /**
    * Натуральный порядок сравнения Range
    *
    * @param o1 - левый\меньший операнд
@@ -257,17 +320,34 @@ public final class Ranges {
   }
 
   /**
-   * @deprecated Для совместимости метод оставлен, но будет удален в будущих версиях.
-   * Вместо него стоит использовать метод {@link ModuleSymbol#getSelectionRange()}
+   * Натуральный порядок сравнения двух диапазонов, заданных деконструированными координатами.
+   *
+   * @param startLine1 - начальная строка первого диапазона
+   * @param startChar1 - начальный символ первого диапазона
+   * @param endLine1   - конечная строка первого диапазона
+   * @param endChar1   - конечный символ первого диапазона
+   * @param startLine2 - начальная строка второго диапазона
+   * @param startChar2 - начальный символ второго диапазона
+   * @param endLine2   - конечная строка второго диапазона
+   * @param endChar2   - конечный символ второго диапазона
+   * @return 0 - равно, 1 - больше, -1 - меньше
    */
-  @Deprecated(since = "0.20")
-  public Optional<Range> getFirstSignificantTokenRange(Collection<Token> tokens) {
-    return tokens.stream()
-      .filter(token -> token.getType() != Token.EOF)
-      .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
-      .map(Ranges::create)
-      .filter(range -> (!range.getStart().equals(range.getEnd())))
-      .findFirst();
+  public int compare(
+    int startLine1, int startChar1, int endLine1, int endChar1,
+    int startLine2, int startChar2, int endLine2, int endChar2
+  ) {
+    // Сравнение начальных позиций
+    if (startLine1 != startLine2) {
+      return Integer.compare(startLine1, startLine2);
+    }
+    if (startChar1 != startChar2) {
+      return Integer.compare(startChar1, startChar2);
+    }
+    // Сравнение конечных позиций
+    if (endLine1 != endLine2) {
+      return Integer.compare(endLine1, endLine2);
+    }
+    return Integer.compare(endChar1, endChar2);
   }
 
 }

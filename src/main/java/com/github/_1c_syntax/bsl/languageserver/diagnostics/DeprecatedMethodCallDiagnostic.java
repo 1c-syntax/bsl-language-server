@@ -53,13 +53,13 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
     var uri = documentContext.getUri();
 
     referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
-      .filter(reference -> reference.getSymbol().isDeprecated())
-      .filter(reference -> !reference.getFrom().isDeprecated())
+      .filter(reference -> reference.symbol().isDeprecated())
+      .filter(reference -> !reference.from().isDeprecated())
       .forEach((Reference reference) -> {
-        var deprecatedSymbol = reference.getSymbol();
+        var deprecatedSymbol = reference.symbol();
         var deprecationInfo = getDeprecationInfo(deprecatedSymbol);
         var message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
-        diagnosticStorage.addDiagnostic(reference.getSelectionRange(), message);
+        diagnosticStorage.addDiagnostic(reference.selectionRange(), message);
       });
   }
 

@@ -59,9 +59,9 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     super.visitFile(ctx);
     for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method)) {
-      var call = calls.get(reference.getSelectionRange());
+      var call = calls.get(reference.selectionRange());
       if (call != null) {
-        checkMethod((MethodSymbol) reference.getSymbol(), call);
+        checkMethod((MethodSymbol) reference.symbol(), call);
       }
     }
     return ctx;
