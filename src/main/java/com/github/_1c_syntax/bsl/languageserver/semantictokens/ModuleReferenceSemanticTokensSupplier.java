@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SymbolKind;
@@ -49,9 +51,19 @@ public class ModuleReferenceSemanticTokensSupplier implements SemanticTokensSupp
     var uri = documentContext.getUri();
 
     for (var reference : referenceIndex.getReferencesFrom(uri, SymbolKind.Module)) {
+      if (!isCommonModuleReference(reference.symbol())) {
+        continue;
+      }
       helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Namespace);
     }
 
     return entries;
+  }
+
+  private static boolean isCommonModuleReference(com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol symbol) {
+    if (!(symbol instanceof ModuleSymbol moduleSymbol)) {
+      return false;
+    }
+    return moduleSymbol.getOwner().getModuleType() == ModuleType.CommonModule;
   }
 }
