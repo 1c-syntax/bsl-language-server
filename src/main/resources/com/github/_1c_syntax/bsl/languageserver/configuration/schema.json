@@ -1169,18 +1169,8 @@
                         "type": "string"
                     },
                     "default": [
-                        "ПодставитьПараметрыВСтроку",
-                        "SubstituteParametersToString",
-                        "SubstituteParametersInString",
-                        "СтроковыеФункции.ПодставитьПараметрыВСтроку",
-                        "СтроковыеФункцииКлиент.ПодставитьПараметрыВСтроку",
                         "СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку",
-                        "StringFunctions.SubstituteParametersToString",
-                        "StringFunctionsClient.SubstituteParametersToString",
-                        "StringFunctionsClientServer.SubstituteParametersToString",
-                        "StringFunctions.SubstituteParametersInString",
-                        "StringFunctionsClient.SubstituteParametersInString",
-                        "StringFunctionsClientServer.SubstituteParametersInString"
+                        "StringFunctionsClientServer.SubstituteParametersToString"
                     ]
                 }
             }

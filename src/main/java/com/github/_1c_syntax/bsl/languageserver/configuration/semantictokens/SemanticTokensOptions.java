@@ -58,20 +58,9 @@ public class SemanticTokensOptions {
    * По умолчанию включает стандартные варианты из БСП.
    */
   private List<String> strTemplateMethods = new ArrayList<>(List.of(
-    // Локальные вызовы
-    "ПодставитьПараметрыВСтроку",
-    "SubstituteParametersToString",
-    "SubstituteParametersInString",
-    // Стандартные модули БСП
-    "СтроковыеФункции.ПодставитьПараметрыВСтроку",
-    "СтроковыеФункцииКлиент.ПодставитьПараметрыВСтроку",
+    // Стандартный модуль БСП
     "СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку",
-    // Английские варианты
-    "StringFunctions.SubstituteParametersToString",
-    "StringFunctionsClient.SubstituteParametersToString",
-    "StringFunctionsClientServer.SubstituteParametersToString",
-    "StringFunctions.SubstituteParametersInString",
-    "StringFunctionsClient.SubstituteParametersInString",
-    "StringFunctionsClientServer.SubstituteParametersInString"
+    // Английский вариант
+    "StringFunctionsClientServer.SubstituteParametersToString"
   ));
 }

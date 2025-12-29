@@ -600,24 +600,6 @@ class StringSemanticTokensSupplierTest {
   }
 
   @Test
-  void testSubstituteParametersToStringLocal() {
-    // given - Local call without module prefix (configured in defaults)
-    String bsl = """
-      Процедура Тест()
-        Текст = ПодставитьПараметрыВСтроку("Наименование: %1, версия: %2", Наименование, Версия);
-      КонецПроцедуры
-      """;
-
-    // when
-    var tokens = tokens(bsl);
-
-    // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2
-    assertThat(parameterTokens).hasSize(2);
-  }
-
-  @Test
   void testSubstituteParametersToStringWithVariable() {
     // given - template stored in variable, then used in module function call
     String bsl = """
