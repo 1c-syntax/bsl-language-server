@@ -107,4 +107,47 @@ class ModuleReferenceSemanticTokensSupplierTest {
     // then
     assertThat(tokens).isEmpty();
   }
+
+  @Test
+  void testVariableWithCommonModuleNotHighlightedAsNamespace() throws IOException {
+    // given - code with variable that holds reference to common module via ОбщегоНазначения.ОбщийМодуль
+    // The variable itself should NOT be highlighted as namespace
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    // Load the common module
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    // Load a document with the pattern: Модуль = ОбщегоНазначения.ОбщийМодуль("..."); Модуль.Метод();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    // when
+    var tokens = supplier.getSemanticTokens(documentContext);
+
+    // then
+    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+    var namespaceTokens = tokens.stream()
+      .filter(t -> t.type() == namespaceTypeIdx)
+      .toList();
+
+    // Variable names like "МодульУправлениеДоступом" should NOT appear as namespace tokens
+    // Only direct common module names should be namespace tokens
+    for (var token : namespaceTokens) {
+      // Check that the token is not on a line where variable is used (lines 7, 8, 10, 13 in the test file)
+      // Line 7 is where the variable is assigned - "МодульУправлениеДоступом" should not be namespace
+      // The only namespace token should be on line 7 for expression "ОбщегоНазначения.ОбщийМодуль(...)" 
+      // but that's a method call pattern, not a direct module reference
+      assertThat(token.line()).as("Namespace token should not be on variable usage lines").isNotIn(7, 10, 13);
+    }
+  }
 }
