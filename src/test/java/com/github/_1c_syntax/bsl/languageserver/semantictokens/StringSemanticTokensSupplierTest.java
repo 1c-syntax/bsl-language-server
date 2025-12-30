@@ -23,9 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
-import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.DecodedToken;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
+import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,24 +46,6 @@ class StringSemanticTokensSupplierTest {
   @Autowired
   private SemanticTokensTestHelper helper;
 
-  @Autowired
-  private SemanticTokensLegend legend;
-
-  private List<DecodedToken> getTokens(String bsl) {
-    return helper.getDecodedTokens(bsl, supplier);
-  }
-
-  private int typeIndex(String semanticTokenType) {
-    return legend.getTokenTypes().indexOf(semanticTokenType);
-  }
-
-  private List<DecodedToken> tokensOfType(List<DecodedToken> tokens, String semanticTokenType) {
-    int typeIdx = typeIndex(semanticTokenType);
-    return tokens.stream()
-      .filter(t -> t.type() == typeIdx)
-      .toList();
-  }
-
   // ==================== Regular String Tests ====================
 
   @Test
@@ -76,11 +58,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-    assertThat(stringTokens).hasSize(1);
+    // then - one string token
+    assertThat(decoded).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 10, 12, SemanticTokenTypes.String, "\"Привет мир\"")
+    ));
   }
 
   @Test
@@ -95,12 +79,15 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-    // STRINGSTART, 2x STRINGPART, or STRINGTAIL
-    assertThat(stringTokens).hasSizeGreaterThanOrEqualTo(3);
+    // then - multiple string parts
+    assertThat(decoded).hasSize(3);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 10, 14, SemanticTokenTypes.String, "\"Первая строка"),
+      new ExpectedToken(2, 2, 14, SemanticTokenTypes.String, "|Вторая строка"),
+      new ExpectedToken(3, 2, 15, SemanticTokenTypes.String, "|Третья строка\"")
+    ));
   }
 
   // ==================== NStr Tests ====================
@@ -115,16 +102,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru, en
-    assertThat(propertyTokens).hasSize(2);
-
-    // Check that string parts are also present
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-    assertThat(stringTokens).isNotEmpty();
+    // then - language keys (ru, en) are highlighted as Property
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 16, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 29, 2, SemanticTokenTypes.Property, "en")
+    ));
   }
 
   @Test
@@ -137,12 +121,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru, en
-    assertThat(propertyTokens).hasSize(2);
+    // then - NStr works same as НСтр
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 16, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 29, 2, SemanticTokenTypes.Property, "en")
+    ));
   }
 
   // ==================== StrTemplate Tests ====================
@@ -157,16 +142,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2
-    assertThat(parameterTokens).hasSize(2);
-
-    // Check that string parts are also present
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-    assertThat(stringTokens).isNotEmpty();
+    // then - placeholders %1, %2 are highlighted as Parameter
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 35, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 47, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   @Test
@@ -179,12 +161,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2
-    assertThat(parameterTokens).hasSize(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 29, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 42, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   @Test
@@ -197,12 +180,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %(1), %(2)
-    assertThat(parameterTokens).hasSize(2);
+    // then - %(1) and %(2) syntax
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 21, 4, SemanticTokenTypes.Parameter, "%(1)"),
+      new ExpectedToken(1, 25, 4, SemanticTokenTypes.Parameter, "%(2)")
+    ));
   }
 
   @Test
@@ -216,12 +200,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - плейсхолдеры в строке-присвоении должны подсвечиваться
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2 из строки НовыйШаблон = "%1 %2"
-    assertThat(parameterTokens).hasSize(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 17, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 20, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   @Test
@@ -235,12 +220,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %(1), %(2)
-    assertThat(parameterTokens).hasSize(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 12, 4, SemanticTokenTypes.Parameter, "%(1)"),
+      new ExpectedToken(1, 16, 4, SemanticTokenTypes.Parameter, "%(2)")
+    ));
   }
 
   // ==================== Combined NStr + StrTemplate Tests ====================
@@ -255,16 +241,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru
-    assertThat(propertyTokens).hasSize(1);
-
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1
-    assertThat(parameterTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 27, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 42, 2, SemanticTokenTypes.Parameter, "%1")
+    ));
   }
 
   @Test
@@ -277,16 +260,15 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru, en
-    assertThat(propertyTokens).hasSize(2);
-
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2
-    assertThat(parameterTokens).hasSize(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 30, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 43, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 48, 2, SemanticTokenTypes.Property, "en"),
+      new ExpectedToken(1, 60, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   @Test
@@ -300,16 +282,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru
-    assertThat(propertyTokens).hasSize(1);
-
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1
-    assertThat(parameterTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 17, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 32, 2, SemanticTokenTypes.Parameter, "%1")
+    ));
   }
 
   @Test
@@ -323,17 +302,17 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru, en
-    assertThat(propertyTokens).hasSize(2);
-
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2 (по одному разу в каждой подстроке, но токен один - значит 4 плейсхолдера)
-    // Нет, здесь один строковый токен, внутри которого 4 вхождения %N
-    assertThat(parameterTokens).hasSize(4);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 17, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 30, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 35, 2, SemanticTokenTypes.Parameter, "%2"),
+      new ExpectedToken(1, 40, 2, SemanticTokenTypes.Property, "en"),
+      new ExpectedToken(1, 52, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 59, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   // ==================== Query String Tests ====================
@@ -348,14 +327,15 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    // String parts should be split around query tokens
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-
-    // Should have multiple string parts (quotes and spaces around keywords)
-    assertThat(stringTokens).hasSizeGreaterThan(1);
+    // then - query keywords are highlighted
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 18, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
+      new ExpectedToken(1, 33, 2, SemanticTokenTypes.Keyword, "ИЗ"),
+      new ExpectedToken(1, 36, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(1, 47, 12, SemanticTokenTypes.Class, "Номенклатура")
+    ));
   }
 
   @Test
@@ -371,13 +351,15 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-
-    // Should have string parts on each line
-    assertThat(stringTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 18, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
+      new ExpectedToken(3, 3, 2, SemanticTokenTypes.Keyword, "ИЗ"),
+      new ExpectedToken(4, 5, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(4, 16, 12, SemanticTokenTypes.Class, "Номенклатура")
+    ));
   }
 
   // ==================== Mixed Context Tests ====================
@@ -393,16 +375,16 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru from NStr
-    assertThat(propertyTokens).hasSize(1);
-
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-    // Should have string parts from both NStr and query
-    assertThat(stringTokens).hasSizeGreaterThan(2);
+    helper.assertContainsTokens(decoded, List.of(
+      // NStr tokens
+      new ExpectedToken(1, 20, 2, SemanticTokenTypes.Property, "ru"),
+      // Query tokens
+      new ExpectedToken(2, 18, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
+      new ExpectedToken(2, 36, 10, SemanticTokenTypes.Namespace, "Справочник")
+    ));
   }
 
   @Test
@@ -415,19 +397,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-    // Single string token for the whole string
-    assertThat(stringTokens).hasSize(1);
-
-    // No Property or Parameter tokens
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    assertThat(propertyTokens).isEmpty();
-
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    assertThat(parameterTokens).isEmpty();
+    // then - just one string token
+    assertThat(decoded).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 18, 38, SemanticTokenTypes.String, "\"Это просто строка без НСтр и запроса\"")
+    ));
   }
 
   // ==================== SDBL Query Token Tests ====================
@@ -442,19 +418,15 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var keywordTokens = tokensOfType(tokens, SemanticTokenTypes.Keyword);
-    var namespaceTokens = tokensOfType(tokens, SemanticTokenTypes.Namespace);
-    var classTokens = tokensOfType(tokens, SemanticTokenTypes.Class);
-
-    // Выбрать, из
-    assertThat(keywordTokens).hasSizeGreaterThanOrEqualTo(2);
-    // Справочник
-    assertThat(namespaceTokens).hasSize(1);
-    // Контрагенты
-    assertThat(classTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 12, 7, SemanticTokenTypes.Keyword, "Выбрать"),
+      new ExpectedToken(1, 22, 2, SemanticTokenTypes.Keyword, "из"),
+      new ExpectedToken(1, 25, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(1, 36, 11, SemanticTokenTypes.Class, "Контрагенты")
+    ));
   }
 
   @Test
@@ -467,14 +439,12 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-
-    // &Параметр - один объединённый токен
-    assertThat(parameterTokens).hasSize(1);
-    assertThat(parameterTokens.get(0).line()).isEqualTo(1);
+    // then - Query parameter has readonly modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 32, 9, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Readonly, "&Параметр")
+    ));
   }
 
   @Test
@@ -487,13 +457,12 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var methodTokens = tokensOfType(tokens, SemanticTokenTypes.Method);
-
-    // СрезПоследних
-    assertThat(methodTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 52, 13, SemanticTokenTypes.Method, "СрезПоследних")
+    ));
   }
 
   @Test
@@ -506,19 +475,14 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var namespaceTokens = tokensOfType(tokens, SemanticTokenTypes.Namespace);
-    var classTokens = tokensOfType(tokens, SemanticTokenTypes.Class);
-    var enumMemberTokens = tokensOfType(tokens, SemanticTokenTypes.EnumMember);
-
-    // Справочник
-    assertThat(namespaceTokens).hasSize(1);
-    // Валюты
-    assertThat(classTokens).hasSize(1);
-    // Рубль
-    assertThat(enumMemberTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 44, 10, SemanticTokenTypes.Namespace, "Справочник"),
+      new ExpectedToken(1, 55, 6, SemanticTokenTypes.Class, "Валюты"),
+      new ExpectedToken(1, 62, 5, SemanticTokenTypes.EnumMember, "Рубль")
+    ));
   }
 
   @Test
@@ -531,16 +495,14 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var enumTokens = tokensOfType(tokens, SemanticTokenTypes.Enum);
-    var enumMemberTokens = tokensOfType(tokens, SemanticTokenTypes.EnumMember);
-
-    // Пол (enum)
-    assertThat(enumTokens).hasSize(1);
-    // Мужской (enum member)
-    assertThat(enumMemberTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 41, 12, SemanticTokenTypes.Namespace, "Перечисление"),
+      new ExpectedToken(1, 54, 3, SemanticTokenTypes.Enum, "Пол"),
+      new ExpectedToken(1, 58, 7, SemanticTokenTypes.EnumMember, "Мужской")
+    ));
   }
 
   @Test
@@ -553,13 +515,12 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    var functionTokens = tokensOfType(tokens, SemanticTokenTypes.Function);
-
-    // Количество
-    assertThat(functionTokens).hasSize(1);
+    // then - Aggregate function has defaultLibrary modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 20, 10, SemanticTokenTypes.Function, SemanticTokenModifiers.DefaultLibrary, "Количество")
+    ));
   }
 
   // ==================== Configurable Template Function Tests ====================
@@ -574,16 +535,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2
-    assertThat(parameterTokens).hasSize(2);
-
-    // Check that string parts are also present
-    var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
-    assertThat(stringTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 81, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 93, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   @Test
@@ -596,12 +554,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2
-    assertThat(parameterTokens).hasSize(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 73, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 86, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   @Test
@@ -614,12 +573,13 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2
-    assertThat(parameterTokens).hasSize(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 52, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 64, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
   }
 
   @Test
@@ -633,12 +593,14 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - placeholders in the assigned string should be highlighted
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1, %2, %3
-    assertThat(parameterTokens).hasSize(3);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 12, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 17, 2, SemanticTokenTypes.Parameter, "%2"),
+      new ExpectedToken(1, 22, 2, SemanticTokenTypes.Parameter, "%3")
+    ));
   }
 
   @Test
@@ -652,15 +614,12 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = getTokens(bsl);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - should have both language keys (ru) and placeholders (%1)
-    var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
-    // ru
-    assertThat(propertyTokens).hasSize(1);
-
-    var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
-    // %1
-    assertThat(parameterTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 17, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 30, 2, SemanticTokenTypes.Parameter, "%1")
+    ));
   }
 }
