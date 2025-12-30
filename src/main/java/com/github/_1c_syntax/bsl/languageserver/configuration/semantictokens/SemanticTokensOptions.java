@@ -79,7 +79,7 @@ public class SemanticTokensOptions {
    * Кэшированные разобранные паттерны функций-шаблонизаторов.
    */
   @JsonIgnore
-  private ParsedStrTemplateMethods parsedStrTemplateMethods;
+  private ParsedStrTemplateMethods parsedStrTemplateMethods = parseStrTemplateMethods(DEFAULT_STR_TEMPLATE_METHODS);
 
   /**
    * Устанавливает список паттернов функций-шаблонизаторов и пересчитывает кэш.
@@ -98,9 +98,6 @@ public class SemanticTokensOptions {
    */
   @JsonIgnore
   public ParsedStrTemplateMethods getParsedStrTemplateMethods() {
-    if (parsedStrTemplateMethods == null) {
-      parsedStrTemplateMethods = parseStrTemplateMethods(strTemplateMethods);
-    }
     return parsedStrTemplateMethods;
   }
 
