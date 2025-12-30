@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767082794188,
+  "lastUpdate": 1767090998533,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33201,6 +33201,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9655260361629148",
             "extra": "mean: 73.0085100332896 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e5b578102f6129c30f4609eff7d8170a17ccbbac",
+          "message": "Merge pull request #3714 from 1c-syntax/copilot/refactor-string-function-parameters\n\nAdd configurable template function highlighting for semantic tokens",
+          "timestamp": "2025-12-30T11:27:54+01:00",
+          "tree_id": "215617ada7ae2bb84e6e53aca1d1dca7bd108cd6",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e5b578102f6129c30f4609eff7d8170a17ccbbac"
+        },
+        "date": 1767090992331,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.51456554730733,
+            "unit": "sec",
+            "range": "stddev: 1.4719860404567644",
+            "extra": "mean: 73.51456554730733 sec\nrounds: 3"
           }
         ]
       }
