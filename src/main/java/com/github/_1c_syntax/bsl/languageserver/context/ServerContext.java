@@ -213,6 +213,11 @@ public class ServerContext {
     var documentContext = getDocument(uri);
     if (documentContext == null) {
       documentContext = createDocumentContext(uri);
+      // Initialize the document from disk if it's a file URI
+      // Virtual URIs (like "untitled:") will be initialized later when content is provided
+      if ("file".equals(uri.getScheme())) {
+        rebuildDocument(documentContext);
+      }
     }
 
     contextLock.readLock().unlock();
