@@ -80,7 +80,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
 
-  private ParsedStrTemplateMethods parsedStrTemplateMethods;
+  private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
 
   @PostConstruct
   private void init() {

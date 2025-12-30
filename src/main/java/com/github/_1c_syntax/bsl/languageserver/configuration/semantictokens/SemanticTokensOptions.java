@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -42,11 +42,21 @@ import java.util.Set;
  * Позволяет указать дополнительные функции-шаблонизаторы строк,
  * аналогичные СтрШаблон/StrTemplate, для подсветки плейсхолдеров (%1, %2 и т.д.).
  */
-@Data
+@Getter
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SemanticTokensOptions {
+
+  private static final List<String> DEFAULT_STR_TEMPLATE_METHODS = List.of(
+    // Локальный вызов
+    "ПодставитьПараметрыВСтроку",
+    "SubstituteParametersToString",
+    // Стандартный модуль БСП
+    "СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку",
+    // Английский вариант
+    "StringFunctionsClientServer.SubstituteParametersToString"
+  );
 
   /**
    * Список паттернов "Модуль.Метод" для функций-шаблонизаторов строк.
@@ -63,15 +73,23 @@ public class SemanticTokensOptions {
    * <p>
    * По умолчанию включает стандартные варианты из БСП.
    */
-  private List<String> strTemplateMethods = new ArrayList<>(List.of(
-    // Локальный вызов
-    "ПодставитьПараметрыВСтроку",
-    "SubstituteParametersToString",
-    // Стандартный модуль БСП
-    "СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку",
-    // Английский вариант
-    "StringFunctionsClientServer.SubstituteParametersToString"
-  ));
+  private List<String> strTemplateMethods = new ArrayList<>(DEFAULT_STR_TEMPLATE_METHODS);
+
+  /**
+   * Кэшированные разобранные паттерны функций-шаблонизаторов.
+   */
+  @JsonIgnore
+  private ParsedStrTemplateMethods parsedStrTemplateMethods;
+
+  /**
+   * Устанавливает список паттернов функций-шаблонизаторов и пересчитывает кэш.
+   *
+   * @param strTemplateMethods Список паттернов
+   */
+  public void setStrTemplateMethods(List<String> strTemplateMethods) {
+    this.strTemplateMethods = strTemplateMethods;
+    this.parsedStrTemplateMethods = parseStrTemplateMethods(strTemplateMethods);
+  }
 
   /**
    * Возвращает предварительно разобранные паттерны функций-шаблонизаторов.
@@ -80,10 +98,17 @@ public class SemanticTokensOptions {
    */
   @JsonIgnore
   public ParsedStrTemplateMethods getParsedStrTemplateMethods() {
+    if (parsedStrTemplateMethods == null) {
+      parsedStrTemplateMethods = parseStrTemplateMethods(strTemplateMethods);
+    }
+    return parsedStrTemplateMethods;
+  }
+
+  private static ParsedStrTemplateMethods parseStrTemplateMethods(List<String> methods) {
     var localMethods = new HashSet<String>();
     var moduleMethodPairs = new HashMap<String, Set<String>>();
 
-    for (var pattern : strTemplateMethods) {
+    for (var pattern : methods) {
       if (pattern.isBlank()) {
         continue;
       }
