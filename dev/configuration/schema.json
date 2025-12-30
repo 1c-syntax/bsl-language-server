@@ -1155,6 +1155,27 @@
                     ]
                 }
             }
+        },
+        "semanticTokens": {
+            "$id": "#/properties/semanticTokens",
+            "type": "object",
+            "title": "Semantic tokens configuration.",
+            "properties": {
+                "strTemplateMethods": {
+                    "$id": "#/properties/semanticTokens/strTemplateMethods",
+                    "type": "array",
+                    "title": "List of 'Module.Method' patterns for string template functions similar to StrTemplate/СтрШаблон. Strings in these functions will be highlighted with placeholder detection (%1, %2, etc.).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "ПодставитьПараметрыВСтроку",
+                        "SubstituteParametersToString",
+                        "СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку",
+                        "StringFunctionsClientServer.SubstituteParametersToString"
+                    ]
+                }
+            }
         }
     }
 }

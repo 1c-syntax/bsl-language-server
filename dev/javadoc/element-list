@@ -23,6 +23,7 @@ com.github._1c_syntax.bsl.languageserver.configuration.events
 com.github._1c_syntax.bsl.languageserver.configuration.formating
 com.github._1c_syntax.bsl.languageserver.configuration.inlayhints
 com.github._1c_syntax.bsl.languageserver.configuration.references
+com.github._1c_syntax.bsl.languageserver.configuration.semantictokens
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
