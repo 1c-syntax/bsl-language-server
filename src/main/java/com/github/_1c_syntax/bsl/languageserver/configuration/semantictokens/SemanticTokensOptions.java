@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Настройки для семантических токенов.
@@ -79,7 +81,7 @@ public class SemanticTokensOptions {
   @JsonIgnore
   public ParsedStrTemplateMethods getParsedStrTemplateMethods() {
     var localMethods = new HashSet<String>();
-    var moduleMethodPairs = new HashMap<String, java.util.Set<String>>();
+    var moduleMethodPairs = new HashMap<String, Set<String>>();
 
     for (var pattern : strTemplateMethods) {
       if (pattern.isBlank()) {
