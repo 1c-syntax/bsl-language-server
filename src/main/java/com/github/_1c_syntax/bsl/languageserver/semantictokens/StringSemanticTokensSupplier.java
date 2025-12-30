@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.QueryContext;
@@ -79,7 +80,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
 
-  private SpecialContextVisitor.ParsedStrTemplateMethods parsedStrTemplateMethods;
+  private ParsedStrTemplateMethods parsedStrTemplateMethods;
 
   @PostConstruct
   private void init() {
@@ -99,11 +100,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   private void updateParsedStrTemplateMethods() {
-    var semanticTokensOptions = configuration.getSemanticTokensOptions();
-    var strTemplateMethods = semanticTokensOptions != null
-      ? semanticTokensOptions.getStrTemplateMethods()
-      : null;
-    parsedStrTemplateMethods = SpecialContextVisitor.parseStrTemplateMethods(strTemplateMethods);
+    parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
   }
 
   @Override

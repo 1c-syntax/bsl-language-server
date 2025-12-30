@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens.strings;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -31,8 +32,6 @@ import org.antlr.v4.runtime.Token;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,71 +61,6 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
 
   private final Map<Token, StringContext> contexts;
   private final ParsedStrTemplateMethods parsedMethods;
-
-  /**
-   * Предварительно разобранные паттерны функций-шаблонизаторов.
-   * <p>
-   * Структура:
-   * - localMethods: Set методов для локального вызова (без модуля)
-   * - moduleMethodPairs: Map из имени модуля -> Set методов этого модуля
-   */
-  public record ParsedStrTemplateMethods(
-    Set<String> localMethods,
-    Map<String, Set<String>> moduleMethodPairs
-  ) {
-    /**
-     * Создаёт пустой объект без дополнительных методов.
-     */
-    public static ParsedStrTemplateMethods empty() {
-      return new ParsedStrTemplateMethods(Set.of(), Map.of());
-    }
-  }
-
-  /**
-   * Разбирает список паттернов функций-шаблонизаторов один раз.
-   * <p>
-   * Вызывается один раз при инициализации и результат кэшируется.
-   *
-   * @param strTemplateMethods Список паттернов "Модуль.Метод" или "Метод" для локального вызова
-   * @return Предварительно разобранные паттерны
-   */
-  public static ParsedStrTemplateMethods parseStrTemplateMethods(List<String> strTemplateMethods) {
-    var localMethods = new HashSet<String>();
-    var moduleMethodPairs = new HashMap<String, Set<String>>();
-
-    if (strTemplateMethods == null) {
-      return new ParsedStrTemplateMethods(localMethods, moduleMethodPairs);
-    }
-
-    for (var pattern : strTemplateMethods) {
-      if (pattern == null || pattern.isBlank()) {
-        continue;
-      }
-      var patternLower = pattern.toLowerCase(Locale.ENGLISH);
-
-      if (patternLower.contains(".")) {
-        var parts = patternLower.split("\\.", 2);
-        if (parts.length == 2 && !parts[0].isEmpty() && !parts[1].isEmpty()) {
-          moduleMethodPairs
-            .computeIfAbsent(parts[0], k -> new HashSet<>())
-            .add(parts[1]);
-        }
-      } else {
-        localMethods.add(patternLower);
-      }
-    }
-
-    return new ParsedStrTemplateMethods(localMethods, moduleMethodPairs);
-  }
-
-  /**
-   * Создаёт visitor для сбора контекстов строк.
-   *
-   * @param contexts Map для заполнения контекстами строк
-   */
-  public SpecialContextVisitor(Map<Token, StringContext> contexts) {
-    this(contexts, ParsedStrTemplateMethods.empty());
-  }
 
   /**
    * Создаёт visitor для сбора контекстов строк с конфигурируемыми функциями-шаблонизаторами.

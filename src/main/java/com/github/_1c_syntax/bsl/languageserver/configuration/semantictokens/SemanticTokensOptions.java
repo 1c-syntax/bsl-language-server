@@ -22,13 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.semantictokens;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Настройки для семантических токенов.
@@ -66,4 +70,35 @@ public class SemanticTokensOptions {
     // Английский вариант
     "StringFunctionsClientServer.SubstituteParametersToString"
   ));
+
+  /**
+   * Возвращает предварительно разобранные паттерны функций-шаблонизаторов.
+   *
+   * @return Разобранные паттерны для быстрого поиска
+   */
+  @JsonIgnore
+  public ParsedStrTemplateMethods getParsedStrTemplateMethods() {
+    var localMethods = new HashSet<String>();
+    var moduleMethodPairs = new HashMap<String, java.util.Set<String>>();
+
+    for (var pattern : strTemplateMethods) {
+      if (pattern.isBlank()) {
+        continue;
+      }
+      var patternLower = pattern.toLowerCase(Locale.ENGLISH);
+
+      if (patternLower.contains(".")) {
+        var parts = patternLower.split("\\.", 2);
+        if (parts.length == 2 && !parts[0].isEmpty() && !parts[1].isEmpty()) {
+          moduleMethodPairs
+            .computeIfAbsent(parts[0], k -> new HashSet<>())
+            .add(parts[1]);
+        }
+      } else {
+        localMethods.add(patternLower);
+      }
+    }
+
+    return new ParsedStrTemplateMethods(localMethods, moduleMethodPairs);
+  }
 }
