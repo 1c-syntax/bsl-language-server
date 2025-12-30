@@ -337,18 +337,18 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
     try {
 
-      content = null;
-      contentList.clear();
-      tokenizer = null;
-      queries.clear();
-      clearDependantData();
-
       if (!isComputedDataFrozen) {
+        content = null;
+        contentList.clear();
+        tokenizer = null;
+        queries.clear();
         cognitiveComplexityData.clear();
         cyclomaticComplexityData.clear();
         metrics.clear();
         diagnosticIgnoranceData.clear();
       }
+      clearDependantData();
+
     } finally {
       releaseLocks();
     }

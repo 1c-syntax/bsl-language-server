@@ -71,6 +71,34 @@ class DocumentContextTest {
   }
 
   @Test
+  void testGetAstAfterFreezeAndClear() {
+    // given
+    var documentContext = getDocumentContext();
+    
+    // when - freeze the document to preserve computed data
+    documentContext.freezeComputedData();
+    // then clear secondary data (simulating what happens in ServerContext.tryClearDocument)
+    documentContext.clearSecondaryData();
+    
+    // then - getAst() should not throw NPE on frozen documents
+    assertThat(documentContext.getAst()).isNotNull();
+  }
+
+  @Test
+  void testGetTokensAfterFreezeAndClear() {
+    // given
+    var documentContext = getDocumentContext();
+    
+    // when - freeze the document to preserve computed data
+    documentContext.freezeComputedData();
+    // then clear secondary data (simulating what happens in ServerContext.tryClearDocument)
+    documentContext.clearSecondaryData();
+    
+    // then - getTokens() should not throw NPE on frozen documents
+    assertThat(documentContext.getTokens()).isNotEmpty();
+  }
+
+  @Test
   void testMethodCompute() {
 
     var documentContext = getDocumentContext();
