@@ -22,12 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.DecodedToken;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
@@ -35,24 +37,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class StringSemanticTokensSupplierTest {
 
   @Autowired
   private StringSemanticTokensSupplier supplier;
 
   @Autowired
+  private SemanticTokensTestHelper helper;
+
+  @Autowired
   private SemanticTokensLegend legend;
 
-  private List<SemanticTokenEntry> tokens(String bsl) {
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    return supplier.getSemanticTokens(documentContext);
+  private List<DecodedToken> getTokens(String bsl) {
+    return helper.getDecodedTokens(bsl, supplier);
   }
 
   private int typeIndex(String semanticTokenType) {
     return legend.getTokenTypes().indexOf(semanticTokenType);
   }
 
-  private List<SemanticTokenEntry> tokensOfType(List<SemanticTokenEntry> tokens, String semanticTokenType) {
+  private List<DecodedToken> tokensOfType(List<DecodedToken> tokens, String semanticTokenType) {
     int typeIdx = typeIndex(semanticTokenType);
     return tokens.stream()
       .filter(t -> t.type() == typeIdx)
@@ -71,7 +76,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
@@ -90,7 +95,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
@@ -110,7 +115,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -132,7 +137,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -152,7 +157,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -174,7 +179,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -192,7 +197,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -211,7 +216,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then - плейсхолдеры в строке-присвоении должны подсвечиваться
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -230,7 +235,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -250,7 +255,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -272,7 +277,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -295,7 +300,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then - должны быть и языковые ключи (ru), и плейсхолдеры (%1)
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -318,7 +323,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -343,7 +348,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     // String parts should be split around query tokens
@@ -366,7 +371,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
@@ -388,7 +393,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -410,7 +415,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var stringTokens = tokensOfType(tokens, SemanticTokenTypes.String);
@@ -437,7 +442,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var keywordTokens = tokensOfType(tokens, SemanticTokenTypes.Keyword);
@@ -462,7 +467,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -482,7 +487,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var methodTokens = tokensOfType(tokens, SemanticTokenTypes.Method);
@@ -501,7 +506,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var namespaceTokens = tokensOfType(tokens, SemanticTokenTypes.Namespace);
@@ -526,7 +531,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var enumTokens = tokensOfType(tokens, SemanticTokenTypes.Enum);
@@ -548,7 +553,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var functionTokens = tokensOfType(tokens, SemanticTokenTypes.Function);
@@ -569,7 +574,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -591,7 +596,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -609,7 +614,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -628,7 +633,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then - placeholders in the assigned string should be highlighted
     var parameterTokens = tokensOfType(tokens, SemanticTokenTypes.Parameter);
@@ -647,7 +652,7 @@ class StringSemanticTokensSupplierTest {
       """;
 
     // when
-    var tokens = tokens(bsl);
+    var tokens = getTokens(bsl);
 
     // then - should have both language keys (ru) and placeholders (%1)
     var propertyTokens = tokensOfType(tokens, SemanticTokenTypes.Property);
@@ -659,4 +664,3 @@ class StringSemanticTokensSupplierTest {
     assertThat(parameterTokens).hasSize(1);
   }
 }
-
