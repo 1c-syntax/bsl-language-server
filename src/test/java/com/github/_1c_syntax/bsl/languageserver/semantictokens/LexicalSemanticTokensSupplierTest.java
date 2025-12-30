@@ -22,24 +22,28 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class LexicalSemanticTokensSupplierTest {
 
   @Autowired
   private LexicalSemanticTokensSupplier supplier;
 
   @Autowired
-  private SemanticTokensLegend legend;
+  private SemanticTokensTestHelper helper;
 
   @Test
   void testKeywords() {
@@ -49,18 +53,14 @@ class LexicalSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int keywordTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    var keywordTokens = tokens.stream()
-      .filter(t -> t.type() == keywordTypeIdx)
-      .toList();
-    // Процедура, КонецПроцедуры
-    assertThat(keywordTokens).hasSizeGreaterThanOrEqualTo(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
+      new ExpectedToken(1, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
+    ));
   }
 
   @Test
@@ -74,18 +74,14 @@ class LexicalSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
-    // String tokens are handled by StringSemanticTokensSupplier, so should be 0
-    assertThat(stringTokens).isEmpty();
+    // then - String tokens are handled by StringSemanticTokensSupplier
+    // No String type tokens expected from LexicalSemanticTokensSupplier at position where the string is
+    assertThat(decoded.stream()
+      .filter(t -> t.start() == 10 && t.line() == 1)
+      .toList()).isEmpty();
   }
 
   @Test
@@ -97,17 +93,13 @@ class LexicalSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int numberTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Number);
-    var numberTokens = tokens.stream()
-      .filter(t -> t.type() == numberTypeIdx)
-      .toList();
-    assertThat(numberTokens).hasSize(1);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 10, 3, SemanticTokenTypes.Number, "123")
+    ));
   }
 
   @Test
@@ -119,18 +111,14 @@ class LexicalSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    int operatorTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Operator);
-    var operatorTokens = tokens.stream()
-      .filter(t -> t.type() == operatorTypeIdx)
-      .toList();
-    // =, +, ;
-    assertThat(operatorTokens).hasSizeGreaterThanOrEqualTo(2);
+    // then - =, + should be operators
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 4, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(1, 8, 1, SemanticTokenTypes.Operator, "+")
+    ));
   }
 
   @Test
@@ -142,18 +130,13 @@ class LexicalSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokens = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx)
-      .toList();
-    // DateTime is highlighted as String
-    assertThat(stringTokens).hasSize(1);
+    // then - DateTime is highlighted as String
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 9, 10, SemanticTokenTypes.String, "'20231225'")
+    ));
   }
 
   @Test
@@ -165,18 +148,13 @@ class LexicalSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    int keywordTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Keyword);
-    var keywordTokens = tokens.stream()
-      .filter(t -> t.type() == keywordTypeIdx && t.line() == 1)
-      .toList();
-    // Истина is Keyword
-    assertThat(keywordTokens).hasSize(1);
+    // then - Истина is Keyword
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 6, 6, SemanticTokenTypes.Keyword, "Истина")
+    ));
   }
 
   @Test
@@ -188,19 +166,15 @@ class LexicalSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - The query string should NOT be present as a single String token
-    int stringTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.String);
-    var stringTokensOnQueryLine = tokens.stream()
-      .filter(t -> t.type() == stringTypeIdx && t.line() == 1)
+    var stringTokensOnQueryLine = decoded.stream()
+      .filter(t -> t.line() == 1 && t.start() >= 11 && t.start() < 40)
       .toList();
 
     // Query string is skipped - no full string token at that position
     assertThat(stringTokensOnQueryLine).isEmpty();
   }
 }
-
