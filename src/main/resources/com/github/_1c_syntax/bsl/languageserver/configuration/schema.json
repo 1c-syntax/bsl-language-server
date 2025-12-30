@@ -1169,6 +1169,8 @@
                         "type": "string"
                     },
                     "default": [
+                        "ПодставитьПараметрыВСтроку",
+                        "SubstituteParametersToString",
                         "СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку",
                         "StringFunctionsClientServer.SubstituteParametersToString"
                     ]
