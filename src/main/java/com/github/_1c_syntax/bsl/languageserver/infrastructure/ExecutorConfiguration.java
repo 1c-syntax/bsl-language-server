@@ -63,6 +63,11 @@ public class ExecutorConfiguration {
     return getThreadPoolTaskExecutor(compositeTaskDecorator, "analyze-on-start-");
   }
 
+  @Bean(destroyMethod = "shutdown")
+  public ThreadPoolTaskExecutor semanticTokensExecutor(TaskDecorator compositeTaskDecorator) {
+    return getThreadPoolTaskExecutor(compositeTaskDecorator, "semantic-tokens-");
+  }
+
   private static ThreadPoolTaskExecutor getThreadPoolTaskExecutor(
     TaskDecorator compositeTaskDecorator,
     String threadNamePrefix
