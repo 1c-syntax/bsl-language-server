@@ -366,13 +366,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
   /**
    * Ensures that the document has been initialized with content.
    * If the tokenizer is null, triggers a rebuild from the file on disk.
-   * This method assumes computeLock is already held.
+   * Note: This is safe to call from within @Locked methods because computeLock is reentrant.
    */
   private void ensureInitialized() {
-    if (tokenizer == null) {
-      if (context != null) {
-        context.rebuildDocument(this);
-      }
+    if (tokenizer == null && context != null) {
+      context.rebuildDocument(this);
     }
   }
 
