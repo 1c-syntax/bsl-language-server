@@ -66,7 +66,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@SentrySpan
 public class ServerContext {
   private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
     .skipDataCompositionSchema(true)
@@ -93,7 +92,7 @@ public class ServerContext {
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
-
+  @SentrySpan
   public void populateContext() {
     if (configurationRoot == null) {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
@@ -113,6 +112,7 @@ public class ServerContext {
     populateContext(files);
   }
 
+  @SentrySpan
   public void populateContext(List<File> files) {
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(
       files.size(),
@@ -180,6 +180,7 @@ public class ServerContext {
    * @param uri URI документа (будет нормализован)
    * @return Контекст документа или {@code null}, если документ не найден
    */
+  @SentrySpan
   @Nullable
   public DocumentContext getDocumentUnsafe(URI uri) {
     return getDocument(Absolute.uri(uri));
@@ -194,6 +195,7 @@ public class ServerContext {
    * @param uri строковый URI документа
    * @return Контекст документа или {@code null}, если документ не найден
    */
+  @SentrySpan
   @Nullable
   public DocumentContext getDocumentUnsafe(String uri) {
     return getDocument(Absolute.uri(uri));
@@ -211,6 +213,7 @@ public class ServerContext {
    * @param uri нормализованный URI документа
    * @return Контекст документа
    */
+  @SentrySpan
   public DocumentContext addDocument(URI uri) {
     contextLock.readLock().lock();
 
@@ -230,6 +233,7 @@ public class ServerContext {
    *
    * @param uri нормализованный URI документа
    */
+  @SentrySpan
   public void removeDocument(URI uri) {
     var documentContext = documents.get(uri);
     if (openedDocuments.contains(documentContext)) {
@@ -263,6 +267,7 @@ public class ServerContext {
    * @param content         новое содержимое документа.
    * @param version         версия документа.
    */
+  @SentrySpan
   public void openDocument(DocumentContext documentContext, String content, Integer version) {
     openedDocuments.add(documentContext);
     documentContext.unfreezeComputedData();
@@ -292,6 +297,7 @@ public class ServerContext {
    *
    * @param documentContext документ, который необходимо перестроить.
    */
+  @SentrySpan
   public void rebuildDocument(DocumentContext documentContext) {
     if (states.get(documentContext) == State.WITH_CONTENT) {
       return;
@@ -308,6 +314,7 @@ public class ServerContext {
    * @param content         новое содержимое документа.
    * @param version         версия документа.
    */
+  @SentrySpan
   public void rebuildDocument(DocumentContext documentContext, String content, Integer version) {
     documentContext.rebuild(content, version);
     states.put(documentContext, State.WITH_CONTENT);
@@ -318,6 +325,7 @@ public class ServerContext {
    *
    * @param documentContext документ, который необходимо попытаться закрыть.
    */
+  @SentrySpan
   public void tryClearDocument(DocumentContext documentContext) {
     if (openedDocuments.contains(documentContext)) {
       return;
@@ -332,6 +340,7 @@ public class ServerContext {
    *
    * @param documentContext документ, который необходимо закрыть.
    */
+  @SentrySpan
   public void closeDocument(DocumentContext documentContext) {
     openedDocuments.remove(documentContext);
     states.put(documentContext, State.WITHOUT_CONTENT);
@@ -342,6 +351,7 @@ public class ServerContext {
     return configurationMetadata.getOrCompute();
   }
 
+  @SentrySpan
   private DocumentContext createDocumentContext(URI uri) {
     var documentContext = documentContextProvider.getObject(uri);
 
@@ -351,6 +361,7 @@ public class ServerContext {
     return documentContext;
   }
 
+  @SentrySpan
   private CF computeConfigurationMetadata() {
     if (configurationRoot == null) {
       return (CF) MDClasses.createConfiguration();
