@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.QueryContext;
@@ -40,6 +41,7 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -81,6 +83,22 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   @PostConstruct
   private void init() {
+    updateParsedStrTemplateMethods();
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Обновляет кэшированные паттерны функций-шаблонизаторов при изменении конфигурации.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    updateParsedStrTemplateMethods();
+  }
+
+  private void updateParsedStrTemplateMethods() {
     var semanticTokensOptions = configuration.getSemanticTokensOptions();
     var strTemplateMethods = semanticTokensOptions != null
       ? semanticTokensOptions.getStrTemplateMethods()
