@@ -117,6 +117,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Nullable
   private BSLTokenizer tokenizer;
 
+  private boolean isRebuilding = false;
+
   @Getter(onMethod = @__({@Locked("computeLock")}))
   private SymbolTree symbolTree = SymbolTreeComputer.empty(this);
 
@@ -298,6 +300,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
     acquireLocks();
 
     try {
+      isRebuilding = true;
 
       boolean versionMatches = version == this.version && version != 0;
 
@@ -320,6 +323,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       symbolTree = computeSymbolTree();
 
     } finally {
+      isRebuilding = false;
       releaseLocks();
     }
 
@@ -369,7 +373,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * Note: This is safe to call from within @Locked methods because computeLock is reentrant.
    */
   private void ensureInitialized() {
-    if (tokenizer == null && context != null) {
+    if (tokenizer == null && context != null && !isRebuilding) {
       context.rebuildDocument(this);
     }
   }
