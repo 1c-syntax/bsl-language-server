@@ -21,30 +21,31 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class SymbolsSemanticTokensSupplierTest {
 
   @Autowired
   private SymbolsSemanticTokensSupplier supplier;
 
   @Autowired
-  private SemanticTokensLegend legend;
+  private SemanticTokensTestHelper helper;
 
   @Autowired
-  private ReferenceIndexFiller referenceIndexFiller;
+  private SemanticTokensLegend legend;
 
   @Test
   void testMethodDeclaration() {
@@ -55,20 +56,17 @@ class SymbolsSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isNotEmpty();
+    assertThat(decoded).isNotEmpty();
 
-    // Should contain Function token for method name
-    var functionTokens = tokens.stream()
-      .filter(t -> t.type() == legend.getTokenTypes().indexOf(SemanticTokenTypes.Function))
+    int functionTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Function);
+    var functionTokens = decoded.stream()
+      .filter(t -> t.type() == functionTypeIdx)
       .toList();
-    assertThat(functionTokens).isNotEmpty();
+    assertThat(functionTokens).hasSize(1);
   }
 
   @Test
@@ -79,20 +77,17 @@ class SymbolsSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isNotEmpty();
+    assertThat(decoded).isNotEmpty();
 
-    // Should contain Method token for procedure name
-    var methodTokens = tokens.stream()
-      .filter(t -> t.type() == legend.getTokenTypes().indexOf(SemanticTokenTypes.Method))
+    int methodTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
+    var methodTokens = decoded.stream()
+      .filter(t -> t.type() == methodTypeIdx)
       .toList();
-    assertThat(methodTokens).isNotEmpty();
+    assertThat(methodTokens).hasSize(1);
   }
 
   @Test
@@ -104,25 +99,22 @@ class SymbolsSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isNotEmpty();
+    assertThat(decoded).isNotEmpty();
 
     int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
     int definitionModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Definition);
 
-    // Should contain Parameter tokens with Definition modifier
-    var parameterTokens = tokens.stream()
+    var parameterTokens = decoded.stream()
       .filter(t -> t.type() == parameterTypeIdx)
       .toList();
+    // 2 definitions + 2 usages = 4 parameter tokens
     assertThat(parameterTokens).hasSizeGreaterThanOrEqualTo(2);
 
-    // At least one should have Definition modifier (the declarations)
+    // At least 2 should have Definition modifier (the declarations)
     var definitionTokens = parameterTokens.stream()
       .filter(t -> (t.modifiers() & definitionModifierMask) != 0)
       .toList();
@@ -138,23 +130,18 @@ class SymbolsSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isNotEmpty();
+    assertThat(decoded).isNotEmpty();
 
     int variableTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
     int definitionModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Definition);
 
-    // Should contain Variable token with Definition modifier
-    var variableTokens = tokens.stream()
+    var variableTokens = decoded.stream()
       .filter(t -> t.type() == variableTypeIdx && (t.modifiers() & definitionModifierMask) != 0)
       .toList();
     assertThat(variableTokens).hasSize(1);
   }
 }
-

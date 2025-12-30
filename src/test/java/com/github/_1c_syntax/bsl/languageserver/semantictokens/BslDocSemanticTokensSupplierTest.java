@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
@@ -30,15 +32,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class BslDocSemanticTokensSupplierTest {
 
   @Autowired
   private BslDocSemanticTokensSupplier supplier;
+
+  @Autowired
+  private SemanticTokensTestHelper helper;
 
   @Autowired
   private SemanticTokensLegend legend;
@@ -57,20 +67,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - Description should be Comment with Documentation modifier
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var docCommentTokens = tokens.stream()
-      .filter(t -> t.type() == commentTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    assertThat(docCommentTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 0, 18, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Описание метода")
+    ));
   }
 
   @Test
@@ -84,20 +88,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - "Параметры:" should be Macro with Documentation modifier
-    int macroTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Macro);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var macroTokens = tokens.stream()
-      .filter(t -> t.type() == macroTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    assertThat(macroTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 3, 10, SemanticTokenTypes.Macro,
+        Set.of(SemanticTokenModifiers.Documentation), "Параметры:")
+    ));
   }
 
   @Test
@@ -111,20 +109,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - Parameter name in description should be Parameter with Documentation modifier
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    assertThat(parameterTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 4, 9, SemanticTokenTypes.Parameter,
+        Set.of(SemanticTokenModifiers.Documentation), "Параметр1")
+    ));
   }
 
   @Test
@@ -139,20 +131,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - "Возвращаемое значение:" should be Macro with Documentation modifier
-    int macroTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Macro);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var macroTokens = tokens.stream()
-      .filter(t -> t.type() == macroTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    assertThat(macroTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 3, 22, SemanticTokenTypes.Macro,
+        Set.of(SemanticTokenModifiers.Documentation), "Возвращаемое значение:")
+    ));
   }
 
   @Test
@@ -166,20 +152,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - Type "Строка" should be Type with Documentation modifier
-    int typeTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var typeTokens = tokens.stream()
-      .filter(t -> t.type() == typeTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    assertThat(typeTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 16, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Строка")
+    ));
   }
 
   @Test
@@ -191,20 +171,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - "Устарела." should be Macro with Documentation modifier
-    int macroTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Macro);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var macroTokens = tokens.stream()
-      .filter(t -> t.type() == macroTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    assertThat(macroTokens).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 3, 9, SemanticTokenTypes.Macro,
+        Set.of(SemanticTokenModifiers.Documentation), "Устарела.")
+    ));
   }
 
   @Test
@@ -220,16 +194,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - All three types should be Type with Documentation modifier
     int typeTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
     int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
 
-    var typeTokens = tokens.stream()
+    var typeTokens = decoded.stream()
       .filter(t -> t.type() == typeTypeIdx && (t.modifiers() & docModifierMask) != 0)
       .toList();
 
@@ -250,16 +222,14 @@ class BslDocSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - Both types should be Type with Documentation modifier
     int typeTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
     int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
 
-    var typeTokens = tokens.stream()
+    var typeTokens = decoded.stream()
       .filter(t -> t.type() == typeTypeIdx && (t.modifiers() & docModifierMask) != 0)
       .toList();
 
@@ -282,11 +252,11 @@ class BslDocSemanticTokensSupplierTest {
 
     // Test without multiline support
     supplier.setMultilineTokenSupport(false);
-    var tokensWithoutMultiline = supplier.getSemanticTokens(documentContext);
+    var tokensWithoutMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
     // Test with multiline support
     supplier.setMultilineTokenSupport(true);
-    var tokensWithMultiline = supplier.getSemanticTokens(documentContext);
+    var tokensWithMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
     // Without multiline: should have 3 separate comment tokens (one per line)
     // With multiline: may merge consecutive lines into fewer tokens

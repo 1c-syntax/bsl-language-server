@@ -32,23 +32,25 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
-class AnnotationSemanticTokensSupplierTest {
+class NewExpressionSemanticTokensSupplierTest {
 
   @Autowired
-  private AnnotationSemanticTokensSupplier supplier;
+  private NewExpressionSemanticTokensSupplier supplier;
 
   @Autowired
   private SemanticTokensTestHelper helper;
 
   @Test
-  void testCompilerDirective() {
+  void testNewExpressionWithTypeName() {
     // given
     String bsl = """
-      &НаСервере
       Процедура Тест()
+        Массив = Новый Массив();
       КонецПроцедуры
       """;
 
@@ -57,17 +59,20 @@ class AnnotationSemanticTokensSupplierTest {
 
     // then
     var expected = List.of(
-      new ExpectedToken(0, 0, 10, SemanticTokenTypes.Decorator, "&НаСервере")
+      new ExpectedToken(1, 17, 6, SemanticTokenTypes.Type, "Массив")
     );
+
     helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
-  void testAnnotationWithParams() {
+  void testMultipleNewExpressions() {
     // given
     String bsl = """
-      &Перед("ИмяМетода")
       Процедура Тест()
+        Массив = Новый Массив();
+        Список = Новый СписокЗначений();
+        Структура = Новый Структура();
       КонецПроцедуры
       """;
 
@@ -76,18 +81,37 @@ class AnnotationSemanticTokensSupplierTest {
 
     // then
     var expected = List.of(
-      new ExpectedToken(0, 0, 6, SemanticTokenTypes.Decorator, "&Перед")
+      new ExpectedToken(1, 17, 6, SemanticTokenTypes.Type, "Массив"),
+      new ExpectedToken(2, 17, 14, SemanticTokenTypes.Type, "СписокЗначений"),
+      new ExpectedToken(3, 20, 9, SemanticTokenTypes.Type, "Структура")
     );
+
     helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
-  void testAnnotationWithNamedParam() {
+  void testNewExpressionWithTypeMethod() {
+    // given - New("TypeName") syntax should NOT produce tokens (no typeName() context)
+    String bsl = """
+      Процедура Тест()
+        Объект = Новый("Массив");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - this syntax uses Type() global method, not direct type name
+    assertThat(decoded).isEmpty();
+  }
+
+  @Test
+  void testNewExpressionEnglish() {
     // given
     String bsl = """
-      &ИзменениеИКонтроль("ПередЗаписью", ИмяПараметра = "Значение")
-      Процедура Тест()
-      КонецПроцедуры
+      Procedure Test()
+        Array = New Array();
+      EndProcedure
       """;
 
     // when
@@ -95,19 +119,18 @@ class AnnotationSemanticTokensSupplierTest {
 
     // then
     var expected = List.of(
-      new ExpectedToken(0, 0, 19, SemanticTokenTypes.Decorator, "&ИзменениеИКонтроль"),
-      new ExpectedToken(0, 36, 12, SemanticTokenTypes.Parameter, "ИмяПараметра")
+      new ExpectedToken(1, 14, 5, SemanticTokenTypes.Type, "Array")
     );
+
     helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
-  void testMultipleAnnotations() {
+  void testNoTokensWithoutNewExpression() {
     // given
     String bsl = """
-      &НаСервере
-      &Перед("ИмяМетода")
       Процедура Тест()
+        А = 1;
       КонецПроцедуры
       """;
 
@@ -115,10 +138,6 @@ class AnnotationSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    var expected = List.of(
-      new ExpectedToken(0, 0, 10, SemanticTokenTypes.Decorator, "&НаСервере"),
-      new ExpectedToken(1, 0, 6, SemanticTokenTypes.Decorator, "&Перед")
-    );
-    helper.assertTokensMatch(decoded, expected);
+    assertThat(decoded).isEmpty();
   }
 }

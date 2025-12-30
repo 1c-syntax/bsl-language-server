@@ -22,24 +22,28 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class PreprocessorSemanticTokensSupplierTest {
 
   @Autowired
   private PreprocessorSemanticTokensSupplier supplier;
 
   @Autowired
-  private SemanticTokensLegend legend;
+  private SemanticTokensTestHelper helper;
 
   @Test
   void testRegionDirective() {
@@ -51,26 +55,16 @@ class PreprocessorSemanticTokensSupplierTest {
       #КонецОбласти
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int variableTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
-
-    var namespaceTokens = tokens.stream()
-      .filter(t -> t.type() == namespaceTypeIdx)
-      .toList();
-    // #Область and #КонецОбласти
-    assertThat(namespaceTokens).hasSize(2);
-
-    var variableTokens = tokens.stream()
-      .filter(t -> t.type() == variableTypeIdx)
-      .toList();
-    // МояОбласть
-    assertThat(variableTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(0, 0, 8, SemanticTokenTypes.Namespace, "#Область"),
+      new ExpectedToken(0, 9, 10, SemanticTokenTypes.Variable, "МояОбласть"),
+      new ExpectedToken(3, 0, 13, SemanticTokenTypes.Namespace, "#КонецОбласти")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -82,26 +76,15 @@ class PreprocessorSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
-    int variableTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Variable);
-
-    var namespaceTokens = tokens.stream()
-      .filter(t -> t.type() == namespaceTypeIdx)
-      .toList();
-    // #Использовать
-    assertThat(namespaceTokens).hasSize(1);
-
-    var variableTokens = tokens.stream()
-      .filter(t -> t.type() == variableTypeIdx)
-      .toList();
-    // mylib
-    assertThat(variableTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(0, 0, 13, SemanticTokenTypes.Namespace, "#Использовать"),
+      new ExpectedToken(0, 14, 5, SemanticTokenTypes.Variable, "mylib")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -114,18 +97,12 @@ class PreprocessorSemanticTokensSupplierTest {
       #КонецЕсли
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int macroTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Macro);
-    var macroTokens = tokens.stream()
-      .filter(t -> t.type() == macroTypeIdx)
-      .toList();
     // #Если, Сервер, Тогда, #КонецЕсли
-    assertThat(macroTokens).hasSizeGreaterThanOrEqualTo(4);
+    assertThat(decoded).hasSizeGreaterThanOrEqualTo(4);
   }
 
   @Test
@@ -138,18 +115,15 @@ class PreprocessorSemanticTokensSupplierTest {
       КонецФункции
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int macroTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Macro);
-    var macroTokens = tokens.stream()
-      .filter(t -> t.type() == macroTypeIdx)
-      .toList();
     // #, native
-    assertThat(macroTokens).hasSize(2);
+    var expected = List.of(
+      new ExpectedToken(0, 0, 1, SemanticTokenTypes.Macro, "#"),
+      new ExpectedToken(0, 1, 6, SemanticTokenTypes.Macro, "native")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 }
-
