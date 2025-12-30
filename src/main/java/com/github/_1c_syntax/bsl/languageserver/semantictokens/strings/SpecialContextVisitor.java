@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens.strings;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -32,6 +33,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -44,6 +46,9 @@ import java.util.Set;
  * <p>
  * Также поддерживает поиск строк-шаблонов, которые присвоены переменным,
  * а затем используются в вызове СтрШаблон.
+ * <p>
+ * Дополнительно поддерживает конфигурируемые функции-шаблонизаторы,
+ * аналогичные СтрШаблон (например, СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку).
  */
 public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
 
@@ -55,14 +60,17 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
   );
 
   private final Map<Token, StringContext> contexts;
+  private final ParsedStrTemplateMethods parsedMethods;
 
   /**
-   * Создаёт visitor для сбора контекстов строк.
+   * Создаёт visitor для сбора контекстов строк с конфигурируемыми функциями-шаблонизаторами.
    *
-   * @param contexts Map для заполнения контекстами строк
+   * @param contexts      Map для заполнения контекстами строк
+   * @param parsedMethods Предварительно разобранные паттерны функций-шаблонизаторов
    */
-  public SpecialContextVisitor(Map<Token, StringContext> contexts) {
+  public SpecialContextVisitor(Map<Token, StringContext> contexts, ParsedStrTemplateMethods parsedMethods) {
     this.contexts = contexts;
+    this.parsedMethods = parsedMethods;
   }
 
   @Override
@@ -73,27 +81,106 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       context = StringContext.NSTR;
     } else if (MultilingualStringAnalyser.isStrTemplateCall(ctx)) {
       context = StringContext.STR_TEMPLATE;
+    } else if (isConfiguredStrTemplateCall(ctx)) {
+      context = StringContext.STR_TEMPLATE;
     }
 
     if (context != null) {
-      var callParams = ctx.doCall().callParamList().callParam();
-      if (!callParams.isEmpty()) {
-        var firstParam = callParams.get(0);
-        var stringTokens = getStringTokensFromParam(firstParam);
+      processMethodCallParams(ctx.doCall(), context, ctx);
+    }
 
-        if (stringTokens.isEmpty() && context == StringContext.STR_TEMPLATE) {
-          // Первый параметр не строковый литерал - возможно, это переменная
-          // Пытаемся найти присвоение этой переменной
-          stringTokens = findStringTokensFromVariable(firstParam, ctx);
-        }
+    return super.visitGlobalMethodCall(ctx);
+  }
 
-        for (Token token : stringTokens) {
-          contexts.merge(token, context, StringContext::combine);
+  @Override
+  public Void visitCallStatement(BSLParser.CallStatementContext ctx) {
+    // Обрабатываем вызовы вида Модуль.Метод(...) в отдельных statements (не в выражениях)
+    if (ctx.IDENTIFIER() != null && ctx.accessCall() != null) {
+      processModuleMethodCall(ctx.IDENTIFIER().getText(), ctx.accessCall(), ctx);
+    }
+
+    return super.visitCallStatement(ctx);
+  }
+
+  @Override
+  public Void visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    // Обрабатываем вызовы вида Модуль.Метод(...) в выражениях (присвоениях и т.п.)
+    var identifier = ctx.IDENTIFIER();
+    if (identifier != null && ctx.modifier() != null && !ctx.modifier().isEmpty()) {
+      for (var modifier : ctx.modifier()) {
+        var accessCall = modifier.accessCall();
+        if (accessCall != null) {
+          processModuleMethodCall(identifier.getText(), accessCall, ctx);
         }
       }
     }
 
-    return super.visitGlobalMethodCall(ctx);
+    return super.visitComplexIdentifier(ctx);
+  }
+
+  /**
+   * Обрабатывает вызов метода модуля вида Модуль.Метод(...).
+   */
+  private void processModuleMethodCall(
+    String moduleName,
+    BSLParser.AccessCallContext accessCall,
+    org.antlr.v4.runtime.ParserRuleContext ctx
+  ) {
+    var methodCall = accessCall.methodCall();
+    if (methodCall == null || methodCall.methodName() == null) {
+      return;
+    }
+
+    var methodName = methodCall.methodName().getText().toLowerCase(Locale.ENGLISH);
+    var moduleNameLower = moduleName.toLowerCase(Locale.ENGLISH);
+
+    if (isModuleMethodMatch(moduleNameLower, methodName)) {
+      var doCall = methodCall.doCall();
+      if (doCall != null) {
+        processMethodCallParams(doCall, StringContext.STR_TEMPLATE, ctx);
+      }
+    }
+  }
+
+  /**
+   * Проверяет, является ли вызов глобального метода конфигурируемым шаблонизатором.
+   */
+  private boolean isConfiguredStrTemplateCall(BSLParser.GlobalMethodCallContext ctx) {
+    var methodName = ctx.methodName().getText().toLowerCase(Locale.ENGLISH);
+    return parsedMethods.localMethods().contains(methodName);
+  }
+
+  /**
+   * Проверяет, соответствует ли пара "модуль.метод" конфигурируемым паттернам.
+   */
+  private boolean isModuleMethodMatch(String moduleName, String methodName) {
+    var moduleMethods = parsedMethods.moduleMethodPairs().get(moduleName);
+    return moduleMethods != null && moduleMethods.contains(methodName);
+  }
+
+  /**
+   * Обрабатывает параметры вызова метода.
+   */
+  private void processMethodCallParams(
+    BSLParser.DoCallContext doCall,
+    StringContext context,
+    ParserRuleContext callContext
+  ) {
+    var callParams = doCall.callParamList().callParam();
+    if (!callParams.isEmpty()) {
+      var firstParam = callParams.get(0);
+      var stringTokens = getStringTokensFromParam(firstParam);
+
+      if (stringTokens.isEmpty() && context == StringContext.STR_TEMPLATE) {
+        // Первый параметр не строковый литерал - возможно, это переменная
+        // Пытаемся найти присвоение этой переменной
+        stringTokens = findStringTokensFromVariable(firstParam, callContext);
+      }
+
+      for (Token token : stringTokens) {
+        contexts.merge(token, context, StringContext::combine);
+      }
+    }
   }
 
   private List<Token> getStringTokensFromParam(BSLParser.CallParamContext callParam) {
@@ -128,7 +215,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
    */
   private List<Token> findStringTokensFromVariable(
     BSLParser.CallParamContext callParam,
-    BSLParser.GlobalMethodCallContext callContext
+    ParserRuleContext callContext
   ) {
     // Получаем имя переменной из первого параметра
     var varName = extractVariableName(callParam);
