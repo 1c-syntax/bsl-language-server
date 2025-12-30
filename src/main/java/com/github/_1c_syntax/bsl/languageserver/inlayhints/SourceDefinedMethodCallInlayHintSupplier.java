@@ -81,15 +81,16 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     var methodSymbol = (MethodSymbol) reference.symbol();
     var parameters = methodSymbol.getParameters();
 
-    var ast = reference.from().getOwner().getAst();
-    var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
+    try {
+      var ast = reference.from().getOwner().getAst();
+      var doCalls = Trees.findAllRuleNodes(ast, BSLParser.RULE_doCall);
 
-    return doCalls.stream()
-      .map(BSLParser.DoCallContext.class::cast)
-      .filter(doCall -> isRightMethod(doCall.getParent(), reference))
-      .map(BSLParser.DoCallContext::callParamList)
-      .map(BSLParser.CallParamListContext::callParam)
-      .map((List<? extends BSLParser.CallParamContext> callParams) -> {
+      return doCalls.stream()
+        .map(BSLParser.DoCallContext.class::cast)
+        .filter(doCall -> isRightMethod(doCall.getParent(), reference))
+        .map(BSLParser.DoCallContext::callParamList)
+        .map(BSLParser.CallParamListContext::callParam)
+        .map((List<? extends BSLParser.CallParamContext> callParams) -> {
         var hints = new ArrayList<InlayHint>();
         for (var i = 0; i < parameters.size(); i++) {
 
@@ -121,6 +122,10 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
       })
       .flatMap(Collection::stream)
       .toList();
+    } catch (NullPointerException e) {
+      // Document not initialized, skip inlay hints for this reference
+      return List.of();
+    }
 
   }
 

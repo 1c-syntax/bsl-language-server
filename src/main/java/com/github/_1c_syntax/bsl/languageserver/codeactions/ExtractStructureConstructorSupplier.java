@@ -68,20 +68,21 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
       return Collections.emptyList();
     }
 
-    var parseTree = documentContext.getAst();
+    try {
+      var parseTree = documentContext.getAst();
 
-    var maybeDoCall = Trees.findTerminalNodeContainsPosition(parseTree, start)
-      .map(TerminalNode::getParent)
-      .filter(BSLParser.TypeNameContext.class::isInstance)
-      .map(BSLParser.TypeNameContext.class::cast)
-      .filter(DiagnosticHelper::isStructureType)
-      .map(ParserRuleContext::getParent)
-      .map(BSLParser.NewExpressionContext.class::cast)
-      .map(BSLParser.NewExpressionContext::doCall);
+      var maybeDoCall = Trees.findTerminalNodeContainsPosition(parseTree, start)
+        .map(TerminalNode::getParent)
+        .filter(BSLParser.TypeNameContext.class::isInstance)
+        .map(BSLParser.TypeNameContext.class::cast)
+        .filter(DiagnosticHelper::isStructureType)
+        .map(ParserRuleContext::getParent)
+        .map(BSLParser.NewExpressionContext.class::cast)
+        .map(BSLParser.NewExpressionContext::doCall);
 
-    if (maybeDoCall.isEmpty()) {
-      return Collections.emptyList();
-    }
+      if (maybeDoCall.isEmpty()) {
+        return Collections.emptyList();
+      }
 
     var parameters = maybeDoCall
       .map(BSLParser.DoCallContext::callParamList)
@@ -159,6 +160,10 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
     codeAction.setTitle(Resources.getResourceString(configuration.getLanguage(), getClass(), "title"));
 
     return Collections.singletonList(codeAction);
+    } catch (NullPointerException e) {
+      // Document not initialized, skip code actions
+      return Collections.emptyList();
+    }
 
   }
 

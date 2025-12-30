@@ -164,13 +164,15 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Locked("computeLock")
   public BSLParser.FileContext getAst() {
-    requireNonNull(tokenizer);
+    ensureInitialized();
+    requireNonNull(tokenizer, "Document tokenizer is not initialized for URI: " + uri);
     return tokenizer.getAst();
   }
 
   @Locked("computeLock")
   public List<Token> getTokens() {
-    requireNonNull(tokenizer);
+    ensureInitialized();
+    requireNonNull(tokenizer, "Document tokenizer is not initialized for URI: " + uri);
     return tokenizer.getTokens();
   }
 
@@ -359,6 +361,19 @@ public class DocumentContext implements Comparable<DocumentContext> {
    */
   private void clearDependantData() {
     diagnostics.clear();
+  }
+
+  /**
+   * Ensures that the document has been initialized with content.
+   * If the tokenizer is null, triggers a rebuild from the file on disk.
+   * This method assumes computeLock is already held.
+   */
+  private void ensureInitialized() {
+    if (tokenizer == null) {
+      if (context != null) {
+        context.rebuildDocument(this);
+      }
+    }
   }
 
   private void acquireLocks() {

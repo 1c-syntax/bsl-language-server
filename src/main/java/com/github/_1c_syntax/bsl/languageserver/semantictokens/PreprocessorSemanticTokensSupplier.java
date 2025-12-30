@@ -48,11 +48,15 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     List<SemanticTokenEntry> entries = new ArrayList<>();
-    var ast = documentContext.getAst();
+    try {
+      var ast = documentContext.getAst();
 
-    addRegionsNamespaces(entries, ast);
-    addDirectives(entries, ast);
-    addOtherPreprocs(entries, ast);
+      addRegionsNamespaces(entries, ast);
+      addDirectives(entries, ast);
+      addOtherPreprocs(entries, ast);
+    } catch (NullPointerException e) {
+      // Document not initialized, return empty list
+    }
 
     return entries;
   }
