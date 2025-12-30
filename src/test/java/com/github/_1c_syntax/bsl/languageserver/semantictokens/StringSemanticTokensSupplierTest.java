@@ -622,4 +622,158 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(1, 30, 2, SemanticTokenTypes.Parameter, "%1")
     ));
   }
+
+  // ==================== Case-Insensitive Method Name Tests ====================
+
+  @Test
+  void testStrTemplateUpperCase() {
+    // given - СтрШаблон in uppercase
+    String bsl = """
+      Процедура Тест()
+        Текст = СТРШАБЛОН("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - placeholders should still be highlighted
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 35, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 47, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
+
+  @Test
+  void testStrTemplateMixedCase() {
+    // given - СтрШаблон in mixed case
+    String bsl = """
+      Процедура Тест()
+        Текст = стрШаблон("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 35, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 47, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
+
+  @Test
+  void testNStrUpperCase() {
+    // given - НСтр in uppercase
+    String bsl = """
+      Процедура Тест()
+        Текст = НСТР("ru='Привет'; en='Hello'");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - language keys should still be highlighted
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 16, 2, SemanticTokenTypes.Property, "ru"),
+      new ExpectedToken(1, 29, 2, SemanticTokenTypes.Property, "en")
+    ));
+  }
+
+  @Test
+  void testSubstituteParametersToStringUpperCase() {
+    // given - local method call in uppercase
+    String bsl = """
+      Процедура Тест()
+        Текст = ПОДСТАВИТЬПАРАМЕТРЫВСТРОКУ("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - placeholders should be highlighted
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 52, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 64, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
+
+  @Test
+  void testSubstituteParametersToStringMixedCase() {
+    // given - local method call in mixed case
+    String bsl = """
+      Процедура Тест()
+        Текст = подставитьПараметрыВСтроку("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 52, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 64, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
+
+  @Test
+  void testModuleMethodCallUpperCase() {
+    // given - module.method call in uppercase
+    String bsl = """
+      Процедура Тест()
+        Текст = СТРОКОВЫЕФУНКЦИИКЛИЕНТСЕРВЕР.ПОДСТАВИТЬПАРАМЕТРЫВСТРОКУ("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 81, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 93, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
+
+  @Test
+  void testModuleMethodCallMixedCase() {
+    // given - module.method call in mixed case
+    String bsl = """
+      Процедура Тест()
+        Текст = СтроковыеФункцииКлиентсервер.подставитьПараметрыВстроку("Наименование: %1, версия: %2", Наименование, Версия);
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 81, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 93, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
+
+  @Test
+  void testEnglishSubstituteParametersToStringUpperCase() {
+    // given - English variant in uppercase
+    String bsl = """
+      Процедура Тест()
+        Text = STRINGFUNCTIONSCLIENTSERVER.SUBSTITUTEPARAMETERSTOSTRING("Name: %1, version: %2", Name, Version);
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 73, 2, SemanticTokenTypes.Parameter, "%1"),
+      new ExpectedToken(1, 86, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
 }
