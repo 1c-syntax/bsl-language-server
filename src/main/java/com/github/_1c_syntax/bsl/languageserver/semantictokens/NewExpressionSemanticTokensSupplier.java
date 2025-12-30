@@ -47,13 +47,12 @@ public class NewExpressionSemanticTokensSupplier implements SemanticTokensSuppli
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     List<SemanticTokenEntry> entries = new ArrayList<>();
 
-    var newExpressions = Trees.findAllRuleNodes(
+    var newExpressions = Trees.<BSLParser.NewExpressionContext>findAllRuleNodes(
       documentContext.getAst(),
       BSLParser.RULE_newExpression
     );
 
-    for (var node : newExpressions) {
-      var newExpression = (BSLParser.NewExpressionContext) node;
+    for (var newExpression : newExpressions) {
       var typeName = newExpression.typeName();
       if (typeName != null) {
         helper.addContextRange(entries, typeName, SemanticTokenTypes.Type);

@@ -22,24 +22,28 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class NewExpressionSemanticTokensSupplierTest {
 
   @Autowired
   private NewExpressionSemanticTokensSupplier supplier;
 
   @Autowired
-  private SemanticTokensLegend legend;
+  private SemanticTokensTestHelper helper;
 
   @Test
   void testNewExpressionWithTypeName() {
@@ -50,20 +54,15 @@ class NewExpressionSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
-    var typeTokens = tokens.stream()
-      .filter(t -> t.type() == typeIdx)
-      .toList();
+    var expected = List.of(
+      new ExpectedToken(1, 17, 6, SemanticTokenTypes.Type, "Массив")
+    );
 
-    assertThat(typeTokens).hasSize(1);
-    // "Массив" starts at column 16 (0-indexed: 16) and has length 6
-    assertThat(typeTokens.get(0).line()).isEqualTo(1);
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -77,18 +76,17 @@ class NewExpressionSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
-    var typeTokens = tokens.stream()
-      .filter(t -> t.type() == typeIdx)
-      .toList();
+    var expected = List.of(
+      new ExpectedToken(1, 17, 6, SemanticTokenTypes.Type, "Массив"),
+      new ExpectedToken(2, 17, 14, SemanticTokenTypes.Type, "СписокЗначений"),
+      new ExpectedToken(3, 20, 9, SemanticTokenTypes.Type, "Структура")
+    );
 
-    assertThat(typeTokens).hasSize(3);
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -100,18 +98,11 @@ class NewExpressionSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - this syntax uses Type() global method, not direct type name
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
-    var typeTokens = tokens.stream()
-      .filter(t -> t.type() == typeIdx)
-      .toList();
-
-    assertThat(typeTokens).isEmpty();
+    assertThat(decoded).isEmpty();
   }
 
   @Test
@@ -123,18 +114,15 @@ class NewExpressionSemanticTokensSupplierTest {
       EndProcedure
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int typeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
-    var typeTokens = tokens.stream()
-      .filter(t -> t.type() == typeIdx)
-      .toList();
+    var expected = List.of(
+      new ExpectedToken(1, 14, 5, SemanticTokenTypes.Type, "Array")
+    );
 
-    assertThat(typeTokens).hasSize(1);
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -146,12 +134,10 @@ class NewExpressionSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isEmpty();
+    assertThat(decoded).isEmpty();
   }
 }
