@@ -28,6 +28,7 @@ import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.springframework.boot.test.context.TestComponent;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -73,7 +74,19 @@ public class SemanticTokensTestHelper {
   /**
    * Represents decoded semantic token with absolute positions.
    */
-  public record DecodedToken(int line, int start, int length, int type, int modifiers) {}
+  public record DecodedToken(int line, int start, int length, int type, int modifiers)
+    implements Comparable<DecodedToken> {
+
+    @Override
+    public int compareTo(DecodedToken other) {
+      return Comparator.comparing(DecodedToken::line)
+        .thenComparing(DecodedToken::start)
+        .thenComparing(DecodedToken::length)
+        .thenComparing(DecodedToken::type)
+        .thenComparing(DecodedToken::modifiers)
+        .compare(this, other);
+    }
+  }
 
   /**
    * Decode LSP-encoded semantic tokens data (List&lt;Integer&gt;) into absolute positions.
@@ -177,10 +190,10 @@ public class SemanticTokensTestHelper {
           && t.modifiers == expectedModifiersMask)
         .findFirst();
 
-      assertThat(found)
+      assertThat(actual)
         .as("Expected token: %s at [%d:%d], length=%d, type=%s, modifiers=%s",
           exp.lexeme, exp.line, exp.startChar, exp.length, exp.tokenType, exp.tokenModifiers)
-        .isPresent();
+        .contains(new DecodedToken(exp.line, exp.startChar, exp.length, expectedTypeIdx, expectedModifiersMask));
     }
   }
 

@@ -21,29 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class MethodCallSemanticTokensSupplierTest {
 
   @Autowired
   private MethodCallSemanticTokensSupplier supplier;
 
   @Autowired
-  private SemanticTokensLegend legend;
-
-  @Autowired
-  private ReferenceIndexFiller referenceIndexFiller;
+  private SemanticTokensTestHelper helper;
 
   @Test
   void testMethodCall() {
@@ -51,25 +51,20 @@ class MethodCallSemanticTokensSupplierTest {
     String bsl = """
       Процедура ВызываемаяПроцедура()
       КонецПроцедуры
-      
+
       Процедура Тест()
         ВызываемаяПроцедура();
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int methodTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-    var methodTokens = tokens.stream()
-      .filter(t -> t.type() == methodTypeIdx)
-      .toList();
-    // ВызываемаяПроцедура() call
-    assertThat(methodTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(4, 2, 19, SemanticTokenTypes.Method, "ВызываемаяПроцедура")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -79,24 +74,20 @@ class MethodCallSemanticTokensSupplierTest {
       Функция ВызываемаяФункция()
         Возврат 1;
       КонецФункции
-      
+
       Процедура Тест()
         Результат = ВызываемаяФункция();
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int methodTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-    var methodTokens = tokens.stream()
-      .filter(t -> t.type() == methodTypeIdx)
-      .toList();
-    assertThat(methodTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(5, 14, 17, SemanticTokenTypes.Method, "ВызываемаяФункция")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -105,10 +96,10 @@ class MethodCallSemanticTokensSupplierTest {
     String bsl = """
       Процедура Первая()
       КонецПроцедуры
-      
+
       Процедура Вторая()
       КонецПроцедуры
-      
+
       Процедура Тест()
         Первая();
         Вторая();
@@ -116,18 +107,16 @@ class MethodCallSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier).stream().sorted().toList();
 
     // then
-    int methodTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Method);
-    var methodTokens = tokens.stream()
-      .filter(t -> t.type() == methodTypeIdx)
-      .toList();
-    assertThat(methodTokens).hasSize(3);
+    var expected = List.of(
+      new ExpectedToken(7, 2, 6, SemanticTokenTypes.Method, "Первая"),
+      new ExpectedToken(8, 2, 6, SemanticTokenTypes.Method, "Вторая"),
+      new ExpectedToken(9, 2, 6, SemanticTokenTypes.Method, "Первая")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -139,14 +128,10 @@ class MethodCallSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    referenceIndexFiller.fill(documentContext);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - Builtin methods are not in the reference index
-    assertThat(tokens).isEmpty();
+    assertThat(decoded).isEmpty();
   }
 }
-
