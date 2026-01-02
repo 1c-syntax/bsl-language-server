@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<UselessTernaryOperatorDiagnostic> {
 
@@ -81,6 +82,16 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
       .fixes(reversDiagnostic)
       .hasChanges(1)
       .hasNewText("НЕ (Б=0)");
+  }
+
+  @Test
+  void testMalformedTernaryOperatorDoesNotThrowNPE() {
+    // Проверяем, что на некорректном синтаксисе не падает NullPointerException
+    // Пример из issue: Return ?(table.Count() = 1, undefined, );
+    var documentContext = getDocumentContext("UselessTernaryOperatorDiagnosticMalformed");
+    
+    assertThatCode(() -> getDiagnostics(documentContext))
+      .doesNotThrowAnyException();
   }
 
 }
