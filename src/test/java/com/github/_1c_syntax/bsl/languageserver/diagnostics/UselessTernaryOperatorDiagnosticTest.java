@@ -83,4 +83,12 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
       .hasNewText("НЕ (Б=0)");
   }
 
+  @Test
+  void testMalformedTernaryOperatorDoesNotThrowNPE() {
+    // Проверяем, что на некорректном синтаксисе не падает NullPointerException
+    // Пример из issue: Return ?(table.Count() = 1, undefined, );
+    getDocumentContext("UselessTernaryOperatorDiagnosticMalformed");
+    // Если дошли сюда без исключения - тест прошел
+  }
+
 }
