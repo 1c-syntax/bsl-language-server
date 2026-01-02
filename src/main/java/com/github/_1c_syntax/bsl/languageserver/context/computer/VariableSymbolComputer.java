@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -76,6 +77,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   @Override
+  @SentrySpan
   public List<VariableSymbol> compute() {
     variables.clear();
     moduleVariables.clear();

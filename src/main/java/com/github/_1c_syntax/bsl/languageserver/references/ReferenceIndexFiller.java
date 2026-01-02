@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -70,6 +71,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
+@SentrySpan
 public class ReferenceIndexFiller {
 
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(

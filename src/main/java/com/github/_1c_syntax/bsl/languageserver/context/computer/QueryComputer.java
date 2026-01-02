@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -81,6 +82,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   }
 
   @Override
+  @SentrySpan
   public List<SDBLTokenizer> compute() {
     queries.clear();
     visitFile(documentContext.getAst());

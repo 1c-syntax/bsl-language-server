@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.utils.StringInterner;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -98,6 +99,7 @@ public class CognitiveComplexityComputer
   }
 
   @Override
+  @SentrySpan
   public ComplexityData compute() {
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;

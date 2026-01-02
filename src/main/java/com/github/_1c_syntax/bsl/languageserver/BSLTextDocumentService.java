@@ -47,7 +47,8 @@ import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import io.sentry.spring.jakarta.tracing.SentrySpan;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
 import io.sentry.spring.jakarta.tracing.SentryTransaction;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -138,8 +139,6 @@ import java.util.function.Supplier;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@SentrySpan
-@SentryTransaction(operation = "text-document-service")
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private static final long AWAIT_CLOSE = 30;
@@ -759,6 +758,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     String newContent,
     Integer version
   ) {
+    var span = Sentry.getSpan();
+    var child = span.startChild("BSLTextDocumentService.processDocumentChange");
+
     context.rebuildDocument(
       documentContext,
       newContent,
@@ -768,12 +770,17 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
     }
+
+    child.finish();
   }
 
   private <T> CompletableFuture<@Nullable T> withFreshDocumentContext(
     DocumentContext documentContext,
     Supplier<@Nullable T> supplier
   ) {
+    var span = Sentry.getSpan();
+    var child = span.startChild("BSLTextDocumentService.withFreshDocumentContext");
+
     var executor = documentExecutors.get(documentContext.getUri());
     CompletableFuture<Void> waitFuture;
     if (executor != null) {
@@ -790,6 +797,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           return supplier.get();
         }
       )
-    );
+    ).whenComplete((result, error) -> {
+      if (error != null) {
+        child.setStatus(SpanStatus.INTERNAL_ERROR);
+        child.setThrowable(error);
+      } else {
+        child.setStatus(SpanStatus.OK);
+      }
+      child.finish();
+    });
   }
 }

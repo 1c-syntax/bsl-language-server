@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,6 +51,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
   }
 
   @Override
+  @SentrySpan
   public SymbolTree compute() {
 
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();

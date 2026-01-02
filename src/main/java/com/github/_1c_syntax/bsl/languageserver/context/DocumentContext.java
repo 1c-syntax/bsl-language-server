@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
+import io.sentry.ScopesAdapter;
 import io.sentry.spring.jakarta.tracing.SentrySpan;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -88,7 +89,6 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Scope("prototype")
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@SentrySpan
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
@@ -164,12 +164,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   @Locked("computeLock")
+  @SentrySpan
   public BSLParser.FileContext getAst() {
     requireNonNull(tokenizer);
     return tokenizer.getAst();
   }
 
   @Locked("computeLock")
+  @SentrySpan
   public List<Token> getTokens() {
     requireNonNull(tokenizer);
     return tokenizer.getTokens();
@@ -285,14 +287,17 @@ public class DocumentContext implements Comparable<DocumentContext> {
       .orElseGet(Collections::emptyList);
   }
 
+  @SentrySpan
   public void freezeComputedData() {
     isComputedDataFrozen = true;
   }
 
+  @SentrySpan
   public void unfreezeComputedData() {
     isComputedDataFrozen = false;
   }
 
+  @SentrySpan
   protected void rebuild(String content, int version) {
     acquireLocks();
 
@@ -324,6 +329,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   }
 
+  @SentrySpan
   protected void rebuild() {
     try {
       var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
@@ -333,6 +339,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
     }
   }
 
+  @SentrySpan
   protected void clearSecondaryData() {
     acquireLocks();
 
@@ -359,7 +366,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * Убедитесь, что локи установлены корректно перед вызовом метода.
    */
   private void clearDependantData() {
+    var span = ScopesAdapter.getInstance().getSpan();
+    var child = span.startChild("DocumentContext.clearDependantData");
     diagnostics.clear();
+    child.finish();
   }
 
   private void acquireLocks() {

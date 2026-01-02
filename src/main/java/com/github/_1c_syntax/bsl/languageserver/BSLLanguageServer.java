@@ -115,7 +115,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     var sessionName = getSessionName(params);
-//    sentrySessionTransaction.startSession(sessionName);
+    sentrySessionTransaction.startSession(sessionName);
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
 

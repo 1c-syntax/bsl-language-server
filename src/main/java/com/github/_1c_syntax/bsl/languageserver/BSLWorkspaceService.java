@@ -58,8 +58,6 @@ import java.util.concurrent.CompletableFuture;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@SentrySpan
-@SentryTransaction(operation = "workspace-service")
 public class BSLWorkspaceService implements WorkspaceService {
 
   private final LanguageServerConfiguration configuration;

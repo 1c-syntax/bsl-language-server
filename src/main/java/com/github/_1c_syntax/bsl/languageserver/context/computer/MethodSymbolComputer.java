@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -75,6 +76,7 @@ public final class MethodSymbolComputer
   }
 
   @Override
+  @SentrySpan
   public List<MethodSymbol> compute() {
     methods.clear();
     visitFile(documentContext.getAst());

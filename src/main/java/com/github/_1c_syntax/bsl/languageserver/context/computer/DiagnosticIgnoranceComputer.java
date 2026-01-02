@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
@@ -86,6 +87,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   }
 
   @Override
+  @SentrySpan
   public Data compute() {
 
     diagnosticIgnorance.clear();

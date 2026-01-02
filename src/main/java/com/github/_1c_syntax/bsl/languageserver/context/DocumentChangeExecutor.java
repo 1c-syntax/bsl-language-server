@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import io.sentry.spring.jakarta.tracing.SentrySpan;
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.jspecify.annotations.Nullable;
@@ -43,7 +43,6 @@ import java.util.function.BiFunction;
  * Дополнительно класс предоставляет барьер {@link #awaitLatest()}, позволяющий клиентским потокам дождаться
  * применения всех поставленных изменений и тем самым читать консистентное состояние документа.
  */
-@SentrySpan
 @Slf4j
 public final class DocumentChangeExecutor {
 
@@ -220,6 +219,9 @@ public final class DocumentChangeExecutor {
    * Накопить ещё одну задачу изменения, чтобы позже применить пакет изменений одним вызовом rebuild.
    */
   private void accumulate(ChangeTask task) {
+    var span = Sentry.getSpan();
+    var child = span.startChild("DocumentChangeExecutor.accumulate");
+
     try {
       var baseContent = pendingContent == null ? documentContext.getContent() : pendingContent;
       pendingContent = changeApplier.apply(baseContent, task.contentChanges);
@@ -230,6 +232,8 @@ public final class DocumentChangeExecutor {
       pendingVersion = -1;
       latestAppliedVersion.accumulateAndGet(task.version, Math::max);
       completeWaitersUpTo(latestAppliedVersion.get());
+    } finally {
+      child.finish();
     }
   }
 
@@ -237,19 +241,26 @@ public final class DocumentChangeExecutor {
    * Применяет накопленные изменения и уведомляет ожидающие запросы о доступности новой версии.
    */
   private void flushPendingChanges() {
-    if (pendingContent == null || pendingVersion < 0) {
-      return;
-    }
+    var span = Sentry.getSpan();
+    var child = span.startChild("DocumentChangeExecutor.flushPendingChanges");
 
     try {
-      changeListener.onChange(documentContext, pendingContent, pendingVersion);
-      latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
-      completeWaitersUpTo(latestAppliedVersion.get());
-    } catch (Exception e) {
-      LOGGER.error("Error while applying accumulated document changes", e);
+      if (pendingContent == null || pendingVersion < 0) {
+        return;
+      }
+
+      try {
+        changeListener.onChange(documentContext, pendingContent, pendingVersion);
+        latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
+        completeWaitersUpTo(latestAppliedVersion.get());
+      } catch (Exception e) {
+        LOGGER.error("Error while applying accumulated document changes", e);
+      } finally {
+        pendingContent = null;
+        pendingVersion = -1;
+      }
     } finally {
-      pendingContent = null;
-      pendingVersion = -1;
+      child.finish();
     }
   }
 
@@ -257,15 +268,22 @@ public final class DocumentChangeExecutor {
    * Завершает все ожидания, чей целевой номер версии оказался не больше указанного значения.
    */
   private void completeWaitersUpTo(int version) {
-    var iterator = versionWaiters.entrySet().iterator();
-    while (iterator.hasNext()) {
-      var entry = iterator.next();
-      if (entry.getKey() <= version) {
-        entry.getValue().forEach(future -> future.complete(null));
-        iterator.remove();
-      } else {
-        break;
+    var span = Sentry.getSpan();
+    var child = span.startChild("DocumentChangeExecutor.completeWaitersUpTo");
+
+    try {
+      var iterator = versionWaiters.entrySet().iterator();
+      while (iterator.hasNext()) {
+        var entry = iterator.next();
+        if (entry.getKey() <= version) {
+          entry.getValue().forEach(future -> future.complete(null));
+          iterator.remove();
+        } else {
+          break;
+        }
       }
+    } finally {
+      child.finish();
     }
   }
 

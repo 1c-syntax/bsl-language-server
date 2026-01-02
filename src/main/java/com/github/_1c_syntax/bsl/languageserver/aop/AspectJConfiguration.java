@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.aop.measures.ConditionalOnMeasuresEnabled;
+import com.github._1c_syntax.bsl.languageserver.aop.sentry.LspTracingAspect;
 import org.aspectj.lang.Aspects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,5 +61,14 @@ public class AspectJConfiguration {
   @ConditionalOnMeasuresEnabled
   public MeasuresAspect measuresAspect() {
     return Aspects.aspectOf(MeasuresAspect.class);
+  }
+
+  /**
+   * @return Аспект трассировки LSP-запросов в Sentry.
+   */
+  @Bean
+  @Lazy(false)
+  public LspTracingAspect lspTracingAspect() {
+    return Aspects.aspectOf(LspTracingAspect.class);
   }
 }

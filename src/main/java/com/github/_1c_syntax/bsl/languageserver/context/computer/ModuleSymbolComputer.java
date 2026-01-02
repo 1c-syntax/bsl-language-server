@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import org.antlr.v4.runtime.Token;
 
 import java.util.EnumSet;
@@ -48,6 +49,7 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
   }
 
   @Override
+  @SentrySpan
   public ModuleSymbol compute() {
     var firstRange = documentContext.getTokens().stream()
       .filter(token -> token.getType() != Token.EOF)

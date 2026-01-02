@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,7 @@ public abstract class DiagnosticComputer {
    * @param documentContext Контекст документа для анализа
    * @return Список найденных диагностик
    */
+  @SentrySpan
   public List<Diagnostic> compute(DocumentContext documentContext) {
     return CompletableFuture
       .supplyAsync(() -> internalCompute(documentContext), executor)

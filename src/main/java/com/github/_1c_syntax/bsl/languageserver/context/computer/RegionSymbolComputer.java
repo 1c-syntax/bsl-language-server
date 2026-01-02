@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import io.sentry.spring.jakarta.tracing.SentrySpan;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Range;
@@ -57,6 +58,7 @@ public final class RegionSymbolComputer
   }
 
   @Override
+  @SentrySpan
   public List<RegionSymbol> compute() {
     regionStack.clear();
     regions.clear();
