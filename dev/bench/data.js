@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767347786983,
+  "lastUpdate": 1767350497764,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33294,6 +33294,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6599843134213148",
             "extra": "mean: 72.31113497416179 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c6986b0a87e324f51c7f96b6312b49ac251fd778",
+          "message": "Merge pull request #3723 from 1c-syntax/copilot/fix-nullpointerexception-bsl-parser\n\nFix NullPointerException in incomplete ternary operator parsing",
+          "timestamp": "2026-01-02T11:05:42+01:00",
+          "tree_id": "c666075da2203dafe675579130b8030603e75c31",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c6986b0a87e324f51c7f96b6312b49ac251fd778"
+        },
+        "date": 1767350492824,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.70159514745076,
+            "unit": "sec",
+            "range": "stddev: 1.3433238861682348",
+            "extra": "mean: 72.70159514745076 sec\nrounds: 3"
           }
         ]
       }
