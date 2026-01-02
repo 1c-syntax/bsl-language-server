@@ -426,7 +426,9 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     var truePart = makeSubexpression(ctx.expression(1));
     var falsePart = makeSubexpression(ctx.expression(2));
 
-    // If any expression is null (incomplete ternary operator), create an error node
+    // If any expression is null (which happens when the parser encounters syntax errors
+    // in incomplete ternary operators like "?" or "Возврат ?"), create an error node
+    // instead of attempting to create a TernaryOperatorNode to avoid NullPointerException
     if (condition == null || truePart == null || falsePart == null) {
       operands.push(new ErrorExpressionNode(ctx));
       return ctx;
