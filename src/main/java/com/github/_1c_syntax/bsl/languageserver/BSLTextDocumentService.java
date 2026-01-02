@@ -140,6 +140,7 @@ import java.util.function.Supplier;
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private static final long AWAIT_CLOSE = 30;
+  private static final long AWAIT_FORCE_TERMINATION = 1;
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -530,9 +531,34 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         // Wait for all queued changes to complete (with timeout to avoid hanging)
         if (!docExecutor.awaitTermination(AWAIT_CLOSE, TimeUnit.SECONDS)) {
           docExecutor.shutdownNow();
+          // Must wait for worker thread to finish even after shutdownNow,
+          // because finally block in worker may still be executing flushPendingChanges
+          boolean terminated = docExecutor.awaitTermination(AWAIT_FORCE_TERMINATION, TimeUnit.SECONDS);
+          if (!terminated) {
+            LOGGER.warn(
+              "Document executor for URI {} did not terminate within the additional timeout after shutdownNow()",
+              uri
+            );
+          }
         }
       } catch (InterruptedException e) {
         docExecutor.shutdownNow();
+        // Wait briefly for worker to finish after interrupt
+        try {
+          boolean terminated = docExecutor.awaitTermination(AWAIT_FORCE_TERMINATION, TimeUnit.SECONDS);
+          if (!terminated) {
+            LOGGER.warn(
+              "Document executor for URI {} did not terminate within {} seconds after interrupt during document close",
+              uri,
+              AWAIT_FORCE_TERMINATION
+            );
+          }
+        } catch (InterruptedException ignored) {
+          LOGGER.warn(
+            "Interrupted again while waiting for document executor for URI {} to terminate after shutdownNow",
+            uri
+          );
+        }
         Thread.currentThread().interrupt();
       }
     }
