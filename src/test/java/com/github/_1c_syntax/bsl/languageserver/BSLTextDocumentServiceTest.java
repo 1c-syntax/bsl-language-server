@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -37,7 +36,6 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentDiagnosticParams;
 import org.eclipse.lsp4j.ImplementationParams;
-import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.RenameParams;
@@ -46,11 +44,9 @@ import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
-import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
@@ -59,15 +55,16 @@ import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
@@ -79,9 +76,7 @@ class BSLTextDocumentServiceTest {
   private ServerContext serverContext;
   @MockitoSpyBean
   private DiagnosticProvider diagnosticProvider;
-  @Autowired
-  private ApplicationEventPublisher eventPublisher;
-  @Autowired
+  @MockitoSpyBean
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
 
 
@@ -216,13 +211,8 @@ class BSLTextDocumentServiceTest {
     // Simulate client without pull diagnostics support
     var capabilities = new ClientCapabilities();
     // No TextDocumentClientCapabilities.diagnostic set
-    clientCapabilitiesHolder.setCapabilities(capabilities);
-
-    var languageServer = mock(LanguageServer.class);
-    var params = new InitializeParams();
-    params.setCapabilities(capabilities);
-    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
-    eventPublisher.publishEvent(event);
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
+    textDocumentService.handleInitializeEvent(null);
 
     // Clear any invocations from didOpen
     clearInvocations(diagnosticProvider);
@@ -248,13 +238,8 @@ class BSLTextDocumentServiceTest {
     var textDocumentCapabilities = new TextDocumentClientCapabilities();
     textDocumentCapabilities.setDiagnostic(new DiagnosticCapabilities());
     capabilities.setTextDocument(textDocumentCapabilities);
-    clientCapabilitiesHolder.setCapabilities(capabilities);
-
-    var languageServer = mock(LanguageServer.class);
-    var params = new InitializeParams();
-    params.setCapabilities(capabilities);
-    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
-    eventPublisher.publishEvent(event);
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
+    textDocumentService.handleInitializeEvent(null);
 
     // Clear any invocations from didOpen
     clearInvocations(diagnosticProvider);
