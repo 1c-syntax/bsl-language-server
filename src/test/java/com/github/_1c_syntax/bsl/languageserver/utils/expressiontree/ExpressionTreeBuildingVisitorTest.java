@@ -88,7 +88,8 @@ class ExpressionTreeBuildingVisitorTest {
       createIfStatementTestCase("New expression", "Новый"),
       createIfStatementTestCase("New expression with parenthes", "Новый ("),
       createIfStatementTestCase("New expression with two parantheses", "Новый ()"),
-      createIfStatementTestCase("New expression with NOT", "Новый Структура(\"\", Не)", ConstructorCallNode.class)
+      createIfStatementTestCase("New expression with NOT", "Новый Структура(\"\", Не)", ConstructorCallNode.class),
+      createIfStatementTestCase("Incomplete ternary operator - only question mark", "?")
     );
   }
 
