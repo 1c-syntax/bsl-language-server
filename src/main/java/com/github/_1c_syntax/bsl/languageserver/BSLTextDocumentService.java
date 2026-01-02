@@ -548,7 +548,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           boolean terminated = docExecutor.awaitTermination(AWAIT_FORCE_TERMINATION, TimeUnit.SECONDS);
           if (!terminated) {
             LOGGER.warn(
-              "Document executor for URI {} did not terminate within {} second after interrupt during document close",
+              "Document executor for URI {} did not terminate within {} seconds after interrupt during document close",
               uri,
               AWAIT_FORCE_TERMINATION
             );
