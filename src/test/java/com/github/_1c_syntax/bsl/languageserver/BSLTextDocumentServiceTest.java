@@ -187,6 +187,93 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
+  void didCloseWithPendingChanges() throws IOException {
+    // given - open a document and make changes
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(documentContext).isNotNull();
+    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+
+    // when - submit multiple changes rapidly and then close immediately
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    
+    for (int i = 0; i < 5; i++) {
+      params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2 + i));
+      var range = Ranges.create(0, 0, 0, 0);
+      var changeEvent = new TextDocumentContentChangeEvent(range, "// Change " + i + "\n");
+      List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+      contentChanges.add(changeEvent);
+      params.setContentChanges(contentChanges);
+      textDocumentService.didChange(params);
+    }
+
+    // then - close should wait for pending changes to complete
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(uri));
+    textDocumentService.didClose(closeParams);
+
+    // verify the document is closed
+    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+  }
+
+  @Test
+  void didCloseDuringActiveChange() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(documentContext).isNotNull();
+    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+
+    // when - submit a change
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var range = Ranges.create(0, 0, 0, 0);
+    var changeEvent = new TextDocumentContentChangeEvent(range, "// New content\n");
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    contentChanges.add(changeEvent);
+    params.setContentChanges(contentChanges);
+    textDocumentService.didChange(params);
+
+    // then - close immediately while change may still be processing
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(uri));
+    textDocumentService.didClose(closeParams);
+
+    // verify the document is closed
+    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+  }
+
+  @Test
+  void didCloseAwaitTerminationCompletes() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var uri = textDocumentItem.getUri();
+    var documentContext = serverContext.getDocumentUnsafe(uri);
+    assertThat(documentContext).isNotNull();
+    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+
+    // when - close the document (which should wait for executor to terminate)
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(uri));
+    textDocumentService.didClose(closeParams);
+
+    // then - verify the document is properly closed
+    // The close should complete successfully even if executor needs time to terminate
+    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+  }
+
+  @Test
   void didSave() {
     DidSaveTextDocumentParams params = new DidSaveTextDocumentParams();
     params.setTextDocument(getTextDocumentIdentifier());
