@@ -117,7 +117,7 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
   private static int getBooleanToken(BSLParser.ExpressionContext expCtx) {
 
     var tmpCtx = Optional.of(expCtx)
-      .filter(ctx -> ctx.children != null && ctx.children.size() == 1)
+      .filter(ctx -> ctx.getChildCount() == 1)
       .map(ctx -> ctx.member(0))
       .map(ctx -> ctx.getChild(0))
       .filter(BSLParser.ConstValueContext.class::isInstance)
