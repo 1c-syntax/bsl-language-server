@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767371382865,
+  "lastUpdate": 1767384109682,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33387,6 +33387,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4866467340968095",
             "extra": "mean: 72.53187139829 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9c1f4784e9c54d62f7fd7a5c17f2f1646dcdf3a8",
+          "message": "Merge pull request #3728 from 1c-syntax/copilot/fix-nullpointerexception-issue\n\nFix NullPointerException in UselessTernaryOperatorDiagnostic for malformed ternary operators",
+          "timestamp": "2026-01-02T20:25:51+01:00",
+          "tree_id": "96a2b10bb36b701ac2d841e81a79be914f63a2db",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9c1f4784e9c54d62f7fd7a5c17f2f1646dcdf3a8"
+        },
+        "date": 1767384104982,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 73.2464934984843,
+            "unit": "sec",
+            "range": "stddev: 1.5868476649177967",
+            "extra": "mean: 73.2464934984843 sec\nrounds: 3"
           }
         ]
       }
