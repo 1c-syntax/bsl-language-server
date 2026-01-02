@@ -530,9 +530,18 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         // Wait for all queued changes to complete (with timeout to avoid hanging)
         if (!docExecutor.awaitTermination(AWAIT_CLOSE, TimeUnit.SECONDS)) {
           docExecutor.shutdownNow();
+          // Must wait for worker thread to finish even after shutdownNow,
+          // because finally block in worker may still be executing flushPendingChanges
+          docExecutor.awaitTermination(1, TimeUnit.SECONDS);
         }
       } catch (InterruptedException e) {
         docExecutor.shutdownNow();
+        // Wait briefly for worker to finish after interrupt
+        try {
+          docExecutor.awaitTermination(1, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+          // Already interrupted, just restore flag
+        }
         Thread.currentThread().interrupt();
       }
     }
