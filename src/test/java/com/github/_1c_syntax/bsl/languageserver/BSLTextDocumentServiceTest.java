@@ -22,27 +22,35 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentDiagnosticParams;
 import org.eclipse.lsp4j.ImplementationParams;
+import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
@@ -55,6 +63,11 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
@@ -64,6 +77,13 @@ class BSLTextDocumentServiceTest {
   private BSLTextDocumentService textDocumentService;
   @MockitoSpyBean
   private ServerContext serverContext;
+  @MockitoSpyBean
+  private DiagnosticProvider diagnosticProvider;
+  @Autowired
+  private ApplicationEventPublisher eventPublisher;
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
 
   @Test
   void didOpen() throws IOException {
@@ -184,6 +204,68 @@ class BSLTextDocumentServiceTest {
     DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
     params.setTextDocument(getTextDocumentIdentifier());
     textDocumentService.didClose(params);
+  }
+
+  @Test
+  void didClosePublishesEmptyDiagnosticsWhenClientDoesNotSupportPullDiagnostics() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // Simulate client without pull diagnostics support
+    var capabilities = new ClientCapabilities();
+    // No TextDocumentClientCapabilities.diagnostic set
+    clientCapabilitiesHolder.setCapabilities(capabilities);
+
+    var languageServer = mock(LanguageServer.class);
+    var params = new InitializeParams();
+    params.setCapabilities(capabilities);
+    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+    eventPublisher.publishEvent(event);
+
+    // Clear any invocations from didOpen
+    clearInvocations(diagnosticProvider);
+
+    // when
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(textDocumentItem.getUri()));
+    textDocumentService.didClose(closeParams);
+
+    // then - publishEmptyDiagnosticList should be called
+    verify(diagnosticProvider).publishEmptyDiagnosticList(any());
+  }
+
+  @Test
+  void didCloseDoesNotPublishEmptyDiagnosticsWhenClientSupportsPullDiagnostics() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // Simulate client with pull diagnostics support
+    var capabilities = new ClientCapabilities();
+    var textDocumentCapabilities = new TextDocumentClientCapabilities();
+    textDocumentCapabilities.setDiagnostic(new DiagnosticCapabilities());
+    capabilities.setTextDocument(textDocumentCapabilities);
+    clientCapabilitiesHolder.setCapabilities(capabilities);
+
+    var languageServer = mock(LanguageServer.class);
+    var params = new InitializeParams();
+    params.setCapabilities(capabilities);
+    var event = new LanguageServerInitializeRequestReceivedEvent(languageServer, params);
+    eventPublisher.publishEvent(event);
+
+    // Clear any invocations from didOpen
+    clearInvocations(diagnosticProvider);
+
+    // when
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(textDocumentItem.getUri()));
+    textDocumentService.didClose(closeParams);
+
+    // then - publishEmptyDiagnosticList should NOT be called
+    verify(diagnosticProvider, never()).publishEmptyDiagnosticList(any());
   }
 
   @Test
