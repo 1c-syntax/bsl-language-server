@@ -539,7 +539,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     context.closeDocument(documentContext);
 
-    diagnosticProvider.publishEmptyDiagnosticList(documentContext);
+    if (!clientSupportsPullDiagnostics) {
+      diagnosticProvider.publishEmptyDiagnosticList(documentContext);
+    }
   }
 
   @Override
