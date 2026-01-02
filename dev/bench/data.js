@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767353471734,
+  "lastUpdate": 1767371382865,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33356,6 +33356,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4518807524562426",
             "extra": "mean: 72.82296474774678 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fe3fef5fcd595fb5ab3189cc9b95e79e4d45945c",
+          "message": "Merge pull request #3726 from 1c-syntax/nixel2007-patch-1\n\nUpdate mdclasses dependency version to 0.17.1",
+          "timestamp": "2026-01-02T16:42:29+01:00",
+          "tree_id": "c5592420e0c2aea995e219af4495c8bfce95452b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fe3fef5fcd595fb5ab3189cc9b95e79e4d45945c"
+        },
+        "date": 1767371377939,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.53187139829,
+            "unit": "sec",
+            "range": "stddev: 1.4866467340968095",
+            "extra": "mean: 72.53187139829 sec\nrounds: 3"
           }
         ]
       }
