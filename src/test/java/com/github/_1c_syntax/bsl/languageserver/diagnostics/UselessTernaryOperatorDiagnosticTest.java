@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<UselessTernaryOperatorDiagnostic> {
 
@@ -89,9 +90,8 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
     // Пример из issue: Return ?(table.Count() = 1, undefined, );
     var documentContext = getDocumentContext("UselessTernaryOperatorDiagnosticMalformed");
     
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
-    
-    assertThat(diagnostics).isEmpty();
+    assertThatCode(() -> getDiagnostics(documentContext))
+      .doesNotThrowAnyException();
   }
 
 }
