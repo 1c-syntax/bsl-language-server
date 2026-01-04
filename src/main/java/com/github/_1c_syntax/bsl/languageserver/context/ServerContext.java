@@ -84,7 +84,7 @@ public class ServerContext {
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
-  private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
+  private final Map<URI, ReadWriteLock> documentLocks = new ConcurrentHashMap<>();
 
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
@@ -117,27 +117,26 @@ public class ServerContext {
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
     LOGGER.debug("Populating context...");
-    contextLock.writeLock().lock();
 
-    try {
+    files.parallelStream().forEach((File file) -> {
 
-      files.parallelStream().forEach((File file) -> {
+      workDoneProgressReporter.tick();
 
-        workDoneProgressReporter.tick();
-
-        var uri = Absolute.uri(file.toURI());
-        var documentContext = getDocument(uri);
+      var uri = Absolute.uri(file.toURI());
+      var lock = getDocumentLock(uri);
+      lock.writeLock().lock();
+      try {
+        var documentContext = documents.get(uri);
         if (documentContext == null) {
           documentContext = createDocumentContext(uri);
           rebuildDocument(documentContext);
           documentContext.freezeComputedData();
           tryClearDocument(documentContext);
         }
-      });
-
-    } finally {
-      contextLock.writeLock().unlock();
-    }
+      } finally {
+        lock.writeLock().unlock();
+      }
+    });
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
@@ -165,7 +164,13 @@ public class ServerContext {
    */
   @Nullable
   public DocumentContext getDocument(URI uri) {
-    return documents.get(uri);
+    var lock = getDocumentLock(uri);
+    lock.readLock().lock();
+    try {
+      return documents.get(uri);
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   /**
@@ -208,15 +213,17 @@ public class ServerContext {
    * @return Контекст документа
    */
   public DocumentContext addDocument(URI uri) {
-    contextLock.readLock().lock();
-
-    var documentContext = getDocument(uri);
-    if (documentContext == null) {
-      documentContext = createDocumentContext(uri);
+    var lock = getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      var documentContext = documents.get(uri);
+      if (documentContext == null) {
+        documentContext = createDocumentContext(uri);
+      }
+      return documentContext;
+    } finally {
+      lock.writeLock().unlock();
     }
-
-    contextLock.readLock().unlock();
-    return documentContext;
   }
 
   /**
@@ -235,6 +242,7 @@ public class ServerContext {
     removeDocumentMdoRefByUri(uri);
     states.remove(documentContext);
     documents.remove(uri);
+    documentLocks.remove(uri);
   }
 
   public void clear() {
@@ -243,7 +251,20 @@ public class ServerContext {
     states.clear();
     documentsByMDORef.clear();
     mdoRefs.clear();
+    documentLocks.clear();
     configurationMetadata.clear();
+  }
+
+  /**
+   * Получить блокировку для выполнения операций над документом по URI.
+   * <p>
+   * Может использоваться для операций, требующих долгосрочной установки блокировки на изменение объекта.
+   *
+   * @param uri URI документа
+   * @return блокировка, связанная с URI документа.
+   */
+  public ReadWriteLock getDocumentLock(URI uri) {
+    return documentLocks.computeIfAbsent(uri, k -> new ReentrantReadWriteLock());
   }
 
   /**
@@ -293,7 +314,7 @@ public class ServerContext {
       return;
     }
 
-    documentContext.rebuild();
+    documentContext.rebuildFromFileSystem();
     states.put(documentContext, State.WITH_CONTENT);
   }
 

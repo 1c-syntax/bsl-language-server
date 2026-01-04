@@ -47,6 +47,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -185,7 +186,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return withFreshDocumentContext(
+    return withFreshDocumentContextNullable(
       documentContext,
       () -> hoverProvider.getHover(documentContext, params).orElse(null)
     );
@@ -329,7 +330,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return withFreshDocumentContext(
+    return withFreshDocumentContextNullable(
       documentContext,
       () -> {
         List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
@@ -467,51 +468,68 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     var textDocumentItem = params.getTextDocument();
-    var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
+    var uri = Absolute.uri(textDocumentItem.getUri());
+    var lock = context.getDocumentLock(uri);
+    lock.writeLock().lock();
 
-    // Create single-threaded executor for this document to serialize didChange operations
-    var uri = documentContext.getUri();
-    documentExecutors.computeIfAbsent(uri, key ->
-      new DocumentChangeExecutor(
-        documentContext,
-        BSLTextDocumentService::applyTextDocumentChanges,
-        this::processDocumentChange,
-        "doc-" + documentContext.getUri() + "-"
-      )
-    );
+    try {
+      var documentContext = context.addDocument(uri);
 
-    context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+      // Create single-threaded executor for this document to serialize didChange operations
+      documentExecutors.computeIfAbsent(uri, key ->
+        new DocumentChangeExecutor(
+          documentContext,
+          BSLTextDocumentService::applyTextDocumentChanges,
+          this::processDocumentChange,
+          "doc-" + documentContext.getUri() + "-"
+        )
+      );
 
-    if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
-      validate(documentContext);
+      context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+
+      if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
+        validate(documentContext);
+      }
+    } finally {
+      lock.writeLock().unlock();
     }
+
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
     var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
+      LOGGER.warn("Received didChange, but document is not found in context. uri={}", params.getTextDocument().getUri());
       return;
     }
 
     var uri = documentContext.getUri();
 
-    // Get executor for this document
-    var executor = documentExecutors.get(uri);
-    if (executor == null) {
-      // Document not opened or already closed
-      return;
+    // Acquire read lock to ensure document is not being modified by addDocument/removeDocument
+    var lock = context.getDocumentLock(uri);
+    lock.readLock().lock();
+    try {
+      // Get executor for this document
+      var executor = documentExecutors.get(uri);
+      if (executor == null) {
+        // Document not opened or already closed
+        LOGGER.warn("Received didChange, but document executor is not created yet. uri={}", uri);
+        return;
+      }
+
+      var version = params.getTextDocument().getVersion();
+
+      if (version == null) {
+        LOGGER.warn("Received didChange without version for {}", uri);
+        return;
+      }
+
+      // Submit change operation to document's executor to serialize operations.
+      executor.submit(version, params.getContentChanges());
+    } finally {
+      lock.readLock().unlock();
     }
-
-    var version = params.getTextDocument().getVersion();
-
-    if (version == null) {
-      LOGGER.warn("Received didChange without version for {}", uri);
-      return;
-    }
-
-    // Submit change operation to document's executor to serialize operations.
-    executor.submit(version, params.getContentChanges());
   }
 
   @Override
@@ -796,9 +814,23 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
   }
 
-  private <T> CompletableFuture<@Nullable T> withFreshDocumentContext(
+  private <T> CompletableFuture<@Nullable T> withFreshDocumentContextNullable(
     DocumentContext documentContext,
     Supplier<@Nullable T> supplier
+  ) {
+    return withFreshDocumentContextInternal(documentContext, supplier);
+  }
+
+  private <T> CompletableFuture<T> withFreshDocumentContext(
+    DocumentContext documentContext,
+    Supplier<T> supplier
+  ) {
+    return withFreshDocumentContextInternal(documentContext, supplier);
+  }
+
+  private <T> CompletableFuture<T> withFreshDocumentContextInternal(
+    DocumentContext documentContext,
+    Supplier<T> supplier
   ) {
     var executor = documentExecutors.get(documentContext.getUri());
     CompletableFuture<Void> waitFuture;
@@ -813,7 +845,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         executorService,
         cancelChecker -> {
           cancelChecker.checkCanceled();
-          return supplier.get();
+          var lock = context.getDocumentLock(documentContext.getUri());
+          lock.readLock().lock();
+          try {
+            return supplier.get();
+          } finally {
+            lock.readLock().unlock();
+          }
         }
       )
     );
