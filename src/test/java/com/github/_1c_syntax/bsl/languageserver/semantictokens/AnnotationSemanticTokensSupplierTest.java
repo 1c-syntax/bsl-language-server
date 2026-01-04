@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,24 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.List;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class AnnotationSemanticTokensSupplierTest {
 
   @Autowired
   private AnnotationSemanticTokensSupplier supplier;
 
   @Autowired
-  private SemanticTokensLegend legend;
+  private SemanticTokensTestHelper helper;
 
   @Test
   void testCompilerDirective() {
@@ -50,19 +52,14 @@ class AnnotationSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isNotEmpty();
-
-    int decoratorTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
-    var decoratorTokens = tokens.stream()
-      .filter(t -> t.type() == decoratorTypeIdx)
-      .toList();
-    assertThat(decoratorTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(0, 0, 10, SemanticTokenTypes.Decorator, "&НаСервере")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -74,19 +71,14 @@ class AnnotationSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isNotEmpty();
-
-    int decoratorTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
-    var decoratorTokens = tokens.stream()
-      .filter(t -> t.type() == decoratorTypeIdx)
-      .toList();
-    assertThat(decoratorTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(0, 0, 6, SemanticTokenTypes.Decorator, "&Перед")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -98,24 +90,15 @@ class AnnotationSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int decoratorTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
-    int parameterTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Parameter);
-
-    var decoratorTokens = tokens.stream()
-      .filter(t -> t.type() == decoratorTypeIdx)
-      .toList();
-    assertThat(decoratorTokens).hasSize(1);
-
-    var parameterTokens = tokens.stream()
-      .filter(t -> t.type() == parameterTypeIdx)
-      .toList();
-    assertThat(parameterTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(0, 0, 19, SemanticTokenTypes.Decorator, "&ИзменениеИКонтроль"),
+      new ExpectedToken(0, 36, 12, SemanticTokenTypes.Parameter, "ИмяПараметра")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -128,17 +111,14 @@ class AnnotationSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int decoratorTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Decorator);
-    var decoratorTokens = tokens.stream()
-      .filter(t -> t.type() == decoratorTypeIdx)
-      .toList();
-    assertThat(decoratorTokens).hasSize(2);
+    var expected = List.of(
+      new ExpectedToken(0, 0, 10, SemanticTokenTypes.Decorator, "&НаСервере"),
+      new ExpectedToken(1, 0, 6, SemanticTokenTypes.Decorator, "&Перед")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 }
-

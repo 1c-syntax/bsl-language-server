@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -41,18 +42,24 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
 
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
+  private final Resources resources;
 
   @Override
   public MarkupContent getContent(VariableSymbol symbol) {
     var markupBuilder = new StringJoiner("\n");
 
     // сигнатура
+    // информация о переменной
     // местоположение переменной
     // описание переменной
 
     // сигнатура
     String signature = descriptionFormatter.getSignature(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, signature);
+
+    // информация о переменной
+    var variableInfo = getVariableInfo(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, variableInfo);
 
     // местоположение переменной
     var location = descriptionFormatter.getLocation(symbol);
@@ -76,6 +83,22 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   @Override
   public SymbolKind getSymbolKind() {
     return SymbolKind.Variable;
+  }
+
+  private String getVariableInfo(VariableSymbol symbol) {
+    return switch (symbol.getKind()) {
+      case GLOBAL -> getResourceString("globalVariable");
+      case MODULE -> getResourceString("moduleVariable");
+      case LOCAL -> getResourceString("localVariable").formatted(symbol.getScope().getName());
+      case PARAMETER -> getResourceString("methodParameter").formatted(symbol.getScope().getName());
+      case DYNAMIC -> symbol.getScope().getSymbolKind() == SymbolKind.Module
+        ? getResourceString("dynamicVariableOfModule")
+        : getResourceString("dynamicVariableOfMethod").formatted(symbol.getScope().getName());
+    };
+  }
+
+  private String getResourceString(String key) {
+    return resources.getResourceString(getClass(), key);
   }
 
 }

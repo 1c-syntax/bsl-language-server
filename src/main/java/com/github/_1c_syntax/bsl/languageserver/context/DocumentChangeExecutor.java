@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -241,6 +241,9 @@ public final class DocumentChangeExecutor {
       return;
     }
 
+    var lock = documentContext.getServerContext().getDocumentLock(documentContext.getUri());
+    lock.writeLock().lock();
+
     try {
       changeListener.onChange(documentContext, pendingContent, pendingVersion);
       latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
@@ -248,6 +251,7 @@ public final class DocumentChangeExecutor {
     } catch (Exception e) {
       LOGGER.error("Error while applying accumulated document changes", e);
     } finally {
+      lock.writeLock().unlock();
       pendingContent = null;
       pendingVersion = -1;
     }

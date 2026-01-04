@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -66,7 +66,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
    * @param ctx AST выражения
    * @return дерево вычисления выражения
    */
-  public static @Nullable BslExpression buildExpressionTree(BSLParser.ExpressionContext ctx) {
+  public static @Nullable BslExpression buildExpressionTree(BSLParser.@Nullable ExpressionContext ctx) {
+    if (ctx == null) {
+      return null;
+    }
     var instance = new ExpressionTreeBuildingVisitor();
     instance.visitExpression(ctx);
     return instance.getExpressionTree();
@@ -419,11 +422,19 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
 
   @Override
   public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
-    var ternary = TernaryOperatorNode.create(
-      Objects.requireNonNull(makeSubexpression(ctx.expression(0))),
-      Objects.requireNonNull(makeSubexpression(ctx.expression(1))),
-      Objects.requireNonNull(makeSubexpression(ctx.expression(2)))
-    );
+    var condition = makeSubexpression(ctx.expression(0));
+    var truePart = makeSubexpression(ctx.expression(1));
+    var falsePart = makeSubexpression(ctx.expression(2));
+
+    // If any expression is null (which happens when the parser encounters syntax errors
+    // in incomplete ternary operators like "?" or "Возврат ?"), create an error node
+    // instead of attempting to create a TernaryOperatorNode to avoid NullPointerException
+    if (condition == null || truePart == null || falsePart == null) {
+      operands.push(new ErrorExpressionNode(ctx));
+      return ctx;
+    }
+
+    var ternary = TernaryOperatorNode.create(condition, truePart, falsePart);
 
     ternary.setRepresentingAst(ctx);
     operands.push(ternary);

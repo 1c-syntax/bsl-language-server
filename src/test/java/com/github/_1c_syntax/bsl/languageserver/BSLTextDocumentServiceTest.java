@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,10 +23,13 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -36,6 +39,7 @@ import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
@@ -51,10 +55,16 @@ import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
@@ -64,6 +74,11 @@ class BSLTextDocumentServiceTest {
   private BSLTextDocumentService textDocumentService;
   @MockitoSpyBean
   private ServerContext serverContext;
+  @MockitoSpyBean
+  private DiagnosticProvider diagnosticProvider;
+  @MockitoSpyBean
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
 
   @Test
   void didOpen() throws IOException {
@@ -184,6 +199,145 @@ class BSLTextDocumentServiceTest {
     DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
     params.setTextDocument(getTextDocumentIdentifier());
     textDocumentService.didClose(params);
+  }
+
+  @Test
+  void didCloseWithPendingChanges() throws IOException {
+    // given - open a document and make changes
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(documentContext).isNotNull();
+    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+
+    // when - submit multiple changes rapidly and then close immediately
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    
+    for (int i = 0; i < 5; i++) {
+      params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2 + i));
+      var range = Ranges.create(0, 0, 0, 0);
+      var changeEvent = new TextDocumentContentChangeEvent(range, "// Change " + i + "\n");
+      List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+      contentChanges.add(changeEvent);
+      params.setContentChanges(contentChanges);
+      textDocumentService.didChange(params);
+    }
+
+    // then - close should wait for pending changes to complete
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(uri));
+    textDocumentService.didClose(closeParams);
+
+    // verify the document is closed
+    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+  }
+
+  @Test
+  void didCloseDuringActiveChange() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(documentContext).isNotNull();
+    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+
+    // when - submit a change
+    var params = new DidChangeTextDocumentParams();
+    var uri = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var range = Ranges.create(0, 0, 0, 0);
+    var changeEvent = new TextDocumentContentChangeEvent(range, "// New content\n");
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    contentChanges.add(changeEvent);
+    params.setContentChanges(contentChanges);
+    textDocumentService.didChange(params);
+
+    // then - close immediately while change may still be processing
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(uri));
+    textDocumentService.didClose(closeParams);
+
+    // verify the document is closed
+    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+  }
+
+  @Test
+  void didCloseAwaitTerminationCompletes() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    var uri = textDocumentItem.getUri();
+    var documentContext = serverContext.getDocumentUnsafe(uri);
+    assertThat(documentContext).isNotNull();
+    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+
+    // when - close the document (which should wait for executor to terminate)
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(uri));
+    textDocumentService.didClose(closeParams);
+
+    // then - verify the document is properly closed
+    // The close should complete successfully even if executor needs time to terminate
+    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+  }
+
+  @Test
+  void didClosePublishesEmptyDiagnosticsWhenClientDoesNotSupportPullDiagnostics() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // Simulate client without pull diagnostics support
+    var capabilities = new ClientCapabilities();
+    // No TextDocumentClientCapabilities.diagnostic set
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
+    textDocumentService.handleInitializeEvent(null);
+
+    // Clear any invocations from didOpen
+    clearInvocations(diagnosticProvider);
+
+    // when
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(textDocumentItem.getUri()));
+    textDocumentService.didClose(closeParams);
+
+    // then - publishEmptyDiagnosticList should be called
+    verify(diagnosticProvider).publishEmptyDiagnosticList(any());
+  }
+
+  @Test
+  void didCloseDoesNotPublishEmptyDiagnosticsWhenClientSupportsPullDiagnostics() throws IOException {
+    // given - open a document
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // Simulate client with pull diagnostics support
+    var capabilities = new ClientCapabilities();
+    var textDocumentCapabilities = new TextDocumentClientCapabilities();
+    textDocumentCapabilities.setDiagnostic(new DiagnosticCapabilities());
+    capabilities.setTextDocument(textDocumentCapabilities);
+    when(clientCapabilitiesHolder.getCapabilities()).thenReturn(Optional.of(capabilities));
+    textDocumentService.handleInitializeEvent(null);
+
+    // Clear any invocations from didOpen
+    clearInvocations(diagnosticProvider);
+
+    // when
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(new TextDocumentIdentifier(textDocumentItem.getUri()));
+    textDocumentService.didClose(closeParams);
+
+    // then - publishEmptyDiagnosticList should NOT be called
+    verify(diagnosticProvider, never()).publishEmptyDiagnosticList(any());
   }
 
   @Test

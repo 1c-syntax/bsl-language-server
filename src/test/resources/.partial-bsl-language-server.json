@@ -13,5 +13,11 @@
   },
   "diagnostics": {
     "mode": "on"
+  },
+  "semanticTokens": {
+    "strTemplateMethods": [
+      "CustomModule.CustomMethod",
+      "CustomLocalMethod"
+    ]
   }
 }

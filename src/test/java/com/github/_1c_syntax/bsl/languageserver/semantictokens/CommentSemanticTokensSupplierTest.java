@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,25 +22,30 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
 class CommentSemanticTokensSupplierTest {
 
   @Autowired
   private CommentSemanticTokensSupplier supplier;
 
   @Autowired
-  private SemanticTokensLegend legend;
+  private SemanticTokensTestHelper helper;
 
   @BeforeEach
   void init() {
@@ -56,19 +61,14 @@ class CommentSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    assertThat(tokens).isNotEmpty();
-
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-    var commentTokens = tokens.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-    assertThat(commentTokens).hasSize(1);
+    var expected = List.of(
+      new ExpectedToken(1, 2, 32, SemanticTokenTypes.Comment, "// Это комментарий внутри метода")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -82,17 +82,16 @@ class CommentSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-    var commentTokens = tokens.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-    assertThat(commentTokens).hasSize(3);
+    var expected = List.of(
+      new ExpectedToken(1, 2, 21, SemanticTokenTypes.Comment, "// Первый комментарий"),
+      new ExpectedToken(2, 2, 21, SemanticTokenTypes.Comment, "// Второй комментарий"),
+      new ExpectedToken(3, 2, 21, SemanticTokenTypes.Comment, "// Третий комментарий")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -108,19 +107,14 @@ class CommentSemanticTokensSupplierTest {
       // Обычный комментарий после метода
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
-
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - only comment on line 6 (after the procedure)
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-    var commentTokens = tokens.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-    // Description comments are excluded, only the standalone comment remains
-    assertThat(commentTokens).hasSize(1);
-    assertThat(commentTokens.get(0).line()).isEqualTo(6);
+    var expected = List.of(
+      new ExpectedToken(6, 0, 35, SemanticTokenTypes.Comment, "// Обычный комментарий после метода")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test
@@ -138,30 +132,21 @@ class CommentSemanticTokensSupplierTest {
 
     // Test without multiline support - should have 3 separate tokens
     supplier.setMultilineTokenSupport(false);
-    var tokensWithoutMultiline = supplier.getSemanticTokens(documentContext);
+    var tokensWithoutMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
     // Test with multiline support - should have 1 merged token
     supplier.setMultilineTokenSupport(true);
-    var tokensWithMultiline = supplier.getSemanticTokens(documentContext);
+    var tokensWithMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
     // then
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-
-    var commentTokensWithout = tokensWithoutMultiline.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-    var commentTokensWith = tokensWithMultiline.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-
     // Without multiline: 3 separate tokens
-    assertThat(commentTokensWithout).hasSize(3);
+    assertThat(tokensWithoutMultiline).hasSize(3);
 
     // With multiline: 1 merged token for consecutive comments
-    assertThat(commentTokensWith).hasSize(1);
+    assertThat(tokensWithMultiline).hasSize(1);
 
     // The merged token should start on line 1 (0-indexed)
-    assertThat(commentTokensWith.get(0).line()).isEqualTo(1);
+    assertThat(tokensWithMultiline.get(0).line()).isEqualTo(1);
   }
 
   @Test
@@ -175,19 +160,16 @@ class CommentSemanticTokensSupplierTest {
       КонецПроцедуры
       """;
 
-    var documentContext = TestUtils.getDocumentContext(bsl);
     supplier.setMultilineTokenSupport(true);
 
     // when
-    var tokens = supplier.getSemanticTokens(documentContext);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - non-consecutive comments should still be separate tokens
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-    var commentTokens = tokens.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-
-    assertThat(commentTokens).hasSize(2);
+    var expected = List.of(
+      new ExpectedToken(1, 2, 21, SemanticTokenTypes.Comment, "// Первый комментарий"),
+      new ExpectedToken(3, 2, 21, SemanticTokenTypes.Comment, "// Второй комментарий")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 }
-

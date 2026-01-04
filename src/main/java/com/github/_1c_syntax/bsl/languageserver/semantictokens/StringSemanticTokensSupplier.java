@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.QueryContext;
@@ -33,11 +36,13 @@ import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.TokenPosi
 import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -57,6 +62,7 @@ import java.util.Set;
  *   <li>Запросы SDBL: разбивает строки на части вокруг токенов запроса и добавляет токены SDBL</li>
  *   <li>НСтр/NStr: подсвечивает языковые ключи (ru=, en=)</li>
  *   <li>СтрШаблон/StrTemplate: подсвечивает плейсхолдеры (%1, %2)</li>
+ *   <li>Конфигурируемые функции-шаблонизаторы: подсвечивает плейсхолдеры (%1, %2)</li>
  *   <li>Обычные строки: выдаёт токен для всей строки</li>
  * </ul>
  */
@@ -72,6 +78,30 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   );
 
   private final SemanticTokensHelper helper;
+  private final LanguageServerConfiguration configuration;
+
+  private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
+
+  @PostConstruct
+  private void init() {
+    updateParsedStrTemplateMethods();
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Обновляет кэшированные паттерны функций-шаблонизаторов при изменении конфигурации.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    updateParsedStrTemplateMethods();
+  }
+
+  private void updateParsedStrTemplateMethods() {
+    parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
+  }
 
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
@@ -277,7 +307,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private Map<Token, StringContext> collectSpecialStringContexts(DocumentContext documentContext) {
     Map<Token, StringContext> contexts = new HashMap<>();
-    var visitor = new SpecialContextVisitor(contexts);
+    var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods);
     visitor.visit(documentContext.getAst());
     return contexts;
   }

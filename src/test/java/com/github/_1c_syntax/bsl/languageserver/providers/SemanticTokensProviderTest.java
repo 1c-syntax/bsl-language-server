@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,9 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -39,7 +42,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -58,6 +64,9 @@ class SemanticTokensProviderTest {
 
   @Autowired
   private ReferenceIndexFiller referenceIndexFiller;
+
+  @Autowired
+  private ServerContext serverContext;
 
   // region Helper types and methods
 
@@ -1658,6 +1667,60 @@ class SemanticTokensProviderTest {
     );
 
     assertTokensMatch(decoded, expected);
+  }
+
+  // endregion
+
+  // region Common module namespace tests
+
+  @Test
+  void variableWithCommonModuleNotHighlightedAsNamespace() throws IOException {
+    // given - code with variable that holds reference to common module via ОбщегоНазначения.ОбщийМодуль
+    // The variable itself should NOT be highlighted as namespace
+    // Pattern: Модуль = ОбщегоНазначения.ОбщийМодуль("..."); Модуль.Метод();
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    // Load the common module
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    // Load a document with the pattern
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    // when
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    SemanticTokens tokens = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    var decoded = decode(tokens.getData());
+
+    // then
+    int namespaceTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Namespace);
+
+    // Find all namespace tokens
+    var namespaceTokens = decoded.stream()
+      .filter(t -> t.type() == namespaceTypeIdx)
+      .toList();
+
+    // Variable "МодульУправлениеДоступом" should NOT be highlighted as namespace
+    // It appears on lines 6, 7, 10, 13 (0-indexed) in ReferenceIndexCommonModuleVariable.bsl
+    // Lines 7, 10, 13 are where the variable is used for method calls
+    for (var token : namespaceTokens) {
+      // Namespace tokens should not be at position 4 (start of "МодульУправлениеДоступом") on variable usage lines
+      if (token.line() == 7 || token.line() == 10 || token.line() == 13) {
+        assertThat(token.start())
+          .as("Variable 'МодульУправлениеДоступом' at line %d should not be namespace", token.line())
+          .isNotEqualTo(4);
+      }
+    }
   }
 
   // endregion

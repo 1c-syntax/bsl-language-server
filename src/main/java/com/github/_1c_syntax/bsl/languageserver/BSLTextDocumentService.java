@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -47,6 +47,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -140,6 +141,7 @@ import java.util.function.Supplier;
 public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private static final long AWAIT_CLOSE = 30;
+  private static final long AWAIT_FORCE_TERMINATION = 1;
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -184,7 +186,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return withFreshDocumentContext(
+    return withFreshDocumentContextNullable(
       documentContext,
       () -> hoverProvider.getHover(documentContext, params).orElse(null)
     );
@@ -328,7 +330,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return CompletableFuture.completedFuture(null);
     }
 
-    return withFreshDocumentContext(
+    return withFreshDocumentContextNullable(
       documentContext,
       () -> {
         List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
@@ -466,51 +468,68 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     var textDocumentItem = params.getTextDocument();
-    var documentContext = context.addDocument(URI.create(textDocumentItem.getUri()));
+    var uri = Absolute.uri(textDocumentItem.getUri());
+    var lock = context.getDocumentLock(uri);
+    lock.writeLock().lock();
 
-    // Create single-threaded executor for this document to serialize didChange operations
-    var uri = documentContext.getUri();
-    documentExecutors.computeIfAbsent(uri, key ->
-      new DocumentChangeExecutor(
-        documentContext,
-        BSLTextDocumentService::applyTextDocumentChanges,
-        this::processDocumentChange,
-        "doc-" + documentContext.getUri() + "-"
-      )
-    );
+    try {
+      var documentContext = context.addDocument(uri);
 
-    context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+      // Create single-threaded executor for this document to serialize didChange operations
+      documentExecutors.computeIfAbsent(uri, key ->
+        new DocumentChangeExecutor(
+          documentContext,
+          BSLTextDocumentService::applyTextDocumentChanges,
+          this::processDocumentChange,
+          "doc-" + documentContext.getUri() + "-"
+        )
+      );
 
-    if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
-      validate(documentContext);
+      context.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+
+      if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
+        validate(documentContext);
+      }
+    } finally {
+      lock.writeLock().unlock();
     }
+
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
     var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
+      LOGGER.warn("Received didChange, but document is not found in context. uri={}", params.getTextDocument().getUri());
       return;
     }
 
     var uri = documentContext.getUri();
 
-    // Get executor for this document
-    var executor = documentExecutors.get(uri);
-    if (executor == null) {
-      // Document not opened or already closed
-      return;
+    // Acquire read lock to ensure document is not being modified by addDocument/removeDocument
+    var lock = context.getDocumentLock(uri);
+    lock.readLock().lock();
+    try {
+      // Get executor for this document
+      var executor = documentExecutors.get(uri);
+      if (executor == null) {
+        // Document not opened or already closed
+        LOGGER.warn("Received didChange, but document executor is not created yet. uri={}", uri);
+        return;
+      }
+
+      var version = params.getTextDocument().getVersion();
+
+      if (version == null) {
+        LOGGER.warn("Received didChange without version for {}", uri);
+        return;
+      }
+
+      // Submit change operation to document's executor to serialize operations.
+      executor.submit(version, params.getContentChanges());
+    } finally {
+      lock.readLock().unlock();
     }
-
-    var version = params.getTextDocument().getVersion();
-
-    if (version == null) {
-      LOGGER.warn("Received didChange without version for {}", uri);
-      return;
-    }
-
-    // Submit change operation to document's executor to serialize operations.
-    executor.submit(version, params.getContentChanges());
   }
 
   @Override
@@ -530,16 +549,43 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         // Wait for all queued changes to complete (with timeout to avoid hanging)
         if (!docExecutor.awaitTermination(AWAIT_CLOSE, TimeUnit.SECONDS)) {
           docExecutor.shutdownNow();
+          // Must wait for worker thread to finish even after shutdownNow,
+          // because finally block in worker may still be executing flushPendingChanges
+          boolean terminated = docExecutor.awaitTermination(AWAIT_FORCE_TERMINATION, TimeUnit.SECONDS);
+          if (!terminated) {
+            LOGGER.warn(
+              "Document executor for URI {} did not terminate within the additional timeout after shutdownNow()",
+              uri
+            );
+          }
         }
       } catch (InterruptedException e) {
         docExecutor.shutdownNow();
+        // Wait briefly for worker to finish after interrupt
+        try {
+          boolean terminated = docExecutor.awaitTermination(AWAIT_FORCE_TERMINATION, TimeUnit.SECONDS);
+          if (!terminated) {
+            LOGGER.warn(
+              "Document executor for URI {} did not terminate within {} seconds after interrupt during document close",
+              uri,
+              AWAIT_FORCE_TERMINATION
+            );
+          }
+        } catch (InterruptedException ignored) {
+          LOGGER.warn(
+            "Interrupted again while waiting for document executor for URI {} to terminate after shutdownNow",
+            uri
+          );
+        }
         Thread.currentThread().interrupt();
       }
     }
 
     context.closeDocument(documentContext);
 
-    diagnosticProvider.publishEmptyDiagnosticList(documentContext);
+    if (!clientSupportsPullDiagnostics) {
+      diagnosticProvider.publishEmptyDiagnosticList(documentContext);
+    }
   }
 
   @Override
@@ -768,9 +814,23 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
   }
 
-  private <T> CompletableFuture<@Nullable T> withFreshDocumentContext(
+  private <T> CompletableFuture<@Nullable T> withFreshDocumentContextNullable(
     DocumentContext documentContext,
     Supplier<@Nullable T> supplier
+  ) {
+    return withFreshDocumentContextInternal(documentContext, supplier);
+  }
+
+  private <T> CompletableFuture<T> withFreshDocumentContext(
+    DocumentContext documentContext,
+    Supplier<T> supplier
+  ) {
+    return withFreshDocumentContextInternal(documentContext, supplier);
+  }
+
+  private <T> CompletableFuture<T> withFreshDocumentContextInternal(
+    DocumentContext documentContext,
+    Supplier<T> supplier
   ) {
     var executor = documentExecutors.get(documentContext.getUri());
     CompletableFuture<Void> waitFuture;
@@ -785,7 +845,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         executorService,
         cancelChecker -> {
           cancelChecker.checkCanceled();
-          return supplier.get();
+          var lock = context.getDocumentLock(documentContext.getUri());
+          lock.readLock().lock();
+          try {
+            return supplier.get();
+          } finally {
+            lock.readLock().unlock();
+          }
         }
       )
     );
