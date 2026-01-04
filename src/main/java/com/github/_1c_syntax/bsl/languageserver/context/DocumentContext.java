@@ -323,7 +323,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   }
 
-  protected void rebuild() {
+  protected void rebuildFromFileSystem() {
     try {
       var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
