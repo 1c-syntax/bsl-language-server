@@ -80,7 +80,7 @@ public class SentryScopeConfigurer {
   }
 
   private String getEnvironment() {
-    String version = getVersion();
+    String version = serverInfo.getVersion();
     String environment;
 
     if (version.matches("\\d+\\.\\d+\\.\\d+")) {
