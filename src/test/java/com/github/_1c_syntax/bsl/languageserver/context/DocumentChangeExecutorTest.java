@@ -26,19 +26,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class DocumentChangeExecutorTest {
 
+  private static final URI TEST_URI = URI.create("file:///test.bsl");
+
   private DocumentContext documentContext;
+  private ServerContext serverContext;
   private DocumentChangeExecutor.DocumentChangeListener listener;
   private DocumentChangeExecutor executor;
   private AtomicInteger listenerCalls;
@@ -46,8 +52,12 @@ class DocumentChangeExecutorTest {
   @BeforeEach
   void setUp() {
     documentContext = mock(DocumentContext.class);
+    serverContext = mock(ServerContext.class);
     when(documentContext.getContent()).thenReturn("base");
     when(documentContext.getVersion()).thenReturn(0);
+    when(documentContext.getUri()).thenReturn(TEST_URI);
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+    when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
     listenerCalls = new AtomicInteger();
     listener = (ctx, content, version) -> listenerCalls.incrementAndGet();
     executor = new DocumentChangeExecutor(
@@ -74,6 +84,10 @@ class DocumentChangeExecutorTest {
 
   @Test
   void awaitLatestCompletesAfterChangeApplied() throws Exception {
+    // Shutdown executor from setUp before creating a new one
+    executor.shutdown();
+    executor.awaitTermination(1, TimeUnit.SECONDS);
+
     var change = List.of(new TextDocumentContentChangeEvent("first"));
     var latch = new CountDownLatch(1);
     listener = (ctx, content, version) -> {

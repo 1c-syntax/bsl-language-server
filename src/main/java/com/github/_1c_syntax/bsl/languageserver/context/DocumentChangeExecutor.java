@@ -241,6 +241,9 @@ public final class DocumentChangeExecutor {
       return;
     }
 
+    var lock = documentContext.getServerContext().getDocumentLock(documentContext.getUri());
+    lock.writeLock().lock();
+
     try {
       changeListener.onChange(documentContext, pendingContent, pendingVersion);
       latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
@@ -248,6 +251,7 @@ public final class DocumentChangeExecutor {
     } catch (Exception e) {
       LOGGER.error("Error while applying accumulated document changes", e);
     } finally {
+      lock.writeLock().unlock();
       pendingContent = null;
       pendingVersion = -1;
     }
