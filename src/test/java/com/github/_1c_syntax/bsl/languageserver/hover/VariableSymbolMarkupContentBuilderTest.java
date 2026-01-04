@@ -68,14 +68,18 @@ class VariableSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(2);
+    assertThat(blocks).hasSize(3);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем ИмяБезОписания
       ```
 
       """);
-    assertThat(blocks.get(1)).matches("""
+    assertThat(blocks.get(1)).isEqualTo("""
+      Переменная уровня модуля
+
+      """);
+    assertThat(blocks.get(2)).matches("""
       \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
 
       """);
@@ -95,18 +99,22 @@ class VariableSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(3);
+    assertThat(blocks).hasSize(4);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем Имя_ОписаниеСправаОднойСтрокой
       ```
 
       """);
-    assertThat(blocks.get(1)).matches("""
-      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+    assertThat(blocks.get(1)).isEqualTo("""
+      Переменная уровня модуля
 
       """);
     assertThat(blocks.get(2)).matches("""
+      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+
+      """);
+    assertThat(blocks.get(3)).matches("""
       описание
 
       """);
@@ -127,19 +135,23 @@ class VariableSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(3);
+    assertThat(blocks).hasSize(4);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем Имя_ОписаниеСверхуДвеСтроки_Функция
       ```
 
       """);
-    assertThat(blocks.get(1)).matches("""
+    assertThat(blocks.get(1)).isEqualTo("""
+      Локальная переменная метода ИмяФункции
+
+      """);
+    assertThat(blocks.get(2)).matches("""
       \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
 
       """);
     // TODO баг - нет \n для многострочного описания переменной
-    assertThat(blocks.get(2)).matches("""
+    assertThat(blocks.get(3)).matches("""
       описание 1 строка
       2 строка
 
@@ -161,18 +173,22 @@ class VariableSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(3);
+    assertThat(blocks).hasSize(4);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция
       ```
 
       """);
-    assertThat(blocks.get(1)).matches("""
-      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+    assertThat(blocks.get(1)).isEqualTo("""
+      Локальная переменная метода ИмяФункции
 
       """);
     assertThat(blocks.get(2)).matches("""
+      \\[file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции]\\(.*src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl#\\d+\\)
+
+      """);
+    assertThat(blocks.get(3)).matches("""
       описание 1 строка
       2 строка
 
@@ -195,14 +211,18 @@ class VariableSymbolMarkupContentBuilderTest {
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(2);
+    assertThat(blocks).hasSize(3);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Перем ВалютаУчета
       ```
 
       """);
-    assertThat(blocks.get(1)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ObjectModule.bsl#\\d+\\)\n\n");
+    assertThat(blocks.get(1)).isEqualTo("""
+      Переменная уровня модуля
+
+      """);
+    assertThat(blocks.get(2)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ObjectModule.bsl#\\d+\\)\n\n");
   }
 
 }
