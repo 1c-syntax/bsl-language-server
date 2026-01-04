@@ -28,10 +28,13 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,7 +60,14 @@ class DocumentChangeExecutorTest {
     when(documentContext.getVersion()).thenReturn(0);
     when(documentContext.getUri()).thenReturn(TEST_URI);
     when(documentContext.getServerContext()).thenReturn(serverContext);
-    when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
+    
+    // Create a map to store locks per URI, ensuring the same lock is returned for the same URI
+    Map<URI, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
+    when(serverContext.getDocumentLock(any())).thenAnswer(invocation -> {
+      URI uri = invocation.getArgument(0);
+      return lockMap.computeIfAbsent(uri, k -> new ReentrantReadWriteLock());
+    });
+    
     listenerCalls = new AtomicInteger();
     listener = (ctx, content, version) -> listenerCalls.incrementAndGet();
     executor = new DocumentChangeExecutor(

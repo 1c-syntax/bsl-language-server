@@ -126,7 +126,7 @@ public class ServerContext {
       var lock = getDocumentLock(uri);
       lock.writeLock().lock();
       try {
-        var documentContext = getDocument(uri);
+        var documentContext = documents.get(uri);
         if (documentContext == null) {
           documentContext = createDocumentContext(uri);
           rebuildDocument(documentContext);
@@ -216,7 +216,7 @@ public class ServerContext {
     var lock = getDocumentLock(uri);
     lock.writeLock().lock();
     try {
-      var documentContext = getDocument(uri);
+      var documentContext = documents.get(uri);
       if (documentContext == null) {
         documentContext = createDocumentContext(uri);
       }
@@ -267,7 +267,7 @@ public class ServerContext {
     return documentLocks.computeIfAbsent(uri, k -> new ReentrantReadWriteLock());
   }
 
-   /**
+  /**
    * Помечает документ как открытый и перестраивает его содержимое
    * <p>
    * Документы, помеченные как открытые, не будут удаляться из контекста сервера при вызове {@link #removeDocument(URI)},
