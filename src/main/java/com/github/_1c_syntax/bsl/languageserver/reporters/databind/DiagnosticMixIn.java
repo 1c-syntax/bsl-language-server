@@ -29,7 +29,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 /**
  * Mix-in класс для донастройки (де)сериализации {@link org.eclipse.lsp4j.Diagnostic} через Jackson ObjectMapper.
- * См. {@link tools.jackson.databind.ObjectMapper#addMixIn(Class, Class)}
+ * См. {@link tools.jackson.databind.json.JsonMapper.Builder#addMixIn(Class, Class)}
  */
 public abstract class DiagnosticMixIn {
 

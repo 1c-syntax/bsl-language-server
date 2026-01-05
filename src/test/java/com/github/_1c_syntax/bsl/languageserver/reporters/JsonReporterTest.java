@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -59,7 +58,7 @@ class JsonReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     Diagnostic diagnostic = new Diagnostic(
@@ -83,7 +82,6 @@ class JsonReporterTest {
     // then
     ObjectMapper mapper = new AnalysisInfoObjectMapper();
 
-    mapper.findAndRegisterModules();
     AnalysisInfo report = mapper.readValue(file, AnalysisInfo.class);
 
     Assertions.assertThat(report.fileinfos()).hasSize(1);

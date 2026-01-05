@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import tools.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -34,6 +33,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +62,7 @@ class JUnitReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     List<Diagnostic> diagnostics = new ArrayList<>();
