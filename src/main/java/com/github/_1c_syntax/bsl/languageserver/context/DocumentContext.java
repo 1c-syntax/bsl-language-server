@@ -102,22 +102,22 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Getter
   private int version;
 
-  @Setter(onMethod_ ={@Autowired})
+  @Setter(onMethod_ = {@Autowired})
   private ServerContext context;
-  @Setter(onMethod_ ={@Autowired})
+  @Setter(onMethod_ = {@Autowired})
   private DiagnosticComputer diagnosticComputer;
-  @Setter(onMethod_ ={@Autowired})
+  @Setter(onMethod_ = {@Autowired})
   private LanguageServerConfiguration configuration;
 
-  @Setter(onMethod_ ={@Autowired})
+  @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
-  @Setter(onMethod_ ={@Autowired})
+  @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
 
   @Nullable
   private BSLTokenizer tokenizer;
 
-  @Getter(onMethod_ ={@Locked("computeLock")})
+  @Getter(onMethod_ = {@Locked("computeLock")})
   private SymbolTree symbolTree = SymbolTreeComputer.empty(this);
 
   @Getter

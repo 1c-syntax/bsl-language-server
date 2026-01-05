@@ -50,11 +50,11 @@ public class SentryAspect {
 
   private ExecutorService executorService;
 
-  @Setter(onMethod_ ={@Autowired})
+  @Setter(onMethod_ = {@Autowired})
   @Nullable
   private LanguageClientHolder languageClientHolder;
 
-  @Setter(onMethod_ ={@Autowired})
+  @Setter(onMethod_ = {@Autowired})
   private Resources resources;
 
   @PostConstruct
