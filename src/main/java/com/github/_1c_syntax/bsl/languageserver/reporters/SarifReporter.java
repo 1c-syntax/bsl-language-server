@@ -38,8 +38,7 @@ import com.contrastsecurity.sarif.Run;
 import com.contrastsecurity.sarif.SarifSchema210;
 import com.contrastsecurity.sarif.Tool;
 import com.contrastsecurity.sarif.ToolComponent;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -55,6 +54,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.net.URI;
@@ -106,8 +106,9 @@ public class SarifReporter implements DiagnosticReporter {
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
     var report = createReport(analysisInfo);
 
-    var mapper = new ObjectMapper();
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+    var mapper = JsonMapper.builder()
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .build();;
 
     var reportFile = new File(outputDir.toFile(), "./bsl-ls.sarif");
     mapper.writeValue(reportFile, report);
@@ -227,7 +228,7 @@ public class SarifReporter implements DiagnosticReporter {
   private static List<Result> createResults(AnalysisInfo analysisInfo) {
     var results = new ArrayList<Result>();
 
-    analysisInfo.getFileinfos().forEach(fileInfo ->
+    analysisInfo.fileinfos().forEach(fileInfo ->
       fileInfo.getDiagnostics().stream()
         .map(diagnostic -> createResult(fileInfo, diagnostic))
         .collect(Collectors.toCollection(() -> results))

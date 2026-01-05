@@ -21,16 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import org.eclipse.lsp4j.Diagnostic;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Преднастроенный object mapper для (де)сериализации класса {@link AnalysisInfo}
  */
 public class AnalysisInfoObjectMapper extends ObjectMapper {
   public AnalysisInfoObjectMapper() {
-    super();
-    _mixIns.addLocalDefinition(Diagnostic.class, DiagnosticMixIn.class);
+    super(JsonMapper.builder()
+      .addMixIn(Diagnostic.class, DiagnosticMixIn.class));
   }
 }

@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
 import java.io.IOException;
 
@@ -33,13 +33,13 @@ import java.io.IOException;
  * Сериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
  * См. {@link DiagnosticCode}
  */
-public class DiagnosticCodeSerializer extends JsonSerializer<Either<String, Integer>> {
+public class DiagnosticCodeSerializer extends ValueSerializer<Either<String, Integer>> {
   @Override
   public void serialize(
     Either<String, Integer> value,
     JsonGenerator gen,
-    SerializerProvider serializers
-  ) throws IOException {
+    SerializationContext serializers
+  ) {
     gen.writeString(DiagnosticCode.getStringValue(value));
   }
 }

@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
@@ -63,7 +62,7 @@ class LanguageServerConfigurationTest {
   @BeforeEach
   void startUp() throws IOException {
     try {
-      Files.deleteIfExists(Paths.get("build/.trace.log"));
+      Files.deleteIfExists(Path.of("build/.trace.log"));
     } catch (FileSystemException e) {
       // no-op
     }
@@ -142,7 +141,7 @@ class LanguageServerConfigurationTest {
   @Test
   void test_GetCustomConfigurationRoot() {
 
-    Path path = Paths.get(PATH_TO_METADATA);
+    Path path = Path.of(PATH_TO_METADATA);
     Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 

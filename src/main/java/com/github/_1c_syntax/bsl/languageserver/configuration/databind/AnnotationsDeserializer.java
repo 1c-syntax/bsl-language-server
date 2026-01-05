@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ValueDeserializer;
 
 import java.io.IOException;
 import java.util.Set;
@@ -38,22 +38,22 @@ import static com.github._1c_syntax.bsl.languageserver.configuration.codelens.Te
  * Служебный класс-десериализатор для регистронезависимого списка имен аннотаций.
  */
 @Slf4j
-public class AnnotationsDeserializer extends JsonDeserializer<Set<String>> {
+public class AnnotationsDeserializer extends ValueDeserializer<Set<String>> {
 
   @Override
   public Set<String> deserialize(
     JsonParser p,
     DeserializationContext context
-  ) throws IOException {
+  ) {
 
-    JsonNode annotations = p.getCodec().readTree(p);
+    JsonNode annotations = p.objectReadContext().readTree(p);
 
     if (annotations == null) {
       return DEFAULT_ANNOTATIONS;
     }
 
     Set<String> annotationsSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    var objectMapper = (ObjectMapper) p.getCodec();
+    var objectMapper = (ObjectMapper) p.objectReadContext();
     objectMapper.readerForUpdating(annotationsSet).readValue(annotations);
 
     return annotationsSet;

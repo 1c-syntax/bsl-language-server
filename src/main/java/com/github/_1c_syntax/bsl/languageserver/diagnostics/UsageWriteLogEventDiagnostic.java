@@ -223,7 +223,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     return calls.stream()
       .filter(context -> isAppropriateMethodName(context, PATTERN_DETAIL_ERROR_DESCRIPTION))
       .filter(context -> context instanceof BSLParser.GlobalMethodCallContext
-        || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext) context)))
+        || (context instanceof BSLParser.MethodCallContext mcc && isErrorProcessingCall(mcc)))
       .anyMatch(UsageWriteLogEventDiagnostic::hasFirstDescendantGlobalCallWithPatternError);
   }
 
@@ -265,7 +265,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
     return calls.stream()
       .filter(context -> isAppropriateMethodName(context, PATTERN_BRIEF_ERROR_DESCRIPTION))
       .anyMatch(context -> context instanceof BSLParser.GlobalMethodCallContext
-        || (context instanceof BSLParser.MethodCallContext && isErrorProcessingCall((BSLParser.MethodCallContext) context)));
+        || (context instanceof BSLParser.MethodCallContext mcc && isErrorProcessingCall(mcc)));
   }
 
   private static boolean isValidExpression(BSLParser.ExpressionContext context, BSLParser.CodeBlockContext codeBlock,

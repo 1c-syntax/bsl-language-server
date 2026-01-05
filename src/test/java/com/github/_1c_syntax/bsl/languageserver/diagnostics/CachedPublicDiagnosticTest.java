@@ -34,7 +34,6 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,7 +59,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void test() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -82,7 +81,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testSession() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -105,7 +104,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testNegative() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -124,7 +123,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testEmpty() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_EMPTY_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_EMPTY_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -144,7 +143,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   void getDocumentContextFromFile(Path testFile) {
 
     Path path = Absolute.path(PATH_TO_METADATA);
-    Path moduleFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path moduleFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
     var configuration = context.getConfiguration();

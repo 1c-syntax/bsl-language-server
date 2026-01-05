@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -38,7 +38,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,7 +91,7 @@ class JUnitReporterTest {
     ));
 
     var documentContext = TestUtils.getDocumentContext(
-      Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
+      Path.of("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
       ""
     );
     String sourceDir = ".";

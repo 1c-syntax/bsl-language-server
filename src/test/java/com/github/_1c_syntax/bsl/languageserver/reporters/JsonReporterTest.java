@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoObjectMapper;
@@ -86,7 +86,7 @@ class JsonReporterTest {
     mapper.findAndRegisterModules();
     AnalysisInfo report = mapper.readValue(file, AnalysisInfo.class);
 
-    Assertions.assertThat(report.getFileinfos()).hasSize(1);
+    Assertions.assertThat(report.fileinfos()).hasSize(1);
 
   }
 }

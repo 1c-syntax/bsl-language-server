@@ -145,7 +145,7 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
         separator = ", ";
       }
 
-      var newText = String.format("%s%s.%s(\"%s\"%s%s);\n", indent, lValueName, insert, key, separator, value);
+      var newText = "%s%s.%s(\"%s\"%s%s);\n".formatted(indent, lValueName, insert, key, separator, value);
       var textEdit = new TextEdit(range, newText);
       changes.add(textEdit);
     }

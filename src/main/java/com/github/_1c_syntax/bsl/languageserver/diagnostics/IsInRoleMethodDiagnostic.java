@@ -161,8 +161,8 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     var nextGlobalMethodNode = Trees.getNextNode(parentExpression,
       ctx, BSLParser.RULE_globalMethodCall);
 
-    boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext
-      && PRIVILEGED_MODE_NAME_PATTERN.matcher(((BSLParser.GlobalMethodCallContext) nextGlobalMethodNode)
+    boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext gmcc
+      && PRIVILEGED_MODE_NAME_PATTERN.matcher(gmcc
       .methodName().getText()).matches());
 
     return !hasPrivilegedModeCheck;

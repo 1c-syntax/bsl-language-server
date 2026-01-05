@@ -107,8 +107,7 @@ public class DiagnosticInfo {
     var devSuffix = useDevSite ? "/dev" : "";
     var languageSuffix = language == Language.EN ? "/en" : "";
 
-    var siteDiagnosticsUrl = String.format(
-      "%s%s%s/diagnostics/",
+    var siteDiagnosticsUrl = "%s%s%s/diagnostics/".formatted(
       siteRoot,
       devSuffix,
       languageSuffix

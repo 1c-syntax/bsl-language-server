@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.databind;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.NamedType;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;

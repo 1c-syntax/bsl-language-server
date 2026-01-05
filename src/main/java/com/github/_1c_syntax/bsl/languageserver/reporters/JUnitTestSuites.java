@@ -22,16 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlCData;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -39,14 +34,19 @@ import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlCData;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlText;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-@JacksonXmlRootElement(localName = "testsuites")
+@JsonRootName("testsuites")
 class JUnitTestSuites {
 
   @Getter
@@ -61,7 +61,7 @@ class JUnitTestSuites {
   public JUnitTestSuites(AnalysisInfo analysisInfo) {
     name = "bsl-language-server";
 
-    testsuite = analysisInfo.getFileinfos().stream()
+    testsuite = analysisInfo.fileinfos().stream()
       .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
       .map(JUnitTestSuite::new)
       .toList();
@@ -133,8 +133,7 @@ class JUnitTestSuites {
         type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
         Position startRange = diagnostic.getRange().getStart();
         message = diagnostic.getMessage();
-        value.add(String.format(
-          "line: %d, column: %d, text: %s",
+        value.add("line: %d, column: %d, text: %s".formatted(
           startRange.getLine() + 1,
           startRange.getCharacter(),
           diagnostic.getMessage()
@@ -170,15 +169,15 @@ class JUnitTestSuites {
     String value;
   }
 
-  static class JUnitFailureDeserializer extends JsonDeserializer<JUnitFailure> {
+  static class JUnitFailureDeserializer extends ValueDeserializer<JUnitFailure> {
 
     @Override
-    public JUnitFailure deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-      JsonNode node = jp.getCodec().readTree(jp);
+    public JUnitFailure deserialize(JsonParser jp, DeserializationContext ctxt) {
+      JsonNode node = jp.objectReadContext().readTree(jp);
 
-      var type = node.get("type").asText("");
-      var message = node.get("message").asText("");
-      var value = node.get("").asText("");
+      var type = node.get("type").asString("");
+      var message = node.get("message").asString("");
+      var value = node.get("").asString("");
 
       return new JUnitFailure(type, message, value);
     }

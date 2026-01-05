@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataMapDeserializer;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -41,7 +41,7 @@ import java.util.Map;
  * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
  */
 @Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@AllArgsConstructor(onConstructor_ ={@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DiagnosticsOptions {

@@ -47,8 +47,7 @@ class MethodDescriptionTest {
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
+        .flatMap(Optional::stream)
         .toList();
 
       assertThat(methodsWithDescription.size()).isEqualTo(15);
@@ -98,8 +97,9 @@ class MethodDescriptionTest {
     assertThat(param.types()).hasSize(1);
     assertThat(param.types().get(0).name()).isEqualTo("Строка");
     assertThat(param.types().get(0).description()).isEqualTo(
-      "имена реквизитов перечисленные через запятую, в формате требований к свойствам\n" +
-      "структуры. Например, \"Код, Наименование, Родитель\".");
+      """
+      имена реквизитов перечисленные через запятую, в формате требований к свойствам
+      структуры. Например, "Код, Наименование, Родитель".""");
     assertThat(param.isHyperlink()).isFalse();
 
     param = method.getParameters().get(2);

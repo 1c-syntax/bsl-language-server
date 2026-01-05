@@ -21,11 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -35,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.types.ModuleType;
 import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ValueDeserializer;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -46,21 +46,21 @@ import java.util.Map;
  * Converts JSON objects into DiagnosticMetadata annotation instances using geantyref's TypeFactory.
  */
 @Slf4j
-public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<String, DiagnosticMetadata>> {
+public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<String, DiagnosticMetadata>> {
 
   @Override
   public Map<String, DiagnosticMetadata> deserialize(
     JsonParser p,
     DeserializationContext context
-  ) throws IOException {
+  ) {
     
-    JsonNode node = p.getCodec().readTree(p);
+    JsonNode node = p.objectReadContext().readTree(p);
     if (node == null || !node.isObject()) {
       return new HashMap<>();
     }
 
     Map<String, DiagnosticMetadata> result = new HashMap<>();
-    ObjectMapper mapper = (ObjectMapper) p.getCodec();
+    ObjectMapper mapper = (ObjectMapper) p.objectReadContext();
 
     for (var entry : node.properties()) {
       String diagnosticCode = entry.getKey();

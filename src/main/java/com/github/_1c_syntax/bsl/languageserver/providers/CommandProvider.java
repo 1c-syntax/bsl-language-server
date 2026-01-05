@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
 import lombok.RequiredArgsConstructor;
@@ -108,8 +108,8 @@ public class CommandProvider {
 
     var rawArgument = rawArguments.get(0);
 
-    if (rawArgument instanceof CommandArguments) {
-      return (CommandArguments) rawArgument;
+    if (rawArgument instanceof CommandArguments arguments) {
+      return arguments;
     }
 
     return objectMapper.readValue(rawArgument.toString(), CommandArguments.class);

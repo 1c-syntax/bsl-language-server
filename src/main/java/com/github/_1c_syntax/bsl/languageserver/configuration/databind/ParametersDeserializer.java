@@ -21,15 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import tools.jackson.databind.ValueDeserializer;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -40,15 +41,15 @@ import java.util.Map;
  * Служебный класс-десериализатор для коллекции настроек.
  */
 @Slf4j
-public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
+public class ParametersDeserializer extends ValueDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
 
   @Override
   public Map<String, Either<Boolean, Map<String, Object>>> deserialize(
     JsonParser p,
     DeserializationContext context
-  ) throws IOException {
+  ) {
 
-    JsonNode parameters = p.getCodec().readTree(p);
+    JsonNode parameters = p.objectReadContext().readTree(p);
 
     if (parameters == null) {
       return Collections.emptyMap();
@@ -79,7 +80,7 @@ public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<
       JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {
       });
       parameterConfiguration = mapper.readValue(mapper.treeAsTokens(parameterConfig), type);
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       LOGGER.error("Can't deserialize parameter configuration", e);
       return Collections.emptyMap();
     }

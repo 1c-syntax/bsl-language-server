@@ -38,7 +38,7 @@ public class ConsoleReporter implements DiagnosticReporter {
 
   @Override
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    LOGGER.info("Analysis date: {}", analysisInfo.getDate());
-    LOGGER.info("File info:\n{}", analysisInfo.getFileinfos());
+    LOGGER.info("Analysis date: {}", analysisInfo.date());
+    LOGGER.info("File info:\n{}", analysisInfo.fileinfos());
   }
 }

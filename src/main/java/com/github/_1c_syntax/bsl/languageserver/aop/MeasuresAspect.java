@@ -50,7 +50,7 @@ import java.util.Collection;
 @NoArgsConstructor
 public class MeasuresAspect {
 
-  @Setter(onMethod = @__({@Autowired}))
+  @Setter(onMethod_ ={@Autowired})
   private @Nullable MeasureCollector measureCollector;
 
   @PreDestroy

@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -89,7 +89,7 @@ class SmokyTest {
 
     var srcDir = "./src/test/resources/";
     List<Diagnostic> diagnostics = new ArrayList<>();
-    FileUtils.listFiles(Paths.get(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true)
+    FileUtils.listFiles(Path.of(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true)
       .forEach(filePath -> {
         LOGGER.info(filePath.toString());
         var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());

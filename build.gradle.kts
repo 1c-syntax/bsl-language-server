@@ -15,12 +15,12 @@ plugins {
     id("io.freefair.aspectj.post-compile-weaving") version "9.1.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
-    id("org.springframework.boot") version "3.5.9"
+    id("org.springframework.boot") version "4.0.1"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "5.12.2"
+    id("io.sentry.jvm.gradle") version "6.0.0-rc.1"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
-    id("org.jreleaser") version "1.21.0"
+    id("org.jreleaser") version "1.22.0"
     id("org.sonarqube") version "7.2.2.6593"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.4"
@@ -61,8 +61,12 @@ gitProperties {
 }
 
 val languageToolVersion = "6.7"
+val sentryVersion = "8.29.0"
 
 dependencies {
+
+    // BOM
+//    api(platform("io.sentry:sentry-bom:$sentryVersion"))
 
     // RUNTIME
 
@@ -89,7 +93,7 @@ dependencies {
     }
     api("io.github.1c-syntax", "utils", "0.6.8")
     api("io.github.1c-syntax", "mdclasses", "0.17.1")
-    api("io.github.1c-syntax", "bsl-common-library", "0.9.0")
+    api("io.github.1c-syntax", "bsl-common-library", "0.9.1")
     api("io.github.1c-syntax", "supportconf", "0.15.0")
 
     // nullability annotations
@@ -113,7 +117,7 @@ dependencies {
     }
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.25")
+    implementation("org.aspectj", "aspectjrt", "1.9.25.1")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.21.0")
@@ -129,8 +133,8 @@ dependencies {
     implementation("me.tongfei", "progressbar", "0.10.1")
 
     // (de)serialization
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    implementation("tools.jackson.core:jackson-databind")
+    implementation("tools.jackson.dataformat:jackson-dataformat-xml")
     implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
@@ -267,6 +271,10 @@ tasks.jacocoTestReport {
 
 jmh {
     jmhVersion = "1.37"
+}
+
+sentry {
+    includeSourceContext = true
 }
 
 tasks.processResources {

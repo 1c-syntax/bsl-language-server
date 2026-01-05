@@ -226,6 +226,6 @@ class DuplicatedInsertionIntoCollectionDiagnosticTest extends AbstractDiagnostic
   }
 
   private String getMessage(String keyName, String collectionName) {
-    return String.format("Проверьте повторную вставку %s в коллекцию %s", keyName, collectionName);
+    return "Проверьте повторную вставку %s в коллекцию %s".formatted(keyName, collectionName);
   }
 }

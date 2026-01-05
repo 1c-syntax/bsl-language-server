@@ -21,9 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -247,7 +246,6 @@ class DiagnosticMetadataMapDeserializerTest {
 
   private Map<String, DiagnosticMetadata> deserializeMetadata(String json) throws Exception {
     var mapper = new ObjectMapper();
-    mapper.registerModule(new ParameterNamesModule());
 
     String wrappedJson = "{\"metadata\": " + json + "}";
     TestWrapper wrapper = mapper.readValue(wrappedJson, TestWrapper.class);

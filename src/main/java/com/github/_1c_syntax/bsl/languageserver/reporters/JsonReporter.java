@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class JsonReporter implements DiagnosticReporter {
       File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
       mapper.writeValue(reportFile, analysisInfo);
       LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
   }

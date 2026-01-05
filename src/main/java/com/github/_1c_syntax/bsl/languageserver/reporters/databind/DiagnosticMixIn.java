@@ -23,13 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 /**
  * Mix-in класс для донастройки (де)сериализации {@link org.eclipse.lsp4j.Diagnostic} через Jackson ObjectMapper.
- * См. {@link com.fasterxml.jackson.databind.ObjectMapper#addMixIn(Class, Class)}
+ * См. {@link tools.jackson.databind.ObjectMapper#addMixIn(Class, Class)}
  */
 public abstract class DiagnosticMixIn {
 

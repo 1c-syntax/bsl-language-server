@@ -148,8 +148,7 @@ public class DescriptionFormatter {
       .getMdoRefLocal(md)
     ).orElseGet(documentContext::getMdoRef);
 
-    return String.format(
-      "[%s](%s)",
+    return "[%s](%s)".formatted(
       mdoRefLocal,
       uri
     );
@@ -160,8 +159,7 @@ public class DescriptionFormatter {
     var startPosition = symbol.getSelectionRange().getStart();
     var mdoRef = documentContext.getMdoRef();
 
-    return String.format(
-      "[%s](%s#%d)",
+    return "[%s](%s#%d)".formatted(
       mdoRef,
       documentContext.getUri(),
       startPosition.getLine() + 1
@@ -178,8 +176,7 @@ public class DescriptionFormatter {
       .orElse("");
     mdoRef += parentPostfix;
 
-    return String.format(
-      "[%s](%s#%d)",
+    return "[%s](%s#%d)".formatted(
       mdoRef,
       documentContext.getUri(),
       startPosition.getLine() + 1
@@ -201,8 +198,7 @@ public class DescriptionFormatter {
     var returnedValueType = getReturnedValueTypeDescriptionPart(methodSymbol);
     var export = methodSymbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
 
-    return String.format(
-      signatureTemplate,
+    return signatureTemplate.formatted(
       methodKind,
       methodName,
       parameters,
@@ -219,8 +215,7 @@ public class DescriptionFormatter {
 
     var parameters = getParametersSignatureDescription(methodSymbol);
 
-    return String.format(
-      signatureTemplate,
+    return signatureTemplate.formatted(
       annotationKind,
       annotationName,
       parameters
@@ -234,8 +229,7 @@ public class DescriptionFormatter {
     var name = symbol.getName();
     var export = symbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
 
-    return String.format(
-      signatureTemplate,
+    return signatureTemplate.formatted(
       varKey,
       name,
       export
@@ -308,11 +302,11 @@ public class DescriptionFormatter {
     var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
 
     if (typesMap.size() == 1) {
-      result.add(String.format(parameterTemplate,
+      result.add(parameterTemplate.formatted(
         parameterDescription.name(),
         typesMapToString(typesMap, 0)));
     } else {
-      result.add(String.format(parameterTemplate, parameterDescription.name(), ""));
+      result.add(parameterTemplate.formatted(parameterDescription.name(), ""));
       result.add(typesMapToString(typesMap, level + 1));
     }
     return result.toString();
@@ -323,11 +317,10 @@ public class DescriptionFormatter {
     var parameterDescription = parameterDefinition.getDescription();
     return parameterDescription
       .map(description -> parameterToString(description, level))
-      .orElseGet(() -> String.format(
-          PARAMETER_TEMPLATE,
-          parameterDefinition.getName(),
-          ""
-        )
+      .orElseGet(() -> PARAMETER_TEMPLATE.formatted(
+        parameterDefinition.getName(),
+        ""
+      )
       );
 
   }
@@ -339,12 +332,12 @@ public class DescriptionFormatter {
       var typeDescription = typeToString(type, level);
       String typeName;
       if (type.isHyperlink()) {
-        typeName = String.format("[%s](%s)", type.name(), type.link());
+        typeName = "[%s](%s)".formatted(type.name(), type.link());
       } else {
-        typeName = String.format("`%s`", type.name());
+        typeName = "`%s`".formatted(type.name());
       }
 
-      types.merge(typeDescription, typeName, (oldValue, newValue) -> String.format("%s | %s", oldValue, newValue));
+      types.merge(typeDescription, typeName, (oldValue, newValue) -> "%s | %s".formatted(oldValue, newValue));
     });
     return types;
   }
@@ -356,7 +349,7 @@ public class DescriptionFormatter {
       if (key.isBlank()) {
         result.add(value);
       } else {
-        result.add(String.format("%s%s %s", indent, value, key));
+        result.add("%s%s %s".formatted(indent, value, key));
       }
     });
     return result.toString();

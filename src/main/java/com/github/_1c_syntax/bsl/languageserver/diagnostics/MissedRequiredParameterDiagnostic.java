@@ -111,7 +111,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
       }
     }
     if (!missedParameters.isEmpty()) {
-      var message = info.getMessage(String.format("'%s'", String.join("', '", missedParameters)));
+      var message = info.getMessage("'%s'".formatted(String.join("', '", missedParameters)));
       diagnosticStorage.addDiagnostic(callInfo.range, message);
     }
   }

@@ -25,7 +25,7 @@ import com.contrastsecurity.sarif.Location;
 import com.contrastsecurity.sarif.PhysicalLocation;
 import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.SarifSchema210;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;

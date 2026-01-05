@@ -100,7 +100,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
 
         skipLValue = true;
         namePatternWithDot = CaseInsensitivePattern.compile(
-          String.format(getManagerModuleName(mdo.getMdoType()), mdo.getName())
+          getManagerModuleName(mdo.getMdoType()).formatted(mdo.getName())
         );
       });
     }

@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,7 +38,7 @@ import java.util.Map;
  * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
  */
 @Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@AllArgsConstructor(onConstructor_ ={@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeLensOptions {

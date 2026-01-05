@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
@@ -99,8 +99,8 @@ public class TestRunnerAdapter {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     var executable = SystemUtils.IS_OS_WINDOWS ? options.getExecutableWin() : options.getExecutable();
-    var path = Paths.get(documentContext.getUri()).toString();
-    var arguments = String.format(options.getGetTestsArguments(), path);
+    var path = Path.of(documentContext.getUri()).toString();
+    var arguments = options.getGetTestsArguments().formatted(path);
 
     var getTestsCommand = new CommandLine(executable).addArguments(arguments, false);
 

@@ -37,7 +37,7 @@ import java.util.List;
  * (например, ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")).
  */
 @Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@AllArgsConstructor(onConstructor_ ={@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReferencesOptions {

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
@@ -134,8 +134,8 @@ public class CodeLensProvider {
   public CodeLensData extractData(CodeLens codeLens) {
     var rawCodeLensData = codeLens.getData();
 
-    if (rawCodeLensData instanceof CodeLensData) {
-      return (CodeLensData) rawCodeLensData;
+    if (rawCodeLensData instanceof CodeLensData data) {
+      return data;
     }
 
     return objectMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);

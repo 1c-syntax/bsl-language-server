@@ -81,8 +81,7 @@ public abstract class DiagnosticComputer {
         try {
           return diagnostic.getDiagnostics(documentContext).stream();
         } catch (RuntimeException e) {
-          var message = String.format(
-            "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
+          var message = "Diagnostic computation error.%nFile: %s%nDiagnostic: %s".formatted(
             documentContext.getUri(),
             diagnostic.getInfo().getCode()
           );

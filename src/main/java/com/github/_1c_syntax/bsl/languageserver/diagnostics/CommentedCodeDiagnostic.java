@@ -100,8 +100,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
     methodDescriptions = documentContext.getSymbolTree().getMethods()
       .stream()
       .map(MethodSymbol::getDescription)
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .collect(Collectors.toList());
 
     groupComments(documentContext.getComments())
