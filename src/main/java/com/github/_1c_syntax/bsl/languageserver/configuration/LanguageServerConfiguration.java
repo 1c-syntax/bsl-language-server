@@ -67,7 +67,7 @@ import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS
 @Data
 @Component
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-@AllArgsConstructor(onConstructor_ ={@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
+@AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)

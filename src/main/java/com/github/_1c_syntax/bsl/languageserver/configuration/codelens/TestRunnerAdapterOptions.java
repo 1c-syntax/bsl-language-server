@@ -38,7 +38,7 @@ import java.util.TreeSet;
  * Параметры запускателя тестового фреймворка.
  */
 @Data
-@AllArgsConstructor(onConstructor_ ={@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
+@AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TestRunnerAdapterOptions {

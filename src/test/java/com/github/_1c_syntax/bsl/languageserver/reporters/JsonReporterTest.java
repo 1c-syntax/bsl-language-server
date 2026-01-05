@@ -83,7 +83,6 @@ class JsonReporterTest {
     // then
     ObjectMapper mapper = new AnalysisInfoObjectMapper();
 
-    mapper.findAndRegisterModules();
     AnalysisInfo report = mapper.readValue(file, AnalysisInfo.class);
 
     Assertions.assertThat(report.fileinfos()).hasSize(1);
