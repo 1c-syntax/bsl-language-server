@@ -67,7 +67,12 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
-    String collectionExpression = ctx.expression().getText();
+    var expression = ctx.expression();
+    if (expression == null) {
+      return super.visitForEachStatement(ctx);
+    }
+
+    String collectionExpression = expression.getText();
     Trees.findAllRuleNodes(ctx.codeBlock(), BSLParser.RULE_methodCall)
       .stream()
       .filter(MethodCallContext.class::isInstance)
