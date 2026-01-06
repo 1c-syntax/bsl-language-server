@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767704223591,
+  "lastUpdate": 1767719260846,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33573,6 +33573,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6956139255890806",
             "extra": "mean: 70.42306605974834 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a23caef4278be69a9e904aff92f0794f4977d19a",
+          "message": "Merge pull request #3741 from 1c-syntax/copilot/fix-nullpointerexception-foreach\n\nFix NullPointerException in UseLessForEachDiagnostic for malformed code",
+          "timestamp": "2026-01-06T17:11:38+01:00",
+          "tree_id": "a1b0c6d09ec41adb3e303ca695d16b05f3805431",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a23caef4278be69a9e904aff92f0794f4977d19a"
+        },
+        "date": 1767719254831,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.8505352338155,
+            "unit": "sec",
+            "range": "stddev: 0.8454421587028027",
+            "extra": "mean: 68.8505352338155 sec\nrounds: 3"
           }
         ]
       }
