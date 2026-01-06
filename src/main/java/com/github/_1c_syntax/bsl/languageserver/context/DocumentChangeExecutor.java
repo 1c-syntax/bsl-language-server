@@ -182,7 +182,7 @@ public final class DocumentChangeExecutor {
         }
       }
     } catch (Exception e) {
-      LOGGER.error("Unexpected error in document executor worker", e);
+      LOGGER.error("Unexpected error in document executor worker: " + e.getMessage(), e);
     } finally {
       flushPendingChanges();
     }
@@ -225,7 +225,7 @@ public final class DocumentChangeExecutor {
       pendingContent = changeApplier.apply(baseContent, task.contentChanges);
       pendingVersion = task.version;
     } catch (Exception e) {
-      LOGGER.error("Error while accumulating document change task", e);
+      LOGGER.error("Error while accumulating document change task: " + e.getMessage(), e);
       pendingContent = null;
       pendingVersion = -1;
       latestAppliedVersion.accumulateAndGet(task.version, Math::max);
@@ -249,7 +249,7 @@ public final class DocumentChangeExecutor {
       latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
       completeWaitersUpTo(latestAppliedVersion.get());
     } catch (Exception e) {
-      LOGGER.error("Error while applying accumulated document changes", e);
+      LOGGER.error("Error while applying accumulated document changes: " + e.getMessage(), e);
     } finally {
       lock.writeLock().unlock();
       pendingContent = null;
