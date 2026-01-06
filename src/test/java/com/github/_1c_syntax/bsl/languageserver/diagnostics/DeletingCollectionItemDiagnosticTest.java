@@ -67,4 +67,19 @@ class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest<Deleti
       .doesNotThrowAnyException();
   }
 
+  @Test
+  void testForEachStatementWithoutCodeBlock() {
+    // Test that forEach statement without code block doesn't cause NullPointerException
+    String module = """
+      Процедура Тест()
+        Для Каждого Элемент Из Коллекция Цикл
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(module);
+
+    assertThatCode(() -> getDiagnostics(documentContext))
+      .doesNotThrowAnyException();
+  }
+
 }
