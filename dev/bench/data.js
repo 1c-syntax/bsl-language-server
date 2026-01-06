@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767519833602,
+  "lastUpdate": 1767691971910,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33511,6 +33511,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.34893662267023",
             "extra": "mean: 69.26621373494466 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8eb4a2f1034c88a93423517729b179386d727e8a",
+          "message": "Merge pull request #3738 from 1c-syntax/copilot/fix-null-pointer-exception\n\nFix NullPointerException in DeletingCollectionItemDiagnostic for incomplete forEach statements",
+          "timestamp": "2026-01-06T10:23:37+01:00",
+          "tree_id": "e2d7b78920ddd8ef62f10ccce0ca606b98096177",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8eb4a2f1034c88a93423517729b179386d727e8a"
+        },
+        "date": 1767691966437,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 70.64873607953389,
+            "unit": "sec",
+            "range": "stddev: 2.494049113152678",
+            "extra": "mean: 70.64873607953389 sec\nrounds: 3"
           }
         ]
       }
