@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,22 @@ class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest<Deleti
       .hasRange(45, 4, 45, 23)
       .hasRange(50, 4, 50, 37)
       .hasRange(55, 4, 55, 39);
+  }
+
+  @Test
+  void testIncompleteForEachStatement() {
+    // Test that incomplete forEach statement doesn't cause NullPointerException
+    String module = """
+      Процедура Тест()
+        Для Каждого\s
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(module);
+    var diagnostics = getDiagnostics(documentContext);
+
+    // Should not throw NullPointerException and should have no diagnostics
+    assertThat(diagnostics).hasSize(0);
   }
 
 }
