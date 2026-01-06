@@ -54,6 +54,9 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
     TerminalNode iterator = ctx.IDENTIFIER();
+    if (iterator == null) {
+      return super.visitForEachStatement(ctx);
+    }
     String iteratorIdName = iterator.getText();
 
     boolean isVariable = documentContext.getSymbolTree().getVariables()

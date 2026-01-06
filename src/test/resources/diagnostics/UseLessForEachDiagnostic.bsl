@@ -46,3 +46,8 @@
     КонецЦикла;
 
 КонецПроцедуры
+
+// Malformed for-each loop without iterator variable to test null handling
+Для Каждого Из Коллекция Цикл
+    КакойтоМетод();
+КонецЦикла;
