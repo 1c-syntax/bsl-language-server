@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 
 class UseLessForEachDiagnosticTest extends AbstractDiagnosticTest<UseLessForEachDiagnostic> {
@@ -45,6 +47,23 @@ class UseLessForEachDiagnosticTest extends AbstractDiagnosticTest<UseLessForEach
       .hasRange(39, 16, 26)
     ;
 
+  }
+
+  @Test
+  void testForEachStatementWithoutIterator() {
+    // Test that forEach statement without iterator doesn't cause NullPointerException
+    String module = """
+      Процедура Тест()
+        Для Каждого Из Коллекция Цикл
+          КакойтоМетод();
+        КонецЦикла;
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(module);
+
+    assertThatCode(() -> getDiagnostics(documentContext))
+      .doesNotThrowAnyException();
   }
 }
 
