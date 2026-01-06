@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 
 class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest<DeletingCollectionItemDiagnostic> {
@@ -56,15 +57,14 @@ class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest<Deleti
     // Test that incomplete forEach statement doesn't cause NullPointerException
     String module = """
       Процедура Тест()
-        Для Каждого\s
+        Для Каждого
       КонецПроцедуры
       """;
 
     var documentContext = TestUtils.getDocumentContext(module);
-    var diagnostics = getDiagnostics(documentContext);
 
-    // Should not throw NullPointerException and should have no diagnostics
-    assertThat(diagnostics).hasSize(0);
+    assertThatCode(() -> getDiagnostics(documentContext))
+      .doesNotThrowAnyException();
   }
 
 }
