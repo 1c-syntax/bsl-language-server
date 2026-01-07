@@ -29,7 +29,6 @@ import io.sentry.protocol.Geo;
 import io.sentry.protocol.User;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientInfo;
-import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.ServerInfo;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -92,16 +91,9 @@ public class SentryScopeConfigurer {
    */
   @EventListener
   public void onLanguageServerInitialize(LanguageServerInitializeRequestReceivedEvent event) {
-    var clientName = Optional.of(event)
-      .map(LanguageServerInitializeRequestReceivedEvent::getParams)
-      .map(InitializeParams::getClientInfo)
-      .map(ClientInfo::getName)
-      .orElse("UNKNOWN");
-    var clientVersion = Optional.of(event)
-      .map(LanguageServerInitializeRequestReceivedEvent::getParams)
-      .map(InitializeParams::getClientInfo)
-      .map(ClientInfo::getVersion)
-      .orElse("UNKNOWN");
+    var clientInfo = Optional.ofNullable(event.getParams().getClientInfo());
+    var clientName = clientInfo.map(ClientInfo::getName).orElse("UNKNOWN");
+    var clientVersion = clientInfo.map(ClientInfo::getVersion).orElse("UNKNOWN");
 
     Sentry.configureScope((IScope scope) -> {
       scope.setTag("clientName", clientName);
