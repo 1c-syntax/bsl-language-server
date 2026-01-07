@@ -23,10 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -34,11 +30,14 @@ import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlCData;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import tools.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlText;
 
 import java.util.ArrayList;
@@ -50,8 +49,7 @@ import java.util.stream.Collectors;
 class JUnitTestSuites {
 
   @Getter
-  @JsonProperty("package")
-  @JacksonXmlProperty(isAttribute = true)
+  @JacksonXmlProperty(localName = "package", isAttribute = true)
   private final String name;
 
   @Getter
@@ -68,7 +66,7 @@ class JUnitTestSuites {
   }
 
   public JUnitTestSuites(
-    @JsonProperty("package") String name,
+    @JacksonXmlProperty(localName = "package") String name,
     @JsonProperty("testsuite") List<JUnitTestSuite> testsuite
   ) {
     this.name = name;
