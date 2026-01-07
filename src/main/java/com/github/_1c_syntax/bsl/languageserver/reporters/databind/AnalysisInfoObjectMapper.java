@@ -29,6 +29,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * Преднастроенный object mapper для (де)сериализации класса {@link AnalysisInfo}
  */
+// Подавление предупреждений о несовместимости типов [unchecked] readTree(JsonParser)
+@SuppressWarnings({"unchecked"})
 public class AnalysisInfoObjectMapper extends ObjectMapper {
   public AnalysisInfoObjectMapper() {
     super(JsonMapper.builder()
