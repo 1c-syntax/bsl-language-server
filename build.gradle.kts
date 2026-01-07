@@ -88,8 +88,8 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
     }
     api("io.github.1c-syntax", "utils", "0.6.8")
-    api("io.github.1c-syntax", "mdclasses", "0.17.1")
-    api("io.github.1c-syntax", "bsl-common-library", "0.9.0")
+    api("io.github.1c-syntax", "mdclasses", "0.17.2")
+    api("io.github.1c-syntax", "bsl-common-library", "0.9.1")
     api("io.github.1c-syntax", "supportconf", "0.15.0")
 
     // nullability annotations
