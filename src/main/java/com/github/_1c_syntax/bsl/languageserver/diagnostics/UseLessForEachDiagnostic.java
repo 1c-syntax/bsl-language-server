@@ -54,6 +54,10 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
     TerminalNode iterator = ctx.IDENTIFIER();
+    // Malformed code (missing iterator variable or code block) can result in null IDENTIFIER or codeBlock
+    if (iterator == null || ctx.codeBlock() == null) {
+      return super.visitForEachStatement(ctx);
+    }
     String iteratorIdName = iterator.getText();
 
     boolean isVariable = documentContext.getSymbolTree().getVariables()
