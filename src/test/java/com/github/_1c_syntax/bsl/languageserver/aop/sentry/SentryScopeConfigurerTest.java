@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -103,6 +104,31 @@ class SentryScopeConfigurerTest {
     // given
     var initializeParams = new InitializeParams();
     // clientInfo is null by default
+
+    var event = new LanguageServerInitializeRequestReceivedEvent(
+      mock(LanguageServer.class),
+      initializeParams
+    );
+
+    // when - publish initialize event which sets tags in scope
+    eventPublisher.publishEvent(event);
+
+    // then - capture a Sentry event and verify tags are set to UNKNOWN
+    Sentry.captureMessage("test");
+
+    assertThat(capturedEvent.get()).isNotNull();
+    assertThat(capturedEvent.get().getTags()).containsEntry("client.name", "UNKNOWN");
+    assertThat(capturedEvent.get().getTags()).containsEntry("client.version", "UNKNOWN");
+  }
+
+  @Test
+  void testClientInfoTagsSetToUnknownWhenFieldsAreNull() {
+    // given
+    var initializeParams = new InitializeParams();
+    var clientInfo = mock(ClientInfo.class);
+    when(clientInfo.getName()).thenReturn(null);
+    when(clientInfo.getVersion()).thenReturn(null);
+    initializeParams.setClientInfo(clientInfo);
 
     var event = new LanguageServerInitializeRequestReceivedEvent(
       mock(LanguageServer.class),

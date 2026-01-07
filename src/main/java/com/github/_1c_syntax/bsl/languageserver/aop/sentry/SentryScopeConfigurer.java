@@ -92,8 +92,12 @@ public class SentryScopeConfigurer {
   @EventListener
   public void onLanguageServerInitialize(LanguageServerInitializeRequestReceivedEvent event) {
     var clientInfo = Optional.ofNullable(event.getParams().getClientInfo());
-    var clientName = clientInfo.map(ClientInfo::getName).orElse("UNKNOWN");
-    var clientVersion = clientInfo.map(ClientInfo::getVersion).orElse("UNKNOWN");
+    var clientName = clientInfo
+      .flatMap(info -> Optional.ofNullable(info.getName()))
+      .orElse("UNKNOWN");
+    var clientVersion = clientInfo
+      .flatMap(info -> Optional.ofNullable(info.getVersion()))
+      .orElse("UNKNOWN");
 
     Sentry.configureScope((IScope scope) -> {
       scope.setTag("client.name", clientName);
