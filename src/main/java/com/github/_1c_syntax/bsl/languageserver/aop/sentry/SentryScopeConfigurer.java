@@ -96,8 +96,8 @@ public class SentryScopeConfigurer {
     var clientVersion = clientInfo.map(ClientInfo::getVersion).orElse("UNKNOWN");
 
     Sentry.configureScope((IScope scope) -> {
-      scope.setTag("clientName", clientName);
-      scope.setTag("clientVersion", clientVersion);
+      scope.setTag("client.name", clientName);
+      scope.setTag("client.version", clientVersion);
     });
   }
 

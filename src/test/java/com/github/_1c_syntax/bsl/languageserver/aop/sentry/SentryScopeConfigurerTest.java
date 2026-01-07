@@ -21,17 +21,27 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import io.sentry.Hint;
+import io.sentry.Sentry;
+import io.sentry.SentryEvent;
+import io.sentry.SentryOptions;
 import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 @SpringBootTest
@@ -44,8 +54,32 @@ class SentryScopeConfigurerTest {
   @Autowired
   private ApplicationEventPublisher eventPublisher;
 
+  @Autowired
+  private LanguageServerConfiguration configuration;
+
+  private final AtomicReference<SentryEvent> capturedEvent = new AtomicReference<>();
+
+  @BeforeEach
+  void setUp() {
+    // Initialize Sentry with a test DSN and BeforeSend callback to capture events
+    Sentry.init(options -> {
+      options.setDsn("https://key@sentry.io/123");
+      options.setBeforeSend((event, hint) -> {
+        capturedEvent.set(event);
+        return null; // Don't actually send
+      });
+    });
+    configuration.setSendErrors(SendErrorsMode.SEND);
+  }
+
+  @AfterEach
+  void tearDown() {
+    capturedEvent.set(null);
+    Sentry.close();
+  }
+
   @Test
-  void testOnLanguageServerInitializeWithClientInfo() {
+  void testClientInfoTagsSetInSentryScope() {
     // given
     var initializeParams = new InitializeParams();
     initializeParams.setClientInfo(new ClientInfo("Test Client", "1.2.3"));
@@ -55,13 +89,19 @@ class SentryScopeConfigurerTest {
       initializeParams
     );
 
-    // when & then
-    assertThatCode(() -> sentryScopeConfigurer.onLanguageServerInitialize(event))
-      .doesNotThrowAnyException();
+    // when - publish initialize event which sets tags in scope
+    eventPublisher.publishEvent(event);
+
+    // then - capture a Sentry event and verify tags are applied
+    Sentry.captureMessage("test");
+
+    assertThat(capturedEvent.get()).isNotNull();
+    assertThat(capturedEvent.get().getTags()).containsEntry("client.name", "Test Client");
+    assertThat(capturedEvent.get().getTags()).containsEntry("client.version", "1.2.3");
   }
 
   @Test
-  void testOnLanguageServerInitializeWithNullClientInfo() {
+  void testClientInfoTagsSetToUnknownWhenClientInfoIsNull() {
     // given
     var initializeParams = new InitializeParams();
     // clientInfo is null by default
@@ -71,24 +111,14 @@ class SentryScopeConfigurerTest {
       initializeParams
     );
 
-    // when & then
-    assertThatCode(() -> sentryScopeConfigurer.onLanguageServerInitialize(event))
-      .doesNotThrowAnyException();
-  }
+    // when - publish initialize event which sets tags in scope
+    eventPublisher.publishEvent(event);
 
-  @Test
-  void testOnLanguageServerInitializeViaEventPublisher() {
-    // given
-    var initializeParams = new InitializeParams();
-    initializeParams.setClientInfo(new ClientInfo("Visual Studio Code", "1.85.0"));
+    // then - capture a Sentry event and verify tags are set to UNKNOWN
+    Sentry.captureMessage("test");
 
-    var event = new LanguageServerInitializeRequestReceivedEvent(
-      mock(LanguageServer.class),
-      initializeParams
-    );
-
-    // when & then - verifies event listener is properly registered and invoked
-    assertThatCode(() -> eventPublisher.publishEvent(event))
-      .doesNotThrowAnyException();
+    assertThat(capturedEvent.get()).isNotNull();
+    assertThat(capturedEvent.get().getTags()).containsEntry("client.name", "UNKNOWN");
+    assertThat(capturedEvent.get().getTags()).containsEntry("client.version", "UNKNOWN");
   }
 }
