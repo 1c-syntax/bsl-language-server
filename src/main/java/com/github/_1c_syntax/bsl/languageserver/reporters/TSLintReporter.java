@@ -21,14 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
@@ -56,9 +55,9 @@ public class TSLintReporter implements DiagnosticReporter {
       }
     }
 
-    ObjectMapper mapper = JsonMapper.builder()
+    var mapper = JsonMapper.builder()
       .enable(SerializationFeature.INDENT_OUTPUT)
-      .build();;
+      .build();
 
     File reportFile = new File(outputDir.toFile(), "./bsl-tslint.json");
     mapper.writeValue(reportFile, tsLintReport);

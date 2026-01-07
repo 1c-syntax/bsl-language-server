@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -34,9 +32,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -104,7 +102,7 @@ class JUnitReporterTest {
     reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
-    ObjectMapper mapper = new XmlMapper();
+    var mapper = new XmlMapper();
     JUnitTestSuites report = mapper.readValue(file, JUnitTestSuites.class);
 
     assertThat(report).isNotNull();

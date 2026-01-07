@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,7 @@ import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +44,7 @@ import java.util.concurrent.CompletableFuture;
 public class CommandProvider {
 
   private final Map<String, CommandSupplier<CommandArguments>> commandSuppliersById;
-  private final ObjectMapper objectMapper;
+  private final JsonMapper jsonMapper;
 
   private final CodeLensProvider codeLensProvider;
   private final InlayHintProvider inlayHintProvider;
@@ -112,7 +112,7 @@ public class CommandProvider {
       return arguments;
     }
 
-    return objectMapper.readValue(rawArgument.toString(), CommandArguments.class);
+    return jsonMapper.readValue(rawArgument.toString(), CommandArguments.class);
   }
 
 }

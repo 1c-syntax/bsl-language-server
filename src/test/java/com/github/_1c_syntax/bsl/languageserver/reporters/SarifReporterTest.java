@@ -25,7 +25,6 @@ import com.contrastsecurity.sarif.Location;
 import com.contrastsecurity.sarif.PhysicalLocation;
 import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.SarifSchema210;
-import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
@@ -42,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,7 +102,7 @@ class SarifReporterTest {
     reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new JsonMapper();
     var report = mapper.readValue(file, SarifSchema210.class);
 
     assertThat(report).isNotNull();

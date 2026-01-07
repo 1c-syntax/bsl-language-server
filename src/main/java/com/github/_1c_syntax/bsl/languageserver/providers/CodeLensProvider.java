@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
@@ -40,6 +39,7 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collection;
 import java.util.List;
@@ -61,7 +61,7 @@ public class CodeLensProvider {
   private final ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-  private final ObjectMapper objectMapper;
+  private final JsonMapper jsonMapper;
 
   private List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers;
 
@@ -138,7 +138,7 @@ public class CodeLensProvider {
       return data;
     }
 
-    return objectMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
+    return jsonMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
   }
 
   /**

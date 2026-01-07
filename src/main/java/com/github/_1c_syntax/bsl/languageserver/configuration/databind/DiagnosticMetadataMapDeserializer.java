@@ -21,10 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -34,9 +30,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.types.ModuleType;
 import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +59,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
     }
 
     Map<String, DiagnosticMetadata> result = new HashMap<>();
-    ObjectMapper mapper = (ObjectMapper) p.objectReadContext();
+    var mapper = (JsonMapper) p.objectReadContext();
 
     for (var entry : node.properties()) {
       String diagnosticCode = entry.getKey();

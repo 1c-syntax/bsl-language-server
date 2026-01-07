@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -34,6 +32,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,7 +84,7 @@ class TSLintReporterTest {
     reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new JsonMapper();
     List<TSLintReportEntry> report = mapper.readValue(
       file,
       new TypeReference<ArrayList<TSLintReportEntry>>() {

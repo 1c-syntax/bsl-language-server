@@ -21,18 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +54,7 @@ public class ParametersDeserializer extends ValueDeserializer<Map<String, Either
       return Collections.emptyMap();
     }
 
-    var mapper = new ObjectMapper();
+    var mapper = new JsonMapper();
     Map<String, Either<Boolean, Map<String, Object>>> parametersMap = new HashMap<>();
 
     for (var entry : parameters.properties()) {
@@ -72,7 +71,7 @@ public class ParametersDeserializer extends ValueDeserializer<Map<String, Either
   }
 
   private static Map<String, Object> getParameterConfiguration(
-    ObjectMapper mapper,
+    JsonMapper mapper,
     JsonNode parameterConfig
   ) {
     Map<String, Object> parameterConfiguration;

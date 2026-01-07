@@ -21,12 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SerializationFeature;
 import tools.jackson.dataformat.xml.XmlMapper;
 
 import java.io.File;
@@ -47,7 +46,7 @@ public class JUnitReporter implements DiagnosticReporter {
 
     JUnitTestSuites jUnitReport = new JUnitTestSuites(analysisInfo);
 
-    ObjectMapper mapper = XmlMapper.builder()
+    var mapper = XmlMapper.builder()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .build();
 

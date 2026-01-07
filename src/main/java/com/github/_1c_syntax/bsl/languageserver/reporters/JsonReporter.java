@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
 @Slf4j
@@ -43,7 +42,7 @@ public class JsonReporter implements DiagnosticReporter {
 
   @Override
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    ObjectMapper mapper = new AnalysisInfoObjectMapper();
+    JsonMapper mapper = new AnalysisInfoJsonMapper();
 
     try {
       File reportFile = new File(outputDir.toFile(), "./bsl-json.json");

@@ -21,14 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
@@ -52,7 +51,7 @@ public class GenericIssueReporter implements DiagnosticReporter {
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
     GenericIssueReport report = new GenericIssueReport(analysisInfo, diagnosticInfos);
 
-    ObjectMapper mapper = JsonMapper.builder()
+    JsonMapper mapper = JsonMapper.builder()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .build();
 

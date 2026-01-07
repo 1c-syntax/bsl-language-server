@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -37,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -115,7 +115,7 @@ class GenericReporterTest {
     reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new JsonMapper();
     GenericIssueReport report = mapper.readValue(file, GenericIssueReport.class);
     assertThat(report).isNotNull();
     assertThat(report.getIssues()).isNotNull();
