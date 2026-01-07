@@ -108,7 +108,7 @@ public class SarifReporter implements DiagnosticReporter {
 
     var mapper = JsonMapper.builder()
       .enable(SerializationFeature.INDENT_OUTPUT)
-      .build();;
+      .build();
 
     var reportFile = new File(outputDir.toFile(), "./bsl-ls.sarif");
     mapper.writeValue(reportFile, report);

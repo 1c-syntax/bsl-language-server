@@ -55,7 +55,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
   ) throws JacksonException {
     
     JsonNode node = context.readTree(p);
-    if (node == null || !node.isObject()) {
+    if (node == null || node.isNull() || !node.isObject()) {
       return new HashMap<>();
     }
 
