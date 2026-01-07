@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767809649299,
+  "lastUpdate": 1767819779073,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33697,6 +33697,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2835167797664977",
             "extra": "mean: 69.01357062657674 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eea29459d014d23647af9776ce8831c14883ae11",
+          "message": "Merge pull request #3746 from 1c-syntax/copilot/add-tags-to-user-info\n\nAdd Sentry tags for LS client name and version from initialize request",
+          "timestamp": "2026-01-07T18:39:15+01:00",
+          "tree_id": "8c179c3887fb6012b1dfc33cacc405237fd20c77",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/eea29459d014d23647af9776ce8831c14883ae11"
+        },
+        "date": 1767819773503,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 71.83097918828328,
+            "unit": "sec",
+            "range": "stddev: 0.6172258959974175",
+            "extra": "mean: 71.83097918828328 sec\nrounds: 3"
           }
         ]
       }
