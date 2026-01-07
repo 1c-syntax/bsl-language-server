@@ -34,8 +34,8 @@ import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.json.JsonMapper;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,13 +53,12 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
     DeserializationContext context
   ) {
     
-    JsonNode node = p.objectReadContext().readTree(p);
+    JsonNode node = context.readTree(p);
     if (node == null || !node.isObject()) {
       return new HashMap<>();
     }
 
     Map<String, DiagnosticMetadata> result = new HashMap<>();
-    var mapper = (JsonMapper) p.objectReadContext();
 
     for (var entry : node.properties()) {
       String diagnosticCode = entry.getKey();
@@ -68,8 +67,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
       if (valueNode.isObject()) {
         try {
           // Convert JSON object to Map
-          @SuppressWarnings("unchecked")
-          Map<String, Object> annotationParams = mapper.convertValue(valueNode, Map.class);
+          Map<String, Object> annotationParams = convertNodeToMap(valueNode);
 
           // Convert string enum values to proper types
           // IMPORTANT: When adding a new enum or array field to DiagnosticMetadata annotation,
@@ -98,7 +96,35 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
       params.put(key, Enum.valueOf(enumClass, value));
     }
   }
-  
+
+  private static Map<String, Object> convertNodeToMap(JsonNode node) {
+    Map<String, Object> result = new HashMap<>();
+    for (var entry : node.properties()) {
+      String key = entry.getKey();
+      JsonNode value = entry.getValue();
+      if (value.isString()) {
+        result.put(key, value.stringValue());
+      } else if (value.isNumber()) {
+        result.put(key, value.numberValue());
+      } else if (value.isBoolean()) {
+        result.put(key, value.booleanValue());
+      } else if (value.isArray()) {
+        var list = new ArrayList<>();
+        for (JsonNode item : value) {
+          if (item.isString()) {
+            list.add(item.stringValue());
+          } else if (item.isNumber()) {
+            list.add(item.numberValue());
+          } else if (item.isBoolean()) {
+            list.add(item.booleanValue());
+          }
+        }
+        result.put(key, list);
+      }
+    }
+    return result;
+  }
+
   private static <E extends Enum<E>> void convertStringArrayToEnumArray(
     Map<String, Object> params,
     String key,
