@@ -46,7 +46,7 @@ public class AnnotationsDeserializer extends ValueDeserializer<Set<String>> {
 
     JsonNode annotations = context.readTree(p);
 
-    if (annotations == null) {
+    if (annotations == null || annotations.isNull()) {
       return DEFAULT_ANNOTATIONS;
     }
 

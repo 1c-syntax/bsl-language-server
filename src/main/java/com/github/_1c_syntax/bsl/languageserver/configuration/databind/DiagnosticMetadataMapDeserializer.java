@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.types.ModuleType;
 import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
@@ -51,7 +52,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
   public Map<String, DiagnosticMetadata> deserialize(
     JsonParser p,
     DeserializationContext context
-  ) {
+  ) throws JacksonException {
     
     JsonNode node = context.readTree(p);
     if (node == null || !node.isObject()) {

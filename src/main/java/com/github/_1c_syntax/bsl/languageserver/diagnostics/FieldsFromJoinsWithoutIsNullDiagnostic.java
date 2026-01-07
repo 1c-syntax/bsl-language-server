@@ -155,7 +155,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private static boolean isTerminalNodeNOT(ParseTree node) {
-    return node instanceof TerminalNode tn && tn.getSymbol().getType() == SDBLParser.NOT;
+    return node instanceof TerminalNode terminalNode && terminalNode.getSymbol().getType() == SDBLParser.NOT;
   }
 
   private static boolean haveExprNotWithParens(SDBLParser.PredicateContext ctx) {
