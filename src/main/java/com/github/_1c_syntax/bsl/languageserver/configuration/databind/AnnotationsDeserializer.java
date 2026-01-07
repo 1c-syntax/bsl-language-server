@@ -21,14 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
+import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -46,15 +44,16 @@ public class AnnotationsDeserializer extends ValueDeserializer<Set<String>> {
     DeserializationContext context
   ) {
 
-    JsonNode annotations = p.objectReadContext().readTree(p);
+    JsonNode annotations = context.readTree(p);
 
     if (annotations == null) {
       return DEFAULT_ANNOTATIONS;
     }
 
     Set<String> annotationsSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    var objectMapper = (ObjectMapper) p.objectReadContext();
-    objectMapper.readerForUpdating(annotationsSet).readValue(annotations);
+    for (JsonNode annotation : annotations) {
+      annotationsSet.add(annotation.stringValue());
+    }
 
     return annotationsSet;
   }
