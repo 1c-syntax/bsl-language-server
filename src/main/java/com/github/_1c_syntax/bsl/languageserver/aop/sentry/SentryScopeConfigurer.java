@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import io.sentry.IScope;
 import io.sentry.Sentry;
 import io.sentry.SentryOptions;
 import io.sentry.protocol.Geo;
 import io.sentry.protocol.User;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.ServerInfo;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -36,6 +38,7 @@ import org.springframework.context.event.EventListener;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -76,6 +79,29 @@ public class SentryScopeConfigurer {
       user.setId(UUID.randomUUID().toString());
       user.setGeo(new Geo()); // empty geo to block calculating geolocation by ip
       scope.setUser(user);
+    });
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerInitializeRequestReceivedEvent}.
+   * <p>
+   * Добавляет теги с именем и версией клиента в Sentry scope.
+   *
+   * @param event Событие инициализации языкового сервера
+   */
+  @EventListener
+  public void onLanguageServerInitialize(LanguageServerInitializeRequestReceivedEvent event) {
+    var clientInfo = Optional.ofNullable(event.getParams().getClientInfo());
+    var clientName = clientInfo
+      .flatMap(info -> Optional.ofNullable(info.getName()))
+      .orElse("UNKNOWN");
+    var clientVersion = clientInfo
+      .flatMap(info -> Optional.ofNullable(info.getVersion()))
+      .orElse("UNKNOWN");
+
+    Sentry.configureScope((IScope scope) -> {
+      scope.setTag("client.name", clientName);
+      scope.setTag("client.version", clientVersion);
     });
   }
 
