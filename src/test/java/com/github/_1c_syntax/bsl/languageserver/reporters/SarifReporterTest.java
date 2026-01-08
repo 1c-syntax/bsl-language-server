@@ -44,7 +44,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -78,7 +77,7 @@ class SarifReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     configuration.getDiagnosticsOptions().getParameters().put("Typo", Either.forLeft(false));

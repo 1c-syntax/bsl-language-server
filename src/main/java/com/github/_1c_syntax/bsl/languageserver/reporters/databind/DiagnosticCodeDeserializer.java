@@ -27,8 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
-
 /**
  * Десериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
  * См. {@link DiagnosticCode}

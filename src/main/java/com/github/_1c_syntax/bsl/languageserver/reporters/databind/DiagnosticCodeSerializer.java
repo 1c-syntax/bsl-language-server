@@ -27,8 +27,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.ValueSerializer;
 
-import java.io.IOException;
-
 /**
  * Сериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
  * См. {@link DiagnosticCode}

@@ -36,7 +36,7 @@ import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
 
-import java.util.ArrayList;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +68,8 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
       if (valueNode.isObject()) {
         try {
           // Convert JSON object to Map
-          Map<String, Object> annotationParams = convertNodeToMap(valueNode);
+          var mapType = context.constructType(Map.class);
+          Map<String, Object> annotationParams = context.readTreeAsValue(valueNode, mapType);
 
           // Convert string enum values to proper types
           // IMPORTANT: When adding a new enum or array field to DiagnosticMetadata annotation,
@@ -98,49 +99,19 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
     }
   }
 
-  private static Map<String, Object> convertNodeToMap(JsonNode node) {
-    Map<String, Object> result = new HashMap<>();
-    for (var entry : node.properties()) {
-      String key = entry.getKey();
-      JsonNode value = entry.getValue();
-      if (value.isString()) {
-        result.put(key, value.stringValue());
-      } else if (value.isNumber()) {
-        result.put(key, value.numberValue());
-      } else if (value.isBoolean()) {
-        result.put(key, value.booleanValue());
-      } else if (value.isArray()) {
-        var list = new ArrayList<>();
-        for (JsonNode item : value) {
-          if (item.isString()) {
-            list.add(item.stringValue());
-          } else if (item.isNumber()) {
-            list.add(item.numberValue());
-          } else if (item.isBoolean()) {
-            list.add(item.booleanValue());
-          }
-        }
-        result.put(key, list);
-      }
-    }
-    return result;
-  }
-
   private static <E extends Enum<E>> void convertStringArrayToEnumArray(
     Map<String, Object> params,
     String key,
     Class<E> enumClass
   ) {
-    if (params.containsKey(key) && params.get(key) instanceof Iterable) {
-      @SuppressWarnings("unchecked")
-      var list = (Iterable<Object>) params.get(key);
-      var array = java.lang.reflect.Array.newInstance(enumClass, ((Collection<?>) list).size());
+    if (params.containsKey(key) && params.get(key) instanceof Iterable<?> list) {
+      var array = Array.newInstance(enumClass, ((Collection<?>) list).size());
       var i = 0;
       for (Object item : list) {
         if (item instanceof String stringItem) {
-          java.lang.reflect.Array.set(array, i, Enum.valueOf(enumClass, stringItem));
+          Array.set(array, i, Enum.valueOf(enumClass, stringItem));
         } else {
-          java.lang.reflect.Array.set(array, i, item);
+          Array.set(array, i, item);
         }
         i++;
       }

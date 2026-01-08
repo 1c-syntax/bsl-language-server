@@ -36,7 +36,6 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -62,7 +61,7 @@ class TSLintReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     Diagnostic diagnostic = new Diagnostic(

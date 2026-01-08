@@ -25,12 +25,18 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import org.eclipse.lsp4j.Diagnostic;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.io.Serial;
+
 /**
  * Преднастроенный object mapper для (де)сериализации класса {@link AnalysisInfo}
  */
 // Подавление предупреждений о несовместимости типов [unchecked] readTree(JsonParser)
 @SuppressWarnings("unchecked")
 public class AnalysisInfoJsonMapper extends JsonMapper {
+
+  @Serial
+  private static final long serialVersionUID = -5493276930667196227L;
+
   public AnalysisInfoJsonMapper() {
     super(JsonMapper.builder()
       .addMixIn(Diagnostic.class, DiagnosticMixIn.class));

@@ -337,7 +337,7 @@ public class DescriptionFormatter {
         typeName = "`%s`".formatted(type.name());
       }
 
-      types.merge(typeDescription, typeName, (oldValue, newValue) -> "%s | %s".formatted(oldValue, newValue));
+      types.merge(typeDescription, typeName, "%s | %s"::formatted);
     });
     return types;
   }
