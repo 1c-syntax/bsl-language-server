@@ -66,18 +66,18 @@ class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwa
       context
     );
 
-    // Load a document that references the common module
+    // Load a document that directly references the common module ПервыйОбщийМодуль
     var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+      "./src/test/resources/references/ReferenceIndex.bsl"
     );
 
     // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // then - Only the module name string literal should be highlighted as namespace,
-    // not the entire expression (to avoid covering the method ОбщийМодуль with module hover)
+    // then - Common module name ПервыйОбщийМодуль should be highlighted as namespace
+    // Line 3: ПервыйОбщийМодуль.УстаревшаяПроцедура(); - position 4, length 17
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(6, 60, 19, SemanticTokenTypes.Namespace, "\"ПервыйОбщийМодуль\"")
+      new ExpectedToken(2, 4, 17, SemanticTokenTypes.Namespace, "ПервыйОбщийМодуль")
     ));
   }
 

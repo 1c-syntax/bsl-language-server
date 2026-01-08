@@ -382,6 +382,9 @@ public class ReferenceIndexFiller {
     @Override
     public ParserRuleContext visitAssignment(BSLParser.AssignmentContext ctx) {
       // Detect pattern: Variable = ОбщегоНазначения.ОбщийМодуль("ModuleName") or Variable = ОбщийМодуль("ModuleName")
+      // Здесь мы только отслеживаем что переменная теперь содержит ссылку на общий модуль,
+      // чтобы последующие вызовы методов через эту переменную могли быть разрезолвлены.
+      // Ссылка на сам модуль ОбщегоНазначения уже добавляется в visitComplexIdentifier.
       var lValue = ctx.lValue();
       var expression = ctx.expression();
 
@@ -395,16 +398,6 @@ public class ReferenceIndexFiller {
           if (commonModuleOpt.isPresent()) {
             var mdoRef = commonModuleOpt.get().getMdoReference().getMdoRef();
             variableToCommonModuleMap.put(variableKey, mdoRef);
-
-            // Добавляем ссылку на модуль только для диапазона строкового литерала с именем модуля,
-            // чтобы не перекрывать hover для метода ОбщийМодуль()
-            ModuleReference.extractCommonModuleNameContext(expression, parsedAccessors)
-              .ifPresent(callParamContext -> index.addModuleReference(
-                documentContext.getUri(),
-                mdoRef,
-                ModuleType.CommonModule,
-                Ranges.create(callParamContext)
-              ));
           } else {
             // Модуль не найден - удаляем старый mapping если был
             variableToCommonModuleMap.remove(variableKey);

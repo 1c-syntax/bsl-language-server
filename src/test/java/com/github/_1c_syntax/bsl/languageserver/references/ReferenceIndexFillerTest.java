@@ -545,12 +545,12 @@ class ReferenceIndexFillerTest {
     assertThat(referenceOnAccessorMethod).isEmpty();
 
     // Позиция 70 - это внутри строкового литерала "ПервыйОбщийМодуль"
-    // При наведении на строковый литерал ДОЛЖНА возвращаться ссылка на модуль
+    // Строковый литерал - это просто данные, не ссылка на модуль. Референс добавлять не нужно.
     var referenceOnModuleName = referenceIndex.getReference(
       documentContext.getUri(),
       new Position(6, 70)
     );
-    // Должна быть ссылка на модуль ПервыйОбщийМодуль
-    assertThat(referenceOnModuleName).isPresent();
+    // Не должно быть ссылки на модуль ПервыйОбщийМодуль, т.к. это строковый литерал - параметр метода
+    assertThat(referenceOnModuleName).isEmpty();
   }
 }
