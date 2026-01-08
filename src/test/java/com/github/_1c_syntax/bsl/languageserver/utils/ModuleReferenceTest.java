@@ -119,4 +119,41 @@ class ModuleReferenceTest {
     assertThat(parsed.moduleMethodPairs()).containsKey("common");
     assertThat(parsed.moduleMethodPairs().get("common")).contains("commonmodule");
   }
+
+  @Test
+  void testExtractCommonModuleNameContext() {
+    var code = """
+      Процедура Тест()
+        Модуль = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
+      КонецПроцедуры""";
+
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node ->
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+
+    assertThat(assignments).hasSize(1);
+
+    var expression = assignments.get(0).expression();
+
+    // Проверяем, что контекст параметра извлекается корректно
+    var moduleNameContext = ModuleReference.extractCommonModuleNameContext(expression, DEFAULT_ACCESSORS);
+    assertThat(moduleNameContext).isPresent();
+
+    // Проверяем, что текст содержит имя модуля с кавычками
+    assertThat(moduleNameContext.get().getText()).isEqualTo("\"ПервыйОбщийМодуль\"");
+
+    // Проверяем диапазон (range) контекста параметра
+    var startToken = moduleNameContext.get().getStart();
+    var stopToken = moduleNameContext.get().getStop();
+
+    // Строка 2 (индекс 1), позиция должна соответствовать строковому литералу
+    assertThat(startToken.getLine()).isEqualTo(2);
+    assertThat(stopToken.getLine()).isEqualTo(2);
+    // Проверяем, что это именно строковый литерал (начинается с кавычки)
+    assertThat(startToken.getText()).startsWith("\"");
+  }
 }

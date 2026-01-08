@@ -396,12 +396,15 @@ public class ReferenceIndexFiller {
             var mdoRef = commonModuleOpt.get().getMdoReference().getMdoRef();
             variableToCommonModuleMap.put(variableKey, mdoRef);
 
-            index.addModuleReference(
-              documentContext.getUri(),
-              mdoRef,
-              ModuleType.CommonModule,
-              Ranges.create(expression)
-            );
+            // Добавляем ссылку на модуль только для диапазона строкового литерала с именем модуля,
+            // чтобы не перекрывать hover для метода ОбщийМодуль()
+            ModuleReference.extractCommonModuleNameContext(expression, parsedAccessors)
+              .ifPresent(callParamContext -> index.addModuleReference(
+                documentContext.getUri(),
+                mdoRef,
+                ModuleType.CommonModule,
+                Ranges.create(callParamContext)
+              ));
           } else {
             // Модуль не найден - удаляем старый mapping если был
             variableToCommonModuleMap.remove(variableKey);

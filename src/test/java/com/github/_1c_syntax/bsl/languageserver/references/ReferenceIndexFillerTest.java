@@ -510,4 +510,47 @@ class ReferenceIndexFillerTest {
     reference = referenceIndex.getReference(uri, new Position(25, 24));
     assertThat(reference).isEmpty();
   }
+
+  @Test
+  void testModuleReferenceRangeNotOverlapAccessorMethod() throws IOException {
+    // Тест для issue: при наведении на ОбщийМодуль() должно показываться описание метода,
+    // а не информация о модуле "РаботаСФайлами"
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Строка 7 (индекс 6): МодульУправлениеДоступом = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
+    // Позиция 55 - это внутри имени метода "ОбщийМодуль"
+    // При наведении на метод ОбщийМодуль НЕ должна возвращаться ссылка на модуль ПервыйОбщийМодуль
+    var referenceOnAccessorMethod = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(6, 55)
+    );
+    // Должно быть пусто, т.к. ОбщийМодуль - это метод модуля ОбщегоНазначения, а не ссылка на ПервыйОбщийМодуль
+    assertThat(referenceOnAccessorMethod).isEmpty();
+
+    // Позиция 70 - это внутри строкового литерала "ПервыйОбщийМодуль"
+    // При наведении на строковый литерал ДОЛЖНА возвращаться ссылка на модуль
+    var referenceOnModuleName = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(6, 70)
+    );
+    // Должна быть ссылка на модуль ПервыйОбщийМодуль
+    assertThat(referenceOnModuleName).isPresent();
+  }
 }
