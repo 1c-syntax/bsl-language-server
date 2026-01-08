@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767866744601,
+  "lastUpdate": 1767872118477,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33759,6 +33759,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2389640553780683",
             "extra": "mean: 69.66265392303467 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ba5492e830ad15c79cf69776743152f7b6e50105",
+          "message": "Merge pull request #3748 from 1c-syntax/copilot/fix-sources-jar-dependency\n\nFix Gradle task dependency: sourcesJar must depend on collectExternalDependenciesForSentry",
+          "timestamp": "2026-01-08T11:33:57+01:00",
+          "tree_id": "d6e6506e5e53061e3bbcd47fd0cbdffe6124702a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ba5492e830ad15c79cf69776743152f7b6e50105"
+        },
+        "date": 1767872111113,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.77307017644246,
+            "unit": "sec",
+            "range": "stddev: 2.4403775505438445",
+            "extra": "mean: 68.77307017644246 sec\nrounds: 3"
           }
         ]
       }
