@@ -284,10 +284,10 @@ sentry {
 
 // Disable Sentry upload tasks if authentication token is missing
 gradle.taskGraph.whenReady {
-    allTasks.forEach { task ->
-        if (task.name.startsWith("sentryUpload") && !hasSentryToken) {
-            task.enabled = false
-        }
+    if (!hasSentryToken) {
+        allTasks
+            .filter { it.name.startsWith("sentryUpload") }
+            .forEach { it.enabled = false }
     }
 }
 
