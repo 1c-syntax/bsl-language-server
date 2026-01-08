@@ -277,7 +277,6 @@ sentry {
     
     // Включить source context только при наличии токена аутентификации
     includeSourceContext = System.getenv("SENTRY_AUTH_TOKEN") != null
-    autoUploadSourceContext.set(System.getenv("SENTRY_AUTH_TOKEN") != null)
 }
 
 tasks.processResources {
