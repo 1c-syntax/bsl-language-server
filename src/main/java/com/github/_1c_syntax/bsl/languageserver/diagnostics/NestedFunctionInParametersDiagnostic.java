@@ -146,12 +146,12 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
 
   private boolean containsForbiddenMethod(ParseTree t) {
     var needReturn = false;
-    if (t instanceof ParserRuleContext) {
-      if (BSLParser.RULE_methodCall == ((ParserRuleContext) t).getRuleIndex()) {
+    if (t instanceof ParserRuleContext context) {
+      if (BSLParser.RULE_methodCall == context.getRuleIndex()) {
         needReturn = true;
-      } else if (BSLParser.RULE_newExpression == ((ParserRuleContext) t).getRuleIndex()) {
+      } else if (BSLParser.RULE_newExpression == context.getRuleIndex()) {
         needReturn = !emptyCallParameterList(((BSLParser.NewExpressionContext) t).doCall());
-      } else if (BSLParser.RULE_globalMethodCall == ((ParserRuleContext) t).getRuleIndex()) {
+      } else if (BSLParser.RULE_globalMethodCall == context.getRuleIndex()) {
         needReturn = !allowedMethodNamesPattern.matcher(
           ((BSLParser.GlobalMethodCallContext) t).methodName().getText()).matches();
       } else {

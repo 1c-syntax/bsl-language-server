@@ -21,25 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-
-import java.io.IOException;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Десериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
  * См. {@link DiagnosticCode}
  */
-public class DiagnosticCodeDeserializer extends JsonDeserializer<Either<String, Number>> {
+public class DiagnosticCodeDeserializer extends ValueDeserializer<Either<String, Number>> {
 
   @Override
   public Either<String, Number> deserialize(
     JsonParser p,
     DeserializationContext ctxt
-  ) throws IOException {
+  ) {
     return Either.forLeft(p.getValueAsString());
   }
 

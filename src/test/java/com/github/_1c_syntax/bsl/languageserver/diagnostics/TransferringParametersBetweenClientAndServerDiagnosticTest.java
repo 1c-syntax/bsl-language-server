@@ -158,7 +158,7 @@ class TransferringParametersBetweenClientAndServerDiagnosticTest extends Abstrac
   }
 
   private String getMessage(String paramName, String methodName) {
-    return String.format("Установите модификатор \"Знач\" для параметра %s метода %s",
+    return "Установите модификатор \"Знач\" для параметра %s метода %s".formatted(
       paramName, methodName);
   }
 

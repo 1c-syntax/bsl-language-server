@@ -331,8 +331,8 @@ public class ReferenceIndex {
       return true;
     }
 
-    if (to instanceof Exportable) {
-      return ((Exportable) to).isExport();
+    if (to instanceof Exportable exportable) {
+      return exportable.isExport();
     }
 
     return true;

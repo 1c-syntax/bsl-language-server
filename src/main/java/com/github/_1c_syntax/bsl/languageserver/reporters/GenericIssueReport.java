@@ -33,7 +33,7 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +60,7 @@ public class GenericIssueReport {
 
   public GenericIssueReport(AnalysisInfo analysisInfo, Map<String, DiagnosticInfo> diagnosticInfos) {
     issues = new ArrayList<>();
-    for (var fileInfo : analysisInfo.getFileinfos()) {
+    for (var fileInfo : analysisInfo.fileinfos()) {
       for (var diagnostic : fileInfo.getDiagnostics()) {
         var entry = new GenericIssueEntry(
           fileInfo.getPath().toString(),
@@ -145,7 +145,7 @@ public class GenericIssueReport {
 
     public Location(DiagnosticRelatedInformation relatedInformation) {
       message = relatedInformation.getMessage();
-      filePath = Paths.get(URI.create(relatedInformation.getLocation().getUri())).toString();
+      filePath = Path.of(URI.create(relatedInformation.getLocation().getUri())).toString();
       textRange = new TextRange(relatedInformation.getLocation().getRange());
     }
   }

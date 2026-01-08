@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +53,7 @@ class RenameProviderTest {
 
   @PostConstruct
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
+    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
     serverContext.populateContext();
   }
 

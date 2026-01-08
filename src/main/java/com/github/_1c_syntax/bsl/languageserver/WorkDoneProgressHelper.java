@@ -119,7 +119,7 @@ public class WorkDoneProgressHelper {
       }
 
       var currentCounter = counter.incrementAndGet();
-      var message = String.format("%d/%d%s", currentCounter, size, messagePostfix);
+      var message = "%d/%d%s".formatted(currentCounter, size, messagePostfix);
       var percentage = (double) currentCounter / size * 100;
 
       tick(message, (int) percentage);

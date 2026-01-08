@@ -130,11 +130,11 @@ public class SymbolTree {
     ParserRuleContext subNameNode;
     if (Trees.nodeContainsErrors(ctx)) {
       subNameNode = ctx;
-    } else if (ctx instanceof BSLParser.SubContext) {
-      if (((BSLParser.SubContext) ctx).function() == null) {
-        subNameNode = ((BSLParser.SubContext) ctx).procedure().procDeclaration().subName();
+    } else if (ctx instanceof BSLParser.SubContext subContext) {
+      if (subContext.function() == null) {
+        subNameNode = subContext.procedure().procDeclaration().subName();
       } else {
-        subNameNode = ((BSLParser.SubContext) ctx).function().funcDeclaration().subName();
+        subNameNode = subContext.function().funcDeclaration().subName();
       }
     } else {
       subNameNode = ctx;
@@ -171,10 +171,10 @@ public class SymbolTree {
 
     if (Trees.nodeContainsErrors(ctx)) {
       varNameNode = ctx;
-    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext) {
-      varNameNode = ((BSLParser.ModuleVarDeclarationContext) ctx).var_name();
-    } else if (ctx instanceof BSLParser.SubVarDeclarationContext) {
-      varNameNode = ((BSLParser.SubVarDeclarationContext) ctx).var_name();
+    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext moduleVarDeclarationContext) {
+      varNameNode = moduleVarDeclarationContext.var_name();
+    } else if (ctx instanceof BSLParser.SubVarDeclarationContext subVarDeclarationContext) {
+      varNameNode = subVarDeclarationContext.var_name();
     } else {
       varNameNode = ctx;
     }

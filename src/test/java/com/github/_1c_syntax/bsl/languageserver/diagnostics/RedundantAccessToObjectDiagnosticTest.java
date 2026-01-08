@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -99,7 +98,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @SneakyThrows
   DocumentContext createDocumentContextFromFile(String pathToFile) {
     Path path = Absolute.path("src/test/resources/metadata/designer");
-    Path testFile = Paths.get(pathToFile).toAbsolutePath();
+    Path testFile = Path.of(pathToFile).toAbsolutePath();
 
     initServerContext(path);
     return spy(TestUtils.getDocumentContext(

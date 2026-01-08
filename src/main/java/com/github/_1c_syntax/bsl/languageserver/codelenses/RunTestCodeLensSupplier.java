@@ -41,7 +41,7 @@ import org.springframework.stereotype.Component;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -112,13 +112,13 @@ public class RunTestCodeLensSupplier
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, RunTestCodeLensData data) {
 
-    var path = Paths.get(documentContext.getUri());
+    var path = Path.of(documentContext.getUri());
     var testId = data.getTestId();
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunTestArguments();
-    runText = String.format(runText, path, testId);
+    runText = runText.formatted(path, testId);
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runTest"));

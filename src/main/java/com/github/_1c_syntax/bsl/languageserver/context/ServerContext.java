@@ -236,7 +236,7 @@ public class ServerContext {
   public void removeDocument(URI uri) {
     var documentContext = documents.get(uri);
     if (openedDocuments.contains(documentContext)) {
-      throw new IllegalStateException(String.format("Document %s is opened", uri));
+      throw new IllegalStateException("Document %s is opened".formatted(uri));
     }
 
     removeDocumentMdoRefByUri(uri);

@@ -63,9 +63,9 @@ public final class DiagnosticHelper {
       return false;
     }
 
-    if (leftNode instanceof TerminalNode) {
+    if (leftNode instanceof TerminalNode node) {
 
-      int leftNodeType = ((TerminalNode) leftNode).getSymbol().getType();
+      int leftNodeType = node.getSymbol().getType();
       int rightNodeType = ((TerminalNode) rightNode).getSymbol().getType();
 
       if (leftNodeType != rightNodeType

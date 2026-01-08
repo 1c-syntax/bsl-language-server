@@ -190,12 +190,12 @@ public final class Ranges {
    * @return - полученный Range.
    */
   public Range create(ParseTree tree) {
-    if (tree instanceof TerminalNode) {
-      return Ranges.create((TerminalNode) tree);
-    } else if (tree instanceof Token) {
-      return Ranges.create((Token) tree);
-    } else if (tree instanceof ParserRuleContext) {
-      return Ranges.create((ParserRuleContext) tree);
+    if (tree instanceof TerminalNode node) {
+      return Ranges.create(node);
+    } else if (tree instanceof Token token) {
+      return Ranges.create(token);
+    } else if (tree instanceof ParserRuleContext context) {
+      return Ranges.create(context);
     } else {
       throw new IllegalArgumentException();
     }

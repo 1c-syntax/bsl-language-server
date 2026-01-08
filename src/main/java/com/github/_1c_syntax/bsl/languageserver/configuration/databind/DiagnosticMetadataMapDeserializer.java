@@ -21,11 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -35,8 +30,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.types.ModuleType;
 import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,21 +46,20 @@ import java.util.Map;
  * Converts JSON objects into DiagnosticMetadata annotation instances using geantyref's TypeFactory.
  */
 @Slf4j
-public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<String, DiagnosticMetadata>> {
+public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<String, DiagnosticMetadata>> {
 
   @Override
   public Map<String, DiagnosticMetadata> deserialize(
     JsonParser p,
     DeserializationContext context
-  ) throws IOException {
+  ) throws JacksonException {
     
-    JsonNode node = p.getCodec().readTree(p);
-    if (node == null || !node.isObject()) {
+    JsonNode node = context.readTree(p);
+    if (node == null || node.isNull() || !node.isObject()) {
       return new HashMap<>();
     }
 
     Map<String, DiagnosticMetadata> result = new HashMap<>();
-    ObjectMapper mapper = (ObjectMapper) p.getCodec();
 
     for (var entry : node.properties()) {
       String diagnosticCode = entry.getKey();
@@ -69,8 +68,8 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
       if (valueNode.isObject()) {
         try {
           // Convert JSON object to Map
-          @SuppressWarnings("unchecked")
-          Map<String, Object> annotationParams = mapper.convertValue(valueNode, Map.class);
+          var mapType = context.constructType(Map.class);
+          Map<String, Object> annotationParams = context.readTreeAsValue(valueNode, mapType);
 
           // Convert string enum values to proper types
           // IMPORTANT: When adding a new enum or array field to DiagnosticMetadata annotation,
@@ -99,22 +98,20 @@ public class DiagnosticMetadataMapDeserializer extends JsonDeserializer<Map<Stri
       params.put(key, Enum.valueOf(enumClass, value));
     }
   }
-  
+
   private static <E extends Enum<E>> void convertStringArrayToEnumArray(
     Map<String, Object> params,
     String key,
     Class<E> enumClass
   ) {
-    if (params.containsKey(key) && params.get(key) instanceof Iterable) {
-      @SuppressWarnings("unchecked")
-      var list = (Iterable<Object>) params.get(key);
-      var array = java.lang.reflect.Array.newInstance(enumClass, ((Collection<?>) list).size());
+    if (params.containsKey(key) && params.get(key) instanceof Iterable<?> list) {
+      var array = Array.newInstance(enumClass, ((Collection<?>) list).size());
       var i = 0;
       for (Object item : list) {
         if (item instanceof String stringItem) {
-          java.lang.reflect.Array.set(array, i, Enum.valueOf(enumClass, stringItem));
+          Array.set(array, i, Enum.valueOf(enumClass, stringItem));
         } else {
-          java.lang.reflect.Array.set(array, i, item);
+          Array.set(array, i, item);
         }
         i++;
       }

@@ -71,8 +71,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .flatMap(RewriteMethodParameterDiagnostic::getParametersByValue)
       .flatMap(pair -> getVariableByParameter(pair.getLeft(), pair.getRight()))
       .map(this::isOverwrited)
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .forEach(variableSymbolReferenceListTriple -> fireIssue(variableSymbolReferenceListTriple.getLeft(),
         variableSymbolReferenceListTriple.getMiddle(),
         variableSymbolReferenceListTriple.getRight()));

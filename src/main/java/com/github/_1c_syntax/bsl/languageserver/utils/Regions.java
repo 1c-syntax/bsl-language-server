@@ -263,7 +263,7 @@ public class Regions {
 
   private static Pattern createPattern(MultiName keyword, String template) {
     return CaseInsensitivePattern.compile(
-      String.format(template, keyword.getRu(), keyword.getEn())
+      template.formatted(keyword.getRu(), keyword.getEn())
     );
   }
 }

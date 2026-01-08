@@ -21,11 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.core.util.DefaultIndenter;
+import tools.jackson.core.util.DefaultPrettyPrinter;
+import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
@@ -35,6 +33,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -58,7 +57,7 @@ public class CodeQualityReporter implements DiagnosticReporter {
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
     List<CodeQualityReportEntry> report = new ArrayList<>();
-    for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
+    for (FileInfo fileInfo : analysisInfo.fileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
         var diagnosticInfo = diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnostic.getCode()));
         var path = fileInfo.getPath().toString().replace("\\", "/");
@@ -67,16 +66,17 @@ public class CodeQualityReporter implements DiagnosticReporter {
       }
     }
 
-    var mapper = new ObjectMapper();
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-
     var indenter = new DefaultIndenter().withLinefeed("\n");
     var printer = new DefaultPrettyPrinter()
       .withObjectIndenter(indenter);
-    ObjectWriter writer = mapper.writer(printer);
+
+    var mapper = JsonMapper.builder()
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .defaultPrettyPrinter(printer)
+      .build();
 
     var reportFile = new File(outputDir.toFile(), "./bsl-code-quality.json");
-    writer.writeValue(reportFile, report);
+    mapper.writer().writeValue(reportFile, report);
     LOGGER.info("CodeQuality report saved to {}", reportFile.getAbsolutePath());
   }
 }

@@ -88,8 +88,7 @@ class VariableSymbolTest {
 
     List<VariableDescription> variableDescriptions = variableSymbols.stream()
       .map(VariableSymbol::getDescription)
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .collect(Collectors.toList());
 
     assertThat(variableDescriptions)

@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.net.URI;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,7 +95,7 @@ class SymbolProviderTest {
 
   @SneakyThrows
   private boolean uriContains(WorkspaceSymbol workspaceSymbol, String name) {
-    return Paths.get(new URI(workspaceSymbol.getLocation().getLeft().getUri())).toString().contains(name);
+    return Path.of(new URI(workspaceSymbol.getLocation().getLeft().getUri())).toString().contains(name);
   }
 
   @Test

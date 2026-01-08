@@ -57,9 +57,9 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
 
   @Override
   public void enterEveryRule(ParserRuleContext ctx) {
-    if (ctx instanceof BSLParser.RegionStartContext) {
+    if (ctx instanceof BSLParser.RegionStartContext context) {
       currentRegionLevel++;
-      regions.push((BSLParser.RegionStartContext) ctx);
+      regions.push(context);
     } else if (!(ctx instanceof BSLParser.PreprocessorContext
       || ctx instanceof BSLParser.RegionNameContext
       || ctx instanceof BSLParser.RegionEndContext

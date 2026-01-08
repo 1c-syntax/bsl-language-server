@@ -21,48 +21,43 @@
  */
 package com.github._1c_syntax.bsl.languageserver.databind;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
+import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.jsontype.NamedType;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
- * Конфигурация ObjectMapper для сериализации/десериализации.
+ * Конфигурация JsonMapper для сериализации/десериализации.
  * <p>
- * Настраивает Jackson ObjectMapper для работы с code lenses и командами,
+ * Настраивает Jackson JsonMapper для работы с code lenses и командами,
  * регистрируя необходимые типы для полиморфной сериализации.
  */
 @Configuration
-public class ObjectMapperConfiguration  {
+public class JsonMapperConfiguration {
 
   @Bean
-  public ObjectMapper objectMapper(
+  JsonMapperBuilderCustomizer jacksonCustomizer(
     Collection<CodeLensSupplier<? extends CodeLensData>> codeLensResolvers,
     Collection<CommandSupplier<? extends CommandArguments>> commandSuppliers
   ) {
 
     var namedTypes = new ArrayList<NamedType>();
     codeLensResolvers.stream()
-      .map(ObjectMapperConfiguration::toNamedType)
+      .map(JsonMapperConfiguration::toNamedType)
       .collect(Collectors.toCollection(() -> namedTypes));
     commandSuppliers.stream()
-      .map(ObjectMapperConfiguration::toNamedType)
+      .map(JsonMapperConfiguration::toNamedType)
       .collect(Collectors.toCollection(() -> namedTypes));
 
-    var objectMapperBuilder = JsonMapper.builder();
-
-    namedTypes.forEach(objectMapperBuilder::registerSubtypes);
-
-    return objectMapperBuilder.build();
+    return builder -> namedTypes.forEach(builder::registerSubtypes);
   }
 
   private static NamedType toNamedType(CodeLensSupplier<? extends CodeLensData> codeLensSupplier) {

@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -52,7 +51,7 @@ class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModu
     Path path = Absolute.path(PATH_TO_METADATA);
     initServerContext(path);
 
-    Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
     var documentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),

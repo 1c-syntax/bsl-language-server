@@ -289,7 +289,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   }
 
   private String getErrorMessage(String formatString, String errorMessage, String tokenText) {
-    return stringInterner.intern(String.format(formatString, errorMessage, tokenText));
+    return stringInterner.intern(formatString.formatted(errorMessage, tokenText));
   }
 
   private static Set<Integer> computeKeywordsWithLeftRightSpace() {

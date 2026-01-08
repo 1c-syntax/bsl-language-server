@@ -79,8 +79,8 @@ public abstract class AbstractCfgVisitor {
    * @param v начинает обход с указанной вершины
    */
   public void visitVertex(CfgVertex v) {
-    if (v instanceof BranchingVertex) {
-      visitSuperclassingVertexType((BranchingVertex) v);
+    if (v instanceof BranchingVertex vertex) {
+      visitSuperclassingVertexType(vertex);
       return;
     }
     dispatchVertex(v);
@@ -226,8 +226,8 @@ public abstract class AbstractCfgVisitor {
   }
 
   private void visitSuperclassingVertexType(BranchingVertex v) {
-    if (v instanceof LoopVertex) {
-      visitLoopVertex((LoopVertex) v);
+    if (v instanceof LoopVertex vertex) {
+      visitLoopVertex(vertex);
     } else {
       visitBranchingVertex(v);
     }
