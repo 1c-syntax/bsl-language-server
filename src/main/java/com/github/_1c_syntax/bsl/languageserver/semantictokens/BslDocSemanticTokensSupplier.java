@@ -22,22 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionLexer;
-import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
-import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
+import com.github._1c_syntax.bsl.parser.BSLDescriptionLexer;
+import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
-import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -104,7 +99,7 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
     boolean multilineTokenSupport
   ) {
     var range = description.getRange();
-    if (Ranges.isEmpty(range)) {
+    if (range.isEmpty()) {
       return;
     }
 
@@ -113,26 +108,21 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       return;
     }
 
-    // Re-parse description to get AST for parameter names and types
-    var tokenizer = new BSLMethodDescriptionTokenizer(descriptionText);
-    var ast = tokenizer.getAst();
-    var tokens = tokenizer.getTokens();
-
     // The description range start gives us the file position
-    int fileStartLine = range.getStart().getLine();
-    int fileStartChar = range.getStart().getCharacter();
+    int fileStartLine = range.startLine();
+    int fileStartChar = range.startCharacter();
 
     // Collect semantic elements from AST (parameter names, types, and keywords in structural positions)
     var semanticElements = new ArrayList<SemanticTokenEntry>();
-    if (ast != null) {
-      collectBslDocSemanticElements(ast, semanticElements);
-    }
 
-    // Collect operator tokens from lexer (DASH, STAR) - these are safe to highlight everywhere
-    for (Token token : tokens) {
-      if (isOperatorToken(token.getType())) {
-        helper.addTokenRange(semanticElements, token, SemanticTokenTypes.Operator, SemanticTokenModifiers.Documentation);
-      }
+    for (var element : description.getElements()) {
+      var semanticType = switch (element.type()) {
+        case TYPE_NAME -> SemanticTokenTypes.Type;
+        case PARAMETER_NAME -> SemanticTokenTypes.Parameter;
+        case RETURNS_KEYWORD, EXAMPLE_KEYWORD, PARAMETERS_KEYWORD, DEPRECATE_KEYWORD -> SemanticTokenTypes.Macro;
+        default -> "";
+      };
+      helper.addDescriptionElement(semanticElements, element, semanticType, SemanticTokenModifiers.Documentation);
     }
 
     // Sort elements by position
@@ -152,103 +142,6 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       addBslDocTokensWithMultilineSupport(entries, lines, elementsByLine, fileStartLine, fileStartChar);
     } else {
       addBslDocTokensPerLine(entries, lines, elementsByLine, fileStartLine, fileStartChar);
-    }
-  }
-
-  private void collectBslDocSemanticElements(
-    BSLMethodDescriptionParser.MethodDescriptionContext ast,
-    List<SemanticTokenEntry> elements
-  ) {
-    // "Параметры:" keyword
-    var parameters = ast.parameters();
-    if (parameters != null) {
-      helper.addTerminalNodeRange(elements, parameters.PARAMETERS_KEYWORD(), SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation);
-      if (parameters.parameterString() != null) {
-        for (var paramString : parameters.parameterString()) {
-          if (paramString.parameter() != null) {
-            collectParameterElements(paramString.parameter(), elements);
-          }
-          if (paramString.typesBlock() != null) {
-            collectTypesBlockElements(paramString.typesBlock(), elements);
-          }
-          if (paramString.subParameter() != null) {
-            collectSubParameterElements(paramString.subParameter(), elements);
-          }
-        }
-      }
-    }
-
-    // "Возвращаемое значение:" keyword
-    var returnsValues = ast.returnsValues();
-    if (returnsValues != null) {
-      helper.addTerminalNodeRange(elements, returnsValues.RETURNS_KEYWORD(), SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation);
-      if (returnsValues.returnsValuesString() != null) {
-        for (var returnString : returnsValues.returnsValuesString()) {
-          if (returnString.returnsValue() != null) {
-            var type = returnString.returnsValue().type();
-            if (type != null) {
-              helper.addContextRange(elements, type, SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation);
-            }
-          }
-          if (returnString.typesBlock() != null) {
-            collectTypesBlockElements(returnString.typesBlock(), elements);
-          }
-          if (returnString.subParameter() != null) {
-            collectSubParameterElements(returnString.subParameter(), elements);
-          }
-        }
-      }
-    }
-
-    // "Пример:" keyword
-    var examples = ast.examples();
-    if (examples != null) {
-      helper.addTerminalNodeRange(elements, examples.EXAMPLE_KEYWORD(), SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation);
-    }
-
-    // "Варианты вызова:" keyword
-    var callOptions = ast.callOptions();
-    if (callOptions != null) {
-      helper.addTerminalNodeRange(elements, callOptions.CALL_OPTIONS_KEYWORD(), SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation);
-    }
-
-    // "Устарела." keyword
-    var deprecate = ast.deprecate();
-    if (deprecate != null) {
-      helper.addTerminalNodeRange(elements, deprecate.DEPRECATE_KEYWORD(), SemanticTokenTypes.Macro, SemanticTokenModifiers.Documentation);
-    }
-  }
-
-  private void collectParameterElements(
-    BSLMethodDescriptionParser.ParameterContext parameter,
-    List<SemanticTokenEntry> elements
-  ) {
-    var paramName = parameter.parameterName();
-    if (paramName != null) {
-      helper.addContextRange(elements, paramName, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation);
-    }
-
-    collectTypesBlockElements(parameter.typesBlock(), elements);
-  }
-
-  private void collectSubParameterElements(
-    BSLMethodDescriptionParser.SubParameterContext subParameter,
-    List<SemanticTokenEntry> elements
-  ) {
-    var paramName = subParameter.parameterName();
-    if (paramName != null) {
-      helper.addContextRange(elements, paramName, SemanticTokenTypes.Parameter, SemanticTokenModifiers.Documentation);
-    }
-
-    collectTypesBlockElements(subParameter.typesBlock(), elements);
-  }
-
-  private void collectTypesBlockElements(
-    BSLMethodDescriptionParser.@Nullable TypesBlockContext typesBlock,
-    List<SemanticTokenEntry> elements
-  ) {
-    if (typesBlock != null && typesBlock.type() != null) {
-      helper.addContextRange(elements, typesBlock.type(), SemanticTokenTypes.Type, SemanticTokenModifiers.Documentation);
     }
   }
 
@@ -372,8 +265,6 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   private static boolean isOperatorToken(int tokenType) {
-    return tokenType == BSLMethodDescriptionLexer.DASH || tokenType == BSLMethodDescriptionLexer.STAR;
+    return tokenType == BSLDescriptionLexer.DASH || tokenType == BSLDescriptionLexer.STAR;
   }
 }
-
-

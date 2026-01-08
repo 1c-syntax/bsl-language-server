@@ -23,12 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.ArrayList;
@@ -82,7 +82,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
     }
 
     if (parametersDescriptions.isEmpty()) {
-      if (!description.get().getLink().isEmpty()) {
+      if (!description.get().getLinks().isEmpty()) {
         // пока считаем ссылку наличием описания всего и вся
         return;
       }

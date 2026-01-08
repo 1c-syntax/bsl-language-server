@@ -59,7 +59,7 @@ class MissingReturnedValueDescriptionDiagnosticTest extends AbstractDiagnosticTe
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasMessageOnRange("Добавьте описание возвращаемого значения функции",
         4, 8, 15)
@@ -71,6 +71,8 @@ class MissingReturnedValueDescriptionDiagnosticTest extends AbstractDiagnosticTe
         31, 8, 15)
       .hasMessageOnRange("Необходимо добавить описание типов \"Строка, булево\" возвращаемого значения",
         39, 8, 15)
+      .hasMessageOnRange("Необходимо добавить описание типов \"ФайловаяСистемаКлиент.ПараметрыЗагрузкиФайла\" возвращаемого значения",
+        195, 8, 18)
     ;
   }
 }

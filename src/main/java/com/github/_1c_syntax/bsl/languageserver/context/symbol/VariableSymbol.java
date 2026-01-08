@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Optional;
