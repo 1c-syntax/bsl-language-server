@@ -263,8 +263,4 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
   private void addDocCommentRange(List<SemanticTokenEntry> entries, int line, int start, int length) {
     helper.addEntry(entries, line, start, length, SemanticTokenTypes.Comment, SemanticTokenModifiers.Documentation);
   }
-
-  private static boolean isOperatorToken(int tokenType) {
-    return tokenType == BSLDescriptionLexer.DASH || tokenType == BSLDescriptionLexer.STAR;
-  }
 }
