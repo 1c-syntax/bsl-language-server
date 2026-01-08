@@ -74,9 +74,10 @@ class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwa
     // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // then - Common module name should be highlighted as namespace
+    // then - Only the module name string literal should be highlighted as namespace,
+    // not the entire expression (to avoid covering the method ОбщийМодуль with module hover)
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(6, 31, 49, SemanticTokenTypes.Namespace, "ОбщегоНазначения.ОбщийМодуль(\"ПервыйОбщийМодуль\")")
+      new ExpectedToken(6, 60, 19, SemanticTokenTypes.Namespace, "\"ПервыйОбщийМодуль\"")
     ));
   }
 
