@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767872118477,
+  "lastUpdate": 1767875813970,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33790,6 +33790,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.4403775505438445",
             "extra": "mean: 68.77307017644246 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "280130bba2e3319191b30ee578c1a6ddacd01781",
+          "message": "Merge pull request #3750 from 1c-syntax/copilot/fix-sources-jar-dependency\n\nAdd missing task dependency from sourcesJar to generateSentryDebugMetaPropertiesjava",
+          "timestamp": "2026-01-08T12:09:34+01:00",
+          "tree_id": "a98c78fc25d89847495053e0e8b0c4a021fa2e8e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/280130bba2e3319191b30ee578c1a6ddacd01781"
+        },
+        "date": 1767875808673,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.52715055147807,
+            "unit": "sec",
+            "range": "stddev: 1.4159266724574602",
+            "extra": "mean: 69.52715055147807 sec\nrounds: 3"
           }
         ]
       }
