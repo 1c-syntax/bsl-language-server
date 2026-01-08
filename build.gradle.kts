@@ -280,6 +280,15 @@ sentry {
     autoUploadSourceContext.set(System.getenv("SENTRY_AUTH_TOKEN") != null)
 }
 
+// Отключить задачи загрузки в Sentry, если отсутствует токен аутентификации
+gradle.taskGraph.whenReady {
+    allTasks.forEach { task ->
+        if (task.name.startsWith("sentryUpload") && System.getenv("SENTRY_AUTH_TOKEN") == null) {
+            task.enabled = false
+        }
+    }
+}
+
 tasks.processResources {
     filteringCharset = "UTF-8"
     // native2ascii gradle replacement
