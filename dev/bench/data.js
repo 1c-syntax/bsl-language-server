@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767892843894,
+  "lastUpdate": 1767904361606,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33883,6 +33883,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7825613922458079",
             "extra": "mean: 69.38200370470683 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36566ee1b1ebc6966e76581067825f0eef64f66b",
+          "message": "Merge pull request #3755 from 1c-syntax/copilot/fix-sentry-upload-behavior\n\nFix Sentry upload task failure when auth token unavailable",
+          "timestamp": "2026-01-08T19:58:22+01:00",
+          "tree_id": "af0bf795bbe3719edc679198d467c9681281752d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/36566ee1b1ebc6966e76581067825f0eef64f66b"
+        },
+        "date": 1767904354537,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.3273515701294,
+            "unit": "sec",
+            "range": "stddev: 0.4986997739097426",
+            "extra": "mean: 69.3273515701294 sec\nrounds: 3"
           }
         ]
       }
