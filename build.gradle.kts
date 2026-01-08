@@ -274,10 +274,9 @@ jmh {
 sentry {
     org.set("1c-syntax")
     projectName.set("bsl-language-server")
-    includeSourceContext = true
     
-    // Загружать source bundle только при наличии токена аутентификации
-    autoUploadSourceContext.set(System.getenv("SENTRY_AUTH_TOKEN") != null)
+    // Включить source context только при наличии токена аутентификации
+    includeSourceContext = System.getenv("SENTRY_AUTH_TOKEN") != null
 }
 
 tasks.processResources {
