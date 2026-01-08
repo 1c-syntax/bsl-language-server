@@ -271,19 +271,21 @@ jmh {
     jmhVersion = "1.37"
 }
 
+val hasSentryToken = System.getenv("SENTRY_AUTH_TOKEN") != null
+
 sentry {
     org.set("1c-syntax")
     projectName.set("bsl-language-server")
     includeSourceContext = true
     
-    // Загружать source bundle только при наличии токена аутентификации
-    autoUploadSourceContext.set(System.getenv("SENTRY_AUTH_TOKEN") != null)
+    // Upload source bundle only when authentication token is available
+    autoUploadSourceContext.set(hasSentryToken)
 }
 
-// Отключить задачи загрузки в Sentry, если отсутствует токен аутентификации
+// Disable Sentry upload tasks if authentication token is missing
 gradle.taskGraph.whenReady {
     allTasks.forEach { task ->
-        if (task.name.startsWith("sentryUpload") && System.getenv("SENTRY_AUTH_TOKEN") == null) {
+        if (task.name.startsWith("sentryUpload") && !hasSentryToken) {
             task.enabled = false
         }
     }
