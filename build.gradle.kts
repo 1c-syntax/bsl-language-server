@@ -205,6 +205,7 @@ afterEvaluate {
     }
 
     tasks.named("sourcesJar") {
+        dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
 }
