@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
+import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 
 import java.util.Optional;
 
