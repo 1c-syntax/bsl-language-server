@@ -425,10 +425,10 @@ jreleaser {
             mode = org.jreleaser.model.Signing.Mode.COMMAND
             command {
                 executable = "gpg"
+                keyName = System.getenv("JRELEASER_GPG_KEY_NAME") ?: ""
+                passphrase = System.getenv("JRELEASER_GPG_PASSPHRASE") ?: ""
                 args = listOf("--batch", "--yes", "--passphrase", "{{passphrase}}", "--pinentry-mode", "loopback", "--armor", "--detach-sign", "{{file}}")
             }
-            publicKey = System.getenv("JRELEASER_GPG_PUBLIC_KEY") ?: ""
-            passphrase = System.getenv("JRELEASER_GPG_PASSPHRASE") ?: ""
         }
     }
     deploy {
