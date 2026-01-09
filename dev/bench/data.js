@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767904361606,
+  "lastUpdate": 1767970295389,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33914,6 +33914,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4986997739097426",
             "extra": "mean: 69.3273515701294 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ac4f541ed376189a732dbc62e343f0589ee3719b",
+          "message": "Merge pull request #3756 from 1c-syntax/copilot/update-jreleaser-signing-config\n\nFix JReleaser PGP signing configuration and workflow for Maven Central deployment",
+          "timestamp": "2026-01-09T15:16:12+01:00",
+          "tree_id": "9329f4c163070ad6b836bed6ad13cc4d6d36aa3c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ac4f541ed376189a732dbc62e343f0589ee3719b"
+        },
+        "date": 1767970288921,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.24105699857076,
+            "unit": "sec",
+            "range": "stddev: 1.510614670738267",
+            "extra": "mean: 69.24105699857076 sec\nrounds: 3"
           }
         ]
       }
