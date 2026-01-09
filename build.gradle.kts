@@ -420,7 +420,18 @@ publishing {
 jreleaser {
     signing {
         active = ALWAYS
-        armored = true
+        pgp {
+            active = ALWAYS
+            armored = true
+            mode = org.jreleaser.model.Signing.Mode.MEMORY
+            publicKey = System.getenv("JRELEASER_GPG_PUBLIC_KEY") ?: ""
+            secretKey = System.getenv("JRELEASER_GPG_SECRET_KEY") ?: ""
+            passphrase = System.getenv("JRELEASER_GPG_PASSPHRASE") ?: ""
+            verify = false
+            files = true
+            artifacts = true
+            checksums = true
+        }
     }
     deploy {
         maven {
