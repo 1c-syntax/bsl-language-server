@@ -20,7 +20,7 @@ plugins {
     id("io.sentry.jvm.gradle") version "6.0.0-rc.1"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
-    id("org.jreleaser") version "1.22.0"
+    id("org.jreleaser") version "1.21.0"
     id("org.sonarqube") version "7.2.2.6593"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.4"
@@ -420,16 +420,7 @@ publishing {
 jreleaser {
     signing {
         active = ALWAYS
-        pgp {
-            active = ALWAYS
-            mode = org.jreleaser.model.Signing.Mode.COMMAND
-            command {
-                executable = "gpg"
-                keyName = System.getenv("JRELEASER_GPG_KEY_NAME") ?: ""
-                passphrase = System.getenv("JRELEASER_GPG_PASSPHRASE") ?: ""
-                args = listOf("--batch", "--yes", "--passphrase", "{{passphrase}}", "--pinentry-mode", "loopback", "--armor", "--detach-sign", "{{file}}")
-            }
-        }
+        armored = true
     }
     deploy {
         maven {
