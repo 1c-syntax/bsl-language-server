@@ -422,9 +422,11 @@ jreleaser {
         active = ALWAYS
         pgp {
             active = ALWAYS
-            mode = org.jreleaser.model.Signing.Mode.MEMORY
+            mode = org.jreleaser.model.Signing.Mode.COMMAND
+            command {
+                executable = "gpg"
+            }
             publicKey = System.getenv("JRELEASER_GPG_PUBLIC_KEY") ?: ""
-            secretKey = System.getenv("JRELEASER_GPG_SECRET_KEY") ?: ""
             passphrase = System.getenv("JRELEASER_GPG_PASSPHRASE") ?: ""
         }
     }
