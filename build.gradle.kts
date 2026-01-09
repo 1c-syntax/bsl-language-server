@@ -420,7 +420,16 @@ publishing {
 jreleaser {
     signing {
         active = ALWAYS
-        armored = true
+        pgp {
+            active = ALWAYS
+            mode = org.jreleaser.model.Signing.Mode.COMMAND
+            command {
+                executable = "gpg"
+                args = listOf("--batch", "--yes", "--passphrase", "{{passphrase}}", "--pinentry-mode", "loopback", "--armor", "--detach-sign", "{{file}}")
+            }
+            publicKey = System.getenv("JRELEASER_GPG_PUBLIC_KEY") ?: ""
+            passphrase = System.getenv("JRELEASER_GPG_PASSPHRASE") ?: ""
+        }
     }
     deploy {
         maven {
