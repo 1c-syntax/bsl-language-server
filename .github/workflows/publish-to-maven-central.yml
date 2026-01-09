@@ -27,39 +27,9 @@ jobs:
           mkdir -p ~/.gnupg
           chmod 700 ~/.gnupg
           
-          # Validate that GPG_SIGNING_KEY secret is set
-          if [ -z "${{ secrets.GPG_SIGNING_KEY }}" ]; then
-            echo "ERROR: GPG_SIGNING_KEY secret is not set or is empty"
-            echo "Please configure the GPG_SIGNING_KEY secret in repository settings"
-            exit 1
-          fi
-          
-          # Validate that GPG_SIGNING_PUBLIC_KEY secret is set
-          if [ -z "${{ secrets.GPG_SIGNING_PUBLIC_KEY }}" ]; then
-            echo "ERROR: GPG_SIGNING_PUBLIC_KEY secret is not set or is empty"
-            echo "Please configure the GPG_SIGNING_PUBLIC_KEY secret in repository settings"
-            exit 1
-          fi
-          
-          # Import the secret key with error handling
-          echo "Importing GPG secret key..."
-          if ! echo "${{ secrets.GPG_SIGNING_KEY }}" | base64 -d | gpg --batch --import 2>&1; then
-            echo "ERROR: Failed to import GPG_SIGNING_KEY"
-            echo "The secret may contain invalid base64 data or invalid GPG key data"
-            echo "Please verify the GPG_SIGNING_KEY secret is properly base64-encoded"
-            exit 1
-          fi
-          echo "GPG secret key imported successfully"
-          
-          # Import the public key with error handling
-          echo "Importing GPG public key..."
-          if ! echo "${{ secrets.GPG_SIGNING_PUBLIC_KEY }}" | base64 -d | gpg --batch --import 2>&1; then
-            echo "ERROR: Failed to import GPG_SIGNING_PUBLIC_KEY"
-            echo "The secret may contain invalid base64 data or invalid GPG key data"
-            echo "Please verify the GPG_SIGNING_PUBLIC_KEY secret is properly base64-encoded"
-            exit 1
-          fi
-          echo "GPG public key imported successfully"
+          # Import the secret and public keys
+          echo "${{ secrets.GPG_SIGNING_KEY }}" | base64 -d | gpg --batch --import
+          echo "${{ secrets.GPG_SIGNING_PUBLIC_KEY }}" | base64 -d | gpg --batch --import
           
           # List keys to verify import
           echo "Imported GPG keys:"
@@ -71,15 +41,6 @@ jobs:
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent
           gpgconf --launch gpg-agent
-          
-          # Test signing capability
-          echo "Testing GPG signing..."
-          if ! echo "test" | gpg --batch --yes --passphrase "${{ secrets.GPG_SIGNING_PASSWORD }}" --pinentry-mode loopback --clearsign > /dev/null 2>&1; then
-            echo "ERROR: GPG signing test failed"
-            echo "Please verify the GPG_SIGNING_PASSWORD secret is correct"
-            exit 1
-          fi
-          echo "GPG signing test completed successfully"
       - name: Deploy to Central Portal
         run: |
           ./gradlew publishMavenPublicationToStagingRepository
