@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767988142581,
+  "lastUpdate": 1767991523873,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33976,6 +33976,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8251291206391126",
             "extra": "mean: 68.86330699920654 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9739b5003bf7930cec5916cd10b3e33127ad2140",
+          "message": "Merge pull request #3758 from 1c-syntax/copilot/rollback-jreleaser-plugin\n\nRevert JReleaser 1.22.0 upgrade due to GPG signing failure",
+          "timestamp": "2026-01-09T20:44:50+01:00",
+          "tree_id": "9db83389da195d04a4f24d75f1dd8380331bd914",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9739b5003bf7930cec5916cd10b3e33127ad2140"
+        },
+        "date": 1767991518427,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.85864353179932,
+            "unit": "sec",
+            "range": "stddev: 0.9906849579375945",
+            "extra": "mean: 69.85864353179932 sec\nrounds: 3"
           }
         ]
       }
