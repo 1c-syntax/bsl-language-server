@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767991523873,
+  "lastUpdate": 1767994249579,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34007,6 +34007,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9906849579375945",
             "extra": "mean: 69.85864353179932 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e829d9faa6ce2895772025492be72acc478f8dc5",
+          "message": "Merge pull request #3759 from 1c-syntax/revert-3749-dependabot/gradle/com.diffplug.spotless-8.1.0\n\nRevert \"Bump com.diffplug.spotless from 7.0.4 to 8.1.0\"",
+          "timestamp": "2026-01-09T21:44:24+01:00",
+          "tree_id": "956deeb1671355f8d5857684eb61e1f66ba4f920",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e829d9faa6ce2895772025492be72acc478f8dc5"
+        },
+        "date": 1767994243992,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.41599647204082,
+            "unit": "sec",
+            "range": "stddev: 0.8287701587767248",
+            "extra": "mean: 69.41599647204082 sec\nrounds: 3"
           }
         ]
       }
