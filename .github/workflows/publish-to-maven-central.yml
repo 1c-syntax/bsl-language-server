@@ -38,7 +38,11 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG
           
           # Extract the key ID and export it for JReleaser
-          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep -E "sec\s+\w+/(\w+)" | head -1 | sed -E 's/.*\/([A-F0-9]+).*/\1/')
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep -E 'sec\s+\w+/([A-F0-9]+)' | head -1 | sed -E 's/.*\/([A-F0-9]+).*/\1/')
+          if [ -z "$GPG_KEY_ID" ]; then
+            echo "ERROR: Failed to extract GPG key ID from imported keys"
+            exit 1
+          fi
           echo "GPG_KEY_ID=${GPG_KEY_ID}" >> $GITHUB_ENV
           echo "Using GPG Key ID: ${GPG_KEY_ID}"
           
