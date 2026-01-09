@@ -23,13 +23,15 @@ jobs:
           cache: gradle
       - name: Import GPG key
         run: |
+          set -e
+          
           # Create GPG home directory with proper permissions
           mkdir -p ~/.gnupg
           chmod 700 ~/.gnupg
           
           # Import the secret and public keys
-          echo "${{ secrets.GPG_SIGNING_KEY }}" | base64 -d | gpg --batch --import || exit 1
-          echo "${{ secrets.GPG_SIGNING_PUBLIC_KEY }}" | base64 -d | gpg --batch --import || exit 1
+          echo "${{ secrets.GPG_SIGNING_KEY }}" | base64 -d | gpg --batch --import
+          echo "${{ secrets.GPG_SIGNING_PUBLIC_KEY }}" | base64 -d | gpg --batch --import
           
           # List keys to verify import
           echo "Imported GPG keys:"
