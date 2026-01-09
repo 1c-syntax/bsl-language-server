@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767970295389,
+  "lastUpdate": 1767988142581,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -33945,6 +33945,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.510614670738267",
             "extra": "mean: 69.24105699857076 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "be6486a822e9cd3b645ad626ed9b52b8138caa71",
+          "message": "Merge pull request #3757 from 1c-syntax/copilot/fix-gpg-key-import-errors\n\nFix JReleaser COMMAND mode configuration for Maven Central deployment",
+          "timestamp": "2026-01-09T20:16:40+01:00",
+          "tree_id": "a9cbb193d36e9782e7798bd1a886067a162fd63f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/be6486a822e9cd3b645ad626ed9b52b8138caa71"
+        },
+        "date": 1767988136757,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.86330699920654,
+            "unit": "sec",
+            "range": "stddev: 0.8251291206391126",
+            "extra": "mean: 68.86330699920654 sec\nrounds: 3"
           }
         ]
       }
