@@ -21,6 +21,31 @@ jobs:
           java-version: 25
           distribution: 'corretto'
           cache: gradle
+      - name: Import GPG key
+        run: |
+          # Create GPG home directory with proper permissions
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          
+          # Import the secret and public keys
+          echo "${{ secrets.GPG_SIGNING_KEY }}" | base64 --decode | gpg --batch --import
+          echo "${{ secrets.GPG_SIGNING_PUBLIC_KEY }}" | base64 --decode | gpg --batch --import
+          
+          # List keys to verify import
+          echo "Imported GPG keys:"
+          gpg --list-secret-keys --keyid-format LONG
+          
+          # Configure GPG for non-interactive use
+          echo "use-agent" >> ~/.gnupg/gpg.conf
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpgconf --kill gpg-agent
+          gpgconf --launch gpg-agent
+          
+          # Test signing capability
+          echo "Testing GPG signing..."
+          echo "test" | gpg --batch --yes --passphrase "${{ secrets.GPG_SIGNING_PASSWORD }}" --pinentry-mode loopback --clearsign > /dev/null 2>&1
+          echo "GPG signing test completed successfully"
       - name: Deploy to Central Portal
         run: |
           ./gradlew publishMavenPublicationToStagingRepository
