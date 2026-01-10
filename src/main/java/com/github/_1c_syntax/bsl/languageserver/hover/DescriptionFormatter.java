@@ -312,7 +312,7 @@ public class DescriptionFormatter {
       var typeDescription = typeToString(type, level);
       String typeName;
       if (type instanceof HyperlinkTypeDescription hyperlinkTypeDescription) {
-        typeName = "[%s](%s)".formatted(thyperlinkTypeDescription.name(), hyperlinkTypeDescription.hyperlink());      
+        typeName = "[%s](%s)".formatted(hyperlinkTypeDescription.name(), hyperlinkTypeDescription.hyperlink());
       } else {
         typeName = "`%s`".formatted(type.name());
       }
