@@ -77,10 +77,6 @@ public class AnnotationSymbolMarkupContentBuilder implements MarkupContentBuilde
     String examplesSection = descriptionFormatter.getExamplesSection(methodSymbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, examplesSection);
 
-    // варианты вызова
-    var callOptionsSection = descriptionFormatter.getCallOptionsSection(methodSymbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
-
     var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);

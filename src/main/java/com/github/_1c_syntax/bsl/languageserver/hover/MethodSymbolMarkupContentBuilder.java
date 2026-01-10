@@ -74,10 +74,6 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     var examplesSection = descriptionFormatter.getExamplesSection(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, examplesSection);
 
-    // варианты вызова
-    var callOptionsSection = descriptionFormatter.getCallOptionsSection(symbol);
-    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, callOptionsSection);
-
     var content = markupBuilder.toString();
 
     return new MarkupContent(MarkupKind.MARKDOWN, content);
