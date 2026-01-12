@@ -200,15 +200,12 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<@Nullable List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
     var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
     if (documentContext == null) {
-      return CompletableFuture.completedFuture(null);
+      return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return withFreshDocumentContextNullable(
+    return withFreshDocumentContext(
       documentContext,
-      () -> {
-        var highlights = documentHighlightProvider.getDocumentHighlight(documentContext, params);
-        return highlights.isEmpty() ? null : highlights;
-      }
+      () -> documentHighlightProvider.getDocumentHighlight(documentContext, params)
     );
   }
 
