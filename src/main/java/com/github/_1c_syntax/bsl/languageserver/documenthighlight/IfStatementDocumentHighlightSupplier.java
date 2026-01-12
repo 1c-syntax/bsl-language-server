@@ -119,12 +119,4 @@ public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHig
 
     return highlights;
   }
-
-  private void addTokenHighlight(List<DocumentHighlight> highlights, TerminalNode terminalNode) {
-    if (terminalNode != null) {
-      var token = terminalNode.getSymbol();
-      var range = Ranges.create(token);
-      highlights.add(new DocumentHighlight(range));
-    }
-  }
 }

@@ -85,14 +85,15 @@ public class TryStatementDocumentHighlightSupplier extends AbstractASTDocumentHi
   private List<DocumentHighlight> highlightTryStatement(ParserRuleContext tryStatement) {
     List<DocumentHighlight> highlights = new ArrayList<>();
 
-    // Добавляем подсветку для Try
-    addKeywordHighlight(highlights, tryStatement, BSLParser.TRY_KEYWORD);
+    // Приводим к конкретному типу контекста для доступа к геттерам токенов
+    if (!(tryStatement instanceof BSLParser.TryStatementContext tryStatementContext)) {
+      return highlights;
+    }
 
-    // Добавляем подсветку для Except
-    addKeywordHighlight(highlights, tryStatement, BSLParser.EXCEPT_KEYWORD);
-
-    // Добавляем подсветку для EndTry
-    addKeywordHighlight(highlights, tryStatement, BSLParser.ENDTRY_KEYWORD);
+    // Используем геттеры из контекста для прямого доступа к токенам
+    addTokenHighlight(highlights, tryStatementContext.TRY_KEYWORD());
+    addTokenHighlight(highlights, tryStatementContext.EXCEPT_KEYWORD());
+    addTokenHighlight(highlights, tryStatementContext.ENDTRY_KEYWORD());
 
     return highlights;
   }

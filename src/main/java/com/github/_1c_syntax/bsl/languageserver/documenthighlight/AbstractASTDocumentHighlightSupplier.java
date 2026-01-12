@@ -54,4 +54,20 @@ public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHi
       }
     }
   }
+
+  /**
+   * Добавляет подсветку для токена, полученного из TerminalNode.
+   * <p>
+   * Используется для прямого доступа к токенам через геттеры ANTLR-контекста.
+   *
+   * @param highlights Список подсветок, в который будет добавлена подсветка токена
+   * @param terminalNode Терминальный узел с токеном (может быть null)
+   */
+  protected void addTokenHighlight(List<DocumentHighlight> highlights, TerminalNode terminalNode) {
+    if (terminalNode != null) {
+      var token = terminalNode.getSymbol();
+      var range = Ranges.create(token);
+      highlights.add(new DocumentHighlight(range));
+    }
+  }
 }

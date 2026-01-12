@@ -98,28 +98,52 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
 
   private List<DocumentHighlight> highlightWhileStatement(ParserRuleContext whileStatement) {
     List<DocumentHighlight> highlights = new ArrayList<>();
-    addKeywordHighlight(highlights, whileStatement, BSLParser.WHILE_KEYWORD);
-    addKeywordHighlight(highlights, whileStatement, BSLParser.DO_KEYWORD);
-    addKeywordHighlight(highlights, whileStatement, BSLParser.ENDDO_KEYWORD);
+
+    // Приводим к конкретному типу контекста для доступа к геттерам токенов
+    if (!(whileStatement instanceof BSLParser.WhileStatementContext whileStatementContext)) {
+      return highlights;
+    }
+
+    // Используем геттеры из контекста для прямого доступа к токенам
+    addTokenHighlight(highlights, whileStatementContext.WHILE_KEYWORD());
+    addTokenHighlight(highlights, whileStatementContext.DO_KEYWORD());
+    addTokenHighlight(highlights, whileStatementContext.ENDDO_KEYWORD());
+
     return highlights;
   }
 
   private List<DocumentHighlight> highlightForStatement(ParserRuleContext forStatement) {
     List<DocumentHighlight> highlights = new ArrayList<>();
-    addKeywordHighlight(highlights, forStatement, BSLParser.FOR_KEYWORD);
-    addKeywordHighlight(highlights, forStatement, BSLParser.TO_KEYWORD);
-    addKeywordHighlight(highlights, forStatement, BSLParser.DO_KEYWORD);
-    addKeywordHighlight(highlights, forStatement, BSLParser.ENDDO_KEYWORD);
+
+    // Приводим к конкретному типу контекста для доступа к геттерам токенов
+    if (!(forStatement instanceof BSLParser.ForStatementContext forStatementContext)) {
+      return highlights;
+    }
+
+    // Используем геттеры из контекста для прямого доступа к токенам
+    addTokenHighlight(highlights, forStatementContext.FOR_KEYWORD());
+    addTokenHighlight(highlights, forStatementContext.TO_KEYWORD());
+    addTokenHighlight(highlights, forStatementContext.DO_KEYWORD());
+    addTokenHighlight(highlights, forStatementContext.ENDDO_KEYWORD());
+
     return highlights;
   }
 
   private List<DocumentHighlight> highlightForEachStatement(ParserRuleContext forEachStatement) {
     List<DocumentHighlight> highlights = new ArrayList<>();
-    addKeywordHighlight(highlights, forEachStatement, BSLParser.FOR_KEYWORD);
-    addKeywordHighlight(highlights, forEachStatement, BSLParser.EACH_KEYWORD);
-    addKeywordHighlight(highlights, forEachStatement, BSLParser.IN_KEYWORD);
-    addKeywordHighlight(highlights, forEachStatement, BSLParser.DO_KEYWORD);
-    addKeywordHighlight(highlights, forEachStatement, BSLParser.ENDDO_KEYWORD);
+
+    // Приводим к конкретному типу контекста для доступа к геттерам токенов
+    if (!(forEachStatement instanceof BSLParser.ForEachStatementContext forEachStatementContext)) {
+      return highlights;
+    }
+
+    // Используем геттеры из контекста для прямого доступа к токенам
+    addTokenHighlight(highlights, forEachStatementContext.FOR_KEYWORD());
+    addTokenHighlight(highlights, forEachStatementContext.EACH_KEYWORD());
+    addTokenHighlight(highlights, forEachStatementContext.IN_KEYWORD());
+    addTokenHighlight(highlights, forEachStatementContext.DO_KEYWORD());
+    addTokenHighlight(highlights, forEachStatementContext.ENDDO_KEYWORD());
+
     return highlights;
   }
 }
