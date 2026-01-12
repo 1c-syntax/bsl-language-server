@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 
@@ -32,28 +30,9 @@ import java.util.List;
 /**
  * Базовый класс для поставщиков подсветки на основе AST.
  * <p>
- * Предоставляет общую функциональность для поиска и подсветки токенов ключевых слов
- * в AST-узлах.
+ * Предоставляет общую функциональность для подсветки токенов, полученных через геттеры ANTLR-контекста.
  */
 public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHighlightSupplier {
-
-  /**
-   * Добавляет подсветку для всех токенов указанного типа в контексте.
-   *
-   * @param highlights Список подсветок, в который будут добавлены найденные токены
-   * @param context Контекст AST, в котором осуществляется поиск
-   * @param tokenType Тип токена для поиска (константа из BSLParser)
-   */
-  protected void addKeywordHighlight(List<DocumentHighlight> highlights, ParserRuleContext context, int tokenType) {
-    var tokens = Trees.findAllTokenNodes(context, tokenType);
-    for (var tokenNode : tokens) {
-      if (tokenNode instanceof TerminalNode terminalNode) {
-        var token = terminalNode.getSymbol();
-        var range = Ranges.create(token);
-        highlights.add(new DocumentHighlight(range));
-      }
-    }
-  }
 
   /**
    * Добавляет подсветку для токена, полученного из TerminalNode.
