@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.DocumentHighlightParams;
@@ -32,71 +32,76 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class DocumentHighlightProviderTest {
+class RegionDocumentHighlightSupplierTest {
 
   private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight.bsl";
 
   @Autowired
-  private DocumentHighlightProvider provider;
+  private RegionDocumentHighlightSupplier supplier;
 
   @Test
-  void testProviderReturnsHighlights() {
+  void testRegionStart() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 6)); // На "Если"
+    params.setPosition(new Position(35, 3)); // На "#Область"
 
     // when
-    var highlights = provider.getDocumentHighlight(documentContext, params);
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: #Область и #КонецОбласти
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(2);
   }
 
   @Test
-  void testProviderReturnsEmptyForNonKeyword() {
+  void testRegionEnd() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 10)); // На обычном идентификаторе
+    params.setPosition(new Position(45, 3)); // На "#КонецОбласти"
 
     // when
-    var highlights = provider.getDocumentHighlight(documentContext, params);
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(2);
+  }
+
+  @Test
+  void testNestedRegion() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(37, 6)); // На вложенной "#Область"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться только вложенные #Область и #КонецОбласти
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(2);
+    assertThat(highlights).hasSizeLessThanOrEqualTo(4);
+  }
+
+  @Test
+  void testNonRegionKeyword() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, 6)); // На "Если" (не регион)
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isEmpty();
-  }
-
-  @Test
-  void testProviderDelegatesCorrectly() {
-    // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var params = new DocumentHighlightParams();
-    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-
-    // when - проверяем разные типы конструкций
-    params.setPosition(new Position(3, 6)); // If
-    var ifHighlights = provider.getDocumentHighlight(documentContext, params);
-
-    params.setPosition(new Position(14, 6)); // For
-    var forHighlights = provider.getDocumentHighlight(documentContext, params);
-
-    params.setPosition(new Position(28, 6)); // Try
-    var tryHighlights = provider.getDocumentHighlight(documentContext, params);
-
-    params.setPosition(new Position(35, 3)); // Region
-    var regionHighlights = provider.getDocumentHighlight(documentContext, params);
-
-    params.setPosition(new Position(49, 24)); // Bracket
-    var bracketHighlights = provider.getDocumentHighlight(documentContext, params);
-
-    // then - все должны вернуть результаты
-    assertThat(ifHighlights).isNotEmpty();
-    assertThat(forHighlights).isNotEmpty();
-    assertThat(tryHighlights).isNotEmpty();
-    assertThat(regionHighlights).isNotEmpty();
-    assertThat(bracketHighlights).isNotEmpty();
   }
 }
