@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ColorProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DocumentHighlightProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
@@ -75,6 +76,8 @@ import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.DocumentDiagnosticParams;
 import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.DocumentLinkParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
@@ -162,6 +165,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final InlayHintProvider inlayHintProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
+  private final DocumentHighlightProvider documentHighlightProvider;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
 
@@ -189,6 +193,22 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContextNullable(
       documentContext,
       () -> hoverProvider.getHover(documentContext, params).orElse(null)
+    );
+  }
+
+  @Override
+  public CompletableFuture<@Nullable List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
+    var documentContext = context.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return withFreshDocumentContextNullable(
+      documentContext,
+      () -> {
+        var highlights = documentHighlightProvider.getDocumentHighlight(documentContext, params);
+        return highlights.isEmpty() ? null : highlights;
+      }
     );
   }
 
