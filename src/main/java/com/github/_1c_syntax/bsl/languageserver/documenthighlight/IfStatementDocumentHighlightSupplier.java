@@ -43,7 +43,7 @@ import java.util.List;
  * If, ElseIf, Else, EndIf, относящиеся к одному блоку.
  */
 @Component
-public class IfStatementDocumentHighlightSupplier implements DocumentHighlightSupplier {
+public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHighlightSupplier {
 
   @Override
   public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
@@ -111,16 +111,5 @@ public class IfStatementDocumentHighlightSupplier implements DocumentHighlightSu
     addKeywordHighlight(highlights, ifStatement, BSLParser.ENDIF_KEYWORD);
 
     return highlights;
-  }
-
-  private void addKeywordHighlight(List<DocumentHighlight> highlights, ParserRuleContext context, int tokenType) {
-    var tokens = Trees.findAllTokenNodes(context, tokenType);
-    for (var tokenNode : tokens) {
-      if (tokenNode instanceof TerminalNode terminalNode) {
-        var token = terminalNode.getSymbol();
-        var range = Ranges.create(token);
-        highlights.add(new DocumentHighlight(range));
-      }
-    }
   }
 }

@@ -41,7 +41,7 @@ import java.util.List;
  * При клике на любое из ключевых слов блока Try подсвечиваются все связанные ключевые слова.
  */
 @Component
-public class TryStatementDocumentHighlightSupplier implements DocumentHighlightSupplier {
+public class TryStatementDocumentHighlightSupplier extends AbstractASTDocumentHighlightSupplier {
 
   @Override
   public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
@@ -95,16 +95,5 @@ public class TryStatementDocumentHighlightSupplier implements DocumentHighlightS
     addKeywordHighlight(highlights, tryStatement, BSLParser.ENDTRY_KEYWORD);
 
     return highlights;
-  }
-
-  private void addKeywordHighlight(List<DocumentHighlight> highlights, ParserRuleContext context, int tokenType) {
-    var tokens = Trees.findAllTokenNodes(context, tokenType);
-    for (var tokenNode : tokens) {
-      if (tokenNode instanceof TerminalNode terminalNode) {
-        var token = terminalNode.getSymbol();
-        var range = Ranges.create(token);
-        highlights.add(new DocumentHighlight(range));
-      }
-    }
   }
 }

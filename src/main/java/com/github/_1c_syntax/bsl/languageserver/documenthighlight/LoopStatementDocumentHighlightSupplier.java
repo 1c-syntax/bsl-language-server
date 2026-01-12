@@ -41,7 +41,7 @@ import java.util.List;
  * При клике на любое из ключевых слов цикла подсвечиваются все связанные ключевые слова того же цикла.
  */
 @Component
-public class LoopStatementDocumentHighlightSupplier implements DocumentHighlightSupplier {
+public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentHighlightSupplier {
 
   @Override
   public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
@@ -121,16 +121,5 @@ public class LoopStatementDocumentHighlightSupplier implements DocumentHighlight
     addKeywordHighlight(highlights, forEachStatement, BSLParser.DO_KEYWORD);
     addKeywordHighlight(highlights, forEachStatement, BSLParser.ENDDO_KEYWORD);
     return highlights;
-  }
-
-  private void addKeywordHighlight(List<DocumentHighlight> highlights, ParserRuleContext context, int tokenType) {
-    var tokens = Trees.findAllTokenNodes(context, tokenType);
-    for (var tokenNode : tokens) {
-      if (tokenNode instanceof TerminalNode terminalNode) {
-        var token = terminalNode.getSymbol();
-        var range = Ranges.create(token);
-        highlights.add(new DocumentHighlight(range));
-      }
-    }
   }
 }
