@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
-import com.github._1c_syntax.bsl.parser.BSLDescriptionLexer;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
