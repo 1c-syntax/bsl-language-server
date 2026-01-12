@@ -80,6 +80,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(3);
     assertThat(method.getReturnedValue()).hasSize(1);
     assertThat(method.getLinks()).isEmpty();
@@ -131,6 +132,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).hasSize(1);
     assertThat(method.getLinks()).hasSize(1);
@@ -150,12 +152,13 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(1);
     assertThat(method.getReturnedValue()).isEmpty();
     assertThat(method.getLinks()).hasSize(1);
 
     var param = method.getParameters().get(0);
-    assertThat(param.name()).isEmpty();
+    assertThat(param.name()).isEqualTo("ОбщийМодуль.Метод");
     assertThat(param.types()).hasSize(1);
     assertThat(param.isHyperlink()).isTrue();
     assertThat(param.link()).isEqualTo(Hyperlink.create("ОбщийМодуль.Метод()"));
@@ -169,6 +172,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
     assertThat(method.getLinks()).contains(Hyperlink.create("ОбщийМодуль.Метод()"));
@@ -182,6 +186,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).hasSize(1);
     assertThat(method.getLinks()).isEmpty();
@@ -195,6 +200,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(3);
     assertThat(method.getReturnedValue()).hasSize(1);
     assertThat(method.getLinks()).isEmpty();
@@ -208,11 +214,10 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isTrue();
     assertThat(method.getDeprecationInfo())
       .isEqualTo("Следует использовать новую см. ОбщегоНазначения.Метод()");
-    assertThat(method.getExamples()).hasSize(177);
-    assertThat(method.getExamples())
-      .startsWith("Пример0(Тип11, Тип21) - описание ...");
-    assertThat(method.getExamples())
-      .contains("УниверсальнаяПроцедура(Тип11, Тип21) - описание ...");
+    assertThat(method.getExamples()).hasSize(73);
+    assertThat(method.getExamples()).startsWith("Пример0(Тип11, Тип21) - описание ...");
+    assertThat(method.getCallOptions()).hasSize(103);
+    assertThat(method.getCallOptions()).startsWith("УниверсальнаяПроцедура(Тип11, Тип21) - описание ...");
     assertThat(method.getParameters()).hasSize(3);
     assertThat(method.getReturnedValue()).hasSize(2);
     assertThat(method.getLinks()).hasSize(1);
@@ -226,6 +231,7 @@ class MethodDescriptionTest {
     assertThat(method.getDeprecationInfo())
       .isEqualTo("Следует использовать новую см. ОбщегоНазначения.Метод()");
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
     assertThat(method.getLinks()).hasSize(1);
@@ -240,6 +246,7 @@ class MethodDescriptionTest {
     assertThat(method.getExamples()).hasSize(104);
     assertThat(method.getExamples())
       .startsWith("УниверсальнаяПроцедура(Тип11, Тип21) - описание ...");
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
     assertThat(method.getLinks()).isEmpty();
@@ -252,6 +259,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).hasSize(2);
     assertThat(method.getLinks()).isEmpty();
@@ -271,8 +279,9 @@ class MethodDescriptionTest {
     assertThat(method.getPurposeDescription()).isEmpty();
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
-    assertThat(method.getExamples()).hasSize(155);
-    assertThat(method.getExamples())
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).hasSize(155);
+    assertThat(method.getCallOptions())
       .startsWith("УниверсальнаяПроцедура(Тип11, Тип21) - описание ...");
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
@@ -286,6 +295,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(8);
     assertThat(method.getLinks()).hasSize(3);
     var param = method.getParameters().get(0);
@@ -428,6 +438,7 @@ class MethodDescriptionTest {
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
     assertThat(method.getLinks()).isEmpty();

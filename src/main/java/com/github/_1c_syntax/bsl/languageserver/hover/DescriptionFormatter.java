@@ -118,6 +118,14 @@ public class DescriptionFormatter {
       .orElseGet(String::new);
   }
 
+  public String getCallOptionsSection(MethodSymbol methodSymbol) {
+    return methodSymbol.getDescription()
+      .map(MethodDescription::getCallOptions)
+      .filter(callOption -> !callOption.isEmpty())
+      .map(codeBlock -> "**" + getResourceString(CALL_OPTIONS_KEY) + ":**\n\n" + "```bsl\n" + codeBlock + "\n```")
+      .orElseGet(String::new);
+  }
+
   public String getLocation(ModuleSymbol symbol) {
     var documentContext = symbol.getOwner();
     var uri = documentContext.getUri();

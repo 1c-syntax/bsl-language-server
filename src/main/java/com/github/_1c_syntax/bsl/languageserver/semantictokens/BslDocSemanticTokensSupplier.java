@@ -119,7 +119,8 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       var semanticType = switch (element.type()) {
         case TYPE_NAME -> SemanticTokenTypes.Type;
         case PARAMETER_NAME -> SemanticTokenTypes.Parameter;
-        case RETURNS_KEYWORD, EXAMPLE_KEYWORD, PARAMETERS_KEYWORD, DEPRECATE_KEYWORD -> SemanticTokenTypes.Macro;
+        case RETURNS_KEYWORD, EXAMPLE_KEYWORD, PARAMETERS_KEYWORD, DEPRECATE_KEYWORD,
+             CALL_OPTIONS_KEYWORD -> SemanticTokenTypes.Macro;
         default -> "";
       };
       helper.addDescriptionElement(semanticElements, element, semanticType, SemanticTokenModifiers.Documentation);
