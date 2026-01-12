@@ -89,25 +89,12 @@ public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHig
   private List<DocumentHighlight> highlightIfStatement(ParserRuleContext ifStatement) {
     List<DocumentHighlight> highlights = new ArrayList<>();
 
-    // Добавляем подсветку для If и Then
-    var ifBranch = Trees.getFirstChild(ifStatement, BSLParser.RULE_ifBranch);
-    ifBranch.ifPresent(branch -> {
-      addKeywordHighlight(highlights, branch, BSLParser.IF_KEYWORD);
-      addKeywordHighlight(highlights, branch, BSLParser.THEN_KEYWORD);
-    });
-
-    // Добавляем подсветку для всех ElseIf и Then
-    var elsifBranches = Trees.findAllRuleNodes(ifStatement, BSLParser.RULE_elsifBranch);
-    for (var elsifBranch : elsifBranches) {
-      addKeywordHighlight(highlights, (ParserRuleContext) elsifBranch, BSLParser.ELSIF_KEYWORD);
-      addKeywordHighlight(highlights, (ParserRuleContext) elsifBranch, BSLParser.THEN_KEYWORD);
-    }
-
-    // Добавляем подсветку для Else
-    var elseBranch = Trees.getFirstChild(ifStatement, BSLParser.RULE_elseBranch);
-    elseBranch.ifPresent(branch -> addKeywordHighlight(highlights, branch, BSLParser.ELSE_KEYWORD));
-
-    // Добавляем подсветку для EndIf
+    // Все ключевые слова находятся непосредственно в узле ifStatement по грамматике
+    // Используем addKeywordHighlight который ищет только в прямых потомках
+    addKeywordHighlight(highlights, ifStatement, BSLParser.IF_KEYWORD);
+    addKeywordHighlight(highlights, ifStatement, BSLParser.THEN_KEYWORD);
+    addKeywordHighlight(highlights, ifStatement, BSLParser.ELSIF_KEYWORD);
+    addKeywordHighlight(highlights, ifStatement, BSLParser.ELSE_KEYWORD);
     addKeywordHighlight(highlights, ifStatement, BSLParser.ENDIF_KEYWORD);
 
     return highlights;
