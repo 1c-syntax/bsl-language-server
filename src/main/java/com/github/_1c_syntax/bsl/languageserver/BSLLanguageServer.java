@@ -40,6 +40,7 @@ import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
+import org.eclipse.lsp4j.DocumentHighlightOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
 import org.eclipse.lsp4j.DocumentSymbolOptions;
@@ -122,7 +123,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentLinkProvider(getDocumentLinkProvider());
     capabilities.setWorkspaceSymbolProvider(getWorkspaceProvider());
     capabilities.setHoverProvider(getHoverProvider());
-    capabilities.setDocumentHighlightProvider(Boolean.TRUE);
+    capabilities.setDocumentHighlightProvider(getDocumentHighlightProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
@@ -292,6 +293,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var hoverOptions = new HoverOptions();
     hoverOptions.setWorkDoneProgress(Boolean.FALSE);
     return hoverOptions;
+  }
+
+  private static DocumentHighlightOptions getDocumentHighlightProvider() {
+    var documentHighlightOptions = new DocumentHighlightOptions();
+    documentHighlightOptions.setWorkDoneProgress(Boolean.FALSE);
+    return documentHighlightOptions;
   }
 
   private static DefinitionOptions getDefinitionProvider() {
