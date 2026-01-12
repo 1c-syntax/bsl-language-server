@@ -89,14 +89,42 @@ public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHig
   private List<DocumentHighlight> highlightIfStatement(ParserRuleContext ifStatement) {
     List<DocumentHighlight> highlights = new ArrayList<>();
 
-    // Все ключевые слова находятся непосредственно в узле ifStatement по грамматике
-    // Используем addKeywordHighlight который ищет только в прямых потомках
-    addKeywordHighlight(highlights, ifStatement, BSLParser.IF_KEYWORD);
-    addKeywordHighlight(highlights, ifStatement, BSLParser.THEN_KEYWORD);
-    addKeywordHighlight(highlights, ifStatement, BSLParser.ELSIF_KEYWORD);
-    addKeywordHighlight(highlights, ifStatement, BSLParser.ELSE_KEYWORD);
-    addKeywordHighlight(highlights, ifStatement, BSLParser.ENDIF_KEYWORD);
+    // Приводим к конкретному типу контекста для доступа к геттерам токенов
+    if (!(ifStatement instanceof BSLParser.IfStatementContext ifStatementContext)) {
+      return highlights;
+    }
+
+    // Используем геттеры из контекста для прямого доступа к токенам
+    // ifBranch содержит IF и THEN
+    var ifBranch = ifStatementContext.ifBranch();
+    if (ifBranch != null) {
+      addTokenHighlight(highlights, ifBranch.IF_KEYWORD());
+      addTokenHighlight(highlights, ifBranch.THEN_KEYWORD());
+    }
+
+    // elsifBranch содержит ELSIF и THEN
+    for (var elsifBranch : ifStatementContext.elsifBranch()) {
+      addTokenHighlight(highlights, elsifBranch.ELSIF_KEYWORD());
+      addTokenHighlight(highlights, elsifBranch.THEN_KEYWORD());
+    }
+
+    // elseBranch содержит ELSE
+    var elseBranch = ifStatementContext.elseBranch();
+    if (elseBranch != null) {
+      addTokenHighlight(highlights, elseBranch.ELSE_KEYWORD());
+    }
+
+    // ENDIF находится в самом ifStatement
+    addTokenHighlight(highlights, ifStatementContext.ENDIF_KEYWORD());
 
     return highlights;
+  }
+
+  private void addTokenHighlight(List<DocumentHighlight> highlights, TerminalNode terminalNode) {
+    if (terminalNode != null) {
+      var token = terminalNode.getSymbol();
+      var range = Ranges.create(token);
+      highlights.add(new DocumentHighlight(range));
+    }
   }
 }
