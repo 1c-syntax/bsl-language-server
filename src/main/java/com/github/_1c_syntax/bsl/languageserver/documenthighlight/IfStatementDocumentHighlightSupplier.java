@@ -45,28 +45,17 @@ public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHig
 
   @Override
   public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var position = params.getPosition();
-    var ast = documentContext.getAst();
-
-    // Находим терминальный узел на позиции курсора
-    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
-    if (maybeTerminalNode.isEmpty()) {
+    var terminalNodeInfo = findTerminalNode(params.getPosition(), documentContext);
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var terminalNode = maybeTerminalNode.get();
-    var token = terminalNode.getSymbol();
-    var tokenType = token.getType();
-
-    // Проверяем, является ли токен одним из ключевых слов if-конструкции
-    if (!isIfStatementKeyword(tokenType)) {
+    var info = terminalNodeInfo.get();
+    if (!isIfStatementKeyword(info.tokenType())) {
       return Collections.emptyList();
     }
 
-    // Находим родительский узел ifStatement
-    // Некоторые токены (ENDIF_KEYWORD) находятся напрямую в IfStatementContext,
-    // поэтому parent уже может быть нужным типом
-    var parent = (ParserRuleContext) terminalNode.getParent();
+    var parent = (ParserRuleContext) info.terminalNode().getParent();
     var ifStatement = findIfStatementContext(parent);
 
     if (ifStatement == null) {

@@ -44,28 +44,20 @@ public class TryStatementDocumentHighlightSupplier extends AbstractASTDocumentHi
 
   @Override
   public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var position = params.getPosition();
-    var ast = documentContext.getAst();
-
-    // Находим терминальный узел на позиции курсора
-    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
-    if (maybeTerminalNode.isEmpty()) {
+    var terminalNodeInfo = findTerminalNode(params.getPosition(), documentContext);
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var terminalNode = maybeTerminalNode.get();
-    var token = terminalNode.getSymbol();
-    var tokenType = token.getType();
-
-    // Проверяем, является ли токен одним из ключевых слов try-конструкции
-    if (!isTryStatementKeyword(tokenType)) {
+    var info = terminalNodeInfo.get();
+    if (!isTryStatementKeyword(info.tokenType())) {
       return Collections.emptyList();
     }
 
     // Находим родительский узел tryStatement
     // Токены try-конструкции находятся напрямую в TryStatementContext,
     // поэтому parent уже может быть нужным типом
-    var parent = (ParserRuleContext) terminalNode.getParent();
+    var parent = (ParserRuleContext) info.terminalNode().getParent();
     var tryStatement = findTryStatementContext(parent);
 
     if (tryStatement == null) {

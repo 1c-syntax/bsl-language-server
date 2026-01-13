@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
@@ -47,20 +46,13 @@ public class SubroutineDocumentHighlightSupplier extends AbstractASTDocumentHigh
   @Override
   public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
     var position = params.getPosition();
-    var ast = documentContext.getAst();
-
-    // Находим терминальный узел на позиции курсора
-    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
-    if (maybeTerminalNode.isEmpty()) {
+    var terminalNodeInfo = findTerminalNode(position, documentContext);
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var terminalNode = maybeTerminalNode.get();
-    var token = terminalNode.getSymbol();
-    var tokenType = token.getType();
-
-    // Проверяем, является ли токен одним из ключевых слов процедуры/функции
-    if (!isSubroutineKeyword(tokenType)) {
+    var info = terminalNodeInfo.get();
+    if (!isSubroutineKeyword(info.tokenType())) {
       return Collections.emptyList();
     }
 

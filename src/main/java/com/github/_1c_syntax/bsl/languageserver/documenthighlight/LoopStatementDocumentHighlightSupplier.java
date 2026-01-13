@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DocumentHighlight;
@@ -44,25 +43,17 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
 
   @Override
   public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var position = params.getPosition();
-    var ast = documentContext.getAst();
-
-    // Находим терминальный узел на позиции курсора
-    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
-    if (maybeTerminalNode.isEmpty()) {
+    var terminalNodeInfo = findTerminalNode(params.getPosition(), documentContext);
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var terminalNode = maybeTerminalNode.get();
-    var token = terminalNode.getSymbol();
-    var tokenType = token.getType();
-
-    // Проверяем, является ли токен одним из ключевых слов цикла
-    if (!isLoopKeyword(tokenType)) {
+    var info = terminalNodeInfo.get();
+    if (!isLoopKeyword(info.tokenType())) {
       return Collections.emptyList();
     }
 
-    var parent = (ParserRuleContext) terminalNode.getParent();
+    var parent = (ParserRuleContext) info.terminalNode().getParent();
 
     // Находим ближайший цикл - сначала проверяем сам parent, потом его предков
     var loopStatement = findNearestLoopStatement(parent);
