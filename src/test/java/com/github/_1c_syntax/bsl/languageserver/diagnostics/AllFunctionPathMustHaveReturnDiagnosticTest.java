@@ -125,21 +125,70 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   }
 
   @Test
-  void testNestedIfWithPreprocessor() {
-    // Test case for ClassCastException bug when preprocessor directives are inside if-statements
+  void testPreprocessorWithMissingReturn() {
+    // Positive test: function should be flagged for missing return when preprocessor is used
     var sample = """
-      Функция ТестСПрепроцессоромВIfStatement()
+      Функция ТестСПрепроцессором()
+          #Если Сервер Тогда
+              Если Условие Тогда
+                  Возврат 1;
+              КонецЕсли;
+          #КонецЕсли
+          // Missing return here - should be detected
+      КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 27);
+
+  }
+
+  @Test
+  void testPreprocessorInElsifWithMissingReturn() {
+    // Positive test: missing return when inner if without else is inside preprocessor
+    var sample = """
+      Функция ТестПрепроцессорВElsif()
+          #Если Сервер Тогда
+              Если Условие1 Тогда
+                  Возврат 1;
+              ИначеЕсли Условие2 Тогда
+                  Возврат 2;
+              КонецЕсли;
+          #КонецЕсли
+          // Missing return at function end
+      КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 30);
+
+  }
+
+  @Test
+  void testPreprocessorWithAllPathsHaveReturn() {
+    // Negative test: should not crash and should not report any issues
+    var sample = """
+      Функция ТестВсеПутиСВозвратом()
           Если Условие1 Тогда
               #Если Сервер Тогда
                   Если Условие2 Тогда
                       Возврат 1;
                   ИначеЕсли Условие3 Тогда
                       Возврат 2;
+                  Иначе
+                      Возврат 3;
                   КонецЕсли;
+              #Иначе
+                  Возврат 4;
               #КонецЕсли
-              Возврат 3;
           Иначе
-              Возврат 4;
+              Возврат 5;
           КонецЕсли;
       КонецФункции""";
 
@@ -152,49 +201,27 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   }
 
   @Test
-  void testNestedIfWithPreprocessorNoElse() {
-    // Test case for ClassCastException bug - variant without else clause
+  void testNestedPreprocessorNoCrash() {
+    // Negative test: should not crash when processing nested preprocessor with if-statements
     var sample = """
-      Функция ТестСПрепроцессоромВIfStatementБезElse()
-          Если Условие1 Тогда
-              #Если Сервер Тогда
-                  Если Условие2 Тогда
-                      Возврат 1;
-                  ИначеЕсли Условие3 Тогда
-                      Возврат 2;
-                  КонецЕсли;
-              #КонецЕсли
-              Возврат 3;
-          КонецЕсли;
-          Возврат 4;
-      КонецФункции""";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    // Should not throw ClassCastException
-    assertThat(diagnostics).isEmpty();
-
-  }
-
-  @Test
-  void testComplexPreprocessorInElsifBranch() {
-    // More complex test case matching the stack trace pattern
-    var sample = """
-      Функция ТестСложнаяСтруктура()
-          Если Условие1 Тогда
-              #Если Сервер Тогда
-                  Если Условие2 Тогда
-                      А = 1;
-                  ИначеЕсли Условие3 Тогда
-                      Б = 2;
-                  КонецЕсли;
-              #КонецЕсли
-              Возврат 1;
-          ИначеЕсли Условие4 Тогда
-              Возврат 2;
-          КонецЕсли;
-          Возврат 3;
+      Функция ВложенныйПрепроцессор()
+          #Если Сервер Тогда
+              Если Условие1 Тогда
+                  #Если НЕ ВебКлиент Тогда
+                      Если Условие2 Тогда
+                          Возврат 1;
+                      Иначе
+                          Возврат 2;
+                      КонецЕсли;
+                  #Иначе
+                      Возврат 3;
+                  #КонецЕсли
+              Иначе
+                  Возврат 4;
+              КонецЕсли;
+          #Иначе
+              Возврат 5;
+          #КонецЕсли
       КонецФункции""";
 
     var documentContext = TestUtils.getDocumentContext(sample);
