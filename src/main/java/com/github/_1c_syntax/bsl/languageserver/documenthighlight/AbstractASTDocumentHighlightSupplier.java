@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -42,11 +43,13 @@ public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHi
    * @param highlights Список подсветок, в который будет добавлена подсветка токена
    * @param terminalNode Терминальный узел с токеном (может быть null)
    */
-  protected void addTokenHighlight(List<DocumentHighlight> highlights, TerminalNode terminalNode) {
-    if (terminalNode != null) {
-      var token = terminalNode.getSymbol();
-      var range = Ranges.create(token);
-      highlights.add(new DocumentHighlight(range));
+  protected void addTokenHighlight(List<DocumentHighlight> highlights, @Nullable TerminalNode terminalNode) {
+    if (terminalNode == null) {
+      return;
     }
+
+    var token = terminalNode.getSymbol();
+    var range = Ranges.create(token);
+    highlights.add(new DocumentHighlight(range));
   }
 }

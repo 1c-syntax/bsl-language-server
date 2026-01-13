@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Range;
@@ -117,34 +116,18 @@ public class SubroutineDocumentHighlightSupplier extends AbstractASTDocumentHigh
         if (method.isFunction()) {
           var function = sub.function();
           if (function != null) {
-            addTerminalHighlight(highlights, function.funcDeclaration().FUNCTION_KEYWORD());
-            addTerminalHighlight(highlights, function.ENDFUNCTION_KEYWORD());
+            addTokenHighlight(highlights, function.funcDeclaration().FUNCTION_KEYWORD());
+            addTokenHighlight(highlights, function.ENDFUNCTION_KEYWORD());
           }
         } else {
           var procedure = sub.procedure();
           if (procedure != null) {
-            addTerminalHighlight(highlights, procedure.procDeclaration().PROCEDURE_KEYWORD());
-            addTerminalHighlight(highlights, procedure.ENDPROCEDURE_KEYWORD());
+            addTokenHighlight(highlights, procedure.procDeclaration().PROCEDURE_KEYWORD());
+            addTokenHighlight(highlights, procedure.ENDPROCEDURE_KEYWORD());
           }
         }
         return;
       }
-    }
-  }
-
-  private void addTerminalHighlight(List<DocumentHighlight> highlights, TerminalNode node) {
-    if (node != null) {
-      var range = new Range(
-        new org.eclipse.lsp4j.Position(
-          node.getSymbol().getLine() - 1,
-          node.getSymbol().getCharPositionInLine()
-        ),
-        new org.eclipse.lsp4j.Position(
-          node.getSymbol().getLine() - 1,
-          node.getSymbol().getCharPositionInLine() + node.getText().length()
-        )
-      );
-      highlights.add(new DocumentHighlight(range));
     }
   }
 }
