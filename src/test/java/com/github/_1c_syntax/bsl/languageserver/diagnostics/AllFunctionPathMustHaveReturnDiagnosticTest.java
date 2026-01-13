@@ -201,6 +201,33 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   }
 
   @Test
+  void testPreprocessorInsideIfBlockWithMissingReturn() {
+    // Positive test: preprocessor inside if block, missing return should be detected
+    // The outer if-elsif chain is missing else, causing missing return
+    var sample = """
+      Функция ПрепроцессорВнутриIfБлока()
+          Если Условие1 Тогда
+              #Если Сервер Тогда
+                  Возврат 1;
+              #Иначе
+                  Возврат 2;
+              #КонецЕсли
+          ИначеЕсли Условие2 Тогда
+              Возврат 3;
+          КонецЕсли;
+          // Missing return here - no else branch for outer if
+      КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 33);
+
+  }
+
+  @Test
   void testNestedPreprocessorNoCrash() {
     // Negative test: should not crash when processing nested preprocessor with if-statements
     var sample = """
