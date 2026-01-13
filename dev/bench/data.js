@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1767994249579,
+  "lastUpdate": 1768308563396,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34038,6 +34038,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8287701587767248",
             "extra": "mean: 69.41599647204082 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d5d20cc1e7e9e5ad33680768b01a89f40722a42f",
+          "message": "Downgrade spotless plugin version to 7.0.4",
+          "timestamp": "2026-01-13T13:40:24+01:00",
+          "tree_id": "956deeb1671355f8d5857684eb61e1f66ba4f920",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d5d20cc1e7e9e5ad33680768b01a89f40722a42f"
+        },
+        "date": 1768308558112,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.00026297569275,
+            "unit": "sec",
+            "range": "stddev: 0.8327383724244594",
+            "extra": "mean: 69.00026297569275 sec\nrounds: 3"
           }
         ]
       }
