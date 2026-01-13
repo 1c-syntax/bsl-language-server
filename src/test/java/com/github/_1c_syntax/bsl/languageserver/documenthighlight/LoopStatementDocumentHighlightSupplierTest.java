@@ -45,7 +45,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(14, 6)); // На "Для"
+    params.setPosition(new Position(13, 4)); // На "Для" (строка 14 в 1-based, 13 в 0-based)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -62,7 +62,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(18, 6)); // На "Пока"
+    params.setPosition(new Position(17, 4)); // На "Пока" (строка 18 в 1-based, 17 в 0-based)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -79,7 +79,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(22, 6)); // На "Для" в "Для Каждого"
+    params.setPosition(new Position(21, 4)); // На "Для" в "Для Каждого" (строка 22 в 1-based, 21 в 0-based)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -96,7 +96,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(14, 30)); // На "Цикл"
+    params.setPosition(new Position(13, 27)); // На "Цикл" (строка 14, после "Для Счетчик = 1 По 10 ")
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -112,12 +112,40 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 6)); // На "Если" (не цикл)
+    params.setPosition(new Position(3, 4)); // На "Если" (не цикл)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isEmpty();
+  }
+
+  @Test
+  void testNestedForEachInsideWhile() {
+    // given
+    // Тестируем вложенный цикл "Для Каждого" внутри "Пока"
+    // Строка 28 (0-based) содержит "Для Каждого Элемент Из Массив Цикл" внутри "Пока"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(28, 8)); // На "Для" во вложенном цикле
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Для, Каждого, Из, Цикл, КонецЦикла внутреннего цикла
+    // НЕ должны подсветиться ключевые слова внешнего цикла "Пока"
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(5);
+
+    // Проверяем, что все подсвеченные элементы находятся на строках 28-30 (внутренний цикл)
+    // а не на строках 27, 31 (внешний цикл "Пока")
+    for (var highlight : highlights) {
+      var line = highlight.getRange().getStart().getLine();
+      assertThat(line).isGreaterThanOrEqualTo(28);
+      assertThat(line).isLessThanOrEqualTo(30);
+    }
   }
 }

@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -64,16 +63,30 @@ public class TryStatementDocumentHighlightSupplier extends AbstractASTDocumentHi
     }
 
     // Находим родительский узел tryStatement
-    var tryStatement = Trees.getAncestorByRuleIndex(
-      (ParserRuleContext) terminalNode.getParent(),
-      BSLParser.RULE_tryStatement
-    );
+    // Токены try-конструкции находятся напрямую в TryStatementContext,
+    // поэтому parent уже может быть нужным типом
+    var parent = (ParserRuleContext) terminalNode.getParent();
+    var tryStatement = findTryStatementContext(parent);
 
     if (tryStatement == null) {
       return Collections.emptyList();
     }
 
     return highlightTryStatement(tryStatement);
+  }
+
+  /**
+   * Находит TryStatementContext.
+   * Сначала проверяет сам parent, затем ищет среди его предков.
+   */
+  @Nullable
+  private ParserRuleContext findTryStatementContext(ParserRuleContext parent) {
+    // Проверяем, является ли сам parent нужным типом
+    if (parent.getRuleIndex() == BSLParser.RULE_tryStatement) {
+      return parent;
+    }
+    // Если нет, ищем среди предков
+    return Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_tryStatement);
   }
 
   private boolean isTryStatementKeyword(int tokenType) {

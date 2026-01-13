@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -65,25 +64,19 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
 
     var parent = (ParserRuleContext) terminalNode.getParent();
 
-    // Проверяем для While
-    var whileStatement = Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_whileStatement);
-    if (whileStatement != null) {
-      return highlightWhileStatement(whileStatement);
+    // Находим ближайший цикл - сначала проверяем сам parent, потом его предков
+    var loopStatement = findNearestLoopStatement(parent);
+    if (loopStatement == null) {
+      return Collections.emptyList();
     }
 
-    // Проверяем для For
-    var forStatement = Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_forStatement);
-    if (forStatement != null) {
-      return highlightForStatement(forStatement);
-    }
-
-    // Проверяем для ForEach
-    var forEachStatement = Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_forEachStatement);
-    if (forEachStatement != null) {
-      return highlightForEachStatement(forEachStatement);
-    }
-
-    return Collections.emptyList();
+    // Определяем тип цикла и подсвечиваем
+    return switch (loopStatement.getRuleIndex()) {
+      case BSLParser.RULE_whileStatement -> highlightWhileStatement(loopStatement);
+      case BSLParser.RULE_forStatement -> highlightForStatement(loopStatement);
+      case BSLParser.RULE_forEachStatement -> highlightForEachStatement(loopStatement);
+      default -> Collections.emptyList();
+    };
   }
 
   private boolean isLoopKeyword(int tokenType) {
@@ -94,6 +87,27 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
       || tokenType == BSLParser.TO_KEYWORD
       || tokenType == BSLParser.DO_KEYWORD
       || tokenType == BSLParser.ENDDO_KEYWORD;
+  }
+
+  /**
+   * Находит ближайший Statement контекст цикла.
+   * Сначала проверяет сам parent, затем поднимается по иерархии предков.
+   * Это необходимо для корректной обработки вложенных циклов.
+   */
+  @Nullable
+  private ParserRuleContext findNearestLoopStatement(ParserRuleContext context) {
+    var current = context;
+    while (current != null) {
+      var ruleIndex = current.getRuleIndex();
+      if (ruleIndex == BSLParser.RULE_whileStatement
+          || ruleIndex == BSLParser.RULE_forStatement
+          || ruleIndex == BSLParser.RULE_forEachStatement) {
+        return current;
+      }
+      var parent = current.getParent();
+      current = parent instanceof ParserRuleContext ? (ParserRuleContext) parent : null;
+    }
+    return null;
   }
 
   private List<DocumentHighlight> highlightWhileStatement(ParserRuleContext whileStatement) {

@@ -45,7 +45,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(28, 6)); // На "Попытка"
+    params.setPosition(new Position(35, 4)); // На "Попытка" (строка 36 в 1-based, 35 в 0-based)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -62,7 +62,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(30, 6)); // На "Исключение"
+    params.setPosition(new Position(37, 4)); // На "Исключение" (строка 38 в 1-based, 37 в 0-based)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -78,7 +78,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(32, 6)); // На "КонецПопытки"
+    params.setPosition(new Position(39, 4)); // На "КонецПопытки" (строка 40 в 1-based, 39 в 0-based)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -94,7 +94,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 6)); // На "Если" (не try)
+    params.setPosition(new Position(3, 4)); // На "Если" (не try)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
