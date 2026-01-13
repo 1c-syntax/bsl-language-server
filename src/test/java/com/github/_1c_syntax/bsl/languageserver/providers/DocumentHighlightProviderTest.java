@@ -92,11 +92,19 @@ class DocumentHighlightProviderTest {
     params.setPosition(new Position(49, 20)); // Bracket
     var bracketHighlights = provider.getDocumentHighlight(documentContext, params);
 
+    params.setPosition(new Position(3, 0)); // Procedure
+    var procedureHighlights = provider.getDocumentHighlight(documentContext, params);
+
+    params.setPosition(new Position(39, 4)); // Function
+    var functionHighlights = provider.getDocumentHighlight(documentContext, params);
+
     // then - все должны вернуть результаты
     assertThat(ifHighlights).as("If highlights").isNotEmpty();
     assertThat(forHighlights).as("For highlights").isNotEmpty();
     assertThat(tryHighlights).as("Try highlights").isNotEmpty();
     assertThat(regionHighlights).as("Region highlights").isNotEmpty();
     assertThat(bracketHighlights).as("Bracket highlights").isNotEmpty();
+    assertThat(procedureHighlights).as("Procedure highlights").isNotEmpty();
+    assertThat(functionHighlights).as("Function highlights").isNotEmpty();
   }
 }
