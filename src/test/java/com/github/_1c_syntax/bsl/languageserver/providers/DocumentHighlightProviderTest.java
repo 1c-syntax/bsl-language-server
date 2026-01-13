@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class DocumentHighlightProviderTest {
 
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight.bsl";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/DocumentHighlightProvider.bsl";
 
   @Autowired
   private DocumentHighlightProvider provider;
@@ -45,7 +45,7 @@ class DocumentHighlightProviderTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 6)); // На "Если"
+    params.setPosition(new Position(4, 4)); // На "Если"
 
     // when
     var highlights = provider.getDocumentHighlight(documentContext, params);
@@ -60,7 +60,7 @@ class DocumentHighlightProviderTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 10)); // На обычном идентификаторе
+    params.setPosition(new Position(5, 10)); // На обычном идентификаторе
 
     // when
     var highlights = provider.getDocumentHighlight(documentContext, params);
@@ -77,26 +77,26 @@ class DocumentHighlightProviderTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
 
     // when - проверяем разные типы конструкций
-    params.setPosition(new Position(3, 6)); // If
+    params.setPosition(new Position(4, 4)); // If
     var ifHighlights = provider.getDocumentHighlight(documentContext, params);
 
-    params.setPosition(new Position(14, 6)); // For
+    params.setPosition(new Position(14, 4)); // For
     var forHighlights = provider.getDocumentHighlight(documentContext, params);
 
-    params.setPosition(new Position(28, 6)); // Try
+    params.setPosition(new Position(28, 4)); // Try
     var tryHighlights = provider.getDocumentHighlight(documentContext, params);
 
-    params.setPosition(new Position(35, 3)); // Region
+    params.setPosition(new Position(35, 1)); // Region
     var regionHighlights = provider.getDocumentHighlight(documentContext, params);
 
-    params.setPosition(new Position(49, 24)); // Bracket
+    params.setPosition(new Position(49, 20)); // Bracket
     var bracketHighlights = provider.getDocumentHighlight(documentContext, params);
 
     // then - все должны вернуть результаты
-    assertThat(ifHighlights).isNotEmpty();
-    assertThat(forHighlights).isNotEmpty();
-    assertThat(tryHighlights).isNotEmpty();
-    assertThat(regionHighlights).isNotEmpty();
-    assertThat(bracketHighlights).isNotEmpty();
+    assertThat(ifHighlights).as("If highlights").isNotEmpty();
+    assertThat(forHighlights).as("For highlights").isNotEmpty();
+    assertThat(tryHighlights).as("Try highlights").isNotEmpty();
+    assertThat(regionHighlights).as("Region highlights").isNotEmpty();
+    assertThat(bracketHighlights).as("Bracket highlights").isNotEmpty();
   }
 }

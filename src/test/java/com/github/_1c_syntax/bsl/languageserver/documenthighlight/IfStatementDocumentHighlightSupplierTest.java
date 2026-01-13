@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class IfStatementDocumentHighlightSupplierTest {
 
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight.bsl";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/IfStatementDocumentHighlight.bsl";
 
   @Autowired
   private IfStatementDocumentHighlightSupplier supplier;
@@ -45,7 +45,7 @@ class IfStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 6)); // На "Если"
+    params.setPosition(new Position(3, 4)); // На "Если"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -62,7 +62,7 @@ class IfStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(5, 6)); // На "ИначеЕсли"
+    params.setPosition(new Position(5, 4)); // На "ИначеЕсли"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -78,7 +78,7 @@ class IfStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(7, 6)); // На "Иначе"
+    params.setPosition(new Position(7, 4)); // На "Иначе"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -94,7 +94,7 @@ class IfStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(9, 6)); // На "КонецЕсли"
+    params.setPosition(new Position(9, 4)); // На "КонецЕсли"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -110,7 +110,7 @@ class IfStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 10)); // На обычном идентификаторе
+    params.setPosition(new Position(13, 4)); // На "Пока" (не if)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);

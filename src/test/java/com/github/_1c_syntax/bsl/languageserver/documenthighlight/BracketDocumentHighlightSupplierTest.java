@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class BracketDocumentHighlightSupplierTest {
 
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight.bsl";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/BracketDocumentHighlight.bsl";
 
   @Autowired
   private BracketDocumentHighlightSupplier supplier;
@@ -45,7 +45,7 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(49, 24)); // На "(" в "(1 + 2)"
+    params.setPosition(new Position(4, 20)); // На "(" в "(1 + 2)"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -62,7 +62,7 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(49, 29)); // На ")" в "(1 + 2)"
+    params.setPosition(new Position(4, 26)); // На ")" в "(1 + 2)"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -78,7 +78,7 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(50, 18)); // На "[" в "Массив[0]"
+    params.setPosition(new Position(5, 18)); // На "[" в "Массив[0]"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -95,7 +95,7 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(50, 20)); // На "]" в "Массив[0]"
+    params.setPosition(new Position(5, 20)); // На "]" в "Массив[0]"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -111,7 +111,7 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 6)); // На "Если" (не скобка)
+    params.setPosition(new Position(9, 4)); // На "Если" (не скобка)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);

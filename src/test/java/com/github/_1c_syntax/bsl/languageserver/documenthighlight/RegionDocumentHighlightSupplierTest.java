@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class RegionDocumentHighlightSupplierTest {
 
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight.bsl";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/RegionDocumentHighlight.bsl";
 
   @Autowired
   private RegionDocumentHighlightSupplier supplier;
@@ -45,7 +45,7 @@ class RegionDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(35, 3)); // На "#Область"
+    params.setPosition(new Position(2, 1)); // На "#Область"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -62,7 +62,7 @@ class RegionDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(45, 3)); // На "#КонецОбласти"
+    params.setPosition(new Position(12, 1)); // На "#КонецОбласти"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -78,7 +78,7 @@ class RegionDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(37, 6)); // На вложенной "#Область"
+    params.setPosition(new Position(4, 5)); // На вложенной "#Область"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -96,7 +96,7 @@ class RegionDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 6)); // На "Если" (не регион)
+    params.setPosition(new Position(15, 4)); // На "Если" (не регион)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);

@@ -86,7 +86,9 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
       || tokenType == BSLParser.IN_KEYWORD
       || tokenType == BSLParser.TO_KEYWORD
       || tokenType == BSLParser.DO_KEYWORD
-      || tokenType == BSLParser.ENDDO_KEYWORD;
+      || tokenType == BSLParser.ENDDO_KEYWORD
+      || tokenType == BSLParser.BREAK_KEYWORD
+      || tokenType == BSLParser.CONTINUE_KEYWORD;
   }
 
   /**
@@ -123,6 +125,9 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
     addTokenHighlight(highlights, whileStatementContext.DO_KEYWORD());
     addTokenHighlight(highlights, whileStatementContext.ENDDO_KEYWORD());
 
+    // Добавляем break и continue внутри цикла
+    addBreakAndContinueHighlights(highlights, whileStatementContext.codeBlock());
+
     return highlights;
   }
 
@@ -139,6 +144,9 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
     addTokenHighlight(highlights, forStatementContext.TO_KEYWORD());
     addTokenHighlight(highlights, forStatementContext.DO_KEYWORD());
     addTokenHighlight(highlights, forStatementContext.ENDDO_KEYWORD());
+
+    // Добавляем break и continue внутри цикла
+    addBreakAndContinueHighlights(highlights, forStatementContext.codeBlock());
 
     return highlights;
   }
@@ -158,6 +166,78 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
     addTokenHighlight(highlights, forEachStatementContext.DO_KEYWORD());
     addTokenHighlight(highlights, forEachStatementContext.ENDDO_KEYWORD());
 
+    // Добавляем break и continue внутри цикла
+    addBreakAndContinueHighlights(highlights, forEachStatementContext.codeBlock());
+
     return highlights;
+  }
+
+  /**
+   * Добавляет подсветку для break и continue внутри блока кода цикла.
+   * Ищет только на первом уровне вложенности - не заходит во вложенные циклы.
+   */
+  private void addBreakAndContinueHighlights(List<DocumentHighlight> highlights, BSLParser.CodeBlockContext codeBlock) {
+    if (codeBlock == null) {
+      return;
+    }
+
+    for (var statement : codeBlock.statement()) {
+      var compoundStatement = statement.compoundStatement();
+      if (compoundStatement == null) {
+        continue;
+      }
+
+      // Подсвечиваем break
+      var breakStatement = compoundStatement.breakStatement();
+      if (breakStatement != null) {
+        addTokenHighlight(highlights, breakStatement.BREAK_KEYWORD());
+      }
+
+      // Подсвечиваем continue
+      var continueStatement = compoundStatement.continueStatement();
+      if (continueStatement != null) {
+        addTokenHighlight(highlights, continueStatement.CONTINUE_KEYWORD());
+      }
+
+      // Рекурсивно ищем в if/else блоках, но НЕ во вложенных циклах
+      var ifStatement = compoundStatement.ifStatement();
+      if (ifStatement != null) {
+        addBreakAndContinueFromIfStatement(highlights, ifStatement);
+      }
+
+      var tryStatement = compoundStatement.tryStatement();
+      if (tryStatement != null) {
+        addBreakAndContinueFromTryStatement(highlights, tryStatement);
+      }
+    }
+  }
+
+  /**
+   * Ищет break/continue в if-блоках.
+   */
+  private void addBreakAndContinueFromIfStatement(List<DocumentHighlight> highlights,
+                                                   BSLParser.IfStatementContext ifStatement) {
+    var ifBranch = ifStatement.ifBranch();
+    if (ifBranch != null) {
+      addBreakAndContinueHighlights(highlights, ifBranch.codeBlock());
+    }
+
+    for (var elsifBranch : ifStatement.elsifBranch()) {
+      addBreakAndContinueHighlights(highlights, elsifBranch.codeBlock());
+    }
+
+    var elseBranch = ifStatement.elseBranch();
+    if (elseBranch != null) {
+      addBreakAndContinueHighlights(highlights, elseBranch.codeBlock());
+    }
+  }
+
+  /**
+   * Ищет break/continue в try-блоках.
+   */
+  private void addBreakAndContinueFromTryStatement(List<DocumentHighlight> highlights,
+                                                    BSLParser.TryStatementContext tryStatement) {
+    addBreakAndContinueHighlights(highlights, tryStatement.tryCodeBlock().codeBlock());
+    addBreakAndContinueHighlights(highlights, tryStatement.exceptCodeBlock().codeBlock());
   }
 }

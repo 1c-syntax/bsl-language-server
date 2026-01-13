@@ -22,14 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -66,16 +64,30 @@ public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHig
     }
 
     // Находим родительский узел ifStatement
-    var ifStatement = Trees.getAncestorByRuleIndex(
-      (ParserRuleContext) terminalNode.getParent(),
-      BSLParser.RULE_ifStatement
-    );
+    // Некоторые токены (ENDIF_KEYWORD) находятся напрямую в IfStatementContext,
+    // поэтому parent уже может быть нужным типом
+    var parent = (ParserRuleContext) terminalNode.getParent();
+    var ifStatement = findIfStatementContext(parent);
 
     if (ifStatement == null) {
       return Collections.emptyList();
     }
 
     return highlightIfStatement(ifStatement);
+  }
+
+  /**
+   * Находит IfStatementContext.
+   * Сначала проверяет сам parent, затем ищет среди его предков.
+   */
+  @Nullable
+  private ParserRuleContext findIfStatementContext(ParserRuleContext parent) {
+    // Проверяем, является ли сам parent нужным типом
+    if (parent.getRuleIndex() == BSLParser.RULE_ifStatement) {
+      return parent;
+    }
+    // Если нет, ищем среди предков
+    return Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_ifStatement);
   }
 
   private boolean isIfStatementKeyword(int tokenType) {

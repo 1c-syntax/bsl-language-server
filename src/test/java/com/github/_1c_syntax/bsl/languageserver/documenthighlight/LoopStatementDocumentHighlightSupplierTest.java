@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class LoopStatementDocumentHighlightSupplierTest {
 
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight.bsl";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/LoopStatementDocumentHighlight.bsl";
 
   @Autowired
   private LoopStatementDocumentHighlightSupplier supplier;
@@ -45,7 +45,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(13, 4)); // На "Для" (строка 14 в 1-based, 13 в 0-based)
+    params.setPosition(new Position(3, 4)); // На "Для"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -62,7 +62,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(17, 4)); // На "Пока" (строка 18 в 1-based, 17 в 0-based)
+    params.setPosition(new Position(7, 4)); // На "Пока"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -79,7 +79,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(21, 4)); // На "Для" в "Для Каждого" (строка 22 в 1-based, 21 в 0-based)
+    params.setPosition(new Position(11, 4)); // На "Для" в "Для Каждого"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -96,7 +96,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(13, 27)); // На "Цикл" (строка 14, после "Для Счетчик = 1 По 10 ")
+    params.setPosition(new Position(3, 27)); // На "Цикл"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -112,7 +112,7 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 4)); // На "Если" (не цикл)
+    params.setPosition(new Position(34, 4)); // На "Если" (не цикл)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -125,11 +125,10 @@ class LoopStatementDocumentHighlightSupplierTest {
   void testNestedForEachInsideWhile() {
     // given
     // Тестируем вложенный цикл "Для Каждого" внутри "Пока"
-    // Строка 28 (0-based) содержит "Для Каждого Элемент Из Массив Цикл" внутри "Пока"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(28, 8)); // На "Для" во вложенном цикле
+    params.setPosition(new Position(18, 8)); // На "Для" во вложенном цикле
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -140,12 +139,111 @@ class LoopStatementDocumentHighlightSupplierTest {
     // НЕ должны подсветиться ключевые слова внешнего цикла "Пока"
     assertThat(highlights).hasSizeGreaterThanOrEqualTo(5);
 
-    // Проверяем, что все подсвеченные элементы находятся на строках 28-30 (внутренний цикл)
-    // а не на строках 27, 31 (внешний цикл "Пока")
+    // Проверяем, что все подсвеченные элементы находятся на строках 18-20 (внутренний цикл)
     for (var highlight : highlights) {
       var line = highlight.getRange().getStart().getLine();
-      assertThat(line).isGreaterThanOrEqualTo(28);
-      assertThat(line).isLessThanOrEqualTo(30);
+      assertThat(line).isGreaterThanOrEqualTo(18);
+      assertThat(line).isLessThanOrEqualTo(20);
     }
+  }
+
+  @Test
+  void testBreakKeywordHighlightsLoop() {
+    // given
+    // Строка 8 содержит "Прервать;" внутри цикла "Пока"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(8, 8)); // На "Прервать"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Пока, Цикл, КонецЦикла, Прервать
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(4);
+  }
+
+  @Test
+  void testContinueKeywordHighlightsLoop() {
+    // given
+    // Строка 12 содержит "Продолжить;" внутри цикла "Для Каждого"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(12, 8)); // На "Продолжить"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Для, Каждого, Из, Цикл, КонецЦикла, Продолжить
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(6);
+  }
+
+  @Test
+  void testWhileLoopIncludesBreak() {
+    // given
+    // При клике на "Пока" должен подсвечиваться и "Прервать" внутри цикла
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(7, 4)); // На "Пока"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Пока, Цикл, КонецЦикла, Прервать
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(4);
+
+    // Проверяем, что "Прервать" на строке 8 тоже подсвечен
+    var breakHighlighted = highlights.stream()
+      .anyMatch(h -> h.getRange().getStart().getLine() == 8);
+    assertThat(breakHighlighted).isTrue();
+  }
+
+  @Test
+  void testBreakInsideIfInsideLoop() {
+    // given
+    // Строка 27 содержит "Прервать;" внутри "Если" внутри цикла "Для Каждого"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(27, 12)); // На "Прервать"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Для, Каждого, Из, Цикл, КонецЦикла, Прервать
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(6);
+  }
+
+  @Test
+  void testForEachLoopIncludesBreakInsideIf() {
+    // given
+    // При клике на "Для" должен подсвечиваться и "Прервать" внутри if внутри цикла
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(25, 4)); // На "Для"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Для, Каждого, Из, Цикл, КонецЦикла, Прервать
+    assertThat(highlights).hasSizeGreaterThanOrEqualTo(6);
+
+    // Проверяем, что "Прервать" на строке 27 тоже подсвечен
+    var breakHighlighted = highlights.stream()
+      .anyMatch(h -> h.getRange().getStart().getLine() == 27);
+    assertThat(breakHighlighted).isTrue();
   }
 }

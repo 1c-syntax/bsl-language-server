@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class TryStatementDocumentHighlightSupplierTest {
 
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight.bsl";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/TryStatementDocumentHighlight.bsl";
 
   @Autowired
   private TryStatementDocumentHighlightSupplier supplier;
@@ -45,7 +45,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(35, 4)); // На "Попытка" (строка 36 в 1-based, 35 в 0-based)
+    params.setPosition(new Position(3, 4)); // На "Попытка"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -62,7 +62,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(37, 4)); // На "Исключение" (строка 38 в 1-based, 37 в 0-based)
+    params.setPosition(new Position(5, 4)); // На "Исключение"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -78,7 +78,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(39, 4)); // На "КонецПопытки" (строка 40 в 1-based, 39 в 0-based)
+    params.setPosition(new Position(7, 4)); // На "КонецПопытки"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -94,7 +94,7 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 4)); // На "Если" (не try)
+    params.setPosition(new Position(11, 4)); // На "Если" (не try)
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
