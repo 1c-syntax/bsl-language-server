@@ -123,4 +123,85 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     assertThat(diagnostics).isEmpty();
 
   }
+
+  @Test
+  void testNestedIfWithPreprocessor() {
+    // Test case for ClassCastException bug when preprocessor directives are inside if-statements
+    var sample = """
+      Функция ТестСПрепроцессоромВIfStatement()
+          Если Условие1 Тогда
+              #Если Сервер Тогда
+                  Если Условие2 Тогда
+                      Возврат 1;
+                  ИначеЕсли Условие3 Тогда
+                      Возврат 2;
+                  КонецЕсли;
+              #КонецЕсли
+              Возврат 3;
+          Иначе
+              Возврат 4;
+          КонецЕсли;
+      КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    // Should not throw ClassCastException and should have no diagnostics
+    assertThat(diagnostics).isEmpty();
+
+  }
+
+  @Test
+  void testNestedIfWithPreprocessorNoElse() {
+    // Test case for ClassCastException bug - variant without else clause
+    var sample = """
+      Функция ТестСПрепроцессоромВIfStatementБезElse()
+          Если Условие1 Тогда
+              #Если Сервер Тогда
+                  Если Условие2 Тогда
+                      Возврат 1;
+                  ИначеЕсли Условие3 Тогда
+                      Возврат 2;
+                  КонецЕсли;
+              #КонецЕсли
+              Возврат 3;
+          КонецЕсли;
+          Возврат 4;
+      КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    // Should not throw ClassCastException
+    assertThat(diagnostics).isEmpty();
+
+  }
+
+  @Test
+  void testComplexPreprocessorInElsifBranch() {
+    // More complex test case matching the stack trace pattern
+    var sample = """
+      Функция ТестСложнаяСтруктура()
+          Если Условие1 Тогда
+              #Если Сервер Тогда
+                  Если Условие2 Тогда
+                      А = 1;
+                  ИначеЕсли Условие3 Тогда
+                      Б = 2;
+                  КонецЕсли;
+              #КонецЕсли
+              Возврат 1;
+          ИначеЕсли Условие4 Тогда
+              Возврат 2;
+          КонецЕсли;
+          Возврат 3;
+      КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    // Should not throw ClassCastException
+    assertThat(diagnostics).isEmpty();
+
+  }
 }
