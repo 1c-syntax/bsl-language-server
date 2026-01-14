@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
 class VariableSymbolTest {
@@ -160,11 +161,12 @@ class VariableSymbolTest {
       КонецПроцедуры
       """;
     
-    var ctx = TestUtils.getDocumentContext(code);
-    var variables = ctx.getSymbolTree().getVariables();
-    
-    // Should not throw NullPointerException
-    assertThat(variables).isNotNull();
+    // Symbol tree construction happens during getDocumentContext
+    // and should not throw NullPointerException
+    assertThatCode(() -> {
+      var ctx = TestUtils.getDocumentContext(code);
+      ctx.getSymbolTree().getVariables();
+    }).doesNotThrowAnyException();
   }
 
 }
