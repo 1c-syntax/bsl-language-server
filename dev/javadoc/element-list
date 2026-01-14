@@ -37,6 +37,7 @@ com.github._1c_syntax.bsl.languageserver.diagnostics
 com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure
 com.github._1c_syntax.bsl.languageserver.diagnostics.metadata
 com.github._1c_syntax.bsl.languageserver.diagnostics.typo
+com.github._1c_syntax.bsl.languageserver.documenthighlight
 com.github._1c_syntax.bsl.languageserver.documentlink
 com.github._1c_syntax.bsl.languageserver.events
 com.github._1c_syntax.bsl.languageserver.folding
