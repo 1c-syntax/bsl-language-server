@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768310585640,
+  "lastUpdate": 1768390970111,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34100,6 +34100,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.90021620677015",
             "extra": "mean: 69.69121058781941 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bdf2f4ca3434d13878310362d6a455845e2fc278",
+          "message": "Merge pull request #3767 from 1c-syntax/copilot/fix-nullpointerexception-node-null\n\nFix NullPointerException in VariableSymbolComputer when parsing malformed lValue",
+          "timestamp": "2026-01-14T12:34:30+01:00",
+          "tree_id": "adb3335c3f4399b4a495e4bf132845978477204b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bdf2f4ca3434d13878310362d6a455845e2fc278"
+        },
+        "date": 1768390963777,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.45661679903667,
+            "unit": "sec",
+            "range": "stddev: 0.4236616668822822",
+            "extra": "mean: 69.45661679903667 sec\nrounds: 3"
           }
         ]
       }
