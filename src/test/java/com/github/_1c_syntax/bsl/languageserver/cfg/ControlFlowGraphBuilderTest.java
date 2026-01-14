@@ -834,6 +834,42 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isInstanceOf(ConditionalVertex.class);
   }
 
+  @Test
+  void test_realWorldObjectModuleWithPreprocessor() {
+    // Test with real-world file that caused ClassCastException
+    // https://github.com/1c-syntax/bsl-language-server/issues/3740
+    var code = getResourceFile("RealWorldObjectModule");
+
+    var dContext = TestUtils.getDocumentContext(code);
+    var ast = dContext.getAst();
+    
+    assertThat(ast.subs()).isNotNull();
+    var subs = ast.subs().sub();
+    assertThat(subs).isNotEmpty();
+    
+    // Try to build CFG for each method - should not throw ClassCastException
+    for (var sub : subs) {
+      var codeBlock = sub.procedure() != null ? 
+        sub.procedure().subCodeBlock().codeBlock() :
+        (sub.function() != null ? sub.function().subCodeBlock().codeBlock() : null);
+      
+      if (codeBlock != null) {
+        var builder = new CfgBuildingParseTreeVisitor();
+        builder.producePreprocessorConditions(true);
+        
+        // Should not throw ClassCastException
+        var graph = builder.buildGraph(codeBlock);
+        assertThat(graph).isNotNull();
+        assertThat(graph.vertexSet()).isNotEmpty();
+      }
+    }
+    
+    // Also run diagnostics to ensure all code blocks are covered
+    // This ensures diagnostics that use CFG (like AllFunctionPathMustHaveReturn) don't throw exceptions
+    var diagnostics = dContext.getDiagnostics();
+    assertThat(diagnostics).isNotNull();
+  }
+
   @SneakyThrows
   private String getResourceFile(String name) {
 
