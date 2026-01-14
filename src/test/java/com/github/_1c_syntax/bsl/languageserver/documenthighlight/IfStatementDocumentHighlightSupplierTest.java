@@ -161,6 +161,158 @@ class IfStatementDocumentHighlightSupplierTest {
     assertThat(highlights).isEmpty();
   }
 
+  @Test
+  void testNestedIfStatement() {
+    // given
+    // Тест вложенных if-конструкций
+    // Строка 20 (0-based): "    Если Истина Тогда" (внешний if)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(20, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если" (внешний)
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться только ключевые слова внешнего if: Если, Тогда, КонецЕсли
+    assertThat(highlights).hasSize(3);
+
+    assertHighlightRange(highlights, 20, 4, 20, 8);     // Если (внешний)
+    assertHighlightRange(highlights, 20, 16, 20, 21);   // Тогда (внешний)
+    assertHighlightRange(highlights, 24, 4, 24, 13);    // КонецЕсли (внешний)
+  }
+
+  @Test
+  void testNestedInnerIfStatement() {
+    // given
+    // Строка 21 (0-based): "        Если Ложь Тогда" (внутренний if)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(21, 9);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если" (внутренний)
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться только ключевые слова внутреннего if: Если, Тогда, КонецЕсли
+    assertThat(highlights).hasSize(3);
+
+    assertHighlightRange(highlights, 21, 8, 21, 12);    // Если (внутренний)
+    assertHighlightRange(highlights, 21, 18, 21, 23);   // Тогда (внутренний)
+    assertHighlightRange(highlights, 23, 8, 23, 17);    // КонецЕсли (внутренний)
+  }
+
+  @Test
+  void testMultipleElseIf() {
+    // given
+    // Тест множественных ИначеЕсли
+    // Строка 29 (0-based): "    Если Ложь Тогда"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(29, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Если, Тогда, 3xИначеЕсли, 3xТогда, Иначе, КонецЕсли = 10
+    assertThat(highlights).hasSize(10);
+
+    assertHighlightRange(highlights, 29, 4, 29, 8);     // Если
+    assertHighlightRange(highlights, 29, 14, 29, 19);   // Тогда
+    assertHighlightRange(highlights, 31, 4, 31, 13);    // ИначеЕсли 1
+    assertHighlightRange(highlights, 33, 4, 33, 13);    // ИначеЕсли 2
+    assertHighlightRange(highlights, 35, 4, 35, 13);    // ИначеЕсли 3
+    assertHighlightRange(highlights, 37, 4, 37, 9);     // Иначе
+    assertHighlightRange(highlights, 39, 4, 39, 13);    // КонецЕсли
+  }
+
+  @Test
+  void testSimpleIfWithoutElse() {
+    // given
+    // Тест if без ИначеЕсли и Иначе
+    // Строка 44 (0-based): "    Если Истина Тогда"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(44, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Если, Тогда, КонецЕсли
+    assertThat(highlights).hasSize(3);
+
+    assertHighlightRange(highlights, 44, 4, 44, 8);     // Если
+    assertHighlightRange(highlights, 44, 16, 44, 21);   // Тогда
+    assertHighlightRange(highlights, 46, 4, 46, 13);    // КонецЕсли
+  }
+
+  @Test
+  void testIfWithElseIfButNoElse() {
+    // given
+    // Тест if без Иначе, но с ИначеЕсли
+    // Строка 51 (0-based): "    Если Ложь Тогда"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(51, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Если, Тогда, ИначеЕсли, Тогда, КонецЕсли
+    assertThat(highlights).hasSize(5);
+
+    assertHighlightRange(highlights, 51, 4, 51, 8);     // Если
+    assertHighlightRange(highlights, 51, 14, 51, 19);   // Тогда
+    assertHighlightRange(highlights, 53, 4, 53, 13);    // ИначеЕсли
+    assertHighlightRange(highlights, 53, 21, 53, 26);   // Тогда
+    assertHighlightRange(highlights, 55, 4, 55, 13);    // КонецЕсли
+  }
+
+  @Test
+  void testThenKeyword() {
+    // given
+    // Клик на "Тогда" должен подсветить весь блок if
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(3, 18); // На "Тогда"
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    assertThat(highlights).hasSize(6);
+
+    assertHighlightRange(highlights, 3, 4, 3, 8);      // Если
+    assertHighlightRange(highlights, 3, 16, 3, 21);    // Тогда
+  }
+
   private void assertHighlightRange(List<DocumentHighlight> highlights,
                                      int startLine, int startChar,
                                      int endLine, int endChar) {

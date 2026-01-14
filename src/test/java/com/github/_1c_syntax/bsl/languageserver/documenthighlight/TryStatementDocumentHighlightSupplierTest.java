@@ -134,6 +134,80 @@ class TryStatementDocumentHighlightSupplierTest {
     assertThat(highlights).isEmpty();
   }
 
+  @Test
+  void testNestedTryOuter() {
+    // given
+    // Тест вложенных try-конструкций - внешняя попытка
+    // Строка 18 (0-based): "    Попытка" (внешняя)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(18, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Попытка" (внешняя)
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться только ключевые слова внешней попытки: Попытка, Исключение, КонецПопытки
+    assertThat(highlights).hasSize(3);
+
+    assertHighlightRange(highlights, 18, 4, 18, 11);    // Попытка (внешняя)
+    assertHighlightRange(highlights, 24, 4, 24, 14);    // Исключение (внешняя)
+    assertHighlightRange(highlights, 26, 4, 26, 16);    // КонецПопытки (внешняя)
+  }
+
+  @Test
+  void testNestedTryInner() {
+    // given
+    // Строка 19 (0-based): "        Попытка" (внутренняя)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(19, 9);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Попытка" (внутренняя)
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться только ключевые слова внутренней попытки: Попытка, Исключение, КонецПопытки
+    assertThat(highlights).hasSize(3);
+
+    assertHighlightRange(highlights, 19, 8, 19, 15);    // Попытка (внутренняя)
+    assertHighlightRange(highlights, 21, 8, 21, 18);    // Исключение (внутренняя)
+    assertHighlightRange(highlights, 23, 8, 23, 20);    // КонецПопытки (внутренняя)
+  }
+
+  @Test
+  void testTryInsideIf() {
+    // given
+    // Тест попытки внутри if
+    // Строка 32 (0-based): "        Попытка"
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(32, 9);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Попытка"
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertThat(highlights).isNotEmpty();
+    // Должны подсветиться: Попытка, Исключение, КонецПопытки
+    assertThat(highlights).hasSize(3);
+
+    assertHighlightRange(highlights, 32, 8, 32, 15);    // Попытка
+    assertHighlightRange(highlights, 34, 8, 34, 18);    // Исключение
+    assertHighlightRange(highlights, 36, 8, 36, 20);    // КонецПопытки
+  }
+
   private void assertHighlightRange(List<DocumentHighlight> highlights,
                                      int startLine, int startChar,
                                      int endLine, int endChar) {
