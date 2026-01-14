@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768420263417,
+  "lastUpdate": 1768420810620,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34224,6 +34224,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8817494624745433",
             "extra": "mean: 69.27588836352031 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "baed484da23063922c2785ae809254f02e6e3af1",
+          "message": "Merge pull request #3751 from 1c-syntax/copilot/fix-reference-index-calculation\n\nFix incorrect module reference range overlapping accessor method",
+          "timestamp": "2026-01-14T20:41:53+01:00",
+          "tree_id": "792f2af88bbd5b9bc5099b319990aab2726c6e17",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/baed484da23063922c2785ae809254f02e6e3af1"
+        },
+        "date": 1768420805324,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.78833158810933,
+            "unit": "sec",
+            "range": "stddev: 0.8321665745626435",
+            "extra": "mean: 68.78833158810933 sec\nrounds: 3"
           }
         ]
       }
