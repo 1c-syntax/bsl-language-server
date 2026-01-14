@@ -20,7 +20,6 @@
  * License along with BSL Language Server.
  */
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
-
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
@@ -30,92 +29,64 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
-
 @SpringBootTest
-class SubroutineDocumentHighlightSupplierTest {
-
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/SubroutineDocumentHighlight.bsl";
-
+class SDBLBracketDocumentHighlightSupplierTest {
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/SDBLBracketDocumentHighlight.bsl";
+  // Точные позиции скобок в тестовом файле (0-based):
+  // Строка 10: "    |   (Товары.Цена > 0)"
+  // "(" на позиции 8, Range(10, 8, 10, 9)
+  // ")" на позиции 24, Range(10, 24, 10, 25)
   @Autowired
-  private SubroutineDocumentHighlightSupplier supplier;
-
+  private SDBLBracketDocumentHighlightSupplier supplier;
   @Test
-  void testProcedureKeyword() {
-    // given
-    // Строка 2 (0-based): "Процедура ТестПроцедура()"
+  void testOpenParenthesisCursorInside() {
+    // given - курсор внутри открывающей скобки
+    // Строка 10 (0-based): "    |   (Товары.Цена > 0)"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(2, 3)); // На "Процедура"
-
+    // Курсор на "(" (строка 10, позиция 8 - на самой скобке)
+    params.setPosition(new Position(10, 8));
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
-
-    // then
-    assertThat(highlights).isNotEmpty();
-    // Должны подсветиться: Процедура и КонецПроцедуры
-    assertThat(highlights).hasSize(2);
-
-    // Проверяем точные позиции
-    assertHighlightRange(highlights, 2, 0, 2, 9);      // Процедура
-    assertHighlightRange(highlights, 4, 0, 4, 14);     // КонецПроцедуры
-  }
-
-  @Test
-  void testEndProcedureKeyword() {
-    // given
-    // Строка 4 (0-based): "КонецПроцедуры"
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var params = new DocumentHighlightParams();
-    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 5)); // На "КонецПроцедуры"
-
-    // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
-
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(2);
-
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 2, 0, 2, 9);      // Процедура
-    assertHighlightRange(highlights, 4, 0, 4, 14);     // КонецПроцедуры
+    assertHighlightRange(highlights, 10, 8, 10, 9);   // (
+    assertHighlightRange(highlights, 10, 24, 10, 25); // )
   }
-
   @Test
-  void testFunctionKeyword() {
-    // given
-    // Строка 6 (0-based): "Функция ТестФункция()"
+  void testOpenParenthesisCursorAfter() {
+    // given - курсор справа от открывающей скобки
+    // Строка 10 (0-based): "    |   (Товары.Цена > 0)"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(6, 3)); // На "Функция"
-
+    // Курсор сразу после "(" (строка 10, позиция 9)
+    params.setPosition(new Position(10, 9));
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
-
     // then
     assertThat(highlights).isNotEmpty();
-    // Должны подсветиться: Функция и КонецФункции
     assertThat(highlights).hasSize(2);
-
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 6, 0, 6, 7);      // Функция
-    assertHighlightRange(highlights, 8, 0, 8, 12);     // КонецФункции
+    assertHighlightRange(highlights, 10, 8, 10, 9);   // (
+    assertHighlightRange(highlights, 10, 24, 10, 25); // )
   }
-
   @Test
-  void testEndFunctionKeyword() {
-    // given
-    // Строка 8 (0-based): "КонецФункции"
+  void testCloseParenthesis() {
+    // given - курсор на закрывающей скобке
+    // Строка 10 (0-based): "    |   (Товары.Цена > 0)"
+    // ")" на позиции 24, Range(10, 24, 10, 25)
+    // Позиция 25 (конец токена) позволяет найти токен через проверку "курсор после токена"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(8, 5)); // На "КонецФункции"
+    // Курсор на конец ")" (позиция 25 = конец токена)
+    params.setPosition(new Position(10, 25));
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -125,26 +96,21 @@ class SubroutineDocumentHighlightSupplierTest {
     assertThat(highlights).hasSize(2);
 
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 6, 0, 6, 7);      // Функция
-    assertHighlightRange(highlights, 8, 0, 8, 12);     // КонецФункции
+    assertHighlightRange(highlights, 10, 8, 10, 9);   // (
+    assertHighlightRange(highlights, 10, 24, 10, 25); // )
   }
-
   @Test
-  void testNonSubroutineKeyword() {
+  void testNonBracket() {
     // given
-    // Строка 16 (0-based): "    Если Истина Тогда"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(16, 4)); // На "Если" (не процедура)
-
+    params.setPosition(new Position(0, 0)); // Позиция в комментарии
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
-
     // then
     assertThat(highlights).isEmpty();
   }
-
   private void assertHighlightRange(List<DocumentHighlight> highlights,
                                      int startLine, int startChar,
                                      int endLine, int endChar) {

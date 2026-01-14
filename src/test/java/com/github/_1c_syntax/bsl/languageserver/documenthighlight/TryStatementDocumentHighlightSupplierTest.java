@@ -22,12 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,10 +46,11 @@ class TryStatementDocumentHighlightSupplierTest {
   @Test
   void testTryKeyword() {
     // given
+    // Строка 3 (0-based): "    Попытка"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 4)); // На "Попытка"
+    params.setPosition(new Position(3, 5)); // На "Попытка"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -53,44 +58,62 @@ class TryStatementDocumentHighlightSupplierTest {
     // then
     assertThat(highlights).isNotEmpty();
     // Должны подсветиться: Попытка, Исключение, КонецПопытки
-    assertThat(highlights).hasSizeGreaterThanOrEqualTo(3);
+    assertThat(highlights).hasSize(3);
+
+    // Проверяем точные позиции
+    assertHighlightRange(highlights, 3, 4, 3, 11);     // Попытка
+    assertHighlightRange(highlights, 5, 4, 5, 14);     // Исключение
+    assertHighlightRange(highlights, 7, 4, 7, 16);     // КонецПопытки
   }
 
   @Test
   void testExceptKeyword() {
     // given
+    // Строка 5 (0-based): "    Исключение"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(5, 4)); // На "Исключение"
+    params.setPosition(new Position(5, 6)); // На "Исключение"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSizeGreaterThanOrEqualTo(3);
+    assertThat(highlights).hasSize(3);
+
+    // Проверяем точные позиции
+    assertHighlightRange(highlights, 3, 4, 3, 11);     // Попытка
+    assertHighlightRange(highlights, 5, 4, 5, 14);     // Исключение
+    assertHighlightRange(highlights, 7, 4, 7, 16);     // КонецПопытки
   }
 
   @Test
   void testEndTryKeyword() {
     // given
+    // Строка 7 (0-based): "    КонецПопытки;"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(7, 4)); // На "КонецПопытки"
+    params.setPosition(new Position(7, 6)); // На "КонецПопытки"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSizeGreaterThanOrEqualTo(3);
+    assertThat(highlights).hasSize(3);
+
+    // Проверяем точные позиции
+    assertHighlightRange(highlights, 3, 4, 3, 11);     // Попытка
+    assertHighlightRange(highlights, 5, 4, 5, 14);     // Исключение
+    assertHighlightRange(highlights, 7, 4, 7, 16);     // КонецПопытки
   }
 
   @Test
   void testNonTryKeyword() {
     // given
+    // Строка 11 (0-based): "    Если Истина Тогда"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -101,5 +124,17 @@ class TryStatementDocumentHighlightSupplierTest {
 
     // then
     assertThat(highlights).isEmpty();
+  }
+
+  private void assertHighlightRange(List<DocumentHighlight> highlights,
+                                     int startLine, int startChar,
+                                     int endLine, int endChar) {
+    var expectedRange = new Range(
+      new Position(startLine, startChar),
+      new Position(endLine, endChar)
+    );
+    assertThat(highlights)
+      .extracting(DocumentHighlight::getRange)
+      .contains(expectedRange);
   }
 }

@@ -50,6 +50,9 @@ public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHi
 
   /**
    * Находит терминальный узел на позиции курсора и возвращает информацию о нём.
+   * <p>
+   * Поддерживает как позицию внутри токена, так и позицию сразу после токена
+   * (когда курсор стоит справа от токена).
    *
    * @param position        позиция курсора
    * @param documentContext контекст документа
@@ -57,7 +60,15 @@ public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHi
    */
   protected Optional<TerminalNodeInfo> findTerminalNode(Position position, DocumentContext documentContext) {
     var ast = documentContext.getAst();
+
+    // Сначала пробуем найти токен на текущей позиции
     var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
+
+    // Если не нашли и курсор не в начале строки, пробуем позицию слева (курсор справа от токена)
+    if (maybeTerminalNode.isEmpty() && position.getCharacter() > 0) {
+      var leftPosition = new Position(position.getLine(), position.getCharacter() - 1);
+      maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, leftPosition);
+    }
 
     if (maybeTerminalNode.isEmpty()) {
       return Optional.empty();

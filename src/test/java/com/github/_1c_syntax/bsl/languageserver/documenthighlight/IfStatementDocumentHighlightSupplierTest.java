@@ -22,12 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,10 +46,12 @@ class IfStatementDocumentHighlightSupplierTest {
   @Test
   void testIfKeyword() {
     // given
+    // Строка 3 (0-based): "    Если Истина Тогда"
+    // "Если" на позиции 4-7, "Тогда" на позиции 16-20
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 4)); // На "Если"
+    params.setPosition(new Position(3, 5)); // На "Если"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
@@ -53,60 +59,86 @@ class IfStatementDocumentHighlightSupplierTest {
     // then
     assertThat(highlights).isNotEmpty();
     // Должны подсветиться: Если, Тогда, ИначеЕсли, Тогда, Иначе, КонецЕсли
-    assertThat(highlights).hasSizeGreaterThanOrEqualTo(6);
+    assertThat(highlights).hasSize(6);
+
+    // Проверяем точные позиции
+    assertHighlightRange(highlights, 3, 4, 3, 8);      // Если
+    assertHighlightRange(highlights, 3, 16, 3, 21);    // Тогда
+    assertHighlightRange(highlights, 5, 4, 5, 13);     // ИначеЕсли
+    assertHighlightRange(highlights, 5, 19, 5, 24);    // Тогда
+    assertHighlightRange(highlights, 7, 4, 7, 9);      // Иначе
+    assertHighlightRange(highlights, 9, 4, 9, 13);     // КонецЕсли
   }
 
   @Test
   void testElseIfKeyword() {
     // given
+    // Строка 5 (0-based): "    ИначеЕсли Ложь Тогда"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(5, 4)); // На "ИначеЕсли"
+    params.setPosition(new Position(5, 6)); // На "ИначеЕсли"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSizeGreaterThanOrEqualTo(6);
+    assertThat(highlights).hasSize(6);
+
+    // Проверяем точные позиции
+    assertHighlightRange(highlights, 3, 4, 3, 8);      // Если
+    assertHighlightRange(highlights, 5, 4, 5, 13);     // ИначеЕсли
+    assertHighlightRange(highlights, 9, 4, 9, 13);     // КонецЕсли
   }
 
   @Test
   void testElseKeyword() {
     // given
+    // Строка 7 (0-based): "    Иначе"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(7, 4)); // На "Иначе"
+    params.setPosition(new Position(7, 5)); // На "Иначе"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSizeGreaterThanOrEqualTo(6);
+    assertThat(highlights).hasSize(6);
+
+    // Проверяем точные позиции
+    assertHighlightRange(highlights, 3, 4, 3, 8);      // Если
+    assertHighlightRange(highlights, 7, 4, 7, 9);      // Иначе
+    assertHighlightRange(highlights, 9, 4, 9, 13);     // КонецЕсли
   }
 
   @Test
   void testEndIfKeyword() {
     // given
+    // Строка 9 (0-based): "    КонецЕсли;"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(9, 4)); // На "КонецЕсли"
+    params.setPosition(new Position(9, 6)); // На "КонецЕсли"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSizeGreaterThanOrEqualTo(6);
+    assertThat(highlights).hasSize(6);
+
+    // Проверяем точные позиции
+    assertHighlightRange(highlights, 3, 4, 3, 8);      // Если
+    assertHighlightRange(highlights, 9, 4, 9, 13);     // КонецЕсли
   }
 
   @Test
   void testNonIfKeyword() {
     // given
+    // Строка 13 (0-based): "    Пока Истина Цикл"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -117,5 +149,17 @@ class IfStatementDocumentHighlightSupplierTest {
 
     // then
     assertThat(highlights).isEmpty();
+  }
+
+  private void assertHighlightRange(List<DocumentHighlight> highlights,
+                                     int startLine, int startChar,
+                                     int endLine, int endChar) {
+    var expectedRange = new Range(
+      new Position(startLine, startChar),
+      new Position(endLine, endChar)
+    );
+    assertThat(highlights)
+      .extracting(DocumentHighlight::getRange)
+      .contains(expectedRange);
   }
 }

@@ -36,107 +36,90 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class SubroutineDocumentHighlightSupplierTest {
+class SDBLJoinDocumentHighlightSupplierTest {
 
-  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/SubroutineDocumentHighlight.bsl";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/documentHighlight/SDBLJoinDocumentHighlight.bsl";
 
   @Autowired
-  private SubroutineDocumentHighlightSupplier supplier;
+  private SDBLJoinDocumentHighlightSupplier supplier;
 
   @Test
-  void testProcedureKeyword() {
+  void testLeftKeyword() {
     // given
-    // Строка 2 (0-based): "Процедура ТестПроцедура()"
+    // Строка 10 (0-based): "    |ЛЕВОЕ СОЕДИНЕНИЕ..."
+    // "ЛЕВОЕ" начинается с позиции 5 (после "    |")
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(2, 3)); // На "Процедура"
+    params.setPosition(new Position(10, 6)); // На "ЛЕВОЕ"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    // Должны подсветиться: Процедура и КонецПроцедуры
-    assertThat(highlights).hasSize(2);
+    // Должны подсветиться: ЛЕВОЕ, СОЕДИНЕНИЕ, ПО (первого JOIN)
+    assertThat(highlights).hasSize(3);
 
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 2, 0, 2, 9);      // Процедура
-    assertHighlightRange(highlights, 4, 0, 4, 14);     // КонецПроцедуры
+    assertHighlightRange(highlights, 10, 5, 10, 10);   // ЛЕВОЕ
+    assertHighlightRange(highlights, 10, 11, 10, 21);  // СОЕДИНЕНИЕ
+    assertHighlightRange(highlights, 11, 8, 11, 10);   // ПО
   }
 
   @Test
-  void testEndProcedureKeyword() {
+  void testJoinKeyword() {
     // given
-    // Строка 4 (0-based): "КонецПроцедуры"
+    // Строка 10 (0-based): "    |ЛЕВОЕ СОЕДИНЕНИЕ..."
+    // "СОЕДИНЕНИЕ" начинается с позиции 11
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 5)); // На "КонецПроцедуры"
+    params.setPosition(new Position(10, 15)); // На "СОЕДИНЕНИЕ"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSize(2);
+    assertThat(highlights).hasSize(3);
 
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 2, 0, 2, 9);      // Процедура
-    assertHighlightRange(highlights, 4, 0, 4, 14);     // КонецПроцедуры
+    assertHighlightRange(highlights, 10, 5, 10, 10);   // ЛЕВОЕ
+    assertHighlightRange(highlights, 10, 11, 10, 21);  // СОЕДИНЕНИЕ
+    assertHighlightRange(highlights, 11, 8, 11, 10);   // ПО
   }
 
   @Test
-  void testFunctionKeyword() {
+  void testOnKeyword() {
     // given
-    // Строка 6 (0-based): "Функция ТестФункция()"
+    // Строка 11 (0-based): "    |   ПО Товары.Поставщик..."
+    // "ПО" начинается с позиции 8 (после "    |   ")
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(6, 3)); // На "Функция"
+    params.setPosition(new Position(11, 8)); // На "ПО"
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);
 
     // then
     assertThat(highlights).isNotEmpty();
-    // Должны подсветиться: Функция и КонецФункции
-    assertThat(highlights).hasSize(2);
+    assertThat(highlights).hasSize(3);
 
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 6, 0, 6, 7);      // Функция
-    assertHighlightRange(highlights, 8, 0, 8, 12);     // КонецФункции
+    assertHighlightRange(highlights, 10, 5, 10, 10);   // ЛЕВОЕ
+    assertHighlightRange(highlights, 10, 11, 10, 21);  // СОЕДИНЕНИЕ
+    assertHighlightRange(highlights, 11, 8, 11, 10);   // ПО
   }
 
   @Test
-  void testEndFunctionKeyword() {
+  void testNonJoinKeyword() {
     // given
-    // Строка 8 (0-based): "КонецФункции"
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(8, 5)); // На "КонецФункции"
-
-    // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
-
-    // then
-    assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSize(2);
-
-    // Проверяем точные позиции
-    assertHighlightRange(highlights, 6, 0, 6, 7);      // Функция
-    assertHighlightRange(highlights, 8, 0, 8, 12);     // КонецФункции
-  }
-
-  @Test
-  void testNonSubroutineKeyword() {
-    // given
-    // Строка 16 (0-based): "    Если Истина Тогда"
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var params = new DocumentHighlightParams();
-    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(16, 4)); // На "Если" (не процедура)
+    params.setPosition(new Position(0, 0)); // Позиция в комментарии
 
     // when
     var highlights = supplier.getDocumentHighlight(params, documentContext);

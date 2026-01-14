@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -49,6 +50,13 @@ public class BracketDocumentHighlightSupplier implements DocumentHighlightSuppli
 
     // Находим терминальный узел на позиции курсора
     var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
+
+    // Если не нашли и курсор не в начале строки, пробуем позицию слева (курсор справа от скобки)
+    if (maybeTerminalNode.isEmpty() && position.getCharacter() > 0) {
+      var leftPosition = new Position(position.getLine(), position.getCharacter() - 1);
+      maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, leftPosition);
+    }
+
     if (maybeTerminalNode.isEmpty()) {
       return Collections.emptyList();
     }
