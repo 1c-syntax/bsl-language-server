@@ -148,4 +148,23 @@ class VariableSymbolTest {
 
   }
 
+  @Test
+  void testNoNPEOnMalformedLValue() {
+    // Test for issue BSL-LANGUAGE-SERVER-G5
+    // Malformed code with syntax errors should not cause NPE
+    String code = """
+      Процедура Тест()
+        Переменная = 
+        =
+        Док.Записать
+      КонецПроцедуры
+      """;
+    
+    var ctx = TestUtils.getDocumentContext(code);
+    var variables = ctx.getSymbolTree().getVariables();
+    
+    // Should not throw NullPointerException
+    assertThat(variables).isNotNull();
+  }
+
 }
