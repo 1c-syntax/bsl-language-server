@@ -157,7 +157,14 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       conditionStatement = null;
     } else {
       // убрали условие верхнего уровня
-      conditionStatement = (ConditionalVertex) currentLevelBlock.getBuildParts().pop();
+      var poppedVertex = currentLevelBlock.getBuildParts().pop();
+      if (poppedVertex instanceof ConditionalVertex conditional) {
+        conditionStatement = conditional;
+      } else {
+        // If preprocessor conditions modified the stack, the popped vertex might not be a ConditionalVertex
+        // In this case, we don't have a condition to connect the false branch
+        conditionStatement = null;
+      }
     }
 
     // конец подграфа if

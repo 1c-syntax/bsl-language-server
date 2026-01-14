@@ -714,6 +714,196 @@ class ControlFlowGraphBuilderTest {
       .isThrownBy(() -> graph.addEdge(ifBlock, truePart));
   }
 
+  @Test
+  void test_preprocessorInsideIfBlockShouldNotCrash() {
+    // Test for ClassCastException fix when preprocessor is inside if block
+    var code = """
+      Если Условие1 Тогда
+          #Если Сервер Тогда
+              Возврат 1;
+          #Иначе
+              Возврат 2;
+          #КонецЕсли
+      ИначеЕсли Условие2 Тогда
+          Возврат 3;
+      КонецЕсли;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    // Verify the graph is built correctly
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isTrue();
+    
+    var outerIf = walker.getCurrentNode();
+    assertThat(outerIf).isInstanceOf(ConditionalVertex.class);
+    
+    // Walk through true branch (contains preprocessor)
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(PreprocessorConditionVertex.class);
+  }
+
+  @Test
+  void test_nestedPreprocessorAndIfStatements() {
+    // Test complex nesting of preprocessor and if statements
+    var code = """
+      #Если Сервер Тогда
+          Если Условие1 Тогда
+              #Если НЕ ВебКлиент Тогда
+                  Если Условие2 Тогда
+                      Возврат 1;
+                  Иначе
+                      Возврат 2;
+                  КонецЕсли;
+              #Иначе
+                  Возврат 3;
+              #КонецЕсли
+          Иначе
+              Возврат 4;
+          КонецЕсли;
+      #Иначе
+          Возврат 5;
+      #КонецЕсли
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    
+    // Should start with preprocessor condition
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(PreprocessorConditionVertex.class);
+  }
+
+  @Test
+  void test_preprocessorInElsifBranch() {
+    // Test preprocessor inside elsif branch
+    var code = """
+      Если Условие1 Тогда
+          Возврат 1;
+      ИначеЕсли Условие2 Тогда
+          #Если Сервер Тогда
+              Если ВнутреннееУсловие Тогда
+                  А = 1;
+              КонецЕсли;
+          #КонецЕсли
+          Возврат 2;
+      Иначе
+          Возврат 3;
+      КонецЕсли;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isTrue();
+    
+    var outerIf = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    
+    // Should be elsif condition
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ConditionalVertex.class);
+  }
+
+  @Test
+  void test_realWorldPatternWithPreprocessorInElsifBranch() {
+    // Test with real-world pattern that caused ClassCastException
+    // https://github.com/1c-syntax/bsl-language-server/issues/3740
+    // Extracted from НастраиваемыйОтчет/Ext/ObjectModule.bsl
+    var code = """
+      Процедура ПриКопировании(ОбъектКопирования)
+        
+        Если ТипЗнч(Основание) = Тип("ДокументСсылка.ЗаявкаНаВводДанных") Тогда
+          ВидОтчета=Основание.ВидОтчета;
+          
+          Если НЕ ЗначениеЗаполнено(ПравилоОбработки) Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Настройки по умолчанию не определены.'"));
+            #КонецЕсли
+          КонецЕсли;
+          
+        ИначеЕсли ТипЗнч(Основание) = Тип("СправочникСсылка.ВидыОтчетов") Тогда
+          ВидОтчета=Основание;
+          
+          Если НЕ ЗначениеЗаполнено(ПравилоОбработки) Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Настройки не определены.'"));
+            #КонецЕсли
+          КонецЕсли;
+          
+        ИначеЕсли ТипЗнч(Основание) = Тип("СправочникСсылка.ХранимыеФайлы") Тогда
+          
+          Если Основание.ЭтоГруппа Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Нельзя вводить на основании группы.'"));
+            #КонецЕсли
+            Возврат;
+          КонецЕсли;
+          
+          Если НЕ ЗначениеЗаполнено(ПравилоОбработки) Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Настройки не определены.'"));
+            #КонецЕсли
+          КонецЕсли;
+          
+        КонецЕсли;
+        
+      КонецПроцедуры
+      """;
+
+    var dContext = TestUtils.getDocumentContext(code);
+    var ast = dContext.getAst();
+    
+    assertThat(ast.subs()).isNotNull();
+    var subs = ast.subs().sub();
+    assertThat(subs).hasSize(1);
+    
+    // Build CFG - should not throw ClassCastException
+    var sub = subs.get(0);
+    var codeBlock = sub.procedure().subCodeBlock().codeBlock();
+    
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException when processing elsif branches with preprocessor directives
+    var graph = builder.buildGraph(codeBlock);
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    // Also run diagnostics to ensure all code blocks are covered
+    var diagnostics = dContext.getDiagnostics();
+    assertThat(diagnostics).isNotNull();
+  }
+
   @SneakyThrows
   private String getResourceFile(String name) {
 

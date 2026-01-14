@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
 class VariableSymbolTest {
@@ -147,6 +148,26 @@ class VariableSymbolTest {
     assertThat(variableSymbols.get(14).getKind()).isEqualTo(VariableKind.LOCAL);
     assertThat(variableSymbols.get(18).getKind()).isEqualTo(VariableKind.DYNAMIC);
 
+  }
+
+  @Test
+  void testNoNPEOnMalformedLValue() {
+    // Test for issue BSL-LANGUAGE-SERVER-G5
+    // Malformed code with syntax errors should not cause NPE
+    String code = """
+      Процедура Тест()
+        Переменная =;
+        =;
+        Док.Записать;
+      КонецПроцедуры
+      """;
+    
+    // Symbol tree construction happens during getDocumentContext
+    // and should not throw NullPointerException
+    assertThatCode(() -> {
+      var ctx = TestUtils.getDocumentContext(code);
+      ctx.getSymbolTree().getVariables();
+    }).doesNotThrowAnyException();
   }
 
 }

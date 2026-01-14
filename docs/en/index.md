@@ -40,6 +40,7 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
 * Folding regions definition `#Region`, `#If`, procedures and functions, code blocks, queries
 * Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
 * Tooltip on local methods and methods of common / manager modules
+* Highlighting of matching constructs (if/elsif/else/endif, try/except/endtry, loops, regions, brackets)
 * Go to method definitions
 * Finding places to use methods
 * Method call hierarchy
@@ -89,7 +90,7 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
     | [typeDefinition](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_typeDefinition) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
     | [implementation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation) | <img src="./assets/images/cross.svg" alt="no" width="20">    | not applicable in 1C:Enterprise                                |                  |
     | [references](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-    | [documentHighlight](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [documentHighlight](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | Highlight related constructs: if/elsif/else/endif, try/except/endtry, loops, regions, brackets |                  |
     | [documentSymbol](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | hierarchicalDocumentSymbolSupport = true                     |                  |
     | [codeAction](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | codeActionKinds = ? (см. [#1433](https://github.com/1c-syntax/bsl-language-server/issues/1433))<br />isPreferredSupport = true | yes               |
     | [codeAction/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeAction_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |

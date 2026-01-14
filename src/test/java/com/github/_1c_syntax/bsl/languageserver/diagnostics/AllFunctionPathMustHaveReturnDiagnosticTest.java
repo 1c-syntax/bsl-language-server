@@ -41,10 +41,13 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     diagnosticInstance.configure(config);
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 27)
       .hasRange(25, 8, 25, 19)
+      .hasRange(93, 8, 93, 27) // ТестСПрепроцессором
+      .hasRange(102, 8, 102, 30) // ТестПрепроцессорВElsif
+      .hasRange(131, 8, 131, 33) // ПрепроцессорВнутриIfБлока
     ;
 
   }
@@ -58,11 +61,14 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 27)
       .hasRange(25, 8, 25, 19)
       .hasRange(36, 8, 36, 23)
+      .hasRange(93, 8, 93, 27) // ТестСПрепроцессором
+      .hasRange(102, 8, 102, 30) // ТестПрепроцессорВElsif
+      .hasRange(131, 8, 131, 33) // ПрепроцессорВнутриIfБлока
     ;
   }
 
@@ -75,9 +81,12 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
       .hasRange(25, 8, 25, 19)
+      .hasRange(93, 8, 93, 27) // ТестСПрепроцессором
+      .hasRange(102, 8, 102, 30) // ТестПрепроцессорВElsif
+      // ПрепроцессорВнутриIfБлока is suppressed by ignoreMissingElseOnExit
     ;
   }
 

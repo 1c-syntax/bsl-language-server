@@ -7,12 +7,12 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("com.diffplug.spotless") version "8.1.0"
+    id("com.diffplug.spotless") version "7.0.4"
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.1.0"
-    id("io.freefair.javadoc-links") version "9.1.0"
-    id("io.freefair.javadoc-utf-8") version "9.1.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.1.0"
+    id("io.freefair.lombok") version "9.2.0"
+    id("io.freefair.javadoc-links") version "9.2.0"
+    id("io.freefair.javadoc-utf-8") version "9.2.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.2.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
     id("org.springframework.boot") version "4.0.1"
@@ -88,7 +88,7 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
     }
     api("io.github.1c-syntax", "utils", "0.6.8")
-    api("io.github.1c-syntax", "mdclasses", "0.17.2")
+    api("io.github.1c-syntax", "mdclasses", "0.17.3")
     api("io.github.1c-syntax", "bsl-common-library", "0.9.2")
     api("io.github.1c-syntax", "supportconf", "0.15.0")
 
