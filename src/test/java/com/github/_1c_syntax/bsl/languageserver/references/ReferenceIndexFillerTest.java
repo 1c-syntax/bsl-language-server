@@ -514,7 +514,7 @@ class ReferenceIndexFillerTest {
   @Test
   void testModuleReferenceRangeNotOverlapAccessorMethod() throws IOException {
     // Тест для issue: при наведении на ОбщийМодуль() должно показываться описание метода,
-    // а не информация о модуле "РаботаСФайлами"
+    // а не информация о модуле "ПервыйОбщийМодуль"
     var path = Absolute.path("src/test/resources/metadata/designer");
     serverContext.setConfigurationRoot(path);
 
@@ -522,7 +522,7 @@ class ReferenceIndexFillerTest {
       "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
     );
 
-    // Load the common module that will be referenced
+    // Загружаем модуль ПервыйОбщийМодуль
     var file = new File("src/test/resources/metadata/designer",
       "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
     var uri = Absolute.uri(file);
@@ -532,20 +532,31 @@ class ReferenceIndexFillerTest {
       serverContext
     );
 
+    // Загружаем модуль ОбщегоНазначения с методом ОбщийМодуль
+    var commonFile = new File("src/test/resources/metadata/designer",
+      "CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+    var commonUri = Absolute.uri(commonFile);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      commonUri,
+      FileUtils.readFileToString(commonFile, StandardCharsets.UTF_8),
+      serverContext
+    );
+
     referenceIndexFiller.fill(documentContext);
 
     // Строка 7 (индекс 6): МодульУправлениеДоступом = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
     // Позиция 55 - это внутри имени метода "ОбщийМодуль"
     // При наведении на метод ОбщийМодуль должен показываться референс на метод ОбщийМодуль модуля ОбщегоНазначения,
     // а НЕ референс на модуль ПервыйОбщийМодуль (это была ошибка).
-    // В данном тесте результат пустой, т.к. модуль ОбщегоНазначения не существует в тестовой конфигурации.
     var referenceOnAccessorMethod = referenceIndex.getReference(
       documentContext.getUri(),
       new Position(6, 55)
     );
-    // Пусто, т.к. ОбщегоНазначения не существует в тестовой конфигурации.
-    // Главное - убедиться, что здесь НЕ возвращается ссылка на ПервыйОбщийМодуль (это была ошибка).
-    assertThat(referenceOnAccessorMethod).isEmpty();
+    // Должен быть референс на метод ОбщийМодуль модуля ОбщегоНазначения
+    assertThat(referenceOnAccessorMethod).isPresent();
+    var methodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("ОбщийМодуль");
+    assertThat(methodSymbol).isPresent();
+    assertThat(referenceOnAccessorMethod.get().getSourceDefinedSymbol()).contains(methodSymbol.get());
 
     // Позиция 70 - это внутри строкового литерала "ПервыйОбщийМодуль"
     // Строковый литерал - это просто данные, не ссылка на модуль. Референс добавлять не нужно.
