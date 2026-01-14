@@ -714,6 +714,126 @@ class ControlFlowGraphBuilderTest {
       .isThrownBy(() -> graph.addEdge(ifBlock, truePart));
   }
 
+  @Test
+  void test_preprocessorInsideIfBlockShouldNotCrash() {
+    // Test for ClassCastException fix when preprocessor is inside if block
+    var code = """
+      Если Условие1 Тогда
+          #Если Сервер Тогда
+              Возврат 1;
+          #Иначе
+              Возврат 2;
+          #КонецЕсли
+      ИначеЕсли Условие2 Тогда
+          Возврат 3;
+      КонецЕсли;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    // Verify the graph is built correctly
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isTrue();
+    
+    var outerIf = walker.getCurrentNode();
+    assertThat(outerIf).isInstanceOf(ConditionalVertex.class);
+    
+    // Walk through true branch (contains preprocessor)
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(PreprocessorConditionVertex.class);
+  }
+
+  @Test
+  void test_nestedPreprocessorAndIfStatements() {
+    // Test complex nesting of preprocessor and if statements
+    var code = """
+      #Если Сервер Тогда
+          Если Условие1 Тогда
+              #Если НЕ ВебКлиент Тогда
+                  Если Условие2 Тогда
+                      Возврат 1;
+                  Иначе
+                      Возврат 2;
+                  КонецЕсли;
+              #Иначе
+                  Возврат 3;
+              #КонецЕсли
+          Иначе
+              Возврат 4;
+          КонецЕсли;
+      #Иначе
+          Возврат 5;
+      #КонецЕсли
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    
+    // Should start with preprocessor condition
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(PreprocessorConditionVertex.class);
+  }
+
+  @Test
+  void test_preprocessorInElsifBranch() {
+    // Test preprocessor inside elsif branch
+    var code = """
+      Если Условие1 Тогда
+          Возврат 1;
+      ИначеЕсли Условие2 Тогда
+          #Если Сервер Тогда
+              Если ВнутреннееУсловие Тогда
+                  А = 1;
+              КонецЕсли;
+          #КонецЕсли
+          Возврат 2;
+      Иначе
+          Возврат 3;
+      КонецЕсли;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isTrue();
+    
+    var outerIf = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    
+    // Should be elsif condition
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ConditionalVertex.class);
+  }
+
   @SneakyThrows
   private String getResourceFile(String name) {
 

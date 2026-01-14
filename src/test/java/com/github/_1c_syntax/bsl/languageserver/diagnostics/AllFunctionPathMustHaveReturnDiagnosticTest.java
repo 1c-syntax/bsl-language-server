@@ -41,10 +41,13 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     diagnosticInstance.configure(config);
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 27)
       .hasRange(25, 8, 25, 19)
+      .hasRange(93, 8, 93, 27) // ТестСПрепроцессором
+      .hasRange(102, 8, 102, 30) // ТестПрепроцессорВElsif
+      .hasRange(131, 8, 131, 33) // ПрепроцессорВнутриIfБлока
     ;
 
   }
@@ -58,11 +61,14 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 27)
       .hasRange(25, 8, 25, 19)
       .hasRange(36, 8, 36, 23)
+      .hasRange(93, 8, 93, 27) // ТестСПрепроцессором
+      .hasRange(102, 8, 102, 30) // ТестПрепроцессорВElsif
+      .hasRange(131, 8, 131, 33) // ПрепроцессорВнутриIfБлока
     ;
   }
 
@@ -75,9 +81,12 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
       .hasRange(25, 8, 25, 19)
+      .hasRange(93, 8, 93, 27) // ТестСПрепроцессором
+      .hasRange(102, 8, 102, 30) // ТестПрепроцессорВElsif
+      // ПрепроцессорВнутриIfБлока is suppressed by ignoreMissingElseOnExit
     ;
   }
 
@@ -120,141 +129,6 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     var documentContext = TestUtils.getDocumentContext(sample);
     var diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).isEmpty();
-
-  }
-
-  @Test
-  void testPreprocessorWithMissingReturn() {
-    // Positive test: function should be flagged for missing return when preprocessor is used
-    var sample = """
-      Функция ТестСПрепроцессором()
-          #Если Сервер Тогда
-              Если Условие Тогда
-                  Возврат 1;
-              КонецЕсли;
-          #КонецЕсли
-          // Missing return here - should be detected
-      КонецФункции""";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true)
-      .hasRange(0, 8, 0, 27);
-
-  }
-
-  @Test
-  void testPreprocessorInElsifWithMissingReturn() {
-    // Positive test: missing return when inner if without else is inside preprocessor
-    var sample = """
-      Функция ТестПрепроцессорВElsif()
-          #Если Сервер Тогда
-              Если Условие1 Тогда
-                  Возврат 1;
-              ИначеЕсли Условие2 Тогда
-                  Возврат 2;
-              КонецЕсли;
-          #КонецЕсли
-          // Missing return at function end
-      КонецФункции""";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true)
-      .hasRange(0, 8, 0, 30);
-
-  }
-
-  @Test
-  void testPreprocessorWithAllPathsHaveReturn() {
-    // Negative test: should not crash and should not report any issues
-    var sample = """
-      Функция ТестВсеПутиСВозвратом()
-          Если Условие1 Тогда
-              #Если Сервер Тогда
-                  Если Условие2 Тогда
-                      Возврат 1;
-                  ИначеЕсли Условие3 Тогда
-                      Возврат 2;
-                  Иначе
-                      Возврат 3;
-                  КонецЕсли;
-              #Иначе
-                  Возврат 4;
-              #КонецЕсли
-          Иначе
-              Возврат 5;
-          КонецЕсли;
-      КонецФункции""";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    // Should not throw ClassCastException and should have no diagnostics
-    assertThat(diagnostics).isEmpty();
-
-  }
-
-  @Test
-  void testPreprocessorInsideIfBlockWithMissingReturn() {
-    // Positive test: preprocessor inside if block, missing return should be detected
-    // The outer if-elsif chain is missing else, causing missing return
-    var sample = """
-      Функция ПрепроцессорВнутриIfБлока()
-          Если Условие1 Тогда
-              #Если Сервер Тогда
-                  Возврат 1;
-              #Иначе
-                  Возврат 2;
-              #КонецЕсли
-          ИначеЕсли Условие2 Тогда
-              Возврат 3;
-          КонецЕсли;
-          // Missing return here - no else branch for outer if
-      КонецФункции""";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true)
-      .hasRange(0, 8, 0, 33);
-
-  }
-
-  @Test
-  void testNestedPreprocessorNoCrash() {
-    // Negative test: should not crash when processing nested preprocessor with if-statements
-    var sample = """
-      Функция ВложенныйПрепроцессор()
-          #Если Сервер Тогда
-              Если Условие1 Тогда
-                  #Если НЕ ВебКлиент Тогда
-                      Если Условие2 Тогда
-                          Возврат 1;
-                      Иначе
-                          Возврат 2;
-                      КонецЕсли;
-                  #Иначе
-                      Возврат 3;
-                  #КонецЕсли
-              Иначе
-                  Возврат 4;
-              КонецЕсли;
-          #Иначе
-              Возврат 5;
-          #КонецЕсли
-      КонецФункции""";
-
-    var documentContext = TestUtils.getDocumentContext(sample);
-    var diagnostics = getDiagnostics(documentContext);
-
-    // Should not throw ClassCastException
     assertThat(diagnostics).isEmpty();
 
   }
