@@ -154,9 +154,9 @@ class VariableSymbolTest {
     // Malformed code with syntax errors should not cause NPE
     String code = """
       Процедура Тест()
-        Переменная = 
-        =
-        Док.Записать
+        Переменная =;
+        =;
+        Док.Записать;
       КонецПроцедуры
       """;
     
