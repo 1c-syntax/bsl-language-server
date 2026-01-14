@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768417931936,
+  "lastUpdate": 1768420263417,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34193,6 +34193,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6795741529383926",
             "extra": "mean: 70.05420351028442 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d79706b36bc10f921f0248602ad4b6f0bcc537ea",
+          "message": "Merge pull request #3762 from 1c-syntax/copilot/highlight-braces-in-code\n\nImplement textDocument/documentHighlight for matching block constructs",
+          "timestamp": "2026-01-14T20:34:13+01:00",
+          "tree_id": "dcba58dc1f2e05295248cd758e97b9e78f22492d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d79706b36bc10f921f0248602ad4b6f0bcc537ea"
+        },
+        "date": 1768420257191,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.27588836352031,
+            "unit": "sec",
+            "range": "stddev: 0.8817494624745433",
+            "extra": "mean: 69.27588836352031 sec\nrounds: 3"
           }
         ]
       }
