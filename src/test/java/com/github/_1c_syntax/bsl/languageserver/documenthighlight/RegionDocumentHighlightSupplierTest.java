@@ -60,7 +60,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(2, 3)); // На "#Область"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -82,7 +82,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(12, 5)); // На "#КонецОбласти"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -103,7 +103,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(4, 6)); // На вложенной "#Область"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -125,7 +125,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(15, 4)); // На "Если" (не регион)
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isEmpty();

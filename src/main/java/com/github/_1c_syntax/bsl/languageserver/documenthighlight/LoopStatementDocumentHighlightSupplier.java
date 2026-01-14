@@ -42,18 +42,20 @@ import java.util.List;
 public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentHighlightSupplier {
 
   @Override
-  public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var terminalNodeInfo = findTerminalNode(params.getPosition(), documentContext);
-    if (terminalNodeInfo.isEmpty()) {
+  public List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  ) {
+    if (terminalNodeInfo == null) {
       return Collections.emptyList();
     }
 
-    var info = terminalNodeInfo.get();
-    if (!isLoopKeyword(info.tokenType())) {
+    if (!isLoopKeyword(terminalNodeInfo.tokenType())) {
       return Collections.emptyList();
     }
 
-    var parent = (ParserRuleContext) info.terminalNode().getParent();
+    var parent = (ParserRuleContext) terminalNodeInfo.terminalNode().getParent();
 
     // Находим ближайший цикл - сначала проверяем сам parent, потом его предков
     var loopStatement = findNearestLoopStatement(parent);

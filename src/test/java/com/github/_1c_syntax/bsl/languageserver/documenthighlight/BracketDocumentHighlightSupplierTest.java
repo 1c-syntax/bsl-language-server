@@ -51,10 +51,12 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 20)); // На вложенную "(" в "(1 + 2)"
+    var position = new Position(4, 20); // На вложенную "(" в "(1 + 2)"
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -71,10 +73,12 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 26)); // На ")" в "(1 + 2)"
+    var position = new Position(4, 26); // На ")" в "(1 + 2)"
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -93,10 +97,12 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(5, 18)); // На "[" в "Массив[0]"
+    var position = new Position(5, 18); // На "[" в "Массив[0]"
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -113,10 +119,12 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(5, 20)); // На "]" в "Массив[0]"
+    var position = new Position(5, 20); // На "]" в "Массив[0]"
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -133,10 +141,12 @@ class BracketDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(9, 4)); // На "Если" (не скобка)
+    var position = new Position(9, 4); // На "Если" (не скобка)
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isEmpty();

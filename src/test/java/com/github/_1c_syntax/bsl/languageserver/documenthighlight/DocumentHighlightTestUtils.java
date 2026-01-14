@@ -19,47 +19,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.documenthighlight.DocumentHighlightSupplier;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.DocumentHighlight;
-import org.eclipse.lsp4j.DocumentHighlightParams;
+import lombok.experimental.UtilityClass;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
- * Провайдер для предоставления подсветки связанных элементов в документе.
- * <p>
- * Обрабатывает запросы {@code textDocument/documentHighlight}.
- *
- * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight">Document Highlight Request specification</a>
+ * Вспомогательные методы для тестирования DocumentHighlight сапплаеров.
  */
-@Component
-@RequiredArgsConstructor
-public final class DocumentHighlightProvider {
-
-  private final List<DocumentHighlightSupplier> suppliers;
-
-  /**
-   * Получить подсветки связанных элементов в документе на основе позиции курсора.
-   *
-   * @param documentContext Контекст документа
-   * @param params Параметры запроса document highlight
-   * @return Список подсветок связанных элементов
-   */
-  public List<DocumentHighlight> getDocumentHighlight(DocumentContext documentContext, DocumentHighlightParams params) {
-    var terminalNodeInfo = findTerminalNode(params.getPosition(), documentContext);
-
-    return suppliers.stream()
-      .flatMap(supplier -> supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo).stream())
-      .toList();
-  }
+@UtilityClass
+public class DocumentHighlightTestUtils {
 
   /**
    * Находит терминальный узел на позиции курсора и возвращает информацию о нём.
@@ -71,7 +43,7 @@ public final class DocumentHighlightProvider {
    * @param documentContext контекст документа
    * @return информация о терминальном узле, или null если не найден
    */
-  private DocumentHighlightSupplier.@Nullable TerminalNodeInfo findTerminalNode(
+  public DocumentHighlightSupplier. @Nullable TerminalNodeInfo findTerminalNode(
     Position position,
     DocumentContext documentContext
   ) {
@@ -97,3 +69,4 @@ public final class DocumentHighlightProvider {
     return new DocumentHighlightSupplier.TerminalNodeInfo(terminalNode, tokenType);
   }
 }
+

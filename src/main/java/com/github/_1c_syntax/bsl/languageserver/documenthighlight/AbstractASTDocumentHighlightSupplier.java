@@ -21,16 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
-import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Базовый класс для поставщиков подсветки на основе AST.
@@ -38,48 +34,6 @@ import java.util.Optional;
  * Предоставляет общую функциональность для подсветки токенов, полученных через геттеры ANTLR-контекста.
  */
 public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHighlightSupplier {
-
-  /**
-   * Результат поиска терминального узла на позиции курсора.
-   *
-   * @param terminalNode найденный терминальный узел
-   * @param tokenType    тип токена
-   */
-  protected record TerminalNodeInfo(TerminalNode terminalNode, int tokenType) {
-  }
-
-  /**
-   * Находит терминальный узел на позиции курсора и возвращает информацию о нём.
-   * <p>
-   * Поддерживает как позицию внутри токена, так и позицию сразу после токена
-   * (когда курсор стоит справа от токена).
-   *
-   * @param position        позиция курсора
-   * @param documentContext контекст документа
-   * @return информация о терминальном узле, если найден
-   */
-  protected Optional<TerminalNodeInfo> findTerminalNode(Position position, DocumentContext documentContext) {
-    var ast = documentContext.getAst();
-
-    // Сначала пробуем найти токен на текущей позиции
-    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
-
-    // Если не нашли и курсор не в начале строки, пробуем позицию слева (курсор справа от токена)
-    if (maybeTerminalNode.isEmpty() && position.getCharacter() > 0) {
-      var leftPosition = new Position(position.getLine(), position.getCharacter() - 1);
-      maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, leftPosition);
-    }
-
-    if (maybeTerminalNode.isEmpty()) {
-      return Optional.empty();
-    }
-
-    var terminalNode = maybeTerminalNode.get();
-    var token = terminalNode.getSymbol();
-    var tokenType = token.getType();
-
-    return Optional.of(new TerminalNodeInfo(terminalNode, tokenType));
-  }
 
   /**
    * Добавляет подсветку для токена, полученного из TerminalNode.

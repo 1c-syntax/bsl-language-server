@@ -50,10 +50,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 5)); // На "Для"
+    var position = new Position(3, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Для"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -74,10 +76,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(7, 5)); // На "Пока"
+    var position = new Position(7, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Пока"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -98,10 +102,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(11, 5)); // На "Для" в "Для Каждого"
+    var position = new Position(11, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Для" в "Для Каждого"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -124,10 +130,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 27)); // На "Цикл"
+    var position = new Position(3, 27);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Цикл"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -146,10 +154,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(34, 4)); // На "Если" (не цикл)
+    var position = new Position(34, 4);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если" (не цикл)
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isEmpty();
@@ -162,10 +172,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(18, 9)); // На "Для" во вложенном цикле
+    var position = new Position(18, 9);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Для" во вложенном цикле
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -188,10 +200,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(8, 10)); // На "Прервать"
+    var position = new Position(8, 10);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Прервать"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -211,10 +225,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(12, 10)); // На "Продолжить"
+    var position = new Position(12, 10);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Продолжить"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -234,10 +250,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(7, 5)); // На "Пока"
+    var position = new Position(7, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Пока"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -254,10 +272,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(27, 13)); // На "Прервать"
+    var position = new Position(27, 13);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Прервать"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -280,10 +300,12 @@ class LoopStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(25, 5)); // На "Для"
+    var position = new Position(25, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Для"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();

@@ -22,8 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -34,13 +36,27 @@ import java.util.List;
  * условные операторы (If/ElseIf/Else/EndIf), циклы, try-except, регионы, скобки и т.д.
  */
 public interface DocumentHighlightSupplier {
-  
+
+  /**
+   * Информация о терминальном узле на позиции курсора.
+   *
+   * @param terminalNode найденный терминальный узел
+   * @param tokenType    тип токена
+   */
+  record TerminalNodeInfo(TerminalNode terminalNode, int tokenType) {
+  }
+
   /**
    * Получить список подсветок для элементов, связанных с позицией курсора.
    *
    * @param params Параметры запроса document highlight
    * @param documentContext Контекст документа
+   * @param terminalNodeInfo Информация о терминальном узле на позиции курсора (может быть null)
    * @return Список подсветок связанных элементов, или пустой список если нет совпадений
    */
-  List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext);
+  List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  );
 }

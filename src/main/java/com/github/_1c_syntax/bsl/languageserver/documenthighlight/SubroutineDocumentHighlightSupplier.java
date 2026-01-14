@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -44,19 +45,21 @@ import java.util.List;
 public class SubroutineDocumentHighlightSupplier extends AbstractASTDocumentHighlightSupplier {
 
   @Override
-  public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var position = params.getPosition();
-    var terminalNodeInfo = findTerminalNode(position, documentContext);
-    if (terminalNodeInfo.isEmpty()) {
+  public List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  ) {
+    if (terminalNodeInfo == null) {
       return Collections.emptyList();
     }
 
-    var info = terminalNodeInfo.get();
-    if (!isSubroutineKeyword(info.tokenType())) {
+    if (!isSubroutineKeyword(terminalNodeInfo.tokenType())) {
       return Collections.emptyList();
     }
 
     // Ищем метод по дереву символов
+    var position = params.getPosition();
     var symbolTree = documentContext.getSymbolTree();
     for (var method : symbolTree.getMethods()) {
       var methodRange = method.getRange();

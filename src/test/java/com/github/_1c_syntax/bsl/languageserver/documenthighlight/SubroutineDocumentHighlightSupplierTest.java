@@ -50,10 +50,12 @@ class SubroutineDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(2, 3)); // На "Процедура"
+    var position = new Position(2, 3);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Процедура"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -72,10 +74,12 @@ class SubroutineDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(4, 5)); // На "КонецПроцедуры"
+    var position = new Position(4, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "КонецПроцедуры"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -93,10 +97,12 @@ class SubroutineDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(6, 3)); // На "Функция"
+    var position = new Position(6, 3);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Функция"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -115,10 +121,12 @@ class SubroutineDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(8, 5)); // На "КонецФункции"
+    var position = new Position(8, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "КонецФункции"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -136,10 +144,12 @@ class SubroutineDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(16, 4)); // На "Если" (не процедура)
+    var position = new Position(16, 4);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если" (не процедура)
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isEmpty();

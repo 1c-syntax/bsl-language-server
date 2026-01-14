@@ -50,10 +50,12 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, 5)); // На "Попытка"
+    var position = new Position(3, 5);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Попытка"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -73,10 +75,12 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(5, 6)); // На "Исключение"
+    var position = new Position(5, 6);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Исключение"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -95,10 +99,12 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(7, 6)); // На "КонецПопытки"
+    var position = new Position(7, 6);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "КонецПопытки"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -117,10 +123,12 @@ class TryStatementDocumentHighlightSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var params = new DocumentHighlightParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(11, 4)); // На "Если" (не try)
+    var position = new Position(11, 4);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext); // На "Если" (не try)
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
 
     // then
     assertThat(highlights).isEmpty();

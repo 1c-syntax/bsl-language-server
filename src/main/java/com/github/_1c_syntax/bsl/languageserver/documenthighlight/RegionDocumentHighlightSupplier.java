@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -42,7 +43,11 @@ import java.util.List;
 public class RegionDocumentHighlightSupplier implements DocumentHighlightSupplier {
 
   @Override
-  public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
+  public List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  ) {
     var position = params.getPosition();
     var symbolTree = documentContext.getSymbolTree();
     

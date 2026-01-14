@@ -50,7 +50,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     // Курсор на "(" (строка 10, позиция 8 - на самой скобке)
     params.setPosition(new Position(10, 8));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(2);
@@ -68,7 +68,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     // Курсор сразу после "(" (строка 10, позиция 9)
     params.setPosition(new Position(10, 9));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(2);
@@ -89,7 +89,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     params.setPosition(new Position(10, 25));
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -107,7 +107,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 0)); // Позиция в комментарии
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isEmpty();
   }

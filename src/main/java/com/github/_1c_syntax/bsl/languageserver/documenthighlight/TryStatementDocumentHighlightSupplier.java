@@ -43,21 +43,23 @@ import java.util.List;
 public class TryStatementDocumentHighlightSupplier extends AbstractASTDocumentHighlightSupplier {
 
   @Override
-  public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var terminalNodeInfo = findTerminalNode(params.getPosition(), documentContext);
-    if (terminalNodeInfo.isEmpty()) {
+  public List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  ) {
+    if (terminalNodeInfo == null) {
       return Collections.emptyList();
     }
 
-    var info = terminalNodeInfo.get();
-    if (!isTryStatementKeyword(info.tokenType())) {
+    if (!isTryStatementKeyword(terminalNodeInfo.tokenType())) {
       return Collections.emptyList();
     }
 
     // Находим родительский узел tryStatement
     // Токены try-конструкции находятся напрямую в TryStatementContext,
     // поэтому parent уже может быть нужным типом
-    var parent = (ParserRuleContext) info.terminalNode().getParent();
+    var parent = (ParserRuleContext) terminalNodeInfo.terminalNode().getParent();
     var tryStatement = findTryStatementContext(parent);
 
     if (tryStatement == null) {

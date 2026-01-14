@@ -54,7 +54,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(10, 6)); // На "ЛЕВОЕ"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -78,7 +78,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(10, 15)); // На "СОЕДИНЕНИЕ"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -101,7 +101,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(11, 8)); // На "ПО"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -122,7 +122,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(0, 0)); // Позиция в комментарии
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
 
     // then
     assertThat(highlights).isEmpty();

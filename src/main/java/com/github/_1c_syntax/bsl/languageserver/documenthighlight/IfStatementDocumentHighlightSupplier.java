@@ -44,18 +44,20 @@ import java.util.List;
 public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHighlightSupplier {
 
   @Override
-  public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var terminalNodeInfo = findTerminalNode(params.getPosition(), documentContext);
-    if (terminalNodeInfo.isEmpty()) {
+  public List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  ) {
+    if (terminalNodeInfo == null) {
       return Collections.emptyList();
     }
 
-    var info = terminalNodeInfo.get();
-    if (!isIfStatementKeyword(info.tokenType())) {
+    if (!isIfStatementKeyword(terminalNodeInfo.tokenType())) {
       return Collections.emptyList();
     }
 
-    var parent = (ParserRuleContext) info.terminalNode().getParent();
+    var parent = (ParserRuleContext) terminalNodeInfo.terminalNode().getParent();
     var ifStatement = findIfStatementContext(parent);
 
     if (ifStatement == null) {

@@ -23,12 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
-import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -44,32 +43,23 @@ import java.util.List;
 public class BracketDocumentHighlightSupplier implements DocumentHighlightSupplier {
 
   @Override
-  public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
-    var position = params.getPosition();
-    var ast = documentContext.getAst();
-
-    // Находим терминальный узел на позиции курсора
-    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
-
-    // Если не нашли и курсор не в начале строки, пробуем позицию слева (курсор справа от скобки)
-    if (maybeTerminalNode.isEmpty() && position.getCharacter() > 0) {
-      var leftPosition = new Position(position.getLine(), position.getCharacter() - 1);
-      maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, leftPosition);
-    }
-
-    if (maybeTerminalNode.isEmpty()) {
+  public List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  ) {
+    if (terminalNodeInfo == null) {
       return Collections.emptyList();
     }
 
-    var terminalNode = maybeTerminalNode.get();
-    var token = terminalNode.getSymbol();
-    var tokenType = token.getType();
+    var tokenType = terminalNodeInfo.tokenType();
 
     // Проверяем, является ли токен скобкой
     if (!isBracket(tokenType)) {
       return Collections.emptyList();
     }
 
+    var token = terminalNodeInfo.terminalNode().getSymbol();
     return highlightMatchingBracket(token, documentContext);
   }
 

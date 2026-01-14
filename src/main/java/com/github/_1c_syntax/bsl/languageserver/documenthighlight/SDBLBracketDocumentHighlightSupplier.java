@@ -42,7 +42,11 @@ import java.util.List;
 public class SDBLBracketDocumentHighlightSupplier extends AbstractSDBLDocumentHighlightSupplier {
 
   @Override
-  public List<DocumentHighlight> getDocumentHighlight(DocumentHighlightParams params, DocumentContext documentContext) {
+  public List<DocumentHighlight> getDocumentHighlight(
+    DocumentHighlightParams params,
+    DocumentContext documentContext,
+    @Nullable TerminalNodeInfo terminalNodeInfo
+  ) {
     var position = params.getPosition();
 
     var tokenInfo = findTokenInQueries(position, documentContext);

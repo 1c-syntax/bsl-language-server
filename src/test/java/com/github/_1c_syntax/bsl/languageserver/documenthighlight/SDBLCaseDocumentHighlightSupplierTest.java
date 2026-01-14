@@ -51,7 +51,7 @@ class SDBLCaseDocumentHighlightSupplierTest {
     // Курсор на "ВЫБОР" (строка 7, позиция 9 - внутри слова)
     params.setPosition(new Position(7, 9));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isNotEmpty();
     // ВЫБОР, КОГДА (2 раза), ТОГДА (2 раза), ИНАЧЕ, КОНЕЦ = 7 элементов
@@ -72,7 +72,7 @@ class SDBLCaseDocumentHighlightSupplierTest {
     // Курсор сразу после "ВЫБОР" (строка 7, позиция 13)
     params.setPosition(new Position(7, 13));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(7);
@@ -87,7 +87,7 @@ class SDBLCaseDocumentHighlightSupplierTest {
     // Курсор на первом "КОГДА" (строка 8, позиция 13 - внутри слова)
     params.setPosition(new Position(8, 13));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(7);
@@ -105,7 +105,7 @@ class SDBLCaseDocumentHighlightSupplierTest {
     // Курсор на "КОНЕЦ" (строка 11, позиция 9 - внутри слова)
     params.setPosition(new Position(11, 9));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(7);
@@ -121,7 +121,7 @@ class SDBLCaseDocumentHighlightSupplierTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 0)); // Позиция в комментарии
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
     // then
     assertThat(highlights).isEmpty();
   }
