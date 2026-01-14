@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768417214140,
+  "lastUpdate": 1768417931936,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34162,6 +34162,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0051783751473427",
             "extra": "mean: 68.37987891832988 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "198982749+Copilot@users.noreply.github.com",
+            "name": "Copilot",
+            "username": "Copilot"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5ce4485a2d3495aa50adbb9c2ab7ad812244f667",
+          "message": "Fix ClassCastException in CFG builder when preprocessor directives appear inside if-statements (#3765)\n\n* Initial plan\n\n* Fix ClassCastException in CfgBuildingParseTreeVisitor when processing if-statements with preprocessor directives\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Add positive test cases for preprocessor directives and remove unused test resource file\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Add positive test case for preprocessor inside if block with missing return\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Add CFG builder tests and move diagnostic test cases to BSL file\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Add test for real-world ObjectModule file with preprocessor directives\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n* Replace large real-world file with minimal reproducing test case\n\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: nixel2007 <1132840+nixel2007@users.noreply.github.com>",
+          "timestamp": "2026-01-14T19:00:14Z",
+          "tree_id": "fad3de45c788dcd5f9263959d8532cdc5a01a62e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5ce4485a2d3495aa50adbb9c2ab7ad812244f667"
+        },
+        "date": 1768417926258,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 70.05420351028442,
+            "unit": "sec",
+            "range": "stddev: 0.6795741529383926",
+            "extra": "mean: 70.05420351028442 sec\nrounds: 3"
           }
         ]
       }
