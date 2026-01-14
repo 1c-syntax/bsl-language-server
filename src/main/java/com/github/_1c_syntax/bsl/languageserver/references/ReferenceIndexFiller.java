@@ -382,9 +382,11 @@ public class ReferenceIndexFiller {
     @Override
     public ParserRuleContext visitAssignment(BSLParser.AssignmentContext ctx) {
       // Detect pattern: Variable = ОбщегоНазначения.ОбщийМодуль("ModuleName") or Variable = ОбщийМодуль("ModuleName")
-      // Здесь мы только отслеживаем что переменная теперь содержит ссылку на общий модуль,
+      // Здесь мы только отслеживаем, что переменная теперь содержит ссылку на общий модуль,
       // чтобы последующие вызовы методов через эту переменную могли быть разрезолвлены.
-      // Ссылка на сам модуль ОбщегоНазначения уже добавляется в visitComplexIdentifier.
+      // Ссылки на модуль-аксессор (например, ОбщегоНазначения) добавляются в visitComplexIdentifier,
+      // когда он используется как самостоятельный идентификатор, а здесь мы лишь ведем mapping
+      // переменная → общий модуль для дальнейшего разрешения вызовов методов.
       var lValue = ctx.lValue();
       var expression = ctx.expression();
 

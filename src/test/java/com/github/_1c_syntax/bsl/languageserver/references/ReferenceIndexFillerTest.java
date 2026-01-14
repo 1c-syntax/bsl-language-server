@@ -513,7 +513,7 @@ class ReferenceIndexFillerTest {
 
   @Test
   void testModuleReferenceRangeNotOverlapAccessorMethod() throws IOException {
-    // Тест для issue: при наведении на ОбщийМодуль() должно показываться описание метода,
+    // Тест для проверки поведения: при наведении на ОбщийМодуль() должно показываться описание метода,
     // а не информация о модуле "ПервыйОбщийМодуль"
     var path = Absolute.path("src/test/resources/metadata/designer");
     serverContext.setConfigurationRoot(path);
