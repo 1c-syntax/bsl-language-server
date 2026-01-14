@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -30,8 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -145,19 +145,19 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
     tokensInOneLine.put(token.getLine() - 1, tokenList);
   }
 
-  private static boolean descriptionContainToken(List<Range> descriptionRanges, Token token) {
+  private static boolean descriptionContainToken(List<SimpleRange> descriptionRanges, Token token) {
     if (descriptionRanges.isEmpty()) {
       return false;
     }
 
     var first = descriptionRanges.get(0);
-    if (first.getStart().getLine() + 1 > token.getLine()) {
+    if (first.startLine() + 1 > token.getLine()) {
       return false;
-    } else if (first.getEnd().getLine() + 1 < token.getLine()) {
+    } else if (first.endLine() + 1 < token.getLine()) {
       descriptionRanges.remove(first);
       return descriptionContainToken(descriptionRanges, token);
     } else {
-      return Ranges.containsRange(first, Ranges.create(token));
+      return SimpleRange.containsRange(first, SimpleRange.create(token));
     }
   }
 }

@@ -26,16 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.parser.description.HyperlinkTypeDescription;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,30 +111,19 @@ public class DescriptionFormatter {
   }
 
   public String getExamplesSection(MethodSymbol methodSymbol) {
-    var examples = methodSymbol.getDescription()
+    return methodSymbol.getDescription()
       .map(MethodDescription::getExamples)
-      .orElseGet(Collections::emptyList);
-    return getSectionWithCodeFences(examples, EXAMPLES_KEY);
+      .filter(example -> !example.isEmpty())
+      .map(codeBlock -> "**" + getResourceString(EXAMPLES_KEY) + ":**\n\n" + "```bsl\n" + codeBlock + "\n```")
+      .orElseGet(String::new);
   }
 
   public String getCallOptionsSection(MethodSymbol methodSymbol) {
-    var callOptions = methodSymbol.getDescription()
+    return methodSymbol.getDescription()
       .map(MethodDescription::getCallOptions)
-      .orElseGet(Collections::emptyList);
-    return getSectionWithCodeFences(callOptions, CALL_OPTIONS_KEY);
-  }
-
-  public String getSectionWithCodeFences(Collection<String> codeBlocks, String resourceKey) {
-    var codeFences = codeBlocks
-      .stream()
-      .map(codeBlock -> "```bsl\n" + codeBlock + "\n```")
-      .collect(Collectors.joining("\n"));
-
-    if (!codeFences.isEmpty()) {
-      codeFences = "**" + getResourceString(resourceKey) + ":**\n\n" + codeFences;
-    }
-
-    return codeFences;
+      .filter(callOption -> !callOption.isEmpty())
+      .map(codeBlock -> "**" + getResourceString(CALL_OPTIONS_KEY) + ":**\n\n" + "```bsl\n" + codeBlock + "\n```")
+      .orElseGet(String::new);
   }
 
   public String getLocation(ModuleSymbol symbol) {
@@ -331,8 +319,8 @@ public class DescriptionFormatter {
     parameterTypes.forEach((TypeDescription type) -> {
       var typeDescription = typeToString(type, level);
       String typeName;
-      if (type.isHyperlink()) {
-        typeName = "[%s](%s)".formatted(type.name(), type.link());
+      if (type instanceof HyperlinkTypeDescription hyperlinkTypeDescription) {
+        typeName = "[%s](%s)".formatted(hyperlinkTypeDescription.name(), hyperlinkTypeDescription.hyperlink());
       } else {
         typeName = "`%s`".formatted(type.name());
       }
@@ -362,12 +350,12 @@ public class DescriptionFormatter {
     if (!description.isBlank()) {
       description = "- " + description;
     }
-    if (!type.parameters().isEmpty()) {
+    if (!type.fields().isEmpty()) {
       description += ":";
     }
 
     result.add(description);
-    type.parameters().forEach((ParameterDescription parameter) ->
+    type.fields().forEach((ParameterDescription parameter) ->
       result.add(parameterToString(parameter, level + 1)));
     return result.toString();
   }
