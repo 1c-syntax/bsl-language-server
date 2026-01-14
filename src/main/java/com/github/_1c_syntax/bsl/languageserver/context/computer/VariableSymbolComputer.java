@@ -165,6 +165,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
     if (
       ctx.getChildCount() > 1
+      || ctx.IDENTIFIER() == null
       || currentMethodVariables.containsKey(ctx.getText())
       || moduleVariables.containsKey(ctx.getText())
     ) {
