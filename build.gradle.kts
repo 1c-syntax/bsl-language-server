@@ -7,7 +7,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("com.diffplug.spotless") version "7.0.4"
+    id("com.diffplug.spotless") version "8.1.0"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.2.0"
     id("io.freefair.javadoc-links") version "9.2.0"
