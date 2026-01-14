@@ -9,10 +9,10 @@ plugins {
     jacoco
     id("com.diffplug.spotless") version "7.0.4"
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.1.0"
-    id("io.freefair.javadoc-links") version "9.1.0"
-    id("io.freefair.javadoc-utf-8") version "9.1.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.1.0"
+    id("io.freefair.lombok") version "9.2.0"
+    id("io.freefair.javadoc-links") version "9.2.0"
+    id("io.freefair.javadoc-utf-8") version "9.2.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.2.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
     id("org.springframework.boot") version "4.0.1"
