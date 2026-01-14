@@ -28,10 +28,10 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Position;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Провайдер для предоставления подсветки связанных элементов в документе.
@@ -69,9 +69,9 @@ public final class DocumentHighlightProvider {
    *
    * @param position        позиция курсора
    * @param documentContext контекст документа
-   * @return информация о терминальном узле, или null если не найден
+   * @return информация о терминальном узле
    */
-  private DocumentHighlightSupplier.@Nullable TerminalNodeInfo findTerminalNode(
+  private Optional<DocumentHighlightSupplier.TerminalNodeInfo> findTerminalNode(
     Position position,
     DocumentContext documentContext
   ) {
@@ -87,13 +87,13 @@ public final class DocumentHighlightProvider {
     }
 
     if (maybeTerminalNode.isEmpty()) {
-      return null;
+      return Optional.empty();
     }
 
     var terminalNode = maybeTerminalNode.get();
     var token = terminalNode.getSymbol();
     var tokenType = token.getType();
 
-    return new DocumentHighlightSupplier.TerminalNodeInfo(terminalNode, tokenType);
+    return Optional.of(new DocumentHighlightSupplier.TerminalNodeInfo(terminalNode, tokenType));
   }
 }

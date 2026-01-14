@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
+import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class SDBLBracketDocumentHighlightSupplierTest {
@@ -50,7 +51,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     // Курсор на "(" (строка 10, позиция 8 - на самой скобке)
     params.setPosition(new Position(10, 8));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(2);
@@ -68,7 +69,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     // Курсор сразу после "(" (строка 10, позиция 9)
     params.setPosition(new Position(10, 9));
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
     // then
     assertThat(highlights).isNotEmpty();
     assertThat(highlights).hasSize(2);
@@ -89,7 +90,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     params.setPosition(new Position(10, 25));
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -107,7 +108,7 @@ class SDBLBracketDocumentHighlightSupplierTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 0)); // Позиция в комментарии
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
     // then
     assertThat(highlights).isEmpty();
   }

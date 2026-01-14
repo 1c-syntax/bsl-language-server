@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Range;
-import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -48,13 +48,13 @@ public class SubroutineDocumentHighlightSupplier extends AbstractASTDocumentHigh
   public List<DocumentHighlight> getDocumentHighlight(
     DocumentHighlightParams params,
     DocumentContext documentContext,
-    @Nullable TerminalNodeInfo terminalNodeInfo
+    Optional<TerminalNodeInfo> terminalNodeInfo
   ) {
-    if (terminalNodeInfo == null) {
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    if (!isSubroutineKeyword(terminalNodeInfo.tokenType())) {
+    if (!isSubroutineKeyword(terminalNodeInfo.get().tokenType())) {
       return Collections.emptyList();
     }
 

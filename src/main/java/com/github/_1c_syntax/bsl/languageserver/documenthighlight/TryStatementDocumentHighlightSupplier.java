@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -46,20 +47,20 @@ public class TryStatementDocumentHighlightSupplier extends AbstractASTDocumentHi
   public List<DocumentHighlight> getDocumentHighlight(
     DocumentHighlightParams params,
     DocumentContext documentContext,
-    @Nullable TerminalNodeInfo terminalNodeInfo
+    Optional<TerminalNodeInfo> terminalNodeInfo
   ) {
-    if (terminalNodeInfo == null) {
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    if (!isTryStatementKeyword(terminalNodeInfo.tokenType())) {
+    if (!isTryStatementKeyword(terminalNodeInfo.get().tokenType())) {
       return Collections.emptyList();
     }
 
     // Находим родительский узел tryStatement
     // Токены try-конструкции находятся напрямую в TryStatementContext,
     // поэтому parent уже может быть нужным типом
-    var parent = (ParserRuleContext) terminalNodeInfo.terminalNode().getParent();
+    var parent = (ParserRuleContext) terminalNodeInfo.get().terminalNode().getParent();
     var tryStatement = findTryStatementContext(parent);
 
     if (tryStatement == null) {

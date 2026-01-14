@@ -25,7 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import lombok.experimental.UtilityClass;
 import org.eclipse.lsp4j.Position;
-import org.jspecify.annotations.Nullable;
+
+import java.util.Optional;
 
 /**
  * Вспомогательные методы для тестирования DocumentHighlight сапплаеров.
@@ -41,9 +42,9 @@ public class DocumentHighlightTestUtils {
    *
    * @param position        позиция курсора
    * @param documentContext контекст документа
-   * @return информация о терминальном узле, или null если не найден
+   * @return информация о терминальном узле
    */
-  public DocumentHighlightSupplier. @Nullable TerminalNodeInfo findTerminalNode(
+  public Optional<DocumentHighlightSupplier.TerminalNodeInfo> findTerminalNode(
     Position position,
     DocumentContext documentContext
   ) {
@@ -59,14 +60,13 @@ public class DocumentHighlightTestUtils {
     }
 
     if (maybeTerminalNode.isEmpty()) {
-      return null;
+      return Optional.empty();
     }
 
     var terminalNode = maybeTerminalNode.get();
     var token = terminalNode.getSymbol();
     var tokenType = token.getType();
 
-    return new DocumentHighlightSupplier.TerminalNodeInfo(terminalNode, tokenType);
+    return Optional.of(new DocumentHighlightSupplier.TerminalNodeInfo(terminalNode, tokenType));
   }
 }
-

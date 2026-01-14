@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

@@ -28,10 +28,12 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Position;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Базовый класс для поставщиков подсветки в SDBL-запросах.

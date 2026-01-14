@@ -25,9 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Интерфейс для поставщиков подсветки связанных элементов в документе.
@@ -51,12 +51,12 @@ public interface DocumentHighlightSupplier {
    *
    * @param params Параметры запроса document highlight
    * @param documentContext Контекст документа
-   * @param terminalNodeInfo Информация о терминальном узле на позиции курсора (может быть null)
+   * @param terminalNodeInfo Информация о терминальном узле на позиции курсора
    * @return Список подсветок связанных элементов, или пустой список если нет совпадений
    */
   List<DocumentHighlight> getDocumentHighlight(
     DocumentHighlightParams params,
     DocumentContext documentContext,
-    @Nullable TerminalNodeInfo terminalNodeInfo
+    Optional<TerminalNodeInfo> terminalNodeInfo
   );
 }

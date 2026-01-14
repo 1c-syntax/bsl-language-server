@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,7 +61,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(2, 3)); // На "#Область"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -82,7 +83,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(12, 5)); // На "#КонецОбласти"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -103,7 +104,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(4, 6)); // На вложенной "#Область"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -125,7 +126,7 @@ class RegionDocumentHighlightSupplierTest {
     params.setPosition(new Position(15, 4)); // На "Если" (не регион)
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isEmpty();

@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
-import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -46,20 +46,20 @@ public class BracketDocumentHighlightSupplier implements DocumentHighlightSuppli
   public List<DocumentHighlight> getDocumentHighlight(
     DocumentHighlightParams params,
     DocumentContext documentContext,
-    @Nullable TerminalNodeInfo terminalNodeInfo
+    Optional<TerminalNodeInfo> terminalNodeInfo
   ) {
-    if (terminalNodeInfo == null) {
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    var tokenType = terminalNodeInfo.tokenType();
+    var tokenType = terminalNodeInfo.get().tokenType();
 
     // Проверяем, является ли токен скобкой
     if (!isBracket(tokenType)) {
       return Collections.emptyList();
     }
 
-    var token = terminalNodeInfo.terminalNode().getSymbol();
+    var token = terminalNodeInfo.get().terminalNode().getSymbol();
     return highlightMatchingBracket(token, documentContext);
   }
 

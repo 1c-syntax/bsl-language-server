@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Position;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -49,7 +50,7 @@ public class SDBLJoinDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
   public List<DocumentHighlight> getDocumentHighlight(
     DocumentHighlightParams params,
     DocumentContext documentContext,
-    @Nullable TerminalNodeInfo terminalNodeInfo
+    Optional<TerminalNodeInfo> terminalNodeInfo
   ) {
     var position = params.getPosition();
 

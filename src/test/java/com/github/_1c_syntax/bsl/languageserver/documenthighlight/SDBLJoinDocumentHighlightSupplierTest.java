@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,7 +55,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(10, 6)); // На "ЛЕВОЕ"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -78,7 +79,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(10, 15)); // На "СОЕДИНЕНИЕ"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -101,7 +102,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(11, 8)); // На "ПО"
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isNotEmpty();
@@ -122,7 +123,7 @@ class SDBLJoinDocumentHighlightSupplierTest {
     params.setPosition(new Position(0, 0)); // Позиция в комментарии
 
     // when
-    var highlights = supplier.getDocumentHighlight(params, documentContext, null);
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
 
     // then
     assertThat(highlights).isEmpty();

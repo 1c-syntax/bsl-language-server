@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -47,17 +48,17 @@ public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHig
   public List<DocumentHighlight> getDocumentHighlight(
     DocumentHighlightParams params,
     DocumentContext documentContext,
-    @Nullable TerminalNodeInfo terminalNodeInfo
+    Optional<TerminalNodeInfo> terminalNodeInfo
   ) {
-    if (terminalNodeInfo == null) {
+    if (terminalNodeInfo.isEmpty()) {
       return Collections.emptyList();
     }
 
-    if (!isIfStatementKeyword(terminalNodeInfo.tokenType())) {
+    if (!isIfStatementKeyword(terminalNodeInfo.get().tokenType())) {
       return Collections.emptyList();
     }
 
-    var parent = (ParserRuleContext) terminalNodeInfo.terminalNode().getParent();
+    var parent = (ParserRuleContext) terminalNodeInfo.get().terminalNode().getParent();
     var ifStatement = findIfStatementContext(parent);
 
     if (ifStatement == null) {
