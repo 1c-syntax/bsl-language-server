@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768501059624,
+  "lastUpdate": 1768503356462,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34317,6 +34317,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.2065108134969103",
             "extra": "mean: 69.37838673591614 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7e5f6468ff2626701be7f733a810356443e7993b",
+          "message": "Merge pull request #3777 from 1c-syntax/copilot/fix-diagnostic-message-text\n\nFix parameter substitution in ServerCallsInFormEvents diagnostic message",
+          "timestamp": "2026-01-15T19:47:16+01:00",
+          "tree_id": "2b40d0c4729d0eefa294cc0c8b6c8db4ca7f6ccd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7e5f6468ff2626701be7f733a810356443e7993b"
+        },
+        "date": 1768503351502,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.61862826347351,
+            "unit": "sec",
+            "range": "stddev: 0.8669385573397306",
+            "extra": "mean: 69.61862826347351 sec\nrounds: 3"
           }
         ]
       }
