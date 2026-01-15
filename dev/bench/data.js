@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768421283332,
+  "lastUpdate": 1768501059624,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34286,6 +34286,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5487896022814188",
             "extra": "mean: 68.83173298835754 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a76f7640aa4c255f58f7fb368ab1dacd7e4170a6",
+          "message": "Merge pull request #3776 from 1c-syntax/copilot/revert-spotless-update\n\nRevert spotless plugin to 7.0.4 and block dependabot updates",
+          "timestamp": "2026-01-15T19:08:49+01:00",
+          "tree_id": "ef8ea2d90677add9fe98e5f3f36e96847c44528c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a76f7640aa4c255f58f7fb368ab1dacd7e4170a6"
+        },
+        "date": 1768501054049,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.37838673591614,
+            "unit": "sec",
+            "range": "stddev: 0.2065108134969103",
+            "extra": "mean: 69.37838673591614 sec\nrounds: 3"
           }
         ]
       }
