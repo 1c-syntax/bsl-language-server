@@ -13,6 +13,8 @@ updates:
       freefair:
         patterns:
           - "io.freefair.*"
+    ignore:
+      - dependency-name: "com.diffplug.spotless"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
