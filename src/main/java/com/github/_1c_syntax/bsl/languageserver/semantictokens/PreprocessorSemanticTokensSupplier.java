@@ -102,34 +102,38 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
   // excluding region start/end, native, use (handled as Namespace)
   private void addOtherPreprocs(List<SemanticTokenEntry> entries, BSLParser.FileContext ast) {
     for (var preprocessor : Trees.<BSLParser.PreprocessorContext>findAllRuleNodes(ast, BSLParser.RULE_preprocessor)) {
-      boolean containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
+      var containsRegion = (preprocessor.regionStart() != null) || (preprocessor.regionEnd() != null);
       if (containsRegion) {
         continue; // region handled as Namespace above
       }
 
-      // Find HASH token and keyword tokens to combine them into single token
-      Token hashToken = null;
-      boolean firstKeywordCombined = false;
+      addOtherPreprocs(entries, preprocessor);
+    }
+  }
 
-      for (Token token : Trees.getTokens(preprocessor)) {
-        if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-          continue;
-        }
-        if (token.getType() == BSLLexer.HASH) {
-          hashToken = token;
-        } else {
-          String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
-          if (symbolicName != null && symbolicName.startsWith("PREPROC_")) {
-            // Track keyword tokens for combining with HASH
-            if (hashToken != null && !firstKeywordCombined) {
-              // First keyword after HASH - combine them into single token
-              helper.addRange(entries, Ranges.create(hashToken, token), SemanticTokenTypes.Macro);
-              firstKeywordCombined = true;
-            } else {
-              // Subsequent keywords (e.g., "Сервер", "Тогда" in "#Если Сервер Тогда")
-              // or keyword without preceding HASH (shouldn't happen in valid syntax)
-              helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
-            }
+  private void addOtherPreprocs(List<SemanticTokenEntry> entries, BSLParser.PreprocessorContext preprocessor) {
+    // Find HASH token and keyword tokens to combine them into single token
+    Token hashToken = null;
+    var firstKeywordCombined = false;
+
+    for (Token token : Trees.getTokens(preprocessor)) {
+      if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+        continue;
+      }
+      if (token.getType() == BSLLexer.HASH) {
+        hashToken = token;
+      } else {
+        var symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
+        if (symbolicName != null && symbolicName.startsWith("PREPROC_")) {
+          // Track keyword tokens for combining with HASH
+          if (hashToken != null && !firstKeywordCombined) {
+            // First keyword after HASH - combine them into single token
+            helper.addRange(entries, Ranges.create(hashToken, token), SemanticTokenTypes.Macro);
+            firstKeywordCombined = true;
+          } else {
+            // Subsequent keywords (e.g., "Сервер", "Тогда" in "#Если Сервер Тогда")
+            // or keyword without preceding HASH (shouldn't happen in valid syntax)
+            helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
           }
         }
       }
