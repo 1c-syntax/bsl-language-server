@@ -19,10 +19,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-/**
- * Классы для хранения информации, прочитанной из комментариев-описаний
- */
-@NullMarked
-package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
+package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
-import org.jspecify.annotations.NullMarked;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import org.eclipse.lsp4j.Diagnostic;
+import tools.jackson.databind.json.JsonMapper;
+
+import java.io.Serial;
+
+/**
+ * Преднастроенный object mapper для (де)сериализации класса {@link AnalysisInfo}
+ */
+// Подавление предупреждений о несовместимости типов [unchecked] readTree(JsonParser)
+@SuppressWarnings("unchecked")
+public class AnalysisInfoJsonMapper extends JsonMapper {
+
+  @Serial
+  private static final long serialVersionUID = -5493276930667196227L;
+
+  public AnalysisInfoJsonMapper() {
+    super(JsonMapper.builder()
+      .addMixIn(Diagnostic.class, DiagnosticMixIn.class));
+  }
+}

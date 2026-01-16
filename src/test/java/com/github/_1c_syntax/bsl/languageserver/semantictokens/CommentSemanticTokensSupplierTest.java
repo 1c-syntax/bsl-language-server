@@ -34,8 +34,6 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
@@ -134,19 +132,20 @@ class CommentSemanticTokensSupplierTest {
     supplier.setMultilineTokenSupport(false);
     var tokensWithoutMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
+    helper.assertTokensMatch(tokensWithoutMultiline, List.of(
+      new ExpectedToken(1, 2, 21, SemanticTokenTypes.Comment, "// Первый комментарий"),
+      new ExpectedToken(2, 2, 21, SemanticTokenTypes.Comment, "// Второй комментарий"),
+      new ExpectedToken(3, 2, 21, SemanticTokenTypes.Comment, "// Третий комментарий")
+    ));
+
     // Test with multiline support - should have 1 merged token
     supplier.setMultilineTokenSupport(true);
     var tokensWithMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // then
-    // Without multiline: 3 separate tokens
-    assertThat(tokensWithoutMultiline).hasSize(3);
-
-    // With multiline: 1 merged token for consecutive comments
-    assertThat(tokensWithMultiline).hasSize(1);
-
-    // The merged token should start on line 1 (0-indexed)
-    assertThat(tokensWithMultiline.get(0).line()).isEqualTo(1);
+    // With multiline: 1 merged token for consecutive comments (length = 21 + 1 + 21 + 1 + 21 = 65)
+    helper.assertTokensMatch(tokensWithMultiline, List.of(
+      new ExpectedToken(1, 2, 65, SemanticTokenTypes.Comment, "// Первый комментарий...")
+    ));
   }
 
   @Test

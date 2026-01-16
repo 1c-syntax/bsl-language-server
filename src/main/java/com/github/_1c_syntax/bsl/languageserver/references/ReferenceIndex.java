@@ -314,7 +314,7 @@ public class ReferenceIndex {
     var uri = symbolOccurrence.location().uri();
     var position = symbolOccurrence.location().getStart();
 
-    return Optional.ofNullable(serverContext.getDocument(uri))
+    return Optional.ofNullable(serverContext.getDocumentNoLock(uri))
       .map(DocumentContext::getSymbolTree)
       .map(symbolTree -> symbolTree.getSymbolAtPosition(position))
       .orElseThrow();
@@ -331,8 +331,8 @@ public class ReferenceIndex {
       return true;
     }
 
-    if (to instanceof Exportable) {
-      return ((Exportable) to).isExport();
+    if (to instanceof Exportable exportable) {
+      return exportable.isExport();
     }
 
     return true;

@@ -392,7 +392,11 @@ public class SemanticTokensProvider {
    * При вставке текста без перевода строки (lineOffset == 0), первый токен
    * может иметь смещённый deltaStart.
    */
-  private static int findSuffixMatchWithOffset(int[] prev, int[] curr, int firstDiffToken, int lineOffset, int tokenSize) {
+  private static int findSuffixMatchWithOffset(int[] prev,
+                                               int[] curr,
+                                               int firstDiffToken,
+                                               int lineOffset,
+                                               int tokenSize) {
     final int DELTA_LINE_INDEX = 0;
     final int DELTA_START_INDEX = 1;
     

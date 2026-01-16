@@ -189,7 +189,7 @@ public final class MultilingualStringAnalyser {
       return false;
     }
 
-    if (parent instanceof BSLParser.GlobalMethodCallContext && isTemplate((BSLParser.GlobalMethodCallContext) parent)) {
+    if (parent instanceof BSLParser.GlobalMethodCallContext context && isTemplate(context)) {
       return true;
     }
 

@@ -29,7 +29,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -118,7 +118,7 @@ class ExecuteExternalCodeInCommonModuleDiagnosticTest extends AbstractDiagnostic
 
   private void getDocumentContextFromFile() {
     var path = Absolute.path(PATH_TO_METADATA);
-    var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    var testFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
     var configuration = spy(context.getConfiguration());

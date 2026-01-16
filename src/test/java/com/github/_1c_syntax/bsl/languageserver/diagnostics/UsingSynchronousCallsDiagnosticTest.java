@@ -33,7 +33,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -140,7 +140,7 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode, String moduleFile) {
     var path = Absolute.path(PATH_TO_METADATA);
-    var testFile = Paths.get(moduleFile).toAbsolutePath();
+    var testFile = Path.of(moduleFile).toAbsolutePath();
 
     initServerContext(path);
     var serverContext = spy(context);

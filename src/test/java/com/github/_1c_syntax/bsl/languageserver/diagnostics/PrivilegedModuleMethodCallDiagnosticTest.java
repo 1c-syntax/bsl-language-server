@@ -25,7 +25,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +78,7 @@ class PrivilegedModuleMethodCallDiagnosticTest extends AbstractDiagnosticTest<Pr
   }
 
   private List<Diagnostic> getDiagnosticsAsCommonModule() {
-    Path moduleFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path moduleFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(PATH_TO_METADATA);
 

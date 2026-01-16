@@ -100,7 +100,7 @@ public class Resources {
    * @return Содержимое ресурса.
    */
   public static String getResourceString(Locale locale, Class<?> clazz, String key, Object... args) {
-    var resourceString = String.format(getResourceString(locale, clazz, key), args);
+    var resourceString = getResourceString(locale, clazz, key).formatted(args);
     return stringInterner.intern(resourceString);
   }
 }

@@ -7,17 +7,17 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("cloud.rio.license") version "0.18.0"
+    id("com.diffplug.spotless") version "7.0.4"
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.1.0"
-    id("io.freefair.javadoc-links") version "9.1.0"
-    id("io.freefair.javadoc-utf-8") version "9.1.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.1.0"
+    id("io.freefair.lombok") version "9.2.0"
+    id("io.freefair.javadoc-links") version "9.2.0"
+    id("io.freefair.javadoc-utf-8") version "9.2.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.2.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
     id("com.github.ben-manes.versions") version "0.53.0"
-    id("org.springframework.boot") version "3.5.9"
+    id("org.springframework.boot") version "4.0.1"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "5.12.2"
+    id("io.sentry.jvm.gradle") version "6.0.0-rc.1"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.21.0"
@@ -38,21 +38,21 @@ gitVersioning.apply {
     refs {
         describeTagFirstParent = false
         tag("v(?<tagVersion>[0-9].*)") {
-            version = "\${ref.tagVersion}\${dirty}"
+            version = $$"${ref.tagVersion}${dirty}"
         }
 
         branch("develop") {
-            version = "\${describe.tag.version}." +
-                    "\${describe.distance}-SNAPSHOT\${dirty}"
+            version = $$"${describe.tag.version}." +
+                    $$"${describe.distance}-SNAPSHOT${dirty}"
         }
 
         branch(".+") {
-            version = "\${ref}-\${commit.short}\${dirty}"
+            version = $$"${ref}-${commit.short}${dirty}"
         }
     }
 
     rev {
-        version = "\${commit.short}\${dirty}"
+        version = $$"${commit.short}${dirty}"
     }
 }
 
@@ -82,14 +82,14 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.29.0") {
+    api("io.github.1c-syntax", "bsl-parser", "0.30.0") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.antlr", "antlr-runtime")
     }
     api("io.github.1c-syntax", "utils", "0.6.8")
-    api("io.github.1c-syntax", "mdclasses", "0.17.2")
-    api("io.github.1c-syntax", "bsl-common-library", "0.9.1")
+    api("io.github.1c-syntax", "mdclasses", "0.17.4")
+    api("io.github.1c-syntax", "bsl-common-library", "0.9.2")
     api("io.github.1c-syntax", "supportconf", "0.15.0")
 
     // nullability annotations
@@ -113,7 +113,7 @@ dependencies {
     }
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.25")
+    implementation("org.aspectj", "aspectjrt", "1.9.25.1")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.21.0")
@@ -129,8 +129,8 @@ dependencies {
     implementation("me.tongfei", "progressbar", "0.10.1")
 
     // (de)serialization
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    implementation("tools.jackson.core:jackson-databind")
+    implementation("tools.jackson.dataformat:jackson-dataformat-xml")
     implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
@@ -193,9 +193,21 @@ tasks.bootJar {
     archiveClassifier.set("exec")
 }
 
-tasks.named("sourcesJar") {
-    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
-    dependsOn(tasks.collectExternalDependenciesForSentry)
+afterEvaluate {
+    tasks.named("spotlessJavaCheck") {
+        dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+        dependsOn(tasks.collectExternalDependenciesForSentry)
+    }
+
+    tasks.named("spotlessJavaApply") {
+        dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+        dependsOn(tasks.collectExternalDependenciesForSentry)
+    }
+
+    tasks.named("sourcesJar") {
+        dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
+        dependsOn(tasks.collectExternalDependenciesForSentry)
+    }
 }
 
 tasks.build {
@@ -248,16 +260,6 @@ tasks.check {
     mustRunAfter(tasks.generateDiagnosticDocs)
 }
 
-tasks.named("licenseMain") {
-    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
-    dependsOn(tasks.collectExternalDependenciesForSentry)
-}
-
-tasks.named("licenseFormatMain") {
-    dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
-    dependsOn(tasks.collectExternalDependenciesForSentry)
-}
-
 tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
@@ -267,6 +269,14 @@ tasks.jacocoTestReport {
 
 jmh {
     jmhVersion = "1.37"
+}
+
+sentry {
+    org.set("1c-syntax")
+    projectName.set("bsl-language-server")
+    
+    // Включить source context только при наличии токена аутентификации
+    includeSourceContext = System.getenv("SENTRY_AUTH_TOKEN") != null
 }
 
 tasks.processResources {
@@ -307,23 +317,11 @@ tasks.javadoc {
     }
 }
 
-license {
-    header = rootProject.file("license/HEADER.txt")
-    skipExistingHeaders = false
-    strictCheck = true
-    ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
-    ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com>"
-    ext["project"] = "BSL Language Server"
-    mapping("java", "SLASHSTAR_STYLE")
-    exclude("**/*.properties")
-    exclude("**/*.xml")
-    exclude("**/*.json")
-    exclude("**/*.bsl")
-    exclude("**/*.os")
-    exclude("**/*.txt")
-    exclude("**/*.java.orig")
-    exclude("**/*.impl")
-    exclude("**/*.mockito.plugins.MockMaker")
+spotless {
+    java {
+        targetExclude("**/AbstractObjectPool.java")
+        licenseHeaderFile(rootProject.file("license/HEADER.txt"), "package ").updateYearWithLatest(true)
+    }
 }
 
 sonarqube {
@@ -453,9 +451,9 @@ tasks.withType<GenerateModuleMetadata> {
 }
 
 tasks.register("updateLicenses") {
-    description = "Wrapper for licenseFormat"
+    description = "Wrapper for spotlessApply"
     group = "license"
-    dependsOn(tasks.licenseFormat)
+    dependsOn(tasks.spotlessApply)
 }
 
 fun buildTime(): String {

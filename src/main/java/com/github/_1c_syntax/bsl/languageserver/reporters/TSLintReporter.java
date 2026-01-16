@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -48,15 +48,16 @@ public class TSLintReporter implements DiagnosticReporter {
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
     List<TSLintReportEntry> tsLintReport = new ArrayList<>();
-    for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
+    for (FileInfo fileInfo : analysisInfo.fileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
         TSLintReportEntry entry = new TSLintReportEntry(fileInfo.getPath().toString(), diagnostic);
         tsLintReport.add(entry);
       }
     }
 
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+    var mapper = JsonMapper.builder()
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .build();
 
     File reportFile = new File(outputDir.toFile(), "./bsl-tslint.json");
     mapper.writeValue(reportFile, tsLintReport);

@@ -40,10 +40,10 @@ public class ConditionalVertex extends BranchingVertex {
   }
 
   public BSLParser.ExpressionContext getExpression() {
-    if (ast instanceof BSLParser.IfBranchContext) {
-      return ((BSLParser.IfBranchContext) ast).expression();
-    } else if (ast instanceof BSLParser.ElsifBranchContext) {
-      return ((BSLParser.ElsifBranchContext) ast).expression();
+    if (ast instanceof BSLParser.IfBranchContext ifBranch) {
+      return ifBranch.expression();
+    } else if (ast instanceof BSLParser.ElsifBranchContext elsifBranch) {
+      return elsifBranch.expression();
     }
 
     throw new IllegalStateException();

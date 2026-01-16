@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Setter;

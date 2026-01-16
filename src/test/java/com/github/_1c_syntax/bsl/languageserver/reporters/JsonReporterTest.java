@@ -21,10 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
@@ -37,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -59,7 +57,7 @@ class JsonReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     Diagnostic diagnostic = new Diagnostic(
@@ -81,12 +79,11 @@ class JsonReporterTest {
     reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
-    ObjectMapper mapper = new AnalysisInfoObjectMapper();
+    var mapper = new AnalysisInfoJsonMapper();
 
-    mapper.findAndRegisterModules();
     AnalysisInfo report = mapper.readValue(file, AnalysisInfo.class);
 
-    Assertions.assertThat(report.getFileinfos()).hasSize(1);
+    Assertions.assertThat(report.fileinfos()).hasSize(1);
 
   }
 }

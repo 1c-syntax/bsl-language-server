@@ -59,8 +59,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractS
   @SuppressWarnings("unchecked")
   AbstractDiagnosticTest() {
     Type superclass = getClass().getGenericSuperclass();
-    if (superclass instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) superclass;
+    if (superclass instanceof ParameterizedType parameterizedType) {
       Type[] typeArguments = parameterizedType.getActualTypeArguments();
       if (typeArguments.length > 0 && typeArguments[0] instanceof Class) {
         this.diagnosticClass = (Class<T>) typeArguments[0];

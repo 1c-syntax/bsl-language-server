@@ -32,8 +32,6 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
@@ -100,9 +98,14 @@ class PreprocessorSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
-    // #Если, Сервер, Тогда, #КонецЕсли
-    assertThat(decoded).hasSizeGreaterThanOrEqualTo(4);
+    // then - #Если and #КонецЕсли are single tokens, other keywords are separate
+    var expected = List.of(
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Macro, "#Если"),
+      new ExpectedToken(0, 6, 6, SemanticTokenTypes.Macro, "Сервер"),
+      new ExpectedToken(0, 13, 5, SemanticTokenTypes.Macro, "Тогда"),
+      new ExpectedToken(3, 0, 10, SemanticTokenTypes.Macro, "#КонецЕсли")
+    );
+    helper.assertTokensMatch(decoded, expected);
   }
 
   @Test

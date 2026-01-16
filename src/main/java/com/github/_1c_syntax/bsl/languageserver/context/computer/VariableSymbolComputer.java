@@ -26,12 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -165,6 +165,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
     if (
       ctx.getChildCount() > 1
+      || ctx.IDENTIFIER() == null
       || currentMethodVariables.containsKey(ctx.getText())
       || moduleVariables.containsKey(ctx.getText())
     ) {
@@ -235,7 +236,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     return Optional.of(
-      new VariableDescription(Collections.emptyList(), trailingComments)
+      VariableDescription.create(Collections.emptyList(), trailingComments)
     );
   }
 
@@ -247,7 +248,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     return Optional.of(
-      new VariableDescription(Collections.emptyList(), trailingComments)
+      VariableDescription.create(Collections.emptyList(), trailingComments)
     );
   }
 
@@ -259,7 +260,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     return Optional.of(
-      new VariableDescription(Collections.emptyList(), trailingComments)
+      VariableDescription.create(Collections.emptyList(), trailingComments)
     );
   }
 
@@ -279,7 +280,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return Optional.empty();
     }
 
-    return Optional.of(new VariableDescription(comments, trailingComments));
+    return Optional.of(VariableDescription.create(comments, trailingComments));
 
   }
 

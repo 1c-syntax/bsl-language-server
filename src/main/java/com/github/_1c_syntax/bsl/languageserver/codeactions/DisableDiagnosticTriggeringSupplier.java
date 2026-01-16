@@ -188,7 +188,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       params.getRange().getStart().getLine(),
       0
     );
-    TextEdit disableTextEdit = new TextEdit(disableRange, String.format("// BSLLS%s-off%n", diagnosticName));
+    TextEdit disableTextEdit = new TextEdit(disableRange, "// BSLLS%s-off%n".formatted(diagnosticName));
     edits.add(disableTextEdit);
 
     Range enableRange = Ranges.create(
@@ -197,7 +197,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       params.getRange().getEnd().getLine(),
       last.getCharPositionInLine() + last.getText().length()
     );
-    TextEdit enableTextEdit = new TextEdit(enableRange, String.format("%n// BSLLS%s-on%n", diagnosticName));
+    TextEdit enableTextEdit = new TextEdit(enableRange, "%n// BSLLS%s-on%n".formatted(diagnosticName));
     edits.add(enableTextEdit);
     return edits;
   }
@@ -205,7 +205,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   private List<TextEdit> createInFileTextEdits(String diagnosticName) {
     TextEdit textEdit = new TextEdit(
       Ranges.create(0, 0, 0, 0),
-      String.format("// BSLLS%s-off%n", diagnosticName)
+      "// BSLLS%s-off%n".formatted(diagnosticName)
     );
     return Collections.singletonList(textEdit);
   }
@@ -238,7 +238,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       last.getCharPositionInLine() + last.getText().length()
     );
 
-    TextEdit textEdit = new TextEdit(range, String.format(" // BSLLS%s-off", diagnosticName));
+    TextEdit textEdit = new TextEdit(range, " // BSLLS%s-off".formatted(diagnosticName));
     return Collections.singletonList(textEdit);
   }
 

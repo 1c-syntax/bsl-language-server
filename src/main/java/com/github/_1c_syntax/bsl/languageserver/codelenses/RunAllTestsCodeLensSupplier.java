@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -97,12 +97,12 @@ public class RunAllTestsCodeLensSupplier
    */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, DefaultCodeLensData data) {
-    var path = Paths.get(documentContext.getUri());
+    var path = Path.of(documentContext.getUri());
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunAllTestsArguments();
-    runText = String.format(runText, path);
+    runText = runText.formatted(path);
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runAllTests"));

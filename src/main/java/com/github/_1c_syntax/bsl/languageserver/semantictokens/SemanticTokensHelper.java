@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
+import com.github._1c_syntax.bsl.parser.description.support.DescriptionElement;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokensLegend;
@@ -157,17 +157,19 @@ public class SemanticTokensHelper {
   }
 
   /**
-   * Добавить токен из TerminalNode с явно указанным типом и модификаторами.
+   * Добавить элемент описания с явно указанным типом и модификаторами.
    *
    * @param entries   Список токенов для наполнения
-   * @param node      Терминальный узел AST
+   * @param element   Элемент описания
    * @param type      Тип семантического токена (из SemanticTokenTypes)
    * @param modifiers Модификаторы токена (из SemanticTokenModifiers)
    */
-  public void addTerminalNodeRange(List<SemanticTokenEntry> entries, @Nullable TerminalNode node, String type, String... modifiers) {
-    if (node != null) {
-      addTokenRange(entries, node.getSymbol(), type, modifiers);
-    }
+  public void addDescriptionElement(List<SemanticTokenEntry> entries,
+                                    DescriptionElement element,
+                                    String type,
+                                    String... modifiers) {
+    var range = element.range();
+    addEntry(entries, range.startLine(), range.startCharacter(), range.length(), type, modifiers);
   }
 
   /**

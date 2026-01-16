@@ -95,7 +95,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
       regionsLanguage == ScriptVariant.ENGLISH ? "#Region %s%n%n#EndRegion%n" : "#Область %s%n%n#КонецОбласти%n";
 
     String result = neededStandardRegions.stream()
-      .map(s -> String.format(regionFormat, s))
+      .map(regionFormat::formatted)
       .collect(Collectors.joining("\n"));
     var textEdit = new TextEdit(calculateFixRange(params.getRange()), result);
 

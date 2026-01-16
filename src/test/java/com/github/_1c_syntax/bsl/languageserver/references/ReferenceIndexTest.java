@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -56,7 +56,7 @@ class ReferenceIndexTest {
 
   @PostConstruct
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
+    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
     serverContext.populateContext();
   }
 

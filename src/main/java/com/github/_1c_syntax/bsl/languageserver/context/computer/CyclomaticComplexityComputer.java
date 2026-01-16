@@ -66,7 +66,7 @@ public class CyclomaticComplexityComputer
 
   private final DocumentContext documentContext;
 
-  @Setter(onMethod = @__({@Autowired}), value = AccessLevel.PACKAGE)
+  @Setter(onMethod_ ={@Autowired}, value = AccessLevel.PACKAGE)
   private StringInterner stringInterner;
 
   private int fileComplexity;
@@ -307,7 +307,7 @@ public class CyclomaticComplexityComputer
 
   private void addSecondaryLocation(Range range) {
     String message;
-    message = String.format("+%d", 1);
+    message = "+%d".formatted(1);
     var secondaryLocation = new ComplexitySecondaryLocation(range, stringInterner.intern(message));
     List<ComplexitySecondaryLocation> locations;
     if (currentMethod != null) {

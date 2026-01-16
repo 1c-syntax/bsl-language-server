@@ -23,10 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.description.VariableDescription;
+import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,6 +37,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
 class VariableSymbolTest {
@@ -88,19 +90,18 @@ class VariableSymbolTest {
 
     List<VariableDescription> variableDescriptions = variableSymbols.stream()
       .map(VariableSymbol::getDescription)
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .collect(Collectors.toList());
 
     assertThat(variableDescriptions)
       .hasSize(12)
       .filteredOn(variableDescription -> !variableDescription.getDescription().isEmpty())
       .hasSize(5)
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(1, 0, 18)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(4, 0, 5, 23)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(21, 0, 23, 29)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(37, 4, 25)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(41, 4, 45, 27)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(1, 0, 18)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(4, 0, 5, 23)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(21, 0, 23, 29)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(37, 4, 25)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(41, 4, 45, 27)))
     ;
 
     assertThat(variableDescriptions)
@@ -108,13 +109,13 @@ class VariableSymbolTest {
       .filteredOn(Optional::isPresent)
       .hasSize(9)
       .extracting(Optional::get)
-      .anyMatch(trailingDescription -> trailingDescription.getRange().equals(Ranges.create(8, 35, 55)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(19, 20, 42)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(24, 20, 42)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(35, 21, 43)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(39, 21, 43)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(63, 45, 77)))
-      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(71, 38, 70)))
+      .anyMatch(trailingDescription -> trailingDescription.getRange().equals(SimpleRange.create(8, 35, 55)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(19, 20, 42)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(24, 20, 42)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(35, 21, 43)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(39, 21, 43)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(63, 45, 77)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(SimpleRange.create(71, 38, 70)))
     ;
 
   }
@@ -147,6 +148,26 @@ class VariableSymbolTest {
     assertThat(variableSymbols.get(14).getKind()).isEqualTo(VariableKind.LOCAL);
     assertThat(variableSymbols.get(18).getKind()).isEqualTo(VariableKind.DYNAMIC);
 
+  }
+
+  @Test
+  void testNoNPEOnMalformedLValue() {
+    // Test for issue BSL-LANGUAGE-SERVER-G5
+    // Malformed code with syntax errors should not cause NPE
+    String code = """
+      Процедура Тест()
+        Переменная =;
+        =;
+        Док.Записать;
+      КонецПроцедуры
+      """;
+    
+    // Symbol tree construction happens during getDocumentContext
+    // and should not throw NullPointerException
+    assertThatCode(() -> {
+      var ctx = TestUtils.getDocumentContext(code);
+      ctx.getSymbolTree().getVariables();
+    }).doesNotThrowAnyException();
   }
 
 }

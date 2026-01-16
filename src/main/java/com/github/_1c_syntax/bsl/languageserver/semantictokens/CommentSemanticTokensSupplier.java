@@ -22,17 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
+import com.github._1c_syntax.bsl.parser.description.VariableDescription;
+import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -78,7 +78,7 @@ public class CommentSemanticTokensSupplier implements SemanticTokensSupplier {
     var symbolTree = documentContext.getSymbolTree();
 
     // Collect description ranges for describable symbols
-    List<Range> descriptionRanges = new ArrayList<>();
+    List<SimpleRange> descriptionRanges = new ArrayList<>();
 
     for (var method : symbolTree.getMethods()) {
       method.getDescription().ifPresent((MethodDescription description) ->
@@ -98,10 +98,10 @@ public class CommentSemanticTokensSupplier implements SemanticTokensSupplier {
     // Filter comments (excluding those inside descriptions)
     List<Token> regularComments = new ArrayList<>();
     for (var commentToken : documentContext.getComments()) {
-      var commentRange = Ranges.create(commentToken);
+      var commentRange = SimpleRange.create(commentToken);
 
       // Skip comments that are inside method/variable descriptions - they are handled by BslDocSemanticTokensSupplier
-      boolean insideDescription = descriptionRanges.stream().anyMatch(r -> Ranges.containsRange(r, commentRange));
+      boolean insideDescription = descriptionRanges.stream().anyMatch(r -> SimpleRange.containsRange(r, commentRange));
       if (insideDescription) {
         continue;
       }
@@ -178,9 +178,9 @@ public class CommentSemanticTokensSupplier implements SemanticTokensSupplier {
     }
   }
 
-  private void addDescriptionRange(List<Range> descriptionRanges, SourceDefinedSymbolDescription description) {
+  private void addDescriptionRange(List<SimpleRange> descriptionRanges, SourceDefinedSymbolDescription description) {
     var range = description.getRange();
-    if (Ranges.isEmpty(range)) {
+    if (range.isEmpty()) {
       return;
     }
     descriptionRanges.add(range);

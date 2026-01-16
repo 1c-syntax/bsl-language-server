@@ -64,7 +64,7 @@ jobs:
         run: pip install pytest pytest-benchmark && pip install pybadges
 
       - name: Download SSL 3.1
-        run: git clone https://github.com/1c-syntax/ssl_3_1.git ssl
+        run: git clone --depth 1 https://github.com/1c-syntax/ssl_3_1.git ssl
 
       - name: Analyze ssl
         run: pytest .github/scripts/benchmark.py --benchmark-min-rounds=3 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose

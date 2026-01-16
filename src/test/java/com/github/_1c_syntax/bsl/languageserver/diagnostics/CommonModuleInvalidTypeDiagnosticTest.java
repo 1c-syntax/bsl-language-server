@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -168,7 +167,7 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
   void getDocumentContextFromFile() {
 
     Path path = Absolute.path(PATH_TO_METADATA);
-    Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
     var configuration = context.getConfiguration();

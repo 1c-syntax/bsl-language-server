@@ -32,8 +32,6 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
@@ -66,7 +64,7 @@ class LexicalSemanticTokensSupplierTest {
   @Test
   void testStrings() {
     // Note: STRING tokens are now handled by StringSemanticTokensSupplier
-    // This test verifies that LexicalSemanticTokensSupplier does NOT process regular strings
+    // This test verifies that LexicalSemanticTokensSupplier processes keywords but NOT regular strings
     // given
     String bsl = """
       Процедура Тест()
@@ -77,11 +75,12 @@ class LexicalSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then - String tokens are handled by StringSemanticTokensSupplier
-    // No String type tokens expected from LexicalSemanticTokensSupplier at position where the string is
-    assertThat(decoded.stream()
-      .filter(t -> t.start() == 10 && t.line() == 1)
-      .toList()).isEmpty();
+    // then - should have keywords and operators, but no string token at position 10 on line 1
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
+      new ExpectedToken(1, 8, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(2, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
+    ));
   }
 
   @Test
@@ -159,7 +158,7 @@ class LexicalSemanticTokensSupplierTest {
 
   @Test
   void testQueryStringsAreSkipped() {
-    // given - Query strings should be skipped (handled by QuerySemanticTokensSupplier)
+    // given - Query strings should be skipped (handled by StringSemanticTokensSupplier with SDBL parsing)
     String bsl = """
       Процедура Тест()
         Запрос = "Выбрать * из Справочник.Контрагенты";
@@ -169,12 +168,11 @@ class LexicalSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then - The query string should NOT be present as a single String token
-    var stringTokensOnQueryLine = decoded.stream()
-      .filter(t -> t.line() == 1 && t.start() >= 11 && t.start() < 40)
-      .toList();
-
-    // Query string is skipped - no full string token at that position
-    assertThat(stringTokensOnQueryLine).isEmpty();
+    // then - should have keywords and operators, query string content is handled elsewhere
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 0, 9, SemanticTokenTypes.Keyword, "Процедура"),
+      new ExpectedToken(1, 9, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(2, 0, 14, SemanticTokenTypes.Keyword, "КонецПроцедуры")
+    ));
   }
 }

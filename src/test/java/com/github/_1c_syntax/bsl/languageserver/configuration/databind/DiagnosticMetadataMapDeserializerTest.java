@@ -21,9 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -32,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -246,8 +245,7 @@ class DiagnosticMetadataMapDeserializerTest {
   }
 
   private Map<String, DiagnosticMetadata> deserializeMetadata(String json) throws Exception {
-    var mapper = new ObjectMapper();
-    mapper.registerModule(new ParameterNamesModule());
+    var mapper = new JsonMapper();
 
     String wrappedJson = "{\"metadata\": " + json + "}";
     TestWrapper wrapper = mapper.readValue(wrappedJson, TestWrapper.class);
