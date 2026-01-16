@@ -158,13 +158,13 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       String lineText = lines[lineIdx];
       int charOffset = (lineIdx == 0) ? fileStartChar : 0;
 
-      var lineElements = elementsByLine.getOrDefault(lineIdx, List.of());
+      var lineElements = elementsByLine.getOrDefault(fileLine, List.of());
 
       if (lineElements.isEmpty()) {
         int startLineIdx = lineIdx;
 
         while (lineIdx < lines.length) {
-          var nextLineElements = elementsByLine.getOrDefault(lineIdx, List.of());
+          var nextLineElements = elementsByLine.getOrDefault(fileLine, List.of());
           if (!nextLineElements.isEmpty()) {
             break;
           }
