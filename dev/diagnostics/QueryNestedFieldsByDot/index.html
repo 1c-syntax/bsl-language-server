@@ -1481,26 +1481,34 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Базовое разыменование ссылочных полей в выборке (во временную таблицу или в результат запроса)
-<code>ЗаказКлиентаТовары.Ссылка.Организация КАК Организация</code></li>
+<div class="highlight"><pre><span></span><code><span class="nv">ЗаказКлиентаТовары</span><span class="o">.</span><span class="nv">Ссылка</span><span class="o">.</span><span class="nv">Организация</span> <span class="nv">КАК</span> <span class="nv">Организация</span>
+</code></pre></div></li>
 <li>Разыменование ссылочных полей в соединениях таблиц
-<code>ВТ_РасчетыСКлиентами КАК ВТ_РасчетыСКлиентами
-     ЛЕВОЕ СОЕДИНЕНИЕ ВТ_ДанныеЗаказовКлиента КАК ВТ_ДанныеЗаказовКлиента
-     ПО ВТ_РасчетыСКлиентами.АналитикаУчетаПоПартнерам.Партнер = ВТ_ДанныеЗаказовКлиента.Партнер</code></li>
+<div class="highlight"><pre><span></span><code><span class="k">ИЗ</span>
+    <span class="nv">ВТ_РасчетыСКлиентами</span> <span class="nv">КАК</span> <span class="nv">ВТ_РасчетыСКлиентами</span>
+        <span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span> <span class="nv">ВТ_ДанныеЗаказовКлиента</span> <span class="nv">КАК</span> <span class="nv">ВТ_ДанныеЗаказовКлиента</span>
+        <span class="k">ПО</span> <span class="nv">ВТ_РасчетыСКлиентами</span><span class="o">.</span><span class="nv">АналитикаУчетаПоПартнерам</span><span class="o">.</span><span class="nv">Партнер</span> <span class="o">=</span> <span class="nv">ВТ_ДанныеЗаказовКлиента</span><span class="o">.</span><span class="nv">Партнер</span>
+</code></pre></div></li>
 <li>Разыменование ссылочных полей в виртуальных таблицах
-<code>РегистрНакопления.РасчетыСКлиентами.Обороты(
-            &amp;НачалоПериода,
-                &amp;КонецПериода,
-                ,
-                (АналитикаУчетаПоПартнерам.Партнер) В ...</code></li>
+<div class="highlight"><pre><span></span><code><span class="k">ИЗ</span>
+    <span class="nv">РегистрНакопления</span><span class="o">.</span><span class="nv">РасчетыСКлиентами</span><span class="o">.</span><span class="nf">Обороты</span><span class="p">(</span>
+        <span class="nd">&amp;НачалоПериода,</span>
+        <span class="nd">&amp;КонецПериода,</span>
+        <span class="p">,</span>
+        <span class="p">(</span><span class="nv">АналитикаУчетаПоПартнерам</span><span class="o">.</span><span class="nv">Партнер</span><span class="p">)</span> <span class="nv">В</span> <span class="o">...</span>
+</code></pre></div></li>
 <li>Конструкция "ВЫРАЗИТЬ" с разыменованием получаемого поля
-<code>ВЫРАЗИТЬ(ВТ_ПланОтгрузок.ДокументПлан КАК Документ.ЗаказКлиента).Валюта.Наценка</code></li>
+<div class="highlight"><pre><span></span><code><span class="nf">ВЫРАЗИТЬ</span><span class="p">(</span><span class="nv">ВТ_ПланОтгрузок</span><span class="o">.</span><span class="nv">ДокументПлан</span> <span class="nv">КАК</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">ЗаказКлиента</span><span class="p">)</span><span class="o">.</span><span class="nv">Валюта</span><span class="o">.</span><span class="nv">Наценка</span>
+</code></pre></div></li>
 <li>Разыменование ссылочных полей в секции "ГДЕ"
-<code>ГДЕ азКлиентаТовары.Ссылка.Дата МЕЖДУ &amp;НачалоПериода И &amp;КонецПериода</code></li>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
+    <span class="nv">ЗаказКлиентаТовары</span><span class="o">.</span><span class="nv">Ссылка</span><span class="o">.</span><span class="nv">Дата</span> <span class="nv">МЕЖДУ</span> <span class="nd">&amp;НачалоПериода И &amp;КонецПериода</span>
+</code></pre></div></li>
 </ol>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
-<p>Источник: [Разыменование ссылочных полей составного типа в языке запросов] (https://its.1c.ru/db/v8std/content/654/hdoc)</p>
+<p><a href="https://its.1c.ru/db/v8std/content/654/hdoc">Разыменование ссылочных полей составного типа в языке запросов (#std654)</a></p>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
