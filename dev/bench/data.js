@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768503356462,
+  "lastUpdate": 1768554753261,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34348,6 +34348,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8669385573397306",
             "extra": "mean: 69.61862826347351 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a02f38e95f5f8d34681b878bf36003036b9fe0c8",
+          "message": "Merge pull request #3778 from 1c-syntax/fix/startup-deadlock\n\nИсправлен дедлок при построении контекста, если при открытии проекта открыт документ",
+          "timestamp": "2026-01-16T09:58:33+01:00",
+          "tree_id": "452511b79830e24fbc95e19cf82a7ec14c4bf3a0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a02f38e95f5f8d34681b878bf36003036b9fe0c8"
+        },
+        "date": 1768554746925,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.05579606691997,
+            "unit": "sec",
+            "range": "stddev: 0.5226184067660412",
+            "extra": "mean: 69.05579606691997 sec\nrounds: 3"
           }
         ]
       }
