@@ -346,18 +346,14 @@ class SemanticTokensProviderTest {
 
     var decoded = getDecodedTokens(bsl);
 
-    // Verify preprocessor macro tokens on specific lines
+    // Verify preprocessor macro tokens - # and keyword are combined into single token
     var expectedTokens = List.of(
-      new ExpectedToken(0, 0, 1, SemanticTokenTypes.Macro, "#"),
-      new ExpectedToken(0, 1, 4, SemanticTokenTypes.Macro, "Если"),
+      new ExpectedToken(0, 0, 5, SemanticTokenTypes.Macro, "#Если"),
       new ExpectedToken(0, 6, 6, SemanticTokenTypes.Macro, "Сервер"),
       new ExpectedToken(0, 13, 5, SemanticTokenTypes.Macro, "Тогда"),
-      new ExpectedToken(3, 0, 1, SemanticTokenTypes.Macro, "#"),
-      new ExpectedToken(3, 1, 9, SemanticTokenTypes.Macro, "ИначеЕсли"),
-      new ExpectedToken(4, 0, 1, SemanticTokenTypes.Macro, "#"),
-      new ExpectedToken(4, 1, 5, SemanticTokenTypes.Macro, "Иначе"),
-      new ExpectedToken(5, 0, 1, SemanticTokenTypes.Macro, "#"),
-      new ExpectedToken(5, 1, 9, SemanticTokenTypes.Macro, "КонецЕсли")
+      new ExpectedToken(3, 0, 10, SemanticTokenTypes.Macro, "#ИначеЕсли"),
+      new ExpectedToken(4, 0, 6, SemanticTokenTypes.Macro, "#Иначе"),
+      new ExpectedToken(5, 0, 10, SemanticTokenTypes.Macro, "#КонецЕсли")
     );
 
     assertContainsTokens(decoded, expectedTokens);
