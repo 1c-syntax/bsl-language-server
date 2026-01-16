@@ -30,7 +30,6 @@ com.github._1c_syntax.bsl.languageserver.context.computer
 com.github._1c_syntax.bsl.languageserver.context.events
 com.github._1c_syntax.bsl.languageserver.context.symbol
 com.github._1c_syntax.bsl.languageserver.context.symbol.annotations
-com.github._1c_syntax.bsl.languageserver.context.symbol.description
 com.github._1c_syntax.bsl.languageserver.context.symbol.variable
 com.github._1c_syntax.bsl.languageserver.databind
 com.github._1c_syntax.bsl.languageserver.diagnostics
