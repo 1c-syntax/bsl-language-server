@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.Ex
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +35,6 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -49,9 +46,6 @@ class BslDocSemanticTokensSupplierTest {
 
   @Autowired
   private SemanticTokensTestHelper helper;
-
-  @Autowired
-  private SemanticTokensLegend legend;
 
   @BeforeEach
   void init() {
@@ -198,15 +192,14 @@ class BslDocSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - All three types should be Type with Documentation modifier
-    int typeTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var typeTokens = decoded.stream()
-      .filter(t -> t.type() == typeTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    // Should have 3 type tokens: СправочникСсылка, ДокументСсылка, ПеречислениеСсылка
-    assertThat(typeTokens).hasSize(3);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 15, 16, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "СправочникСсылка"),
+      new ExpectedToken(3, 22, 14, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "ДокументСсылка"),
+      new ExpectedToken(4, 22, 18, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "ПеречислениеСсылка")
+    ));
   }
 
   @Test
@@ -226,15 +219,12 @@ class BslDocSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - Both types should be Type with Documentation modifier
-    int typeTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
-    int docModifierMask = 1 << legend.getTokenModifiers().indexOf(SemanticTokenModifiers.Documentation);
-
-    var typeTokens = decoded.stream()
-      .filter(t -> t.type() == typeTypeIdx && (t.modifiers() & docModifierMask) != 0)
-      .toList();
-
-    // Should have 2 type tokens: СправочникСсылка, ДокументСсылка
-    assertThat(typeTokens).hasSize(2);
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 4, 16, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "СправочникСсылка"),
+      new ExpectedToken(3, 6, 14, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "ДокументСсылка")
+    ));
   }
 
   @Test
@@ -250,27 +240,29 @@ class BslDocSemanticTokensSupplierTest {
 
     var documentContext = TestUtils.getDocumentContext(bsl);
 
-    // Test without multiline support
+    // Test without multiline support - should have 3 separate comment tokens (one per line)
     supplier.setMultilineTokenSupport(false);
     var tokensWithoutMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // Test with multiline support
+    helper.assertContainsTokens(tokensWithoutMultiline, List.of(
+      new ExpectedToken(0, 0, 25, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Первая строка описания"),
+      new ExpectedToken(1, 0, 25, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Вторая строка описания"),
+      new ExpectedToken(2, 0, 25, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Третья строка описания")
+    ));
+
+    // Test with multiline support - should merge consecutive lines into one token
     supplier.setMultilineTokenSupport(true);
     var tokensWithMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // Without multiline: should have 3 separate comment tokens (one per line)
-    // With multiline: may merge consecutive lines into fewer tokens
-    int commentTypeIdx = legend.getTokenTypes().indexOf(SemanticTokenTypes.Comment);
-
-    var commentTokensWithout = tokensWithoutMultiline.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-    var commentTokensWith = tokensWithMultiline.stream()
-      .filter(t -> t.type() == commentTypeIdx)
-      .toList();
-
-    // With multiline support, we expect fewer or equal number of tokens
-    assertThat(commentTokensWith.size()).isLessThanOrEqualTo(commentTokensWithout.size());
+    // With multiline support, all 3 lines are merged into single token starting at line 0
+    // Length is 77 (25 + 1 + 25 + 1 + 25 = 77 including newlines)
+    helper.assertContainsTokens(tokensWithMultiline, List.of(
+      new ExpectedToken(0, 0, 77, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Первая строка описания...")
+    ));
   }
 }
 
