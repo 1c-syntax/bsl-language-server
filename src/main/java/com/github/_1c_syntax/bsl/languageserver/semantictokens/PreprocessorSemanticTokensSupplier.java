@@ -109,7 +109,7 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
 
       // Find HASH token and keyword tokens to combine them into single token
       Token hashToken = null;
-      Token lastKeywordToken = null;
+      boolean firstKeywordCombined = false;
 
       for (Token token : Trees.getTokens(preprocessor)) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
@@ -121,12 +121,13 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
           String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
           if (symbolicName != null && symbolicName.startsWith("PREPROC_")) {
             // Track keyword tokens for combining with HASH
-            if (hashToken != null && lastKeywordToken == null) {
-              // First keyword after HASH - combine them
+            if (hashToken != null && !firstKeywordCombined) {
+              // First keyword after HASH - combine them into single token
               helper.addRange(entries, Ranges.create(hashToken, token), SemanticTokenTypes.Macro);
-              lastKeywordToken = token;
+              firstKeywordCombined = true;
             } else {
               // Subsequent keywords (e.g., "Сервер", "Тогда" in "#Если Сервер Тогда")
+              // or keyword without preceding HASH (shouldn't happen in valid syntax)
               helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
             }
           }
