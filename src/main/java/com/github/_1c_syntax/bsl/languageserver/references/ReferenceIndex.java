@@ -314,7 +314,7 @@ public class ReferenceIndex {
     var uri = symbolOccurrence.location().uri();
     var position = symbolOccurrence.location().getStart();
 
-    return Optional.ofNullable(serverContext.getDocument(uri))
+    return Optional.ofNullable(serverContext.getDocumentNoLock(uri))
       .map(DocumentContext::getSymbolTree)
       .map(symbolTree -> symbolTree.getSymbolAtPosition(position))
       .orElseThrow();
