@@ -142,7 +142,7 @@ class MethodDescriptionTest {
     assertThat(type.description()).isEmpty();
     assertThat(type.fields()).isEmpty();
     assertThat(type).isInstanceOf(HyperlinkTypeDescription.class);
-    assertThat(((HyperlinkTypeDescription) type).hyperlink()).isEqualTo(Hyperlink.create("ОбщийМодуль.Метод()"));
+    assertThat(((HyperlinkTypeDescription) type).hyperlink().link()).isEqualTo("ОбщийМодуль.Метод");
   }
 
   @Test
@@ -161,7 +161,7 @@ class MethodDescriptionTest {
     assertThat(param.name()).isEqualTo("ОбщийМодуль.Метод");
     assertThat(param.types()).hasSize(1);
     assertThat(param.isHyperlink()).isTrue();
-    assertThat(param.link()).isEqualTo(Hyperlink.create("ОбщийМодуль.Метод()"));
+    assertThat(param.link().link()).isEqualTo("ОбщийМодуль.Метод");
   }
 
   @Test
@@ -175,7 +175,7 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
-    assertThat(method.getLinks()).contains(Hyperlink.create("ОбщийМодуль.Метод()"));
+    assertThat(method.getLinks()).extracting(Hyperlink::link).contains("ОбщийМодуль.Метод");
   }
 
   @Test

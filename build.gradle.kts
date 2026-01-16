@@ -82,13 +82,13 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.30.0-rc.2") {
+    api("io.github.1c-syntax", "bsl-parser", "0.30.0-rc.5") {
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.antlr", "antlr-runtime")
     }
     api("io.github.1c-syntax", "utils", "0.6.8")
-    api("io.github.1c-syntax", "mdclasses", "0.17.3")
+    api("io.github.1c-syntax", "mdclasses", "0.17.4")
     api("io.github.1c-syntax", "bsl-common-library", "0.9.2")
     api("io.github.1c-syntax", "supportconf", "0.15.0")
 
