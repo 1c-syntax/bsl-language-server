@@ -33,8 +33,6 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
@@ -61,8 +59,7 @@ class StringSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - one string token
-    assertThat(decoded).hasSize(1);
-    helper.assertContainsTokens(decoded, List.of(
+    helper.assertTokensMatch(decoded, List.of(
       new ExpectedToken(1, 10, 12, SemanticTokenTypes.String, "\"Привет мир\"")
     ));
   }
@@ -82,8 +79,7 @@ class StringSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - multiple string parts
-    assertThat(decoded).hasSize(3);
-    helper.assertContainsTokens(decoded, List.of(
+    helper.assertTokensMatch(decoded, List.of(
       new ExpectedToken(1, 10, 14, SemanticTokenTypes.String, "\"Первая строка"),
       new ExpectedToken(2, 2, 14, SemanticTokenTypes.String, "|Вторая строка"),
       new ExpectedToken(3, 2, 15, SemanticTokenTypes.String, "|Третья строка\"")
@@ -400,8 +396,7 @@ class StringSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
     // then - just one string token
-    assertThat(decoded).hasSize(1);
-    helper.assertContainsTokens(decoded, List.of(
+    helper.assertTokensMatch(decoded, List.of(
       new ExpectedToken(1, 18, 38, SemanticTokenTypes.String, "\"Это просто строка без НСтр и запроса\"")
     ));
   }

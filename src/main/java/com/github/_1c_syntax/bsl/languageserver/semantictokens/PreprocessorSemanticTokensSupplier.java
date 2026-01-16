@@ -98,7 +98,7 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
     }
   }
 
-  // Other preprocessor directives: Macro for each HASH and PREPROC_* token,
+  // Other preprocessor directives: Macro for entire directive keyword (#Если, #КонецЕсли, etc.),
   // excluding region start/end, native, use (handled as Namespace)
   private void addOtherPreprocs(List<SemanticTokenEntry> entries, BSLParser.FileContext ast) {
     for (var preprocessor : Trees.<BSLParser.PreprocessorContext>findAllRuleNodes(ast, BSLParser.RULE_preprocessor)) {
@@ -107,13 +107,29 @@ public class PreprocessorSemanticTokensSupplier implements SemanticTokensSupplie
         continue; // region handled as Namespace above
       }
 
+      // Find HASH token and keyword tokens to combine them into single token
+      Token hashToken = null;
+      Token lastKeywordToken = null;
+
       for (Token token : Trees.getTokens(preprocessor)) {
         if (token.getChannel() != Token.DEFAULT_CHANNEL) {
           continue;
         }
-        String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
-        if (token.getType() == BSLLexer.HASH || (symbolicName != null && symbolicName.startsWith("PREPROC_"))) {
-          helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
+        if (token.getType() == BSLLexer.HASH) {
+          hashToken = token;
+        } else {
+          String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(token.getType());
+          if (symbolicName != null && symbolicName.startsWith("PREPROC_")) {
+            // Track keyword tokens for combining with HASH
+            if (hashToken != null && lastKeywordToken == null) {
+              // First keyword after HASH - combine them
+              helper.addRange(entries, Ranges.create(hashToken, token), SemanticTokenTypes.Macro);
+              lastKeywordToken = token;
+            } else {
+              // Subsequent keywords (e.g., "Сервер", "Тогда" in "#Если Сервер Тогда")
+              helper.addRange(entries, Ranges.create(token), SemanticTokenTypes.Macro);
+            }
+          }
         }
       }
     }
