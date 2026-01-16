@@ -212,7 +212,7 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
       int lineLength = lineText.length();
       int charOffset = (lineIdx == 0) ? fileStartChar : 0;
 
-      var lineElements = elementsByLine.getOrDefault(lineIdx, List.of());
+      var lineElements = elementsByLine.getOrDefault(fileLine, List.of());
 
       if (lineElements.isEmpty()) {
         if (lineLength > 0) {
