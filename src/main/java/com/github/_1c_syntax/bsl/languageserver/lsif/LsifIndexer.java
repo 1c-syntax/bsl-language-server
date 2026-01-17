@@ -92,6 +92,9 @@ public class LsifIndexer {
       return;
     }
 
+    // Rebuild document to ensure AST is available
+    serverContext.rebuildDocument(documentContext);
+
     LOGGER.debug("Processing document: {}", uri);
 
     // Emit document vertex

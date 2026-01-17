@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.lsif;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.BelongsToEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ContainsEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.DefinitionEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.DocumentLinkEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.DocumentSymbolEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.FoldingRangeEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.HoverEdge;
@@ -31,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ItemEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.NextEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ReferencesEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DefinitionResultVertex;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DocumentLinkResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DocumentSymbolResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DocumentVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.FoldingRangeResultVertex;
@@ -41,6 +43,7 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.RangeVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ReferenceResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ResultSetVertex;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.Range;
@@ -385,6 +388,52 @@ public class LsifEmitter implements Closeable {
   public long emitDocumentSymbolEdge(long outV, long inV) {
     var id = nextId();
     var edge = DocumentSymbolEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inV(inV)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает вершину documentLinkResult.
+   */
+  public long emitDocumentLinkResult(List<DocumentLink> documentLinks) {
+    var id = nextId();
+    var result = documentLinks.stream()
+      .map(dl -> DocumentLinkResultVertex.DocumentLinkInfo.builder()
+        .range(convertToDocumentLinkRange(dl.getRange()))
+        .target(dl.getTarget())
+        .build())
+      .toList();
+    var vertex = DocumentLinkResultVertex.builder()
+      .id(id)
+      .result(result)
+      .build();
+    emit(vertex);
+    return id;
+  }
+
+  private DocumentLinkResultVertex.RangeInfo convertToDocumentLinkRange(Range range) {
+    return DocumentLinkResultVertex.RangeInfo.builder()
+      .start(DocumentLinkResultVertex.PositionInfo.builder()
+        .line(range.getStart().getLine())
+        .character(range.getStart().getCharacter())
+        .build())
+      .end(DocumentLinkResultVertex.PositionInfo.builder()
+        .line(range.getEnd().getLine())
+        .character(range.getEnd().getCharacter())
+        .build())
+      .build();
+  }
+
+  /**
+   * Записывает ребро textDocument/documentLink.
+   */
+  public long emitDocumentLinkEdge(long outV, long inV) {
+    var id = nextId();
+    var edge = DocumentLinkEdge.builder()
       .id(id)
       .outV(outV)
       .inV(inV)

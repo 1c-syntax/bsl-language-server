@@ -53,6 +53,7 @@ public class LsifConstants {
     public static final String REFERENCE_RESULT = "referenceResult";
     public static final String FOLDING_RANGE_RESULT = "foldingRangeResult";
     public static final String DOCUMENT_SYMBOL_RESULT = "documentSymbolResult";
+    public static final String DOCUMENT_LINK_RESULT = "documentLinkResult";
   }
 
   /**
@@ -68,6 +69,7 @@ public class LsifConstants {
     public static final String REFERENCES = "textDocument/references";
     public static final String FOLDING_RANGE = "textDocument/foldingRange";
     public static final String DOCUMENT_SYMBOL = "textDocument/documentSymbol";
+    public static final String DOCUMENT_LINK = "textDocument/documentLink";
     public static final String ITEM = "item";
   }
 }
