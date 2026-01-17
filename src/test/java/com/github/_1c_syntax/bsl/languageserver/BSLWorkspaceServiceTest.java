@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
@@ -43,6 +44,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Тесты для {@link BSLWorkspaceService}.
@@ -282,8 +285,8 @@ class BSLWorkspaceServiceTest {
     // Мокируем params с getSettings(), возвращающим null
     // Это соответствует реальному сценарию, когда некоторые LSP клиенты
     // отправляют workspace/didChangeConfiguration без настроек
-    var params = org.mockito.Mockito.mock(org.eclipse.lsp4j.DidChangeConfigurationParams.class);
-    org.mockito.Mockito.when(params.getSettings()).thenReturn(null);
+    var params = mock(DidChangeConfigurationParams.class);
+    when(params.getSettings()).thenReturn(null);
 
     // when/then
     // Не должно быть исключений при вызове с null settings
