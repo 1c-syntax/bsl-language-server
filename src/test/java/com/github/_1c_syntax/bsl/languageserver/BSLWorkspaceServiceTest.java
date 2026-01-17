@@ -276,6 +276,20 @@ class BSLWorkspaceServiceTest {
     assertThat(serverContext.getDocument(uri3)).isNull();
   }
 
+  @Test
+  void testDidChangeConfiguration_WithNullSettings() {
+    // given
+    // Мокируем params с getSettings(), возвращающим null
+    // Это соответствует реальному сценарию, когда некоторые LSP клиенты
+    // отправляют workspace/didChangeConfiguration без настроек
+    var params = org.mockito.Mockito.mock(org.eclipse.lsp4j.DidChangeConfigurationParams.class);
+    org.mockito.Mockito.when(params.getSettings()).thenReturn(null);
+
+    // when/then
+    // Не должно быть исключений при вызове с null settings
+    workspaceService.didChangeConfiguration(params);
+  }
+
   /**
    * Создает временный тестовый файл с базовым содержимым.
    */
