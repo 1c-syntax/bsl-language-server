@@ -80,8 +80,12 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
+    var settings = params.getSettings();
+    if (settings == null) {
+      return;
+    }
     try {
-      PropertyUtils.copyProperties(configuration, params.getSettings());
+      PropertyUtils.copyProperties(configuration, settings);
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
