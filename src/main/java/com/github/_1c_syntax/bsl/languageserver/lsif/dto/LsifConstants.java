@@ -54,6 +54,8 @@ public class LsifConstants {
     public static final String FOLDING_RANGE_RESULT = "foldingRangeResult";
     public static final String DOCUMENT_SYMBOL_RESULT = "documentSymbolResult";
     public static final String DOCUMENT_LINK_RESULT = "documentLinkResult";
+    public static final String MONIKER = "moniker";
+    public static final String PACKAGE_INFORMATION = "packageInformation";
   }
 
   /**
@@ -70,6 +72,26 @@ public class LsifConstants {
     public static final String FOLDING_RANGE = "textDocument/foldingRange";
     public static final String DOCUMENT_SYMBOL = "textDocument/documentSymbol";
     public static final String DOCUMENT_LINK = "textDocument/documentLink";
+    public static final String MONIKER_EDGE = "moniker";
+    public static final String PACKAGE_INFORMATION_EDGE = "packageInformation";
     public static final String ITEM = "item";
+  }
+
+  /**
+   * Типы моникеров.
+   */
+  @UtilityClass
+  public static class MonikerKind {
+    public static final String IMPORT = "import";
+    public static final String EXPORT = "export";
+    public static final String LOCAL = "local";
+  }
+
+  /**
+   * Схемы моникеров.
+   */
+  @UtilityClass
+  public static class MonikerScheme {
+    public static final String BSL = "bsl";
   }
 }

@@ -29,7 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.DocumentSymbolEdge
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.FoldingRangeEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.HoverEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ItemEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.MonikerEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.NextEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.PackageInformationEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ReferencesEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DefinitionResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DocumentLinkResultVertex;
@@ -38,6 +40,8 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DocumentVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.FoldingRangeResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.HoverResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.MetaDataVertex;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.MonikerVertex;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.PackageInformationVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ProjectVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.RangeVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ReferenceResultVertex;
@@ -434,6 +438,65 @@ public class LsifEmitter implements Closeable {
   public long emitDocumentLinkEdge(long outV, long inV) {
     var id = nextId();
     var edge = DocumentLinkEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inV(inV)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает вершину moniker.
+   */
+  public long emitMoniker(String scheme, String identifier, String kind, String unique) {
+    var id = nextId();
+    var vertex = MonikerVertex.builder()
+      .id(id)
+      .scheme(scheme)
+      .identifier(identifier)
+      .kind(kind)
+      .unique(unique)
+      .build();
+    emit(vertex);
+    return id;
+  }
+
+  /**
+   * Записывает вершину packageInformation.
+   */
+  public long emitPackageInformation(String name, String manager, String version) {
+    var id = nextId();
+    var vertex = PackageInformationVertex.builder()
+      .id(id)
+      .name(name)
+      .manager(manager)
+      .version(version)
+      .build();
+    emit(vertex);
+    return id;
+  }
+
+  /**
+   * Записывает ребро moniker.
+   */
+  public long emitMonikerEdge(long outV, long inV) {
+    var id = nextId();
+    var edge = MonikerEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inV(inV)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает ребро packageInformation.
+   */
+  public long emitPackageInformationEdge(long outV, long inV) {
+    var id = nextId();
+    var edge = PackageInformationEdge.builder()
       .id(id)
       .outV(outV)
       .inV(inV)
