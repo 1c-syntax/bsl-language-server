@@ -43,6 +43,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -290,7 +291,8 @@ class BSLWorkspaceServiceTest {
 
     // when/then
     // Не должно быть исключений при вызове с null settings
-    workspaceService.didChangeConfiguration(params);
+    assertThatCode(() -> workspaceService.didChangeConfiguration(params))
+      .doesNotThrowAnyException();
   }
 
   /**
