@@ -23,15 +23,26 @@ package com.github._1c_syntax.bsl.languageserver.lsif;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.BelongsToEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ContainsEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.DefinitionEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.DocumentSymbolEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.FoldingRangeEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.HoverEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ItemEdge;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.NextEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.edge.ReferencesEdge;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DefinitionResultVertex;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DocumentSymbolResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.DocumentVertex;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.FoldingRangeResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.HoverResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.MetaDataVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ProjectVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.RangeVertex;
+import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ReferenceResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ResultSetVertex;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.Range;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -213,6 +224,167 @@ public class LsifEmitter implements Closeable {
   public long emitBelongsTo(long outV, long inV) {
     var id = nextId();
     var edge = BelongsToEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inV(inV)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает вершину definitionResult.
+   */
+  public long emitDefinitionResult() {
+    var id = nextId();
+    var vertex = DefinitionResultVertex.builder()
+      .id(id)
+      .build();
+    emit(vertex);
+    return id;
+  }
+
+  /**
+   * Записывает ребро textDocument/definition.
+   */
+  public long emitDefinitionEdge(long outV, long inV) {
+    var id = nextId();
+    var edge = DefinitionEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inV(inV)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает вершину referenceResult.
+   */
+  public long emitReferenceResult() {
+    var id = nextId();
+    var vertex = ReferenceResultVertex.builder()
+      .id(id)
+      .build();
+    emit(vertex);
+    return id;
+  }
+
+  /**
+   * Записывает ребро textDocument/references.
+   */
+  public long emitReferencesEdge(long outV, long inV) {
+    var id = nextId();
+    var edge = ReferencesEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inV(inV)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает ребро item.
+   */
+  public long emitItem(long outV, List<Long> inVs, long document, String property) {
+    var id = nextId();
+    var edge = ItemEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inVs(inVs)
+      .document(document)
+      .property(property)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает вершину foldingRangeResult.
+   */
+  public long emitFoldingRangeResult(List<FoldingRange> foldingRanges) {
+    var id = nextId();
+    var result = foldingRanges.stream()
+      .map(fr -> FoldingRangeResultVertex.FoldingRangeInfo.builder()
+        .startLine(fr.getStartLine())
+        .startCharacter(fr.getStartCharacter() != null ? fr.getStartCharacter() : 0)
+        .endLine(fr.getEndLine())
+        .endCharacter(fr.getEndCharacter() != null ? fr.getEndCharacter() : 0)
+        .kind(fr.getKind())
+        .build())
+      .toList();
+    var vertex = FoldingRangeResultVertex.builder()
+      .id(id)
+      .result(result)
+      .build();
+    emit(vertex);
+    return id;
+  }
+
+  /**
+   * Записывает ребро textDocument/foldingRange.
+   */
+  public long emitFoldingRangeEdge(long outV, long inV) {
+    var id = nextId();
+    var edge = FoldingRangeEdge.builder()
+      .id(id)
+      .outV(outV)
+      .inV(inV)
+      .build();
+    emit(edge);
+    return id;
+  }
+
+  /**
+   * Записывает вершину documentSymbolResult.
+   */
+  public long emitDocumentSymbolResult(List<DocumentSymbol> symbols) {
+    var id = nextId();
+    var result = symbols.stream()
+      .map(this::convertDocumentSymbol)
+      .toList();
+    var vertex = DocumentSymbolResultVertex.builder()
+      .id(id)
+      .result(result)
+      .build();
+    emit(vertex);
+    return id;
+  }
+
+  private DocumentSymbolResultVertex.DocumentSymbolInfo convertDocumentSymbol(DocumentSymbol symbol) {
+    List<DocumentSymbolResultVertex.DocumentSymbolInfo> children = symbol.getChildren() != null
+      ? symbol.getChildren().stream().map(this::convertDocumentSymbol).toList()
+      : List.of();
+
+    return DocumentSymbolResultVertex.DocumentSymbolInfo.builder()
+      .name(symbol.getName())
+      .kind(symbol.getKind().getValue())
+      .range(convertRange(symbol.getRange()))
+      .selectionRange(convertRange(symbol.getSelectionRange()))
+      .children(children)
+      .build();
+  }
+
+  private DocumentSymbolResultVertex.RangeInfo convertRange(Range range) {
+    return DocumentSymbolResultVertex.RangeInfo.builder()
+      .start(DocumentSymbolResultVertex.PositionInfo.builder()
+        .line(range.getStart().getLine())
+        .character(range.getStart().getCharacter())
+        .build())
+      .end(DocumentSymbolResultVertex.PositionInfo.builder()
+        .line(range.getEnd().getLine())
+        .character(range.getEnd().getCharacter())
+        .build())
+      .build();
+  }
+
+  /**
+   * Записывает ребро textDocument/documentSymbol.
+   */
+  public long emitDocumentSymbolEdge(long outV, long inV) {
+    var id = nextId();
+    var edge = DocumentSymbolEdge.builder()
       .id(id)
       .outV(outV)
       .inV(inV)
