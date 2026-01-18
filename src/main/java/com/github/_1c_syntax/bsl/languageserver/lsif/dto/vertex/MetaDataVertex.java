@@ -22,30 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина метаданных LSIF-индекса.
  */
-@Value
-@Builder
-public class MetaDataVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.META_DATA;
-  String version;
-  String projectRoot;
-  String positionEncoding;
-  ToolInfo toolInfo;
+public record MetaDataVertex(
+  long id,
+  String type,
+  String label,
+  String version,
+  String projectRoot,
+  String positionEncoding,
+  ToolInfo toolInfo
+) {
+  public MetaDataVertex(long id, String version, String projectRoot, String positionEncoding, ToolInfo toolInfo) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.META_DATA,
+      version, projectRoot, positionEncoding, toolInfo);
+  }
 
   /**
    * Информация об инструменте, создавшем индекс.
    */
-  @Value
-  @Builder
-  public static class ToolInfo {
-    String name;
-    String version;
-  }
+  public record ToolInfo(String name, String version) {}
 }

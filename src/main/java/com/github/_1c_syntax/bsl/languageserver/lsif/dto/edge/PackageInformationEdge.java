@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "packageInformation" — связь моникера с информацией о пакете.
  */
-@Value
-@Builder
-public class PackageInformationEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.PACKAGE_INFORMATION_EDGE;
-  long outV;
-  long inV;
+public record PackageInformationEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public PackageInformationEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.PACKAGE_INFORMATION_EDGE, outV, inV);
+  }
 }

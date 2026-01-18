@@ -22,22 +22,22 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
 
 /**
  * Ребро "item" — связь результата с конкретными диапазонами.
  */
-@Value
-@Builder
-public class ItemEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.ITEM;
-  long outV;
-  List<Long> inVs;
-  long document;
-  String property;
+public record ItemEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  List<Long> inVs,
+  long document,
+  String property
+) {
+  public ItemEdge(long id, long outV, List<Long> inVs, long document, String property) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.ITEM, outV, inVs, document, property);
+  }
 }

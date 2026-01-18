@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "textDocument/definition" — связь с результатом определения.
  */
-@Value
-@Builder
-public class DefinitionEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.DEFINITION;
-  long outV;
-  long inV;
+public record DefinitionEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public DefinitionEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.DEFINITION, outV, inV);
+  }
 }

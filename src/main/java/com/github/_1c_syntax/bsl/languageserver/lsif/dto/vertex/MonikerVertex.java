@@ -22,40 +22,32 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина моникера для кросс-проектной навигации.
  * <p>
  * Моникеры позволяют связывать символы между разными проектами,
  * что необходимо для Sourcegraph, GitHub Code Navigation и других систем.
+ *
+ * @param id идентификатор вершины
+ * @param type тип элемента (vertex)
+ * @param label метка вершины (moniker)
+ * @param scheme схема моникера (например, "bsl")
+ * @param identifier уникальный идентификатор символа (формат: mdoRef:moduleType:symbolName)
+ * @param kind тип моникера: import, export или local
+ * @param unique уникальность моникера в рамках документа, проекта или схемы
  */
-@Value
-@Builder
-public class MonikerVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.MONIKER;
-  
-  /**
-   * Схема моникера (например, "bsl").
-   */
-  String scheme;
-  
-  /**
-   * Уникальный идентификатор символа.
-   * Формат: mdoRef:moduleType:symbolName
-   */
-  String identifier;
-  
-  /**
-   * Тип моникера: import, export или local.
-   */
-  String kind;
-  
-  /**
-   * Уникальность моникера в рамках документа, проекта или схемы.
-   */
-  String unique;
+public record MonikerVertex(
+  long id,
+  String type,
+  String label,
+  String scheme,
+  String identifier,
+  String kind,
+  String unique
+) {
+  public MonikerVertex(long id, String scheme, String identifier, String kind, String unique) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.MONIKER,
+      scheme, identifier, kind, unique);
+  }
 }

@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "moniker" — связь диапазона/resultSet с моникером.
  */
-@Value
-@Builder
-public class MonikerEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.MONIKER_EDGE;
-  long outV;
-  long inV;
+public record MonikerEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public MonikerEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.MONIKER_EDGE, outV, inV);
+  }
 }

@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "textDocument/references" — связь с результатом поиска ссылок.
  */
-@Value
-@Builder
-public class ReferencesEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.REFERENCES;
-  long outV;
-  long inV;
+public record ReferencesEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public ReferencesEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.REFERENCES, outV, inV);
+  }
 }

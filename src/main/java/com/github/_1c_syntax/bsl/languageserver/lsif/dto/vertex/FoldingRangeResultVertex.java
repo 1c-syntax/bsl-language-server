@@ -22,32 +22,30 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
 
 /**
  * Вершина результата сворачиваемых областей.
  */
-@Value
-@Builder
-public class FoldingRangeResultVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.FOLDING_RANGE_RESULT;
-  List<FoldingRangeInfo> result;
+public record FoldingRangeResultVertex(
+  long id,
+  String type,
+  String label,
+  List<FoldingRangeInfo> result
+) {
+  public FoldingRangeResultVertex(long id, List<FoldingRangeInfo> result) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.FOLDING_RANGE_RESULT, result);
+  }
 
   /**
    * Информация о сворачиваемой области.
    */
-  @Value
-  @Builder
-  public static class FoldingRangeInfo {
-    int startLine;
-    int startCharacter;
-    int endLine;
-    int endCharacter;
-    String kind;
-  }
+  public record FoldingRangeInfo(
+    int startLine,
+    int startCharacter,
+    int endLine,
+    int endCharacter,
+    String kind
+  ) {}
 }

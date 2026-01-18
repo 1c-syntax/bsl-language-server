@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "belongsTo" — связь документа/проекта.
  */
-@Value
-@Builder
-public class BelongsToEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.BELONGS_TO;
-  long outV;
-  long inV;
+public record BelongsToEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public BelongsToEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.BELONGS_TO, outV, inV);
+  }
 }

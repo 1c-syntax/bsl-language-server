@@ -22,36 +22,27 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина результата hover.
  */
-@Value
-@Builder
-public class HoverResultVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.HOVER_RESULT;
-  HoverContent result;
+public record HoverResultVertex(
+  long id,
+  String type,
+  String label,
+  HoverContent result
+) {
+  public HoverResultVertex(long id, HoverContent result) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.HOVER_RESULT, result);
+  }
 
   /**
    * Содержимое hover.
    */
-  @Value
-  @Builder
-  public static class HoverContent {
-    Contents contents;
-  }
+  public record HoverContent(Contents contents) {}
 
   /**
    * Контент для hover.
    */
-  @Value
-  @Builder
-  public static class Contents {
-    String kind;
-    String value;
-  }
+  public record Contents(String kind, String value) {}
 }

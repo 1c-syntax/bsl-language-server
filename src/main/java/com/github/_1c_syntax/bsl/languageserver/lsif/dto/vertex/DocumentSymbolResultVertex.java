@@ -22,52 +22,40 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
 
 /**
  * Вершина результата символов документа.
  */
-@Value
-@Builder
-public class DocumentSymbolResultVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.DOCUMENT_SYMBOL_RESULT;
-  List<DocumentSymbolInfo> result;
+public record DocumentSymbolResultVertex(
+  long id,
+  String type,
+  String label,
+  List<DocumentSymbolInfo> result
+) {
+  public DocumentSymbolResultVertex(long id, List<DocumentSymbolInfo> result) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.DOCUMENT_SYMBOL_RESULT, result);
+  }
 
   /**
    * Информация о символе документа.
    */
-  @Value
-  @Builder
-  public static class DocumentSymbolInfo {
-    String name;
-    int kind;
-    RangeInfo range;
-    RangeInfo selectionRange;
-    List<DocumentSymbolInfo> children;
-  }
+  public record DocumentSymbolInfo(
+    String name,
+    int kind,
+    RangeInfo range,
+    RangeInfo selectionRange,
+    List<DocumentSymbolInfo> children
+  ) {}
 
   /**
    * Информация о диапазоне.
    */
-  @Value
-  @Builder
-  public static class RangeInfo {
-    PositionInfo start;
-    PositionInfo end;
-  }
+  public record RangeInfo(PositionInfo start, PositionInfo end) {}
 
   /**
    * Информация о позиции.
    */
-  @Value
-  @Builder
-  public static class PositionInfo {
-    int line;
-    int character;
-  }
+  public record PositionInfo(int line, int character) {}
 }

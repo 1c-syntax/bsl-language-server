@@ -22,20 +22,20 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 import java.util.List;
 
 /**
  * Ребро "contains" — документ содержит диапазоны.
  */
-@Value
-@Builder
-public class ContainsEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.CONTAINS;
-  long outV;
-  List<Long> inVs;
+public record ContainsEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  List<Long> inVs
+) {
+  public ContainsEdge(long id, long outV, List<Long> inVs) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.CONTAINS, outV, inVs);
+  }
 }

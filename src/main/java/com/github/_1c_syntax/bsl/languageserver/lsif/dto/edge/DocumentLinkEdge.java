@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "textDocument/documentLink" — связь с результатом ссылок на документацию.
  */
-@Value
-@Builder
-public class DocumentLinkEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.DOCUMENT_LINK;
-  long outV;
-  long inV;
+public record DocumentLinkEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public DocumentLinkEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.DOCUMENT_LINK, outV, inV);
+  }
 }

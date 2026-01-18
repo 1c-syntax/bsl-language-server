@@ -22,33 +22,29 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина информации о пакете.
  * <p>
  * Содержит метаданные о пакете/проекте для связывания моникеров.
+ *
+ * @param id идентификатор вершины
+ * @param type тип элемента (vertex)
+ * @param label метка вершины (packageInformation)
+ * @param name название пакета/проекта
+ * @param manager менеджер пакетов (для BSL это "bsl")
+ * @param version версия пакета
  */
-@Value
-@Builder
-public class PackageInformationVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.PACKAGE_INFORMATION;
-  
-  /**
-   * Название пакета/проекта.
-   */
-  String name;
-  
-  /**
-   * Менеджер пакетов (для BSL это "bsl").
-   */
-  String manager;
-  
-  /**
-   * Версия пакета.
-   */
-  String version;
+public record PackageInformationVertex(
+  long id,
+  String type,
+  String label,
+  String name,
+  String manager,
+  String version
+) {
+  public PackageInformationVertex(long id, String name, String manager, String version) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.PACKAGE_INFORMATION,
+      name, manager, version);
+  }
 }

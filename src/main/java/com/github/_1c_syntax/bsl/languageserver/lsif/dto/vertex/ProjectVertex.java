@@ -22,17 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина проекта.
  */
-@Value
-@Builder
-public class ProjectVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.PROJECT;
-  String kind;
+public record ProjectVertex(
+  long id,
+  String type,
+  String label,
+  String kind
+) {
+  public ProjectVertex(long id, String kind) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.PROJECT, kind);
+  }
 }

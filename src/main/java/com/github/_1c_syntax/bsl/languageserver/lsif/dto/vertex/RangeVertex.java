@@ -22,28 +22,23 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина диапазона в документе.
  */
-@Value
-@Builder
-public class RangeVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.RANGE;
-  Position start;
-  Position end;
+public record RangeVertex(
+  long id,
+  String type,
+  String label,
+  Position start,
+  Position end
+) {
+  public RangeVertex(long id, Position start, Position end) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.RANGE, start, end);
+  }
 
   /**
    * Позиция в документе.
    */
-  @Value
-  @Builder
-  public static class Position {
-    int line;
-    int character;
-  }
+  public record Position(int line, int character) {}
 }

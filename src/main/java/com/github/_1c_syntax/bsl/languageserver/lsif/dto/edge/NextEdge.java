@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "next" — связь диапазона с набором результатов.
  */
-@Value
-@Builder
-public class NextEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.NEXT;
-  long outV;
-  long inV;
+public record NextEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public NextEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.NEXT, outV, inV);
+  }
 }

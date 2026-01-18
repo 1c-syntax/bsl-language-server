@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "textDocument/foldingRange" — связь с результатом сворачивания.
  */
-@Value
-@Builder
-public class FoldingRangeEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.FOLDING_RANGE;
-  long outV;
-  long inV;
+public record FoldingRangeEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public FoldingRangeEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.FOLDING_RANGE, outV, inV);
+  }
 }

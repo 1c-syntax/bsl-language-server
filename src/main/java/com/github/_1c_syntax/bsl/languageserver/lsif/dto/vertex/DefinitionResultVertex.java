@@ -22,16 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина результата перехода к определению.
  */
-@Value
-@Builder
-public class DefinitionResultVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.DEFINITION_RESULT;
+public record DefinitionResultVertex(
+  long id,
+  String type,
+  String label
+) {
+  public DefinitionResultVertex(long id) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.DEFINITION_RESULT);
+  }
 }

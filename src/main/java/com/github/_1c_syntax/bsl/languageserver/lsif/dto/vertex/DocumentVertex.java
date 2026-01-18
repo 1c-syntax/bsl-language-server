@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Вершина документа.
  */
-@Value
-@Builder
-public class DocumentVertex {
-  long id;
-  String type = LsifConstants.ElementType.VERTEX;
-  String label = LsifConstants.VertexLabel.DOCUMENT;
-  String uri;
-  String languageId;
+public record DocumentVertex(
+  long id,
+  String type,
+  String label,
+  String uri,
+  String languageId
+) {
+  public DocumentVertex(long id, String uri, String languageId) {
+    this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.DOCUMENT, uri, languageId);
+  }
 }

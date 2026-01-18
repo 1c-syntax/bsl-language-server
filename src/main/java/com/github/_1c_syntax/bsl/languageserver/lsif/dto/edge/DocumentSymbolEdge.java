@@ -22,18 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.dto.edge;
 
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
-import lombok.Builder;
-import lombok.Value;
 
 /**
  * Ребро "textDocument/documentSymbol" — связь с результатом символов документа.
  */
-@Value
-@Builder
-public class DocumentSymbolEdge {
-  long id;
-  String type = LsifConstants.ElementType.EDGE;
-  String label = LsifConstants.EdgeLabel.DOCUMENT_SYMBOL;
-  long outV;
-  long inV;
+public record DocumentSymbolEdge(
+  long id,
+  String type,
+  String label,
+  long outV,
+  long inV
+) {
+  public DocumentSymbolEdge(long id, long outV, long inV) {
+    this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.DOCUMENT_SYMBOL, outV, inV);
+  }
 }

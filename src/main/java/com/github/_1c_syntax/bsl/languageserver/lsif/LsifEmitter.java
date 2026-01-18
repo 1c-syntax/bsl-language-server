@@ -92,16 +92,13 @@ public class LsifEmitter implements Closeable {
    */
   public long emitMetaData(String version, String projectRoot, String toolName, String toolVersion) {
     var id = nextId();
-    var vertex = MetaDataVertex.builder()
-      .id(id)
-      .version(version)
-      .projectRoot(projectRoot)
-      .positionEncoding("utf-16")
-      .toolInfo(MetaDataVertex.ToolInfo.builder()
-        .name(toolName)
-        .version(toolVersion)
-        .build())
-      .build();
+    var vertex = new MetaDataVertex(
+      id,
+      version,
+      projectRoot,
+      "utf-16",
+      new MetaDataVertex.ToolInfo(toolName, toolVersion)
+    );
     emit(vertex);
     return id;
   }
@@ -111,10 +108,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitProject(String kind) {
     var id = nextId();
-    var vertex = ProjectVertex.builder()
-      .id(id)
-      .kind(kind)
-      .build();
+    var vertex = new ProjectVertex(id, kind);
     emit(vertex);
     return id;
   }
@@ -124,11 +118,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitDocument(String uri, String languageId) {
     var id = nextId();
-    var vertex = DocumentVertex.builder()
-      .id(id)
-      .uri(uri)
-      .languageId(languageId)
-      .build();
+    var vertex = new DocumentVertex(id, uri, languageId);
     emit(vertex);
     return id;
   }
@@ -138,17 +128,11 @@ public class LsifEmitter implements Closeable {
    */
   public long emitRange(Range range) {
     var id = nextId();
-    var vertex = RangeVertex.builder()
-      .id(id)
-      .start(RangeVertex.Position.builder()
-        .line(range.getStart().getLine())
-        .character(range.getStart().getCharacter())
-        .build())
-      .end(RangeVertex.Position.builder()
-        .line(range.getEnd().getLine())
-        .character(range.getEnd().getCharacter())
-        .build())
-      .build();
+    var vertex = new RangeVertex(
+      id,
+      new RangeVertex.Position(range.getStart().getLine(), range.getStart().getCharacter()),
+      new RangeVertex.Position(range.getEnd().getLine(), range.getEnd().getCharacter())
+    );
     emit(vertex);
     return id;
   }
@@ -158,9 +142,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitResultSet() {
     var id = nextId();
-    var vertex = ResultSetVertex.builder()
-      .id(id)
-      .build();
+    var vertex = new ResultSetVertex(id);
     emit(vertex);
     return id;
   }
@@ -170,15 +152,10 @@ public class LsifEmitter implements Closeable {
    */
   public long emitHoverResult(String content) {
     var id = nextId();
-    var vertex = HoverResultVertex.builder()
-      .id(id)
-      .result(HoverResultVertex.HoverContent.builder()
-        .contents(HoverResultVertex.Contents.builder()
-          .kind("markdown")
-          .value(content)
-          .build())
-        .build())
-      .build();
+    var vertex = new HoverResultVertex(
+      id,
+      new HoverResultVertex.HoverContent(new HoverResultVertex.Contents("markdown", content))
+    );
     emit(vertex);
     return id;
   }
@@ -188,11 +165,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitContains(long outV, List<Long> inVs) {
     var id = nextId();
-    var edge = ContainsEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inVs(inVs)
-      .build();
+    var edge = new ContainsEdge(id, outV, inVs);
     emit(edge);
     return id;
   }
@@ -202,11 +175,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitNext(long outV, long inV) {
     var id = nextId();
-    var edge = NextEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new NextEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -216,11 +185,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitHoverEdge(long outV, long inV) {
     var id = nextId();
-    var edge = HoverEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new HoverEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -230,11 +195,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitBelongsTo(long outV, long inV) {
     var id = nextId();
-    var edge = BelongsToEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new BelongsToEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -244,9 +205,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitDefinitionResult() {
     var id = nextId();
-    var vertex = DefinitionResultVertex.builder()
-      .id(id)
-      .build();
+    var vertex = new DefinitionResultVertex(id);
     emit(vertex);
     return id;
   }
@@ -256,11 +215,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitDefinitionEdge(long outV, long inV) {
     var id = nextId();
-    var edge = DefinitionEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new DefinitionEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -270,9 +225,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitReferenceResult() {
     var id = nextId();
-    var vertex = ReferenceResultVertex.builder()
-      .id(id)
-      .build();
+    var vertex = new ReferenceResultVertex(id);
     emit(vertex);
     return id;
   }
@@ -282,11 +235,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitReferencesEdge(long outV, long inV) {
     var id = nextId();
-    var edge = ReferencesEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new ReferencesEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -296,13 +245,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitItem(long outV, List<Long> inVs, long document, String property) {
     var id = nextId();
-    var edge = ItemEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inVs(inVs)
-      .document(document)
-      .property(property)
-      .build();
+    var edge = new ItemEdge(id, outV, inVs, document, property);
     emit(edge);
     return id;
   }
@@ -313,18 +256,15 @@ public class LsifEmitter implements Closeable {
   public long emitFoldingRangeResult(List<FoldingRange> foldingRanges) {
     var id = nextId();
     var result = foldingRanges.stream()
-      .map(fr -> FoldingRangeResultVertex.FoldingRangeInfo.builder()
-        .startLine(fr.getStartLine())
-        .startCharacter(fr.getStartCharacter() != null ? fr.getStartCharacter() : 0)
-        .endLine(fr.getEndLine())
-        .endCharacter(fr.getEndCharacter() != null ? fr.getEndCharacter() : 0)
-        .kind(fr.getKind())
-        .build())
+      .map(fr -> new FoldingRangeResultVertex.FoldingRangeInfo(
+        fr.getStartLine(),
+        fr.getStartCharacter() != null ? fr.getStartCharacter() : 0,
+        fr.getEndLine(),
+        fr.getEndCharacter() != null ? fr.getEndCharacter() : 0,
+        fr.getKind()
+      ))
       .toList();
-    var vertex = FoldingRangeResultVertex.builder()
-      .id(id)
-      .result(result)
-      .build();
+    var vertex = new FoldingRangeResultVertex(id, result);
     emit(vertex);
     return id;
   }
@@ -334,11 +274,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitFoldingRangeEdge(long outV, long inV) {
     var id = nextId();
-    var edge = FoldingRangeEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new FoldingRangeEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -351,10 +287,7 @@ public class LsifEmitter implements Closeable {
     var result = symbols.stream()
       .map(this::convertDocumentSymbol)
       .toList();
-    var vertex = DocumentSymbolResultVertex.builder()
-      .id(id)
-      .result(result)
-      .build();
+    var vertex = new DocumentSymbolResultVertex(id, result);
     emit(vertex);
     return id;
   }
@@ -364,26 +297,20 @@ public class LsifEmitter implements Closeable {
       ? symbol.getChildren().stream().map(this::convertDocumentSymbol).toList()
       : List.of();
 
-    return DocumentSymbolResultVertex.DocumentSymbolInfo.builder()
-      .name(symbol.getName())
-      .kind(symbol.getKind().getValue())
-      .range(convertRange(symbol.getRange()))
-      .selectionRange(convertRange(symbol.getSelectionRange()))
-      .children(children)
-      .build();
+    return new DocumentSymbolResultVertex.DocumentSymbolInfo(
+      symbol.getName(),
+      symbol.getKind().getValue(),
+      convertRange(symbol.getRange()),
+      convertRange(symbol.getSelectionRange()),
+      children
+    );
   }
 
   private DocumentSymbolResultVertex.RangeInfo convertRange(Range range) {
-    return DocumentSymbolResultVertex.RangeInfo.builder()
-      .start(DocumentSymbolResultVertex.PositionInfo.builder()
-        .line(range.getStart().getLine())
-        .character(range.getStart().getCharacter())
-        .build())
-      .end(DocumentSymbolResultVertex.PositionInfo.builder()
-        .line(range.getEnd().getLine())
-        .character(range.getEnd().getCharacter())
-        .build())
-      .build();
+    return new DocumentSymbolResultVertex.RangeInfo(
+      new DocumentSymbolResultVertex.PositionInfo(range.getStart().getLine(), range.getStart().getCharacter()),
+      new DocumentSymbolResultVertex.PositionInfo(range.getEnd().getLine(), range.getEnd().getCharacter())
+    );
   }
 
   /**
@@ -391,11 +318,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitDocumentSymbolEdge(long outV, long inV) {
     var id = nextId();
-    var edge = DocumentSymbolEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new DocumentSymbolEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -406,30 +329,21 @@ public class LsifEmitter implements Closeable {
   public long emitDocumentLinkResult(List<DocumentLink> documentLinks) {
     var id = nextId();
     var result = documentLinks.stream()
-      .map(dl -> DocumentLinkResultVertex.DocumentLinkInfo.builder()
-        .range(convertToDocumentLinkRange(dl.getRange()))
-        .target(dl.getTarget())
-        .build())
+      .map(dl -> new DocumentLinkResultVertex.DocumentLinkInfo(
+        convertToDocumentLinkRange(dl.getRange()),
+        dl.getTarget()
+      ))
       .toList();
-    var vertex = DocumentLinkResultVertex.builder()
-      .id(id)
-      .result(result)
-      .build();
+    var vertex = new DocumentLinkResultVertex(id, result);
     emit(vertex);
     return id;
   }
 
   private DocumentLinkResultVertex.RangeInfo convertToDocumentLinkRange(Range range) {
-    return DocumentLinkResultVertex.RangeInfo.builder()
-      .start(DocumentLinkResultVertex.PositionInfo.builder()
-        .line(range.getStart().getLine())
-        .character(range.getStart().getCharacter())
-        .build())
-      .end(DocumentLinkResultVertex.PositionInfo.builder()
-        .line(range.getEnd().getLine())
-        .character(range.getEnd().getCharacter())
-        .build())
-      .build();
+    return new DocumentLinkResultVertex.RangeInfo(
+      new DocumentLinkResultVertex.PositionInfo(range.getStart().getLine(), range.getStart().getCharacter()),
+      new DocumentLinkResultVertex.PositionInfo(range.getEnd().getLine(), range.getEnd().getCharacter())
+    );
   }
 
   /**
@@ -437,11 +351,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitDocumentLinkEdge(long outV, long inV) {
     var id = nextId();
-    var edge = DocumentLinkEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new DocumentLinkEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -451,13 +361,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitMoniker(String scheme, String identifier, String kind, String unique) {
     var id = nextId();
-    var vertex = MonikerVertex.builder()
-      .id(id)
-      .scheme(scheme)
-      .identifier(identifier)
-      .kind(kind)
-      .unique(unique)
-      .build();
+    var vertex = new MonikerVertex(id, scheme, identifier, kind, unique);
     emit(vertex);
     return id;
   }
@@ -467,12 +371,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitPackageInformation(String name, String manager, String version) {
     var id = nextId();
-    var vertex = PackageInformationVertex.builder()
-      .id(id)
-      .name(name)
-      .manager(manager)
-      .version(version)
-      .build();
+    var vertex = new PackageInformationVertex(id, name, manager, version);
     emit(vertex);
     return id;
   }
@@ -482,11 +381,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitMonikerEdge(long outV, long inV) {
     var id = nextId();
-    var edge = MonikerEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new MonikerEdge(id, outV, inV);
     emit(edge);
     return id;
   }
@@ -496,11 +391,7 @@ public class LsifEmitter implements Closeable {
    */
   public long emitPackageInformationEdge(long outV, long inV) {
     var id = nextId();
-    var edge = PackageInformationEdge.builder()
-      .id(id)
-      .outV(outV)
-      .inV(inV)
-      .build();
+    var edge = new PackageInformationEdge(id, outV, inV);
     emit(edge);
     return id;
   }
