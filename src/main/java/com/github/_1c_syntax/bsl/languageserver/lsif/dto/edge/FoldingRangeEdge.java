@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "textDocument/foldingRange" — связь с результатом сворачивания.
+ * <p>
+ * Связывает документ с результатом сворачиваемых областей (foldingRangeResult).
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "textDocument/foldingRange")
+ * @param outV  исходящая вершина (ID документа)
+ * @param inV   входящая вершина (ID результата сворачивания)
  */
 public record FoldingRangeEdge(
   long id,
@@ -33,6 +41,13 @@ public record FoldingRangeEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро foldingRange с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (документ)
+   * @param inV  ID входящей вершины (результат сворачивания)
+   */
   public FoldingRangeEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.FOLDING_RANGE, outV, inV);
   }

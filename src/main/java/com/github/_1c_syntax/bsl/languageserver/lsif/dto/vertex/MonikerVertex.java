@@ -28,14 +28,15 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
  * <p>
  * Моникеры позволяют связывать символы между разными проектами,
  * что необходимо для Sourcegraph, GitHub Code Navigation и других систем.
+ * Каждый моникер уникально идентифицирует символ в рамках схемы.
  *
- * @param id идентификатор вершины
- * @param type тип элемента (vertex)
- * @param label метка вершины (moniker)
- * @param scheme схема моникера (например, "bsl")
+ * @param id         уникальный идентификатор вершины
+ * @param type       тип элемента (всегда "vertex")
+ * @param label      метка вершины (всегда "moniker")
+ * @param scheme     схема моникера (например, "bsl")
  * @param identifier уникальный идентификатор символа (формат: mdoRef:moduleType:symbolName)
- * @param kind тип моникера: import, export или local
- * @param unique уникальность моникера в рамках документа, проекта или схемы
+ * @param kind       тип моникера: import, export или local
+ * @param unique     уникальность моникера: document, project или scheme
  */
 public record MonikerVertex(
   long id,
@@ -46,6 +47,15 @@ public record MonikerVertex(
   String kind,
   String unique
 ) {
+  /**
+   * Создаёт вершину моникера с автоматическим заполнением type и label.
+   *
+   * @param id         уникальный идентификатор вершины
+   * @param scheme     схема моникера
+   * @param identifier уникальный идентификатор символа
+   * @param kind       тип моникера
+   * @param unique     уникальность моникера
+   */
   public MonikerVertex(long id, String scheme, String identifier, String kind, String unique) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.MONIKER,
       scheme, identifier, kind, unique);

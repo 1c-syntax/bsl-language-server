@@ -25,12 +25,24 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Вершина результата поиска ссылок.
+ * <p>
+ * Используется для связывания символа со всеми его использованиями.
+ * Связывается с resultSet через ребро textDocument/references.
+ *
+ * @param id    уникальный идентификатор вершины
+ * @param type  тип элемента (всегда "vertex")
+ * @param label метка вершины (всегда "referenceResult")
  */
 public record ReferenceResultVertex(
   long id,
   String type,
   String label
 ) {
+  /**
+   * Создаёт вершину результата ссылок с автоматическим заполнением type и label.
+   *
+   * @param id уникальный идентификатор вершины
+   */
   public ReferenceResultVertex(long id) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.REFERENCE_RESULT);
   }

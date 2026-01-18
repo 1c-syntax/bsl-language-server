@@ -27,11 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
  * Вершина информации о пакете.
  * <p>
  * Содержит метаданные о пакете/проекте для связывания моникеров.
+ * Используется для кросс-проектной навигации в Sourcegraph и GitHub.
  *
- * @param id идентификатор вершины
- * @param type тип элемента (vertex)
- * @param label метка вершины (packageInformation)
- * @param name название пакета/проекта
+ * @param id      уникальный идентификатор вершины
+ * @param type    тип элемента (всегда "vertex")
+ * @param label   метка вершины (всегда "packageInformation")
+ * @param name    название пакета/проекта
  * @param manager менеджер пакетов (для BSL это "bsl")
  * @param version версия пакета
  */
@@ -43,6 +44,14 @@ public record PackageInformationVertex(
   String manager,
   String version
 ) {
+  /**
+   * Создаёт вершину информации о пакете с автоматическим заполнением type и label.
+   *
+   * @param id      уникальный идентификатор вершины
+   * @param name    название пакета/проекта
+   * @param manager менеджер пакетов
+   * @param version версия пакета
+   */
   public PackageInformationVertex(long id, String name, String manager, String version) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.PACKAGE_INFORMATION,
       name, manager, version);

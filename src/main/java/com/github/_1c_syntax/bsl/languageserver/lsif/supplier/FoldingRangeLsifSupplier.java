@@ -31,6 +31,10 @@ import org.springframework.stereotype.Component;
  * Поставщик LSIF-данных для сворачиваемых областей.
  * <p>
  * Генерирует вершину foldingRangeResult и связывающее ребро для документа.
+ * Использует {@link FoldingRangeProvider} для получения областей сворачивания.
+ *
+ * @see LsifDataSupplier
+ * @see FoldingRangeProvider
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +42,11 @@ public class FoldingRangeLsifSupplier implements LsifDataSupplier {
 
   private final FoldingRangeProvider foldingRangeProvider;
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Генерирует foldingRangeResult для документа, если в нём есть сворачиваемые области.
+   */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     var foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);

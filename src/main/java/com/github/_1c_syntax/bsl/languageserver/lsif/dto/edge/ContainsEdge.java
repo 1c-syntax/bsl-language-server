@@ -27,6 +27,14 @@ import java.util.List;
 
 /**
  * Ребро "contains" — документ содержит диапазоны.
+ * <p>
+ * Связывает документ с набором диапазонов (range), которые в нём определены.
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "contains")
+ * @param outV  исходящая вершина (ID документа)
+ * @param inVs  список входящих вершин (ID диапазонов)
  */
 public record ContainsEdge(
   long id,
@@ -35,6 +43,13 @@ public record ContainsEdge(
   long outV,
   List<Long> inVs
 ) {
+  /**
+   * Создаёт ребро contains с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (документ)
+   * @param inVs список ID входящих вершин (диапазоны)
+   */
   public ContainsEdge(long id, long outV, List<Long> inVs) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.CONTAINS, outV, inVs);
   }

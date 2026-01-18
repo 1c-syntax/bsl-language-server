@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "packageInformation" — связь моникера с информацией о пакете.
+ * <p>
+ * Связывает моникер с информацией о пакете для кросс-проектной навигации.
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "packageInformation")
+ * @param outV  исходящая вершина (ID моникера)
+ * @param inV   входящая вершина (ID информации о пакете)
  */
 public record PackageInformationEdge(
   long id,
@@ -33,6 +41,13 @@ public record PackageInformationEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро packageInformation с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (моникер)
+   * @param inV  ID входящей вершины (информация о пакете)
+   */
   public PackageInformationEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.PACKAGE_INFORMATION_EDGE, outV, inV);
   }

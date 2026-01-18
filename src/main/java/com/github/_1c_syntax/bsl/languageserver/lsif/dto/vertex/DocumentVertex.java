@@ -25,6 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Вершина документа.
+ * <p>
+ * Представляет файл исходного кода в LSIF-графе. Документ содержит
+ * диапазоны (range), связанные с ним через ребро contains.
+ *
+ * @param id         уникальный идентификатор вершины
+ * @param type       тип элемента (всегда "vertex")
+ * @param label      метка вершины (всегда "document")
+ * @param uri        URI документа (например, "file:///path/to/file.bsl")
+ * @param languageId идентификатор языка документа (например, "bsl" или "oscript")
  */
 public record DocumentVertex(
   long id,
@@ -33,6 +42,13 @@ public record DocumentVertex(
   String uri,
   String languageId
 ) {
+  /**
+   * Создаёт вершину документа с автоматическим заполнением type и label.
+   *
+   * @param id         уникальный идентификатор вершины
+   * @param uri        URI документа
+   * @param languageId идентификатор языка документа
+   */
   public DocumentVertex(long id, String uri, String languageId) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.DOCUMENT, uri, languageId);
   }

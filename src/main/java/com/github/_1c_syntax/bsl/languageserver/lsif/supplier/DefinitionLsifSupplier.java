@@ -36,12 +36,20 @@ import java.util.List;
  * Поставщик LSIF-данных для перехода к определению.
  * <p>
  * Генерирует вершины range, resultSet, definitionResult и соответствующие рёбра
- * для определений символов документа.
+ * для определений символов документа. Обрабатывает методы и переменные.
+ *
+ * @see LsifDataSupplier
  */
 @Component
 @RequiredArgsConstructor
 public class DefinitionLsifSupplier implements LsifDataSupplier {
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает все методы и переменные документа, генерируя для каждого
+   * определения LSIF-элементы с использованием ребра item для связи.
+   */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     var symbolTree = documentContext.getSymbolTree();

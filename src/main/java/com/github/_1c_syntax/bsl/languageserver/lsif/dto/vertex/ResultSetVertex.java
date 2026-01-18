@@ -25,12 +25,25 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Вершина набора результатов для символа.
+ * <p>
+ * Используется для группировки результатов (hover, definition, references)
+ * для одного символа. Диапазоны связываются с resultSet через ребро next,
+ * а resultSet связывается с результатами через соответствующие рёбра.
+ *
+ * @param id    уникальный идентификатор вершины
+ * @param type  тип элемента (всегда "vertex")
+ * @param label метка вершины (всегда "resultSet")
  */
 public record ResultSetVertex(
   long id,
   String type,
   String label
 ) {
+  /**
+   * Создаёт вершину набора результатов с автоматическим заполнением type и label.
+   *
+   * @param id уникальный идентификатор вершины
+   */
   public ResultSetVertex(long id) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.RESULT_SET);
   }

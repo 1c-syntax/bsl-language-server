@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "textDocument/references" — связь с результатом поиска ссылок.
+ * <p>
+ * Связывает набор результатов (resultSet) с результатом поиска ссылок (referenceResult).
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "textDocument/references")
+ * @param outV  исходящая вершина (ID набора результатов)
+ * @param inV   входящая вершина (ID результата ссылок)
  */
 public record ReferencesEdge(
   long id,
@@ -33,6 +41,13 @@ public record ReferencesEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро references с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (набор результатов)
+   * @param inV  ID входящей вершины (результат ссылок)
+   */
   public ReferencesEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.REFERENCES, outV, inV);
   }

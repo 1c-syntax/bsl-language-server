@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "textDocument/definition" — связь с результатом определения.
+ * <p>
+ * Связывает набор результатов (resultSet) с результатом определения (definitionResult).
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "textDocument/definition")
+ * @param outV  исходящая вершина (ID набора результатов)
+ * @param inV   входящая вершина (ID результата определения)
  */
 public record DefinitionEdge(
   long id,
@@ -33,6 +41,13 @@ public record DefinitionEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро definition с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (набор результатов)
+   * @param inV  ID входящей вершины (результат определения)
+   */
   public DefinitionEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.DEFINITION, outV, inV);
   }

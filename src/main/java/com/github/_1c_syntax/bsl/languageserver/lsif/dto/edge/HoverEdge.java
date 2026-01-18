@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "textDocument/hover" — связь с результатом hover.
+ * <p>
+ * Связывает набор результатов (resultSet) с результатом hover (hoverResult).
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "textDocument/hover")
+ * @param outV  исходящая вершина (ID набора результатов)
+ * @param inV   входящая вершина (ID результата hover)
  */
 public record HoverEdge(
   long id,
@@ -33,6 +41,13 @@ public record HoverEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро hover с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (набор результатов)
+   * @param inV  ID входящей вершины (результат hover)
+   */
   public HoverEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.HOVER, outV, inV);
   }

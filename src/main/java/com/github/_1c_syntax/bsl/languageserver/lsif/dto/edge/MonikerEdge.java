@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "moniker" — связь диапазона/resultSet с моникером.
+ * <p>
+ * Связывает набор результатов с моникером для кросс-проектной навигации.
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "moniker")
+ * @param outV  исходящая вершина (ID набора результатов)
+ * @param inV   входящая вершина (ID моникера)
  */
 public record MonikerEdge(
   long id,
@@ -33,6 +41,13 @@ public record MonikerEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро moniker с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (набор результатов)
+   * @param inV  ID входящей вершины (моникер)
+   */
   public MonikerEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.MONIKER_EDGE, outV, inV);
   }

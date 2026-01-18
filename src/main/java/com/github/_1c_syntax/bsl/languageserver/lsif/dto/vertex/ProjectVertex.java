@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Вершина проекта.
+ * <p>
+ * Представляет проект в LSIF-графе. Документы связываются с проектом
+ * через ребро belongsTo.
+ *
+ * @param id    уникальный идентификатор вершины
+ * @param type  тип элемента (всегда "vertex")
+ * @param label метка вершины (всегда "project")
+ * @param kind  идентификатор языка проекта (например, "bsl")
  */
 public record ProjectVertex(
   long id,
@@ -32,6 +40,12 @@ public record ProjectVertex(
   String label,
   String kind
 ) {
+  /**
+   * Создаёт вершину проекта с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор вершины
+   * @param kind идентификатор языка проекта
+   */
   public ProjectVertex(long id, String kind) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.PROJECT, kind);
   }

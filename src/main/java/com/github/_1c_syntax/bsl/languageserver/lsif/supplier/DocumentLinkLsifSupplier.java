@@ -31,6 +31,10 @@ import org.springframework.stereotype.Component;
  * Поставщик LSIF-данных для ссылок на документацию.
  * <p>
  * Генерирует вершину documentLinkResult и связывающее ребро для документа.
+ * Использует {@link DocumentLinkProvider} для получения ссылок.
+ *
+ * @see LsifDataSupplier
+ * @see DocumentLinkProvider
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +42,11 @@ public class DocumentLinkLsifSupplier implements LsifDataSupplier {
 
   private final DocumentLinkProvider documentLinkProvider;
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Генерирует documentLinkResult для ссылок в документе (например, ссылки на внешнюю документацию).
+   */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);

@@ -27,6 +27,14 @@ import java.util.List;
 
 /**
  * Вершина результата сворачиваемых областей.
+ * <p>
+ * Содержит информацию о всех сворачиваемых областях в документе.
+ * Связывается с документом через ребро textDocument/foldingRange.
+ *
+ * @param id     уникальный идентификатор вершины
+ * @param type   тип элемента (всегда "vertex")
+ * @param label  метка вершины (всегда "foldingRangeResult")
+ * @param result список сворачиваемых областей
  */
 public record FoldingRangeResultVertex(
   long id,
@@ -34,12 +42,24 @@ public record FoldingRangeResultVertex(
   String label,
   List<FoldingRangeInfo> result
 ) {
+  /**
+   * Создаёт вершину результата сворачивания с автоматическим заполнением type и label.
+   *
+   * @param id     уникальный идентификатор вершины
+   * @param result список сворачиваемых областей
+   */
   public FoldingRangeResultVertex(long id, List<FoldingRangeInfo> result) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.FOLDING_RANGE_RESULT, result);
   }
 
   /**
    * Информация о сворачиваемой области.
+   *
+   * @param startLine      начальная строка области
+   * @param startCharacter начальный символ области
+   * @param endLine        конечная строка области
+   * @param endCharacter   конечный символ области
+   * @param kind           тип области (например, "region", "comment", "imports")
    */
   public record FoldingRangeInfo(
     int startLine,

@@ -40,11 +40,23 @@ import java.util.Locale;
  * Генерирует вершины moniker для экспортируемых символов,
  * что позволяет связывать символы между разными проектами
  * в Sourcegraph, GitHub Code Navigation и других системах.
+ * <p>
+ * Моникер формируется в формате: {@code mdoRef:moduleType:symbolName}
+ *
+ * @see LsifDataSupplier
+ * @see LsifConstants.MonikerKind
+ * @see LsifConstants.MonikerScheme
  */
 @Component
 @RequiredArgsConstructor
 public class MonikerLsifSupplier implements LsifDataSupplier {
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает экспортируемые методы документа, генерируя для каждого
+   * моникер с уникальным идентификатором.
+   */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     var symbolTree = documentContext.getSymbolTree();

@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "belongsTo" — связь документа/проекта.
+ * <p>
+ * Связывает документ с проектом, к которому он принадлежит.
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "belongsTo")
+ * @param outV  исходящая вершина (ID документа)
+ * @param inV   входящая вершина (ID проекта)
  */
 public record BelongsToEdge(
   long id,
@@ -33,6 +41,13 @@ public record BelongsToEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро belongsTo с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (документ)
+   * @param inV  ID входящей вершины (проект)
+   */
   public BelongsToEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.BELONGS_TO, outV, inV);
   }

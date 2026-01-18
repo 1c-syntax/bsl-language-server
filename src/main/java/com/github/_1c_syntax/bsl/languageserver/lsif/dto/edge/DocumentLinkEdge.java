@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "textDocument/documentLink" — связь с результатом ссылок на документацию.
+ * <p>
+ * Связывает документ с результатом ссылок (documentLinkResult).
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "textDocument/documentLink")
+ * @param outV  исходящая вершина (ID документа)
+ * @param inV   входящая вершина (ID результата ссылок)
  */
 public record DocumentLinkEdge(
   long id,
@@ -33,6 +41,13 @@ public record DocumentLinkEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро documentLink с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (документ)
+   * @param inV  ID входящей вершины (результат ссылок)
+   */
   public DocumentLinkEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.DOCUMENT_LINK, outV, inV);
   }

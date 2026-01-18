@@ -25,12 +25,24 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Вершина результата перехода к определению.
+ * <p>
+ * Используется для связывания символа с его определением.
+ * Связывается с resultSet через ребро textDocument/definition.
+ *
+ * @param id    уникальный идентификатор вершины
+ * @param type  тип элемента (всегда "vertex")
+ * @param label метка вершины (всегда "definitionResult")
  */
 public record DefinitionResultVertex(
   long id,
   String type,
   String label
 ) {
+  /**
+   * Создаёт вершину результата определения с автоматическим заполнением type и label.
+   *
+   * @param id уникальный идентификатор вершины
+   */
   public DefinitionResultVertex(long id) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.DEFINITION_RESULT);
   }

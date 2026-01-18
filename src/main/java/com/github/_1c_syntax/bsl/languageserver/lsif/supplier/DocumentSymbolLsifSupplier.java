@@ -31,6 +31,10 @@ import org.springframework.stereotype.Component;
  * Поставщик LSIF-данных для символов документа.
  * <p>
  * Генерирует вершину documentSymbolResult и связывающее ребро для документа.
+ * Использует {@link DocumentSymbolProvider} для получения иерархии символов.
+ *
+ * @see LsifDataSupplier
+ * @see DocumentSymbolProvider
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +42,11 @@ public class DocumentSymbolLsifSupplier implements LsifDataSupplier {
 
   private final DocumentSymbolProvider documentSymbolProvider;
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Генерирует documentSymbolResult с иерархической структурой символов документа.
+   */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     var symbols = documentSymbolProvider.getDocumentSymbols(documentContext);

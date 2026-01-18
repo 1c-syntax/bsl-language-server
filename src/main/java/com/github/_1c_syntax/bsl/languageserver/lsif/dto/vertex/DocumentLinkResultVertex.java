@@ -27,6 +27,14 @@ import java.util.List;
 
 /**
  * Вершина результата ссылок на документацию.
+ * <p>
+ * Содержит информацию о ссылках в документе (например, ссылки на внешнюю документацию).
+ * Связывается с документом через ребро textDocument/documentLink.
+ *
+ * @param id     уникальный идентификатор вершины
+ * @param type   тип элемента (всегда "vertex")
+ * @param label  метка вершины (всегда "documentLinkResult")
+ * @param result список ссылок в документе
  */
 public record DocumentLinkResultVertex(
   long id,
@@ -34,22 +42,37 @@ public record DocumentLinkResultVertex(
   String label,
   List<DocumentLinkInfo> result
 ) {
+  /**
+   * Создаёт вершину результата ссылок с автоматическим заполнением type и label.
+   *
+   * @param id     уникальный идентификатор вершины
+   * @param result список ссылок в документе
+   */
   public DocumentLinkResultVertex(long id, List<DocumentLinkInfo> result) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.DOCUMENT_LINK_RESULT, result);
   }
 
   /**
    * Информация о ссылке на документацию.
+   *
+   * @param range  диапазон ссылки в документе
+   * @param target целевой URI ссылки
    */
   public record DocumentLinkInfo(RangeInfo range, String target) {}
 
   /**
    * Информация о диапазоне.
+   *
+   * @param start начальная позиция
+   * @param end   конечная позиция
    */
   public record RangeInfo(PositionInfo start, PositionInfo end) {}
 
   /**
    * Информация о позиции.
+   *
+   * @param line      номер строки (начиная с 0)
+   * @param character номер символа в строке (начиная с 0)
    */
   public record PositionInfo(int line, int character) {}
 }

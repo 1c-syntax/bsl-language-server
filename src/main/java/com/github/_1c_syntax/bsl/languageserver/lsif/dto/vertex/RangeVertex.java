@@ -25,6 +25,16 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Вершина диапазона в документе.
+ * <p>
+ * Представляет текстовый диапазон (позицию символа, идентификатора и т.д.)
+ * в документе. Диапазоны связываются с результатами (hover, definition и т.д.)
+ * через resultSet и соответствующие рёбра.
+ *
+ * @param id    уникальный идентификатор вершины
+ * @param type  тип элемента (всегда "vertex")
+ * @param label метка вершины (всегда "range")
+ * @param start начальная позиция диапазона
+ * @param end   конечная позиция диапазона
  */
 public record RangeVertex(
   long id,
@@ -33,12 +43,24 @@ public record RangeVertex(
   Position start,
   Position end
 ) {
+  /**
+   * Создаёт вершину диапазона с автоматическим заполнением type и label.
+   *
+   * @param id    уникальный идентификатор вершины
+   * @param start начальная позиция диапазона
+   * @param end   конечная позиция диапазона
+   */
   public RangeVertex(long id, Position start, Position end) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.RANGE, start, end);
   }
 
   /**
    * Позиция в документе.
+   * <p>
+   * Использует нумерацию с нуля (0-based) для строк и символов.
+   *
+   * @param line      номер строки (начиная с 0)
+   * @param character номер символа в строке (начиная с 0)
    */
   public record Position(int line, int character) {}
 }

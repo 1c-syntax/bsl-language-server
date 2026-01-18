@@ -37,7 +37,11 @@ import java.util.List;
  * Поставщик LSIF-данных для поиска ссылок.
  * <p>
  * Генерирует вершины range, resultSet, referenceResult и соответствующие рёбра
- * для символов документа и их ссылок.
+ * для символов документа и их ссылок. Использует {@link ReferenceIndex} для
+ * получения информации о ссылках на символы.
+ *
+ * @see LsifDataSupplier
+ * @see ReferenceIndex
  */
 @Component
 @RequiredArgsConstructor
@@ -45,6 +49,12 @@ public class ReferenceLsifSupplier implements LsifDataSupplier {
 
   private final ReferenceIndex referenceIndex;
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает все методы документа и их ссылки, генерируя referenceResult
+   * с разделением на definitions и references через ребро item.
+   */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     var symbolTree = documentContext.getSymbolTree();

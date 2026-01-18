@@ -39,7 +39,11 @@ import java.util.Map;
  * Поставщик LSIF-данных для hover.
  * <p>
  * Генерирует вершины range, resultSet, hoverResult и соответствующие рёбра
- * для символов документа.
+ * для символов документа. Использует {@link MarkupContentBuilder} для
+ * формирования содержимого hover-подсказок.
+ *
+ * @see LsifDataSupplier
+ * @see MarkupContentBuilder
  */
 @Component
 @RequiredArgsConstructor
@@ -47,6 +51,12 @@ public class HoverLsifSupplier implements LsifDataSupplier {
 
   private final Map<SymbolKind, MarkupContentBuilder<Symbol>> markupContentBuilders;
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Обрабатывает все методы и модуль документа, генерируя для каждого
+   * hover-информацию и связывающие LSIF-элементы.
+   */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     var symbolTree = documentContext.getSymbolTree();

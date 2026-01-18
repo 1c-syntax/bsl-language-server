@@ -27,6 +27,17 @@ import java.util.List;
 
 /**
  * Ребро "item" — связь результата с конкретными диапазонами.
+ * <p>
+ * Связывает результат (referenceResult, definitionResult) с конкретными диапазонами,
+ * которые являются определениями или ссылками. Свойство property указывает тип связи.
+ *
+ * @param id       уникальный идентификатор ребра
+ * @param type     тип элемента (всегда "edge")
+ * @param label    метка ребра (всегда "item")
+ * @param outV     исходящая вершина (ID результата)
+ * @param inVs     список входящих вершин (ID диапазонов)
+ * @param document ID документа, в котором находятся диапазоны
+ * @param property тип связи: "definitions" или "references"
  */
 public record ItemEdge(
   long id,
@@ -37,6 +48,15 @@ public record ItemEdge(
   long document,
   String property
 ) {
+  /**
+   * Создаёт ребро item с автоматическим заполнением type и label.
+   *
+   * @param id       уникальный идентификатор ребра
+   * @param outV     ID исходящей вершины (результат)
+   * @param inVs     список ID входящих вершин (диапазоны)
+   * @param document ID документа
+   * @param property тип связи
+   */
   public ItemEdge(long id, long outV, List<Long> inVs, long document, String property) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.ITEM, outV, inVs, document, property);
   }

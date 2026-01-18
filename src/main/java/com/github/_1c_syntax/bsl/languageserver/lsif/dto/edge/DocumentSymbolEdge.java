@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "textDocument/documentSymbol" — связь с результатом символов документа.
+ * <p>
+ * Связывает документ с результатом символов (documentSymbolResult).
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "textDocument/documentSymbol")
+ * @param outV  исходящая вершина (ID документа)
+ * @param inV   входящая вершина (ID результата символов)
  */
 public record DocumentSymbolEdge(
   long id,
@@ -33,6 +41,13 @@ public record DocumentSymbolEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро documentSymbol с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (документ)
+   * @param inV  ID входящей вершины (результат символов)
+   */
   public DocumentSymbolEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.DOCUMENT_SYMBOL, outV, inV);
   }

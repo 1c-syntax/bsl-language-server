@@ -25,6 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Ребро "next" — связь диапазона с набором результатов.
+ * <p>
+ * Связывает диапазон (range) с набором результатов (resultSet),
+ * который содержит hover, definition и другие данные для этого диапазона.
+ *
+ * @param id    уникальный идентификатор ребра
+ * @param type  тип элемента (всегда "edge")
+ * @param label метка ребра (всегда "next")
+ * @param outV  исходящая вершина (ID диапазона)
+ * @param inV   входящая вершина (ID набора результатов)
  */
 public record NextEdge(
   long id,
@@ -33,6 +42,13 @@ public record NextEdge(
   long outV,
   long inV
 ) {
+  /**
+   * Создаёт ребро next с автоматическим заполнением type и label.
+   *
+   * @param id   уникальный идентификатор ребра
+   * @param outV ID исходящей вершины (диапазон)
+   * @param inV  ID входящей вершины (набор результатов)
+   */
   public NextEdge(long id, long outV, long inV) {
     this(id, LsifConstants.ElementType.EDGE, LsifConstants.EdgeLabel.NEXT, outV, inV);
   }

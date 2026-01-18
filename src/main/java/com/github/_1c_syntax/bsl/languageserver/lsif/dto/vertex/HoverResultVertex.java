@@ -25,6 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.LsifConstants;
 
 /**
  * Вершина результата hover.
+ * <p>
+ * Содержит информацию для всплывающей подсказки при наведении на символ.
+ * Связывается с resultSet через ребро textDocument/hover.
+ *
+ * @param id     уникальный идентификатор вершины
+ * @param type   тип элемента (всегда "vertex")
+ * @param label  метка вершины (всегда "hoverResult")
+ * @param result содержимое hover-подсказки
  */
 public record HoverResultVertex(
   long id,
@@ -32,17 +40,28 @@ public record HoverResultVertex(
   String label,
   HoverContent result
 ) {
+  /**
+   * Создаёт вершину результата hover с автоматическим заполнением type и label.
+   *
+   * @param id     уникальный идентификатор вершины
+   * @param result содержимое hover-подсказки
+   */
   public HoverResultVertex(long id, HoverContent result) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.HOVER_RESULT, result);
   }
 
   /**
    * Содержимое hover.
+   *
+   * @param contents контент для отображения
    */
   public record HoverContent(Contents contents) {}
 
   /**
    * Контент для hover.
+   *
+   * @param kind  тип контента (например, "markdown" или "plaintext")
+   * @param value текстовое содержимое
    */
   public record Contents(String kind, String value) {}
 }

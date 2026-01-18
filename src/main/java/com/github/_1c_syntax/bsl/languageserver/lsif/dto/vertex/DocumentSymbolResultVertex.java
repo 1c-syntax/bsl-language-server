@@ -27,6 +27,14 @@ import java.util.List;
 
 /**
  * Вершина результата символов документа.
+ * <p>
+ * Содержит иерархическую структуру символов документа (модули, процедуры, функции).
+ * Связывается с документом через ребро textDocument/documentSymbol.
+ *
+ * @param id     уникальный идентификатор вершины
+ * @param type   тип элемента (всегда "vertex")
+ * @param label  метка вершины (всегда "documentSymbolResult")
+ * @param result список символов документа
  */
 public record DocumentSymbolResultVertex(
   long id,
@@ -34,12 +42,24 @@ public record DocumentSymbolResultVertex(
   String label,
   List<DocumentSymbolInfo> result
 ) {
+  /**
+   * Создаёт вершину результата символов с автоматическим заполнением type и label.
+   *
+   * @param id     уникальный идентификатор вершины
+   * @param result список символов документа
+   */
   public DocumentSymbolResultVertex(long id, List<DocumentSymbolInfo> result) {
     this(id, LsifConstants.ElementType.VERTEX, LsifConstants.VertexLabel.DOCUMENT_SYMBOL_RESULT, result);
   }
 
   /**
    * Информация о символе документа.
+   *
+   * @param name           имя символа
+   * @param kind           тип символа (числовое значение из LSP SymbolKind)
+   * @param range          полный диапазон символа
+   * @param selectionRange диапазон имени символа
+   * @param children       дочерние символы
    */
   public record DocumentSymbolInfo(
     String name,
@@ -51,11 +71,17 @@ public record DocumentSymbolResultVertex(
 
   /**
    * Информация о диапазоне.
+   *
+   * @param start начальная позиция
+   * @param end   конечная позиция
    */
   public record RangeInfo(PositionInfo start, PositionInfo end) {}
 
   /**
    * Информация о позиции.
+   *
+   * @param line      номер строки (начиная с 0)
+   * @param character номер символа в строке (начиная с 0)
    */
   public record PositionInfo(int line, int character) {}
 }
