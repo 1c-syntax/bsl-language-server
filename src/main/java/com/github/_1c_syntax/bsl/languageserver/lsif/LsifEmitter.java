@@ -46,19 +46,17 @@ import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ProjectVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.RangeVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ReferenceResultVertex;
 import com.github._1c_syntax.bsl.languageserver.lsif.dto.vertex.ResultSetVertex;
+import com.github._1c_syntax.bsl.languageserver.lsif.writer.JsonLsifWriter;
+import com.github._1c_syntax.bsl.languageserver.lsif.writer.LsifWriter;
+import com.github._1c_syntax.bsl.languageserver.lsif.writer.NdJsonLsifWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.Range;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
-import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -66,18 +64,44 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Генератор LSIF-вывода.
  * <p>
- * Записывает LSIF-элементы (вершины и рёбра) в файл в формате NDJSON.
+ * Записывает LSIF-элементы (вершины и рёбра) в файл в выбранном формате.
+ * Поддерживаемые форматы: NDJSON и JSON.
+ *
+ * @see LsifOutputFormat
+ * @see LsifWriter
  */
 @Slf4j
 public class LsifEmitter implements Closeable {
 
   private final AtomicLong idGenerator = new AtomicLong(1);
-  private final BufferedWriter writer;
-  private final ObjectMapper objectMapper;
+  private final LsifWriter writer;
 
+  /**
+   * Создаёт эмиттер с форматом NDJSON по умолчанию.
+   *
+   * @param outputFile путь к выходному файлу
+   * @throws IOException если не удалось создать файл
+   */
   public LsifEmitter(Path outputFile) throws IOException {
-    this.writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8);
-    this.objectMapper = JsonMapper.builder().build();
+    this(outputFile, LsifOutputFormat.DEFAULT);
+  }
+
+  /**
+   * Создаёт эмиттер с указанным форматом вывода.
+   *
+   * @param outputFile путь к выходному файлу
+   * @param format     формат вывода (NDJSON или JSON)
+   * @throws IOException если не удалось создать файл
+   */
+  public LsifEmitter(Path outputFile, LsifOutputFormat format) throws IOException {
+    this.writer = createWriter(outputFile, format);
+  }
+
+  private static LsifWriter createWriter(Path outputFile, LsifOutputFormat format) throws IOException {
+    return switch (format) {
+      case NDJSON -> new NdJsonLsifWriter(outputFile);
+      case JSON -> new JsonLsifWriter(outputFile);
+    };
   }
 
   /**
@@ -398,8 +422,7 @@ public class LsifEmitter implements Closeable {
 
   private void emit(Object element) {
     try {
-      writer.write(objectMapper.writeValueAsString(element));
-      writer.newLine();
+      writer.write(element);
     } catch (IOException e) {
       LOGGER.error("Failed to write LSIF element", e);
       throw new RuntimeException("Failed to write LSIF element", e);

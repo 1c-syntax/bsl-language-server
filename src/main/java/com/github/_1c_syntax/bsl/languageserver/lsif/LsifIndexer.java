@@ -40,6 +40,9 @@ import java.util.List;
  * <p>
  * Обходит все документы проекта и генерирует LSIF-граф с использованием
  * зарегистрированных поставщиков данных.
+ *
+ * @see LsifOutputFormat
+ * @see LsifEmitter
  */
 @Slf4j
 @Component
@@ -54,19 +57,33 @@ public class LsifIndexer {
   private final List<LsifDataSupplier> dataSuppliers;
 
   /**
-   * Выполняет индексацию проекта и записывает LSIF-дамп.
+   * Выполняет индексацию проекта и записывает LSIF-дамп в формате NDJSON.
    *
-   * @param srcDir     путь к каталогу исходных файлов
-   * @param outputFile путь к выходному файлу
+   * @param srcDir      путь к каталогу исходных файлов
+   * @param outputFile  путь к выходному файлу
    * @param toolVersion версия инструмента
+   * @throws IOException если произошла ошибка записи
    */
   public void index(Path srcDir, Path outputFile, String toolVersion) throws IOException {
-    LOGGER.info("Starting LSIF indexing for {}", srcDir);
+    index(srcDir, outputFile, toolVersion, LsifOutputFormat.DEFAULT);
+  }
+
+  /**
+   * Выполняет индексацию проекта и записывает LSIF-дамп в указанном формате.
+   *
+   * @param srcDir      путь к каталогу исходных файлов
+   * @param outputFile  путь к выходному файлу
+   * @param toolVersion версия инструмента
+   * @param format      формат вывода (NDJSON или JSON)
+   * @throws IOException если произошла ошибка записи
+   */
+  public void index(Path srcDir, Path outputFile, String toolVersion, LsifOutputFormat format) throws IOException {
+    LOGGER.info("Starting LSIF indexing for {} (format: {})", srcDir, format.getFormatId());
 
     var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
     serverContext.populateContext(files);
 
-    try (var emitter = new LsifEmitter(outputFile)) {
+    try (var emitter = new LsifEmitter(outputFile, format)) {
       // Emit metaData
       var projectRoot = srcDir.toUri().toString();
       emitter.emitMetaData(LSIF_VERSION, projectRoot, TOOL_NAME, toolVersion);

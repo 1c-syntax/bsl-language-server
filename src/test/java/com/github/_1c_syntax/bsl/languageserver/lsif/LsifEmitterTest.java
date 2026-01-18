@@ -127,4 +127,45 @@ class LsifEmitterTest {
     assertThat(lsifContent).contains("\"manager\":\"bsl\"");
     assertThat(lsifContent).contains("\"version\":\"1.0.0\"");
   }
+
+  @Test
+  void testNdJsonFormat() throws IOException {
+    // given
+    Path outputFile = tempDir.resolve("test.lsif");
+
+    // when
+    try (var emitter = new LsifEmitter(outputFile, LsifOutputFormat.NDJSON)) {
+      emitter.emitMetaData("0.6.0", "file:///project", "bsl-language-server", "1.0.0");
+      emitter.emitProject("bsl");
+    }
+
+    // then
+    var lines = Files.readAllLines(outputFile);
+    assertThat(lines).hasSize(2);
+    assertThat(lines.get(0)).contains("\"label\":\"metaData\"");
+    assertThat(lines.get(1)).contains("\"label\":\"project\"");
+  }
+
+  @Test
+  void testJsonFormat() throws IOException {
+    // given
+    Path outputFile = tempDir.resolve("test.lsif.json");
+
+    // when
+    try (var emitter = new LsifEmitter(outputFile, LsifOutputFormat.JSON)) {
+      emitter.emitMetaData("0.6.0", "file:///project", "bsl-language-server", "1.0.0");
+      emitter.emitProject("bsl");
+    }
+
+    // then
+    var lsifContent = Files.readString(outputFile);
+    // JSON format should be a valid JSON array
+    assertThat(lsifContent).startsWith("[");
+    assertThat(lsifContent).endsWith("]");
+    // Should be pretty-printed with indentation
+    assertThat(lsifContent).contains("  ");
+    // Should contain both elements
+    assertThat(lsifContent).contains("\"label\" : \"metaData\"");
+    assertThat(lsifContent).contains("\"label\" : \"project\"");
+  }
 }

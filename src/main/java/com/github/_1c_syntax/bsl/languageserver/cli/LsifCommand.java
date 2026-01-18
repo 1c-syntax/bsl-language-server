@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.lsif.LsifIndexer;
+import com.github._1c_syntax.bsl.languageserver.lsif.LsifOutputFormat;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ import java.util.concurrent.Callable;
  * <ul>
  *   <li>-s, --srcDir — путь к каталогу исходных файлов</li>
  *   <li>-o, --output — путь к выходному файлу (по умолчанию: dump.lsif)</li>
+ *   <li>-f, --format — формат вывода: ndjson или json (по умолчанию: ndjson)</li>
  *   <li>-c, --configuration — путь к конфигурационному файлу</li>
  * </ul>
  */
@@ -81,6 +83,13 @@ public class LsifCommand implements Callable<Integer> {
   private String outputOption;
 
   @Option(
+    names = {"-f", "--format"},
+    description = "Output format: ndjson (default) or json. NDJSON is recommended for large projects.",
+    paramLabel = "<format>",
+    defaultValue = "NDJSON")
+  private LsifOutputFormat formatOption;
+
+  @Option(
     names = {"-c", "--configuration"},
     description = "Path to language server configuration file",
     paramLabel = "<path>",
@@ -112,8 +121,8 @@ public class LsifCommand implements Callable<Integer> {
     }
 
     try {
-      lsifIndexer.index(srcDir, outputFile, toolVersion);
-      LOGGER.info("LSIF index generated: {}", outputFile);
+      lsifIndexer.index(srcDir, outputFile, toolVersion, formatOption);
+      LOGGER.info("LSIF index generated: {} (format: {})", outputFile, formatOption.getFormatId());
       return 0;
     } catch (Exception e) {
       LOGGER.error("Failed to generate LSIF index", e);

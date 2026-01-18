@@ -100,15 +100,51 @@ BSL Language Server уже имеет всё необходимое для эк�
 
 ```sh
 java -jar bsl-language-server.jar lsif --srcDir ./src/cf --output ./dump.lsif
-java -jar bsl-language-server.jar lsif --srcDir ./src/cf --output ./dump.lsif --format json
+java -jar bsl-language-server.jar lsif --srcDir ./src/cf --output ./dump.lsif.json --format json
 ```
 
 **Параметры:**
 - `-s`, `--srcDir` — путь к каталогу исходных файлов (аналогично `AnalyzeCommand`)
 - `-o`, `--output` — путь к выходному файлу (по умолчанию: `dump.lsif`)
-- `-f`, `--format` — формат вывода: `line` (NDJSON, по умолчанию) или `json`
-- `-q`, `--silent` — тихий режим (аналогично существующим командам)
+- `-f`, `--format` — формат вывода: `ndjson` (по умолчанию) или `json`
 - `-c`, `--configuration` — путь к конфигурационному файлу
+
+### Форматы вывода
+
+LSIF поддерживает два формата вывода:
+
+#### NDJSON (Newline Delimited JSON)
+
+Формат по умолчанию. Каждый LSIF-элемент записывается на отдельной строке как отдельный JSON-объект.
+
+**Преимущества:**
+- Потоковая обработка — файл можно читать построчно
+- Эффективен для больших проектов
+- Рекомендуемый формат для Sourcegraph и GitHub
+
+**Пример:**
+```json
+{"id":1,"type":"vertex","label":"metaData",...}
+{"id":2,"type":"vertex","label":"project",...}
+{"id":3,"type":"edge","label":"contains",...}
+```
+
+#### JSON (массив элементов)
+
+Все элементы записываются как массив в одном JSON-документе с форматированием.
+
+**Преимущества:**
+- Удобен для отладки и просмотра
+- Читаемое форматирование с отступами
+
+**Пример:**
+```json
+[
+  {"id": 1, "type": "vertex", "label": "metaData", ...},
+  {"id": 2, "type": "vertex", "label": "project", ...},
+  {"id": 3, "type": "edge", "label": "contains", ...}
+]
+```
 
 ### Структура модулей
 
@@ -127,29 +163,44 @@ src/main/java/com/github/_1c_syntax/bsl/languageserver/
     ├── LsifEmitter.java                    # Генератор LSIF-вывода
     │                                       # Записывает вершины и рёбра в файл
     │
+    ├── LsifOutputFormat.java               # Enum форматов вывода (NDJSON, JSON)
+    │
+    ├── writer/                             # Реализации писателей
+    │   ├── LsifWriter.java                 # Интерфейс писателя
+    │   ├── NdJsonLsifWriter.java           # Потоковая запись NDJSON
+    │   └── JsonLsifWriter.java             # Запись JSON-массива
+    │
     ├── dto/                                # Data Transfer Objects для LSIF
-    │   ├── ElementDto.java                 # Базовый класс (id, type)
-    │   ├── VertexDto.java                  # Базовая вершина (+ label)
-    │   ├── EdgeDto.java                    # Базовое ребро (+ outV, inV/inVs)
+    │   ├── LsifConstants.java              # Константы протокола
     │   │
-    │   ├── vertex/                         # Вершины LSIF-протокола
-    │   │   ├── MetaDataDto.java
-    │   │   ├── ProjectDto.java
-    │   │   ├── DocumentDto.java
-    │   │   ├── RangeDto.java
-    │   │   ├── ResultSetDto.java
-    │   │   ├── HoverResultDto.java
-    │   │   ├── DefinitionResultDto.java
-    │   │   ├── ReferenceResultDto.java
-    │   │   ├── FoldingRangeResultDto.java
-    │   │   ├── DocumentSymbolResultDto.java
-    │   │   └── MonikerDto.java
+    │   ├── vertex/                         # Вершины LSIF-протокола (Java records)
+    │   │   ├── MetaDataVertex.java
+    │   │   ├── ProjectVertex.java
+    │   │   ├── DocumentVertex.java
+    │   │   ├── RangeVertex.java
+    │   │   ├── ResultSetVertex.java
+    │   │   ├── HoverResultVertex.java
+    │   │   ├── DefinitionResultVertex.java
+    │   │   ├── ReferenceResultVertex.java
+    │   │   ├── FoldingRangeResultVertex.java
+    │   │   ├── DocumentSymbolResultVertex.java
+    │   │   ├── DocumentLinkResultVertex.java
+    │   │   ├── MonikerVertex.java
+    │   │   └── PackageInformationVertex.java
     │   │
-    │   └── edge/                           # Рёбра LSIF-протокола
-    │       ├── ContainsDto.java
-    │       ├── NextDto.java
-    │       ├── ItemDto.java
-    │       └── MonikerEdgeDto.java
+    │   └── edge/                           # Рёбра LSIF-протокола (Java records)
+    │       ├── ContainsEdge.java
+    │       ├── NextEdge.java
+    │       ├── BelongsToEdge.java
+    │       ├── HoverEdge.java
+    │       ├── DefinitionEdge.java
+    │       ├── ReferencesEdge.java
+    │       ├── FoldingRangeEdge.java
+    │       ├── DocumentSymbolEdge.java
+    │       ├── DocumentLinkEdge.java
+    │       ├── ItemEdge.java
+    │       ├── MonikerEdge.java
+    │       └── PackageInformationEdge.java
     │
     └── supplier/                           # Поставщики LSIF-данных
         │                                   # (паттерн аналогичен FoldingRangeSupplier)
@@ -158,7 +209,9 @@ src/main/java/com/github/_1c_syntax/bsl/languageserver/
         ├── DefinitionLsifSupplier.java     # Использует DefinitionProvider
         ├── ReferenceLsifSupplier.java      # Использует ReferenceIndex
         ├── FoldingRangeLsifSupplier.java   # Использует FoldingRangeProvider
-        └── DocumentSymbolLsifSupplier.java # Использует DocumentSymbolProvider
+        ├── DocumentSymbolLsifSupplier.java # Использует DocumentSymbolProvider
+        ├── DocumentLinkLsifSupplier.java   # Использует DocumentLinkSupplier
+        └── MonikerLsifSupplier.java        # Генерирует monikеры для символов
 ```
 
 ### Ключевые классы
@@ -189,9 +242,13 @@ public class LsifIndexer {
     private final ServerContext serverContext;
     private final List<LsifDataSupplier> dataSuppliers;
     
-    public void index(Path srcDir, Path outputFile, OutputFormat format) {
+    public void index(Path srcDir, Path outputFile, String toolVersion) {
+        index(srcDir, outputFile, toolVersion, LsifOutputFormat.DEFAULT);
+    }
+    
+    public void index(Path srcDir, Path outputFile, String toolVersion, LsifOutputFormat format) {
         // 1. Заполнить контекст (context.populateContext)
-        // 2. Создать LsifEmitter
+        // 2. Создать LsifEmitter с указанным форматом
         // 3. Для каждого документа вызвать dataSuppliers
         // 4. Записать результат
     }
@@ -347,7 +404,7 @@ Microsoft предоставляет референсную реализацию
 
 1. **Потоковая запись** — LSIF-файлы могут быть большими, запись должна быть потоковой.
 2. **Дедупликация** — избегать повторных вершин для одних и тех же символов.
-3. **Формат вывода** — поддержка `line` (NDJSON) и `json` форматов.
+3. **Формат вывода** — поддержка `ndjson` и `json` форматов.
 4. **Порядок элементов** — вершины должны создаваться до ссылающихся на них рёбер.
 
 ## Рекомендации по реализации
