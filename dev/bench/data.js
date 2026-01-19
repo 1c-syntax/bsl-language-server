@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1768669152297,
+  "lastUpdate": 1768820801872,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34534,6 +34534,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.24710148495493",
             "extra": "mean: 69.22712016105652 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "71b549451104216d853c37c2aa70ec24b92f9ce6",
+          "message": "Merge pull request #3787 from 1c-syntax/fix/semantic-tokens-full-delta-new-lines",
+          "timestamp": "2026-01-19T11:58:12+01:00",
+          "tree_id": "667e45422e82953454d94570f14e558718ca89d4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/71b549451104216d853c37c2aa70ec24b92f9ce6"
+        },
+        "date": 1768820796447,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.75632540384929,
+            "unit": "sec",
+            "range": "stddev: 0.4859700393351214",
+            "extra": "mean: 69.75632540384929 sec\nrounds: 3"
           }
         ]
       }
