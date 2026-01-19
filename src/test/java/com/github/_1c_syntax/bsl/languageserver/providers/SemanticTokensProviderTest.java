@@ -1402,6 +1402,63 @@ class SemanticTokensProviderTest {
     assertThat(editSize).isLessThan(tokens2.getData().size());
   }
 
+  @Test
+  void deltaWithOnlyEmptyLinesInserted_shouldReturnEdits() {
+    // given - simulate inserting only empty lines (no new code)
+    // This reproduces the bug reported by user: when inserting/deleting empty lines,
+    // semantic highlighting "jumps" - tokens shift by 2+ lines
+    String bsl1 = """
+      Процедура Тест()
+        А = 1;
+      КонецПроцедуры
+      """;
+
+    String bsl2 = """
+      Процедура Тест()
+        А = 1;
+      
+      
+      КонецПроцедуры
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    // Verify original tokens structure
+    var decoded1 = decode(tokens1.getData());
+    // КонецПроцедуры should be on line 2
+    var endProcToken1 = decoded1.stream()
+      .filter(t -> t.line == 2 && t.length == 14) // КонецПроцедуры has length 14
+      .findFirst();
+    assertThat(endProcToken1).isPresent();
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // Verify modified tokens structure
+    var decoded2 = decode(tokens2.getData());
+    // КонецПроцедуры should now be on line 4 (shifted by 2 empty lines)
+    var endProcToken2 = decoded2.stream()
+      .filter(t -> t.line == 4 && t.length == 14) // КонецПроцедуры has length 14
+      .findFirst();
+    assertThat(endProcToken2).isPresent();
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - should return delta with edits, NOT empty edits
+    // The bug was that empty edits were returned, causing the client to use stale token positions
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getEdits())
+      .as("Delta should contain edits when empty lines are inserted, because token positions changed")
+      .isNotEmpty();
+  }
+
   // endregion
 
   // region Range tokens tests
