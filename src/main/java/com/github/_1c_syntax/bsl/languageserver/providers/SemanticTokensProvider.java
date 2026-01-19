@@ -391,6 +391,10 @@ public class SemanticTokensProvider {
    * кроме первого токена, у которого deltaLine смещён на lineOffset.
    * При вставке текста без перевода строки (lineOffset == 0), первый токен
    * может иметь смещённый deltaStart.
+   * <p>
+   * ВАЖНО: Граничный токен (с изменённым deltaLine при lineOffset != 0) НЕ включается
+   * в suffix match, чтобы клиент получил обновлённое значение deltaLine через edit.
+   * Это критично для случая, когда добавляются только пустые строки без нового кода.
    */
   private static int findSuffixMatchWithOffset(int[] prev,
                                                int[] curr,
@@ -447,8 +451,10 @@ public class SemanticTokensProvider {
           }
         }
       } else if (!foundBoundary && currDeltaLine - prevDeltaLine == lineOffset) {
-        // Граничный токен — deltaLine отличается ровно на lineOffset
-        suffixMatch++;
+        // Граничный токен при вставке/удалении строк.
+        // НЕ включаем его в suffix match, чтобы он попал в edit и клиент получил
+        // обновлённое значение deltaLine. Это критично для случая, когда добавляются
+        // только пустые строки без нового кода.
         foundBoundary = true;
       } else {
         // Не совпадает
