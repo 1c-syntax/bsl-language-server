@@ -38,7 +38,7 @@ class QueryNestedFieldsByDotDiagnosticTest extends AbstractDiagnosticTest<QueryN
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(13);
     assertThat(diagnostics, true)
       .hasRange(21, 3, 21, 40) //Ошибка №1
       .hasRange(22, 3, 22, 39) //Ошибка №1
@@ -51,6 +51,7 @@ class QueryNestedFieldsByDotDiagnosticTest extends AbstractDiagnosticTest<QueryN
       .hasRange(101, 7, 101, 61) //Ошибка №2
       .hasRange(102, 7, 102, 64) //Ошибка №2
       .hasRange(103, 7, 103, 65) //Ошибка №2
-      .hasRange(115, 3, 115, 82); //Ошибка №6
+      .hasRange(115, 3, 115, 82) //Ошибка №6
+      .hasRange(137, 6, 137, 40); //Ошибка №8
   }
 }
