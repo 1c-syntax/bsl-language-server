@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.lsif.LsifEmitter;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -39,16 +38,15 @@ import java.util.Map;
  * Поставщик LSIF-данных для перехода к определению (Go to Definition).
  * <p>
  * Генерирует вершины range, resultSet, definitionResult и соответствующие рёбра.
- * Обрабатывает как определения символов, так и ссылки на них (вызовы методов,
- * использования переменных), чтобы "Go to Definition" работал с любого места
- * использования символа.
+ * Для каждой ссылки из документа создаётся range и связывается с definitionResult,
+ * указывающим на целевой символ (definition).
  * <p>
- * Использует исключительно {@link ReferenceIndex#getReferencesFrom} для получения
- * всех данных — определений (OccurrenceType.DEFINITION) и ссылок (OccurrenceType.REFERENCE).
+ * Использует {@link ReferenceIndex#getReferencesFrom} для получения всех ссылок
+ * из документа. Поле {@link Reference#symbol()} уже содержит целевой символ (definition).
  *
  * @see LsifDataSupplier
  * @see ReferenceIndex
- * @see OccurrenceType
+ * @see Reference
  */
 @Component
 @RequiredArgsConstructor
@@ -59,41 +57,62 @@ public class DefinitionLsifSupplier implements LsifDataSupplier {
   /**
    * {@inheritDoc}
    * <p>
-   * Обрабатывает все записи из {@link ReferenceIndex#getReferencesFrom}:
+   * Для каждой ссылки из {@link ReferenceIndex#getReferencesFrom}:
    * <ul>
-   *   <li>{@link OccurrenceType#DEFINITION} — создаёт definitionResult для определения</li>
-   *   <li>{@link OccurrenceType#REFERENCE} — связывает ссылку с definitionResult целевого символа</li>
+   *   <li>Создаётся range для местоположения ссылки ({@link Reference#selectionRange()})</li>
+   *   <li>Создаётся resultSet и definitionResult</li>
+   *   <li>definitionResult указывает на местоположение целевого символа ({@link Reference#symbol()})</li>
    * </ul>
    */
   @Override
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     List<Long> rangeIds = new ArrayList<>();
 
-    // Cache: symbol -> definitionData for linking references to definitions
-    Map<SourceDefinedSymbol, DefinitionData> symbolDefinitions = new HashMap<>();
+    // Cache: target symbol -> resultSetId for sharing resultSets between references to same symbol
+    Map<SourceDefinedSymbol, Long> symbolResultSets = new HashMap<>();
 
-    // Get all references from this document (includes both DEFINITION and REFERENCE types)
+    // Get all references from this document
     var references = referenceIndex.getReferencesFrom(documentContext.getUri());
 
-    // First pass: process definitions to build the cache
     for (Reference reference : references) {
-      if (reference.occurrenceType() == OccurrenceType.DEFINITION) {
-        var targetSymbol = reference.getSourceDefinedSymbol();
-        if (targetSymbol.isPresent()) {
-          var data = processDefinition(reference, documentId, emitter);
-          rangeIds.add(data.rangeId);
-          symbolDefinitions.put(targetSymbol.get(), data);
-        }
+      // Reference.symbol() is the target symbol (definition)
+      var targetSymbol = reference.getSourceDefinedSymbol();
+      if (targetSymbol.isEmpty()) {
+        continue;
       }
-    }
 
-    // Second pass: process references and link them to definitions
-    for (Reference reference : references) {
-      if (reference.occurrenceType() == OccurrenceType.REFERENCE) {
-        var refRangeId = processReference(reference, documentId, symbolDefinitions, emitter);
-        if (refRangeId != null) {
-          rangeIds.add(refRangeId);
-        }
+      var target = targetSymbol.get();
+
+      // Emit range for the reference location in this document
+      var rangeId = emitter.emitRange(reference.selectionRange());
+      rangeIds.add(rangeId);
+
+      // Check if we already have a resultSet for this target symbol
+      var existingResultSetId = symbolResultSets.get(target);
+
+      if (existingResultSetId != null) {
+        // Reuse existing resultSet
+        emitter.emitNext(rangeId, existingResultSetId);
+      } else {
+        // Create new resultSet and definitionResult
+        var resultSetId = emitter.emitResultSet();
+        emitter.emitNext(rangeId, resultSetId);
+
+        var definitionResultId = emitter.emitDefinitionResult();
+        emitter.emitDefinitionEdge(resultSetId, definitionResultId);
+
+        // The definition location comes from the target symbol
+        // target.getSelectionRange() is the range of the symbol name in its definition
+        // target.getOwner().getUri() is the document where the symbol is defined
+        var targetRangeId = emitter.emitRange(target.getSelectionRange());
+
+        // Get the document ID for the target symbol's document
+        // Note: For cross-file references, we would need the actual target document ID
+        // For now, we use a simplified approach
+        emitter.emitItem(definitionResultId, List.of(targetRangeId), documentId, "definitions");
+
+        // Cache the resultSet for reuse
+        symbolResultSets.put(target, resultSetId);
       }
     }
 
@@ -102,95 +121,4 @@ public class DefinitionLsifSupplier implements LsifDataSupplier {
       emitter.emitContains(documentId, rangeIds);
     }
   }
-
-  /**
-   * Обрабатывает определение символа из Reference.
-   * Создаёт range для определения и связывает его с definitionResult.
-   *
-   * @param reference  ссылка с типом DEFINITION
-   * @param documentId идентификатор документа
-   * @param emitter    эмиттер LSIF
-   * @return данные определения для кэширования
-   */
-  private DefinitionData processDefinition(Reference reference, long documentId, LsifEmitter emitter) {
-    // Emit range vertex for the symbol definition
-    var rangeId = emitter.emitRange(reference.selectionRange());
-
-    // Emit resultSet vertex
-    var resultSetId = emitter.emitResultSet();
-
-    // Link range to resultSet
-    emitter.emitNext(rangeId, resultSetId);
-
-    // Emit definitionResult vertex
-    var definitionResultId = emitter.emitDefinitionResult();
-
-    // Link resultSet to definitionResult
-    emitter.emitDefinitionEdge(resultSetId, definitionResultId);
-
-    // Emit item edge linking definitionResult to the range (the definition itself)
-    emitter.emitItem(definitionResultId, List.of(rangeId), documentId, "definitions");
-
-    return new DefinitionData(rangeId, resultSetId, definitionResultId);
-  }
-
-  /**
-   * Обрабатывает ссылку на символ (вызов метода, использование переменной).
-   * Создаёт range для ссылки и связывает его с definitionResult целевого символа.
-   *
-   * @param reference         ссылка с типом REFERENCE
-   * @param documentId        идентификатор документа
-   * @param symbolDefinitions кэш определений символов
-   * @param emitter           эмиттер LSIF
-   * @return идентификатор range или null, если целевой символ не найден
-   */
-  private Long processReference(
-    Reference reference,
-    long documentId,
-    Map<SourceDefinedSymbol, DefinitionData> symbolDefinitions,
-    LsifEmitter emitter
-  ) {
-    // Get the target symbol this reference points to
-    var targetSymbol = reference.getSourceDefinedSymbol();
-    if (targetSymbol.isEmpty()) {
-      return null;
-    }
-
-    // Emit range for the reference location
-    var refRangeId = emitter.emitRange(reference.selectionRange());
-
-    // Try to get cached definition data for the target symbol
-    var definitionData = symbolDefinitions.get(targetSymbol.get());
-
-    if (definitionData != null) {
-      // Link reference range to the same resultSet as the definition
-      emitter.emitNext(refRangeId, definitionData.resultSetId);
-    } else {
-      // Target symbol is in another document - create new resultSet and definitionResult
-      var resultSetId = emitter.emitResultSet();
-      emitter.emitNext(refRangeId, resultSetId);
-
-      var definitionResultId = emitter.emitDefinitionResult();
-      emitter.emitDefinitionEdge(resultSetId, definitionResultId);
-
-      // The actual definition location from the target symbol
-      var target = targetSymbol.get();
-      var targetRangeId = emitter.emitRange(target.getSelectionRange());
-
-      // Note: The target document ID would be needed here for cross-file navigation
-      // For now, we emit the range but don't include it in contains
-      emitter.emitItem(definitionResultId, List.of(targetRangeId), documentId, "definitions");
-    }
-
-    return refRangeId;
-  }
-
-  /**
-   * Данные определения символа для кэширования.
-   *
-   * @param rangeId            идентификатор range определения
-   * @param resultSetId        идентификатор resultSet
-   * @param definitionResultId идентификатор definitionResult
-   */
-  private record DefinitionData(long rangeId, long resultSetId, long definitionResultId) {}
 }
