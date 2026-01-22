@@ -58,7 +58,10 @@ import org.eclipse.lsp4j.Range;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -75,6 +78,18 @@ public class LsifEmitter implements Closeable {
 
   private final AtomicLong idGenerator = new AtomicLong(1);
   private final LsifWriter writer;
+
+  /**
+   * Глобальный кэш: символ -> ID его resultSet.
+   * Используется для переиспользования resultSet между ссылками на один символ из разных документов.
+   */
+  private final Map<Object, Long> symbolToResultSetCache = new HashMap<>();
+
+  /**
+   * Глобальный кэш: URI документа -> ID его document vertex.
+   * Используется для кросс-файловых ссылок.
+   */
+  private final Map<String, Long> documentUriToIdCache = new HashMap<>();
 
   /**
    * Создаёт эмиттер с форматом NDJSON по умолчанию.
@@ -138,13 +153,44 @@ public class LsifEmitter implements Closeable {
   }
 
   /**
-   * Записывает вершину document.
+   * Записывает вершину document и кэширует её ID.
    */
   public long emitDocument(String uri, String languageId) {
     var id = nextId();
     var vertex = new DocumentVertex(id, uri, languageId);
     emit(vertex);
+    documentUriToIdCache.put(uri, id);
     return id;
+  }
+
+  /**
+   * Возвращает закэшированный ID документа по его URI.
+   *
+   * @param uri URI документа
+   * @return Optional с ID документа, если он уже был создан
+   */
+  public Optional<Long> getCachedDocumentId(String uri) {
+    return Optional.ofNullable(documentUriToIdCache.get(uri));
+  }
+
+  /**
+   * Возвращает закэшированный ID resultSet для символа.
+   *
+   * @param symbol символ для поиска в кэше
+   * @return Optional с ID resultSet, если он уже был создан
+   */
+  public Optional<Long> getCachedResultSet(Object symbol) {
+    return Optional.ofNullable(symbolToResultSetCache.get(symbol));
+  }
+
+  /**
+   * Кэширует ID resultSet для символа.
+   *
+   * @param symbol      символ
+   * @param resultSetId ID resultSet
+   */
+  public void cacheResultSet(Object symbol, long resultSetId) {
+    symbolToResultSetCache.put(symbol, resultSetId);
   }
 
   /**

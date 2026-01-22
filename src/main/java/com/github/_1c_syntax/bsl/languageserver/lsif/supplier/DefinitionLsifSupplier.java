@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.lsif.supplier;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.lsif.LsifEmitter;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -30,9 +29,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Поставщик LSIF-данных для перехода к определению (Go to Definition).
@@ -68,9 +65,6 @@ public class DefinitionLsifSupplier implements LsifDataSupplier {
   public void supply(DocumentContext documentContext, long documentId, LsifEmitter emitter) {
     List<Long> rangeIds = new ArrayList<>();
 
-    // Cache: target symbol -> resultSetId for sharing resultSets between references to same symbol
-    Map<SourceDefinedSymbol, Long> symbolResultSets = new HashMap<>();
-
     // Get all references from this document
     var references = referenceIndex.getReferencesFrom(documentContext.getUri());
 
@@ -87,12 +81,12 @@ public class DefinitionLsifSupplier implements LsifDataSupplier {
       var rangeId = emitter.emitRange(reference.selectionRange());
       rangeIds.add(rangeId);
 
-      // Check if we already have a resultSet for this target symbol
-      var existingResultSetId = symbolResultSets.get(target);
+      // Check if we already have a resultSet for this target symbol (global cache)
+      var existingResultSetId = emitter.getCachedResultSet(target);
 
-      if (existingResultSetId != null) {
+      if (existingResultSetId.isPresent()) {
         // Reuse existing resultSet
-        emitter.emitNext(rangeId, existingResultSetId);
+        emitter.emitNext(rangeId, existingResultSetId.get());
       } else {
         // Create new resultSet and definitionResult
         var resultSetId = emitter.emitResultSet();
@@ -102,17 +96,17 @@ public class DefinitionLsifSupplier implements LsifDataSupplier {
         emitter.emitDefinitionEdge(resultSetId, definitionResultId);
 
         // The definition location comes from the target symbol
-        // target.getSelectionRange() is the range of the symbol name in its definition
-        // target.getOwner().getUri() is the document where the symbol is defined
         var targetRangeId = emitter.emitRange(target.getSelectionRange());
 
         // Get the document ID for the target symbol's document
-        // Note: For cross-file references, we would need the actual target document ID
-        // For now, we use a simplified approach
-        emitter.emitItem(definitionResultId, List.of(targetRangeId), documentId, "definitions");
+        // Use cached document ID or fall back to current document
+        var targetDocumentUri = target.getOwner().getUri().toString();
+        var targetDocumentId = emitter.getCachedDocumentId(targetDocumentUri).orElse(documentId);
 
-        // Cache the resultSet for reuse
-        symbolResultSets.put(target, resultSetId);
+        emitter.emitItem(definitionResultId, List.of(targetRangeId), targetDocumentId, "definitions");
+
+        // Cache the resultSet for reuse across documents
+        emitter.cacheResultSet(target, resultSetId);
       }
     }
 
