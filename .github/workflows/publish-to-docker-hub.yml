@@ -39,6 +39,7 @@ jobs:
       - name: Tag and push Docker image (develop)
         if: github.ref == 'refs/heads/develop'
         run: |
-          docker tag 1csyntax/bsl-language-server 1csyntax/bsl-language-server:develop
+          VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+          docker tag 1csyntax/bsl-language-server:${VERSION} 1csyntax/bsl-language-server:develop
           docker push 1csyntax/bsl-language-server:develop
 
