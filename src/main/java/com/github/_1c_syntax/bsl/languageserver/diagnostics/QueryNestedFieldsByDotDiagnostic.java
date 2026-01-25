@@ -49,8 +49,14 @@ public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagno
   }
 
   @Override
+  public void enterVirtualTableParameter(SDBLParser.VirtualTableParameterContext ctx) {
+    isVirtualTable = true; // Взводим флаг при начале обработки параметров виртуальной таблицы
+    super.enterVirtualTableParameter(ctx);
+  }
+
+  @Override
   public void exitVirtualTableParameter(SDBLParser.VirtualTableParameterContext ctx) {
-    isVirtualTable = true; //Взводим флаг при начале обработки параметров виртуальной таблицы
+    isVirtualTable = false; // Сбрасываем флаг при окончании обработки параметров виртуальной таблицы
     super.exitVirtualTableParameter(ctx);
   }
 
