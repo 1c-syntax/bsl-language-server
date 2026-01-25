@@ -193,6 +193,10 @@ tasks.bootJar {
     archiveClassifier.set("exec")
 }
 
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
+    imageName.set("docker.io/1csyntax/bsl-language-server:${project.version}")
+}
+
 afterEvaluate {
     tasks.named("spotlessJavaCheck") {
         dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
