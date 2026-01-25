@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769327591117,
+  "lastUpdate": 1769335128419,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34689,6 +34689,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3972913634213389",
             "extra": "mean: 69.60483288764954 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7cefe5ad7405e7c31bcddb18326c242c7d372508",
+          "message": "Merge pull request #3793 from 1c-syntax/copilot/publish-docker-image-to-hub\n\nAdd Docker Hub publishing workflow using Spring Boot bootBuildImage",
+          "timestamp": "2026-01-25T10:50:50+01:00",
+          "tree_id": "34303495976554c67cd0f3a4c33c3ee881204862",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7cefe5ad7405e7c31bcddb18326c242c7d372508"
+        },
+        "date": 1769335125814,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.2555963198344,
+            "unit": "sec",
+            "range": "stddev: 1.9358491566556073",
+            "extra": "mean: 69.2555963198344 sec\nrounds: 3"
           }
         ]
       }
