@@ -3,6 +3,9 @@ name: Publish to Docker Hub
 on:
   release:
     types: [published]
+  push:
+    branches:
+      - develop
   workflow_dispatch:
 
 jobs:
@@ -27,5 +30,15 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      - name: Push Docker image
-        run: docker push 1csyntax/bsl-language-server --all-tags
+      - name: Tag and push Docker image (release)
+        if: github.event_name == 'release'
+        run: |
+          docker push 1csyntax/bsl-language-server --all-tags
+          docker tag 1csyntax/bsl-language-server:${{ github.event.release.tag_name }} 1csyntax/bsl-language-server:latest
+          docker push 1csyntax/bsl-language-server:latest
+      - name: Tag and push Docker image (develop)
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          docker tag 1csyntax/bsl-language-server 1csyntax/bsl-language-server:develop
+          docker push 1csyntax/bsl-language-server:develop
+
