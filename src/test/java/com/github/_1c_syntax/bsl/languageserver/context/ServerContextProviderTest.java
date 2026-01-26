@@ -50,7 +50,7 @@ class ServerContextProviderTest {
     // then
     assertThat(serverContext).isNotNull();
     assertThat(serverContext.getConfigurationRoot()).isNotNull();
-    assertThat(serverContextProvider.hasWorkspaces()).isTrue();
+    assertThat(serverContextProvider.getAllContexts()).isNotEmpty();
 
     // cleanup
     serverContextProvider.removeWorkspace(workspaceFolder);
@@ -67,7 +67,7 @@ class ServerContextProviderTest {
     serverContextProvider.removeWorkspace(workspaceFolder);
 
     // then - workspace removed, should not find contexts
-    assertThat(serverContextProvider.hasWorkspaces()).isFalse();
+    assertThat(serverContextProvider.getAllContexts()).isEmpty();
   }
 
   @Test
@@ -123,7 +123,6 @@ class ServerContextProviderTest {
     serverContextProvider.clear();
 
     // then
-    assertThat(serverContextProvider.hasWorkspaces()).isFalse();
     assertThat(serverContextProvider.getAllContexts()).isEmpty();
   }
 }

@@ -66,12 +66,10 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   @EventListener
   public void handleContextRefresh(ServerContextPopulatedEvent event) {
-    registeredAnnotations.clear();
-    serverContextProvider.getAllContexts().forEach(ctx ->
-      ctx.getDocuments()
-        .values()
-        .forEach(this::findAndRegisterAnnotation)
-    );
+    var serverContext = event.getSource();
+    serverContext.getDocuments()
+      .values()
+      .forEach(this::findAndRegisterAnnotation);
   }
 
   @EventListener
@@ -123,7 +121,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    DocumentContext documentContext = serverContextProvider.getDocumentUnsafe(uri);
+    var documentContext = serverContextProvider.getDocument(uri).orElse(null);
     if (documentContext == null || documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }

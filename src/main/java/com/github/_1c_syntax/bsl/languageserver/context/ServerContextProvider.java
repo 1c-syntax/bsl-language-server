@@ -152,17 +152,13 @@ public class ServerContextProvider {
     }
     
     // Fall back to path-based lookup for new documents
-    if (!"file".equalsIgnoreCase(documentUri.getScheme())) {
-      return Optional.empty();
-    }
-
     try {
       var documentPath = Path.of(documentUri);
       return workspaceRoots.entrySet().stream()
         .filter(entry -> documentPath.startsWith(entry.getValue()))
         .map(entry -> contexts.get(entry.getKey()))
         .findFirst();
-    } catch (UnsupportedOperationException e) {
+    } catch (UnsupportedOperationException | IllegalArgumentException e) {
       return Optional.empty();
     }
   }
@@ -174,10 +170,9 @@ public class ServerContextProvider {
    * Используется для внешних вызовов, где URI может быть не нормализован.
    *
    * @param uri строковый URI документа
-   * @return Контекст документа или {@code null}, если документ не найден
+   * @return Контекст документа, если найден
    */
-  @Nullable
-  public DocumentContext getDocumentUnsafe(String uri) {
+  public Optional<DocumentContext> getDocumentUnsafe(String uri) {
     var normalizedUri = Absolute.uri(uri);
     return getDocument(normalizedUri);
   }
@@ -189,10 +184,9 @@ public class ServerContextProvider {
    * Используется для внешних вызовов, где URI может быть не нормализован.
    *
    * @param uri URI документа (будет нормализован)
-   * @return Контекст документа или {@code null}, если документ не найден
+   * @return Контекст документа, если найден
    */
-  @Nullable
-  public DocumentContext getDocumentUnsafe(URI uri) {
+  public Optional<DocumentContext> getDocumentUnsafe(URI uri) {
     var normalizedUri = Absolute.uri(uri);
     return getDocument(normalizedUri);
   }
@@ -203,13 +197,11 @@ public class ServerContextProvider {
    * URI должен быть уже нормализован через {@link Absolute#uri(URI)}.
    *
    * @param uri нормализованный URI документа
-   * @return Контекст документа или {@code null}, если документ не найден
+   * @return Контекст документа, если найден
    */
-  @Nullable
-  public DocumentContext getDocument(URI uri) {
+  public Optional<DocumentContext> getDocument(URI uri) {
     return getServerContext(uri)
-      .map(ctx -> ctx.getDocument(uri))
-      .orElse(null);
+      .flatMap(ctx -> Optional.ofNullable(ctx.getDocument(uri)));
   }
 
   /**
@@ -250,25 +242,4 @@ public class ServerContextProvider {
     documentIndex.remove(event.getUri());
   }
 
-  /**
-   * Проверить, есть ли зарегистрированные workspaces.
-   *
-   * @return true, если зарегистрирован хотя бы один workspace
-   */
-  public boolean hasWorkspaces() {
-    return !contexts.isEmpty();
-  }
-
-  /**
-   * Проверить, открыт ли документ в каком-либо контексте.
-   *
-   * @param documentContext контекст документа
-   * @return true, если документ открыт
-   */
-  public boolean isDocumentOpened(DocumentContext documentContext) {
-    var uri = documentContext.getUri();
-    return getServerContext(uri)
-      .map(ctx -> ctx.isDocumentOpened(documentContext))
-      .orElse(false);
-  }
 }

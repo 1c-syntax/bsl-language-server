@@ -45,11 +45,12 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    DocumentContext document = serverContextProvider.getDocumentUnsafe(uri);
-    if (document == null) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(uri);
+    if (maybeDocument.isEmpty()) {
       return Optional.empty();
     }
 
+    DocumentContext document = maybeDocument.get();
     SymbolTree symbolTree = document.getSymbolTree();
     return symbolTree.getChildrenFlat()
       .stream()
