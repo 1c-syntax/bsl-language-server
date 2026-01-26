@@ -45,14 +45,22 @@ public class QueryPackageFoldingRangeSupplier implements FoldingRangeSupplier {
       .map(SDBLParser.QueryPackageContext::queries)
       .flatMap(Collection::stream)
       .map(QueryPackageFoldingRangeSupplier::toFoldingRange)
+      .filter(foldingRange -> foldingRange != null)
       .filter(foldingRange -> foldingRange.getStartLine() != foldingRange.getEndLine())
       .collect(Collectors.toList());
   }
 
   private static FoldingRange toFoldingRange(SDBLParser.QueriesContext queriesContext) {
+    var start = queriesContext.getStart();
+    var stop = queriesContext.getStop();
+    
+    if (start == null || stop == null) {
+      return null;
+    }
+    
     FoldingRange foldingRange = new FoldingRange(
-      queriesContext.getStart().getLine() - 1,
-      queriesContext.getStop().getLine() - 1
+      start.getLine() - 1,
+      stop.getLine() - 1
     );
     foldingRange.setKind(FoldingRangeKind.Region);
     return foldingRange;
