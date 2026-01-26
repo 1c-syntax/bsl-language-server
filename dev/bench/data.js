@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769344646864,
+  "lastUpdate": 1769454007805,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34751,6 +34751,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7951835532009727",
             "extra": "mean: 69.03912750879924 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "130c192a809bcd29c9167bdb763255e8eb42cf7d",
+          "message": "Merge pull request #3801 from 1c-syntax/copilot/fix-nullpointer-exception-queries-context\n\nFix NullPointerException in QueryPackageFoldingRangeSupplier for incomplete queries",
+          "timestamp": "2026-01-26T19:43:07+01:00",
+          "tree_id": "b7c83d2ca9b45205d2404bf54b10ff25d035e1b1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/130c192a809bcd29c9167bdb763255e8eb42cf7d"
+        },
+        "date": 1769454005458,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.04898858070374,
+            "unit": "sec",
+            "range": "stddev: 1.1235148633719279",
+            "extra": "mean: 69.04898858070374 sec\nrounds: 3"
           }
         ]
       }
