@@ -138,8 +138,9 @@ public class ServerContextProvider {
   /**
    * Получить контекст сервера для URI документа.
    * <p>
-   * Сначала ищет в индексе документов (O(1)), затем по пути workspace (для новых документов).
+   * Сначала ищет в индексе документов (O(1)), затем по URI workspace (для новых документов).
    * URI должен быть уже нормализован через {@link Absolute#uri(URI)}.
+   * Используется {@link Absolute#uri(URI)} для канонизации, что работает со всеми схемами URI.
    *
    * @param documentUri нормализованный URI документа
    * @return контекст сервера, содержащий документ, или пустой Optional, если не найден
@@ -151,16 +152,15 @@ public class ServerContextProvider {
       return Optional.of(indexed);
     }
     
-    // Fall back to path-based lookup for new documents
-    try {
-      var documentPath = Path.of(documentUri);
-      return workspaceRoots.entrySet().stream()
-        .filter(entry -> documentPath.startsWith(entry.getValue()))
-        .map(entry -> contexts.get(entry.getKey()))
-        .findFirst();
-    } catch (UnsupportedOperationException | IllegalArgumentException e) {
-      return Optional.empty();
-    }
+    // Fall back to URI-based lookup for new documents
+    // Use Absolute.uri for canonicalization - it handles all URI schemes including untitled:
+    var canonicalDocumentUri = Absolute.uri(documentUri);
+    var documentUriString = canonicalDocumentUri.toString();
+    
+    return contexts.keySet().stream()
+      .filter(workspaceUri -> documentUriString.startsWith(workspaceUri.toString()))
+      .findFirst()
+      .map(contexts::get);
   }
 
   /**
