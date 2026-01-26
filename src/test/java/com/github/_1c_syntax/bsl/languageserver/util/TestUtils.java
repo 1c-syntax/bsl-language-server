@@ -76,30 +76,46 @@ public class TestUtils {
   }
 
   /**
-   * Получить или создать ServerContext для директории, содержащей указанный файл.
+   * Получить ServerContext для файла.
+   * <p>
+   * Логика:
+   * - 0 контекстов в провайдере → создаёт новый для родительской директории файла
+   * - 1 контекст → возвращает его (файл будет добавлен туда)
+   * - >1 контекстов → выбрасывает исключение (тест должен явно указать контекст)
    */
   private static ServerContext getServerContextForFile(Path filePath) {
     var provider = TestApplicationContext.getBean(ServerContextProvider.class);
-    var absolutePath = Absolute.path(filePath);
-    var parentDir = absolutePath.getParent();
-    if (parentDir == null) {
-      parentDir = absolutePath;
-    }
+    var allContexts = provider.getAllContexts();
     
-    // Check if workspace already registered for this path
-    var existingContext = provider.getServerContext(absolutePath.toUri());
-    if (existingContext.isPresent()) {
-      return existingContext.get();
+    if (allContexts.isEmpty()) {
+      // No contexts registered - create new one for parent directory
+      var absolutePath = Absolute.path(filePath);
+      var parentDir = absolutePath.getParent();
+      if (parentDir == null) {
+        parentDir = absolutePath;
+      }
+      var workspaceFolder = new WorkspaceFolder(parentDir.toUri().toString(), "test-" + parentDir.getFileName());
+      return provider.addWorkspace(workspaceFolder);
+    } else if (allContexts.size() == 1) {
+      // Single context - use it
+      return allContexts.iterator().next();
+    } else {
+      // Multiple contexts - test must explicitly specify which one to use
+      throw new IllegalStateException(
+        "Multiple ServerContexts registered. Use getDocumentContextFromFile(path, serverContext) to specify target context."
+      );
     }
-    
-    // Register new workspace for parent directory
-    var workspaceFolder = new WorkspaceFolder(parentDir.toUri().toString(), "test-" + parentDir.getFileName());
-    return provider.addWorkspace(workspaceFolder);
   }
 
+  /**
+   * Загрузить файл и добавить его в ServerContext.
+   * <p>
+   * Если контекстов нет — создаёт новый.
+   * Если один контекст — добавляет туда.
+   * Если больше одного — выбрасывает исключение (используйте перегрузку с явным контекстом).
+   */
   @SneakyThrows
   public static DocumentContext getDocumentContextFromFile(String filePath) {
-
     String fileContent = FileUtils.readFileToString(
       new File(filePath),
       StandardCharsets.UTF_8
@@ -108,6 +124,20 @@ public class TestUtils {
     var path = Path.of(filePath);
     var context = getServerContextForFile(path);
     return getDocumentContext(path.toUri(), fileContent, context);
+  }
+
+  /**
+   * Загрузить файл и добавить его в указанный ServerContext.
+   */
+  @SneakyThrows
+  public static DocumentContext getDocumentContextFromFile(String filePath, ServerContext serverContext) {
+    String fileContent = FileUtils.readFileToString(
+      new File(filePath),
+      StandardCharsets.UTF_8
+    );
+
+    var path = Path.of(filePath);
+    return getDocumentContext(path.toUri(), fileContent, serverContext);
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent) {

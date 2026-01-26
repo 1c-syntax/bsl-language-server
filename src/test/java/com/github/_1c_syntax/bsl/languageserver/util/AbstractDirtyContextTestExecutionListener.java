@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import org.springframework.core.Ordered;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestContext;
@@ -37,6 +38,14 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
   }
 
   protected static void dirtyContext(TestContext testContext) {
+    // Clear ServerContextProvider to remove all registered workspaces between tests
+    try {
+      var provider = testContext.getApplicationContext().getBean(ServerContextProvider.class);
+      provider.clear();
+    } catch (Exception e) {
+      // Ignore if provider not available yet
+    }
+    
     testContext.markApplicationContextDirty(DirtiesContext.HierarchyMode.EXHAUSTIVE);
     testContext.setAttribute(DependencyInjectionTestExecutionListener.REINJECT_DEPENDENCIES_ATTRIBUTE, Boolean.TRUE);
   }

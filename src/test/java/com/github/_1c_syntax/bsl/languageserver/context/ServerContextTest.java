@@ -104,7 +104,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   @Test
   void testPopulateContext() {
     // given
-    initServerContext(PATH_TO_METADATA);
+    initServerContext(PATH_TO_METADATA, false);
     assertThat(context.getDocuments()).isEmpty();
 
     // when

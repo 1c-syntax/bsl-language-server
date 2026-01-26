@@ -116,6 +116,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода addDocument.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* addDocument(..))")
+  public void isAddDocumentCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода removeDocument.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* removeDocument(..))")

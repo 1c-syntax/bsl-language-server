@@ -23,11 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -53,6 +56,7 @@ public class ServerContextProvider {
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
+  private final Map<URI, ServerContext> documentIndex = new ConcurrentHashMap<>();
 
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextProvider,
@@ -70,6 +74,17 @@ public class ServerContextProvider {
    */
   public ServerContext addWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
+    return addWorkspace(uri);
+  }
+
+  /**
+   * Добавить workspace по URI и создать для нее контекст сервера.
+   *
+   * @param workspaceUri URI корня workspace
+   * @return созданный контекст сервера
+   */
+  public ServerContext addWorkspace(URI workspaceUri) {
+    var uri = Absolute.uri(workspaceUri);
     
     if (contexts.containsKey(uri)) {
       LOGGER.debug("Workspace {} already exists", uri);
@@ -108,15 +123,35 @@ public class ServerContextProvider {
   }
 
   /**
+   * Получить контекст сервера для URI документа (с нормализацией URI).
+   * <p>
+   * Используется для внешних вызовов, где URI может быть не нормализован.
+   *
+   * @param documentUri URI документа (будет нормализован)
+   * @return контекст сервера, содержащий документ, или пустой Optional, если не найден
+   */
+  public Optional<ServerContext> getServerContextUnsafe(URI documentUri) {
+    var normalizedUri = Absolute.uri(documentUri);
+    return getServerContext(normalizedUri);
+  }
+
+  /**
    * Получить контекст сервера для URI документа.
    * <p>
-   * Основной метод для маршрутизации документа к контексту. Находит соответствующий
-   * контекст сервера на основе пути документа.
+   * Сначала ищет в индексе документов (O(1)), затем по пути workspace (для новых документов).
+   * URI должен быть уже нормализован через {@link Absolute#uri(URI)}.
    *
-   * @param documentUri URI документа
+   * @param documentUri нормализованный URI документа
    * @return контекст сервера, содержащий документ, или пустой Optional, если не найден
    */
   public Optional<ServerContext> getServerContext(URI documentUri) {
+    // O(1) lookup in document index
+    var indexed = documentIndex.get(documentUri);
+    if (indexed != null) {
+      return Optional.of(indexed);
+    }
+    
+    // Fall back to path-based lookup for new documents
     if (!"file".equalsIgnoreCase(documentUri.getScheme())) {
       return Optional.empty();
     }
@@ -144,22 +179,36 @@ public class ServerContextProvider {
   @Nullable
   public DocumentContext getDocumentUnsafe(String uri) {
     var normalizedUri = Absolute.uri(uri);
-    return getDocumentUnsafe(normalizedUri);
+    return getDocument(normalizedUri);
   }
 
   /**
-   * Получить документ по URI.
+   * Получить документ по URI с нормализацией.
    * <p>
    * Ищет документ во всех зарегистрированных контекстах.
+   * Используется для внешних вызовов, где URI может быть не нормализован.
    *
-   * @param uri URI документа
+   * @param uri URI документа (будет нормализован)
    * @return Контекст документа или {@code null}, если документ не найден
    */
   @Nullable
   public DocumentContext getDocumentUnsafe(URI uri) {
     var normalizedUri = Absolute.uri(uri);
-    return getServerContext(normalizedUri)
-      .map(ctx -> ctx.getDocument(normalizedUri))
+    return getDocument(normalizedUri);
+  }
+
+  /**
+   * Получить документ по нормализованному URI.
+   * <p>
+   * URI должен быть уже нормализован через {@link Absolute#uri(URI)}.
+   *
+   * @param uri нормализованный URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocument(URI uri) {
+    return getServerContext(uri)
+      .map(ctx -> ctx.getDocument(uri))
       .orElse(null);
   }
 
@@ -179,7 +228,26 @@ public class ServerContextProvider {
     contexts.values().forEach(ServerContext::clear);
     contexts.clear();
     workspaceRoots.clear();
+    documentIndex.clear();
     LOGGER.info("Cleared all workspaces");
+  }
+
+  /**
+   * Обработчик события добавления документа в контекст.
+   * Добавляет документ в индекс для быстрого поиска.
+   */
+  @EventListener
+  public void onDocumentAdded(ServerContextDocumentAddedEvent event) {
+    documentIndex.put(event.getUri(), event.getSource());
+  }
+
+  /**
+   * Обработчик события удаления документа из контекста.
+   * Удаляет документ из индекса.
+   */
+  @EventListener
+  public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    documentIndex.remove(event.getUri());
   }
 
   /**

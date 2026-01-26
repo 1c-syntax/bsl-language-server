@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -85,6 +86,11 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
   public void serverContextPopulated(JoinPoint joinPoint, Collection<File> files) {
     publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));
+  }
+
+  @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isAddDocumentCall() && args(uri)")
+  public void serverContextAddDocument(JoinPoint joinPoint, URI uri) {
+    publishEvent(new ServerContextDocumentAddedEvent((ServerContext) joinPoint.getThis(), uri));
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isRemoveDocumentCall() && args(uri)")
