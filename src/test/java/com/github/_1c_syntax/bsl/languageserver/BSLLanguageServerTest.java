@@ -145,4 +145,68 @@ class BSLLanguageServerTest {
       .hasMessage("0");
   }
 
+  @Test
+  @SuppressWarnings("deprecation")
+  void initializeWithRootUri() throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+    params.setRootUri(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    // workspaceFolders not set, should fallback to rootUri
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
+      .isEqualTo(TextDocumentSyncKind.Incremental);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void initializeWithRootPath() throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+    params.setRootPath(Absolute.path(PATH_TO_METADATA).toString());
+    // workspaceFolders and rootUri not set, should fallback to rootPath
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
+      .isEqualTo(TextDocumentSyncKind.Incremental);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void initializeWithEmptyWorkspaceFoldersAndRootUri() throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+    params.setWorkspaceFolders(List.of()); // Empty list
+    params.setRootUri(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    // Empty workspaceFolders, should fallback to rootUri
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
+      .isEqualTo(TextDocumentSyncKind.Incremental);
+  }
+
+  @Test
+  void initializeWithNoWorkspaceInfo() throws ExecutionException, InterruptedException {
+    // given
+    InitializeParams params = new InitializeParams();
+    // No workspaceFolders, rootUri, or rootPath - should handle gracefully
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    // Should not throw, but no workspace will be configured
+    assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
+      .isEqualTo(TextDocumentSyncKind.Incremental);
+  }
+
 }
