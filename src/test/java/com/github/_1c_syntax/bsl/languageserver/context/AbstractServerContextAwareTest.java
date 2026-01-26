@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -30,12 +31,18 @@ import java.nio.file.Path;
 
 @SpringBootTest
 public abstract class AbstractServerContextAwareTest {
+
+  private static final String TEST_WORKSPACE_NAME = "test-workspace";
+
   @Autowired
+  protected ServerContextProvider serverContextProvider;
+
   protected ServerContext context;
 
   @PostConstruct
   public void abstractServerContextAwareTestInit() {
-    context.clear();
+    // Clear previous state
+    serverContextProvider.clear();
   }
 
   protected void initServerContext(String path) {
@@ -44,6 +51,9 @@ public abstract class AbstractServerContextAwareTest {
   }
 
   protected void initServerContext(Path configurationRoot) {
+    // Register workspace and get context from provider
+    var workspaceFolder = new WorkspaceFolder(configurationRoot.toUri().toString(), TEST_WORKSPACE_NAME);
+    context = serverContextProvider.addWorkspace(workspaceFolder);
     context.setConfigurationRoot(configurationRoot);
     context.populateContext();
   }

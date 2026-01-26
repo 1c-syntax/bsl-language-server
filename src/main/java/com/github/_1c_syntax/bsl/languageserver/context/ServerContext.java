@@ -388,6 +388,9 @@ public class ServerContext {
 
   private DocumentContext createDocumentContext(URI uri) {
     var documentContext = documentContextProvider.getObject(uri);
+    // Set this ServerContext instance explicitly, because autowired ServerContext 
+    // in DocumentContext gets a new prototype instance, not the one registered in ServerContextProvider
+    documentContext.setContext(this);
 
     documents.put(uri, documentContext);
     addMdoRefByUri(uri, documentContext);

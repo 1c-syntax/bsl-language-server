@@ -27,31 +27,24 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class ServerContextTest {
+class ServerContextTest extends AbstractServerContextAwareTest {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
-  @Autowired
-  private ServerContext serverContext;
-
   @Test
   void testConfigurationMetadata() {
-    Path path = Absolute.path(PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(path);
-    var configurationMetadata = serverContext.getConfiguration();
+    initServerContext(PATH_TO_METADATA);
+    var configurationMetadata = context.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
 
@@ -69,32 +62,31 @@ class ServerContextTest {
 
   @Test
   void testMdoRefs() {
-    var path = Absolute.path(PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(path);
+    initServerContext(PATH_TO_METADATA);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
 
-    var documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
-    assertThat(serverContext.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
+    var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
+    assertThat(context.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
       .isPresent()
       .get()
       .isEqualTo(documentContext);
-    assertThat(serverContext.getDocuments(mdoRefCommonModule))
+    assertThat(context.getDocuments(mdoRefCommonModule))
       .hasSize(1)
       .containsKey(documentContext.getModuleType())
       .containsValue(documentContext);
 
-    addDocumentContext(serverContext, PATH_TO_CATALOG_MODULE_FILE);
-    addDocumentContext(serverContext, PATH_TO_CATALOG_FILE);
+    addDocumentContext(context, PATH_TO_CATALOG_MODULE_FILE);
+    addDocumentContext(context, PATH_TO_CATALOG_FILE);
 
     // для проверки на дубль
-    addDocumentContext(serverContext, PATH_TO_CATALOG_FILE);
+    addDocumentContext(context, PATH_TO_CATALOG_FILE);
 
-    assertThat(serverContext.getDocuments("Catalog.Справочник1"))
+    assertThat(context.getDocuments("Catalog.Справочник1"))
       .hasSize(2)
       .containsKeys(ModuleType.ManagerModule, ModuleType.ObjectModule);
 
-    serverContext.removeDocument(Absolute.uri(new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE)));
-    assertThat(serverContext.getDocument(mdoRefCommonModule, ModuleType.CommonModule))
+    context.removeDocument(Absolute.uri(new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE)));
+    assertThat(context.getDocument(mdoRefCommonModule, ModuleType.CommonModule))
       .isNotPresent();
   }
 
@@ -102,8 +94,8 @@ class ServerContextTest {
   void testErrorConfigurationMetadata() {
     Path path = Absolute.path(PATH_TO_METADATA + "test");
 
-    serverContext.setConfigurationRoot(path);
-    var configurationMetadata = serverContext.getConfiguration();
+    initServerContext(path);
+    var configurationMetadata = context.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
     assertThat(configurationMetadata.getModulesByType()).isEmpty();
@@ -112,16 +104,14 @@ class ServerContextTest {
   @Test
   void testPopulateContext() {
     // given
-    Path path = Absolute.path(PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(path);
-
-    assertThat(serverContext.getDocuments()).isEmpty();
+    initServerContext(PATH_TO_METADATA);
+    assertThat(context.getDocuments()).isEmpty();
 
     // when
-    serverContext.populateContext();
+    context.populateContext();
 
     // then
-    assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
+    assertThat(context.getDocuments()).hasSizeGreaterThan(0);
   }
 
   private DocumentContext addDocumentContext(ServerContext serverContext, String path) {

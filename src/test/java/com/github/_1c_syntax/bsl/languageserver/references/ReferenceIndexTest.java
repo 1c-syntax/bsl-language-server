@@ -21,43 +21,36 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class ReferenceIndexTest {
+class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ReferenceIndex referenceIndex;
 
-  @Autowired
-  private ServerContext serverContext;
-
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndex.bsl";
 
-  @PostConstruct
+  @BeforeEach
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
-    serverContext.populateContext();
+    initServerContext(PATH_TO_METADATA);
   }
 
   @Test
@@ -82,7 +75,7 @@ class ReferenceIndexTest {
   @Test
   void getReferencesToLocalMethodFromFormModule() {
     // given
-    var documentContext = serverContext
+    var documentContext = context
       .getDocument("Catalog.Справочник1.Form.ФормаСписка", ModuleType.FormModule)
       .orElseThrow();
     var method = documentContext.getSymbolTree().getMethodSymbol("ЛокальнаяПроцедура").orElseThrow();
@@ -125,7 +118,7 @@ class ReferenceIndexTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -146,7 +139,7 @@ class ReferenceIndexTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -167,7 +160,7 @@ class ReferenceIndexTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_Присваивание").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -205,7 +198,7 @@ class ReferenceIndexTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_ВызовЧерезПолноеИмяОбъекта").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var commonModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -273,11 +266,11 @@ class ReferenceIndexTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var localMethodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
 
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var commonModuleMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
     var commonModuleSymbol = commonModuleContext.getSymbolTree().getModule();
 
-    var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var managerModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri().toString();
@@ -310,10 +303,10 @@ class ReferenceIndexTest {
   @Test
   void testGetReferencesFromCommonModule() {
     // given
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var commonModuleMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("Тест").orElseThrow();
 
-    var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var managerModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = commonModuleContext.getUri().toString();

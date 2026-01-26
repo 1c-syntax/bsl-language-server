@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -58,7 +59,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReferenceIndex {
 
-  private final ServerContext serverContext;
+  private final ServerContextProvider serverContextProvider;
   private final StringInterner stringInterner;
 
   private final LocationRepository locationRepository;
@@ -278,21 +279,29 @@ public class ReferenceIndex {
     var range = symbolOccurrence.location().getRange();
     var occurrenceType = symbolOccurrence.occurrenceType();
 
-    return getSourceDefinedSymbol(symbolOccurrence.symbol())
+    var serverContextOpt = serverContextProvider.getServerContext(uri);
+    if (serverContextOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    var serverContext = serverContextOpt.get();
+
+    return getSourceDefinedSymbol(serverContext, symbolOccurrence.symbol())
       .map((SourceDefinedSymbol symbol) -> {
-        var from = getFromSymbol(symbolOccurrence);
+        var from = getFromSymbol(serverContext, symbolOccurrence);
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }
 
-  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(Symbol symbolEntity) {
+  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ServerContext serverContext, Symbol symbolEntity) {
     var mdoRef = symbolEntity.mdoRef();
     var moduleType = symbolEntity.moduleType();
     var symbolName = symbolEntity.symbolName();
 
+    var documentOpt = serverContext.getDocument(mdoRef, moduleType);
+
     if (symbolEntity.symbolKind() == SymbolKind.Variable) {
-      return serverContext.getDocument(mdoRef, moduleType)
+      return documentOpt
         .map(DocumentContext::getSymbolTree)
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.scopeName())
           .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
@@ -300,17 +309,17 @@ public class ReferenceIndex {
     }
 
     if (symbolEntity.symbolKind() == SymbolKind.Module) {
-      return serverContext.getDocument(mdoRef, moduleType)
+      return documentOpt
         .map(DocumentContext::getSymbolTree)
         .map(SymbolTree::getModule);
     }
 
-    return serverContext.getDocument(mdoRef, moduleType)
+    return documentOpt
       .map(DocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 
-  private SourceDefinedSymbol getFromSymbol(SymbolOccurrence symbolOccurrence) {
+  private SourceDefinedSymbol getFromSymbol(ServerContext serverContext, SymbolOccurrence symbolOccurrence) {
     var uri = symbolOccurrence.location().uri();
     var position = symbolOccurrence.location().getStart();
 

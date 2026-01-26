@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -61,15 +61,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
-  private final ServerContext serverContext;
+  private final ServerContextProvider serverContextProvider;
   private final Map<String, AnnotationSymbol> registeredAnnotations = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleContextRefresh(ServerContextPopulatedEvent event) {
     registeredAnnotations.clear();
-    serverContext.getDocuments()
-      .values()
-      .forEach(this::findAndRegisterAnnotation);
+    serverContextProvider.getAllContexts().forEach(ctx ->
+      ctx.getDocuments()
+        .values()
+        .forEach(this::findAndRegisterAnnotation)
+    );
   }
 
   @EventListener
@@ -121,7 +123,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    DocumentContext documentContext = serverContext.getDocument(uri);
+    DocumentContext documentContext = serverContextProvider.getDocumentUnsafe(uri);
     if (documentContext == null || documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }

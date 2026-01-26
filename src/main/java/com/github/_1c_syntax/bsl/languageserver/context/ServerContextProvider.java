@@ -144,6 +144,20 @@ public class ServerContextProvider {
   @Nullable
   public DocumentContext getDocumentUnsafe(String uri) {
     var normalizedUri = Absolute.uri(uri);
+    return getDocumentUnsafe(normalizedUri);
+  }
+
+  /**
+   * Получить документ по URI.
+   * <p>
+   * Ищет документ во всех зарегистрированных контекстах.
+   *
+   * @param uri URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocumentUnsafe(URI uri) {
+    var normalizedUri = Absolute.uri(uri);
     return getServerContext(normalizedUri)
       .map(ctx -> ctx.getDocument(normalizedUri))
       .orElse(null);

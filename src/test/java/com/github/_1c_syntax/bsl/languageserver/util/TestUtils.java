@@ -23,12 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.utils.Absolute;
-import org.jspecify.annotations.Nullable;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.springframework.beans.factory.ObjectProvider;
+import org.eclipse.lsp4j.WorkspaceFolder;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.net.URI;
@@ -39,14 +40,61 @@ public class TestUtils {
 
   public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake-uri.bsl");
   public static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+  private static final String TEST_WORKSPACE_NAME = "test-metadata-workspace";
 
   /**
-   * Получить новый экземпляр ServerContext для тестов.
-   * Использует ObjectProvider для получения prototype scope bean.
+   * Получить ServerContext, зарегистрированный в ServerContextProvider.
+   * Регистрирует workspace для PATH_TO_METADATA если ещё не зарегистрирован.
+   *
+   * @return ServerContext, связанный с тестовым workspace
    */
   private static ServerContext getServerContext() {
-    ObjectProvider<ServerContext> provider = TestApplicationContext.getBeanProvider(ServerContext.class);
-    return provider.getObject();
+    var provider = TestApplicationContext.getBean(ServerContextProvider.class);
+    var metadataPath = Absolute.path(PATH_TO_METADATA);
+    
+    // Check if workspace already registered
+    var existingContext = provider.getServerContext(metadataPath.toUri());
+    if (existingContext.isPresent()) {
+      return existingContext.get();
+    }
+    
+    // Register new workspace
+    var workspaceFolder = new WorkspaceFolder(metadataPath.toUri().toString(), TEST_WORKSPACE_NAME);
+    var context = provider.addWorkspace(workspaceFolder);
+    context.setConfigurationRoot(metadataPath);
+    return context;
+  }
+
+  /**
+   * Получить ServerContext, зарегистрированный в ServerContextProvider.
+   * Регистрирует workspace для PATH_TO_METADATA если ещё не зарегистрирован.
+   *
+   * @return ServerContext, связанный с тестовым workspace
+   */
+  public static ServerContext getRegisteredServerContext() {
+    return getServerContext();
+  }
+
+  /**
+   * Получить или создать ServerContext для директории, содержащей указанный файл.
+   */
+  private static ServerContext getServerContextForFile(Path filePath) {
+    var provider = TestApplicationContext.getBean(ServerContextProvider.class);
+    var absolutePath = Absolute.path(filePath);
+    var parentDir = absolutePath.getParent();
+    if (parentDir == null) {
+      parentDir = absolutePath;
+    }
+    
+    // Check if workspace already registered for this path
+    var existingContext = provider.getServerContext(absolutePath.toUri());
+    if (existingContext.isPresent()) {
+      return existingContext.get();
+    }
+    
+    // Register new workspace for parent directory
+    var workspaceFolder = new WorkspaceFolder(parentDir.toUri().toString(), "test-" + parentDir.getFileName());
+    return provider.addWorkspace(workspaceFolder);
   }
 
   @SneakyThrows
@@ -57,11 +105,35 @@ public class TestUtils {
       StandardCharsets.UTF_8
     );
 
-    return getDocumentContext(Path.of(filePath).toUri(), fileContent);
+    var path = Path.of(filePath);
+    var context = getServerContextForFile(path);
+    return getDocumentContext(path.toUri(), fileContent, context);
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent) {
-    return getDocumentContext(uri, fileContent, getServerContext());
+    return getDocumentContext(uri, fileContent, getServerContextForUri(uri));
+  }
+
+  /**
+   * Получить или создать ServerContext для URI.
+   */
+  private static ServerContext getServerContextForUri(URI uri) {
+    var provider = TestApplicationContext.getBean(ServerContextProvider.class);
+    
+    // Check if workspace already registered for this URI
+    var existingContext = provider.getServerContext(uri);
+    if (existingContext.isPresent()) {
+      return existingContext.get();
+    }
+    
+    // For file URIs, register workspace for parent directory
+    if ("file".equalsIgnoreCase(uri.getScheme())) {
+      var path = Path.of(uri);
+      return getServerContextForFile(path);
+    }
+    
+    // For non-file URIs (like fake URIs), use default metadata workspace
+    return getServerContext();
   }
 
   public static DocumentContext getDocumentContext(String fileContent) {
