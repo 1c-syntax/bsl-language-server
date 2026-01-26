@@ -55,6 +55,7 @@ public class QueryPackageFoldingRangeSupplier implements FoldingRangeSupplier {
     var start = queriesContext.getStart();
     var stop = queriesContext.getStop();
     
+    // Handle incomplete or malformed queries where start/stop tokens may be null
     if (start == null || stop == null) {
       return null;
     }
