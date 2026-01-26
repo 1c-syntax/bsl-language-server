@@ -153,9 +153,8 @@ public class ServerContextProvider {
     }
     
     // Fall back to URI-based lookup for new documents
-    // Use Absolute.uri for canonicalization - it handles all URI schemes including untitled:
-    var canonicalDocumentUri = Absolute.uri(documentUri);
-    var documentUriString = canonicalDocumentUri.toString();
+    // URI is already normalized by caller
+    var documentUriString = documentUri.toString();
     
     return contexts.keySet().stream()
       .filter(workspaceUri -> documentUriString.startsWith(workspaceUri.toString()))
