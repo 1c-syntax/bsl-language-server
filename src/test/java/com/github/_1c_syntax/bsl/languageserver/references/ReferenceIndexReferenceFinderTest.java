@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -61,7 +61,7 @@ class ReferenceIndexReferenceFinderTest {
 
   @PostConstruct
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
+    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
     serverContext.populateContext();
   }
 
@@ -106,10 +106,10 @@ class ReferenceIndexReferenceFinderTest {
     var reference = referenceFinder.findReference(uri, position).orElseThrow();
 
     // then
-    assertThat(reference.getUri()).isEqualTo(uri);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(2, 22, 41));
+    assertThat(reference.uri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(2, 22, 41));
   }
 
   @Test
@@ -127,10 +127,10 @@ class ReferenceIndexReferenceFinderTest {
     var reference = referenceFinder.findReference(uri, position).orElseThrow();
 
     // then
-    assertThat(reference.getUri()).isEqualTo(uri);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(3, 38, 57));
+    assertThat(reference.uri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(3, 38, 57));
   }
 
   @Test

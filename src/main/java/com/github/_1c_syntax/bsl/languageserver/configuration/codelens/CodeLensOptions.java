@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -38,7 +38,7 @@ import java.util.Map;
  * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
  */
 @Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeLensOptions {

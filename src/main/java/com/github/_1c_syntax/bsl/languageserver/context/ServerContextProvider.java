@@ -133,6 +133,23 @@ public class ServerContextProvider {
   }
 
   /**
+   * Получить документ по строковому URI с нормализацией.
+   * <p>
+   * Ищет документ во всех зарегистрированных контекстах.
+   * Используется для внешних вызовов, где URI может быть не нормализован.
+   *
+   * @param uri строковый URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocumentUnsafe(String uri) {
+    var normalizedUri = Absolute.uri(uri);
+    return getServerContext(normalizedUri)
+      .map(ctx -> ctx.getDocument(normalizedUri))
+      .orElse(null);
+  }
+
+  /**
    * Получить все контексты серверов.
    *
    * @return неизменяемая коллекция всех контекстов серверов
@@ -158,5 +175,18 @@ public class ServerContextProvider {
    */
   public boolean hasWorkspaces() {
     return !contexts.isEmpty();
+  }
+
+  /**
+   * Проверить, открыт ли документ в каком-либо контексте.
+   *
+   * @param documentContext контекст документа
+   * @return true, если документ открыт
+   */
+  public boolean isDocumentOpened(DocumentContext documentContext) {
+    var uri = documentContext.getUri();
+    return getServerContext(uri)
+      .map(ctx -> ctx.isDocumentOpened(documentContext))
+      .orElse(false);
   }
 }

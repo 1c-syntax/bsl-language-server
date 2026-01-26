@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.Docum
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
@@ -55,7 +56,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
+import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 /**
  * Корневой класс конфигурации BSL Language Server.
@@ -66,7 +67,7 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @Data
 @Component
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -101,6 +102,10 @@ public class LanguageServerConfiguration {
   @JsonProperty("references")
   @Setter(value = AccessLevel.NONE)
   private ReferencesOptions referencesOptions = new ReferencesOptions();
+
+  @JsonProperty("semanticTokens")
+  @Setter(value = AccessLevel.NONE)
+  private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
@@ -217,5 +222,6 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
     PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
+    PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
   }
 }

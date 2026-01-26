@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,13 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -53,13 +53,13 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
     var uri = documentContext.getUri();
 
     referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
-      .filter(reference -> reference.getSymbol().isDeprecated())
-      .filter(reference -> !reference.getFrom().isDeprecated())
+      .filter(reference -> reference.symbol().isDeprecated())
+      .filter(reference -> !reference.from().isDeprecated())
       .forEach((Reference reference) -> {
-        var deprecatedSymbol = reference.getSymbol();
+        var deprecatedSymbol = reference.symbol();
         var deprecationInfo = getDeprecationInfo(deprecatedSymbol);
         var message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
-        diagnosticStorage.addDiagnostic(reference.getSelectionRange(), message);
+        diagnosticStorage.addDiagnostic(reference.selectionRange(), message);
       });
   }
 

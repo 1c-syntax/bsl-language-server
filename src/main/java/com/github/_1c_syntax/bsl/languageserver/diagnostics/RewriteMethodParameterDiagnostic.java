@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -71,8 +71,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .flatMap(RewriteMethodParameterDiagnostic::getParametersByValue)
       .flatMap(pair -> getVariableByParameter(pair.getLeft(), pair.getRight()))
       .map(this::isOverwrited)
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .forEach(variableSymbolReferenceListTriple -> fireIssue(variableSymbolReferenceListTriple.getLeft(),
         variableSymbolReferenceListTriple.getMiddle(),
         variableSymbolReferenceListTriple.getRight()));
@@ -104,7 +103,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   private List<Reference> getSortedReferencesByLocation(VariableSymbol variable) {
     final var references = referenceIndex.getReferencesTo(variable);
     return references.stream()
-      .sorted((o1, o2) -> compare(o1.getSelectionRange(), o2.getSelectionRange()))
+      .sorted((o1, o2) -> compare(o1.selectionRange(), o2.selectionRange()))
       .collect(Collectors.toList());
   }
 
@@ -127,7 +126,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   }
 
   private Optional<Reference> isOverwrited(List<Reference> references) {
-    if (references.isEmpty() || references.get(0).getOccurrenceType() != OccurrenceType.DEFINITION) {
+    if (references.isEmpty() || references.get(0).occurrenceType() != OccurrenceType.DEFINITION) {
       return Optional.empty();
     }
 
@@ -147,7 +146,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
 
   private Optional<RuleNode> getRefContextInsideDefAssign(Reference defRef, Reference nextRef) {
     final var defNode = Trees.findTerminalNodeContainsPosition(documentContext.getAst(),
-      defRef.getSelectionRange().getStart());
+      defRef.selectionRange().getStart());
     final var assignment = defNode
       .map(TerminalNode::getParent)
       .filter(BSLParser.LValueContext.class::isInstance)
@@ -156,7 +155,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(BSLParser.AssignmentContext.class::cast);
 
     return assignment.flatMap(assignContext ->
-        Trees.findTerminalNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
+        Trees.findTerminalNodeContainsPosition(assignContext, nextRef.selectionRange().getStart()))
       .map(TerminalNode::getParent);
   }
 
@@ -177,7 +176,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     var refsForIssue = references.stream()
       .map(reference -> RelatedInformation.create(
         documentContext.getUri(),
-        reference.getSelectionRange(),
+        reference.selectionRange(),
         "+1"
       )).toList();
     var resultRefs = new ArrayList<DiagnosticRelatedInformation>();
@@ -187,6 +186,6 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       "0"));
     resultRefs.addAll(refsForIssue);
 
-    diagnosticStorage.addDiagnostic(nodeForIssue.getSelectionRange(), info.getMessage(variable.getName()), resultRefs);
+    diagnosticStorage.addDiagnostic(nodeForIssue.selectionRange(), info.getMessage(variable.getName()), resultRefs);
   }
 }

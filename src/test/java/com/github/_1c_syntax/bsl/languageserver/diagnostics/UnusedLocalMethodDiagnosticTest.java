@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -112,7 +111,7 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   }
 
   private void getObjectModuleDocumentContext() {
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
     when(documentContext.getModuleType()).thenReturn(ModuleType.ObjectModule);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
@@ -122,7 +121,7 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   void getDocumentContextFromFile(Path testFile) {
 
     Path path = Absolute.path(PATH_TO_METADATA);
-    Path moduleFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path moduleFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
     var configuration = context.getConfiguration();

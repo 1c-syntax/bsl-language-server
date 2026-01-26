@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -100,7 +100,7 @@ public class Resources {
    * @return Содержимое ресурса.
    */
   public static String getResourceString(Locale locale, Class<?> clazz, String key, Object... args) {
-    var resourceString = String.format(getResourceString(locale, clazz, key), args);
+    var resourceString = getResourceString(locale, clazz, key).formatted(args);
     return stringInterner.intern(resourceString);
   }
 }

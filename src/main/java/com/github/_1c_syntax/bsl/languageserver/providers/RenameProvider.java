@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -78,7 +78,7 @@ public final class RenameProvider {
         .flatMap(Collection::stream),
       sourceDefinedSymbol
         .stream().map(RenameProvider::referenceOf)
-    ).collect(Collectors.groupingBy(ref -> ref.getUri().toString(), getTexEdits(params)));
+    ).collect(Collectors.groupingBy(ref -> ref.uri().toString(), getTexEdits(params)));
 
     return new WorkspaceEdit(changes);
   }
@@ -102,13 +102,13 @@ public final class RenameProvider {
   public @Nullable Range getPrepareRename(DocumentContext documentContext, TextDocumentPositionParams params) {
     return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
       .filter(Reference::isSourceDefinedSymbolReference)
-      .map(Reference::getSelectionRange)
+      .map(Reference::selectionRange)
       .orElse(null);
   }
 
   private static Collector<Reference, ?, List<TextEdit>> getTexEdits(RenameParams params) {
     return Collectors.mapping(
-      Reference::getSelectionRange,
+      Reference::selectionRange,
       Collectors.mapping(range -> newTextEdit(params, range), Collectors.toList())
     );
   }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -89,6 +90,11 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isRemoveDocumentCall() && args(uri)")
   public void serverContextRemoveDocument(JoinPoint joinPoint, URI uri) {
     publishEvent(new ServerContextDocumentRemovedEvent((ServerContext) joinPoint.getThis(), uri));
+  }
+
+  @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isCloseDocumentCall() && args(documentContext)")
+  public void serverContextCloseDocument(JoinPoint joinPoint, DocumentContext documentContext) {
+    publishEvent(new ServerContextDocumentClosedEvent((ServerContext) joinPoint.getThis(), documentContext));
   }
 
   @AfterReturning("Pointcuts.isLanguageServer() && Pointcuts.isInitializeCall() && args(initializeParams)")

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,13 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 
 import java.util.Collections;
 import java.util.List;
@@ -85,7 +85,7 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
 
     // функция без описания - ошибка
     if (returnedValueDescription.isEmpty()) {
-      if (!description.get().getLink().isEmpty()) {
+      if (!description.get().getLinks().isEmpty()) {
         // пока считаем ссылку наличием описания всего и вся
         return;
       }
@@ -101,7 +101,7 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
     // тип возвращаемого значения должен иметь описание или быть сложным
     var typesWithoutDescription = returnedValueDescription.stream()
       .filter((TypeDescription typeDescription) ->
-        typeDescription.description().isEmpty() && typeDescription.parameters().isEmpty())
+        typeDescription.description().isEmpty() && typeDescription.fields().isEmpty())
       .map(TypeDescription::name)
       .collect(Collectors.joining(", "));
     if (!typesWithoutDescription.isEmpty()) {

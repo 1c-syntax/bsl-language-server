@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.Builder;
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Comparator.comparing;
+
 /**
  * Обращение к символу в файле.
  *
@@ -45,9 +47,10 @@ public record SymbolOccurrence(
       return 1;
     }
 
-    return java.util.Comparator
-      .comparing(SymbolOccurrence::location, java.util.Comparator.comparing(Location::getUri)
-        .thenComparing((l1, l2) -> Ranges.compare(l1.getRange(), l2.getRange())))
+    return comparing(SymbolOccurrence::location, comparing(Location::uri)
+        .thenComparing((l1, l2) -> Ranges.compare(
+          l1.startLine(), l1.startCharacter(), l1.endLine(), l1.endCharacter(),
+          l2.startLine(), l2.startCharacter(), l2.endLine(), l2.endCharacter())))
       .thenComparing(SymbolOccurrence::occurrenceType)
       .thenComparing(SymbolOccurrence::symbol)
       .compare(this, other);

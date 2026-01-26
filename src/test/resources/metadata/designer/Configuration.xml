@@ -190,6 +190,7 @@
 			<CommonModule>ПервыйОбщийМодуль</CommonModule>
 			<CommonModule>КлиентскийОбщийМодуль</CommonModule>
 			<CommonModule>ГлобальныйСерверныйМодуль</CommonModule>
+			<CommonModule>ОбщегоНазначения</CommonModule>
 			<WebService>WebСервис1</WebService>
 			<HTTPService>HTTPСервис1</HTTPService>
 			<EventSubscription>ВерсионированиеПриЗаписи</EventSubscription>

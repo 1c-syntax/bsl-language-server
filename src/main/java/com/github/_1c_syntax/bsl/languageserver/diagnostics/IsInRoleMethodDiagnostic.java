@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -161,8 +161,8 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     var nextGlobalMethodNode = Trees.getNextNode(parentExpression,
       ctx, BSLParser.RULE_globalMethodCall);
 
-    boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext
-      && PRIVILEGED_MODE_NAME_PATTERN.matcher(((BSLParser.GlobalMethodCallContext) nextGlobalMethodNode)
+    boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext globalMethodCall
+      && PRIVILEGED_MODE_NAME_PATTERN.matcher(globalMethodCall
       .methodName().getText()).matches());
 
     return !hasPrivilegedModeCheck;

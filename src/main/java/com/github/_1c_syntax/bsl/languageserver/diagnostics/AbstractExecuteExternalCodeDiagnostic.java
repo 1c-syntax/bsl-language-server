@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 abstract class AbstractExecuteExternalCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern EVAL_METHOD_NAME = CaseInsensitivePattern.compile(
-    String.format("^(%s|%s)$", Keywords.EVAL.getEn(), Keywords.EVAL.getRu()));
+    "^(%s|%s)$".formatted(Keywords.EVAL.getEn(), Keywords.EVAL.getRu()));
 
   @Override
   public ParseTree visitExecuteStatement(BSLParser.ExecuteStatementContext ctx) {

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,14 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -38,23 +36,24 @@ import static com.github._1c_syntax.bsl.languageserver.configuration.codelens.Te
  * Служебный класс-десериализатор для регистронезависимого списка имен аннотаций.
  */
 @Slf4j
-public class AnnotationsDeserializer extends JsonDeserializer<Set<String>> {
+public class AnnotationsDeserializer extends ValueDeserializer<Set<String>> {
 
   @Override
   public Set<String> deserialize(
     JsonParser p,
     DeserializationContext context
-  ) throws IOException {
+  ) {
 
-    JsonNode annotations = p.getCodec().readTree(p);
+    JsonNode annotations = context.readTree(p);
 
-    if (annotations == null) {
+    if (annotations == null || annotations.isNull()) {
       return DEFAULT_ANNOTATIONS;
     }
 
     Set<String> annotationsSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    var objectMapper = (ObjectMapper) p.getCodec();
-    objectMapper.readerForUpdating(annotationsSet).readValue(annotations);
+    for (JsonNode annotation : annotations) {
+      annotationsSet.add(annotation.stringValue());
+    }
 
     return annotationsSet;
   }

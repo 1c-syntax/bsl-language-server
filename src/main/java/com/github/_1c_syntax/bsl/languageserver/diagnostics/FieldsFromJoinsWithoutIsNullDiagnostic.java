@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -155,7 +155,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private static boolean isTerminalNodeNOT(ParseTree node) {
-    return node instanceof TerminalNode && ((TerminalNode) node).getSymbol().getType() == SDBLParser.NOT;
+    return node instanceof TerminalNode terminalNode && terminalNode.getSymbol().getType() == SDBLParser.NOT;
   }
 
   private static boolean haveExprNotWithParens(SDBLParser.PredicateContext ctx) {

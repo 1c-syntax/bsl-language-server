@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -80,7 +80,7 @@ public class MeasureCollector {
     measures.entrySet().stream()
       .map(entry -> Map.entry(entry.getKey(), entry.getValue().stream().mapToLong(value -> value).sum()))
       .sorted(Comparator.comparingLong(Map.Entry::getValue))
-      .map(entry -> String.format("%s - %d", entry.getKey(), entry.getValue()))
+      .map(entry -> "%s - %d".formatted(entry.getKey(), entry.getValue()))
       .forEach(LOGGER::info);
   }
 }

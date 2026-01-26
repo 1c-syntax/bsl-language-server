@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -36,11 +36,12 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import java.util.Optional;
  */
 @Component
 @Slf4j
+@Order(2)
 public class RunTestCodeLensSupplier
   extends AbstractRunTestsCodeLensSupplier<RunTestCodeLensSupplier.RunTestCodeLensData> {
 
@@ -110,13 +112,13 @@ public class RunTestCodeLensSupplier
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, RunTestCodeLensData data) {
 
-    var path = Paths.get(documentContext.getUri());
+    var path = Path.of(documentContext.getUri());
     var testId = data.getTestId();
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunTestArguments();
-    runText = String.format(runText, path, testId);
+    runText = runText.formatted(path, testId);
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runTest"));
@@ -139,7 +141,7 @@ public class RunTestCodeLensSupplier
   }
 
   /**
-   * DTO для хранения данных линз о сложности методов в документе.
+   * DTO для хранения данных линз для запуска теста.
    */
   @Value
   @EqualsAndHashCode(callSuper = true)

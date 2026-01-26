@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -63,9 +63,9 @@ public final class DiagnosticHelper {
       return false;
     }
 
-    if (leftNode instanceof TerminalNode) {
+    if (leftNode instanceof TerminalNode node) {
 
-      int leftNodeType = ((TerminalNode) leftNode).getSymbol().getType();
+      int leftNodeType = node.getSymbol().getType();
       int rightNodeType = ((TerminalNode) rightNode).getSymbol().getType();
 
       if (leftNodeType != rightNodeType

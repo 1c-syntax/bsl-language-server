@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -41,6 +41,7 @@ import org.eclipse.lsp4j.ColorProviderOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
+import org.eclipse.lsp4j.DocumentHighlightOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
 import org.eclipse.lsp4j.DocumentSymbolOptions;
@@ -57,6 +58,7 @@ import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensServerFull;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
@@ -125,6 +127,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentLinkProvider(getDocumentLinkProvider());
     capabilities.setWorkspaceSymbolProvider(getWorkspaceProvider());
     capabilities.setHoverProvider(getHoverProvider());
+    capabilities.setDocumentHighlightProvider(getDocumentHighlightProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
@@ -314,6 +317,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return hoverOptions;
   }
 
+  private static DocumentHighlightOptions getDocumentHighlightProvider() {
+    var documentHighlightOptions = new DocumentHighlightOptions();
+    documentHighlightOptions.setWorkDoneProgress(Boolean.FALSE);
+    return documentHighlightOptions;
+  }
+
   private static DefinitionOptions getDefinitionProvider() {
     var definitionOptions = new DefinitionOptions();
     definitionOptions.setWorkDoneProgress(Boolean.FALSE);
@@ -401,8 +410,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private SemanticTokensWithRegistrationOptions getSemanticTokensProvider() {
     var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
-    semanticTokensProvider.setFull(Boolean.TRUE);
-    semanticTokensProvider.setRange(Boolean.FALSE);
+
+    var fullOptions = new SemanticTokensServerFull();
+    fullOptions.setDelta(Boolean.TRUE);
+    semanticTokensProvider.setFull(fullOptions);
+
+    semanticTokensProvider.setRange(Boolean.TRUE);
     return semanticTokensProvider;
   }
 

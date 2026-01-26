@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,7 +27,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.Getter;
 import lombok.Value;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -128,11 +130,11 @@ public class SymbolTree {
     ParserRuleContext subNameNode;
     if (Trees.nodeContainsErrors(ctx)) {
       subNameNode = ctx;
-    } else if (ctx instanceof BSLParser.SubContext) {
-      if (((BSLParser.SubContext) ctx).function() == null) {
-        subNameNode = ((BSLParser.SubContext) ctx).procedure().procDeclaration().subName();
+    } else if (ctx instanceof BSLParser.SubContext subContext) {
+      if (subContext.function() == null) {
+        subNameNode = subContext.procedure().procDeclaration().subName();
       } else {
-        subNameNode = ((BSLParser.SubContext) ctx).function().funcDeclaration().subName();
+        subNameNode = subContext.function().funcDeclaration().subName();
       }
     } else {
       subNameNode = ctx;
@@ -169,10 +171,10 @@ public class SymbolTree {
 
     if (Trees.nodeContainsErrors(ctx)) {
       varNameNode = ctx;
-    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext) {
-      varNameNode = ((BSLParser.ModuleVarDeclarationContext) ctx).var_name();
-    } else if (ctx instanceof BSLParser.SubVarDeclarationContext) {
-      varNameNode = ((BSLParser.SubVarDeclarationContext) ctx).var_name();
+    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext moduleVarDeclarationContext) {
+      varNameNode = moduleVarDeclarationContext.var_name();
+    } else if (ctx instanceof BSLParser.SubVarDeclarationContext subVarDeclarationContext) {
+      varNameNode = subVarDeclarationContext.var_name();
     } else {
       varNameNode = ctx;
     }
@@ -196,6 +198,35 @@ public class SymbolTree {
     return Optional.ofNullable(
       getVariablesByName().getOrDefault(scopeSymbol, Collections.emptyMap()).get(variableName)
     );
+  }
+
+  /**
+   * Поиск самого вложенного символа, содержащего указанную позицию.
+   * <p>
+   * Использует иерархический спуск по дереву символов вместо линейного поиска.
+   *
+   * @param position Позиция в документе.
+   * @return Символ, содержащий позицию, или символ модуля, если позиция вне всех символов.
+   */
+  public SourceDefinedSymbol getSymbolAtPosition(Position position) {
+    return findSymbolAtPosition(module, position);
+  }
+
+  private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
+    // Ищем среди детей символ, содержащий позицию
+    for (var child : parent.getChildren()) {
+      if (Ranges.containsPosition(child.getRange(), position)) {
+        // Рекурсивно ищем более вложенный символ
+        var found = findSymbolAtPosition(child, position);
+        // Пропускаем Namespace (Region) - ищем дальше или возвращаем parent
+        if (found.getSymbolKind() == SymbolKind.Namespace) {
+          continue;
+        }
+        return found;
+      }
+    }
+    // Если среди детей не нашли — возвращаем текущий символ
+    return parent;
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {

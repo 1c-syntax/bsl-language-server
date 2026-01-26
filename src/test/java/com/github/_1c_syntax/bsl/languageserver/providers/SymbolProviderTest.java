@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -37,7 +37,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.net.URI;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,7 +102,7 @@ class SymbolProviderTest {
 
   @SneakyThrows
   private boolean uriContains(WorkspaceSymbol workspaceSymbol, String name) {
-    return Paths.get(new URI(workspaceSymbol.getLocation().getLeft().getUri())).toString().contains(name);
+    return Path.of(new URI(workspaceSymbol.getLocation().getLeft().getUri())).toString().contains(name);
   }
 
   @Test

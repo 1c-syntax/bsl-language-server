@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -102,22 +102,22 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Getter
   private int version;
 
-  @Setter(onMethod = @__({@Autowired}))
+  @Setter(onMethod_ = {@Autowired})
   private ServerContext context;
-  @Setter(onMethod = @__({@Autowired}))
+  @Setter(onMethod_ = {@Autowired})
   private DiagnosticComputer diagnosticComputer;
-  @Setter(onMethod = @__({@Autowired}))
+  @Setter(onMethod_ = {@Autowired})
   private LanguageServerConfiguration configuration;
 
-  @Setter(onMethod = @__({@Autowired}))
+  @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
-  @Setter(onMethod = @__({@Autowired}))
+  @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
 
   @Nullable
   private BSLTokenizer tokenizer;
 
-  @Getter(onMethod = @__({@Locked("computeLock")}))
+  @Getter(onMethod_ = {@Locked("computeLock")})
   private SymbolTree symbolTree = SymbolTreeComputer.empty(this);
 
   @Getter
@@ -323,7 +323,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   }
 
-  protected void rebuild() {
+  protected void rebuildFromFileSystem() {
     try {
       var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
       rebuild(newContent, 0);

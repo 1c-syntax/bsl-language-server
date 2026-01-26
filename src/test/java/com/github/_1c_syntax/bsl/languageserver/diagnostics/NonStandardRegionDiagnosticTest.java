@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,7 +32,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +40,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 @DirtiesContext
 class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandardRegionDiagnostic> {
-  private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata/designer");
+  private static final Path CONFIGURATION_PATH = Path.of("src/test/resources/metadata/designer");
   private final Map<ModuleType, String> pathByModuleType = new HashMap<>();
 
   NonStandardRegionDiagnosticTest() {
@@ -240,7 +239,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
   }
 
   private DocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
-    Path tempFile = Paths.get(CONFIGURATION_PATH.toString(),
+    Path tempFile = Path.of(CONFIGURATION_PATH.toString(),
       pathByModuleType.getOrDefault(moduleType, "Module.bsl")
     );
 

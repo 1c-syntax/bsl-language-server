@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -71,12 +71,12 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).isPresent();
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Локальная");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSelectionRange)
+      .extracting(Reference::selectionRange)
       .isEqualTo(Ranges.create(4, 0, 4, 9));
   }
 
@@ -150,17 +150,17 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).isPresent();
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Первая");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getFrom)
+      .extracting(Reference::from)
       .extracting(Symbol::getName)
       .isEqualTo("ТретийМетод");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getOccurrenceType)
+      .extracting(Reference::occurrenceType)
       .isEqualTo(OccurrenceType.REFERENCE);
 
     var scopeMethod = documentContext
@@ -208,7 +208,7 @@ class ReferenceIndexFillerTest {
     );
     assertThat(referencedSymbol).isPresent();
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Модуль");
 
@@ -232,7 +232,7 @@ class ReferenceIndexFillerTest {
     );
     assertThat(referencedSymbol).isPresent();
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Модуль");
 
@@ -257,12 +257,12 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).isPresent();
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Запрос");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getOccurrenceType)
+      .extracting(Reference::occurrenceType)
       .isEqualTo(OccurrenceType.DEFINITION);
   }
 
@@ -315,7 +315,7 @@ class ReferenceIndexFillerTest {
     var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
     // Filter to only references from our test document
     var referencesToProcFromTest = referencesToProc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     assertThat(referencesToProcFromTest).hasSize(1);
 
@@ -324,7 +324,7 @@ class ReferenceIndexFillerTest {
     var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
     // Filter to only references from our test document
     var referencesToFuncFromTest = referencesToFunc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     // Должно быть 2 вызова: в assignment и в условии
     assertThat(referencesToFuncFromTest).hasSize(2);
@@ -357,7 +357,7 @@ class ReferenceIndexFillerTest {
     assertThat(procMethod).isPresent();
     var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
     var referencesToProcFromTest = referencesToProc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     // Должно быть 2 вызова: по одному из каждой процедуры (до переназначения)
     assertThat(referencesToProcFromTest).hasSize(2);
@@ -367,7 +367,7 @@ class ReferenceIndexFillerTest {
     assertThat(funcMethod).isPresent();
     var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
     var referencesToFuncFromTest = referencesToFunc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     // Не должно быть ссылок, так как вызов после переназначения на Неопределено
     assertThat(referencesToFuncFromTest).isEmpty();
@@ -399,7 +399,7 @@ class ReferenceIndexFillerTest {
     assertThat(procMethod).isPresent();
     var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
     var referencesToProcFromTest = referencesToProc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     // Должно быть 2 вызова: из ПерваяПроцедура и из ТретьяПроцедура
     assertThat(referencesToProcFromTest).hasSize(2);
@@ -408,7 +408,7 @@ class ReferenceIndexFillerTest {
     assertThat(funcMethod).isPresent();
     var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
     var referencesToFuncFromTest = referencesToFunc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     // Должна быть 1 ссылка из ВтораяПроцедура (модульная переменная)
     assertThat(referencesToFuncFromTest).hasSize(1);
@@ -440,7 +440,7 @@ class ReferenceIndexFillerTest {
     assertThat(procMethod).isPresent();
     var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
     var referencesToProcFromTest = referencesToProc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     assertThat(referencesToProcFromTest).hasSize(1);
 
@@ -450,7 +450,7 @@ class ReferenceIndexFillerTest {
     assertThat(funcMethod).isPresent();
     var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
     var referencesToFuncFromTest = referencesToFunc.stream()
-      .filter(ref -> ref.getUri().equals(documentContext.getUri()))
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
       .toList();
     assertThat(referencesToFuncFromTest).isEmpty();
   }
@@ -509,5 +509,62 @@ class ReferenceIndexFillerTest {
 
     reference = referenceIndex.getReference(uri, new Position(25, 24));
     assertThat(reference).isEmpty();
+  }
+
+  @Test
+  void testModuleReferenceRangeNotOverlapAccessorMethod() throws IOException {
+    // Тест для проверки поведения: при наведении на ОбщийМодуль() должно показываться описание метода,
+    // а не информация о модуле "ПервыйОбщийМодуль"
+    var path = Absolute.path("src/test/resources/metadata/designer");
+    serverContext.setConfigurationRoot(path);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+    );
+
+    // Загружаем модуль ПервыйОбщийМодуль
+    var file = new File("src/test/resources/metadata/designer",
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    // Загружаем модуль ОбщегоНазначения с методом ОбщийМодуль
+    var commonFile = new File("src/test/resources/metadata/designer",
+      "CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+    var commonUri = Absolute.uri(commonFile);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      commonUri,
+      FileUtils.readFileToString(commonFile, StandardCharsets.UTF_8),
+      serverContext
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Строка 7 (индекс 6): МодульУправлениеДоступом = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
+    // Позиция 55 - это внутри имени метода "ОбщийМодуль"
+    // При наведении на метод ОбщийМодуль должен показываться референс на метод ОбщийМодуль модуля ОбщегоНазначения,
+    // а НЕ референс на модуль ПервыйОбщийМодуль (это была ошибка).
+    var referenceOnAccessorMethod = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(6, 55)
+    );
+    // Должен быть референс на метод ОбщийМодуль модуля ОбщегоНазначения
+    assertThat(referenceOnAccessorMethod).isPresent();
+    var methodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("ОбщийМодуль");
+    assertThat(methodSymbol).isPresent();
+    assertThat(referenceOnAccessorMethod.get().getSourceDefinedSymbol()).contains(methodSymbol.get());
+
+    // Позиция 70 - это внутри строкового литерала "ПервыйОбщийМодуль"
+    // Строковый литерал - это просто данные, не ссылка на модуль. Референс добавлять не нужно.
+    var referenceOnModuleName = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(6, 70)
+    );
+    // Не должно быть ссылки на модуль ПервыйОбщийМодуль, т.к. это строковый литерал - параметр метода
+    assertThat(referenceOnModuleName).isEmpty();
   }
 }

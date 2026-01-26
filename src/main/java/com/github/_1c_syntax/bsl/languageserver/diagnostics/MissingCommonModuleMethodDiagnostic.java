@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -85,13 +85,14 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     // т.к. через refIndex.getReferences нельзя получить приватные методы, приходится обходить символы модуля
     final var methodSymbol = document.get()
       .getSymbolTree().getMethodSymbol(symbol.symbolName());
+    final var location = symbolOccurrence.location();
+    final var locationRange = location.getRange();
     if (methodSymbol.isEmpty()) {
-      final var location = symbolOccurrence.location();
       // Нельзя использовать symbol.getSymbolName(), т.к. имя в нижнем регистре
       return Optional.of(
         new CallData(mdObject.get().getName(),
-          getMethodNameByLocation(documentContext.getAst(), location.getRange()),
-          location.getRange(), false, false));
+          getMethodNameByLocation(documentContext.getAst(), locationRange),
+          locationRange, false, false));
     }
     // вызовы приватных методов внутри самого модуля пропускаем
     if (document.get().getUri().equals(documentContext.getUri())) {
@@ -101,7 +102,7 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
       .filter(methodSymbol2 -> !methodSymbol2.isExport())
       .map(methodSymbol1 -> new CallData(mdObject.get().getName(),
         methodSymbol1.getName(),
-        symbolOccurrence.location().getRange(), true, true));
+        locationRange, true, true));
   }
 
   private void fireIssue(CallData callData) {

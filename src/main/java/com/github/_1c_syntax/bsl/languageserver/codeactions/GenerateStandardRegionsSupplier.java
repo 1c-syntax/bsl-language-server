@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -95,7 +95,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
       regionsLanguage == ScriptVariant.ENGLISH ? "#Region %s%n%n#EndRegion%n" : "#Область %s%n%n#КонецОбласти%n";
 
     String result = neededStandardRegions.stream()
-      .map(s -> String.format(regionFormat, s))
+      .map(regionFormat::formatted)
       .collect(Collectors.joining("\n"));
     var textEdit = new TextEdit(calculateFixRange(params.getRange()), result);
 

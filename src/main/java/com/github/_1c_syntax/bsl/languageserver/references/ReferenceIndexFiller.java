@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -330,6 +330,7 @@ public class ReferenceIndexFiller {
     public ParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
       findVariableSymbol(ctx.var_name().getText()).ifPresent(s -> {
         if (notVariableInitialization(ctx, s)) {
+
           addVariableUsage(
             s.getRootParent(SymbolKind.Method),
             ctx.var_name().getText(),
@@ -381,6 +382,11 @@ public class ReferenceIndexFiller {
     @Override
     public ParserRuleContext visitAssignment(BSLParser.AssignmentContext ctx) {
       // Detect pattern: Variable = ОбщегоНазначения.ОбщийМодуль("ModuleName") or Variable = ОбщийМодуль("ModuleName")
+      // Здесь мы только отслеживаем, что переменная теперь содержит ссылку на общий модуль,
+      // чтобы последующие вызовы методов через эту переменную могли быть разрезолвлены.
+      // Ссылки на модуль-аксессор (например, ОбщегоНазначения) добавляются в visitComplexIdentifier,
+      // когда он используется как самостоятельный идентификатор, а здесь мы лишь ведем mapping
+      // переменная → общий модуль для дальнейшего разрешения вызовов методов.
       var lValue = ctx.lValue();
       var expression = ctx.expression();
 
@@ -394,13 +400,6 @@ public class ReferenceIndexFiller {
           if (commonModuleOpt.isPresent()) {
             var mdoRef = commonModuleOpt.get().getMdoReference().getMdoRef();
             variableToCommonModuleMap.put(variableKey, mdoRef);
-
-            index.addModuleReference(
-              documentContext.getUri(),
-              mdoRef,
-              ModuleType.CommonModule,
-              Ranges.create(expression)
-            );
           } else {
             // Модуль не найден - удаляем старый mapping если был
             variableToCommonModuleMap.remove(variableKey);

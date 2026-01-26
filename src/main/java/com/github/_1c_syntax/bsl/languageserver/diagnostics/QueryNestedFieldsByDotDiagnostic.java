@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -49,8 +49,14 @@ public class QueryNestedFieldsByDotDiagnostic extends AbstractSDBLListenerDiagno
   }
 
   @Override
+  public void enterVirtualTableParameter(SDBLParser.VirtualTableParameterContext ctx) {
+    isVirtualTable = true; // Взводим флаг при начале обработки параметров виртуальной таблицы
+    super.enterVirtualTableParameter(ctx);
+  }
+
+  @Override
   public void exitVirtualTableParameter(SDBLParser.VirtualTableParameterContext ctx) {
-    isVirtualTable = true; //Взводим флаг при начале обработки параметров виртуальной таблицы
+    isVirtualTable = false; // Сбрасываем флаг при окончании обработки параметров виртуальной таблицы
     super.exitVirtualTableParameter(ctx);
   }
 

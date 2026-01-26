@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -111,7 +111,7 @@ class WrongDataPathForFormElementsDiagnosticTest extends AbstractDiagnosticTest<
   }
 
   private List<Diagnostic> getDiagnosticListForMockedFile(String pathToDynamicListModuleFile) {
-    var testFile = Paths.get(PATH_TO_METADATA + pathToDynamicListModuleFile).toAbsolutePath();
+    var testFile = Path.of(PATH_TO_METADATA + pathToDynamicListModuleFile).toAbsolutePath();
 
     var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText()));
     when(documentContext.getServerContext()).thenReturn(context);

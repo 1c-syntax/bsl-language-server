@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,9 +32,10 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ import java.util.Map;
  */
 @Component
 @Slf4j
+@Order(1)
 public class RunAllTestsCodeLensSupplier
   extends AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> {
 
@@ -95,12 +97,12 @@ public class RunAllTestsCodeLensSupplier
    */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, DefaultCodeLensData data) {
-    var path = Paths.get(documentContext.getUri());
+    var path = Path.of(documentContext.getUri());
 
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunAllTestsArguments();
-    runText = String.format(runText, path);
+    runText = runText.formatted(path);
 
     var command = new Command();
     command.setTitle(resources.getResourceString(getClass(), "runAllTests"));

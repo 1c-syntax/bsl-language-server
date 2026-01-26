@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -87,7 +87,7 @@ public class ServerContext {
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
-  private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
+  private final Map<URI, ReadWriteLock> documentLocks = new ConcurrentHashMap<>();
 
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
@@ -120,27 +120,26 @@ public class ServerContext {
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
     LOGGER.debug("Populating context...");
-    contextLock.writeLock().lock();
 
-    try {
+    files.parallelStream().forEach((File file) -> {
 
-      files.parallelStream().forEach((File file) -> {
+      workDoneProgressReporter.tick();
 
-        workDoneProgressReporter.tick();
-
-        var uri = file.toURI();
-        var documentContext = getDocument(uri);
+      var uri = Absolute.uri(file.toURI());
+      var lock = getDocumentLock(uri);
+      lock.writeLock().lock();
+      try {
+        var documentContext = documents.get(uri);
         if (documentContext == null) {
           documentContext = createDocumentContext(uri);
           rebuildDocument(documentContext);
           documentContext.freezeComputedData();
           tryClearDocument(documentContext);
         }
-      });
-
-    } finally {
-      contextLock.writeLock().unlock();
-    }
+      } finally {
+        lock.writeLock().unlock();
+      }
+    });
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
@@ -148,11 +147,6 @@ public class ServerContext {
 
   public Map<URI, DocumentContext> getDocuments() {
     return Collections.unmodifiableMap(documents);
-  }
-
-  @Nullable
-  public DocumentContext getDocument(String uri) {
-    return getDocument(URI.create(uri));
   }
 
   public Optional<DocumentContext> getDocument(String mdoRef, ModuleType moduleType) {
@@ -163,37 +157,119 @@ public class ServerContext {
     return Optional.empty();
   }
 
+  /**
+   * Получить документ по URI.
+   * <p>
+   * URI должен быть уже нормализован (например, получен из DocumentContext или через Absolute.uri).
+   *
+   * @param uri нормализованный URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
   @Nullable
   public DocumentContext getDocument(URI uri) {
-    return documents.get(Absolute.uri(uri));
+    var lock = getDocumentLock(uri);
+    lock.readLock().lock();
+    try {
+      return documents.get(uri);
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
+
+  /**
+   * Получить документ по URI без захвата блокировки.
+   * <p>
+   * Этот метод предоставляет прямой доступ к хранилищу документов без синхронизации.
+   * Используйте его только в случаях, когда:
+   * <ul>
+   *   <li>блокировка уже захвачена вызывающим кодом;</li>
+   *   <li>операция только на чтение и допускается eventual consistency;</li>
+   *   <li>критична производительность и накладные расходы на блокировку недопустимы.</li>
+   * </ul>
+   * <p>
+   * <b>Внимание:</b> использование этого метода без внешней синхронизации может привести
+   * к состояниям гонки, если другой поток одновременно модифицирует документ или коллекцию.
+   *
+   * @param uri нормализованный URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   * @see #getDocument(URI) безопасная версия с захватом блокировки
+   * @see #getDocumentLock(URI) получение блокировки для внешней синхронизации
+   */
+  @Nullable
+  public DocumentContext getDocumentNoLock(URI uri) {
+    return documents.get(uri);
+  }
+
+  /**
+   * Получить документ по URI с нормализацией.
+   * <p>
+   * Используется для внешних вызовов (CLI, Service), где URI может быть не нормализован.
+   *
+   * @param uri URI документа (будет нормализован)
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocumentUnsafe(URI uri) {
+    return getDocument(Absolute.uri(uri));
+  }
+
+
+  /**
+   * Получить документ по строковому URI с нормализацией.
+   * <p>
+   * Используется для внешних вызовов (CLI, Service), где URI может быть не нормализован.
+   *
+   * @param uri строковый URI документа
+   * @return Контекст документа или {@code null}, если документ не найден
+   */
+  @Nullable
+  public DocumentContext getDocumentUnsafe(String uri) {
+    return getDocument(Absolute.uri(uri));
   }
 
   public Map<ModuleType, DocumentContext> getDocuments(String mdoRef) {
     return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
+  /**
+   * Добавить документ в контекст.
+   * <p>
+   * URI должен быть уже нормализован.
+   *
+   * @param uri нормализованный URI документа
+   * @return Контекст документа
+   */
   public DocumentContext addDocument(URI uri) {
-    contextLock.readLock().lock();
-
-    var documentContext = getDocument(uri);
-    if (documentContext == null) {
-      documentContext = createDocumentContext(uri);
+    var lock = getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      var documentContext = documents.get(uri);
+      if (documentContext == null) {
+        documentContext = createDocumentContext(uri);
+      }
+      return documentContext;
+    } finally {
+      lock.writeLock().unlock();
     }
-
-    contextLock.readLock().unlock();
-    return documentContext;
   }
 
+  /**
+   * Удалить документ из контекста.
+   * <p>
+   * URI должен быть уже нормализован.
+   *
+   * @param uri нормализованный URI документа
+   */
   public void removeDocument(URI uri) {
-    var absoluteURI = Absolute.uri(uri);
-    var documentContext = documents.get(absoluteURI);
+    var documentContext = documents.get(uri);
     if (openedDocuments.contains(documentContext)) {
-      throw new IllegalStateException(String.format("Document %s is opened", absoluteURI));
+      throw new IllegalStateException("Document %s is opened".formatted(uri));
     }
 
-    removeDocumentMdoRefByUri(absoluteURI);
+    removeDocumentMdoRefByUri(uri);
     states.remove(documentContext);
-    documents.remove(absoluteURI);
+    documents.remove(uri);
+    documentLocks.remove(uri);
   }
 
   public void clear() {
@@ -202,7 +278,20 @@ public class ServerContext {
     states.clear();
     documentsByMDORef.clear();
     mdoRefs.clear();
+    documentLocks.clear();
     configurationMetadata.clear();
+  }
+
+  /**
+   * Получить блокировку для выполнения операций над документом по URI.
+   * <p>
+   * Может использоваться для операций, требующих долгосрочной установки блокировки на изменение объекта.
+   *
+   * @param uri URI документа
+   * @return блокировка, связанная с URI документа.
+   */
+  public ReadWriteLock getDocumentLock(URI uri) {
+    return documentLocks.computeIfAbsent(uri, k -> new ReentrantReadWriteLock());
   }
 
   /**
@@ -252,7 +341,7 @@ public class ServerContext {
       return;
     }
 
-    documentContext.rebuild();
+    documentContext.rebuildFromFileSystem();
     states.put(documentContext, State.WITH_CONTENT);
   }
 
@@ -298,12 +387,10 @@ public class ServerContext {
   }
 
   private DocumentContext createDocumentContext(URI uri) {
-    var absoluteURI = Absolute.uri(uri);
+    var documentContext = documentContextProvider.getObject(uri);
 
-    var documentContext = documentContextProvider.getObject(absoluteURI);
-
-    documents.put(absoluteURI, documentContext);
-    addMdoRefByUri(absoluteURI, documentContext);
+    documents.put(uri, documentContext);
+    addMdoRefByUri(uri, documentContext);
 
     return documentContext;
   }

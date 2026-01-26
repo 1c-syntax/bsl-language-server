@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Diagno
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
@@ -40,7 +41,6 @@ import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
@@ -62,7 +62,7 @@ class LanguageServerConfigurationTest {
   @BeforeEach
   void startUp() throws IOException {
     try {
-      Files.deleteIfExists(Paths.get("build/.trace.log"));
+      Files.deleteIfExists(Path.of("build/.trace.log"));
     } catch (FileSystemException e) {
       // no-op
     }
@@ -141,7 +141,7 @@ class LanguageServerConfigurationTest {
   @Test
   void test_GetCustomConfigurationRoot() {
 
-    Path path = Paths.get(PATH_TO_METADATA);
+    Path path = Path.of(PATH_TO_METADATA);
     Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
@@ -162,6 +162,7 @@ class LanguageServerConfigurationTest {
     CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
     InlayHintOptions inlayHintOptions = configuration.getInlayHintOptions();
+    SemanticTokensOptions semanticTokensOptions = configuration.getSemanticTokensOptions();
 
     // then
     assertThat(codeLensOptions.getParameters().get("cognitiveComplexity")).isNull();
@@ -175,6 +176,14 @@ class LanguageServerConfigurationTest {
 
     assertThat(inlayHintOptions.getParameters())
       .containsEntry("sourceDefinedMethodCall", Either.forRight(Map.of("showParametersWithTheSameName", true)));
+
+    assertThat(semanticTokensOptions.getStrTemplateMethods())
+      .hasSize(2)
+      .contains("CustomModule.CustomMethod", "CustomLocalMethod");
+    assertThat(semanticTokensOptions.getParsedStrTemplateMethods().localMethods())
+      .contains("customlocalmethod");
+    assertThat(semanticTokensOptions.getParsedStrTemplateMethods().moduleMethodPairs())
+      .containsKey("custommodule");
 
   }
 

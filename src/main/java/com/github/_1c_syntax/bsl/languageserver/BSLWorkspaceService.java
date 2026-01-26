@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -84,8 +84,12 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
+    var settings = params.getSettings();
+    if (settings == null) {
+      return;
+    }
     try {
-      PropertyUtils.copyProperties(configuration, params.getSettings());
+      PropertyUtils.copyProperties(configuration, settings);
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw new RuntimeException(e);
     }

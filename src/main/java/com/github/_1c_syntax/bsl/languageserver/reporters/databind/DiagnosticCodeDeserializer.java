@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2025
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,25 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-
-import java.io.IOException;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * Десериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
  * См. {@link DiagnosticCode}
  */
-public class DiagnosticCodeDeserializer extends JsonDeserializer<Either<String, Number>> {
+public class DiagnosticCodeDeserializer extends ValueDeserializer<Either<String, Number>> {
 
   @Override
   public Either<String, Number> deserialize(
     JsonParser p,
     DeserializationContext ctxt
-  ) throws IOException {
+  ) {
     return Either.forLeft(p.getValueAsString());
   }
 

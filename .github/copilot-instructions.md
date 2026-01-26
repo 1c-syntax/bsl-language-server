@@ -10,6 +10,8 @@ This is a Java-based language server that provides code analysis, diagnostics, c
 - Project site: https://1c-syntax.github.io/bsl-language-server
 - Documentation: [docs/index.md](../docs/index.md) (Russian), [docs/en/index.md](../docs/en/index.md) (English)
 - Contributor's Guide: [docs/en/contributing/index.md](../docs/en/contributing/index.md)
+- BSL grammar used in BSLParser: https://github.com/1c-syntax/bsl-parser/blob/develop/src/main/antlr/BSLParser.g4
+- SDBL grammar used in BSLParser: https://github.com/1c-syntax/bsl-parser/blob/develop/src/main/antlr/SDBLParser.g4
 
 ## Technology Stack
 

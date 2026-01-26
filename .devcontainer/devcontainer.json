@@ -3,7 +3,7 @@
 {
 	"name": "Java",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/java:1-25-bookworm",
+	"image": "mcr.microsoft.com/devcontainers/java:25-jdk-bookworm",
 
 	"features": {
 		"ghcr.io/devcontainers/features/java:1": {
