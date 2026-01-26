@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.Tokenizer;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -51,7 +52,7 @@ public class QueryPackageFoldingRangeSupplier implements FoldingRangeSupplier {
       .collect(Collectors.toList());
   }
 
-  private static FoldingRange toFoldingRange(SDBLParser.QueriesContext queriesContext) {
+  private static @Nullable FoldingRange toFoldingRange(SDBLParser.QueriesContext queriesContext) {
     var start = queriesContext.getStart();
     var stop = queriesContext.getStop();
     
