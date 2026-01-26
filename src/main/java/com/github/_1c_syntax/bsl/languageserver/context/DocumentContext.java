@@ -103,13 +103,17 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private int version;
 
   private final ServerContext context;
+  @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private DiagnosticComputer diagnosticComputer;
+  @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private LanguageServerConfiguration configuration;
 
+  @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
+  @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
 
