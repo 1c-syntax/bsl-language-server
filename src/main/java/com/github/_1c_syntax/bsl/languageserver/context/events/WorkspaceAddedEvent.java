@@ -54,8 +54,9 @@ public class WorkspaceAddedEvent extends ApplicationEvent {
 
   /**
    * Созданный контекст сервера для workspace.
+   * Помечено как transient, так как ServerContext не сериализуем.
    */
-  private final ServerContext serverContext;
+  private final transient ServerContext serverContext;
 
   /**
    * Создает новое событие добавления workspace.

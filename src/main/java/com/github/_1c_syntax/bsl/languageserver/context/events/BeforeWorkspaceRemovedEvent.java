@@ -56,8 +56,9 @@ public class BeforeWorkspaceRemovedEvent extends ApplicationEvent {
 
   /**
    * Контекст сервера, который будет удалён.
+   * Помечено как transient, так как ServerContext не сериализуем.
    */
-  private final ServerContext serverContext;
+  private final transient ServerContext serverContext;
 
   /**
    * Создает новое событие перед удалением workspace.

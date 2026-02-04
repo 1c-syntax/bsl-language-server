@@ -145,6 +145,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   private static final long AWAIT_CLOSE = 30;
   private static final long AWAIT_FORCE_TERMINATION = 1;
+  private static final String NO_WORKSPACE_FOUND_MESSAGE = "No workspace found for document: {}";
 
   private final ServerContextProvider serverContextProvider;
   private final DiagnosticProvider diagnosticProvider;
@@ -508,7 +509,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var uri = Absolute.uri(textDocumentItem.getUri());
     var serverContext = getContextForDocument(textDocumentItem.getUri());
     if (serverContext == null) {
-      LOGGER.warn("No workspace found for document: {}", uri);
+      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, uri);
       return;
     }
     var lock = serverContext.getDocumentLock(uri);
@@ -551,7 +552,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var uri = documentContext.getUri();
     var serverContext = getContextForDocument(params.getTextDocument().getUri());
     if (serverContext == null) {
-      LOGGER.warn("No workspace found for document: {}", uri);
+      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, uri);
       return;
     }
 
@@ -592,7 +593,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var uri = documentContext.getUri();
     var serverContext = getContextForDocument(params.getTextDocument().getUri());
     if (serverContext == null) {
-      LOGGER.warn("No workspace found for document: {}", uri);
+      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, uri);
       return;
     }
 
@@ -867,7 +868,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   ) {
     var serverContext = getContextForDocument(documentContext.getUri().toString());
     if (serverContext == null) {
-      LOGGER.warn("No workspace found for document: {}", documentContext.getUri());
+      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
       return;
     }
     serverContext.rebuildDocument(
@@ -915,7 +916,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           cancelChecker.checkCanceled();
           var serverContext = getContextForDocument(documentContext.getUri().toString());
           if (serverContext == null) {
-            LOGGER.warn("No workspace found for document: {}", documentContext.getUri());
+            LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
             return null;
           }
           var lock = serverContext.getDocumentLock(documentContext.getUri());
