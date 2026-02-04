@@ -144,7 +144,7 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   public void beforeWorkspaceRemoved(JoinPoint joinPoint, WorkspaceFolder workspaceFolder) {
     var provider = (ServerContextProvider) joinPoint.getThis();
     var uri = URI.create(workspaceFolder.getUri());
-    var serverContext = provider.getServerContext(uri).orElse(null);
+    var serverContext = provider.getServerContextUnsafe(uri).orElse(null);
     if (serverContext != null) {
       publishEvent(new BeforeWorkspaceRemovedEvent(provider, uri, serverContext));
     }
