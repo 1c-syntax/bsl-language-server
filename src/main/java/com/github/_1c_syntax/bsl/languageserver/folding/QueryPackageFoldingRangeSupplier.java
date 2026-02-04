@@ -26,10 +26,12 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.Tokenizer;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -45,14 +47,23 @@ public class QueryPackageFoldingRangeSupplier implements FoldingRangeSupplier {
       .map(SDBLParser.QueryPackageContext::queries)
       .flatMap(Collection::stream)
       .map(QueryPackageFoldingRangeSupplier::toFoldingRange)
+      .filter(Objects::nonNull)
       .filter(foldingRange -> foldingRange.getStartLine() != foldingRange.getEndLine())
       .collect(Collectors.toList());
   }
 
-  private static FoldingRange toFoldingRange(SDBLParser.QueriesContext queriesContext) {
+  private static @Nullable FoldingRange toFoldingRange(SDBLParser.QueriesContext queriesContext) {
+    var start = queriesContext.getStart();
+    var stop = queriesContext.getStop();
+    
+    // Handle incomplete or malformed queries where start/stop tokens may be null
+    if (start == null || stop == null) {
+      return null;
+    }
+    
     FoldingRange foldingRange = new FoldingRange(
-      queriesContext.getStart().getLine() - 1,
-      queriesContext.getStop().getLine() - 1
+      start.getLine() - 1,
+      stop.getLine() - 1
     );
     foldingRange.setKind(FoldingRangeKind.Region);
     return foldingRange;
