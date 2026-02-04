@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
@@ -42,7 +43,6 @@ import java.util.concurrent.ForkJoinPool;
 @RequiredArgsConstructor
 public class AnalyzeProjectOnStart {
 
-  private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final LanguageClientHolder languageClientHolder;
   private final WorkDoneProgressHelper workDoneProgressHelper;
@@ -50,6 +50,9 @@ public class AnalyzeProjectOnStart {
   @EventListener
   @Async
   public void handleEvent(ServerContextPopulatedEvent event) {
+    var serverContext = event.getSource();
+    var configuration = serverContext.getLanguageServerConfiguration();
+
     if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
       return;
     }
@@ -58,11 +61,9 @@ public class AnalyzeProjectOnStart {
       return;
     }
 
-    var serverContext = event.getSource();
-
     var documentContexts = serverContext.getDocuments().values();
-    var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
-    progress.beginProgress(getMessage("analyzeProject"));
+    var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage(serverContext, "filesSuffix"));
+    progress.beginProgress(getMessage(serverContext, "analyzeProject"));
 
     var factory = new NamedForkJoinWorkerThreadFactory("analyze-on-start-");
     var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
@@ -88,11 +89,12 @@ public class AnalyzeProjectOnStart {
       executorService.shutdown();
     }
 
-    progress.endProgress(getMessage("projectAnalyzed"));
+    progress.endProgress(getMessage(serverContext, "projectAnalyzed"));
   }
 
-  private String getMessage(String key) {
-    return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
+  private String getMessage(ServerContext serverContext, String key) {
+    Language language = serverContext.getLanguageServerConfiguration().getLanguage();
+    return Resources.getResourceString(language, getClass(), key);
   }
 
 }

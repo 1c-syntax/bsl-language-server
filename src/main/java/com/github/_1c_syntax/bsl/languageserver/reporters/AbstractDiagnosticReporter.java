@@ -19,41 +19,38 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
+
+import java.nio.file.Path;
+import java.util.Map;
 
 /**
- * Component that listens to configuration changes and refreshes DiagnosticInfo instances.
+ * Базовый класс для reporters, которым нужен доступ к per-workspace данным.
  */
-@Slf4j
-@Component
 @RequiredArgsConstructor
-public class DiagnosticInfoRefresher {
+public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
 
-  private final ServerContextProvider serverContextProvider;
+  protected final ServerContextProvider serverContextProvider;
 
   /**
-   * Handles configuration change events by refreshing diagnostic info instances.
-   * <p>
-   * DiagnosticInfo holds a reference to LanguageServerConfiguration, so refresh()
-   * will read the already-updated configuration values.
-   *
-   * @param event the configuration change event
+   * Получить ServerContext для workspace из AnalysisInfo.
    */
-  @EventListener
-  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
-    LOGGER.debug("Refreshing diagnostic info instances after configuration change");
-    serverContextProvider.getAllContexts().stream()
-      .map(ServerContext::getDiagnosticInfosByCode)
-      .flatMap(map -> map.values().stream())
-      .forEach(DiagnosticInfo::refresh);
+  protected ServerContext getServerContext(AnalysisInfo analysisInfo) {
+    var workspaceUri = Path.of(analysisInfo.sourceDir()).toUri();
+    return serverContextProvider.getServerContext(workspaceUri)
+      .orElseThrow(() -> new IllegalStateException("No workspace found for " + workspaceUri));
+  }
+
+  /**
+   * Получить DiagnosticInfo по коду для workspace из AnalysisInfo.
+   */
+  protected Map<String, DiagnosticInfo> getDiagnosticInfosByCode(AnalysisInfo analysisInfo) {
+    return getServerContext(analysisInfo).getDiagnosticInfosByCode();
   }
 }

@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
@@ -43,10 +43,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class ExtractStructureConstructorSupplierTest {
-
-  @Autowired
-  private LanguageServerConfiguration configuration;
 
   @Autowired
   private ExtractStructureConstructorSupplier codeActionSupplier;
@@ -186,10 +184,9 @@ class ExtractStructureConstructorSupplierTest {
   }
 
   void setRange(Range range) {
-    configuration.setLanguage(Language.EN);
-
     String filePath = "./src/test/resources/suppliers/extractStructureConstructor.bsl";
     documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 

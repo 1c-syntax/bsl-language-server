@@ -22,10 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -35,7 +34,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,18 +41,11 @@ import java.util.stream.Collectors;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class DisableDiagnosticTriggeringSupplierTest {
 
   @Autowired
-  private LanguageServerConfiguration configuration;
-  @Autowired
   private DisableDiagnosticTriggeringSupplier codeActionSupplier;
-
-  @PostConstruct
-  public void init() {
-    configuration.setLanguage(Language.EN);
-  }
 
   @Test
   void testGetCodeActions() {
@@ -62,6 +53,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
+    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -96,6 +88,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
+    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -135,6 +128,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
+    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -174,6 +168,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
+    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -198,6 +193,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
+    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 

@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -39,7 +39,7 @@ public class Resources {
 
   private static final StringInterner stringInterner = new StringInterner();
 
-  private final LanguageServerConfiguration configuration;
+  private final GlobalLanguageServerConfiguration configuration;
 
   /**
    * @param clazz    Класс, ресурсы которого необходимо прочитать.

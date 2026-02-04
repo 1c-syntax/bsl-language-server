@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CommentedCodeDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,14 +42,18 @@ class QuickFixSupplierTest {
 
   @Test
   void testGetQuickFixClass() {
+    // Create a document context to get a ServerContext with diagnosticInfos
+    var documentContext = TestUtils.getDocumentContext("");
+    var serverContext = documentContext.getServerContext();
+
     Optional<Class<? extends QuickFixProvider>> quickFixClass =
-      quickFixSupplier.getQuickFixClass(new DiagnosticCode("NON_EXISTING"));
+      quickFixSupplier.getQuickFixClass(new DiagnosticCode("NON_EXISTING"), serverContext);
     assertThat(quickFixClass).isEmpty();
 
-    quickFixClass = quickFixSupplier.getQuickFixClass(new DiagnosticCode("CommitTransactionOutsideTryCatch"));
+    quickFixClass = quickFixSupplier.getQuickFixClass(new DiagnosticCode("CommitTransactionOutsideTryCatch"), serverContext);
     assertThat(quickFixClass).isEmpty();
 
-    quickFixClass = quickFixSupplier.getQuickFixClass(new DiagnosticCode("CommentedCode"));
+    quickFixClass = quickFixSupplier.getQuickFixClass(new DiagnosticCode("CommentedCode"), serverContext);
     assertThat(quickFixClass).hasValue(CommentedCodeDiagnostic.class);
   }
 }

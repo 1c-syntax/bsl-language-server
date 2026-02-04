@@ -22,7 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -76,7 +79,27 @@ public class ServerContext {
 
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
-  private final LanguageServerConfiguration languageServerConfiguration;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
+
+  @Getter
+  @Setter
+  @SuppressWarnings("NullAway.Init")
+  private LanguageServerConfiguration languageServerConfiguration;
+
+  /**
+   * Коллекция DiagnosticInfo для данного workspace.
+   * Создаётся с per-workspace LanguageServerConfiguration.
+   */
+  @Getter
+  @Setter
+  private Map<String, DiagnosticInfo> diagnosticInfosByCode = Collections.emptyMap();
+
+  /**
+   * Коллекция DiagnosticInfo по классам диагностик.
+   */
+  @Getter
+  @Setter
+  private Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByClass = Collections.emptyMap();
 
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
@@ -454,7 +477,7 @@ public class ServerContext {
   }
 
   private String getMessage(String key) {
-    return Resources.getResourceString(languageServerConfiguration.getLanguage(), getClass(), key);
+    return Resources.getResourceString(globalConfiguration.getLanguage(), getClass(), key);
   }
 
   /**

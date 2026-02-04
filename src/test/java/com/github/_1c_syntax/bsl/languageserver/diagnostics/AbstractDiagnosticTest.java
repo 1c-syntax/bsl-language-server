@@ -50,10 +50,14 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractS
 
   @Autowired
   private DiagnosticObjectProvider diagnosticObjectProvider;
-  @Autowired
-  protected LanguageServerConfiguration configuration;
 
   private final Class<T> diagnosticClass;
+  
+  /**
+   * Per-workspace configuration from ServerContext.
+   * Tests should use this instead of injected beans.
+   */
+  protected LanguageServerConfiguration configuration;
   protected T diagnosticInstance;
 
   @SuppressWarnings("unchecked")
@@ -77,7 +81,11 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractS
 
   @PostConstruct
   public void init() {
-    diagnosticInstance = diagnosticObjectProvider.get(diagnosticClass);
+    // Initialize server context to get per-workspace configuration and DiagnosticInfo
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    var diagnosticInfo = context.getDiagnosticInfosByClass().get(diagnosticClass);
+    diagnosticInstance = diagnosticObjectProvider.get(diagnosticInfo, configuration);
     configuration.reset();
   }
 

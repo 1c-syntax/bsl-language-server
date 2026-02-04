@@ -22,9 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.color;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Color;
@@ -42,14 +41,11 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatColorPresentations;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterClass
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class WebColorPresentationSupplierTest {
 
   @Autowired
   private WebColorPresentationSupplier supplier;
-
-  @Autowired
-  private LanguageServerConfiguration configuration;
 
   private DocumentContext documentContext;
 
@@ -61,6 +57,7 @@ class WebColorPresentationSupplierTest {
   @Test
   void getColorPresentationRu() {
     // given
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.setLanguage(Language.RU);
     var params = new ColorPresentationParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -80,6 +77,7 @@ class WebColorPresentationSupplierTest {
   @Test
   void getColorPresentationEn() {
     // given
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.setLanguage(Language.EN);
     var params = new ColorPresentationParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));

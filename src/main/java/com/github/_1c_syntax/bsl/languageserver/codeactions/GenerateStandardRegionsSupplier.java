@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
@@ -51,12 +50,6 @@ import java.util.stream.Collectors;
  */
 @Component
 public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
-
-  private final LanguageServerConfiguration languageServerConfiguration;
-
-  public GenerateStandardRegionsSupplier(LanguageServerConfiguration languageServerConfiguration) {
-    this.languageServerConfiguration = languageServerConfiguration;
-  }
 
   /**
    * При необходимости создает {@code CodeAction} для генерации отсутствующих
@@ -104,8 +97,9 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
       Collections.singletonList(textEdit));
     edit.setChanges(changes);
 
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var title = Resources.getResourceString(
-      languageServerConfiguration.getLanguage(),
+      configuration.getLanguage(),
       getClass(),
       "title"
     );
@@ -119,9 +113,10 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
   private ScriptVariant getRegionsLanguage(DocumentContext documentContext, FileType fileType) {
 
     ScriptVariant regionsLanguage;
-    var configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
-      regionsLanguage = ScriptVariant.valueByName(languageServerConfiguration.getLanguage().getLanguageCode());
+    var cf = documentContext.getServerContext().getConfiguration();
+    if (cf.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
+      var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
+      regionsLanguage = ScriptVariant.valueByName(configuration.getLanguage().getLanguageCode());
     } else {
       regionsLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
     }

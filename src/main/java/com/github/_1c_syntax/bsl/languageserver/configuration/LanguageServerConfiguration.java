@@ -25,17 +25,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import tools.jackson.databind.json.JsonMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.utils.Absolute;
-import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,33 +45,41 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Role;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 /**
- * Корневой класс конфигурации BSL Language Server.
+ * Per-workspace конфигурация BSL Language Server.
  * <p>
- * В обычном режиме работы провайдеры и прочие классы могут расчитывать на единственность объекта конфигурации
- * и безопасно сохранять ссылку на конфигурацию или ее части.
+ * Содержит настройки, специфичные для конкретного workspace.
+ * Создаётся через {@link LanguageServerConfigurationFactory} при добавлении workspace.
+ * <p>
+ * Глобальные настройки (language, sendErrors, traceLog) находятся в {@link GlobalLanguageServerConfiguration}.
+ * <p>
+ * Это prototype bean — каждый запрос создаёт новый экземпляр.
+ * Spring управляет lifecycle, поэтому AOP аспекты работают.
  */
 @Data
-@Component
-@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class LanguageServerConfiguration {
 
+  /**
+   * Язык интерфейса для сообщений и документации в этом workspace.
+   */
   private Language language = Language.DEFAULT_LANGUAGE;
 
   @JsonProperty("diagnostics")
@@ -110,50 +117,27 @@ public class LanguageServerConfiguration {
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
 
-  private SendErrorsMode sendErrors = SendErrorsMode.DEFAULT;
-
-  @Nullable
-  private File traceLog;
-
   @Nullable
   private Path configurationRoot;
 
   @JsonIgnore
   @Setter(value = AccessLevel.NONE)
+  @Nullable
   private File configurationFile;
-
-  @Value("${app.configuration.path:.bsl-language-server.json}")
-  @Getter(value = AccessLevel.NONE)
-  @Setter(value = AccessLevel.NONE)
-  @JsonIgnore
-  private String configurationFilePath;
-
-  @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
-  @Getter(value = AccessLevel.NONE)
-  @Setter(value = AccessLevel.NONE)
-  @JsonIgnore
-  private String globalConfigPath;
-
-  @PostConstruct
-  private void init() {
-    configurationFile = new File(configurationFilePath);
-    if (configurationFile.exists()) {
-      loadConfigurationFile(configurationFile);
-      return;
-    }
-    var configuration = new File(globalConfigPath);
-    if (configuration.exists()) {
-      loadConfigurationFile(configuration);
-    }
-  }
 
   /**
    * Обновить конфигурацию из файла.
+   * <p>
+   * Публикует {@link LanguageServerConfigurationChangedEvent} через AOP аспект.
    *
    * @param configurationFile Файл с конфигурацией
    */
-  public void update(File configurationFile) {
-    loadConfigurationFile(configurationFile);
+  public void update(@Nullable File configurationFile) {
+    if (configurationFile != null && configurationFile.exists() && !configurationFile.isDirectory()) {
+      loadConfigurationFile(configurationFile);
+      this.configurationFile = configurationFile;
+    }
+    // Событие публикуется через EventPublisherAspect
   }
 
   /**
@@ -161,6 +145,7 @@ public class LanguageServerConfiguration {
    */
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
+    // Событие публикуется через EventPublisherAspect
   }
 
   /**
@@ -190,31 +175,20 @@ public class LanguageServerConfiguration {
   }
 
   private void loadConfigurationFile(File configurationFile) {
-    if (!configurationFile.exists() || configurationFile.isDirectory()) {
-      return;
-    }
-
-    LanguageServerConfiguration configuration;
-
     var mapper = JsonMapper.builder()
       .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
       .build();
 
     try (var inputStream = Files.newInputStream(configurationFile.toPath())) {
-      configuration = mapper.readValue(inputStream, LanguageServerConfiguration.class);
+      var loaded = mapper.readValue(inputStream, LoadedConfiguration.class);
+      copyPropertiesFrom(loaded);
     } catch (IOException e) {
       LOGGER.error("Can't deserialize configuration file", e);
-      return;
     }
-
-    this.configurationFile = configurationFile;
-    copyPropertiesFrom(configuration);
   }
 
   @SneakyThrows
-  private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
-    // todo: refactor
-    PropertyUtils.copyProperties(this, configuration);
+  private void copyPropertiesFrom(LoadedConfiguration configuration) {
     PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
     PropertyUtils.copyProperties(this.capabilities, configuration.capabilities);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
@@ -223,5 +197,70 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
     PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
+    this.language = configuration.language;
+    this.siteRoot = configuration.siteRoot;
+    this.useDevSite = configuration.useDevSite;
+    this.configurationRoot = configuration.configurationRoot;
+  }
+
+  private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
+    copyPropertiesFrom(new LoadedConfiguration(configuration));
+  }
+
+  /**
+   * Вспомогательный класс для десериализации конфигурации из JSON.
+   */
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  private static class LoadedConfiguration {
+    private Language language = Language.DEFAULT_LANGUAGE;
+
+    @JsonProperty("diagnostics")
+    private DiagnosticsOptions diagnosticsOptions = new DiagnosticsOptions();
+
+    @JsonProperty("codeLens")
+    private CodeLensOptions codeLensOptions = new CodeLensOptions();
+
+    @JsonProperty("documentLink")
+    private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
+
+    @JsonProperty("inlayHint")
+    private InlayHintOptions inlayHintOptions = new InlayHintOptions();
+
+    @JsonProperty("capabilities")
+    private CapabilitiesOptions capabilities = new CapabilitiesOptions();
+
+    @JsonProperty("formatting")
+    private FormattingOptions formattingOptions = new FormattingOptions();
+
+    @JsonProperty("references")
+    private ReferencesOptions referencesOptions = new ReferencesOptions();
+
+    @JsonProperty("semanticTokens")
+    private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
+
+    private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
+    private boolean useDevSite;
+
+    @Nullable
+    private Path configurationRoot;
+
+    public LoadedConfiguration() {
+    }
+
+    public LoadedConfiguration(LanguageServerConfiguration source) {
+      this.language = source.language;
+      this.diagnosticsOptions = source.diagnosticsOptions;
+      this.codeLensOptions = source.codeLensOptions;
+      this.documentLinkOptions = source.documentLinkOptions;
+      this.inlayHintOptions = source.inlayHintOptions;
+      this.capabilities = source.capabilities;
+      this.formattingOptions = source.formattingOptions;
+      this.referencesOptions = source.referencesOptions;
+      this.semanticTokensOptions = source.semanticTokensOptions;
+      this.siteRoot = source.siteRoot;
+      this.useDevSite = source.useDevSite;
+      this.configurationRoot = source.configurationRoot;
+    }
   }
 }

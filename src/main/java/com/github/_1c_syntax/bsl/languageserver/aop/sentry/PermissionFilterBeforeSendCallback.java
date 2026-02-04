@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import io.sentry.Hint;
@@ -59,7 +59,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
 
   private static final Map<Language, Map<String, SendErrorsMode>> answers = createAnswersMap();
 
-  private final LanguageServerConfiguration configuration;
+  private final GlobalLanguageServerConfiguration configuration;
 
   private final LanguageClientHolder languageClientHolder;
 

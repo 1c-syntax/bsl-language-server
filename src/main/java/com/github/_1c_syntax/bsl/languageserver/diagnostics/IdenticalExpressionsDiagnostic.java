@@ -194,8 +194,9 @@ public class IdenticalExpressionsDiagnostic extends AbstractExpressionTreeDiagno
     fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     return formatProvider.getNewText(
-      tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
+      tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions(), configuration).trim();
 
   }
 

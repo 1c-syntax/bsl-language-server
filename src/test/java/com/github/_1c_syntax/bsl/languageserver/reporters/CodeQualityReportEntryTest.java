@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Map;
@@ -34,10 +36,16 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class CodeQualityReportEntryTest {
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class CodeQualityReportEntryTest extends AbstractServerContextAwareTest {
 
-  @Autowired
   private Map<String, DiagnosticInfo> diagnosticInfosByCode;
+
+  @BeforeEach
+  void setUp() {
+    initServerContext();
+    diagnosticInfosByCode = context.getDiagnosticInfosByCode();
+  }
 
   @Test
   void testConstructor() {

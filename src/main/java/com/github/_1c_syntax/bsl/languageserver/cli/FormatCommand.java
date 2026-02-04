@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -74,8 +75,10 @@ import static picocli.CommandLine.Option;
 public class FormatCommand implements Callable<Integer> {
 
   private static final Pattern COMMA_PATTERN = Pattern.compile(",");
-  private final ServerContext serverContext;
+  private final ServerContextProvider serverContextProvider;
   private final FormatProvider formatProvider;
+  
+  private ServerContext serverContext;
 
   @Option(
     names = {"-h", "--help"},
@@ -96,11 +99,22 @@ public class FormatCommand implements Callable<Integer> {
   private boolean silentMode;
 
   public Integer call() {
-    serverContext.clear();
-
+    serverContextProvider.clear();
+    
     String[] filePaths = COMMA_PATTERN.split(srcDirOption);
 
     List<File> files = findFilesForFormatting(filePaths);
+
+    if (files.isEmpty()) {
+      return 1;
+    }
+    
+    // Create workspace based on first file path
+    Path srcDir = Absolute.path(filePaths[0]);
+    if (!srcDir.toFile().isDirectory()) {
+      srcDir = srcDir.getParent();
+    }
+    serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
     if (files.isEmpty()) {
       return 1;

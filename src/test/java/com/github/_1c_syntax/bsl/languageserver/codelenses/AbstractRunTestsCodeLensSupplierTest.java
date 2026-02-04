@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -92,8 +91,8 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
   @TestConfiguration
   static class TestConfig {
     @Bean
-    public AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier(LanguageServerConfiguration configuration) {
-      return new AbstractRunTestsCodeLensSupplier<>(configuration) {
+    public AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier() {
+      return new AbstractRunTestsCodeLensSupplier<>() {
 
         @Override
         public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
@@ -108,6 +107,11 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
         @Override
         protected AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> getSelf() {
           return this;
+        }
+
+        @Override
+        public CodeLens resolve(DocumentContext documentContext, CodeLens codeLens, DefaultCodeLensData data) {
+          return codeLens;
         }
       };
     }

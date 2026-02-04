@@ -40,12 +40,13 @@ import com.contrastsecurity.sarif.Tool;
 import com.contrastsecurity.sarif.ToolComponent;
 import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.utils.Absolute;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
@@ -74,9 +75,8 @@ import java.util.stream.Collectors;
  * @see <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html">SARIF specification</a>.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
-public class SarifReporter implements DiagnosticReporter {
+public class SarifReporter extends AbstractDiagnosticReporter {
 
   private static final Map<DiagnosticSeverity, Result.Level> severityToResultLevel = Map.of(
     DiagnosticSeverity.Error, Result.Level.ERROR,
@@ -92,9 +92,12 @@ public class SarifReporter implements DiagnosticReporter {
     DiagnosticSeverity.Hint, ReportingConfiguration.Level.NONE
   );
 
-  private final LanguageServerConfiguration configuration;
-  private final Collection<DiagnosticInfo> diagnosticInfos;
   private final ServerInfo serverInfo;
+
+  public SarifReporter(ServerContextProvider serverContextProvider, ServerInfo serverInfo) {
+    super(serverContextProvider);
+    this.serverInfo = serverInfo;
+  }
 
   @Override
   public String key() {
@@ -128,8 +131,11 @@ public class SarifReporter implements DiagnosticReporter {
   }
 
   private Run createRun(AnalysisInfo analysisInfo) {
-    var tool = createTool();
-    var invocation = createInvocation();
+    var serverContext = getServerContext(analysisInfo);
+    var configuration = serverContext.getLanguageServerConfiguration();
+    
+    var tool = createTool(serverContext);
+    var invocation = createInvocation(configuration);
     var results = createResults(analysisInfo);
 
     return new Run()
@@ -141,7 +147,7 @@ public class SarifReporter implements DiagnosticReporter {
       .withResults(results);
   }
 
-  private Invocation createInvocation() {
+  private Invocation createInvocation(LanguageServerConfiguration configuration) {
     Set<ConfigurationOverride> ruleConfigurationOverrides = new HashSet<>();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
     diagnosticsOptions.getParameters().forEach((String key, Either<Boolean, Map<String, Object>> option) -> {
@@ -170,7 +176,10 @@ public class SarifReporter implements DiagnosticReporter {
       ;
   }
 
-  private Tool createTool() {
+  private Tool createTool(ServerContext serverContext) {
+    var configuration = serverContext.getLanguageServerConfiguration();
+    var diagnosticInfos = serverContext.getDiagnosticInfosByCode().values();
+    
     var name = serverInfo.getName();
     var organization = "1c-syntax";
     var version = serverInfo.getVersion();

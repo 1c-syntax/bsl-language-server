@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
@@ -71,13 +70,13 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
   private String diagnosticMessageDash = "";
   private String diagnosticMessageSpace = "";
 
-  @PostConstruct
-  public void init() {
+  @Override
+  public void initAfterInfoSet() {
     diagnosticMessageDash = info.getResourceString("diagnosticMessageDash");
     diagnosticMessageSpace = info.getResourceString("diagnosticMessageSpace");
   }
 
-  @Override
+@Override
   public void check() {
 
     Set<Integer> stringTokenTypes = Set.of(
@@ -102,7 +101,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
       });
   }
 
-  @Override
+@Override
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,

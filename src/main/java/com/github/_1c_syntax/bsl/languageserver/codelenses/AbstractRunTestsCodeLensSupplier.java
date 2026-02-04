@@ -47,8 +47,6 @@ import java.util.stream.Collectors;
 public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   implements CodeLensSupplier<T> {
 
-  protected final LanguageServerConfiguration configuration;
-
   private boolean clientIsSupported;
 
   /**
@@ -88,7 +86,9 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   @Override
   public boolean isApplicable(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var testSources = getSelf().getTestSources(documentContext.getServerContext().getConfigurationRoot());
+    var serverContext = documentContext.getServerContext();
+    var configuration = serverContext.getLanguageServerConfiguration();
+    var testSources = getSelf().getTestSources(serverContext.getConfigurationRoot(), configuration);
 
     return clientIsSupported
       && documentContext.getFileType() == FileType.OS
@@ -108,10 +108,11 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
    * public для работы @Cachable.
    *
    * @param configurationRoot Корень конфигурации
+   * @param configuration     Конфигурация сервера
    * @return Список исходных файлов тестов
    */
   @Cacheable
-  public Set<URI> getTestSources(@Nullable Path configurationRoot) {
+  public Set<URI> getTestSources(@Nullable Path configurationRoot, LanguageServerConfiguration configuration) {
     var configurationRootString = Optional.ofNullable(configurationRoot)
       .map(Path::toString)
       .orElse("");

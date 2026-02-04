@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -66,7 +66,7 @@ class SemanticTokensProviderTest {
   private ReferenceIndexFiller referenceIndexFiller;
 
   @Autowired
-  private ServerContext serverContext;
+  private ServerContextProvider serverContextProvider;
 
   // region Helper types and methods
 
@@ -1707,6 +1707,10 @@ class SemanticTokensProviderTest {
     // The variable itself should NOT be highlighted as namespace
     // Pattern: Модуль = ОбщегоНазначения.ОбщийМодуль("..."); Модуль.Метод();
     var path = Absolute.path("src/test/resources/metadata/designer");
+    
+    // Create workspace for this path
+    serverContextProvider.clear();
+    var serverContext = serverContextProvider.addWorkspace(path.toUri());
     serverContext.setConfigurationRoot(path);
 
     // Load the common module

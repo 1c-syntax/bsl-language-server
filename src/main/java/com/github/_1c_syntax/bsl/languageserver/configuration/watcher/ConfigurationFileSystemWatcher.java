@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.utils.Absolute;
 import com.sun.nio.file.SensitivityWatchEventModifier;
 import jakarta.annotation.PostConstruct;
@@ -48,10 +48,12 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 /**
- * Отслеживатель изменений файла конфигурации.
+ * Отслеживатель изменений файла глобальной конфигурации.
  * <p>
  * При обнаружении изменения в файле (удаление, создание, редактирование) делегирует обработку изменения в
  * {@link ConfigurationFileChangeListener}.
+ * <p>
+ * TODO: В Фазе 5 per-workspace рефакторинга добавить поддержку мониторинга файлов конфигурации каждого workspace.
  */
 @Component
 @Slf4j
@@ -59,7 +61,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 @SuppressWarnings("removal") // SensitivityWatchEventModifier is deprecated in jdk21
 public class ConfigurationFileSystemWatcher {
 
-  private final LanguageServerConfiguration configuration;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
 
   private Path registeredPath;
@@ -69,13 +71,18 @@ public class ConfigurationFileSystemWatcher {
   @PostConstruct
   public void init() throws IOException {
     watchService = FileSystems.getDefault().newWatchService();
-    registerWatchService(configuration.getConfigurationFile());
+    var configFile = globalConfiguration.getConfigurationFile();
+    if (configFile != null) {
+      registerWatchService(configFile);
+    }
   }
 
   @PreDestroy
   @Synchronized
   public void onDestroy() throws IOException {
-    watchKey.cancel();
+    if (watchKey != null) {
+      watchKey.cancel();
+    }
     watchService.close();
   }
 
@@ -85,6 +92,10 @@ public class ConfigurationFileSystemWatcher {
   @Scheduled(fixedDelay = 5000L)
   @Synchronized
   public void watch() {
+    if (watchKey == null) {
+      return;
+    }
+    
     // save last modified date to de-duplicate events
     long lastModified = 0L;
     for (WatchEvent<?> watchEvent : watchKey.pollEvents()) {
@@ -97,7 +108,7 @@ public class ConfigurationFileSystemWatcher {
       if (isConfigurationFile(file)
         && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
         lastModified = file.lastModified();
-        listener.onChange(file, watchEvent.kind());
+        listener.onGlobalChange(file, watchEvent.kind());
       }
     }
 
@@ -105,13 +116,16 @@ public class ConfigurationFileSystemWatcher {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * Обработчик события {@link GlobalLanguageServerConfigurationChangedEvent}.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    registerWatchService(event.getSource().getConfigurationFile());
+  public void handleEvent(GlobalLanguageServerConfigurationChangedEvent event) {
+    var configFile = event.getSource().getConfigurationFile();
+    if (configFile != null) {
+      registerWatchService(configFile);
+    }
   }
 
   @SneakyThrows
@@ -148,8 +162,12 @@ public class ConfigurationFileSystemWatcher {
   }
 
   private boolean isConfigurationFile(File pathname) {
+    var configFile = globalConfiguration.getConfigurationFile();
+    if (configFile == null) {
+      return false;
+    }
     var absolutePathname = Absolute.path(pathname);
-    var absoluteConfigurationFile = Absolute.path(configuration.getConfigurationFile());
+    var absoluteConfigurationFile = Absolute.path(configFile);
     return absolutePathname.equals(absoluteConfigurationFile);
   }
 

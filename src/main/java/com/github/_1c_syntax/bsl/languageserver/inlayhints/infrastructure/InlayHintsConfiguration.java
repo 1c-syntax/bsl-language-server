@@ -21,19 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 /**
  * Spring-конфигурация для определения бинов
@@ -43,25 +35,13 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class InlayHintsConfiguration {
 
   /**
-   * Получить список активированных в данный момент сапплаеров inlay hints.
+   * Проверить, включён ли сапплаер по его id.
    *
-   * @param configuration      Конфигурация сервера.
-   * @param inlayHintSuppliers Список сапплаеров inlay hints в разрезе из идентификаторов.
-   * @return Список активированных в данный момент сапплаеров inlay hints.
+   * @param supplierId id сапплаера
+   * @param parameters параметры из конфигурации
+   * @return true если сапплаер включён
    */
-  @Bean
-  @Scope(SCOPE_PROTOTYPE)
-  public List<InlayHintSupplier> enabledInlayHintSuppliers(
-    LanguageServerConfiguration configuration,
-    Collection<InlayHintSupplier> inlayHintSuppliers
-  ) {
-    var parameters = configuration.getInlayHintOptions().getParameters();
-    return inlayHintSuppliers.stream()
-      .filter(supplier -> supplierIsEnabled(supplier.getId(), parameters))
-      .collect(Collectors.toList());
-  }
-
-  private static boolean supplierIsEnabled(
+  public static boolean supplierIsEnabled(
     String supplierId,
     Map<String, Either<Boolean, Map<String, Object>>> parameters
   ) {

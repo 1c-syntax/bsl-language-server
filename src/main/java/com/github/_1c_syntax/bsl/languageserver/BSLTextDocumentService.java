@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -148,7 +147,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private static final long AWAIT_FORCE_TERMINATION = 1;
 
   private final ServerContextProvider serverContextProvider;
-  private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final CodeActionProvider codeActionProvider;
   private final CodeLensProvider codeLensProvider;
@@ -506,6 +504,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
       serverContext.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
+      var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
       if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
         validate(documentContext);
       }
@@ -616,6 +615,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
@@ -831,6 +831,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       version
     );
 
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
     }

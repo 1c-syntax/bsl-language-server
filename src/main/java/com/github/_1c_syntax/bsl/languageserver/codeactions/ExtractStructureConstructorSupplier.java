@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -30,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
@@ -55,13 +53,11 @@ import java.util.function.Predicate;
  * в вызов конструктора с параметрами.
  */
 @Component
-@RequiredArgsConstructor
 public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
-
-  private final LanguageServerConfiguration configuration;
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
 
     var start = params.getRange().getStart();
     if (start == null) {

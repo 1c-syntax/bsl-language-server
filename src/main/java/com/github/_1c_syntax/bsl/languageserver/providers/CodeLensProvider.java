@@ -25,9 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
+import com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure.CodeLensesConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -58,17 +57,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CodeLensProvider {
   private final Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById;
-  private final ObjectProvider<List<CodeLensSupplier<CodeLensData>>> enabledCodeLensSuppliersProvider;
+  private final List<CodeLensSupplier<CodeLensData>> allCodeLensSuppliers;
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final JsonMapper jsonMapper;
-
-  private List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers;
-
-  @PostConstruct
-  protected void init() {
-    enabledCodeLensSuppliers = enabledCodeLensSuppliersProvider.getObject();
-  }
 
   /**
    * Получение списка {@link CodeLens} в документе.
@@ -77,7 +69,11 @@ public class CodeLensProvider {
    * @return Список линз.
    */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return enabledCodeLensSuppliers.stream()
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
+    var parameters = configuration.getCodeLensOptions().getParameters();
+
+    return allCodeLensSuppliers.stream()
+      .filter(supplier -> CodeLensesConfiguration.supplierIsEnabled(supplier.getId(), parameters))
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
@@ -116,8 +112,7 @@ public class CodeLensProvider {
    */
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    enabledCodeLensSuppliers = enabledCodeLensSuppliersProvider.getObject();
-
+    // Per-workspace конфигурация — просто инициируем refresh для клиента
     refreshCodeLenses();
   }
 

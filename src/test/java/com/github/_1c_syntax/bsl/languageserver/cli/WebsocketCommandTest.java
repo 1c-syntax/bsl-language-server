@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 class WebsocketCommandTest {
 
   @MockitoSpyBean
-  private LanguageServerConfiguration configuration;
+  private GlobalLanguageServerConfiguration configuration;
 
   @Autowired
   private PicocliSpringFactory factory;

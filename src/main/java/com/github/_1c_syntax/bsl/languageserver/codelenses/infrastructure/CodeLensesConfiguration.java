@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -67,26 +66,34 @@ public class CodeLensesConfiguration {
 
   /**
    * Получить список активированных в данный момент сапплаеров линз.
+   * <p>
+   * Возвращает все сапплаеры, отсортированные по порядку. Фильтрация по настройкам per-workspace
+   * происходит в момент использования в {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}.
    *
-   * @param configuration         Конфигурация сервера.
    * @param codeLensSuppliersById Список сапплаеров линз в разрезе из идентификаторов.
-   * @return Список активированных в данный момент сапплаеров линз.
+   * @return Список отсортированных сапплаеров линз.
    */
   @Bean
   @Scope(SCOPE_PROTOTYPE)
   public List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers(
-    LanguageServerConfiguration configuration,
     @Qualifier("codeLensSuppliersById") Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById
   ) {
-    var parameters = configuration.getCodeLensOptions().getParameters();
+    // Возвращаем все сапплаеры отсортированными. Фильтрация по конфигурации 
+    // будет происходить в CodeLensProvider с учётом per-workspace настроек.
     return codeLensSuppliersById.values().stream()
-      .filter(supplier -> supplierIsEnabled(supplier.getId(), parameters))
       .sorted(Comparator.comparing(o ->
         Objects.requireNonNullElse(OrderUtils.getOrder(o.getClass()), Ordered.LOWEST_PRECEDENCE)))
       .collect(Collectors.toList());
   }
 
-  private static boolean supplierIsEnabled(
+  /**
+   * Проверить, включён ли сапплаер по его id.
+   *
+   * @param supplierId id сапплаера
+   * @param parameters параметры из конфигурации
+   * @return true если сапплаер включён
+   */
+  public static boolean supplierIsEnabled(
     String supplierId,
     Map<String, Either<Boolean, Map<String, Object>>> parameters
   ) {

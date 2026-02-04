@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -57,10 +56,10 @@ import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvi
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
   private static final String ALL_DIAGNOSTIC_NAME = "";
-  private final LanguageServerConfiguration languageServerConfiguration;
+  private final Resources resources;
 
-  public DisableDiagnosticTriggeringSupplier(LanguageServerConfiguration languageServerConfiguration) {
-    this.languageServerConfiguration = languageServerConfiguration;
+  public DisableDiagnosticTriggeringSupplier(Resources resources) {
+    this.resources = resources;
   }
 
   /**
@@ -102,7 +101,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       result.addAll(
         actionDisableDiagnostic(
           name -> createCodeAction(
-            getMessage("file", name),
+            getMessage(documentContext, "file", name),
             createInFileTextEdits(":" + name),
             documentContext
           ),
@@ -113,7 +112,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
     result.add(
       createCodeAction(
-        getMessage("fileAll"),
+        getMessage(documentContext, "fileAll"),
         createInFileTextEdits(ALL_DIAGNOSTIC_NAME),
         documentContext
       )
@@ -128,7 +127,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   ) {
     var result = actionDisableDiagnostic(
       name -> createCodeAction(
-        getMessage("line", name),
+        getMessage(documentContext, "line", name),
         createInLineTextEdits(":" + name, lastToken, params),
         documentContext
       ),
@@ -136,7 +135,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     );
     result.add(
       createCodeAction(
-        getMessage("lineAll"),
+        getMessage(documentContext, "lineAll"),
         createInLineTextEdits(ALL_DIAGNOSTIC_NAME, lastToken, params),
         documentContext
       )
@@ -151,7 +150,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   ) {
     var result = actionDisableDiagnostic(
       name -> createCodeAction(
-        getMessage("range", name),
+        getMessage(documentContext, "range", name),
         createInRegionTextEdits(":" + name, lastToken, params),
         documentContext
       ),
@@ -159,7 +158,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     );
     result.add(
       createCodeAction(
-        getMessage("rangeAll"),
+        getMessage(documentContext, "rangeAll"),
         createInRegionTextEdits(ALL_DIAGNOSTIC_NAME, lastToken, params),
         documentContext
       )
@@ -222,12 +221,14 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     return codeAction;
   }
 
-  private String getMessage(String key) {
-    return Resources.getResourceString(languageServerConfiguration.getLanguage(), this.getClass(), key);
+  private String getMessage(DocumentContext documentContext, String key) {
+    var language = documentContext.getServerContext().getLanguageServerConfiguration().getLanguage();
+    return Resources.getResourceString(language, this.getClass(), key);
   }
 
-  private String getMessage(String key, Object... args) {
-    return Resources.getResourceString(languageServerConfiguration.getLanguage(), this.getClass(), key, args);
+  private String getMessage(DocumentContext documentContext, String key, Object... args) {
+    var language = documentContext.getServerContext().getLanguageServerConfiguration().getLanguage();
+    return Resources.getResourceString(language, this.getClass(), key, args);
   }
 
   private static List<TextEdit> createInLineTextEdits(String diagnosticName, Token last, CodeActionParams params) {

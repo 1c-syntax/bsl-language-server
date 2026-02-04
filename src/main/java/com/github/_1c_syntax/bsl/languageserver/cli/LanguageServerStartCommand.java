@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -68,14 +68,14 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
-  private final LanguageServerConfiguration configuration;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
   private final Launcher<LanguageClient> launcher;
   private final List<LanguageClientAware> languageClientAwares;
 
   public Integer call() {
 
     var configurationFile = new File(configurationOption);
-    configuration.update(configurationFile);
+    globalConfiguration.update(configurationFile);
 
     var languageClient = launcher.getRemoteProxy();
 

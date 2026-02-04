@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.TextEdit;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,20 +41,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class RenameProviderTest {
+class RenameProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private RenameProvider renameProvider;
 
-  @Autowired
-  private ServerContext serverContext;
-
   private static final String PATH_TO_FILE = "./src/test/resources/providers/rename.bsl";
 
-  @PostConstruct
+  @BeforeEach
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
-    serverContext.populateContext();
+    initServerContext(Path.of(PATH_TO_METADATA));
   }
 
   @Test

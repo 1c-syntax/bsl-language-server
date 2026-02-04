@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.commands.complexity.AbstractToggleComplexityInlayHintsCommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.commands.complexity.ToggleComplexityInlayHintsCommandArguments;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -52,16 +51,11 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   private static final String TITLE_KEY = "title";
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
-  /**
-   * Конфигурация language server.
-   */
-  protected final LanguageServerConfiguration configuration;
-
   private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
-    var complexityThreshold = getComplexityThreshold();
+    var complexityThreshold = getComplexityThreshold(documentContext);
     var methodsComplexity = getMethodsComplexity(documentContext);
     return documentContext.getSymbolTree().getMethods().stream()
       .filter(methodSymbol -> methodsComplexity.getOrDefault(methodSymbol, complexityThreshold - 1) >= complexityThreshold)
@@ -73,6 +67,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, ComplexityCodeLensData data) {
     var methodName = data.getMethodName();
     var methodsComplexity = getMethodsComplexity(documentContext);
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = methodsComplexity.get(methodSymbol);
 
@@ -103,7 +98,8 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
 
-  private int getComplexityThreshold() {
+  private int getComplexityThreshold(DocumentContext documentContext) {
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_COMPLEXITY_THRESHOLD;

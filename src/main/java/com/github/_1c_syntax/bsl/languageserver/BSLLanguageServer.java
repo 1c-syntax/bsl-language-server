@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
@@ -98,7 +98,8 @@ import java.util.concurrent.ForkJoinPool;
 @RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
-  private final LanguageServerConfiguration configuration;
+  private static final CapabilitiesOptions DEFAULT_CAPABILITIES = new CapabilitiesOptions();
+  
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
@@ -254,7 +255,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
    */
   private TextDocumentSyncKind getConfiguredSyncKind() {
-    return configuration.getCapabilities().getTextDocumentSync().getChange();
+    return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {

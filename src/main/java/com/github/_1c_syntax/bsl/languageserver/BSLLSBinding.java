@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfigurationFactory;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -62,13 +64,37 @@ public class BSLLSBinding {
     return context;
   }
 
-  @SuppressWarnings("unchecked")
-  public static Collection<DiagnosticInfo> getDiagnosticInfos() {
-    return getApplicationContext().getBean("diagnosticInfos", Collection.class);
+  /**
+   * Создать коллекцию DiagnosticInfo с указанной конфигурацией.
+   * <p>
+   * Используется внешними инструментами (bslls-dev-tools) для генерации документации
+   * с нужными настройками языка и других параметров.
+   *
+   * @param configuration Конфигурация для создания DiagnosticInfo
+   * @return Коллекция DiagnosticInfo
+   */
+  public static Collection<DiagnosticInfo> getDiagnosticInfos(LanguageServerConfiguration configuration) {
+    return getApplicationContext()
+      .getBean(DiagnosticInfosFactory.class)
+      .createDiagnosticInfos(configuration);
   }
 
-  public static LanguageServerConfiguration getLanguageServerConfiguration() {
-    return getApplicationContext().getBean(LanguageServerConfiguration.class);
+  /**
+   * Получить фабрику конфигураций для создания LanguageServerConfiguration.
+   *
+   * @return Фабрика конфигураций
+   */
+  public static LanguageServerConfigurationFactory getLanguageServerConfigurationFactory() {
+    return getApplicationContext().getBean(LanguageServerConfigurationFactory.class);
+  }
+
+  /**
+   * Получить фабрику DiagnosticInfos.
+   *
+   * @return Фабрика DiagnosticInfos
+   */
+  public static DiagnosticInfosFactory getDiagnosticInfosFactory() {
+    return getApplicationContext().getBean(DiagnosticInfosFactory.class);
   }
 
   public static ServerContext getServerContext() {

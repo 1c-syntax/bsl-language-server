@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.nio.file.Path;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
@@ -36,10 +38,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GlobalConfigurationTest {
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private LanguageServerConfigurationFactory configurationFactory;
 
   @Test
   void createDefault() {
+    // Test that factory falls back to global config when workspace config doesn't exist
+    var configuration = configurationFactory.createConfiguration(Path.of("."));
 
     assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
     assertThat(configuration.isUseDevSite()).isFalse();

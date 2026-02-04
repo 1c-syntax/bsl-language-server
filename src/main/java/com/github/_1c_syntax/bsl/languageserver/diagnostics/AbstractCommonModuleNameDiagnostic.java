@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -33,10 +32,8 @@ import java.util.regex.Pattern;
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   protected Pattern pattern;
-  private final LanguageServerConfiguration serverConfiguration;
 
-  protected AbstractCommonModuleNameDiagnostic(LanguageServerConfiguration serverConfiguration, String regexp) {
-    this.serverConfiguration = serverConfiguration;
+  protected AbstractCommonModuleNameDiagnostic(String regexp) {
     this.pattern = CaseInsensitivePattern.compile(regexp);
   }
 
@@ -99,7 +96,8 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean isClientOrdinaryAppIfNeed(CommonModule commonModule) {
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     return commonModule.isClientOrdinaryApplication()
-      || !serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport();
+      || !configuration.getDiagnosticsOptions().isOrdinaryAppSupport();
   }
 }

@@ -106,8 +106,6 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private ServerContext context;
   @Setter(onMethod_ = {@Autowired})
   private DiagnosticComputer diagnosticComputer;
-  @Setter(onMethod_ = {@Autowired})
-  private LanguageServerConfiguration configuration;
 
   @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
@@ -220,7 +218,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
     String languageTag;
     if (mdConfiguration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
-      languageTag = configuration.getLanguage().getLanguageCode();
+      languageTag = getServerContext().getLanguageServerConfiguration().getLanguage().getLanguageCode();
     } else {
       var scriptVariant = mdConfiguration.getScriptVariant();
       if (scriptVariant != ScriptVariant.UNKNOWN) {

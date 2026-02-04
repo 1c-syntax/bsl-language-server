@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses.testrunner;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -63,8 +62,6 @@ public class TestRunnerAdapter {
 
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\r?\n");
 
-  private final LanguageServerConfiguration configuration;
-
   /**
    * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    * <p>
@@ -86,6 +83,7 @@ public class TestRunnerAdapter {
    */
   @Cacheable
   public List<String> getTestIds(DocumentContext documentContext) {
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     if (options.isGetTestsByTestRunner()) {
@@ -96,6 +94,7 @@ public class TestRunnerAdapter {
   }
 
   private List<String> computeTestIdsByTestRunner(DocumentContext documentContext) {
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     var executable = SystemUtils.IS_OS_WINDOWS ? options.getExecutableWin() : options.getExecutable();
@@ -149,6 +148,7 @@ public class TestRunnerAdapter {
   }
 
   private List<String> computeTestIdsByLanguageServer(DocumentContext documentContext) {
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var annotations = configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getAnnotations();
     return documentContext.getSymbolTree()
       .getMethods()

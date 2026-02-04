@@ -23,8 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfigurationFactory;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -52,7 +54,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerContextProvider {
 
   private final ObjectProvider<ServerContext> serverContextProvider;
-  private final LanguageServerConfiguration configuration;
+  private final LanguageServerConfigurationFactory configurationFactory;
+  private final DiagnosticInfosFactory diagnosticInfosFactory;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
@@ -60,10 +63,12 @@ public class ServerContextProvider {
 
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextProvider,
-    LanguageServerConfiguration configuration
+    LanguageServerConfigurationFactory configurationFactory,
+    DiagnosticInfosFactory diagnosticInfosFactory
   ) {
     this.serverContextProvider = serverContextProvider;
-    this.configuration = configuration;
+    this.configurationFactory = configurationFactory;
+    this.diagnosticInfosFactory = diagnosticInfosFactory;
   }
 
   /**
@@ -95,8 +100,21 @@ public class ServerContextProvider {
 
     // Get new ServerContext instance from Spring (prototype scope)
     var serverContext = serverContextProvider.getObject();
+    
+    // Create per-workspace configuration
+    var languageServerConfiguration = configurationFactory.createConfiguration(rootPath);
+    serverContext.setLanguageServerConfiguration(languageServerConfiguration);
+    
+    // Create per-workspace DiagnosticInfo collections
+    serverContext.setDiagnosticInfosByCode(
+      diagnosticInfosFactory.createDiagnosticInfosByCode(languageServerConfiguration)
+    );
+    serverContext.setDiagnosticInfosByClass(
+      diagnosticInfosFactory.createDiagnosticInfosByClass(languageServerConfiguration)
+    );
+    
     var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
-      configuration, 
+      languageServerConfiguration, 
       rootPath
     );
     serverContext.setConfigurationRoot(configurationRoot);
@@ -229,7 +247,7 @@ public class ServerContextProvider {
     contexts.clear();
     workspaceRoots.clear();
     documentIndex.clear();
-    LOGGER.info("Cleared all workspaces");
+    LOGGER.debug("Cleared all workspaces");
   }
 
   /**

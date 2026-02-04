@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -35,18 +34,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentLinkProviderTest {
 
   @Autowired
-  private LanguageServerConfiguration configuration;
-
-  @Autowired
   private DocumentLinkProvider documentLinkProvider;
 
   @Test
   void testProviderCanGetResultFromEnabledComputers() {
     // given
-    configuration.getDocumentLinkOptions().setShowDiagnosticDescription(true);
-
     var filePath = "./src/test/resources/providers/documentLinkProvider.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    
+    // Configure for this workspace
+    documentContext.getServerContext().getLanguageServerConfiguration()
+      .getDocumentLinkOptions().setShowDiagnosticDescription(true);
+    
     // На текущий момент единственный DocumentLinkSupplier - это показ ссылок на документацию
     // по рассчитанным диагностикам.
     // Поэтому перед вызовом получения списка ссылок нужно вызвать расчет диагностик.

@@ -21,32 +21,31 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import tools.jackson.core.util.DefaultIndenter;
-import tools.jackson.core.util.DefaultPrettyPrinter;
-import tools.jackson.databind.SerializationFeature;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.util.DefaultIndenter;
+import tools.jackson.core.util.DefaultPrettyPrinter;
+import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class CodeQualityReporter implements DiagnosticReporter {
+public class CodeQualityReporter extends AbstractDiagnosticReporter {
 
-  private final Map<String, DiagnosticInfo> diagnosticInfosByCode;
+  public CodeQualityReporter(ServerContextProvider serverContextProvider) {
+    super(serverContextProvider);
+  }
 
   @Override
   public String key() {
@@ -56,6 +55,8 @@ public class CodeQualityReporter implements DiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
+    var diagnosticInfosByCode = getDiagnosticInfosByCode(analysisInfo);
+
     List<CodeQualityReportEntry> report = new ArrayList<>();
     for (FileInfo fileInfo : analysisInfo.fileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {

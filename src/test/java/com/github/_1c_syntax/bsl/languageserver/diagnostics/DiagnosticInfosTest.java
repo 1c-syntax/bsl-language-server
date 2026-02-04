@@ -23,11 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
@@ -39,13 +40,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
-class DiagnosticInfosTest {
+class DiagnosticInfosTest extends AbstractServerContextAwareTest {
 
-  @Autowired
   private Map<String, DiagnosticInfo> diagnosticInfos;
-
-  @Autowired
   private LanguageServerConfiguration configuration;
+
+  @BeforeEach
+  void setUp() {
+    initServerContext();
+    diagnosticInfos = context.getDiagnosticInfosByCode();
+    configuration = context.getLanguageServerConfiguration();
+  }
 
   @Test
   void testAllDiagnosticsHaveMetadataAnnotation() {

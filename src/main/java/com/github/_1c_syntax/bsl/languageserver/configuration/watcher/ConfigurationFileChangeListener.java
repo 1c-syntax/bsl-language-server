@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -34,33 +34,34 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 /**
- * Обработчик событий изменения файла конфигурации.
+ * Обработчик событий изменения файла глобальной конфигурации.
  * <p>
- * Выполняет обновление/сброс инстанса
- * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+ * Выполняет обновление инстанса
+ * {@link GlobalLanguageServerConfiguration}.
+ * <p>
+ * TODO: В Фазе 5 per-workspace рефакторинга добавить метод для обработки per-workspace конфигураций.
  */
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class ConfigurationFileChangeListener {
 
-  private final LanguageServerConfiguration configuration;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
 
   /**
-   * Обработчик изменения файла конфигурации. Актуализирует текущий активный инстанс конфигурации
-   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * Обработчик изменения глобального файла конфигурации.
    *
-   * @param configurationFile Изменившийся файл конфигурации, содержащий
-   *                          {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * @param configurationFile Изменившийся файл конфигурации
    * @param eventKind         Тип события, произошедшего с файлом.
    */
-  public void onChange(File configurationFile, WatchEvent.Kind<?> eventKind) {
+  public void onGlobalChange(File configurationFile, WatchEvent.Kind<?> eventKind) {
     if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {
-      configuration.update(configurationFile);
-      LOGGER.info("BSL Language Server configuration has been reloaded");
+      globalConfiguration.update(configurationFile);
+      LOGGER.info("BSL Language Server global configuration has been reloaded");
     } else if (ENTRY_DELETE.equals(eventKind)) {
-      configuration.reset();
-      LOGGER.info("BSL Language Server configuration has been reset to default");
+      // Global configuration deleted - reload from default path
+      globalConfiguration.update(null);
+      LOGGER.info("BSL Language Server global configuration file deleted, using defaults");
     } else {
       LOGGER.error("Unknown watch event kind {}", eventKind);
     }

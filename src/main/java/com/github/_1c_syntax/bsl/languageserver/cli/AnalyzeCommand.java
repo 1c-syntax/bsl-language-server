@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -136,8 +138,8 @@ public class AnalyzeCommand implements Callable<Integer> {
   private boolean silentMode;
 
   private final ReportersAggregator aggregator;
-  private final LanguageServerConfiguration configuration;
-  private final ServerContext context;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
+  private final ServerContextProvider serverContextProvider;
 
   public Integer call() {
 
@@ -154,8 +156,18 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     var configurationFile = new File(configurationOption);
-    configuration.update(configurationFile);
+    
+    // Update global configuration
+    globalConfiguration.update(configurationFile);
 
+    // Create workspace for srcDir (factory will create per-workspace configuration)
+    var context = serverContextProvider.addWorkspace(srcDir.toUri());
+    
+    // In analyze mode, -c affects both global and per-workspace settings
+    // since there is always exactly one workspace
+    context.getLanguageServerConfiguration().update(configurationFile);
+
+    var configuration = context.getLanguageServerConfiguration();
     var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);
 
@@ -166,7 +178,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     List<FileInfo> fileInfos;
     if (silentMode) {
       fileInfos = files.parallelStream()
-        .map((File file) -> getFileInfoFromFile(workspaceDir, file))
+        .map((File file) -> getFileInfoFromFile(context, workspaceDir, file))
         .collect(Collectors.toList());
     } else {
       try (ProgressBar pb = new ProgressBarBuilder()
@@ -177,7 +189,7 @@ public class AnalyzeCommand implements Callable<Integer> {
         fileInfos = files.parallelStream()
           .map((File file) -> {
             pb.step();
-            return getFileInfoFromFile(workspaceDir, file);
+            return getFileInfoFromFile(context, workspaceDir, file);
           })
           .collect(Collectors.toList());
       }
@@ -194,7 +206,7 @@ public class AnalyzeCommand implements Callable<Integer> {
   }
 
   @SneakyThrows
-  private FileInfo getFileInfoFromFile(Path srcDir, File file) {
+  private FileInfo getFileInfoFromFile(ServerContext context, Path srcDir, File file) {
     var documentContext = context.addDocument(Absolute.uri(file));
     context.rebuildDocument(documentContext);
 

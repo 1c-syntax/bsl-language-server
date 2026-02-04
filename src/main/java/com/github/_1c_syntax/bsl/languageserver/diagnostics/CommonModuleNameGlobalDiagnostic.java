@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -48,8 +48,8 @@ public class CommonModuleNameGlobalDiagnostic extends AbstractCommonModuleNameDi
 
   private static final String REGEXP = "глобальный|global";
 
-  public CommonModuleNameGlobalDiagnostic(LanguageServerConfiguration serverConfiguration) {
-    super(serverConfiguration, REGEXP);
+  public CommonModuleNameGlobalDiagnostic() {
+    super(REGEXP);
   }
 
   @Override

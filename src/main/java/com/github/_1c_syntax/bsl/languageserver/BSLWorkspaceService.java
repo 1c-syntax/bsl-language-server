@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
@@ -30,7 +29,6 @@ import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
@@ -43,7 +41,6 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -62,7 +59,6 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public class BSLWorkspaceService implements WorkspaceService {
 
-  private final LanguageServerConfiguration configuration;
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
   private final ServerContextProvider serverContextProvider;
@@ -84,15 +80,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
-    var settings = params.getSettings();
-    if (settings == null) {
-      return;
-    }
-    try {
-      PropertyUtils.copyProperties(configuration, settings);
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new RuntimeException(e);
-    }
+    // no-op: configuration is managed through .bsl-language-server.json files
   }
 
   @Override

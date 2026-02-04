@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -30,7 +32,6 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -42,7 +43,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class QuickFixSupplier {
 
-  private final Map<String, DiagnosticInfo> diagnosticInfos;
+  private final DiagnosticInfosFactory diagnosticInfosFactory;
   private final DiagnosticObjectProvider diagnosticObjectProvider;
 
   // TODO: Рефакторинг апи квик-фиксов.
@@ -53,13 +54,16 @@ public class QuickFixSupplier {
    * Получить класс провайдера быстрых исправлений для указанного кода диагностики.
    *
    * @param diagnosticCode Код диагностики
+   * @param serverContext Контекст сервера для получения DiagnosticInfo
    * @param <T> Тип кода диагностики (строка или число)
    * @return Класс провайдера быстрых исправлений, если диагностика поддерживает quick fix
    */
   @SuppressWarnings("unchecked")
   public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
-    T diagnosticCode
+    T diagnosticCode,
+    ServerContext serverContext
   ) {
+    var diagnosticInfos = serverContext.getDiagnosticInfosByCode();
     return Optional.ofNullable(
       diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
     )
@@ -72,12 +76,18 @@ public class QuickFixSupplier {
    * Получить экземпляр провайдера быстрых исправлений.
    *
    * @param quickFixProviderClass Класс провайдера быстрых исправлений
+   * @param serverContext Контекст сервера для получения конфигурации и DiagnosticInfo
    * @return Экземпляр провайдера быстрых исправлений
    */
   @SuppressWarnings("unchecked")
-  public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
+  public QuickFixProvider getQuickFixInstance(
+    Class<? extends QuickFixProvider> quickFixProviderClass,
+    ServerContext serverContext
+  ) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
-    return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticClass);
+    var diagnosticInfo = serverContext.getDiagnosticInfosByClass().get(diagnosticClass);
+    var configuration = serverContext.getLanguageServerConfiguration();
+    return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticInfo, configuration);
   }
 
 }

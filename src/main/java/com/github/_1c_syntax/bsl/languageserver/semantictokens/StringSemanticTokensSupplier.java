@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
@@ -36,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.TokenPosi
 import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
@@ -78,37 +75,16 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   );
 
   private final SemanticTokensHelper helper;
-  private final LanguageServerConfiguration configuration;
-
-  private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
-
-  @PostConstruct
-  private void init() {
-    updateParsedStrTemplateMethods();
-  }
-
-  /**
-   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
-   * <p>
-   * Обновляет кэшированные паттерны функций-шаблонизаторов при изменении конфигурации.
-   *
-   * @param event Событие
-   */
-  @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    updateParsedStrTemplateMethods();
-  }
-
-  private void updateParsedStrTemplateMethods() {
-    parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
-  }
 
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
+    var parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
+    
     List<SemanticTokenEntry> entries = new ArrayList<>();
 
     // Собираем информацию о контекстах строк
-    var specialStringContexts = collectSpecialStringContexts(documentContext);
+    var specialStringContexts = collectSpecialStringContexts(documentContext, parsedStrTemplateMethods);
     var queryStringContexts = collectQueryStringContexts(documentContext);
 
     // Обрабатываем все строковые токены
@@ -305,7 +281,10 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
   }
 
-  private Map<Token, StringContext> collectSpecialStringContexts(DocumentContext documentContext) {
+  private Map<Token, StringContext> collectSpecialStringContexts(
+    DocumentContext documentContext,
+    ParsedStrTemplateMethods parsedStrTemplateMethods
+  ) {
     Map<Token, StringContext> contexts = new HashMap<>();
     var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods);
     visitor.visit(documentContext.getAst());

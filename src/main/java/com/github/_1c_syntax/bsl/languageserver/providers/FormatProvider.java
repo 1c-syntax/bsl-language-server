@@ -98,13 +98,8 @@ public final class FormatProvider {
     BSLLexer.STRING
   ));
 
-  private final Map<Integer, MultiName> keywordCanonText;
-
-  private final LanguageServerConfiguration languageServerConfiguration;
-
-  public FormatProvider(LanguageServerConfiguration languageServerConfiguration) {
-    this.languageServerConfiguration = languageServerConfiguration;
-    keywordCanonText = getKeywordsCanonicalText();
+  public FormatProvider() {
+    // No-op - всё инициализируется при каждом вызове
   }
 
   public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
@@ -116,10 +111,12 @@ public final class FormatProvider {
     var lastToken = tokens.get(tokens.size() - 1);
 
     var locale = documentContext.getScriptVariantLocale();
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     return getTextEdits(
       tokens,
       locale,
-      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
+      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions(),
+      configuration
     );
   }
 
@@ -143,13 +140,15 @@ public final class FormatProvider {
       })
       .collect(Collectors.toList());
 
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     return getTextEdits(
-      tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
+      tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions(),
+      configuration);
   }
 
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    putLogicalNotOrKeywords(keywordCanonText);
+    // No-op: per-workspace архитектура — конфигурация получается при каждом вызове
   }
 
   private static boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
@@ -167,10 +166,11 @@ public final class FormatProvider {
     Locale languageLocale,
     Range range,
     int startCharacter,
-    FormattingOptions options
+    FormattingOptions options,
+    LanguageServerConfiguration configuration
   ) {
 
-    String newText = getNewText(tokens, languageLocale, range, startCharacter, options);
+    String newText = getNewText(tokens, languageLocale, range, startCharacter, options, configuration);
 
     if (newText.isEmpty()) {
       return Collections.emptyList();
@@ -187,7 +187,8 @@ public final class FormatProvider {
     Locale languageLocale,
     Range range,
     int startCharacter,
-    FormattingOptions options
+    FormattingOptions options,
+    LanguageServerConfiguration configuration
   ) {
 
     if (tokens.isEmpty()) {
@@ -293,7 +294,7 @@ public final class FormatProvider {
       if (tokenType == BSLLexer.LINE_COMMENT) {
         addedText = addedText.trim();
       } else if (keywordTypes.contains(tokenType)) {
-        addedText = checkAndFormatKeyword(token, languageLocale);
+        addedText = checkAndFormatKeyword(token, languageLocale, configuration);
       }
       newTextBuilder.append(addedText);
 
@@ -336,10 +337,12 @@ public final class FormatProvider {
     return newTextBuilder.toString();
   }
 
-  private String checkAndFormatKeyword(Token token, Locale languageLocale) {
-    var needFormatKeyword = languageServerConfiguration.getFormattingOptions().isUseKeywordsFormatting();
+  private String checkAndFormatKeyword(Token token, Locale languageLocale, LanguageServerConfiguration configuration) {
+    var needFormatKeyword = configuration.getFormattingOptions().isUseKeywordsFormatting();
     if (needFormatKeyword) {
-      return keywordCanonText.getOrDefault(token.getType(), MultiName.EMPTY).get(languageLocale.getLanguage());
+      var useUpperCase = configuration.getFormattingOptions().isUseUpperCaseForOrNotAndKeywords();
+      var canonText = getKeywordsCanonicalText(useUpperCase);
+      return canonText.getOrDefault(token.getType(), MultiName.EMPTY).get(languageLocale.getLanguage());
     }
 
     return token.getText();
@@ -459,9 +462,10 @@ public final class FormatProvider {
   }
 
   /**
+   * @param useUpperCase использовать заглавные буквы для OR/NOT/AND
    * @return мэппинг типа токена к паре, где слева английский текст, справа русский
    */
-  private Map<Integer, MultiName> getKeywordsCanonicalText() {
+  private static Map<Integer, MultiName> getKeywordsCanonicalText(boolean useUpperCase) {
     Map<Integer, MultiName> canonWords = new HashMap<>();
 
     canonWords.put(BSLLexer.IF_KEYWORD, Keywords.IF);
@@ -499,21 +503,17 @@ public final class FormatProvider {
     canonWords.put(BSLLexer.EXECUTE_KEYWORD, Keywords.EXECUTE);
     canonWords.put(BSLLexer.EXPORT_KEYWORD, Keywords.EXPORT);
 
-    putLogicalNotOrKeywords(canonWords);
+    putLogicalNotOrKeywords(canonWords, useUpperCase);
 
     return canonWords;
   }
 
-  private void putLogicalNotOrKeywords(Map<Integer, MultiName> canonWords) {
-    var useUppercaseForLogicalOrNotAndKeywords = languageServerConfiguration
-      .getFormattingOptions()
-      .isUseUpperCaseForOrNotAndKeywords();
-
+  private static void putLogicalNotOrKeywords(Map<Integer, MultiName> canonWords, boolean useUpperCase) {
     MultiName orKeywordCanonText;
     MultiName notKeywordCanonText;
     MultiName andKeywordCanonText;
 
-    if (useUppercaseForLogicalOrNotAndKeywords) {
+    if (useUpperCase) {
       orKeywordCanonText = Keywords.OR_UP;
       notKeywordCanonText = Keywords.NOT_UP;
       andKeywordCanonText = Keywords.AND_UP;

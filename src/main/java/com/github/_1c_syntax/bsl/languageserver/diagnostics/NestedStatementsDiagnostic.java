@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -65,57 +64,57 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   private ParserRuleContext lastCtx;
   private final Deque<ParserRuleContext> nestedParents = new ArrayDeque<>();
 
-  @PostConstruct
-  public void init() {
+  @Override
+  public void initAfterInfoSet() {
     relatedMessage = this.info.getResourceString("parentStatementRelatedMessage");
   }
 
-  @Override
+@Override
   public void enterIfStatement(BSLParser.IfStatementContext ctx) {
     enterNode(ctx);
   }
 
-  @Override
+@Override
   public void exitIfStatement(BSLParser.IfStatementContext ctx) {
     exitNode(ctx);
   }
 
-  @Override
+@Override
   public void enterWhileStatement(BSLParser.WhileStatementContext ctx) {
     enterNode(ctx);
   }
 
-  @Override
+@Override
   public void exitWhileStatement(BSLParser.WhileStatementContext ctx) {
     exitNode(ctx);
   }
 
-  @Override
+@Override
   public void enterForStatement(BSLParser.ForStatementContext ctx) {
     enterNode(ctx);
   }
 
-  @Override
+@Override
   public void exitForStatement(BSLParser.ForStatementContext ctx) {
     exitNode(ctx);
   }
 
-  @Override
+@Override
   public void enterForEachStatement(BSLParser.ForEachStatementContext ctx) {
     enterNode(ctx);
   }
 
-  @Override
+@Override
   public void exitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     exitNode(ctx);
   }
 
-  @Override
+@Override
   public void enterTryStatement(BSLParser.TryStatementContext ctx) {
     enterNode(ctx);
   }
 
-  @Override
+@Override
   public void exitTryStatement(BSLParser.TryStatementContext ctx) {
     exitNode(ctx);
   }

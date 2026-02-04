@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -61,7 +60,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   private static final boolean DEFAULT_DEFAULT_VALUES = true;
 
   private final ReferenceIndex referenceIndex;
-  private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
 
 
@@ -103,14 +101,14 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
           var passedValue = callParam.getText();
 
-          if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
+          if (!showParametersWithTheSameName(reference) && Strings.CI.contains(passedValue, parameter.getName())) {
             continue;
           }
 
           var inlayHint = new InlayHint();
           inlayHint.setKind(InlayHintKind.Parameter);
 
-          setLabelAndPadding(inlayHint, parameter, passedValue);
+          setLabelAndPadding(inlayHint, parameter, passedValue, reference);
           setPosition(inlayHint, callParam);
           setTooltip(inlayHint, parameter);
 
@@ -127,7 +125,8 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   private void setLabelAndPadding(
     InlayHint inlayHint,
     ParameterDefinition parameter,
-    String passedValue
+    String passedValue,
+    Reference reference
   ) {
 
     var defaultValue = parameter.getDefaultValue();
@@ -135,7 +134,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     var labelBuilder = new StringBuilder();
     labelBuilder.append(parameter.getName());
 
-    if (showDefaultValues()
+    if (showDefaultValues(reference)
       && passedValue.isBlank()
       && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
     ) {
@@ -162,7 +161,8 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   }
 
 
-  private boolean showParametersWithTheSameName() {
+  private boolean showParametersWithTheSameName(Reference reference) {
+    var configuration = reference.from().getOwner().getServerContext().getLanguageServerConfiguration();
     var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME;
@@ -174,7 +174,8 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     }
   }
 
-  private boolean showDefaultValues() {
+  private boolean showDefaultValues(Reference reference) {
+    var configuration = reference.from().getOwner().getServerContext().getLanguageServerConfiguration();
     var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_DEFAULT_VALUES;

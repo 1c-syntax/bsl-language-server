@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -30,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(
@@ -46,14 +44,12 @@ import org.eclipse.lsp4j.Range;
     DiagnosticTag.UNPREDICTABLE
   }
 )
-@RequiredArgsConstructor
 public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
-
-  private final LanguageServerConfiguration serverConfiguration;
 
   @Override
   protected void check() {
 
+    var serverConfiguration = documentContext.getServerContext().getLanguageServerConfiguration();
     if (!serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport()) {
       return;
     }

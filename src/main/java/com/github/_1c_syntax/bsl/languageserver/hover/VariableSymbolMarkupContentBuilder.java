@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
@@ -40,7 +39,6 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
 
-  private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
 

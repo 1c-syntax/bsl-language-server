@@ -26,10 +26,11 @@ import com.contrastsecurity.sarif.PhysicalLocation;
 import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.SarifSchema210;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
@@ -53,20 +54,24 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterClass
-class SarifReporterTest {
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class SarifReporterTest extends AbstractServerContextAwareTest {
+
+  private static final String SOURCE_DIR = ".";
 
   @Autowired
   private SarifReporter reporter;
-  @Autowired
+
   private Collection<DiagnosticInfo> diagnosticInfos;
-  @Autowired
   private LanguageServerConfiguration configuration;
 
   private final File file = new File("./bsl-ls.sarif");
 
   @BeforeEach
   void setUp() {
+    initServerContext(SOURCE_DIR, false);
+    diagnosticInfos = context.getDiagnosticInfosByCode().values();
+    configuration = context.getLanguageServerConfiguration();
     FileUtils.deleteQuietly(file);
   }
 
@@ -93,12 +98,11 @@ class SarifReporterTest {
     );
 
     var documentContext = TestUtils.getDocumentContext("");
-    String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
+    FileInfo fileInfo = new FileInfo(SOURCE_DIR, documentContext, Collections.singletonList(diagnostic));
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), SOURCE_DIR);
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    reporter.report(analysisInfo, Path.of("."));
 
     // then
     var mapper = new JsonMapper();

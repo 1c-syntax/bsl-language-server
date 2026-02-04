@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
@@ -55,8 +54,6 @@ class CodeActionProviderTest {
   @Autowired
   private CodeActionProvider codeActionProvider;
   @Autowired
-  private LanguageServerConfiguration configuration;
-  @Autowired
   private StringInterner stringInterner;
 
   private DocumentContext documentContext;
@@ -71,6 +68,7 @@ class CodeActionProviderTest {
   void testGetCodeActions() {
 
     // given
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
       CanonicalSpellingKeywordsDiagnostic.class,
       configuration,
@@ -137,6 +135,7 @@ class CodeActionProviderTest {
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
       CanonicalSpellingKeywordsDiagnostic.class,
       configuration,

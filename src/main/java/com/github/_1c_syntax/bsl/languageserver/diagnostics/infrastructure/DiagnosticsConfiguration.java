@@ -39,13 +39,11 @@ import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,16 +51,23 @@ import java.util.stream.Collectors;
 
 @Configuration
 @RequiredArgsConstructor
-public abstract class DiagnosticsConfiguration {
+public class DiagnosticsConfiguration {
 
-  private final LanguageServerConfiguration configuration;
   private final DiagnosticObjectProvider diagnosticObjectProvider;
 
   @Bean
   @Scope("prototype")
   public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
 
-    var diagnosticInfos = diagnosticInfos();
+    var serverContext = documentContext.getServerContext();
+    var configuration = serverContext.getLanguageServerConfiguration();
+    
+    // If configuration is not set (shouldn't happen in normal operation), return empty list
+    if (configuration == null) {
+      return Collections.emptyList();
+    }
+
+    var diagnosticInfosByClass = serverContext.getDiagnosticInfosByClass();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     if (needToComputeDiagnostics(documentContext, diagnosticsOptions)) {
@@ -73,23 +78,19 @@ public abstract class DiagnosticsConfiguration {
         .getCompatibilityMode();
       var moduleType = documentContext.getModuleType();
 
-      return diagnosticInfos.stream()
-        .filter(diagnosticInfo -> isEnabled(diagnosticInfo, diagnosticsOptions))
+      return diagnosticInfosByClass.values().stream()
+        .filter(diagnosticInfo -> isEnabled(diagnosticInfo, configuration))
         .filter(diagnosticInfo -> passedMinimumLSPDiagnosticLevel(diagnosticInfo, diagnosticsOptions))
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
-        .map(DiagnosticInfo::getDiagnosticClass)
-        .filter(diagnostic -> AnnotationUtils.findAnnotation(diagnostic, Disabled.class) == null)
-        .map(diagnosticObjectProvider::get)
+        .filter(info -> AnnotationUtils.findAnnotation(info.getDiagnosticClass(), Disabled.class) == null)
+        .<BSLDiagnostic>map(info -> diagnosticObjectProvider.get(info, configuration))
         .collect(Collectors.toList());
     } else {
       return Collections.emptyList();
     }
   }
-
-  @Lookup("diagnosticInfos")
-  protected abstract Collection<DiagnosticInfo> diagnosticInfos();
 
   private static boolean needToComputeDiagnostics(
     DocumentContext documentContext,
@@ -145,14 +146,15 @@ public abstract class DiagnosticsConfiguration {
     return configuredSkipSupport != SkipSupport.WITH_SUPPORT;
   }
 
-  private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
+  private static boolean isEnabled(DiagnosticInfo diagnosticInfo, LanguageServerConfiguration configuration) {
+    var diagnosticsOptions = configuration.getDiagnosticsOptions();
     var mode = diagnosticsOptions.getMode();
     if (mode == Mode.OFF) {
       return false;
     }
 
     Either<Boolean, Map<String, Object>> diagnosticParameters =
-      configuration.getDiagnosticsOptions().getParameters().get(diagnosticInfo.getCode().getStringValue());
+      diagnosticsOptions.getParameters().get(diagnosticInfo.getCode().getStringValue());
 
     boolean activatedByDefault = diagnosticParameters == null && diagnosticInfo.isActivatedByDefault();
     boolean hasCustomConfiguration = diagnosticParameters != null && diagnosticParameters.isRight();

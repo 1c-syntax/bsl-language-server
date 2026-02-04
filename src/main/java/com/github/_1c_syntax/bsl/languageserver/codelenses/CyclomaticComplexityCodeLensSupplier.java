@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.commands.ToggleCyclomaticComplexityInlayHintsCommandSupplier;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.springframework.core.annotation.Order;
@@ -38,10 +37,9 @@ import java.util.Map;
 public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
   public CyclomaticComplexityCodeLensSupplier(
-    LanguageServerConfiguration configuration,
     ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier
   ) {
-    super(configuration, commandSupplier);
+    super(commandSupplier);
   }
 
   @Override
