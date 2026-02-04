@@ -298,10 +298,10 @@ public class ReferenceIndex {
     var moduleType = symbolEntity.moduleType();
     var symbolName = symbolEntity.symbolName();
 
-    var documentOpt = serverContext.getDocument(mdoRef, moduleType);
+    var maybeDocument = serverContext.getDocument(mdoRef, moduleType);
 
     if (symbolEntity.symbolKind() == SymbolKind.Variable) {
-      return documentOpt
+      return maybeDocument
         .map(DocumentContext::getSymbolTree)
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.scopeName())
           .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
@@ -309,12 +309,12 @@ public class ReferenceIndex {
     }
 
     if (symbolEntity.symbolKind() == SymbolKind.Module) {
-      return documentOpt
+      return maybeDocument
         .map(DocumentContext::getSymbolTree)
         .map(SymbolTree::getModule);
     }
 
-    return documentOpt
+    return maybeDocument
       .map(DocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }

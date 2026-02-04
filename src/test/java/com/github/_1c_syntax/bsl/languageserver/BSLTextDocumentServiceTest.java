@@ -121,8 +121,9 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
 
     // when - incremental change: insert text at position
     var params = new DidChangeTextDocumentParams();
@@ -149,8 +150,9 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
 
     // when - multiple incremental changes
     var params = new DidChangeTextDocumentParams();
@@ -183,8 +185,9 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
 
     // when - incremental change: delete text
     var params = new DidChangeTextDocumentParams();
@@ -218,9 +221,12 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
-    assertThat(serverContextProvider.isDocumentOpened(documentContext)).isTrue();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
+    var maybeContext = serverContextProvider.getServerContextUnsafe(Absolute.uri(textDocumentItem.getUri()));
+    assertThat(maybeContext).isPresent();
+    assertThat(maybeContext.get().isDocumentOpened(documentContext)).isTrue();
 
     // when - submit multiple changes rapidly and then close immediately
     var params = new DidChangeTextDocumentParams();
@@ -242,7 +248,9 @@ class BSLTextDocumentServiceTest {
     textDocumentService.didClose(closeParams);
 
     // verify the document is closed
-    assertThat(serverContextProvider.isDocumentOpened(documentContext)).isFalse();
+    var maybeContext2 = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext2).isPresent();
+    assertThat(maybeContext2.get().isDocumentOpened(documentContext)).isFalse();
   }
 
   @Test
@@ -252,9 +260,12 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
-    assertThat(serverContextProvider.isDocumentOpened(documentContext)).isTrue();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
+    var maybeContext = serverContextProvider.getServerContextUnsafe(Absolute.uri(textDocumentItem.getUri()));
+    assertThat(maybeContext).isPresent();
+    assertThat(maybeContext.get().isDocumentOpened(documentContext)).isTrue();
 
     // when - submit a change
     var params = new DidChangeTextDocumentParams();
@@ -273,7 +284,9 @@ class BSLTextDocumentServiceTest {
     textDocumentService.didClose(closeParams);
 
     // verify the document is closed
-    assertThat(serverContextProvider.isDocumentOpened(documentContext)).isFalse();
+    var maybeContext2 = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext2).isPresent();
+    assertThat(maybeContext2.get().isDocumentOpened(documentContext)).isFalse();
   }
 
   @Test
@@ -284,9 +297,12 @@ class BSLTextDocumentServiceTest {
     textDocumentService.didOpen(didOpenParams);
 
     var uri = textDocumentItem.getUri();
-    var documentContext = serverContextProvider.getDocumentUnsafe(uri);
-    assertThat(documentContext).isNotNull();
-    assertThat(serverContextProvider.isDocumentOpened(documentContext)).isTrue();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(uri);
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
+    var maybeContext = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext).isPresent();
+    assertThat(maybeContext.get().isDocumentOpened(documentContext)).isTrue();
 
     // when - close the document (which should wait for executor to terminate)
     var closeParams = new DidCloseTextDocumentParams();
@@ -295,7 +311,9 @@ class BSLTextDocumentServiceTest {
 
     // then - verify the document is properly closed
     // The close should complete successfully even if executor needs time to terminate
-    assertThat(serverContextProvider.isDocumentOpened(documentContext)).isFalse();
+    var maybeContext2 = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext2).isPresent();
+    assertThat(maybeContext2.get().isDocumentOpened(documentContext)).isFalse();
   }
 
   @Test

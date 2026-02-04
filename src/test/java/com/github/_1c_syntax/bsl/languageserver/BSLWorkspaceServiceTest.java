@@ -28,8 +28,11 @@ import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
+import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -311,6 +314,79 @@ class BSLWorkspaceServiceTest {
     // Не должно быть исключений при вызове с null settings
     assertThatCode(() -> workspaceService.didChangeConfiguration(params))
       .doesNotThrowAnyException();
+  }
+
+  @Test
+  void testDidChangeWorkspaceFolders_AddWorkspace() throws IOException {
+    // given
+    var newWorkspaceDir = tempDir.resolve("new-workspace").toFile();
+    newWorkspaceDir.mkdir();
+    var workspaceFolder = new WorkspaceFolder(newWorkspaceDir.toURI().toString(), "new-workspace");
+    
+    var event = new WorkspaceFoldersChangeEvent(
+      List.of(workspaceFolder),
+      List.of()
+    );
+    var params = new DidChangeWorkspaceFoldersParams(event);
+
+    // when
+    workspaceService.didChangeWorkspaceFolders(params);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+
+    // then
+    var uri = Absolute.uri(newWorkspaceDir.toURI());
+    assertThat(serverContextProvider.getServerContext(uri)).isPresent();
+    
+    // cleanup
+    serverContextProvider.removeWorkspace(workspaceFolder);
+  }
+
+  @Test
+  void testDidChangeWorkspaceFolders_RemoveWorkspace() {
+    // given
+    var workspaceFolder = new WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
+    
+    var event = new WorkspaceFoldersChangeEvent(
+      List.of(),
+      List.of(workspaceFolder)
+    );
+    var params = new DidChangeWorkspaceFoldersParams(event);
+
+    // when
+    workspaceService.didChangeWorkspaceFolders(params);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+
+    // then
+    var uri = Absolute.uri(tempDir.toUri());
+    assertThat(serverContextProvider.getServerContext(uri)).isEmpty();
+  }
+
+  @Test
+  void testDidChangeWorkspaceFolders_AddAndRemove() throws IOException {
+    // given
+    var newWorkspaceDir = tempDir.resolve("new-workspace-2").toFile();
+    newWorkspaceDir.mkdir();
+    var workspaceFolderToAdd = new WorkspaceFolder(newWorkspaceDir.toURI().toString(), "new-workspace-2");
+    var workspaceFolderToRemove = new WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
+    
+    var event = new WorkspaceFoldersChangeEvent(
+      List.of(workspaceFolderToAdd),
+      List.of(workspaceFolderToRemove)
+    );
+    var params = new DidChangeWorkspaceFoldersParams(event);
+
+    // when
+    workspaceService.didChangeWorkspaceFolders(params);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+
+    // then
+    var uriAdded = Absolute.uri(newWorkspaceDir.toURI());
+    var uriRemoved = Absolute.uri(tempDir.toUri());
+    assertThat(serverContextProvider.getServerContext(uriAdded)).isPresent();
+    assertThat(serverContextProvider.getServerContext(uriRemoved)).isEmpty();
+    
+    // cleanup
+    serverContextProvider.removeWorkspace(workspaceFolderToAdd);
   }
 
   /**

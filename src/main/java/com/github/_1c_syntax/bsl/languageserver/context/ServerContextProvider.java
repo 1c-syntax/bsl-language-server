@@ -156,8 +156,9 @@ public class ServerContextProvider {
   /**
    * Получить контекст сервера для URI документа.
    * <p>
-   * Сначала ищет в индексе документов (O(1)), затем по пути workspace (для новых документов).
+   * Сначала ищет в индексе документов (O(1)), затем по URI workspace (для новых документов).
    * URI должен быть уже нормализован через {@link Absolute#uri(URI)}.
+   * Используется {@link Absolute#uri(URI)} для канонизации, что работает со всеми схемами URI.
    *
    * @param documentUri нормализованный URI документа
    * @return контекст сервера, содержащий документ, или пустой Optional, если не найден
@@ -169,20 +170,14 @@ public class ServerContextProvider {
       return Optional.of(indexed);
     }
     
-    // Fall back to path-based lookup for new documents
-    if (!"file".equalsIgnoreCase(documentUri.getScheme())) {
-      return Optional.empty();
-    }
-
-    try {
-      var documentPath = Path.of(documentUri);
-      return workspaceRoots.entrySet().stream()
-        .filter(entry -> documentPath.startsWith(entry.getValue()))
-        .map(entry -> contexts.get(entry.getKey()))
-        .findFirst();
-    } catch (UnsupportedOperationException e) {
-      return Optional.empty();
-    }
+    // Fall back to URI-based lookup for new documents
+    // URI is already normalized by caller
+    var documentUriString = documentUri.toString();
+    
+    return contexts.keySet().stream()
+      .filter(workspaceUri -> documentUriString.startsWith(workspaceUri.toString()))
+      .findFirst()
+      .map(contexts::get);
   }
 
   /**
@@ -192,10 +187,9 @@ public class ServerContextProvider {
    * Используется для внешних вызовов, где URI может быть не нормализован.
    *
    * @param uri строковый URI документа
-   * @return Контекст документа или {@code null}, если документ не найден
+   * @return Контекст документа, если найден
    */
-  @Nullable
-  public DocumentContext getDocumentUnsafe(String uri) {
+  public Optional<DocumentContext> getDocumentUnsafe(String uri) {
     var normalizedUri = Absolute.uri(uri);
     return getDocument(normalizedUri);
   }
@@ -207,10 +201,9 @@ public class ServerContextProvider {
    * Используется для внешних вызовов, где URI может быть не нормализован.
    *
    * @param uri URI документа (будет нормализован)
-   * @return Контекст документа или {@code null}, если документ не найден
+   * @return Контекст документа, если найден
    */
-  @Nullable
-  public DocumentContext getDocumentUnsafe(URI uri) {
+  public Optional<DocumentContext> getDocumentUnsafe(URI uri) {
     var normalizedUri = Absolute.uri(uri);
     return getDocument(normalizedUri);
   }
@@ -221,13 +214,11 @@ public class ServerContextProvider {
    * URI должен быть уже нормализован через {@link Absolute#uri(URI)}.
    *
    * @param uri нормализованный URI документа
-   * @return Контекст документа или {@code null}, если документ не найден
+   * @return Контекст документа, если найден
    */
-  @Nullable
-  public DocumentContext getDocument(URI uri) {
+  public Optional<DocumentContext> getDocument(URI uri) {
     return getServerContext(uri)
-      .map(ctx -> ctx.getDocument(uri))
-      .orElse(null);
+      .flatMap(ctx -> Optional.ofNullable(ctx.getDocument(uri)));
   }
 
   /**
@@ -268,25 +259,4 @@ public class ServerContextProvider {
     documentIndex.remove(event.getUri());
   }
 
-  /**
-   * Проверить, есть ли зарегистрированные workspaces.
-   *
-   * @return true, если зарегистрирован хотя бы один workspace
-   */
-  public boolean hasWorkspaces() {
-    return !contexts.isEmpty();
-  }
-
-  /**
-   * Проверить, открыт ли документ в каком-либо контексте.
-   *
-   * @param documentContext контекст документа
-   * @return true, если документ открыт
-   */
-  public boolean isDocumentOpened(DocumentContext documentContext) {
-    var uri = documentContext.getUri();
-    return getServerContext(uri)
-      .map(ctx -> ctx.isDocumentOpened(documentContext))
-      .orElse(false);
-  }
 }

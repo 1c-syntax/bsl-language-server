@@ -177,21 +177,23 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   @Override
   public void initialized(InitializedParams params) {
-    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-    
     // Populate all workspace contexts
     var allContexts = serverContextProvider.getAllContexts();
     var tasks = allContexts.stream()
-      .map(serverContext -> CompletableFuture.runAsync(
-        serverContext::populateContext,
-        executorService
-      ))
+      .map(serverContext -> {
+        // Create unique thread factory per workspace
+        var threadName = "populate-context-" + Integer.toHexString(serverContext.hashCode()) + "-";
+        var factory = new NamedForkJoinWorkerThreadFactory(threadName);
+        var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+        return CompletableFuture.runAsync(
+          serverContext::populateContext,
+          executorService
+        ).whenComplete((unused, throwable) -> executorService.shutdown());
+      })
       .toArray(CompletableFuture[]::new);
 
     CompletableFuture.allOf(tasks)
       .whenComplete((Void unused, @Nullable Throwable throwable) -> {
-        executorService.shutdown();
         if (throwable != null) {
           LOGGER.error("Error populating workspace contexts", throwable);
         }

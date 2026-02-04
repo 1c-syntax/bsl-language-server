@@ -102,13 +102,15 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Getter
   private int version;
 
-  @Setter(onMethod_ = {@Autowired})
-  private ServerContext context;
+  private final ServerContext context;
+  @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private DiagnosticComputer diagnosticComputer;
 
+  @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
+  @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
 
@@ -140,8 +142,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
-  public DocumentContext(URI uri) {
+  public DocumentContext(URI uri, ServerContext context) {
     this.uri = uri;
+    this.context = context;
     this.fileType = computeFileType(uri);
   }
 
