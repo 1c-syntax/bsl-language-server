@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses.testrunner;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +34,11 @@ class TestRunnerAdapterTest {
   @Autowired
   private TestRunnerAdapter testRunnerAdapter;
 
-  @Autowired
-  private LanguageServerConfiguration configuration;
-
   @Test
   void whenComputeTestsByLanguageServer_thenContainsTests() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("src/test/resources/codelenses/testrunner/TestRunnerAdapter.os");
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.getCodeLensOptions().getTestRunnerAdapterOptions().setGetTestsByTestRunner(false);
 
     // when
