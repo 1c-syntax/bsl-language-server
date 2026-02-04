@@ -54,8 +54,6 @@ class CodeLensProviderTest {
   @Autowired
   private CodeLensProvider codeLensProvider;
   @Autowired
-  private LanguageServerConfiguration configuration;
-  @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
   @Autowired
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
@@ -87,6 +85,9 @@ class CodeLensProviderTest {
 
     prepareCodeLensRefreshSupport(true);
 
+    var documentContext = TestUtils.getDocumentContext("");
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
+
     // when
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
 
@@ -102,6 +103,9 @@ class CodeLensProviderTest {
 
     prepareCodeLensRefreshSupport(false);
 
+    var documentContext = TestUtils.getDocumentContext("");
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
+
     // when
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
 
@@ -114,6 +118,8 @@ class CodeLensProviderTest {
   void testCodeLensRefreshes_ifLanguageClientIsNotConnected() {
     // given
     // no connected language client
+    var documentContext = TestUtils.getDocumentContext("");
+    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
 
     // when
     var event = new LanguageServerConfigurationChangedEvent(configuration);

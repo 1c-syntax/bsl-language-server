@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.aspectj.lang.annotation.Pointcut;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -48,6 +49,14 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration)")
   public void isLanguageServerConfiguration() {
+    // no-op
+  }
+
+  /**
+   * Это обращение к классу {@link GlobalLanguageServerConfiguration}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration)")
+  public void isGlobalLanguageServerConfiguration() {
     // no-op
   }
 
@@ -88,6 +97,14 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.ServerContext)")
   public void isServerContext() {
+    // no-op
+  }
+
+  /**
+   * Это обращение к классу {@link ServerContextProvider}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider)")
+  public void isServerContextProvider() {
     // no-op
   }
 
@@ -168,6 +185,22 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* initialize(..))")
   public void isInitializeCall() {
+    // no-op
+  }
+
+  /**
+   * Это вызов метода addWorkspace.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* addWorkspace(..))")
+  public void isAddWorkspaceCall() {
+    // no-op
+  }
+
+  /**
+   * Это вызов метода removeWorkspace.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* removeWorkspace(..))")
+  public void isRemoveWorkspaceCall() {
     // no-op
   }
 

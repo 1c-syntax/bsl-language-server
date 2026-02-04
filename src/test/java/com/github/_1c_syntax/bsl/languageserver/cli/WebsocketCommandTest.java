@@ -55,7 +55,8 @@ class WebsocketCommandTest {
 
     // then
     assertThat(call).isEqualTo(-1);
-    verify(configuration, times(1)).update(any());
+    // update() is called twice: once on ContextRefreshedEvent, once from WebsocketCommand.call()
+    verify(configuration, times(2)).update(any());
   }
 
 }

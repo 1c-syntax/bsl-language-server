@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -34,12 +35,9 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 /**
- * Обработчик событий изменения файла глобальной конфигурации.
+ * Обработчик событий изменения файлов конфигурации.
  * <p>
- * Выполняет обновление инстанса
- * {@link GlobalLanguageServerConfiguration}.
- * <p>
- * TODO: В Фазе 5 per-workspace рефакторинга добавить метод для обработки per-workspace конфигураций.
+ * Выполняет обновление инстансов глобальной и per-workspace конфигураций.
  */
 @Component
 @Slf4j
@@ -59,9 +57,36 @@ public class ConfigurationFileChangeListener {
       globalConfiguration.update(configurationFile);
       LOGGER.info("BSL Language Server global configuration has been reloaded");
     } else if (ENTRY_DELETE.equals(eventKind)) {
-      // Global configuration deleted - reload from default path
-      globalConfiguration.update(null);
+      // Global configuration deleted - reset to defaults
+      globalConfiguration.reset();
       LOGGER.info("BSL Language Server global configuration file deleted, using defaults");
+    } else {
+      LOGGER.error("Unknown watch event kind {}", eventKind);
+    }
+  }
+
+  /**
+   * Обработчик изменения файла конфигурации воркспейса.
+   *
+   * @param configurationFile Изменившийся файл конфигурации
+   * @param eventKind         Тип события, произошедшего с файлом.
+   * @param serverContext     Контекст сервера для данного воркспейса.
+   * @param workspaceUri      URI воркспейса
+   */
+  public void onWorkspaceChange(
+    File configurationFile,
+    WatchEvent.Kind<?> eventKind,
+    ServerContext serverContext,
+    java.net.URI workspaceUri
+  ) {
+    var configuration = serverContext.getLanguageServerConfiguration();
+    if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {
+      configuration.update(configurationFile);
+      LOGGER.info("BSL Language Server configuration for workspace {} has been reloaded", workspaceUri);
+    } else if (ENTRY_DELETE.equals(eventKind)) {
+      // Workspace configuration deleted - reset to defaults
+      configuration.reset();
+      LOGGER.info("BSL Language Server configuration file deleted for workspace {}, using defaults", workspaceUri);
     } else {
       LOGGER.error("Unknown watch event kind {}", eventKind);
     }

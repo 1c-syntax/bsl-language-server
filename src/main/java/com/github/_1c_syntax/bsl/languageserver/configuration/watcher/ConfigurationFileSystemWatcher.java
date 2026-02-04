@@ -23,6 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.utils.Absolute;
 import com.sun.nio.file.SensitivityWatchEventModifier;
 import jakarta.annotation.PostConstruct;
@@ -31,29 +34,32 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 /**
- * Отслеживатель изменений файла глобальной конфигурации.
+ * Отслеживатель изменений файлов конфигурации.
  * <p>
- * При обнаружении изменения в файле (удаление, создание, редактирование) делегирует обработку изменения в
+ * Мониторит глобальный файл конфигурации и файлы конфигурации каждого workspace.
+ * При обнаружении изменения (удаление, создание, редактирование) делегирует обработку в
  * {@link ConfigurationFileChangeListener}.
- * <p>
- * TODO: В Фазе 5 per-workspace рефакторинга добавить поддержку мониторинга файлов конфигурации каждого workspace.
  */
 @Component
 @Slf4j
@@ -61,28 +67,38 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 @SuppressWarnings("removal") // SensitivityWatchEventModifier is deprecated in jdk21
 public class ConfigurationFileSystemWatcher {
 
+  private static final String CONFIG_FILE_NAME = ".bsl-language-server.json";
+
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
 
-  private Path registeredPath;
+  @SuppressWarnings("NullAway.Init")
   private WatchService watchService;
-  private WatchKey watchKey;
+  @Nullable
+  private Path globalRegisteredPath;
+  @Nullable
+  private WatchKey globalWatchKey;
+
+  // Per-workspace config watching
+  private final Map<URI, WatchKey> workspaceWatchKeys = new ConcurrentHashMap<>();
+  private final Map<URI, Path> workspaceRegisteredPaths = new ConcurrentHashMap<>();
+  private final Map<URI, ServerContext> workspaceContexts = new ConcurrentHashMap<>();
 
   @PostConstruct
   public void init() throws IOException {
     watchService = FileSystems.getDefault().newWatchService();
-    var configFile = globalConfiguration.getConfigurationFile();
-    if (configFile != null) {
-      registerWatchService(configFile);
-    }
   }
 
   @PreDestroy
   @Synchronized
   public void onDestroy() throws IOException {
-    if (watchKey != null) {
-      watchKey.cancel();
+    if (globalWatchKey != null) {
+      globalWatchKey.cancel();
     }
+    workspaceWatchKeys.values().forEach(WatchKey::cancel);
+    workspaceWatchKeys.clear();
+    workspaceRegisteredPaths.clear();
+    workspaceContexts.clear();
     watchService.close();
   }
 
@@ -92,27 +108,17 @@ public class ConfigurationFileSystemWatcher {
   @Scheduled(fixedDelay = 5000L)
   @Synchronized
   public void watch() {
-    if (watchKey == null) {
-      return;
-    }
-    
-    // save last modified date to de-duplicate events
-    long lastModified = 0L;
-    for (WatchEvent<?> watchEvent : watchKey.pollEvents()) {
-      Path context = (Path) watchEvent.context();
-      if (context == null) {
-        continue;
-      }
-
-      var file = new File(registeredPath.toFile(), context.toFile().getName());
-      if (isConfigurationFile(file)
-        && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
-        lastModified = file.lastModified();
-        listener.onGlobalChange(file, watchEvent.kind());
-      }
+    // Watch global config
+    if (globalWatchKey != null) {
+      watchGlobalConfig();
     }
 
-    watchKey.reset();
+    // Watch per-workspace configs
+    for (var entry : workspaceWatchKeys.entrySet()) {
+      var workspaceUri = entry.getKey();
+      var watchKey = entry.getValue();
+      watchWorkspaceConfig(workspaceUri, watchKey);
+    }
   }
 
   /**
@@ -121,34 +127,111 @@ public class ConfigurationFileSystemWatcher {
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(GlobalLanguageServerConfigurationChangedEvent event) {
+  public void handleGlobalConfigurationChanged(GlobalLanguageServerConfigurationChangedEvent event) {
     var configFile = event.getSource().getConfigurationFile();
     if (configFile != null) {
-      registerWatchService(configFile);
+      registerGlobalWatchService(configFile);
     }
   }
 
+  /**
+   * Обработчик добавления нового workspace.
+   *
+   * @param event Событие добавления workspace
+   */
+  @EventListener
+  @Synchronized
+  public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
+    var workspaceUri = event.getWorkspaceUri();
+    var serverContext = event.getServerContext();
+
+    LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
+    registerWorkspaceWatchService(workspaceUri, serverContext);
+  }
+
+  /**
+   * Обработчик удаления workspace (перед удалением).
+   *
+   * @param event Событие удаления workspace
+   */
+  @EventListener
+  @Synchronized
+  public void handleBeforeWorkspaceRemoved(BeforeWorkspaceRemovedEvent event) {
+    var workspaceUri = event.getWorkspaceUri();
+
+    LOGGER.debug("Workspace being removed, canceling config watcher: {}", workspaceUri);
+    var watchKey = workspaceWatchKeys.remove(workspaceUri);
+    if (watchKey != null) {
+      watchKey.cancel();
+    }
+    workspaceRegisteredPaths.remove(workspaceUri);
+    workspaceContexts.remove(workspaceUri);
+  }
+
+  private void watchGlobalConfig() {
+    long lastModified = 0L;
+    for (WatchEvent<?> watchEvent : globalWatchKey.pollEvents()) {
+      Path context = (Path) watchEvent.context();
+      if (context == null) {
+        continue;
+      }
+
+      var file = new File(globalRegisteredPath.toFile(), context.toFile().getName());
+      if (isGlobalConfigurationFile(file)
+        && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
+        lastModified = file.lastModified();
+        listener.onGlobalChange(file, watchEvent.kind());
+      }
+    }
+    globalWatchKey.reset();
+  }
+
+  private void watchWorkspaceConfig(URI workspaceUri, WatchKey watchKey) {
+    var registeredPath = workspaceRegisteredPaths.get(workspaceUri);
+    var serverContext = workspaceContexts.get(workspaceUri);
+
+    if (registeredPath == null || serverContext == null) {
+      return;
+    }
+
+    long lastModified = 0L;
+    for (WatchEvent<?> watchEvent : watchKey.pollEvents()) {
+      Path context = (Path) watchEvent.context();
+      if (context == null) {
+        continue;
+      }
+
+      var file = new File(registeredPath.toFile(), context.toFile().getName());
+      if (isWorkspaceConfigurationFile(file, serverContext)
+        && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
+        lastModified = file.lastModified();
+        listener.onWorkspaceChange(file, watchEvent.kind(), serverContext, workspaceUri);
+      }
+    }
+    watchKey.reset();
+  }
+
   @SneakyThrows
-  private void registerWatchService(File configurationFile) {
+  private void registerGlobalWatchService(File configurationFile) {
     Path configurationDir = Absolute.path(configurationFile).getParent();
 
     if (configurationDir == null) {
       return;
     }
 
-    if (configurationDir.equals(registeredPath)) {
+    if (configurationDir.equals(globalRegisteredPath)) {
       return;
     }
 
-    if (watchKey != null) {
-      watchKey.cancel();
+    if (globalWatchKey != null) {
+      globalWatchKey.cancel();
     }
 
-    registeredPath = configurationDir;
+    globalRegisteredPath = configurationDir;
 
     // TODO: SensitivityWatchEventModifier is deprecated in java 21 and marked for removal.
     // We need to drop usage of it here when we change our baseline to jdk 21
-    watchKey = registeredPath.register(
+    globalWatchKey = globalRegisteredPath.register(
       watchService,
       new WatchEvent.Kind[]{
         ENTRY_CREATE,
@@ -158,10 +241,56 @@ public class ConfigurationFileSystemWatcher {
       SensitivityWatchEventModifier.HIGH
     );
 
-    LOGGER.debug("Watch for configuration file changes in {}", configurationDir);
+    LOGGER.debug("Watch for global configuration file changes in {}", configurationDir);
   }
 
-  private boolean isConfigurationFile(File pathname) {
+  @SneakyThrows
+  private void registerWorkspaceWatchService(URI workspaceUri, ServerContext serverContext) {
+    var configuration = serverContext.getLanguageServerConfiguration();
+    var configFile = configuration.getConfigurationFile();
+
+    Path configDir;
+    if (configFile != null) {
+      configDir = Absolute.path(configFile).getParent();
+    } else {
+      // Default to workspace root for config file watching
+      configDir = Path.of(workspaceUri);
+    }
+
+    if (configDir == null || !configDir.toFile().isDirectory()) {
+      return;
+    }
+
+    // Check if already watching this path
+    if (configDir.equals(workspaceRegisteredPaths.get(workspaceUri))) {
+      return;
+    }
+
+    // Cancel previous watch if exists
+    var existingWatchKey = workspaceWatchKeys.get(workspaceUri);
+    if (existingWatchKey != null) {
+      existingWatchKey.cancel();
+    }
+
+    // TODO: SensitivityWatchEventModifier is deprecated in java 21 and marked for removal.
+    var watchKey = configDir.register(
+      watchService,
+      new WatchEvent.Kind[]{
+        ENTRY_CREATE,
+        ENTRY_DELETE,
+        ENTRY_MODIFY
+      },
+      SensitivityWatchEventModifier.HIGH
+    );
+
+    workspaceWatchKeys.put(workspaceUri, watchKey);
+    workspaceRegisteredPaths.put(workspaceUri, configDir);
+    workspaceContexts.put(workspaceUri, serverContext);
+
+    LOGGER.debug("Watch for workspace configuration file changes in {}", configDir);
+  }
+
+  private boolean isGlobalConfigurationFile(File pathname) {
     var configFile = globalConfiguration.getConfigurationFile();
     if (configFile == null) {
       return false;
@@ -171,4 +300,15 @@ public class ConfigurationFileSystemWatcher {
     return absolutePathname.equals(absoluteConfigurationFile);
   }
 
+  private boolean isWorkspaceConfigurationFile(File pathname, ServerContext serverContext) {
+    var configuration = serverContext.getLanguageServerConfiguration();
+    var configFile = configuration.getConfigurationFile();
+    if (configFile != null) {
+      var absolutePathname = Absolute.path(pathname);
+      var absoluteConfigurationFile = Absolute.path(configFile);
+      return absolutePathname.equals(absoluteConfigurationFile);
+    }
+    // If no config file set, check for default config file name
+    return CONFIG_FILE_NAME.equals(pathname.getName());
+  }
 }

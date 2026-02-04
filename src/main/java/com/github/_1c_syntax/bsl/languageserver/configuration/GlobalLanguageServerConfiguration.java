@@ -23,17 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
-import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -51,11 +50,13 @@ import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS
  * <p>
  * Per-workspace настройки хранятся в {@link LanguageServerConfiguration} и доступны
  * через {@link com.github._1c_syntax.bsl.languageserver.context.ServerContext#getLanguageServerConfiguration()}.
+ * <p>
+ * События публикуются через AOP (см. {@link com.github._1c_syntax.bsl.languageserver.aop.EventPublisherAspect}).
  */
 @Data
 @Component
 @Slf4j
-@RequiredArgsConstructor
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GlobalLanguageServerConfiguration {
 
@@ -89,11 +90,15 @@ public class GlobalLanguageServerConfiguration {
   @JsonIgnore
   private String globalConfigPath;
 
-  @JsonIgnore
-  private final ApplicationEventPublisher eventPublisher;
-
-  @PostConstruct
-  void init() {
+  /**
+   * Инициализация конфигурации после полной загрузки Spring контекста.
+   * <p>
+   * Используется {@link ContextRefreshedEvent} вместо {@code @PostConstruct},
+   * чтобы гарантировать что {@link com.github._1c_syntax.bsl.languageserver.aop.EventPublisherAspect}
+   * уже инициализирован и может публиковать события.
+   */
+  @EventListener(ContextRefreshedEvent.class)
+  void onApplicationReady() {
     update(new File(globalConfigPath));
   }
 
@@ -101,8 +106,7 @@ public class GlobalLanguageServerConfiguration {
    * Обновить глобальную конфигурацию из файла.
    * <p>
    * Если файл существует, загружает из него только глобальные настройки (language, sendErrors, traceLog).
-   * Событие {@link GlobalLanguageServerConfigurationChangedEvent} публикуется всегда,
-   * независимо от существования файла.
+   * Событие публикуется через AOP.
    *
    * @param configurationFile Файл с конфигурацией
    */
@@ -111,7 +115,19 @@ public class GlobalLanguageServerConfiguration {
       loadFromFile(configurationFile);
       this.configurationFile = configurationFile;
     }
-    eventPublisher.publishEvent(new GlobalLanguageServerConfigurationChangedEvent(this));
+    // Событие публикуется через EventPublisherAspect
+  }
+
+  /**
+   * Сбросить глобальные настройки к значениям по умолчанию.
+   * Событие публикуется через AOP.
+   */
+  public void reset() {
+    this.language = Language.RU;
+    this.sendErrors = SendErrorsMode.DEFAULT;
+    this.traceLog = null;
+    this.configurationFile = null;
+    // Событие публикуется через EventPublisherAspect
   }
 
   private void loadFromFile(File file) {
