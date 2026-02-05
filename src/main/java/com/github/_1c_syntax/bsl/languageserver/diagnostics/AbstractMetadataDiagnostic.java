@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Range;
@@ -165,10 +167,26 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    */
   private void checkMetadataWithoutModules() {
     documentContext.getServerContext().getConfiguration().getChildren().stream()
+      .filter(this::needToAnalyzeMdo)
       .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
       .filter(mdo -> !(mdo instanceof ModuleOwner moduleOwner)
         || (moduleOwner.getModules().stream()
         .noneMatch(module -> OBJECT_MODULES.contains(module.getModuleType()))))
       .forEach(this::checkMetadata);
+  }
+
+  private boolean needToAnalyzeMdo(MD mdo) {
+    var skipMode = info.skipSupportMode();
+    var variant = mdo.getSupportVariant();
+
+    if (variant == SupportVariant.NONE) {
+      return true;
+    }
+
+    return switch (skipMode) {
+      case NEVER -> true;
+      case WITH_SUPPORT -> false;
+      case WITH_SUPPORT_LOCKED -> variant != SupportVariant.NOT_EDITABLE;
+    };
   }
 }
