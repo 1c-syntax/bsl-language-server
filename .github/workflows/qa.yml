@@ -13,7 +13,7 @@ jobs:
     steps:
     - name: Download PR number artifact
       if: github.event.workflow_run.event == 'pull_request'
-      uses: dawidd6/action-download-artifact@v12
+      uses: dawidd6/action-download-artifact@v14
       with:
         workflow: ${{ github.event.workflow_run.name }}
         run_id: ${{ github.event.workflow_run.id }}
@@ -35,11 +35,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/checkout@v6
-      env:
-        HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
       with:
           repository: ${{ github.event.workflow_run.head_repository.full_name }}
-          ref: "$HEAD_BRANCH"
+          ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
     - name: Checkout base branch
       if: github.event.workflow_run.event == 'pull_request'

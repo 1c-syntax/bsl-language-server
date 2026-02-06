@@ -55,4 +55,16 @@ class QueryPackageFoldingRangeSupplierTest {
       ;
   }
 
+  @Test
+  void getFoldingRangesWithIncompleteQuery() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/folding/QueryPackageFoldingRangeSupplierIncomplete.bsl");
+
+    // when
+    List<FoldingRange> foldingRanges = supplier.getFoldingRanges(documentContext);
+
+    // then - should not throw NullPointerException and return available folding ranges
+    assertThatFoldingRanges(foldingRanges).isNotNull();
+  }
+
 }
