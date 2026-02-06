@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1769454007805,
+  "lastUpdate": 1770399476453,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34782,6 +34782,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1235148633719279",
             "extra": "mean: 69.04898858070374 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "acd8a3e2831b0f2b2c3f6a0feac87ca7322209be",
+          "message": "Merge pull request #3810 from 1c-syntax/copilot/fix-highlight-issue-token\n\nFix semantic token highlighting shift on inline token edits",
+          "timestamp": "2026-02-06T18:29:45+01:00",
+          "tree_id": "27269b47f42a98021fd88b20b4c8928ccbd014af",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/acd8a3e2831b0f2b2c3f6a0feac87ca7322209be"
+        },
+        "date": 1770399469779,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.80497439702351,
+            "unit": "sec",
+            "range": "stddev: 1.795920881305115",
+            "extra": "mean: 69.80497439702351 sec\nrounds: 3"
           }
         ]
       }
