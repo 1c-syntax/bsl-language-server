@@ -106,9 +106,7 @@ public class ServerContext {
    * Хранилища ссылок на символы для данного workspace.
    */
   @Getter
-  @Setter
-  @SuppressWarnings("NullAway.Init")
-  private ReferenceContext referenceContext;
+  private final ReferenceContext referenceContext = ReferenceContext.create();
 
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);

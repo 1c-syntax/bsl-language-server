@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
-import com.github._1c_syntax.bsl.languageserver.references.model.ReferenceContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -113,9 +112,6 @@ public class ServerContextProvider {
     serverContext.setDiagnosticInfosByClass(
       diagnosticInfosFactory.createDiagnosticInfosByClass(languageServerConfiguration)
     );
-    
-    // Create per-workspace reference repositories
-    serverContext.setReferenceContext(ReferenceContext.create());
     
     var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
       languageServerConfiguration, 
