@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import org.springframework.stereotype.Component;
-
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
@@ -33,7 +31,6 @@ import java.util.stream.Stream;
 /**
  * Хранилище расположений обращений к символам.
  */
-@Component
 public class LocationRepository {
   /**
    * Список обращений к символу, сгруппированный по URI.

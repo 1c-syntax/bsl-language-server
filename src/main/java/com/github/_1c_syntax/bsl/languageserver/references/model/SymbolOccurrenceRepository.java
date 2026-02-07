@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
-import org.springframework.stereotype.Component;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +30,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 /**
  * Хранилище обращений к символам.
  */
-@Component
 public class SymbolOccurrenceRepository {
 
   /**

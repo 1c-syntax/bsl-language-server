@@ -28,12 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.model.Location;
-import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.ReferenceContext;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
-import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.StringInterner;
@@ -44,10 +43,12 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Индекс ссылок на символы в проекте.
@@ -62,8 +63,10 @@ public class ReferenceIndex {
   private final ServerContextProvider serverContextProvider;
   private final StringInterner stringInterner;
 
-  private final LocationRepository locationRepository;
-  private final SymbolOccurrenceRepository symbolOccurrenceRepository;
+  private Optional<ReferenceContext> getRepositories(URI uri) {
+    return serverContextProvider.getServerContext(uri)
+      .map(ServerContext::getReferenceContext);
+  }
 
   /**
    * Получить ссылки на символ.
@@ -92,7 +95,11 @@ public class ReferenceIndex {
       .symbolName(symbolName)
       .build();
 
-    return symbolOccurrenceRepository.getAllBySymbol(symbolDto)
+    var repos = getRepositories(symbol.getOwner().getUri());
+    if (repos.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return repos.get().symbolOccurrences().getAllBySymbol(symbolDto)
       .stream()
       .map(this::buildReference)
       .flatMap(Optional::stream)
@@ -107,15 +114,16 @@ public class ReferenceIndex {
    * @return данные ссылки.
    */
   public Optional<Reference> getReference(URI uri, Position position) {
-    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .filter((SymbolOccurrence symbolOccurrence) -> {
-        var location = symbolOccurrence.location();
-        return Ranges.containsPosition(
-          location.startLine(), location.startCharacter(), location.endLine(), location.endCharacter(),
-          position);
-      })
-      .findAny()
-      .flatMap(this::buildReference);
+    return getRepositories(uri)
+      .flatMap(repos -> repos.locations().getSymbolOccurrencesByLocationUri(uri)
+        .filter((SymbolOccurrence symbolOccurrence) -> {
+          var location = symbolOccurrence.location();
+          return Ranges.containsPosition(
+            location.startLine(), location.startCharacter(), location.endLine(), location.endCharacter(),
+            position);
+        })
+        .findAny()
+        .flatMap(this::buildReference));
   }
 
   /**
@@ -125,7 +133,9 @@ public class ReferenceIndex {
    * @return Список ссылок на символы.
    */
   public List<Reference> getReferencesFrom(URI uri) {
-    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+    return getRepositories(uri)
+      .map(repos -> repos.locations().getSymbolOccurrencesByLocationUri(uri))
+      .orElseGet(Stream::empty)
       .map(this::buildReference)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
@@ -138,7 +148,9 @@ public class ReferenceIndex {
    * @return Список ссылок на символы.
    */
   public List<Reference> getReferencesFrom(URI uri, SymbolKind kind) {
-    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+    return getRepositories(uri)
+      .map(repos -> repos.locations().getSymbolOccurrencesByLocationUri(uri))
+      .orElseGet(Stream::empty)
       .filter(s -> s.symbol().symbolKind() == kind)
       .map(this::buildReference)
       .flatMap(Optional::stream)
@@ -163,9 +175,11 @@ public class ReferenceIndex {
    * @param uri URI документа.
    */
   public void clearReferences(URI uri) {
-    var symbolOccurrences = locationRepository.getSymbolOccurrencesByLocationUri(uri);
-    symbolOccurrenceRepository.deleteAll(symbolOccurrences.collect(Collectors.toSet()));
-    locationRepository.delete(uri);
+    getRepositories(uri).ifPresent(repos -> {
+      var symbolOccurrences = repos.locations().getSymbolOccurrencesByLocationUri(uri);
+      repos.symbolOccurrences().deleteAll(symbolOccurrences.collect(Collectors.toSet()));
+      repos.locations().delete(uri);
+    });
   }
 
   /**
@@ -196,8 +210,11 @@ public class ReferenceIndex {
       .location(location)
       .build();
 
-    symbolOccurrenceRepository.save(symbolOccurrence);
-    locationRepository.updateLocation(symbolOccurrence);
+    var repos = getRepositories(uri);
+    repos.ifPresent(r -> {
+      r.symbolOccurrences().save(symbolOccurrence);
+      r.locations().updateLocation(symbolOccurrence);
+    });
   }
 
   /**
@@ -225,8 +242,11 @@ public class ReferenceIndex {
       .location(location)
       .build();
 
-    symbolOccurrenceRepository.save(symbolOccurrence);
-    locationRepository.updateLocation(symbolOccurrence);
+    var repos = getRepositories(uri);
+    repos.ifPresent(r -> {
+      r.symbolOccurrences().save(symbolOccurrence);
+      r.locations().updateLocation(symbolOccurrence);
+    });
   }
 
   /**
@@ -267,8 +287,11 @@ public class ReferenceIndex {
       .location(location)
       .build();
 
-    symbolOccurrenceRepository.save(symbolOccurrence);
-    locationRepository.updateLocation(symbolOccurrence);
+    var repos = getRepositories(uri);
+    repos.ifPresent(r -> {
+      r.symbolOccurrences().save(symbolOccurrence);
+      r.locations().updateLocation(symbolOccurrence);
+    });
   }
 
   private Optional<Reference> buildReference(

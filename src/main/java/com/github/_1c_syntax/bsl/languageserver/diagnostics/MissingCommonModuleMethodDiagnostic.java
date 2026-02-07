@@ -26,13 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -49,10 +47,8 @@ import java.util.Optional;
     DiagnosticTag.ERROR
   }
 )
-@RequiredArgsConstructor
 public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
-  private final LocationRepository locationRepository;
 
   private static String getMethodNameByLocation(ParserRuleContext node, Range range) {
     return Trees.findTerminalNodeContainsPosition(node, range.getStart())
@@ -65,7 +61,8 @@ public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
     if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY) {
       return;
     }
-    locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
+    documentContext.getServerContext().getReferenceContext().locations()
+      .getSymbolOccurrencesByLocationUri(documentContext.getUri())
       .filter(symbolOccurrence -> symbolOccurrence.occurrenceType() == OccurrenceType.REFERENCE)
       .filter(symbolOccurrence -> symbolOccurrence.symbol().symbolKind() == SymbolKind.Method)
       .filter(symbolOccurrence -> symbolOccurrence.symbol().moduleType() == ModuleType.CommonModule)
