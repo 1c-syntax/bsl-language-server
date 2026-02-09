@@ -149,30 +149,36 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private void setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
     
-    // Fallback для старых клиентов: если workspaceFolders не указаны, используем rootUri или rootPath
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
-      String rootUri = params.getRootUri();
-      if (rootUri == null || rootUri.isEmpty()) {
-        String rootPath = params.getRootPath();
-        if (rootPath != null && !rootPath.isEmpty()) {
-          try {
-            rootUri = new File(rootPath).getCanonicalFile().toURI().toString();
-          } catch (IOException e) {
-            LOGGER.debug("Can't convert rootPath to URI: {}", rootPath, e);
-            return;
-          }
-        } else {
-          LOGGER.debug("No workspace folders, rootUri, or rootPath provided in initialize params");
-          return;
-        }
+      var rootUri = resolveRootUri(params);
+      if (rootUri == null) {
+        return;
       }
-      
-      // Создаем один workspace folder из rootUri/rootPath
       workspaceFolders = List.of(new WorkspaceFolder(rootUri, "root"));
     }
 
     // Добавляем все workspace folders
     workspaceFolders.forEach(serverContextProvider::addWorkspace);
+  }
+
+  private @Nullable String resolveRootUri(InitializeParams params) {
+    var rootUri = params.getRootUri();
+    if (rootUri != null && !rootUri.isEmpty()) {
+      return rootUri;
+    }
+
+    var rootPath = params.getRootPath();
+    if (rootPath == null || rootPath.isEmpty()) {
+      LOGGER.debug("No workspace folders, rootUri, or rootPath provided in initialize params");
+      return null;
+    }
+
+    try {
+      return new File(rootPath).getCanonicalFile().toURI().toString();
+    } catch (IOException e) {
+      LOGGER.debug("Can't convert rootPath to URI: {}", rootPath, e);
+      return null;
+    }
   }
 
   @Override
