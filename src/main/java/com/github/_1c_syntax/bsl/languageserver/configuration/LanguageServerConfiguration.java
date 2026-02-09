@@ -179,16 +179,21 @@ public class LanguageServerConfiguration {
       .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
       .build();
 
+    LanguageServerConfiguration configuration;
     try (var inputStream = Files.newInputStream(configurationFile.toPath())) {
-      var loaded = mapper.readValue(inputStream, LoadedConfiguration.class);
-      copyPropertiesFrom(loaded);
+      configuration = mapper.readValue(inputStream, LanguageServerConfiguration.class);
     } catch (IOException e) {
       LOGGER.error("Can't deserialize configuration file", e);
+      return;
     }
+
+    copyPropertiesFrom(configuration);
   }
 
   @SneakyThrows
-  private void copyPropertiesFrom(LoadedConfiguration configuration) {
+  private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
+    // todo: refactor
+    PropertyUtils.copyProperties(this, configuration);
     PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
     PropertyUtils.copyProperties(this.capabilities, configuration.capabilities);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
@@ -197,70 +202,5 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
     PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
-    this.language = configuration.language;
-    this.siteRoot = configuration.siteRoot;
-    this.useDevSite = configuration.useDevSite;
-    this.configurationRoot = configuration.configurationRoot;
-  }
-
-  private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
-    copyPropertiesFrom(new LoadedConfiguration(configuration));
-  }
-
-  /**
-   * Вспомогательный класс для десериализации конфигурации из JSON.
-   */
-  @Data
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private static class LoadedConfiguration {
-    private Language language = Language.DEFAULT_LANGUAGE;
-
-    @JsonProperty("diagnostics")
-    private DiagnosticsOptions diagnosticsOptions = new DiagnosticsOptions();
-
-    @JsonProperty("codeLens")
-    private CodeLensOptions codeLensOptions = new CodeLensOptions();
-
-    @JsonProperty("documentLink")
-    private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
-
-    @JsonProperty("inlayHint")
-    private InlayHintOptions inlayHintOptions = new InlayHintOptions();
-
-    @JsonProperty("capabilities")
-    private CapabilitiesOptions capabilities = new CapabilitiesOptions();
-
-    @JsonProperty("formatting")
-    private FormattingOptions formattingOptions = new FormattingOptions();
-
-    @JsonProperty("references")
-    private ReferencesOptions referencesOptions = new ReferencesOptions();
-
-    @JsonProperty("semanticTokens")
-    private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
-
-    private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
-    private boolean useDevSite;
-
-    @Nullable
-    private Path configurationRoot;
-
-    public LoadedConfiguration() {
-    }
-
-    public LoadedConfiguration(LanguageServerConfiguration source) {
-      this.language = source.language;
-      this.diagnosticsOptions = source.diagnosticsOptions;
-      this.codeLensOptions = source.codeLensOptions;
-      this.documentLinkOptions = source.documentLinkOptions;
-      this.inlayHintOptions = source.inlayHintOptions;
-      this.capabilities = source.capabilities;
-      this.formattingOptions = source.formattingOptions;
-      this.referencesOptions = source.referencesOptions;
-      this.semanticTokensOptions = source.semanticTokensOptions;
-      this.siteRoot = source.siteRoot;
-      this.useDevSite = source.useDevSite;
-      this.configurationRoot = source.configurationRoot;
-    }
   }
 }
