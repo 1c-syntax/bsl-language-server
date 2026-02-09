@@ -114,7 +114,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .flatMap(AnnotationReferenceFinder::getAnnotationName)
       .flatMap(annotationName -> methodSymbolAnnotationPair.map(Pair::getLeft)
         .map(methodSymbol -> AnnotationSymbol.from(annotationName, methodSymbol)))
-      .ifPresent(annotationSymbol -> {
+      .ifPresent((AnnotationSymbol annotationSymbol) -> {
         var serverContext = documentContext.getServerContext();
         registeredAnnotations
           .computeIfAbsent(serverContext, k -> new ConcurrentHashMap<>())

@@ -1391,7 +1391,7 @@ class SemanticTokensProviderTest {
       .isEqualTo(5);
     assertThat(edit.getDeleteCount())
       .as("Edit should delete nothing (suffix match includes А and ;)")
-      .isEqualTo(0);
+      .isZero();
     assertThat(edit.getData())
       .as("Edit should insert Новая and , tokens (2 tokens = 10 integers)")
       .isNotNull()

@@ -43,7 +43,6 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -170,7 +169,7 @@ public class ReferenceIndex {
    * @param uri URI документа.
    */
   public void clearReferences(URI uri) {
-    getRepositories(uri).ifPresent(repos -> {
+    getRepositories(uri).ifPresent((ReferenceContext repos) -> {
       var symbolOccurrences = repos.locations().getSymbolOccurrencesByLocationUri(uri);
       repos.symbolOccurrences().deleteAll(symbolOccurrences.collect(Collectors.toSet()));
       repos.locations().delete(uri);
@@ -282,7 +281,7 @@ public class ReferenceIndex {
       .map(ServerContext::getReferenceContext);
   }
 
-  private void saveOccurrence(ReferenceContext repos, SymbolOccurrence symbolOccurrence) {
+  private static void saveOccurrence(ReferenceContext repos, SymbolOccurrence symbolOccurrence) {
     repos.symbolOccurrences().save(symbolOccurrence);
     repos.locations().updateLocation(symbolOccurrence);
   }
@@ -292,8 +291,6 @@ public class ReferenceIndex {
   ) {
 
     var uri = symbolOccurrence.location().uri();
-    var range = symbolOccurrence.location().getRange();
-    var occurrenceType = symbolOccurrence.occurrenceType();
 
     var serverContextOpt = serverContextProvider.getServerContext(uri);
     if (serverContextOpt.isEmpty()) {
@@ -304,12 +301,14 @@ public class ReferenceIndex {
     return getSourceDefinedSymbol(serverContext, symbolOccurrence.symbol())
       .map((SourceDefinedSymbol symbol) -> {
         var from = getFromSymbol(serverContext, symbolOccurrence);
+        var range = symbolOccurrence.location().getRange();
+        var occurrenceType = symbolOccurrence.occurrenceType();
         return new Reference(from, symbol, uri, range, occurrenceType);
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }
 
-  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ServerContext serverContext, Symbol symbolEntity) {
+  private static Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ServerContext serverContext, Symbol symbolEntity) {
     var mdoRef = symbolEntity.mdoRef();
     var moduleType = symbolEntity.moduleType();
     var symbolName = symbolEntity.symbolName();
@@ -335,7 +334,7 @@ public class ReferenceIndex {
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 
-  private SourceDefinedSymbol getFromSymbol(ServerContext serverContext, SymbolOccurrence symbolOccurrence) {
+  private static SourceDefinedSymbol getFromSymbol(ServerContext serverContext, SymbolOccurrence symbolOccurrence) {
     var uri = symbolOccurrence.location().uri();
     var position = symbolOccurrence.location().getStart();
 

@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -121,7 +122,7 @@ public class BSLWorkspaceService implements WorkspaceService {
         event.getRemoved().forEach(serverContextProvider::removeWorkspace);
         
         // Add new workspace folders
-        event.getAdded().forEach(folder -> {
+        event.getAdded().forEach((WorkspaceFolder folder) -> {
           var serverContext = serverContextProvider.addWorkspace(folder);
           // Async population of context for new workspace
           CompletableFuture.runAsync(serverContext::populateContext);

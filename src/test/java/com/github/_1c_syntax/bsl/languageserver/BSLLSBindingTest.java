@@ -50,8 +50,7 @@ class BSLLSBindingTest {
     var diagnosticInfos = BSLLSBinding.getDiagnosticInfos(configuration);
 
     // then
-    assertThat(diagnosticInfos).isNotNull();
-    assertThat(diagnosticInfos).isNotEmpty();
+    assertThat(diagnosticInfos).isNotNull().isNotEmpty();
   }
 
   @Test

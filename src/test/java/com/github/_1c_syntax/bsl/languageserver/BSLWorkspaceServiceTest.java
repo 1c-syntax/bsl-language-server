@@ -119,7 +119,7 @@ class BSLWorkspaceServiceTest {
     // then
     // Для открытого файла событие Created должно быть проигнорировано
     // Документ должен остаться в контексте
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNotNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
   }
 
   @Test
@@ -144,7 +144,7 @@ class BSLWorkspaceServiceTest {
     await().pollDelay(Duration.ofMillis(100)).until(() -> true);
 
     // then
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNotNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
     assertThat(serverContextProvider.getServerContext(uri).map(c -> c.isDocumentOpened(documentContext)).orElse(false)).isFalse();
   }
 
@@ -173,7 +173,7 @@ class BSLWorkspaceServiceTest {
     // then
     // Для открытого файла событие Changed должно быть проигнорировано
     // Документ должен остаться в контексте
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNotNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
   }
 
   @Test
@@ -182,7 +182,7 @@ class BSLWorkspaceServiceTest {
     var testFile = createTestFile("test_changed_unknown.bsl");
     var uri = Absolute.uri(testFile.toURI());
 
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Changed);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
@@ -207,7 +207,7 @@ class BSLWorkspaceServiceTest {
     ctx.rebuildDocument(documentContext);
     ctx.tryClearDocument(documentContext);
 
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNotNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Deleted);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
@@ -217,7 +217,7 @@ class BSLWorkspaceServiceTest {
     await().until(() -> serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null) == null);
 
     // then
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
   @Test
@@ -231,7 +231,7 @@ class BSLWorkspaceServiceTest {
     var documentContext = ctx.addDocument(uri);
     ctx.openDocument(documentContext, content, 1);
 
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNotNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Deleted);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
@@ -241,7 +241,7 @@ class BSLWorkspaceServiceTest {
     await().until(() -> serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null) == null);
 
     // then
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
   @Test
@@ -258,7 +258,7 @@ class BSLWorkspaceServiceTest {
 
     // then
     // Не должно быть исключений
-    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
   @Test
@@ -296,9 +296,9 @@ class BSLWorkspaceServiceTest {
     );
 
     // then
-    assertThat(serverContextProvider.getServerContext(uri1).map(c -> c.getDocument(uri1)).orElse(null)).isNotNull();
-    assertThat(serverContextProvider.getServerContext(uri2).map(c -> c.getDocument(uri2)).orElse(null)).isNotNull();
-    assertThat(serverContextProvider.getServerContext(uri3).map(c -> c.getDocument(uri3)).orElse(null)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri1).map(c -> c.getDocument(uri1))).isPresent();
+    assertThat(serverContextProvider.getServerContext(uri2).map(c -> c.getDocument(uri2))).isPresent();
+    assertThat(serverContextProvider.getServerContext(uri3).map(c -> c.getDocument(uri3))).isEmpty();
   }
 
   @Test
@@ -317,7 +317,7 @@ class BSLWorkspaceServiceTest {
   }
 
   @Test
-  void testDidChangeWorkspaceFolders_AddWorkspace() throws IOException {
+  void testDidChangeWorkspaceFolders_AddWorkspace() {
     // given
     var newWorkspaceDir = tempDir.resolve("new-workspace").toFile();
     newWorkspaceDir.mkdir();
@@ -362,7 +362,7 @@ class BSLWorkspaceServiceTest {
   }
 
   @Test
-  void testDidChangeWorkspaceFolders_AddAndRemove() throws IOException {
+  void testDidChangeWorkspaceFolders_AddAndRemove() {
     // given
     var newWorkspaceDir = tempDir.resolve("new-workspace-2").toFile();
     newWorkspaceDir.mkdir();

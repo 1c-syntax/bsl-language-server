@@ -180,8 +180,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     // Populate all workspace contexts
     var allContexts = serverContextProvider.getAllContexts();
     var tasks = allContexts.stream()
-      .map(serverContext -> {
-        // Create unique thread factory per workspace
+      .map((ServerContext serverContext) -> {
         var threadName = "populate-context-" + Integer.toHexString(serverContext.hashCode()) + "-";
         var factory = new NamedForkJoinWorkerThreadFactory(threadName);
         var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
