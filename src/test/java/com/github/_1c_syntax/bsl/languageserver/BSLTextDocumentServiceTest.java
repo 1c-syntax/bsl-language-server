@@ -29,17 +29,42 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.CodeActionContext;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.ColorPresentationParams;
+import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.DocumentDiagnosticParams;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.eclipse.lsp4j.DocumentLinkParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
+import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
+import org.eclipse.lsp4j.ReferenceContext;
+import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SelectionRangeParams;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
+import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -509,6 +534,160 @@ class BSLTextDocumentServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.isRight()).isTrue();
     assertThat(result.getRight()).isEmpty();
+  }
+
+  // Tests for unknown file handling (dryRun - no didOpen before call)
+
+  @Test
+  void hoverUnknownFile() throws Exception {
+    var params = new HoverParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.hover(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void documentHighlightUnknownFile() throws Exception {
+    var params = new DocumentHighlightParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.documentHighlight(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void definitionUnknownFile() throws Exception {
+    var params = new DefinitionParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.definition(params).get();
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight()).isEmpty();
+  }
+
+  @Test
+  void referencesUnknownFile() throws Exception {
+    var params = new ReferenceParams(getTextDocumentIdentifier(), new Position(0, 0), new ReferenceContext(false));
+    var result = textDocumentService.references(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void documentSymbolUnknownFile() throws Exception {
+    var params = new DocumentSymbolParams(getTextDocumentIdentifier());
+    var result = textDocumentService.documentSymbol(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void codeActionUnknownFile() throws Exception {
+    var params = new CodeActionParams(getTextDocumentIdentifier(), Ranges.create(0, 0, 0, 0), new CodeActionContext(List.of()));
+    var result = textDocumentService.codeAction(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void codeLensUnknownFile() throws Exception {
+    var params = new CodeLensParams(getTextDocumentIdentifier());
+    var result = textDocumentService.codeLens(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void formattingUnknownFile() throws Exception {
+    var params = new DocumentFormattingParams(getTextDocumentIdentifier(), new FormattingOptions());
+    var result = textDocumentService.formatting(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void rangeFormattingUnknownFile() throws Exception {
+    var params = new DocumentRangeFormattingParams(getTextDocumentIdentifier(), new FormattingOptions(), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.rangeFormatting(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void foldingRangeUnknownFile() throws Exception {
+    var params = new FoldingRangeRequestParams(getTextDocumentIdentifier());
+    var result = textDocumentService.foldingRange(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void prepareCallHierarchyUnknownFile() throws Exception {
+    var params = new CallHierarchyPrepareParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.prepareCallHierarchy(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void callHierarchyIncomingCallsUnknownFile() throws Exception {
+    var item = new CallHierarchyItem();
+    item.setUri(getTextDocumentIdentifier().getUri());
+    var params = new CallHierarchyIncomingCallsParams(item);
+    var result = textDocumentService.callHierarchyIncomingCalls(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void callHierarchyOutgoingCallsUnknownFile() throws Exception {
+    var item = new CallHierarchyItem();
+    item.setUri(getTextDocumentIdentifier().getUri());
+    var params = new CallHierarchyOutgoingCallsParams(item);
+    var result = textDocumentService.callHierarchyOutgoingCalls(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void semanticTokensFullUnknownFile() throws Exception {
+    var params = new SemanticTokensParams(getTextDocumentIdentifier());
+    var result = textDocumentService.semanticTokensFull(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void semanticTokensFullDeltaUnknownFile() throws Exception {
+    var params = new SemanticTokensDeltaParams(getTextDocumentIdentifier(), "");
+    var result = textDocumentService.semanticTokensFullDelta(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void semanticTokensRangeUnknownFile() throws Exception {
+    var params = new SemanticTokensRangeParams(getTextDocumentIdentifier(), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.semanticTokensRange(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void selectionRangeUnknownFile() throws Exception {
+    var params = new SelectionRangeParams(getTextDocumentIdentifier(), List.of(new Position(0, 0)));
+    var result = textDocumentService.selectionRange(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void documentColorUnknownFile() throws Exception {
+    var params = new DocumentColorParams(getTextDocumentIdentifier());
+    var result = textDocumentService.documentColor(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void colorPresentationUnknownFile() throws Exception {
+    var params = new ColorPresentationParams(getTextDocumentIdentifier(), new org.eclipse.lsp4j.Color(0, 0, 0, 0), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.colorPresentation(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void inlayHintUnknownFile() throws Exception {
+    var params = new InlayHintParams(getTextDocumentIdentifier(), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.inlayHint(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void documentLinkUnknownFile() throws Exception {
+    var params = new DocumentLinkParams(getTextDocumentIdentifier());
+    var result = textDocumentService.documentLink(params).get();
+    assertThat(result).isNull();
   }
 
   private File getTestFile() {
