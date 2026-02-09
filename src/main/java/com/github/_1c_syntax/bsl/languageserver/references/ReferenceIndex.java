@@ -63,11 +63,6 @@ public class ReferenceIndex {
   private final ServerContextProvider serverContextProvider;
   private final StringInterner stringInterner;
 
-  private Optional<ReferenceContext> getRepositories(URI uri) {
-    return serverContextProvider.getServerContext(uri)
-      .map(ServerContext::getReferenceContext);
-  }
-
   /**
    * Получить ссылки на символ.
    *
@@ -278,6 +273,11 @@ public class ReferenceIndex {
       .build();
 
     getRepositories(uri).ifPresent(repos -> saveOccurrence(repos, symbolOccurrence));
+  }
+
+  private Optional<ReferenceContext> getRepositories(URI uri) {
+    return serverContextProvider.getServerContext(uri)
+      .map(ServerContext::getReferenceContext);
   }
 
   private void saveOccurrence(ReferenceContext repos, SymbolOccurrence symbolOccurrence) {
