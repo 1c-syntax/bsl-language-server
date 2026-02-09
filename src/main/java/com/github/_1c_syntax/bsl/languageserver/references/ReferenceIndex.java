@@ -156,7 +156,10 @@ public class ReferenceIndex {
    * @return Список ссылок на символы.
    */
   public List<Reference> getReferencesFrom(SourceDefinedSymbol symbol) {
-    return getReferencesFrom(symbol.getOwner().getUri()).stream()
+    var repos = symbol.getOwner().getServerContext().getReferenceContext();
+    return repos.locations().getSymbolOccurrencesByLocationUri(symbol.getOwner().getUri())
+      .map(this::buildReference)
+      .flatMap(Optional::stream)
       .filter(reference -> reference.from().equals(symbol))
       .collect(Collectors.toList());
   }
