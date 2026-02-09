@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -90,6 +91,11 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     var uri = event.getUri();
 
     removeAnnotationsRegisteredForUri(uri);
+  }
+
+  @EventListener
+  public void handleBeforeWorkspaceRemoved(BeforeWorkspaceRemovedEvent event) {
+    registeredAnnotations.remove(event.getServerContext());
   }
 
   private void findAndRegisterAnnotation(DocumentContext documentContext) {
