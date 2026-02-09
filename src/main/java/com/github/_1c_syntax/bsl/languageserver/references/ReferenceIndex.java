@@ -95,11 +95,9 @@ public class ReferenceIndex {
       .symbolName(symbolName)
       .build();
 
-    var repos = getRepositories(symbol.getOwner().getUri());
-    if (repos.isEmpty()) {
-      return Collections.emptyList();
-    }
-    return repos.get().symbolOccurrences().getAllBySymbol(symbolDto)
+    return getRepositories(symbol.getOwner().getUri())
+      .map(repos -> repos.symbolOccurrences().getAllBySymbol(symbolDto))
+      .orElse(Collections.emptySet())
       .stream()
       .map(this::buildReference)
       .flatMap(Optional::stream)
@@ -210,11 +208,7 @@ public class ReferenceIndex {
       .location(location)
       .build();
 
-    var repos = getRepositories(uri);
-    repos.ifPresent(r -> {
-      r.symbolOccurrences().save(symbolOccurrence);
-      r.locations().updateLocation(symbolOccurrence);
-    });
+    getRepositories(uri).ifPresent(repos -> saveOccurrence(repos, symbolOccurrence));
   }
 
   /**
@@ -242,11 +236,7 @@ public class ReferenceIndex {
       .location(location)
       .build();
 
-    var repos = getRepositories(uri);
-    repos.ifPresent(r -> {
-      r.symbolOccurrences().save(symbolOccurrence);
-      r.locations().updateLocation(symbolOccurrence);
-    });
+    getRepositories(uri).ifPresent(repos -> saveOccurrence(repos, symbolOccurrence));
   }
 
   /**
@@ -287,11 +277,12 @@ public class ReferenceIndex {
       .location(location)
       .build();
 
-    var repos = getRepositories(uri);
-    repos.ifPresent(r -> {
-      r.symbolOccurrences().save(symbolOccurrence);
-      r.locations().updateLocation(symbolOccurrence);
-    });
+    getRepositories(uri).ifPresent(repos -> saveOccurrence(repos, symbolOccurrence));
+  }
+
+  private void saveOccurrence(ReferenceContext repos, SymbolOccurrence symbolOccurrence) {
+    repos.symbolOccurrences().save(symbolOccurrence);
+    repos.locations().updateLocation(symbolOccurrence);
   }
 
   private Optional<Reference> buildReference(
