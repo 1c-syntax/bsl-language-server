@@ -90,9 +90,8 @@ public class ReferenceIndex {
       .symbolName(symbolName)
       .build();
 
-    return getRepositories(symbol.getOwner().getUri())
-      .map(repos -> repos.symbolOccurrences().getAllBySymbol(symbolDto))
-      .orElse(Collections.emptySet())
+    return symbol.getOwner().getServerContext().getReferenceContext()
+      .symbolOccurrences().getAllBySymbol(symbolDto)
       .stream()
       .map(this::buildReference)
       .flatMap(Optional::stream)
