@@ -84,6 +84,12 @@ public class GlobalLanguageServerConfiguration {
   @Nullable
   private File configurationFile;
 
+  @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
+  @JsonIgnore
+  private String configurationFilePath;
+
   @Value("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}")
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
@@ -99,6 +105,11 @@ public class GlobalLanguageServerConfiguration {
    */
   @EventListener(ContextRefreshedEvent.class)
   void onApplicationReady() {
+    var configFile = new File(configurationFilePath);
+    if (configFile.exists()) {
+      update(configFile);
+      return;
+    }
     update(new File(globalConfigPath));
   }
 
