@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
@@ -74,6 +73,7 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -84,7 +84,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Основной класс BSL Language Server.
@@ -107,6 +107,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ServerContextProvider serverContextProvider;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService populateContextExecutor;
 
   private boolean shutdownWasCalled;
 
@@ -186,15 +188,10 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     // Populate all workspace contexts
     var allContexts = serverContextProvider.getAllContexts();
     var tasks = allContexts.stream()
-      .map((ServerContext serverContext) -> {
-        var threadName = "populate-context-" + Integer.toHexString(serverContext.hashCode()) + "-";
-        var factory = new NamedForkJoinWorkerThreadFactory(threadName);
-        var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-        return CompletableFuture.runAsync(
+      .map((ServerContext serverContext) -> CompletableFuture.runAsync(
           serverContext::populateContext,
-          executorService
-        ).whenComplete((unused, throwable) -> executorService.shutdown());
-      })
+          populateContextExecutor
+        ))
       .toArray(CompletableFuture[]::new);
 
     CompletableFuture.allOf(tasks)

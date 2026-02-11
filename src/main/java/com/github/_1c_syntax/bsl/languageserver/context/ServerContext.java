@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.references.model.ReferenceContext;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -58,7 +59,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -81,6 +82,8 @@ public class ServerContext {
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
+  @Qualifier("computeConfigurationExecutor")
+  private final ExecutorService computeConfigurationExecutor;
 
   @Getter
   @Setter
@@ -433,12 +436,9 @@ public class ServerContext {
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
-    var factory = new NamedForkJoinWorkerThreadFactory("compute-configuration-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-
     CF configuration;
     try {
-      configuration = (CF) executorService.submit(
+      configuration = (CF) computeConfigurationExecutor.submit(
         () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
@@ -447,8 +447,6 @@ public class ServerContext {
       LOGGER.error("Can't parse configuration metadata. Interrupted exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
       Thread.currentThread().interrupt();
-    } finally {
-      executorService.shutdown();
     }
 
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));

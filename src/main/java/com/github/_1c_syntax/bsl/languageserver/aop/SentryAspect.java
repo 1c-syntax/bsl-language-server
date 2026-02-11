@@ -25,8 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import io.sentry.Sentry;
 import io.sentry.protocol.SentryId;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -35,11 +33,10 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Аспект перехвата исключений и регистрации их в Sentry.
@@ -48,7 +45,8 @@ import java.util.concurrent.Executors;
 @NoArgsConstructor
 public class SentryAspect {
 
-  private ExecutorService executorService;
+  @Setter(onMethod_ = {@Autowired, @Qualifier("sentryExecutor")})
+  private ThreadPoolTaskExecutor executor;
 
   @Setter(onMethod_ = {@Autowired})
   @Nullable
@@ -56,16 +54,6 @@ public class SentryAspect {
 
   @Setter(onMethod_ = {@Autowired})
   private Resources resources;
-
-  @PostConstruct
-  private void init() {
-    executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("sentry-"));
-  }
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
 
   @AfterThrowing(value = "Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()", throwing = "ex")
   public void logThrowingBSLDiagnosticGetDiagnostics(Throwable ex) {
@@ -96,7 +84,7 @@ public class SentryAspect {
 
         languageClientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));
       },
-      executorService);
+      executor);
   }
 
 }

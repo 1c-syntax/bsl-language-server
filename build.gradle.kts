@@ -71,6 +71,8 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("org.springframework.boot:spring-boot-starter-cache")
 
+    api("io.micrometer:context-propagation")
+
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование

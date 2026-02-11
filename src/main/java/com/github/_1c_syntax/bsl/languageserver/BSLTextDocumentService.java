@@ -116,8 +116,9 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -126,8 +127,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -167,7 +166,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final SemanticTokensProvider semanticTokensProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
 
-  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
+  @Qualifier("textDocumentServiceExecutor")
+  private final ThreadPoolTaskExecutor taskExecutor;
 
   // Executors per document URI to serialize didChange operations and avoid race conditions
   private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
@@ -179,8 +179,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // Shutdown all document executors
     documentExecutors.values().forEach(DocumentChangeExecutor::shutdown);
     documentExecutors.clear();
-
-    executorService.shutdown();
   }
 
   @Override
@@ -911,7 +909,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return waitFuture.thenCompose(ignored ->
       CompletableFutures.computeAsync(
-        executorService,
+        taskExecutor,
         cancelChecker -> {
           cancelChecker.checkCanceled();
           var serverContext = getContextForDocument(documentContext.getUri().toString());

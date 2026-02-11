@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.utils.Absolute;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
@@ -39,14 +38,14 @@ import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Сервис обработки запросов, связанных с рабочей областью.
@@ -63,19 +62,16 @@ public class BSLWorkspaceService implements WorkspaceService {
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
   private final ServerContextProvider serverContextProvider;
-
-  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
+  @Qualifier("workspaceServiceExecutor")
+  private final ThreadPoolTaskExecutor executor;
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService populateContextExecutor;
 
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
     return CompletableFuture.supplyAsync(
       () -> Either.forRight(symbolProvider.getSymbols(params)),
-      executorService
+      executor
     );
   }
 
@@ -98,7 +94,7 @@ public class BSLWorkspaceService implements WorkspaceService {
           }
         }
       },
-      executorService
+      executor
     );
   }
 
@@ -108,7 +104,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     return CompletableFuture.supplyAsync(
       () -> commandProvider.executeCommand(arguments),
-      executorService
+      executor
     );
   }
 
@@ -125,13 +121,13 @@ public class BSLWorkspaceService implements WorkspaceService {
         event.getAdded().forEach((WorkspaceFolder folder) -> {
           var serverContext = serverContextProvider.addWorkspace(folder);
           // Async population of context for new workspace
-          CompletableFuture.runAsync(serverContext::populateContext);
+          CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor);
         });
         
         LOGGER.info("Workspace folders changed. Added: {}, Removed: {}",
           event.getAdded().size(), event.getRemoved().size());
       },
-      executorService
+      executor
     );
   }
 

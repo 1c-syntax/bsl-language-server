@@ -23,18 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -46,20 +44,11 @@ import java.util.stream.Stream;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public abstract class DiagnosticComputer {
 
-  private ExecutorService executorService;
-
-  @PostConstruct
-  private void init() {
-    var factory = new NamedForkJoinWorkerThreadFactory("diagnostic-computer-");
-    executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-  }
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
+  @Qualifier("diagnosticComputerExecutor")
+  private final ExecutorService executor;
 
   /**
    * Вычислить все диагностики для документа.
@@ -69,7 +58,7 @@ public abstract class DiagnosticComputer {
    */
   public List<Diagnostic> compute(DocumentContext documentContext) {
     return CompletableFuture
-      .supplyAsync(() -> internalCompute(documentContext), executorService)
+      .supplyAsync(() -> internalCompute(documentContext), executor)
       .join();
   }
 
