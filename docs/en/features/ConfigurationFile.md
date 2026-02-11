@@ -1,9 +1,38 @@
 # BSL Language Server Configuration
 
-BSL Language Server provides the ability to change the settings using a configuration file in json format.  
-The created file must be specified using the key `--configuration` *(or `-c`)* when running BSL Language Server as a console application. If you use the editor / IDE with the BSL Language Server client plugin, place it in accordance with the documentation *(this is usually the root of a project or workspace)*.
+BSL Language Server provides the ability to change settings using a configuration file in JSON format.
 
-If there is no configuration file, an attempt will be made to find the ".bsl-language-server.json" file in "%HOMEPATH%"
+## Global and Local Configuration
+
+BSL Language Server uses a two-level configuration system:
+
+* **Global configuration** — common settings applied to all workspaces. Contains parameters `language`, `sendErrors`, and `traceLog`.
+* **Local (per-workspace) configuration** — individual settings for each workspace, including diagnostics, codeLens, inlayHint, and other parameters. Each workspace can have its own configuration file.
+
+### Configuration File Search Strategy
+
+#### Global Configuration
+
+On startup, BSL Language Server searches for a global configuration file in the following order:
+
+1. File specified via the `-c` (`--configuration`) flag, if provided at launch.
+2. File `.bsl-language-server.json` in the current working directory (CWD).
+3. File `.bsl-language-server.json` in the user's home directory (`%HOMEPATH%` / `$HOME`).
+
+The first found file is used. If no file is found, default settings are applied.
+
+#### Local Configuration (Per-Workspace)
+
+For each workspace, BSL Language Server searches for a `.bsl-language-server.json` file in the workspace root directory. If found, its settings are applied to that workspace; otherwise, default settings are used (supplemented by the global configuration).
+
+### Change Tracking
+
+BSL Language Server automatically tracks configuration file changes:
+
+* Changing the global file updates global parameters (`language`, `sendErrors`, `traceLog`).
+* Changing a workspace file updates settings only for that workspace, including diagnostics recalculation.
+* When a workspace is added, a file watcher is automatically registered for its configuration file.
+* When a workspace is removed, the file watcher is unregistered.
 
 ## Settings
 

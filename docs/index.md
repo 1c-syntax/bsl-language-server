@@ -46,18 +46,21 @@
 * Иерархия вызовов методов
 * Расширение текущего выделения (expand selection)
 * Отображение представления цвета и конвертация между `Цвет` и `WebЦвета`
+* Семантическая подсветка синтаксиса
+* Inlay hints (когнитивная/цикломатическая сложность, параметры вызовов методов)
 * Диагностики
 * "Быстрые исправления" (quick fixes) для ряда диагностик и "быстрые действия" (code actions)
 * Запуск движка диагностик из командной строки
 * Запуск форматирования файлов в каталоге из командной строки
 * Переименование символов
+* Поддержка работы с несколькими рабочими областями (multi-workspace)
 
 ## Поддерживаемые операции протокола
 
 ??? workspace
     | Операция                                                     | Поддержка                                                    | Комментарий                                                  |
     | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-    | [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
+    | [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | Динамическое добавление и удаление рабочих областей          |
     | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | с ограничениями, см. [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
     | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |
     | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
@@ -143,6 +146,8 @@ Commands:
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
+
+Ключ `-c` (`--configuration`) задаёт путь к конфигурационному файлу. Если ключ не указан, BSL Language Server автоматически ищет файл `.bsl-language-server.json` сначала в текущем каталоге, а затем в домашнем каталоге пользователя. Подробнее — на странице [Конфигурационный файл](features/ConfigurationFile.md).
 
 По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `language` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
 
