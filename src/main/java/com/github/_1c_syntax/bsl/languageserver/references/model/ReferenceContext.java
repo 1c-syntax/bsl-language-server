@@ -26,19 +26,22 @@ package com.github._1c_syntax.bsl.languageserver.references.model;
  *
  * @param symbolOccurrences хранилище обращений к символам
  * @param locations         хранилище расположений обращений
+ * @param annotations       хранилище зарегистрированных аннотаций
  */
 public record ReferenceContext(
   SymbolOccurrenceRepository symbolOccurrences,
-  LocationRepository locations
+  LocationRepository locations,
+  AnnotationRepository annotations
 ) {
 
   /**
-   * Создать новую пару пустых репозиториев.
+   * Создать новую тройку пустых репозиториев.
    */
   public static ReferenceContext create() {
     return new ReferenceContext(
       new SymbolOccurrenceRepository(),
-      new LocationRepository()
+      new LocationRepository(),
+      new AnnotationRepository()
     );
   }
 }

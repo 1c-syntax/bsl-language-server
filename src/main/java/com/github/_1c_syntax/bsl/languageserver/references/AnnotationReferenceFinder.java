@@ -23,9 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -49,9 +47,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Поиск ссылок на методы из аннотаций.
@@ -64,14 +60,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
   private final ServerContextProvider serverContextProvider;
-  // Map: ServerContext -> (AnnotationName -> AnnotationSymbol)
-  private final Map<ServerContext, Map<String, AnnotationSymbol>> registeredAnnotations = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleContextRefresh(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
-    // Очищаем аннотации для этого workspace и регистрируем заново
-    registeredAnnotations.put(serverContext, new ConcurrentHashMap<>());
+    var annotations = serverContext.getReferenceContext().annotations();
+    annotations.clear();
     serverContext.getDocuments()
       .values()
       .forEach(this::findAndRegisterAnnotation);
@@ -80,22 +74,16 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
   @EventListener
   public void handleDocumentContextChange(DocumentContextContentChangedEvent event) {
     DocumentContext documentContext = event.getSource();
-    var uri = documentContext.getUri();
+    var annotations = documentContext.getServerContext().getReferenceContext().annotations();
 
-    removeAnnotationsRegisteredForUri(uri);
+    annotations.removeByUri(documentContext.getUri());
     findAndRegisterAnnotation(documentContext);
   }
 
   @EventListener
   public void handleServerContextDocumentRemovedEvent(ServerContextDocumentRemovedEvent event) {
-    var uri = event.getUri();
-
-    removeAnnotationsRegisteredForUri(uri);
-  }
-
-  @EventListener
-  public void handleBeforeWorkspaceRemoved(BeforeWorkspaceRemovedEvent event) {
-    registeredAnnotations.remove(event.getServerContext());
+    var annotations = event.getSource().getReferenceContext().annotations();
+    annotations.removeByUri(event.getUri());
   }
 
   private void findAndRegisterAnnotation(DocumentContext documentContext) {
@@ -121,18 +109,16 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .flatMap(annotationName -> methodSymbolAnnotationPair.map(Pair::getLeft)
         .map(methodSymbol -> AnnotationSymbol.from(annotationName, methodSymbol)))
       .ifPresent((AnnotationSymbol annotationSymbol) -> {
-        var serverContext = documentContext.getServerContext();
-        registeredAnnotations
-          .computeIfAbsent(serverContext, k -> new ConcurrentHashMap<>())
-          .put(annotationSymbol.getName(), annotationSymbol);
+        var annotations = documentContext.getServerContext().getReferenceContext().annotations();
+        annotations.register(annotationSymbol);
       });
   }
 
-  private void removeAnnotationsRegisteredForUri(URI uri) {
-    // Удаляем аннотацию из всех workspace (на случай если документ был в нескольких workspace)
-    registeredAnnotations.values()
-      .forEach(annotationsMap -> annotationsMap.values()
-        .removeIf(annotationSymbol -> annotationSymbol.getOwner().getUri().equals(uri)));
+  private static Optional<AnnotationSymbol> getAnnotationSymbol(DocumentContext documentContext,
+                                                          BSLParser.AnnotationNameContext annotationNode) {
+    var annotationName = annotationNode.getText();
+    return documentContext.getServerContext().getReferenceContext().annotations()
+      .findByName(annotationName);
   }
 
   @Override
@@ -208,14 +194,6 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .map(BSLParser.AnnotationParamContext.class::cast)
       .flatMap(annotationParamContext ->
         getReferenceToAnnotationParam(documentContext, Optional.of(annotationParamContext)));
-  }
-
-  private Optional<AnnotationSymbol> getAnnotationSymbol(DocumentContext documentContext,
-                                                          BSLParser.AnnotationNameContext annotationNode) {
-    var annotationName = annotationNode.getText();
-    var serverContext = documentContext.getServerContext();
-    return Optional.ofNullable(registeredAnnotations.get(serverContext))
-      .flatMap(annotationsMap -> Optional.ofNullable(annotationsMap.get(annotationName)));
   }
 
   private Optional<Reference> getReferenceToAnnotationParam(
