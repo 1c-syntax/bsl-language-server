@@ -180,8 +180,7 @@ public class SelectionRangeProvider {
 
     if (!nearbyStatements.isEmpty() && (nearbyStatements.size() + 1 != children.size())) {
 
-      var statementsBlock = new ParserRuleContext();
-      statementsBlock.setParent(parent);
+      var statementsBlock = new ParserRuleContext(parent, -1); // todo стоит переделать
 
       nearbyStatements.add(statement);
       nearbyStatements.sort(Comparator.comparing(ruleContext -> ruleContext.getStart().getLine()));
@@ -207,6 +206,6 @@ public class SelectionRangeProvider {
     }
 
     var ifStatement = (BSLParser.IfStatementContext) ifBranch.getParent();
-    return ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
+    return ifStatement != null && ifStatement.elseBranch() == null && ifStatement.elsifBranch().isEmpty();
   }
 }

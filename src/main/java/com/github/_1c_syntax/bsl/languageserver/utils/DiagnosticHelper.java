@@ -56,8 +56,10 @@ public final class DiagnosticHelper {
    * @param rightNode Второй узел для сравнения
    * @return true, если узлы эквивалентны
    */
-  public static boolean equalNodes(Tree leftNode, Tree rightNode) {
-
+  public static boolean equalNodes(@Nullable Tree leftNode, @Nullable Tree rightNode) {
+    if (leftNode == null || rightNode == null) {
+      return false;
+    }
     if (leftNode.getChildCount() != rightNode.getChildCount()
       || !leftNode.getClass().equals(rightNode.getClass())) {
       return false;

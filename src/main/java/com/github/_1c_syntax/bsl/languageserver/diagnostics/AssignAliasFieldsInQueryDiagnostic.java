@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -44,9 +45,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class AssignAliasFieldsInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
+  public @Nullable ParseTree visitQuery(SDBLParser.QueryContext ctx) {
 
-    if (ctx.getParent().getRuleIndex() != SDBLParser.RULE_subquery) {
+    if (ctx.getParent() != null && ctx.getParent().getRuleIndex() != SDBLParser.RULE_subquery) {
       return super.visitQuery(ctx);
     }
 

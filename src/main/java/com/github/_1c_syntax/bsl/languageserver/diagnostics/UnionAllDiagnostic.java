@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -43,7 +44,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class UnionAllDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
-  public ParseTree visitUnion(SDBLParser.UnionContext ctx) {
+  public @Nullable ParseTree visitUnion(SDBLParser.UnionContext ctx) {
     if (ctx.UNION_ALL() != null) {
       return super.visitUnion(ctx);
     }

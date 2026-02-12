@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -34,9 +32,7 @@ import org.eclipse.lsp4j.jsonrpc.util.Preconditions;
 import org.eclipse.lsp4j.util.Positions;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Набор методов для удобства работы с областями текста (ренджами)
@@ -68,8 +64,8 @@ public final class Ranges {
    *
    * @param startLine Начальная строка
    * @param startChar Начальный символ
-   * @param endLine Конечная строка
-   * @param endChar Конечный символ
+   * @param endLine   Конечная строка
+   * @param endChar   Конечный символ
    * @return Созданный диапазон
    */
   public Range create(int startLine, int startChar, int endLine, int endChar) {
@@ -94,7 +90,10 @@ public final class Ranges {
    * @param ruleContext Контекст правила
    * @return Диапазон, покрывающий весь контекст
    */
-  public Range create(ParserRuleContext ruleContext) {
+  public Range create(@Nullable ParserRuleContext ruleContext) {
+    if (ruleContext == null) {
+      return create();
+    }
     return create(ruleContext.getStart(), ruleContext.getStop());
   }
 
@@ -102,7 +101,7 @@ public final class Ranges {
    * Создать диапазон от начала одного контекста до конца другого.
    *
    * @param startCtx Начальный контекст
-   * @param endCtx Конечный контекст
+   * @param endCtx   Конечный контекст
    * @return Диапазон между контекстами
    */
   public Range create(ParserRuleContext startCtx, ParserRuleContext endCtx) {
@@ -113,7 +112,7 @@ public final class Ranges {
    * Создать диапазон из токенов.
    *
    * @param startToken Начальный токен
-   * @param endToken Конечный токен
+   * @param endToken   Конечный токен
    * @return Диапазон между токенами
    */
   public Range create(Token startToken, @Nullable Token endToken) {
@@ -153,7 +152,10 @@ public final class Ranges {
    * @param terminalNode Терминальный узел
    * @return Диапазон узла
    */
-  public Range create(TerminalNode terminalNode) {
+  public Range create(@Nullable TerminalNode terminalNode) {
+    if (terminalNode == null) {
+      return create();
+    }
     return create(terminalNode.getSymbol());
   }
 
@@ -161,7 +163,7 @@ public final class Ranges {
    * Создать диапазон между двумя терминальными узлами.
    *
    * @param startTerminalNode Начальный узел
-   * @param stopTerminalNode Конечный узел
+   * @param stopTerminalNode  Конечный узел
    * @return Диапазон между узлами
    */
   public Range create(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
@@ -210,7 +212,7 @@ public final class Ranges {
     Preconditions.checkNotNull(position, "position");
     return range.getStart().equals(position)
       || (Positions.isBefore(range.getStart(), position)
-        && Positions.isBefore(position, range.getEnd()));
+      && Positions.isBefore(position, range.getEnd()));
   }
 
   /**
@@ -275,7 +277,6 @@ public final class Ranges {
   }
 
 
-
   /**
    * Натуральный порядок сравнения Range
    *
@@ -284,11 +285,11 @@ public final class Ranges {
    * @return 0 - равно, 1 - больше, -1 - меньше
    */
   public int compare(Range o1, Range o2) {
-    if (o1.equals(o2)){
+    if (o1.equals(o2)) {
       return 0;
     }
     final var startCompare = compare(o1.getStart(), o2.getStart());
-    if (startCompare != 0){
+    if (startCompare != 0) {
       return startCompare;
     }
     return compare(o1.getEnd(), o2.getEnd());
@@ -302,7 +303,7 @@ public final class Ranges {
    * @return 0 - равно, 1 - больше, -1 - меньше
    */
   public int compare(Position pos1, Position pos2) {
-    if (pos1.equals(pos2)){
+    if (pos1.equals(pos2)) {
       return 0;
     }
 

@@ -28,6 +28,8 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import java.util.Optional;
+
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -111,6 +113,7 @@ public class BracketDocumentHighlightSupplier implements DocumentHighlightSuppli
     return highlights;
   }
 
+  @Nullable
   private Token findMatchingBracket(Token token, List<Token> allTokens, int openType, int closeType, boolean isOpening) {
     int tokenIndex = token.getTokenIndex();
     int depth = 1;

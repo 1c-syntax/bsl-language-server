@@ -60,8 +60,7 @@ public class AllKnownTokenTest {
     SDBLLexer.SLICEFIRST_VT,
     SDBLLexer.SLICELAST_VT,
     SDBLLexer.TASK_BY_PERFORMER_VT,
-    SDBLLexer.TURNOVERS_VT,
-    SDBLLexer.BRACE_IDENTIFIER
+    SDBLLexer.TURNOVERS_VT
   );
 
   @Test

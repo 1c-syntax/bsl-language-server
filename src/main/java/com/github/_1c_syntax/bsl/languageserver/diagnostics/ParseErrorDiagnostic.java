@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
@@ -87,8 +88,8 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
       });
   }
 
-  private static String getTokenName(int tokenType) {
-    String value = BSLLexer.VOCABULARY.getLiteralName(tokenType);
+  private static @Nullable String getTokenName(int tokenType) {
+    var value = BSLLexer.VOCABULARY.getLiteralName(tokenType);
     if (value == null) {
       value = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
     }

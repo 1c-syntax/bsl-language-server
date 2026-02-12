@@ -92,7 +92,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     var nestingCount = operatorsInFly.size();
     recursionLevel++;
 
-    if (Trees.nodeContainsErrors(ctx) || (ctx.getChildCount() == 0 || ctx.children.stream().anyMatch(ErrorNode.class::isInstance))) {
+    if (Trees.nodeContainsErrors(ctx) || (ctx.getChildCount() == 0 || ctx.getChildren().stream().anyMatch(ErrorNode.class::isInstance))) {
       var errorExpressionNode = new ErrorExpressionNode(ctx);
       if (recursionLevel > 0) {
         operands.push(errorExpressionNode);
@@ -147,10 +147,10 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   }
 
   @Override
-  public ParseTree visitMember(BSLParser.MemberContext ctx) {
+  public @Nullable ParseTree visitMember(BSLParser.MemberContext ctx) {
 
     // В случае ошибки парсинга member может быть пустой.
-    if (Trees.nodeContainsErrors(ctx) || ctx.getChildCount() == 0 || ctx.children.stream().anyMatch(ErrorNode.class::isInstance)) {
+    if (Trees.nodeContainsErrors(ctx) || ctx.getChildCount() == 0 || ctx.getChildren().stream().anyMatch(ErrorNode.class::isInstance)) {
       operands.push(new ErrorExpressionNode(ctx));
       return ctx;
     }
@@ -168,7 +168,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
 
     if (unaryModifier != null) {
       visitUnaryModifier(unaryModifier);
-      childIndex = ctx.children.indexOf(unaryModifier) + 1;
+      childIndex = ctx.getChildren().indexOf(unaryModifier) + 1;
     }
 
     if (ctx.waitExpression() != null) {
@@ -299,7 +299,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   @Override
   public ParseTree visitUnaryModifier(BSLParser.UnaryModifierContext ctx) {
     var child = (TerminalNode) ctx.getChild(0);
-    var token = (child).getSymbol().getType();
+    var token = child.getSymbol().getType();
 
     var operator = switch (token) {
       case BSLLexer.PLUS -> BslOperator.UNARY_PLUS;
@@ -318,7 +318,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     if (ctx.IDENTIFIER() != null) {
       operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
     } else {
-      var childVariant = ctx.children.get(0);
+      var childVariant = ctx.getChildren().get(0);
       childVariant.accept(this);
     }
 
@@ -413,10 +413,12 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   public ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
     var target = operands.pop();
     var methodCall = ctx.methodCall();
-    var callNode = MethodCallNode.create(methodCall.methodName().IDENTIFIER());
-    addCallArguments(callNode, methodCall.doCall().callParamList().callParam());
-    var operation = BinaryOperationNode.create(BslOperator.DEREFERENCE, target, callNode, ctx);
-    operands.push(operation);
+    if (methodCall != null) {
+      var callNode = MethodCallNode.create(methodCall.methodName().IDENTIFIER());
+      addCallArguments(callNode, methodCall.doCall().callParamList().callParam());
+      var operation = BinaryOperationNode.create(BslOperator.DEREFERENCE, target, callNode, ctx);
+      operands.push(operation);
+    }
     return ctx;
   }
 
@@ -442,7 +444,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     return ctx;
   }
 
-  private static @Nullable BslExpression makeSubexpression(BSLParser.ExpressionContext ctx) {
+  private static @Nullable BslExpression makeSubexpression(BSLParser.@Nullable ExpressionContext ctx) {
     return buildExpressionTree(ctx);
   }
 

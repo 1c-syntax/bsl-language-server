@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Терминальный узел дерева выражений.
@@ -32,7 +33,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * числа, строки, булевы значения, Неопределено, имена переменных.
  */
 public class TerminalSymbolNode extends BslExpression {
-  private TerminalSymbolNode(ExpressionNodeType type, ParseTree representingAst) {
+  private TerminalSymbolNode(ExpressionNodeType type, @Nullable ParseTree representingAst) {
     super(type, representingAst, null);
   }
 
@@ -48,7 +49,7 @@ public class TerminalSymbolNode extends BslExpression {
    * @param constant константа
    * @return терминал константы
    */
-  public static TerminalSymbolNode literal(TerminalNode constant) {
+  public static TerminalSymbolNode literal(@Nullable TerminalNode constant) {
     return new TerminalSymbolNode(ExpressionNodeType.LITERAL, constant);
   }
 
@@ -56,7 +57,7 @@ public class TerminalSymbolNode extends BslExpression {
    * @param identifier идентификатор
    * @return терминал идентификатора
    */
-  public static TerminalSymbolNode identifier(TerminalNode identifier) {
+  public static TerminalSymbolNode identifier(@Nullable TerminalNode identifier) {
     return new TerminalSymbolNode(ExpressionNodeType.IDENTIFIER, identifier);
   }
 }
