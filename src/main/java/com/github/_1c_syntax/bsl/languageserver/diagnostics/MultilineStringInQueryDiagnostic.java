@@ -41,7 +41,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
   scope = DiagnosticScope.BSL
 )
 public class MultilineStringInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
-  private static final int MULTI_STRING_MIN_SIZE = 2; // see SDBLParser grammar
+  private static final int MULTI_STRING_MIN_SIZE = 1; // see SDBLParser grammar
 
   @Override
   public ParseTree visitMultiString(SDBLParser.MultiStringContext ctx) {

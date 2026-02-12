@@ -60,11 +60,10 @@ class SDBLJoinDocumentHighlightSupplierTest {
     // then
     assertThat(highlights).isNotEmpty();
     // Должны подсветиться: ЛЕВОЕ, СОЕДИНЕНИЕ, ПО (первого JOIN)
-    assertThat(highlights).hasSize(3);
+    assertThat(highlights).hasSize(2);
 
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 10, 5, 10, 10);   // ЛЕВОЕ
-    assertHighlightRange(highlights, 10, 11, 10, 21);  // СОЕДИНЕНИЕ
+    assertHighlightRange(highlights, 10, 5, 10, 21);   // ЛЕВОЕ СОЕДИНЕНИЕ
     assertHighlightRange(highlights, 11, 8, 11, 10);   // ПО
   }
 
@@ -83,11 +82,10 @@ class SDBLJoinDocumentHighlightSupplierTest {
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSize(3);
+    assertThat(highlights).hasSize(2);
 
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 10, 5, 10, 10);   // ЛЕВОЕ
-    assertHighlightRange(highlights, 10, 11, 10, 21);  // СОЕДИНЕНИЕ
+    assertHighlightRange(highlights, 10, 5, 10, 21);   // ЛЕВОЕ соединение
     assertHighlightRange(highlights, 11, 8, 11, 10);   // ПО
   }
 
@@ -106,11 +104,10 @@ class SDBLJoinDocumentHighlightSupplierTest {
 
     // then
     assertThat(highlights).isNotEmpty();
-    assertThat(highlights).hasSize(3);
+    assertThat(highlights).hasSize(2);
 
     // Проверяем точные позиции
-    assertHighlightRange(highlights, 10, 5, 10, 10);   // ЛЕВОЕ
-    assertHighlightRange(highlights, 10, 11, 10, 21);  // СОЕДИНЕНИЕ
+    assertHighlightRange(highlights, 10, 5, 10, 21);   // ЛЕВОЕ СОЕДИНЕНИЕ
     assertHighlightRange(highlights, 11, 8, 11, 10);   // ПО
   }
 
