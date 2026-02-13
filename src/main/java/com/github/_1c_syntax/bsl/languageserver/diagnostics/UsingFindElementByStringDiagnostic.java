@@ -61,8 +61,8 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
         Optional.ofNullable(ctx.doCall())
           .map(BSLParser.DoCallContext::callParamList)
           .ifPresent(callParamList -> {
-            var param = callParamList.callParam().get(0);
-            if (param.getChildren().isEmpty() ||
+            var param = callParamList.callParam(0);
+            if (param == null || param.getChildren().isEmpty() ||
               param.getStart().getType() == BSLParser.STRING ||
               param.getStart().getType() == BSLParser.DECIMAL) {
               diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));

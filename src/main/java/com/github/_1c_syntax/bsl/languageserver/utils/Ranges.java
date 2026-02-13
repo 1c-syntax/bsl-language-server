@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.util.Preconditions;
 import org.eclipse.lsp4j.util.Positions;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -38,6 +39,7 @@ import java.util.List;
  * Набор методов для удобства работы с областями текста (ренджами)
  */
 @UtilityClass
+@NullMarked
 public final class Ranges {
 
   /**

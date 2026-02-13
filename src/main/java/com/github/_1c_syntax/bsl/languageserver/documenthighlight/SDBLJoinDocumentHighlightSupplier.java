@@ -108,15 +108,17 @@ public class SDBLJoinDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
     List<DocumentHighlight> highlights = new ArrayList<>();
 
     // LEFT/RIGHT/FULL/INNER
-    if(joinCtx.leftJoin() != null) {
-      addTokenHighlight(highlights, joinCtx.leftJoin().keyword);
-    } else if(joinCtx.rightJoin() != null) {
-      addTokenHighlight(highlights, joinCtx.rightJoin().keyword);
-    } else if(joinCtx.fullJoin() != null) {
-      addTokenHighlight(highlights, joinCtx.fullJoin().keyword);
-    } else if(joinCtx.innerJoin() != null) {
-      addTokenHighlight(highlights, joinCtx.fullJoin().keyword);
-    }
+    Optional.ofNullable(joinCtx.leftJoin())
+      .ifPresent(join -> addTokenHighlight(highlights, join.keyword));
+
+    Optional.ofNullable(joinCtx.rightJoin())
+      .ifPresent(join -> addTokenHighlight(highlights, join.keyword));
+
+    Optional.ofNullable(joinCtx.fullJoin())
+      .ifPresent(join -> addTokenHighlight(highlights, join.keyword));
+
+    Optional.ofNullable(joinCtx.innerJoin())
+      .ifPresent(join -> addTokenHighlight(highlights, join.keyword));
 
     addTerminalHighlight(highlights, joinCtx.BY());
 

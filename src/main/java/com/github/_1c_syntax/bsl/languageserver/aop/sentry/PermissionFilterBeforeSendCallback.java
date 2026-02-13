@@ -131,7 +131,7 @@ public class PermissionFilterBeforeSendCallback implements BeforeSendCallback {
     return languageClient.showMessageRequest(requestParams);
   }
 
-  private @Nullable MessageActionItem waitForPermission(CompletableFuture<@Nullable MessageActionItem> sendQuestion) {
+  private @Nullable MessageActionItem waitForPermission(CompletableFuture<MessageActionItem> sendQuestion) {
     try {
       return sendQuestion.get();
     } catch (InterruptedException e) {

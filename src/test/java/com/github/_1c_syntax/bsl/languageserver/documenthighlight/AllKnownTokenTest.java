@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.SdblTokenTypes;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.SDBLLexer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Тесты для проверки того, что обо всех токенах лексера было известно
  */
-@SpringBootTest
 public class AllKnownTokenTest {
 
   private static final Set<Integer> skippedSdblToken = Set.of(
@@ -82,12 +81,11 @@ public class AllKnownTokenTest {
   }
 
   @Test
+  @Disabled("Заготовка. Надо реализовать аналог для bsl lexer")
   void bslTokens() {
     List<String> unknown = new ArrayList<>();
     // токены имею индекс от одного максимального
     var endToken = BSLLexer.VOCABULARY.getMaxTokenType();
-    // todo реализовать аналог для bsl lexer
-
     assertThat(unknown).isEmpty();
   }
 }

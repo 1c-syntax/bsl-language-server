@@ -230,7 +230,9 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
    */
   private void addBreakAndContinueFromTryStatement(List<DocumentHighlight> highlights,
                                                    BSLParser.TryStatementContext tryStatement) {
-    addBreakAndContinueHighlights(highlights, tryStatement.tryCodeBlock().codeBlock());
-    addBreakAndContinueHighlights(highlights, tryStatement.exceptCodeBlock().codeBlock());
+    Optional.ofNullable(tryStatement.tryCodeBlock())
+      .ifPresent(block -> addBreakAndContinueHighlights(highlights, block.codeBlock()));
+    Optional.ofNullable(tryStatement.exceptCodeBlock())
+      .ifPresent(block -> addBreakAndContinueHighlights(highlights, block.codeBlock()));
   }
 }
