@@ -239,4 +239,14 @@ class DocumentContextTest {
     assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
     assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);
   }
+
+  @Test
+  void testUnfinishedStringLiteralDoesNotCrash() {
+    // given
+    var content = "Function extractIDs ( changes )\n\n\ts = new Query ( \"\n\t|\n\t\" );\n\nEndFunction";
+
+    // when-then
+    var documentContext = TestUtils.getDocumentContext(content);
+    assertThat(documentContext.getQueries()).isNotNull();
+  }
 }
