@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -245,13 +246,20 @@ class DocumentContextTest {
     // given
     // Незаконченный строковой литерал внутри new Query(...)
     // Воспроизводит баг: https://github.com/1c-syntax/bsl-language-server/issues/2469
-    var content = "Function extractIDs ( changes )\n\n\ts = new Query ( \"\n\t|\n\t\" );\n\nEndFunction";
+    var content = """
+      Function extractIDs ( changes )
+
+      	s = new Query ( "
+      	|
+      	" );
+
+      EndFunction""";
 
     // when-then — getQueries() вызывает QueryComputer.visitString(), который крэшит
     // с StringIndexOutOfBoundsException в visitString:124 на substring(partString.length()),
     // когда newString.length() < partString.length() для токенов на одной строке
     var documentContext = TestUtils.getDocumentContext(content);
-    assertThat(documentContext.getQueries()).isNotNull();
+    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
   }
 
   @Test
@@ -259,10 +267,17 @@ class DocumentContextTest {
     // given
     // Незаконченный строковой литерал в обычном присваивании (не query).
     // QueryComputer.visitString() обходит ВСЁ AST, поэтому крэшит и на обычных строках.
-    var content = "Function test()\n\n\ts = \"\n\t|\n\t\";\n\nEndFunction";
+    var content = """
+      Function test()
+
+      	s = "
+      	|
+      	";
+
+      EndFunction""";
 
     // when-then — getQueries() крэшит с той же ошибкой
     var documentContext = TestUtils.getDocumentContext(content);
-    assertThat(documentContext.getQueries()).isNotNull();
+    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
   }
 }
