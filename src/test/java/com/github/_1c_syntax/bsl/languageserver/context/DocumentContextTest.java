@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -238,5 +239,39 @@ class DocumentContextTest {
     // then
     assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
     assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);
+  }
+
+  @Test
+  void testUnfinishedQueryStringLiteral() {
+    // given
+    var content = """
+      Function extractIDs ( changes )
+
+      	s = new Query ( "
+      	|
+      	" );
+
+      EndFunction""";
+
+    // when-then
+    var documentContext = TestUtils.getDocumentContext(content);
+    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
+  }
+
+  @Test
+  void testUnfinishedPlainStringLiteral() {
+    // given
+    var content = """
+      Function test()
+
+      	s = "
+      	|
+      	";
+
+      EndFunction""";
+
+    // when-then
+    var documentContext = TestUtils.getDocumentContext(content);
+    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
   }
 }
