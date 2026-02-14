@@ -242,10 +242,8 @@ class DocumentContextTest {
   }
 
   @Test
-  void testUnfinishedQueryStringLiteralDoesNotCrash() {
+  void testUnfinishedQueryStringLiteral() {
     // given
-    // Незаконченный строковой литерал внутри new Query(...)
-    // Воспроизводит баг: https://github.com/1c-syntax/bsl-language-server/issues/2469
     var content = """
       Function extractIDs ( changes )
 
@@ -255,18 +253,14 @@ class DocumentContextTest {
 
       EndFunction""";
 
-    // when-then — getQueries() вызывает QueryComputer.visitString(), который крэшит
-    // с StringIndexOutOfBoundsException в visitString:124 на substring(partString.length()),
-    // когда newString.length() < partString.length() для токенов на одной строке
+    // when-then
     var documentContext = TestUtils.getDocumentContext(content);
     assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
   }
 
   @Test
-  void testUnfinishedPlainStringLiteralDoesNotCrash() {
+  void testUnfinishedPlainStringLiteral() {
     // given
-    // Незаконченный строковой литерал в обычном присваивании (не query).
-    // QueryComputer.visitString() обходит ВСЁ AST, поэтому крэшит и на обычных строках.
     var content = """
       Function test()
 
@@ -276,7 +270,7 @@ class DocumentContextTest {
 
       EndFunction""";
 
-    // when-then — getQueries() крэшит с той же ошибкой
+    // when-then
     var documentContext = TestUtils.getDocumentContext(content);
     assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
   }
