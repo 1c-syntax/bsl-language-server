@@ -121,11 +121,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       // если новый токен строки находится на той же строке файла, что и предыдущий, то добавляем его к ней
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
         var newString = getString(startLine, token);
-        if (newString.length() > partString.length()) {
-          partString = newString.substring(partString.length());
-        } else {
-          partString = newString;
-        }
+        partString = newString.substring(partString.length());
       } else {
         partString = getString(startLine, token);
       }
