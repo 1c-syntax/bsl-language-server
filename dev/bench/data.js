@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1770400185544,
+  "lastUpdate": 1771087142731,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34813,6 +34813,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5744691155086696",
             "extra": "mean: 70.0599599679311 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5aba0f5616d7f9035c1bcccc920b56a03102e8ea",
+          "message": "Merge pull request #3819 from 1c-syntax/copilot/fix-server-crash-editing-string-literal\n\nAdd failing tests and analysis for server crash on unfinished string literals",
+          "timestamp": "2026-02-14T17:31:08+01:00",
+          "tree_id": "38abfe6e15a158ccd0d87838554b8bed0211f7c5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5aba0f5616d7f9035c1bcccc920b56a03102e8ea"
+        },
+        "date": 1771087135435,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.35205308596294,
+            "unit": "sec",
+            "range": "stddev: 0.5759957204225655",
+            "extra": "mean: 69.35205308596294 sec\nrounds: 3"
           }
         ]
       }
