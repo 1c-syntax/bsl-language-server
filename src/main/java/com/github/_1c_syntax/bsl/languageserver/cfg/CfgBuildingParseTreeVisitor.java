@@ -605,7 +605,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     }
 
     boolean foundSelf = false;
-    int depth = 0;
+    var depth = 0;
     for (var child : children) {
       if (!foundSelf) {
         if (child == statement) {
@@ -621,7 +621,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       depth += preprocIfs.size();
       depth -= preprocEndifs.size();
 
-      if (depth <= 0) {
+      if (depth == 0) {
         return true;
       }
     }
