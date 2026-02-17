@@ -132,4 +132,41 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     assertThat(diagnostics).isEmpty();
 
   }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches() {
+    var sample =
+      """
+        Функция МенеджерОбъектаПоИмени(Имя)
+          Перем КлассОМ, Менеджер;
+          ЧастиИмени = СтрРазделить(Имя, ".");
+          Если ЧастиИмени.Количество() > 0 Тогда
+            КлассОМ = ВРег(ЧастиИмени[0]);
+          КонецЕсли;
+          Если      КлассОМ = "ПЛАНОБМЕНА" Тогда
+            Менеджер = ПланыОбмена;
+          ИначеЕсли КлассОМ = "СПРАВОЧНИК" Тогда
+            Менеджер = Справочники;
+          ИначеЕсли КлассОМ = "ДОКУМЕНТ" Тогда
+            Менеджер = Документы;
+          #Если НЕ МобильноеПриложениеСервер Тогда
+          ИначеЕсли КлассОМ = "ОТЧЕТ" Тогда
+            Менеджер = Отчеты;
+          ИначеЕсли КлассОМ = "ОБРАБОТКА" Тогда
+            Менеджер = Обработки;
+          #КонецЕсли
+          КонецЕсли;
+          Если Менеджер <> Неопределено Тогда
+            Возврат Менеджер;
+          КонецЕсли;
+          ВызватьИсключение "Ошибка";
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    // Should not throw exception - previously caused Diagnostic computation error
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+
+  }
 }
