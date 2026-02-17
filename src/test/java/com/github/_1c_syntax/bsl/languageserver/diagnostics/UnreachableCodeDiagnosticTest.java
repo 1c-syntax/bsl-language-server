@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -69,5 +70,51 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
   void testParseError() {
     List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeParseErrorDiagnostic");
     assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches() {
+    // Preprocessor #If/#EndIf spanning across elsif boundaries should not crash the CFG builder.
+    // Previously caused Diagnostic computation error (NoSuchElementException or FlowGraphLinkException).
+    var sample =
+      """
+        Процедура Ожидание(Компонента, Секунд) Экспорт
+          Возврат;
+          Если ТипЗнч(Компонента) = Тип("А") Тогда
+            Компонента.Метод1(Секунд * 1000);
+          Иначе
+            Компонента.Метод2(Секунд * 1000);
+          КонецЕсли;
+        КонецПроцедуры
+        Функция МенеджерОбъектаПоИмени(Имя)
+          Перем КлассОМ, Менеджер;
+          ЧастиИмени = СтрРазделить(Имя, ".");
+          Если ЧастиИмени.Количество() > 0 Тогда
+            КлассОМ = ВРег(ЧастиИмени[0]);
+          КонецЕсли;
+          Если      КлассОМ = "ПЛАНОБМЕНА" Тогда
+            Менеджер = ПланыОбмена;
+          ИначеЕсли КлассОМ = "СПРАВОЧНИК" Тогда
+            Менеджер = Справочники;
+          ИначеЕсли КлассОМ = "ДОКУМЕНТ" Тогда
+            Менеджер = Документы;
+          #Если НЕ МобильноеПриложениеСервер Тогда
+          ИначеЕсли КлассОМ = "ОТЧЕТ" Тогда
+            Менеджер = Отчеты;
+          ИначеЕсли КлассОМ = "ОБРАБОТКА" Тогда
+            Менеджер = Обработки;
+          #КонецЕсли
+          КонецЕсли;
+          Если Менеджер <> Неопределено Тогда
+            Возврат Менеджер;
+          КонецЕсли;
+          ВызватьИсключение "Ошибка";
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    // Should detect unreachable code in the first procedure without crashing
+    assertThat(diagnostics).isNotEmpty();
   }
 }

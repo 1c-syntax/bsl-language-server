@@ -458,7 +458,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
       hasTopLevelPreprocessor = false;
 
-    } else if (!isStatementLevelPreproc(ctx)) {
+    } else if (!isStatementLevelPreproc(ctx) || !hasMatchingEndIfInSameCodeBlock(ctx)) {
       return super.visitPreproc_if(ctx);
     }
 
@@ -588,6 +588,45 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
 
   private static boolean isStatementLevelPreproc(ParserRuleContext ctx) {
     return ctx.getParent().getParent().getRuleIndex() == BSLParser.RULE_statement;
+  }
+
+  private static boolean hasMatchingEndIfInSameCodeBlock(ParserRuleContext preprocIfCtx) {
+    // Find the enclosing codeBlock
+    var statement = preprocIfCtx.getParent().getParent(); // preprocessor -> statement
+    var codeBlock = statement.getParent();
+    if (codeBlock == null) {
+      return false;
+    }
+
+    // Count preproc_if and preproc_endif after this statement in the same codeBlock
+    var children = codeBlock.children;
+    if (children == null) {
+      return false;
+    }
+
+    boolean foundSelf = false;
+    var depth = 0;
+    for (var child : children) {
+      if (!foundSelf) {
+        if (child == statement) {
+          foundSelf = true;
+          depth = 1;
+        }
+        continue;
+      }
+
+      // Check for nested preproc_if/preproc_endif in sibling statements/preprocessors
+      var preprocIfs = Trees.findAllRuleNodes(child, BSLParser.RULE_preproc_if);
+      var preprocEndifs = Trees.findAllRuleNodes(child, BSLParser.RULE_preproc_endif);
+      depth += preprocIfs.size();
+      depth -= preprocEndifs.size();
+
+      if (depth == 0) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private PreprocessorConditionVertex popPreprocCondition() {
