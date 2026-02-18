@@ -86,7 +86,9 @@ public class BSLLSBinding {
         "app.command.line.runner.enabled", "false",
         "app.scheduling.enabled", "false",
         "spring.cache.caffeine.spec", "maximumSize=500,expireAfterAccess=600s",
-        "spring.cache.cache-names", "testIds,testSources"
+        "spring.cache.cache-names", "testIds,testSources",
+        "app.cache.fullPath", "",
+        "app.cache.basePath", "${user.home}"
       ))
       .build();
 
