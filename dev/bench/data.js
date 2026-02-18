@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1771434309686,
+  "lastUpdate": 1771434984959,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34875,6 +34875,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4676752558028035",
             "extra": "mean: 68.94833246866862 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7c4e71ad964683a285088c5db31b57679437ed00",
+          "message": "Merge pull request #3825 from 1c-syntax/hotfix/appPaths\n\nИсправление незаполненности плейсхолдеров для кеша",
+          "timestamp": "2026-02-18T17:43:22+01:00",
+          "tree_id": "302b43503aed266c7e9d8c868bee08b8581a445a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7c4e71ad964683a285088c5db31b57679437ed00"
+        },
+        "date": 1771434977113,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.05426828066508,
+            "unit": "sec",
+            "range": "stddev: 1.0443615745689603",
+            "extra": "mean: 69.05426828066508 sec\nrounds: 3"
           }
         ]
       }
