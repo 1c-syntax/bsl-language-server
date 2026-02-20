@@ -116,10 +116,6 @@ public class FormatCommand implements Callable<Integer> {
     }
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
-    if (files.isEmpty()) {
-      return 1;
-    }
-
     if (silentMode) {
       files.parallelStream().forEach(this::formatFile);
     } else {
