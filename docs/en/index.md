@@ -47,7 +47,8 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
 * Expand selection
 * Display color representation and convert between `Color` and `WebColors`
 * Semantic syntax highlighting
-* Inlay hints (cognitive/cyclomatic complexity, method call parameters)
+* Code lenses (cognitive/cyclomatic complexity)
+* Inlay hints (method call parameters)
 * Diagnostics
 * Quick fixes and code actions for several diagnostics
 * Run diagnostics engine from command line
