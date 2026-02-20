@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLens;
@@ -51,7 +50,6 @@ public class RunAllTestsCodeLensSupplier
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.runAllTests";
 
   private final TestRunnerAdapter testRunnerAdapter;
-  private final Resources resources;
 
   // Self-injection для работы кэша в базовом классе.
   @Autowired
@@ -60,11 +58,9 @@ public class RunAllTestsCodeLensSupplier
   private RunAllTestsCodeLensSupplier self;
 
   public RunAllTestsCodeLensSupplier(
-    TestRunnerAdapter testRunnerAdapter,
-    Resources resources
+    TestRunnerAdapter testRunnerAdapter
   ) {
     this.testRunnerAdapter = testRunnerAdapter;
-    this.resources = resources;
   }
 
   /**
@@ -103,7 +99,7 @@ public class RunAllTestsCodeLensSupplier
     runText = runText.formatted(path);
 
     var command = new Command();
-    command.setTitle(resources.getResourceString(getClass(), "runAllTests"));
+    command.setTitle(documentContext.getServerContext().getResources().getResourceString(getClass(), "runAllTests"));
     command.setCommand(COMMAND_ID);
     command.setArguments(List.of(Map.of("text", runText)));
 

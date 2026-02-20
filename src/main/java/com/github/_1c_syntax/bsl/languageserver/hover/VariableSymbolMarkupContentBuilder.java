@@ -40,7 +40,6 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private static final String EXPORT_KEY = "export";
 
   private final DescriptionFormatter descriptionFormatter;
-  private final Resources resources;
 
   @Override
   public MarkupContent getContent(VariableSymbol symbol) {
@@ -84,18 +83,19 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   }
 
   private String getVariableInfo(VariableSymbol symbol) {
+    var resources = symbol.getOwner().getServerContext().getResources();
     return switch (symbol.getKind()) {
-      case GLOBAL -> getResourceString("globalVariable");
-      case MODULE -> getResourceString("moduleVariable");
-      case LOCAL -> getResourceString("localVariable").formatted(symbol.getScope().getName());
-      case PARAMETER -> getResourceString("methodParameter").formatted(symbol.getScope().getName());
+      case GLOBAL -> getResourceString(resources, "globalVariable");
+      case MODULE -> getResourceString(resources, "moduleVariable");
+      case LOCAL -> getResourceString(resources, "localVariable").formatted(symbol.getScope().getName());
+      case PARAMETER -> getResourceString(resources, "methodParameter").formatted(symbol.getScope().getName());
       case DYNAMIC -> symbol.getScope().getSymbolKind() == SymbolKind.Module
-        ? getResourceString("dynamicVariableOfModule")
-        : getResourceString("dynamicVariableOfMethod").formatted(symbol.getScope().getName());
+        ? getResourceString(resources, "dynamicVariableOfModule")
+        : getResourceString(resources, "dynamicVariableOfMethod").formatted(symbol.getScope().getName());
     };
   }
 
-  private String getResourceString(String key) {
+  private String getResourceString(Resources resources, String key) {
     return resources.getResourceString(getClass(), key);
   }
 

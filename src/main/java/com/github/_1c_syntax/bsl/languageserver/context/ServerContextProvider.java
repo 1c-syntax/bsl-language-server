@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -54,6 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerContextProvider {
 
   private final ObjectProvider<ServerContext> serverContextProvider;
+  private final ObjectProvider<Resources> resourcesProvider;
   private final LanguageServerConfigurationFactory configurationFactory;
   private final DiagnosticInfosFactory diagnosticInfosFactory;
 
@@ -63,10 +65,12 @@ public class ServerContextProvider {
 
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextProvider,
+    ObjectProvider<Resources> resourcesProvider,
     LanguageServerConfigurationFactory configurationFactory,
     DiagnosticInfosFactory diagnosticInfosFactory
   ) {
     this.serverContextProvider = serverContextProvider;
+    this.resourcesProvider = resourcesProvider;
     this.configurationFactory = configurationFactory;
     this.diagnosticInfosFactory = diagnosticInfosFactory;
   }
@@ -104,7 +108,11 @@ public class ServerContextProvider {
     // Create per-workspace configuration
     var languageServerConfiguration = configurationFactory.createConfiguration(rootPath);
     serverContext.setLanguageServerConfiguration(languageServerConfiguration);
-    
+
+    // Create per-workspace Resources
+    var resources = resourcesProvider.getObject(languageServerConfiguration);
+    serverContext.setResources(resources);
+
     // Create per-workspace DiagnosticInfo collections
     serverContext.setDiagnosticInfosByCode(
       diagnosticInfosFactory.createDiagnosticInfosByCode(languageServerConfiguration)

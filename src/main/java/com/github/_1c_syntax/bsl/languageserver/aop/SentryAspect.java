@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import io.sentry.Sentry;
 import io.sentry.protocol.SentryId;
@@ -53,7 +54,7 @@ public class SentryAspect {
   private LanguageClientHolder languageClientHolder;
 
   @Setter(onMethod_ = {@Autowired})
-  private Resources resources;
+  private GlobalLanguageServerConfiguration globalConfiguration;
 
   @AfterThrowing(value = "Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()", throwing = "ex")
   public void logThrowingBSLDiagnosticGetDiagnostics(Throwable ex) {
@@ -79,7 +80,7 @@ public class SentryAspect {
           return;
         }
         var messageType = MessageType.Info;
-        var message = resources.getResourceString(getClass(), "logMessage", sentryId);
+        var message = Resources.getResourceString(globalConfiguration.getLanguage(), getClass(), "logMessage", sentryId);
         var messageParams = new MessageParams(messageType, message);
 
         languageClientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));

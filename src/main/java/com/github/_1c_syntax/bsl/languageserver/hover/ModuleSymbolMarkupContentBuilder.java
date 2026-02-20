@@ -41,7 +41,6 @@ import java.util.StringJoiner;
 @RequiredArgsConstructor
 public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<ModuleSymbol> {
 
-  private final Resources resources;
   private final DescriptionFormatter descriptionFormatter;
 
   @Override
@@ -67,6 +66,7 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
 
   private String getModuleInfo(ModuleSymbol symbol) {
     var documentContext = symbol.getOwner();
+    var resources = documentContext.getServerContext().getResources();
     var mdObject = documentContext.getMdObject();
 
     if (mdObject.isEmpty()) {
@@ -88,10 +88,10 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     }
 
     // Флаги доступности
-    var flags = getModuleFlags(commonModule);
+    var flags = getModuleFlags(resources, commonModule);
 
     if (!flags.isEmpty()) {
-      var flagsHeader = "**" + getResourceString("availability") + ":** ";
+      var flagsHeader = "**" + getResourceString(resources, "availability") + ":** ";
       moduleInfoBuilder.add(flagsHeader + String.join(", ", flags));
       moduleInfoBuilder.add("");
     }
@@ -105,41 +105,41 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     };
 
     if (!reuseKey.isEmpty()) {
-      var reuseHeader = "**" + getResourceString("returnValuesReuse") + ":** ";
-      moduleInfoBuilder.add(reuseHeader + getResourceString(reuseKey));
+      var reuseHeader = "**" + getResourceString(resources, "returnValuesReuse") + ":** ";
+      moduleInfoBuilder.add(reuseHeader + getResourceString(resources, reuseKey));
     }
 
     return moduleInfoBuilder.toString();
   }
 
-  private List<String> getModuleFlags(CommonModule commonModule) {
+  private List<String> getModuleFlags(Resources resources, CommonModule commonModule) {
     var flags = new ArrayList<String>();
 
     if (commonModule.isServer()) {
-      flags.add(getResourceString("server"));
+      flags.add(getResourceString(resources, "server"));
     }
     if (commonModule.isClientManagedApplication()) {
-      flags.add(getResourceString("clientManagedApplication"));
+      flags.add(getResourceString(resources, "clientManagedApplication"));
     }
     if (commonModule.isClientOrdinaryApplication()) {
-      flags.add(getResourceString("clientOrdinaryApplication"));
+      flags.add(getResourceString(resources, "clientOrdinaryApplication"));
     }
     if (commonModule.isExternalConnection()) {
-      flags.add(getResourceString("externalConnection"));
+      flags.add(getResourceString(resources, "externalConnection"));
     }
     if (commonModule.isServerCall()) {
-      flags.add(getResourceString("serverCall"));
+      flags.add(getResourceString(resources, "serverCall"));
     }
     if (commonModule.isPrivileged()) {
-      flags.add(getResourceString("privilegedMode"));
+      flags.add(getResourceString(resources, "privilegedMode"));
     }
     if (commonModule.isGlobal()) {
-      flags.add(getResourceString("global"));
+      flags.add(getResourceString(resources, "global"));
     }
     return flags;
   }
 
-  private String getResourceString(String key) {
+  private String getResourceString(Resources resources, String key) {
     return resources.getResourceString(getClass(), key);
   }
 }

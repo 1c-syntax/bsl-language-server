@@ -41,7 +41,8 @@ class DescriptionFormatterTest {
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("МетодСАннотациямиПараметров").orElseThrow();
 
     // when
-    var description = descriptionFormatter.getParametersSignatureDescription(methodSymbol);
+    var description = descriptionFormatter.getParametersSignatureDescription(
+      documentContext.getServerContext().getResources(), methodSymbol);
 
     // then
     assertThat(description).isEqualTo("&Повторяемый Парам1, Парам2");

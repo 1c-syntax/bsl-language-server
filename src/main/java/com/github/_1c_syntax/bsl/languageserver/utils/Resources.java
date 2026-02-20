@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -34,12 +36,13 @@ import java.util.ResourceBundle;
  * Вспомогательный класс для оптимизированного чтения ресурсов прикладных классов с учетом {@link Language}.
  */
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class Resources {
 
   private static final StringInterner stringInterner = new StringInterner();
 
-  private final GlobalLanguageServerConfiguration configuration;
+  private final LanguageServerConfiguration configuration;
 
   /**
    * @param clazz    Класс, ресурсы которого необходимо прочитать.

@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -56,11 +55,6 @@ import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvi
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
   private static final String ALL_DIAGNOSTIC_NAME = "";
-  private final Resources resources;
-
-  public DisableDiagnosticTriggeringSupplier(Resources resources) {
-    this.resources = resources;
-  }
 
   /**
    * При необходимости создает {@code CodeAction} для создания служебного комментария отключающего срабатывание
@@ -222,13 +216,11 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   }
 
   private String getMessage(DocumentContext documentContext, String key) {
-    var language = documentContext.getServerContext().getLanguageServerConfiguration().getLanguage();
-    return Resources.getResourceString(language, this.getClass(), key);
+    return documentContext.getServerContext().getResources().getResourceString(this.getClass(), key);
   }
 
   private String getMessage(DocumentContext documentContext, String key, Object... args) {
-    var language = documentContext.getServerContext().getLanguageServerConfiguration().getLanguage();
-    return Resources.getResourceString(language, this.getClass(), key, args);
+    return documentContext.getServerContext().getResources().getResourceString(this.getClass(), key, args);
   }
 
   private static List<TextEdit> createInLineTextEdits(String diagnosticName, Token last, CodeActionParams params) {

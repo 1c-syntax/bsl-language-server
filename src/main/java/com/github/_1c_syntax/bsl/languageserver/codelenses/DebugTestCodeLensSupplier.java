@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunner
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -55,7 +54,6 @@ public class DebugTestCodeLensSupplier
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.debugTest";
 
   private final TestRunnerAdapter testRunnerAdapter;
-  private final Resources resources;
 
   // Self-injection для работы кэша в базовом классе.
   @Autowired
@@ -65,11 +63,9 @@ public class DebugTestCodeLensSupplier
   private DebugTestCodeLensSupplier self;
 
   public DebugTestCodeLensSupplier(
-    TestRunnerAdapter testRunnerAdapter,
-    Resources resources
+    TestRunnerAdapter testRunnerAdapter
   ) {
     this.testRunnerAdapter = testRunnerAdapter;
-    this.resources = resources;
   }
 
   /**
@@ -123,7 +119,7 @@ public class DebugTestCodeLensSupplier
     runText = runText.formatted(path, testId);
 
     var command = new Command();
-    command.setTitle(resources.getResourceString(getClass(), "title"));
+    command.setTitle(documentContext.getServerContext().getResources().getResourceString(getClass(), "title"));
     command.setCommand(COMMAND_ID);
     command.setArguments(List.of(Map.of("text", runText)));
 
