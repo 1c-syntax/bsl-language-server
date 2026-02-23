@@ -115,7 +115,7 @@ public class SDBLJoinDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
     } else if(joinCtx.fullJoin() != null) {
       addTokenHighlight(highlights, joinCtx.fullJoin().keyword);
     } else if(joinCtx.innerJoin() != null) {
-      addTokenHighlight(highlights, joinCtx.fullJoin().keyword);
+      addTokenHighlight(highlights, joinCtx.innerJoin().keyword);
     }
 
     addTerminalHighlight(highlights, joinCtx.BY());
