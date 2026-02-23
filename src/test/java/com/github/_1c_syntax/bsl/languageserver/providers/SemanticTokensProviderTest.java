@@ -929,8 +929,7 @@ class SemanticTokensProviderTest {
       new ExpectedToken(7, 56, 3, SemanticTokenTypes.Keyword, "КАК"),
       new ExpectedToken(7, 60, 5, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "Курсы"),
       // Line 8: ИНДЕКСИРОВАТЬ ПО Валюта, Период
-      new ExpectedToken(8, 3, 13, SemanticTokenTypes.Keyword, "ИНДЕКСИРОВАТЬ"),
-      new ExpectedToken(8, 17, 2, SemanticTokenTypes.Keyword, "ПО"),
+      new ExpectedToken(8, 3, 16, SemanticTokenTypes.Keyword, "ИНДЕКСИРОВАТЬ ПО"),
       // Second query - line 10: ВЫБРАТЬ
       new ExpectedToken(10, 3, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
       // Line 14: ИЗ ВТ_Курсы КАК ВТ
@@ -939,8 +938,7 @@ class SemanticTokensProviderTest {
       new ExpectedToken(14, 15, 3, SemanticTokenTypes.Keyword, "КАК"),
       new ExpectedToken(14, 19, 2, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "ВТ"),
       // Line 15: ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Валюты КАК СпрВалюта
-      new ExpectedToken(15, 3, 5, SemanticTokenTypes.Keyword, "ЛЕВОЕ"),
-      new ExpectedToken(15, 9, 10, SemanticTokenTypes.Keyword, "СОЕДИНЕНИЕ"),
+      new ExpectedToken(15, 3, 16, SemanticTokenTypes.Keyword, "ЛЕВОЕ СОЕДИНЕНИЕ"),
       new ExpectedToken(15, 20, 10, SemanticTokenTypes.Namespace, "Справочник"),
       new ExpectedToken(15, 31, 6, SemanticTokenTypes.Class, "Валюты"),
       new ExpectedToken(15, 38, 3, SemanticTokenTypes.Keyword, "КАК"),

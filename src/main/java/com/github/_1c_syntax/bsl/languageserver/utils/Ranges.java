@@ -137,8 +137,8 @@ public final class Ranges {
     if (tokens.isEmpty()) {
       return Ranges.create();
     }
-    var firstElement = tokens.get(0);
-    var lastElement = tokens.get(tokens.size() - 1);
+    var firstElement = tokens.getFirst();
+    var lastElement = tokens.getLast();
 
     return Ranges.create(firstElement, lastElement);
   }
@@ -149,8 +149,12 @@ public final class Ranges {
    * @param terminalNode Терминальный узел
    * @return Диапазон узла
    */
-  public Range create(TerminalNode terminalNode) {
-    return create(terminalNode.getSymbol());
+  public Range create(@Nullable TerminalNode terminalNode) {
+    if (terminalNode == null) {
+      return create();
+    } else {
+      return create(terminalNode.getSymbol());
+    }
   }
 
   /**
@@ -186,15 +190,12 @@ public final class Ranges {
    * @return - полученный Range.
    */
   public Range create(ParseTree tree) {
-    if (tree instanceof TerminalNode node) {
-      return Ranges.create(node);
-    } else if (tree instanceof Token token) {
-      return Ranges.create(token);
-    } else if (tree instanceof ParserRuleContext context) {
-      return Ranges.create(context);
-    } else {
-      throw new IllegalArgumentException();
-    }
+    return switch (tree) {
+      case TerminalNode node -> Ranges.create(node);
+      case Token token -> Ranges.create(token);
+      case ParserRuleContext context -> Ranges.create(context);
+      default -> throw new IllegalArgumentException();
+    };
   }
 
   public boolean containsRange(Range bigger, Range smaller) {

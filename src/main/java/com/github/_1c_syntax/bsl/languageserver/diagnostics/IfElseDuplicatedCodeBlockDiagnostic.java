@@ -96,7 +96,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
       .skip(i)
       .filter(codeBlockContext ->
         !codeBlockContext.equals(currentCodeBlock)
-          && !(currentCodeBlock.children == null && codeBlockContext.children == null)
+          && !(currentCodeBlock.getChildren().isEmpty() && codeBlockContext.getChildren().isEmpty())
           && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))
       .toList();
 

@@ -168,7 +168,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
   ) {
     var callParams = doCall.callParamList().callParam();
     if (!callParams.isEmpty()) {
-      var firstParam = callParams.get(0);
+      var firstParam = callParams.getFirst();
       var stringTokens = getStringTokensFromParam(firstParam);
 
       if (stringTokens.isEmpty() && context == StringContext.STR_TEMPLATE) {
@@ -239,7 +239,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       .map(BSLParser.CallParamContext::expression)
       .map(BSLParser.ExpressionContext::member)
       .filter(members -> members.size() == 1)
-      .map(members -> members.get(0))
+      .map(List::getFirst)
       .map(BSLParser.MemberContext::complexIdentifier)
       .map(BSLParser.ComplexIdentifierContext::IDENTIFIER)
       .map(id -> id.getSymbol().getText())
@@ -273,8 +273,8 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       return null;
     }
 
-    var children = parent.children;
-    if (children == null) {
+    var children = parent.getChildren();
+    if (children.isEmpty()) {
       return null;
     }
 
@@ -307,7 +307,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     var stringContext = Optional.of(expression)
       .map(BSLParser.ExpressionContext::member)
       .filter(members -> members.size() == 1)
-      .map(members -> members.get(0))
+      .map(List::getFirst)
       .map(BSLParser.MemberContext::constValue)
       .map(BSLParser.ConstValueContext::string)
       .orElse(null);
@@ -328,7 +328,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     if (globalMethodCall != null && MultilingualStringAnalyser.isNStrCall(globalMethodCall)) {
       var callParams = globalMethodCall.doCall().callParamList().callParam();
       if (!callParams.isEmpty()) {
-        return getStringTokensFromParam(callParams.get(0));
+        return getStringTokensFromParam(callParams.getFirst());
       }
     }
 
