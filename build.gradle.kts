@@ -1,7 +1,7 @@
 import org.apache.tools.ant.filters.EscapeUnicode
-import java.util.*
-import java.text.SimpleDateFormat
 import org.jreleaser.model.Active.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 plugins {
     `java-library`
@@ -92,20 +92,20 @@ dependencies {
     api("org.jspecify:jspecify:1.0.0")
 
     // JLanguageTool
-    implementation("org.languagetool:languagetool-core:$languageToolVersion"){
-        exclude("commons-logging:commons-logging")
-        exclude("com.sun.xml.bind:jaxb-core")
-        exclude("com.sun.xml.bind:jaxb-impl")
+    implementation("org.languagetool:languagetool-core:$languageToolVersion") {
+        exclude("commons-logging", "commons-logging")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
     }
-    implementation("org.languagetool:language-en:$languageToolVersion"){
+    implementation("org.languagetool:language-en:$languageToolVersion") {
         exclude("commons-logging:commons-logging")
-        exclude("com.sun.xml.bind:jaxb-core")
-        exclude("com.sun.xml.bind:jaxb-impl")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
     }
-    implementation("org.languagetool:language-ru:$languageToolVersion"){
-        exclude("commons-logging:commons-logging")
-        exclude("com.sun.xml.bind:jaxb-core")
-        exclude("com.sun.xml.bind:jaxb-impl")
+    implementation("org.languagetool:language-ru:$languageToolVersion") {
+        exclude("commons-logging", "commons-logging")
+        exclude("com.sun.xml.bind", "jaxb-core")
+        exclude("com.sun.xml.bind", "jaxb-impl")
     }
 
     // AOP
@@ -113,8 +113,8 @@ dependencies {
 
     // commons utils
     implementation("commons-io:commons-io:2.21.0")
-    implementation("commons-beanutils:commons-beanutils:1.11.0"){
-        exclude("commons-logging:commons-logging")
+    implementation("commons-beanutils:commons-beanutils:1.11.0") {
+        exclude("commons-logging", "commons-logging")
     }
     implementation("commons-codec:commons-codec:1.20.0")
     implementation("org.apache.commons:commons-lang3:3.20.0")
@@ -139,9 +139,9 @@ dependencies {
     implementation("com.google.guava:guava") {
         version {
             strictly("33.5.0-jre")
-       }
+        }
     }
-    
+
     // COMPILE
 
     // TEST
@@ -274,7 +274,7 @@ jmh {
 sentry {
     org.set("1c-syntax")
     projectName.set("bsl-language-server")
-    
+
     // Включить source context только при наличии токена аутентификации
     includeSourceContext = System.getenv("SENTRY_AUTH_TOKEN") != null
 }
@@ -332,7 +332,10 @@ sonarqube {
         property("sonar.projectKey", "1c-syntax_bsl-language-server")
         property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
-        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml")
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml"
+        )
     }
 }
 
