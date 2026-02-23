@@ -107,7 +107,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
+  public @Nullable ParseTree visitQuery(SDBLParser.QueryContext ctx) {
     checkQuery(ctx).forEach(diagnosticStorage::addDiagnostic);
     return super.visitQuery(ctx);
   }
@@ -312,7 +312,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static List<ParseTree> extractFirstMetadataTypeName(SDBLParser.ColumnContext ctx) {
     final var mdoName = ctx.mdoName;
-    final var children = ctx.children;
+    final var children = ctx.getChildren();
     if (mdoName == null || children.size() < COUNT_OF_TABLE_DOT_REF_DOT_REF
       || !METADATA_TYPES.contains(mdoName.getStart().getType())) {
       return children;

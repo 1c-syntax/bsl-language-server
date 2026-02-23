@@ -26,13 +26,13 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
-import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Поставщик подсветки для циклов (For/While/Do/EndDo).
@@ -96,12 +96,11 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
     while (current != null) {
       var ruleIndex = current.getRuleIndex();
       if (ruleIndex == BSLParser.RULE_whileStatement
-          || ruleIndex == BSLParser.RULE_forStatement
-          || ruleIndex == BSLParser.RULE_forEachStatement) {
+        || ruleIndex == BSLParser.RULE_forStatement
+        || ruleIndex == BSLParser.RULE_forEachStatement) {
         return current;
       }
-      var parent = current.getParent();
-      current = parent instanceof ParserRuleContext ? (ParserRuleContext) parent : null;
+      current = current.getParent();
     }
     return null;
   }
@@ -170,7 +169,7 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
    * Добавляет подсветку для break и continue внутри блока кода цикла.
    * Ищет только на первом уровне вложенности - не заходит во вложенные циклы.
    */
-  private void addBreakAndContinueHighlights(List<DocumentHighlight> highlights, BSLParser.CodeBlockContext codeBlock) {
+  private void addBreakAndContinueHighlights(List<DocumentHighlight> highlights, BSLParser.@Nullable CodeBlockContext codeBlock) {
     if (codeBlock == null) {
       return;
     }
@@ -210,7 +209,7 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
    * Ищет break/continue в if-блоках.
    */
   private void addBreakAndContinueFromIfStatement(List<DocumentHighlight> highlights,
-                                                   BSLParser.IfStatementContext ifStatement) {
+                                                  BSLParser.IfStatementContext ifStatement) {
     var ifBranch = ifStatement.ifBranch();
     if (ifBranch != null) {
       addBreakAndContinueHighlights(highlights, ifBranch.codeBlock());
@@ -230,8 +229,10 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
    * Ищет break/continue в try-блоках.
    */
   private void addBreakAndContinueFromTryStatement(List<DocumentHighlight> highlights,
-                                                    BSLParser.TryStatementContext tryStatement) {
-    addBreakAndContinueHighlights(highlights, tryStatement.tryCodeBlock().codeBlock());
-    addBreakAndContinueHighlights(highlights, tryStatement.exceptCodeBlock().codeBlock());
+                                                   BSLParser.TryStatementContext tryStatement) {
+    Optional.ofNullable(tryStatement.tryCodeBlock())
+      .ifPresent(block -> addBreakAndContinueHighlights(highlights, block.codeBlock()));
+    Optional.ofNullable(tryStatement.exceptCodeBlock())
+      .ifPresent(block -> addBreakAndContinueHighlights(highlights, block.codeBlock()));
   }
 }

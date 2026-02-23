@@ -145,7 +145,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
+  public @Nullable ParseTree visitFile(BSLParser.FileContext ctx) {
     currentScope = new VariableScope();
     currentScope.enterScope(GLOBAL_SCOPE);
     ParseTree result = super.visitFile(ctx);
@@ -154,7 +154,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+  public @Nullable ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
     currentScope.enterScope(MODULE_SCOPE);
     ParseTree result = super.visitFileCodeBlock(ctx);
     currentScope.leaveScope();
@@ -162,7 +162,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
+  public @Nullable ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     currentScope.enterScope(ctx.procDeclaration().subName().getText());
     ParseTree result = super.visitProcedure(ctx);
     currentScope.leaveScope();
@@ -170,7 +170,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
+  public @Nullable ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     currentScope.enterScope(ctx.funcDeclaration().subName().getText());
     ParseTree result = super.visitFunction(ctx);
     currentScope.leaveScope();
@@ -178,7 +178,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitAssignment(AssignmentContext ctx) {
+  public @Nullable ParseTree visitAssignment(AssignmentContext ctx) {
     if (ctx.expression() == null) {
       return super.visitAssignment(ctx);
     }
@@ -217,14 +217,14 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private void visitDescendantCodeBlock(BSLParser.@Nullable CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
-      .map(e -> e.children)
+      .map(ParserRuleContext::getChildren)
       .stream()
       .flatMap(Collection::stream)
       .forEach(t -> t.accept(this));
   }
 
   @Override
-  public ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
+  public @Nullable ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
     if (!EXECUTE_CALL_PATTERN.matcher(ctx.methodCall().methodName().getText()).matches()) {
       return super.visitAccessCall(ctx);
     }
@@ -273,7 +273,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
+  public @Nullable ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
     currentScope.flowMode.push(CodeFlowType.CYCLE);
     ParseTree result = super.visitWhileStatement(ctx);
     currentScope.flowMode.pop();

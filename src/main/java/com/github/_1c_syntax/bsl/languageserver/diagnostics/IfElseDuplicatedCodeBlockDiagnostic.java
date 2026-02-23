@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -61,7 +62,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
   }
 
   @Override
-  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+  public @Nullable ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
     checkedBlocks.clear();
     List<BSLParser.CodeBlockContext> codeBlocks = new ArrayList<>();
 
@@ -96,7 +97,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
       .skip(i)
       .filter(codeBlockContext ->
         !codeBlockContext.equals(currentCodeBlock)
-          && !(currentCodeBlock.children == null && codeBlockContext.children == null)
+          && !(currentCodeBlock.getChildren().isEmpty() && codeBlockContext.getChildren().isEmpty())
           && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))
       .toList();
 

@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -85,7 +86,7 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
 
     var parameters = maybeDoCall
       .map(BSLParser.DoCallContext::callParamList)
-      .map(callParamListContext -> callParamListContext.children)
+      .map(ParserRuleContext::getChildren)
       .orElse(Collections.emptyList())
       .stream()
       .filter(Predicate.not(TerminalNode.class::isInstance))
@@ -163,9 +164,14 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
   }
 
   private static boolean isParentAssignment(BSLParser.DoCallContext doCall, BSLParser.AssignmentContext assignment) {
-    return assignment.expression().member().stream()
+    var expression = assignment.expression();
+    if (expression == null) {
+      return false;
+    }
+    return expression.member().stream()
       .map(BSLParser.MemberContext::complexIdentifier)
-      .map(BSLParser.ComplexIdentifierContext::newExpression)
+      .map(ctx -> ctx != null ? ctx.newExpression() : null)
+      .filter(Objects::nonNull)
       .filter(newExpressionContext -> newExpressionContext == doCall.getParent())
       .findAny().isEmpty();
   }

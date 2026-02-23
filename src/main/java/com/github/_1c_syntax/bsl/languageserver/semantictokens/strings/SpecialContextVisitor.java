@@ -273,11 +273,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       return null;
     }
 
-    var children = parent.children;
-    if (children == null) {
-      return null;
-    }
-
+    var children = parent.getChildren();
     int pos = children.indexOf(statement);
     for (int i = pos - 1; i >= 0; i--) {
       var child = children.get(i);

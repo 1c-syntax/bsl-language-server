@@ -29,7 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -51,14 +53,21 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
   );
 
   @Override
-  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    var matcher = pattern.matcher(ctx.methodName().getText());
-    if (matcher.matches()) {
-      BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().get(0);
-      if (param.children == null ||
-        param.getStart().getType() == BSLParser.STRING ||
-        param.getStart().getType() == BSLParser.DECIMAL) {
-        diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));
+  public @Nullable ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
+    var methodName = ctx.methodName();
+    if (methodName != null) {
+      var matcher = pattern.matcher(methodName.getText());
+      if (matcher.matches()) {
+        Optional.ofNullable(ctx.doCall())
+          .map(BSLParser.DoCallContext::callParamList)
+          .ifPresent(callParamList -> {
+            var param = callParamList.callParam(0);
+            if (param == null || param.getChildren().isEmpty() ||
+              param.getStart().getType() == BSLParser.STRING ||
+              param.getStart().getType() == BSLParser.DECIMAL) {
+              diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));
+            }
+          });
       }
     }
     return super.visitMethodCall(ctx);

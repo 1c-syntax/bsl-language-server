@@ -151,7 +151,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
 
     var expression = v.getExpression();
     if (expression.getParent() instanceof BSLParser.ElsifBranchContext elsifBranch && !ignoreMissingElseOnExit) {
-      return Optional.of(elsifBranch.getParent());
+      return Optional.ofNullable(elsifBranch.getParent());
     }
 
     return Optional.empty();

@@ -87,12 +87,16 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
       return true;
     }
 
-    ParserRuleContext rootExpressionNode = currentRootMember.getParent();
+    var rootExpressionNode = currentRootMember.getParent();
+    if (rootExpressionNode == null) {
+      return false;
+    }
 
-    ParserRuleContext rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
+    var rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
     if (rootIfNode == null || rootIfNode.getRuleIndex() == BSLParser.RULE_codeBlock) {
       return false;
     }
+
     if (rootExpressionNode.getChildCount() == 1 && IF_BRANCHES.contains(rootIfNode.getRuleIndex())) {
       return true;
     }
@@ -103,9 +107,9 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   private static boolean haveNeighboorBooleanOperator(ParserRuleContext currentRootMember,
                                                       ParserRuleContext rootExpressionNode) {
     var haveNeighbourBoolOperation = false;
-    int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
+    int indexOfCurrentMemberNode = rootExpressionNode.getChildren().indexOf(currentRootMember);
     if (indexOfCurrentMemberNode > 0) {
-      var prev = (ParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode - 1);
+      var prev = (ParserRuleContext) rootExpressionNode.getChildren().get(indexOfCurrentMemberNode - 1);
       if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)) {
         return false;
       }
@@ -113,7 +117,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     }
     if (indexOfCurrentMemberNode < rootExpressionNode.getChildCount() - 1) {
 
-      var next = (ParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
+      var next = (ParserRuleContext) rootExpressionNode.getChildren().get(indexOfCurrentMemberNode + 1);
       if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)) {
         return false;
       }

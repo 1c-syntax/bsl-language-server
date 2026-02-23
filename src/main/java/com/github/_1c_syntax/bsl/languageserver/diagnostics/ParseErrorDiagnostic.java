@@ -88,9 +88,13 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
   }
 
   private static String getTokenName(int tokenType) {
-    String value = BSLLexer.VOCABULARY.getLiteralName(tokenType);
+    var value = BSLLexer.VOCABULARY.getLiteralName(tokenType);
     if (value == null) {
       value = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
+    }
+
+    if (value == null) { // вероятность равна нолю
+      value = "";
     }
 
     return value;

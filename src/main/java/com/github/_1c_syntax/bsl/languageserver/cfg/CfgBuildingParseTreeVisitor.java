@@ -76,7 +76,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       // Если это тело модуля, то самую первую инструкцию препроцессора сожрет грамматика file
       // надо ее тоже посетить принудительно.
       var parent = block.getParent();
-      if (parent instanceof BSLParser.FileCodeBlockContext fileBlock) {
+      if (parent instanceof BSLParser.FileCodeBlockContext fileBlock && fileBlock.getParent() != null) {
         var probablyPreprocessor = Trees.getPreviousNode(fileBlock.getParent(), fileBlock,
           BSLParser.RULE_preprocessor);
 
@@ -210,15 +210,15 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     if (currentIfBlock == null) {
       throw new IllegalStateException(
         "Cannot process elsif branch: there is no active condition block. " +
-        "This may occur when preprocessor directives modify the block stack.");
+          "This may occur when preprocessor directives modify the block stack.");
     }
 
     var buildParts = currentIfBlock.getBuildParts();
     if (buildParts.isEmpty()) {
       throw new IllegalStateException(
         "Cannot process elsif branch: build parts stack is empty. " +
-        "Expected previous condition on stack. " +
-        "This may occur when preprocessor conditions modify the stack inside if statement body.");
+          "Expected previous condition on stack. " +
+          "This may occur when preprocessor conditions modify the stack inside if statement body.");
     }
     var previousCondition = buildParts.pop();
 
@@ -256,7 +256,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     if (currentIfBlock == null) {
       throw new IllegalStateException(
         "Cannot process else branch: there is no active condition block. " +
-        "This may occur when preprocessor directives modify the block stack.");
+          "This may occur when preprocessor directives modify the block stack.");
     }
     var condition = currentIfBlock.getBuildParts().pop();
     graph.addEdge(condition, block.begin(), CfgEdgeType.FALSE_BRANCH);

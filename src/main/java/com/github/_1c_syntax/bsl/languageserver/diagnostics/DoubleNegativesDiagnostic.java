@@ -86,7 +86,12 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
   }
 
   private void addDiagnostic(BinaryOperationNode node) {
-    var startToken = Trees.getTokens(node.getParent().getRepresentingAst())
+    var parent = node.getParent();
+    if (parent == null) {
+      return;
+    }
+
+    var startToken = Trees.getTokens(parent.getRepresentingAst())
       .stream()
       .findFirst()
       .orElseThrow();
@@ -100,7 +105,11 @@ public class DoubleNegativesDiagnostic extends AbstractExpressionTreeDiagnostic 
   }
 
   private void addDiagnostic(UnaryOperationNode node) {
-    var startToken = Trees.getTokens(node.getParent().getRepresentingAst())
+    var parent = node.getParent();
+    if (parent == null) {
+      return;
+    }
+    var startToken = Trees.getTokens(parent.getRepresentingAst())
       .stream()
       .findFirst()
       .orElseThrow();
