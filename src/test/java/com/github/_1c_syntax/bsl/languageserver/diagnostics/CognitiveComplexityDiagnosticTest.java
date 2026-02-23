@@ -45,7 +45,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 32);
-    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(35);
+    assertThat(diagnostics.getFirst().getRelatedInformation()).hasSize(35);
   }
 
   @Test

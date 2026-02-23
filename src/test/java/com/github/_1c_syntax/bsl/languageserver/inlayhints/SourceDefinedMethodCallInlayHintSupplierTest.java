@@ -56,7 +56,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
 
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().getFirst();
 
     var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
     var range = firstMethod.getRange();
@@ -97,7 +97,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
     );
 
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().getFirst();
 
     var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
     var range = firstMethod.getRange();

@@ -320,7 +320,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     var globalMethodCall = Optional.of(expression)
       .map(BSLParser.ExpressionContext::member)
       .filter(members -> members.size() == 1)
-      .map(members -> members.get(0))
+      .map(List::getFirst)
       .map(BSLParser.MemberContext::complexIdentifier)
       .map(BSLParser.ComplexIdentifierContext::globalMethodCall)
       .orElse(null);

@@ -77,7 +77,7 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
+    assertThat(diagnostics.getFirst().getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
   }
 
   @Test
@@ -112,7 +112,7 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getMessage()).contains("60");
+    assertThat(diagnostics.getFirst().getMessage()).contains("60");
 
   }
 

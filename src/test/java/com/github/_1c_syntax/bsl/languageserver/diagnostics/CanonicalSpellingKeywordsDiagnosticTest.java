@@ -307,13 +307,13 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
 
     final var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
-    final Diagnostic firstDiagnostic = diagnostics.get(0);
+    final Diagnostic firstDiagnostic = diagnostics.getFirst();
 
     List<CodeAction> quickFixes = getQuickFixes(firstDiagnostic);
 
     assertThat(quickFixes).hasSize(1);
 
-    final CodeAction quickFix = quickFixes.get(0);
+    final CodeAction quickFix = quickFixes.getFirst();
 
     assertThat(quickFix).of(diagnosticInstance).in(documentContext)
       .fixes(firstDiagnostic);

@@ -106,7 +106,7 @@ public class CommandProvider {
       throw new RuntimeException("Command arguments is empty");
     }
 
-    var rawArgument = rawArguments.get(0);
+    var rawArgument = rawArguments.getFirst();
 
     if (rawArgument instanceof CommandArguments arguments) {
       return arguments;

@@ -213,7 +213,7 @@ class SemanticTokensProviderTest {
     assertThat(decoded).isNotEmpty();
 
     // First token should be at line 0
-    assertThat(decoded.get(0).line).isZero();
+    assertThat(decoded.getFirst().line).isZero();
 
     // Tokens should be ordered by position
     for (int i = 1; i < decoded.size(); i++) {
@@ -1210,7 +1210,7 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     assertThat(delta.getResultId()).isNotNull();
     assertThat(delta.getEdits()).isNotEmpty();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     assertThat(edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0))
       .isGreaterThan(0);
   }
@@ -1272,7 +1272,7 @@ class SemanticTokensProviderTest {
     // then - should return delta with small edits (just the new token + changed deltaLine)
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     // For inserting at beginning: prefix=0, suffix should match most of the old data
     // deleteCount should be small (just the first deltaLine that changed)
     // insertData should be the new token + updated first deltaLine
@@ -1314,7 +1314,7 @@ class SemanticTokensProviderTest {
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
     assertThat(delta.getEdits()).isNotEmpty();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     // For insertion in middle: 
     // - prefix matches up to insertion point
     // - suffix matches tokens after insertion (they have same relative deltaLine)
@@ -1384,7 +1384,7 @@ class SemanticTokensProviderTest {
     //   Note: "А" is NOT in suffix because its deltaStart changed (boundary token)
     // - Edit deletes: old "А" (1 token = 5 integers)
     // - Edit inserts: "Новая", ",", new "А" (3 tokens = 15 integers)
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     assertThat(edit.getStart())
       .as("Edit should start after the prefix match (Перем = 5 integers)")
       .isEqualTo(5);

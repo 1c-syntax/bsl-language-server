@@ -162,10 +162,10 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     int lastTokenLine;
     if (codeTokens.isEmpty()) {
       // File contains only comments
-      lastTokenLine = comments.isEmpty() ? 0 : comments.get(comments.size() - 1).getLine();
+      lastTokenLine = comments.isEmpty() ? 0 : comments.getLast().getLine();
     } else {
-      int lastCodeTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
-      int lastCommentLine = comments.isEmpty() ? 0 : comments.get(comments.size() - 1).getLine();
+      int lastCodeTokenLine = codeTokens.getLast().getLine();
+      int lastCommentLine = comments.isEmpty() ? 0 : comments.getLast().getLine();
       lastTokenLine = Math.max(lastCodeTokenLine, lastCommentLine);
     }
     

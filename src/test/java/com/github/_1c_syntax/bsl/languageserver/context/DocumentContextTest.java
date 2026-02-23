@@ -235,7 +235,7 @@ class DocumentContextTest {
     var documentContext = getDocumentContext();
     // when
     List<Token> tokens = documentContext.getTokens();
-    Token lastToken = tokens.get(tokens.size() - 1);
+    Token lastToken = tokens.getLast();
     // then
     assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
     assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);

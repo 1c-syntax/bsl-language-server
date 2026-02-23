@@ -101,7 +101,7 @@ class CodeActionProviderTest {
     assertThat(codeActions)
       .extracting(Either::getRight)
       .hasSizeGreaterThanOrEqualTo(3)
-      .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(0)))
+      .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.getFirst()))
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(1)))
       .anyMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
       .allMatch(codeAction -> (codeAction.getDiagnostics().size() == 1) == toBoolean(codeAction.getIsPreferred()))

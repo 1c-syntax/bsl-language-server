@@ -80,13 +80,13 @@ class CyclomaticComplexityCodeLensSupplierTest {
         assertThat(codeLens.getRange()).isEqualTo(firstMethod.getSubNameRange());
         assertThat(codeLens.getCommand().getTitle()).contains(String.valueOf(complexityFirstMethod));
         assertThat(codeLens.getCommand().getCommand()).isEqualTo("toggleCyclomaticComplexityInlayHints");
-        assertThat(((ToggleComplexityInlayHintsCommandArguments) codeLens.getCommand().getArguments().get(0)).getMethodName()).isEqualTo(firstMethod.getName());
+        assertThat(((ToggleComplexityInlayHintsCommandArguments) codeLens.getCommand().getArguments().getFirst()).getMethodName()).isEqualTo(firstMethod.getName());
       })
       .anySatisfy(codeLens -> {
         assertThat(codeLens.getRange()).isEqualTo(secondMethod.getSubNameRange());
         assertThat(codeLens.getCommand().getTitle()).contains(String.valueOf(complexitySecondMethod));
         assertThat(codeLens.getCommand().getCommand()).isEqualTo("toggleCyclomaticComplexityInlayHints");
-        assertThat(((ToggleComplexityInlayHintsCommandArguments) codeLens.getCommand().getArguments().get(0)).getMethodName()).isEqualTo(secondMethod.getName());
+        assertThat(((ToggleComplexityInlayHintsCommandArguments) codeLens.getCommand().getArguments().getFirst()).getMethodName()).isEqualTo(secondMethod.getName());
       });
 
   }

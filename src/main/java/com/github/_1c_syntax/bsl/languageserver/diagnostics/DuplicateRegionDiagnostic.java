@@ -93,7 +93,7 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
           if (regionsList.size() > 1) {
 
             List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-            RegionSymbol currentRegion = regionsList.get(0);
+            RegionSymbol currentRegion = regionsList.getFirst();
             Range currentRange = currentRegion.getStartRange();
 
             regionsList.stream()

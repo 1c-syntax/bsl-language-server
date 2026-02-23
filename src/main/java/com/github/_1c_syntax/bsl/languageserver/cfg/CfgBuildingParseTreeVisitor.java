@@ -677,8 +677,8 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
         return edges.isEmpty()
           || (adjacentDeadCodeEnabled
           && edges.size() == 1
-          && edges.get(0).getType() == CfgEdgeType.ADJACENT_CODE
-          && graph.getEdgeTarget(edges.get(0)) == vertex);
+          && edges.getFirst().getType() == CfgEdgeType.ADJACENT_CODE
+          && graph.getEdgeTarget(edges.getFirst()) == vertex);
 
       })
       .toList();

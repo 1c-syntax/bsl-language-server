@@ -30,7 +30,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 /**
  * Тесты для диагностики ServerCallsInFormEventsDiagnostic.
- * 
+ * <p>
  * Проверяет корректность обнаружения вызовов серверных процедур 
  * в событиях ПриАктивизацииСтроки и НачалоВыбора.
  * 

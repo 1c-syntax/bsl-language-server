@@ -129,11 +129,11 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
 
       .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
-      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(23)))
+      .matches(codeAction -> codeAction.getDiagnostics().getFirst().equals(diagnostics.get(23)))
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().equals(" ")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).getFirst().getNewText().equals(" ")
       )
     ;
   }

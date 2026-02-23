@@ -95,8 +95,8 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       var range = diagnostic.getRange();
       var data = diagnostic.getData();
-      if (data instanceof DiagnosticStorage.DiagnosticAdditionalData additionalData) {
-        var textEdit = new TextEdit(range, additionalData.string());
+      if (data instanceof DiagnosticStorage.DiagnosticAdditionalData(String string)) {
+        var textEdit = new TextEdit(range, string);
         textEdits.add(textEdit);
       }
     });
