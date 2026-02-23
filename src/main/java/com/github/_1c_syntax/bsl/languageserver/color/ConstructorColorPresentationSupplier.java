@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.color;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.TextEdit;
@@ -37,7 +39,10 @@ import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_
  * {@code Новый Цвет()}.
  */
 @Component
+@RequiredArgsConstructor
 public class ConstructorColorPresentationSupplier implements ColorPresentationSupplier {
+
+  private final LanguageServerConfiguration configuration;
 
   private static final String VIA_CONSTRUCTOR_KEY = "viaConstructor";
   private static final String NEW_COLOR_CONSTRUCTOR_KEY = "newColorConstructor";
@@ -51,7 +56,7 @@ public class ConstructorColorPresentationSupplier implements ColorPresentationSu
     int green = (int) (color.getGreen() * MAX_COLOR_COMPONENT_VALUE);
     int blue = (int) (color.getBlue() * MAX_COLOR_COMPONENT_VALUE);
 
-    var language = documentContext.getServerContext().getLanguageServerConfiguration().getLanguage();
+    var language = configuration.getLanguage();
     var scriptLocale = documentContext.getScriptVariantLocale();
 
     var label = Resources.getResourceString(language, getClass(), VIA_CONSTRUCTOR_KEY);

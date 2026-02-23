@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -165,6 +166,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
+  private final LanguageServerConfiguration configuration;
 
   @Qualifier("textDocumentServiceExecutor")
   private final ThreadPoolTaskExecutor taskExecutor;
@@ -528,7 +530,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
       serverContext.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
-      var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
       if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
         validate(documentContext);
       }
@@ -650,7 +651,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
     var documentContext = maybeDocument.get();
 
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
@@ -875,7 +875,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       version
     );
 
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
     }

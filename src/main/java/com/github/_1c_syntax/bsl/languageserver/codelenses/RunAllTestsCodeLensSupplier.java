@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import lombok.Getter;
@@ -58,8 +59,10 @@ public class RunAllTestsCodeLensSupplier
   private RunAllTestsCodeLensSupplier self;
 
   public RunAllTestsCodeLensSupplier(
+    LanguageServerConfiguration configuration,
     TestRunnerAdapter testRunnerAdapter
   ) {
+    super(configuration);
     this.testRunnerAdapter = testRunnerAdapter;
   }
 
@@ -92,8 +95,7 @@ public class RunAllTestsCodeLensSupplier
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, DefaultCodeLensData data) {
     var path = Path.of(documentContext.getUri());
 
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
-    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
+    var options = getConfiguration().getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunAllTestsArguments();
     runText = runText.formatted(path);

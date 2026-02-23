@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure.CodeLensesConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,7 @@ public class CodeLensProvider {
   private final LanguageClientHolder clientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final JsonMapper jsonMapper;
+  private final LanguageServerConfiguration configuration;
 
   /**
    * Получение списка {@link CodeLens} в документе.
@@ -69,7 +71,6 @@ public class CodeLensProvider {
    * @return Список линз.
    */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var parameters = configuration.getCodeLensOptions().getParameters();
 
     return allCodeLensSuppliers.stream()

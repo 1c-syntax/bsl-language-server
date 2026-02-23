@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
@@ -45,6 +46,7 @@ public class QuickFixSupplier {
 
   private final DiagnosticInfosFactory diagnosticInfosFactory;
   private final DiagnosticObjectProvider diagnosticObjectProvider;
+  private final LanguageServerConfiguration configuration;
 
   // TODO: Рефакторинг апи квик-фиксов.
   // Нужно как-то связать, что квик-фикс исправляет диагностику с таким-то кодом.
@@ -86,7 +88,6 @@ public class QuickFixSupplier {
   ) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
     var diagnosticInfo = serverContext.getDiagnosticInfosByClass().get(diagnosticClass);
-    var configuration = serverContext.getLanguageServerConfiguration();
     return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticInfo, configuration);
   }
 

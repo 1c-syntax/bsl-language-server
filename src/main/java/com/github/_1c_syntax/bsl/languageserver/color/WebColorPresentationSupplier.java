@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.color;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.Range;
@@ -40,7 +42,10 @@ import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_
  * к системному перечислению {@code WebЦвета}.
  */
 @Component
+@RequiredArgsConstructor
 public class WebColorPresentationSupplier implements ColorPresentationSupplier {
+
+  private final LanguageServerConfiguration configuration;
 
   private static final String VIA_WEB_COLOR_KEY = "viaWebColors";
   private static final String WEB_COLOR_DOT_KEY = "webColorDot";
@@ -62,7 +67,7 @@ public class WebColorPresentationSupplier implements ColorPresentationSupplier {
   }
 
   private ColorPresentation toColorPresentation(DocumentContext documentContext, Range range, WebColor webColor) {
-    var language = documentContext.getServerContext().getLanguageServerConfiguration().getLanguage();
+    var language = configuration.getLanguage();
     var scriptLocale = documentContext.getScriptVariantLocale();
 
     var label = Resources.getResourceString(language, getClass(), VIA_WEB_COLOR_KEY);

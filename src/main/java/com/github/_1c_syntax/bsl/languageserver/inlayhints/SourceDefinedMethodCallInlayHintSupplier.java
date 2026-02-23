@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -61,6 +62,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
   private final ReferenceIndex referenceIndex;
   private final DescriptionFormatter descriptionFormatter;
+  private final LanguageServerConfiguration configuration;
 
 
   @Override
@@ -162,7 +164,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
 
   private boolean showParametersWithTheSameName(Reference reference) {
-    var configuration = reference.from().getOwner().getServerContext().getLanguageServerConfiguration();
     var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME;
@@ -175,7 +176,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   }
 
   private boolean showDefaultValues(Reference reference) {
-    var configuration = reference.from().getOwner().getServerContext().getLanguageServerConfiguration();
     var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_DEFAULT_VALUES;

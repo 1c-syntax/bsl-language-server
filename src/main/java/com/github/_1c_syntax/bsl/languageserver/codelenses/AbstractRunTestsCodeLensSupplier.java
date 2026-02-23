@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.InitializeParams;
@@ -46,6 +48,9 @@ import java.util.stream.Collectors;
 @CacheConfig(cacheNames = "testSources")
 public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   implements CodeLensSupplier<T> {
+
+  @Getter(AccessLevel.PROTECTED)
+  private final LanguageServerConfiguration configuration;
 
   private boolean clientIsSupported;
 
@@ -87,7 +92,6 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   public boolean isApplicable(DocumentContext documentContext) {
     var uri = documentContext.getUri();
     var serverContext = documentContext.getServerContext();
-    var configuration = serverContext.getLanguageServerConfiguration();
     var testSources = getSelf().getTestSources(serverContext.getConfigurationRoot(), configuration);
 
     return clientIsSupported

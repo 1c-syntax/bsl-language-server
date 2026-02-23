@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -30,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Range;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -46,11 +48,14 @@ import org.eclipse.lsp4j.Range;
 )
 public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
 
+  @Autowired
+  @SuppressWarnings("NullAway.Init")
+  private LanguageServerConfiguration configuration;
+
   @Override
   protected void check() {
 
-    var serverConfiguration = documentContext.getServerContext().getLanguageServerConfiguration();
-    if (!serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport()) {
+    if (!configuration.getDiagnosticsOptions().isOrdinaryAppSupport()) {
       return;
     }
 

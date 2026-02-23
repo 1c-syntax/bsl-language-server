@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
@@ -75,10 +76,10 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   );
 
   private final SemanticTokensHelper helper;
+  private final LanguageServerConfiguration configuration;
 
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
     
     List<SemanticTokenEntry> entries = new ArrayList<>();

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.MultiName;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -58,6 +59,7 @@ import java.util.stream.Collectors;
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">Document Range Formatting Request specification</a>
  */
 @Component
+@RequiredArgsConstructor
 public final class FormatProvider {
 
   private static final Set<Integer> keywordTypes = keywordsTokenTypes();
@@ -98,9 +100,7 @@ public final class FormatProvider {
     BSLLexer.STRING
   ));
 
-  public FormatProvider() {
-    // No-op - всё инициализируется при каждом вызове
-  }
+  private final LanguageServerConfiguration configuration;
 
   public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     List<Token> tokens = documentContext.getTokens();
@@ -111,7 +111,6 @@ public final class FormatProvider {
     var lastToken = tokens.get(tokens.size() - 1);
 
     var locale = documentContext.getScriptVariantLocale();
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     return getTextEdits(
       tokens,
       locale,
@@ -140,7 +139,6 @@ public final class FormatProvider {
       })
       .collect(Collectors.toList());
 
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     return getTextEdits(
       tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions(),
       configuration);

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
@@ -54,6 +55,7 @@ public class InlayHintProvider {
   private final Collection<InlayHintSupplier> allInlayHintSuppliers;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final LanguageClientHolder clientHolder;
+  private final LanguageServerConfiguration configuration;
 
   /**
    * Получить список inlay hints в документе.
@@ -63,7 +65,6 @@ public class InlayHintProvider {
    * @return Список inlay hints в документе
    */
   public List<InlayHint> getInlayHint(DocumentContext documentContext, InlayHintParams params) {
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     var parameters = configuration.getInlayHintOptions().getParameters();
 
     return allInlayHintSuppliers.stream()

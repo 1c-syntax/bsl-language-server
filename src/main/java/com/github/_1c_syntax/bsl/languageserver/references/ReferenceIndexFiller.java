@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
@@ -78,6 +79,7 @@ public class ReferenceIndexFiller {
   );
 
   private final ReferenceIndex index;
+  private final LanguageServerConfiguration configuration;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -319,7 +321,6 @@ public class ReferenceIndexFiller {
 
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext) {
       this.documentContext = documentContext;
-      var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
       this.parsedAccessors = ModuleReference.parseAccessors(
         configuration.getReferencesOptions().getCommonModuleAccessors()
       );

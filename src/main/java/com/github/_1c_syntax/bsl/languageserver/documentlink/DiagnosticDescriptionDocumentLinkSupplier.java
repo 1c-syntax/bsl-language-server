@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.documentlink;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentLink;
 import org.springframework.stereotype.Component;
@@ -36,11 +38,13 @@ import java.util.stream.Collectors;
  * Сапплаер для формирования ссылки на страницу с информацией по диагностике.
  */
 @Component
+@RequiredArgsConstructor
 public class DiagnosticDescriptionDocumentLinkSupplier implements DocumentLinkSupplier {
+
+  private final LanguageServerConfiguration configuration;
 
   @Override
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     if (!configuration.getDocumentLinkOptions().isShowDiagnosticDescription()) {
       return Collections.emptyList();
     }

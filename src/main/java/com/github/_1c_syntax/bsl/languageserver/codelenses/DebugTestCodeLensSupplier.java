@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -63,8 +64,10 @@ public class DebugTestCodeLensSupplier
   private DebugTestCodeLensSupplier self;
 
   public DebugTestCodeLensSupplier(
+    LanguageServerConfiguration configuration,
     TestRunnerAdapter testRunnerAdapter
   ) {
+    super(configuration);
     this.testRunnerAdapter = testRunnerAdapter;
   }
 
@@ -78,8 +81,7 @@ public class DebugTestCodeLensSupplier
       return Collections.emptyList();
     }
 
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
-    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
+    var options = getConfiguration().getCodeLensOptions().getTestRunnerAdapterOptions();
 
     if (options.getDebugTestArguments().isEmpty()) {
       return Collections.emptyList();
@@ -112,8 +114,7 @@ public class DebugTestCodeLensSupplier
     var path = Path.of(documentContext.getUri());
     var testId = data.getTestId();
 
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
-    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
+    var options = getConfiguration().getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getDebugTestArguments();
     runText = runText.formatted(path, testId);
