@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -968,7 +969,7 @@ class SemanticTokensProviderTest {
     // Sort tokens by position
     var sortedTokens = decoded.stream()
       .filter(t -> t.line == 1)
-      .sorted((a, b) -> Integer.compare(a.start, b.start))
+      .sorted(Comparator.comparingInt(a -> a.start))
       .toList();
 
     // Verify no overlaps

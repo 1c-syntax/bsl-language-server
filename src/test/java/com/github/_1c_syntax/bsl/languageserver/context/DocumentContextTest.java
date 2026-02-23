@@ -255,7 +255,7 @@ class DocumentContextTest {
 
     // when-then
     var documentContext = TestUtils.getDocumentContext(content);
-    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
+    assertThatCode(documentContext::getQueries).doesNotThrowAnyException();
   }
 
   @Test
@@ -272,6 +272,6 @@ class DocumentContextTest {
 
     // when-then
     var documentContext = TestUtils.getDocumentContext(content);
-    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
+    assertThatCode(documentContext::getQueries).doesNotThrowAnyException();
   }
 }
