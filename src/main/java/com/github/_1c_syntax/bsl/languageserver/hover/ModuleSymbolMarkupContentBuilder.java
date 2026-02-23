@@ -42,6 +42,7 @@ import java.util.StringJoiner;
 public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<ModuleSymbol> {
 
   private final DescriptionFormatter descriptionFormatter;
+  private final Resources resources;
 
   @Override
   public MarkupContent getContent(ModuleSymbol symbol) {
@@ -66,7 +67,6 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
 
   private String getModuleInfo(ModuleSymbol symbol) {
     var documentContext = symbol.getOwner();
-    var resources = documentContext.getServerContext().getResources();
     var mdObject = documentContext.getMdObject();
 
     if (mdObject.isEmpty()) {

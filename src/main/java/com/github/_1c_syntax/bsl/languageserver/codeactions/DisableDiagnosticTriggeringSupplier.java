@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -52,7 +54,10 @@ import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvi
  * в указанной строке кода.
  */
 @Component
+@RequiredArgsConstructor
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
+
+  private final Resources resources;
 
   private static final String ALL_DIAGNOSTIC_NAME = "";
 
@@ -216,11 +221,11 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   }
 
   private String getMessage(DocumentContext documentContext, String key) {
-    return documentContext.getServerContext().getResources().getResourceString(this.getClass(), key);
+    return resources.getResourceString(this.getClass(), key);
   }
 
   private String getMessage(DocumentContext documentContext, String key, Object... args) {
-    return documentContext.getServerContext().getResources().getResourceString(this.getClass(), key, args);
+    return resources.getResourceString(this.getClass(), key, args);
   }
 
   private static List<TextEdit> createInLineTextEdits(String diagnosticName, Token last, CodeActionParams params) {

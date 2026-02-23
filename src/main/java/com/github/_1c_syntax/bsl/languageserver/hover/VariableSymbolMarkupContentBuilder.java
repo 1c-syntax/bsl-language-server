@@ -40,6 +40,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private static final String EXPORT_KEY = "export";
 
   private final DescriptionFormatter descriptionFormatter;
+  private final Resources resources;
 
   @Override
   public MarkupContent getContent(VariableSymbol symbol) {
@@ -83,7 +84,6 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   }
 
   private String getVariableInfo(VariableSymbol symbol) {
-    var resources = symbol.getOwner().getServerContext().getResources();
     return switch (symbol.getKind()) {
       case GLOBAL -> getResourceString(resources, "globalVariable");
       case MODULE -> getResourceString(resources, "moduleVariable");

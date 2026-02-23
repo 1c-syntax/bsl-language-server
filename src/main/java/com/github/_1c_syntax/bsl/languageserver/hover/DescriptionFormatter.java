@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.parser.description.HyperlinkTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +43,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
+@RequiredArgsConstructor
 public class DescriptionFormatter {
+
+  private final Resources resources;
 
   private static final String PROCEDURE_KEY = "procedure";
   private static final String FUNCTION_KEY = "function";
@@ -71,7 +75,6 @@ public class DescriptionFormatter {
   }
 
   public String getParametersSection(MethodSymbol methodSymbol) {
-    var resources = methodSymbol.getOwner().getServerContext().getResources();
     var result = new StringJoiner("  \n"); // два пробела
     methodSymbol.getParameters().forEach(parameterDefinition ->
       result.add(parameterToString(parameterDefinition))
@@ -92,7 +95,6 @@ public class DescriptionFormatter {
   }
 
   public String getReturnedValueSection(MethodSymbol methodSymbol) {
-    var resources = methodSymbol.getOwner().getServerContext().getResources();
     var result = new StringJoiner("  \n"); // два пробела
     methodSymbol.getDescription().ifPresent((MethodDescription methodDescription) -> {
       Map<String, String> typesMap = typesToMap(methodDescription.getReturnedValue(), 0);
@@ -109,7 +111,6 @@ public class DescriptionFormatter {
   }
 
   public String getExamplesSection(MethodSymbol methodSymbol) {
-    var resources = methodSymbol.getOwner().getServerContext().getResources();
     return methodSymbol.getDescription()
       .map(MethodDescription::getExamples)
       .filter(example -> !example.isEmpty())
@@ -118,7 +119,6 @@ public class DescriptionFormatter {
   }
 
   public String getCallOptionsSection(MethodSymbol methodSymbol) {
-    var resources = methodSymbol.getOwner().getServerContext().getResources();
     return methodSymbol.getDescription()
       .map(MethodDescription::getCallOptions)
       .filter(callOption -> !callOption.isEmpty())
@@ -172,7 +172,6 @@ public class DescriptionFormatter {
   }
 
   public String getSignature(MethodSymbol methodSymbol) {
-    var resources = methodSymbol.getOwner().getServerContext().getResources();
     var signatureTemplate = "```bsl\n%s %s(%s)%s%s\n```";
 
     String methodKind;
@@ -197,7 +196,6 @@ public class DescriptionFormatter {
   }
 
   public String getSignature(AnnotationSymbol symbol, MethodSymbol methodSymbol) {
-    var resources = methodSymbol.getOwner().getServerContext().getResources();
     var signatureTemplate = "```bsl\n%s &%s(%s)\n```";
 
     var annotationKind = getResourceString(resources, ANNOTATION_KEY);
@@ -213,7 +211,6 @@ public class DescriptionFormatter {
   }
 
   public String getSignature(VariableSymbol symbol) {
-    var resources = symbol.getOwner().getServerContext().getResources();
     var signatureTemplate = "```bsl\n%s %s%s\n```";
 
     var varKey = getResourceString(resources, VARIABLE_KEY);
