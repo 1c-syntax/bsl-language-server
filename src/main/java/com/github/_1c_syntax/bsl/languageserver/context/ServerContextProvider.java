@@ -23,10 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfigurationFactory;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
@@ -55,9 +56,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerContextProvider {
 
   private final ObjectProvider<ServerContext> serverContextProvider;
-  private final ObjectProvider<Resources> resourcesProvider;
-  private final LanguageServerConfigurationFactory configurationFactory;
+  private final LanguageServerConfiguration languageServerConfiguration;
+  private final Resources resources;
   private final DiagnosticInfosFactory diagnosticInfosFactory;
+  private final WorkspaceScope workspaceScope;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRoots = new ConcurrentHashMap<>();
@@ -65,14 +67,16 @@ public class ServerContextProvider {
 
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextProvider,
-    ObjectProvider<Resources> resourcesProvider,
-    LanguageServerConfigurationFactory configurationFactory,
-    DiagnosticInfosFactory diagnosticInfosFactory
+    LanguageServerConfiguration languageServerConfiguration,
+    Resources resources,
+    DiagnosticInfosFactory diagnosticInfosFactory,
+    WorkspaceScope workspaceScope
   ) {
     this.serverContextProvider = serverContextProvider;
-    this.resourcesProvider = resourcesProvider;
-    this.configurationFactory = configurationFactory;
+    this.languageServerConfiguration = languageServerConfiguration;
+    this.resources = resources;
     this.diagnosticInfosFactory = diagnosticInfosFactory;
+    this.workspaceScope = workspaceScope;
   }
 
   /**
@@ -102,35 +106,40 @@ public class ServerContextProvider {
 
     Path rootPath = Absolute.path(uri);
 
-    // Get new ServerContext instance from Spring (prototype scope)
-    var serverContext = serverContextProvider.getObject();
-    
-    // Create per-workspace configuration
-    var languageServerConfiguration = configurationFactory.createConfiguration(rootPath);
-    serverContext.setLanguageServerConfiguration(languageServerConfiguration);
+    // Set workspace context for scoped bean resolution
+    WorkspaceContextHolder.set(uri.toString());
+    try {
+      // Get new ServerContext instance from Spring (prototype scope)
+      var serverContext = serverContextProvider.getObject();
 
-    // Create per-workspace Resources
-    var resources = resourcesProvider.getObject(languageServerConfiguration);
-    serverContext.setResources(resources);
+      // Access workspace-scoped LSC (triggers lazy creation with @PostConstruct init())
+      // and store on ServerContext for navigation-based access
+      serverContext.setLanguageServerConfiguration(languageServerConfiguration);
 
-    // Create per-workspace DiagnosticInfo collections
-    serverContext.setDiagnosticInfosByCode(
-      diagnosticInfosFactory.createDiagnosticInfosByCode(languageServerConfiguration)
-    );
-    serverContext.setDiagnosticInfosByClass(
-      diagnosticInfosFactory.createDiagnosticInfosByClass(languageServerConfiguration)
-    );
-    
-    var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
-      languageServerConfiguration, 
-      rootPath
-    );
-    serverContext.setConfigurationRoot(configurationRoot);
+      // Access workspace-scoped Resources and store on ServerContext
+      serverContext.setResources(resources);
 
-    contexts.put(uri, serverContext);
-    workspaceRoots.put(uri, rootPath);
+      // Create per-workspace DiagnosticInfo collections
+      serverContext.setDiagnosticInfosByCode(
+        diagnosticInfosFactory.createDiagnosticInfosByCode(languageServerConfiguration)
+      );
+      serverContext.setDiagnosticInfosByClass(
+        diagnosticInfosFactory.createDiagnosticInfosByClass(languageServerConfiguration)
+      );
 
-    return serverContext;
+      var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
+        languageServerConfiguration,
+        rootPath
+      );
+      serverContext.setConfigurationRoot(configurationRoot);
+
+      contexts.put(uri, serverContext);
+      workspaceRoots.put(uri, rootPath);
+
+      return serverContext;
+    } finally {
+      WorkspaceContextHolder.clear();
+    }
   }
 
   /**
@@ -142,6 +151,7 @@ public class ServerContextProvider {
     var uri = Absolute.uri(workspaceFolder.getUri());
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
+    workspaceScope.removeWorkspace(uri.toString());
     
     if (serverContext != null) {
       serverContext.clear();

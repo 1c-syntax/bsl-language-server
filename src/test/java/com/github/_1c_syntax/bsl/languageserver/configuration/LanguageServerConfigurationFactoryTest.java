@@ -49,13 +49,13 @@ class LanguageServerConfigurationFactoryTest {
   }
 
   @Test
-  void testCreateConfigurationReturnsNewInstance() {
+  void testCreateConfigurationReturnsSameInstanceForSameWorkspace() {
     // when
     var configuration1 = factory.createConfiguration(workspaceDir);
     var configuration2 = factory.createConfiguration(workspaceDir);
 
-    // then - each call should return a new instance (prototype scope)
-    assertThat(configuration1).isNotSameAs(configuration2);
+    // then - workspace-scoped: same proxy for same workspace context
+    assertThat(configuration1).isSameAs(configuration2);
   }
 
   @Test

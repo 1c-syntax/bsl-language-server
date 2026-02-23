@@ -34,7 +34,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.formating.Formatti
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,28 +47,27 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 /**
  * Per-workspace конфигурация BSL Language Server.
  * <p>
  * Содержит настройки, специфичные для конкретного workspace.
- * Создаётся через {@link LanguageServerConfigurationFactory} при добавлении workspace.
+ * Создаётся lazy при первом обращении к workspace-scoped proxy.
  * <p>
  * Глобальные настройки (language, sendErrors, traceLog) находятся в {@link GlobalLanguageServerConfiguration}.
- * <p>
- * Это prototype bean — каждый запрос создаёт новый экземпляр.
- * Spring управляет lifecycle, поэтому AOP аспекты работают.
  */
 @Data
 @AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
@@ -74,7 +75,7 @@ import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Component
-@Scope(SCOPE_PROTOTYPE)
+@Scope(value = "workspace", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class LanguageServerConfiguration {
 
   /**
@@ -124,6 +125,58 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   @Nullable
   private File configurationFile;
+
+  @JsonIgnore
+  @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Getter(AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
+  private String defaultConfigFileName = ".bsl-language-server.json";
+
+  @JsonIgnore
+  @Value("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}")
+  @Getter(AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
+  private String globalConfigPath = System.getProperty("user.home") + "/.bsl-language-server.json";
+
+  /**
+   * Инициализация конфигурации при создании workspace-scoped бина.
+   * Ищет конфиг-файл в workspace root, затем глобальный.
+   */
+  @PostConstruct
+  void init() {
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      return;
+    }
+
+    Path workspaceRoot;
+    try {
+      workspaceRoot = Absolute.path(URI.create(workspaceUri));
+    } catch (Exception e) {
+      LOGGER.debug("Cannot resolve workspace path from URI: {}", workspaceUri);
+      return;
+    }
+
+    // 1. Прямой путь к конфигурации (из application.properties)
+    var configFile = new File(defaultConfigFileName);
+    if (configFile.isFile()) {
+      update(configFile);
+      return;
+    }
+
+    // 2. Конфиг в workspace
+    var workspaceConfig = workspaceRoot.resolve(defaultConfigFileName).toFile();
+    if (workspaceConfig.isFile()) {
+      update(workspaceConfig);
+      return;
+    }
+
+    // 3. Глобальная конфигурация
+    var globalConfig = new File(globalConfigPath);
+    if (globalConfig.isFile()) {
+      update(globalConfig);
+    }
+  }
 
   /**
    * Обновить конфигурацию из файла.
