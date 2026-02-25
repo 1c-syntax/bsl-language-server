@@ -154,7 +154,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // test utils
-    testImplementation("org.jmockit:jmockit:1.50")
+    testImplementation("com.github.hazendaz.jmockit:jmockit:2.1.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -229,11 +229,7 @@ tasks.test {
     maxHeapSize = "2g"
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
-    jvmArgs(
-        "-javaagent:${jmockitPath}",
-        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-        "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED"
-    )
+    jvmArgs("-javaagent:${jmockitPath}")
 
     // Cleanup test cache directories after tests complete
     doLast {
