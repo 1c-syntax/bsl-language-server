@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772004374532,
+  "lastUpdate": 1772010295341,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -34937,6 +34937,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3031087262693057",
             "extra": "mean: 67.69253714879353 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a9f12890b4662ea1743ca77dc824bc84ad8136ca",
+          "message": "Merge pull request #3833 from 1c-syntax/copilot/add-jvm-flags-for-jmockit\n\nFix Java 21 test warnings: migrate JMockit, add Mockito agent, fix dependency exclusion",
+          "timestamp": "2026-02-25T09:56:57+01:00",
+          "tree_id": "a6259c8056e2bda45c65617d13956d2864efeba5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a9f12890b4662ea1743ca77dc824bc84ad8136ca"
+        },
+        "date": 1772010289751,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 67.67871801058452,
+            "unit": "sec",
+            "range": "stddev: 2.1493425743105083",
+            "extra": "mean: 67.67871801058452 sec\nrounds: 3"
           }
         ]
       }
