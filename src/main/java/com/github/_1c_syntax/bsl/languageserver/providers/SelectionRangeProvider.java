@@ -180,7 +180,7 @@ public class SelectionRangeProvider {
 
     if (!nearbyStatements.isEmpty() && (nearbyStatements.size() + 1 != children.size())) {
 
-      var statementsBlock = new ParserRuleContext();
+      var statementsBlock = new ParserRuleContext(null, -1);
       statementsBlock.setParent(parent);
 
       nearbyStatements.add(statement);
@@ -192,8 +192,8 @@ public class SelectionRangeProvider {
       // возвращение parent
       nearbyStatements.forEach(ruleContext -> ruleContext.setParent(codeBlock));
 
-      statementsBlock.start = nearbyStatements.get(0).getStart();
-      statementsBlock.stop = nearbyStatements.get(nearbyStatements.size() - 1).getStop();
+      statementsBlock.start = nearbyStatements.getFirst().getStart();
+      statementsBlock.stop = nearbyStatements.getLast().getStop();
 
       parent = statementsBlock;
     }

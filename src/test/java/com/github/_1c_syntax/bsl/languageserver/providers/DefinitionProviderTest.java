@@ -85,7 +85,7 @@ class DefinitionProviderTest {
     // then
     assertThat(definitions).hasSize(1);
 
-    var definition = definitions.get(0);
+    var definition = definitions.getFirst();
 
     assertThat(definition.getTargetUri()).isEqualTo(documentContext.getUri().toString());
     assertThat(definition.getTargetSelectionRange()).isEqualTo(methodSymbol.getSelectionRange());
@@ -108,7 +108,7 @@ class DefinitionProviderTest {
     // then
     assertThat(definitions).hasSize(1);
 
-    var definition = definitions.get(0);
+    var definition = definitions.getFirst();
 
     assertThat(definition.getTargetUri()).isEqualTo(managerModule.getUri().toString());
     assertThat(definition.getTargetSelectionRange()).isEqualTo(methodSymbol.getSelectionRange());
@@ -134,7 +134,7 @@ class DefinitionProviderTest {
     // then
     assertThat(definitions).hasSize(1);
 
-    var definition = definitions.get(0);
+    var definition = definitions.getFirst();
 
     assertThat(definition.getTargetUri()).isEqualTo(commonModule.getUri().toString());
     assertThat(definition.getTargetSelectionRange()).isEqualTo(moduleSymbol.getSelectionRange());

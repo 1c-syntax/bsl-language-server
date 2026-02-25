@@ -135,10 +135,10 @@ public class SdblAstTokenCollector extends SDBLParserBaseVisitor<Void> {
     var identifiers = ctx.identifier();
     if (identifiers != null && !identifiers.isEmpty()) {
       if (identifiers.size() == 1) {
-        addTokenOverride(identifiers.get(0).getStart(), SemanticTokenTypes.Variable, NO_MODIFIERS);
+        addTokenOverride(identifiers.getFirst().getStart(), SemanticTokenTypes.Variable, NO_MODIFIERS);
       } else {
-        addTokenOverride(identifiers.get(0).getStart(), SemanticTokenTypes.Variable, NO_MODIFIERS);
-        addTokenOverride(identifiers.get(identifiers.size() - 1).getStart(), SemanticTokenTypes.Property, NO_MODIFIERS);
+        addTokenOverride(identifiers.getFirst().getStart(), SemanticTokenTypes.Variable, NO_MODIFIERS);
+        addTokenOverride(identifiers.getLast().getStart(), SemanticTokenTypes.Property, NO_MODIFIERS);
       }
     }
     return super.visitColumn(ctx);

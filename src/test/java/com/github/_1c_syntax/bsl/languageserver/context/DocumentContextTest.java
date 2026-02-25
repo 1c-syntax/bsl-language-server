@@ -235,7 +235,7 @@ class DocumentContextTest {
     var documentContext = getDocumentContext();
     // when
     List<Token> tokens = documentContext.getTokens();
-    Token lastToken = tokens.get(tokens.size() - 1);
+    Token lastToken = tokens.getLast();
     // then
     assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
     assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);
@@ -255,7 +255,7 @@ class DocumentContextTest {
 
     // when-then
     var documentContext = TestUtils.getDocumentContext(content);
-    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
+    assertThatCode(documentContext::getQueries).doesNotThrowAnyException();
   }
 
   @Test
@@ -272,6 +272,6 @@ class DocumentContextTest {
 
     // when-then
     var documentContext = TestUtils.getDocumentContext(content);
-    assertThatCode(() -> documentContext.getQueries()).doesNotThrowAnyException();
+    assertThatCode(documentContext::getQueries).doesNotThrowAnyException();
   }
 }

@@ -15,7 +15,7 @@ This is a Java-based language server that provides code analysis, diagnostics, c
 
 ## Technology Stack
 
-- **Language:** Java 17
+- **Language:** Java 21
 - **Build System:** Gradle with Kotlin DSL
 - **Frameworks:** Spring Boot
 - **Key Technologies:**
@@ -27,7 +27,7 @@ This is a Java-based language server that provides code analysis, diagnostics, c
 ## Environment Setup
 
 ### Prerequisites
-- Java Development Kit 17
+- Java Development Kit 21
 - Gradle (wrapper included in the repository)
 
 ### Building the Project

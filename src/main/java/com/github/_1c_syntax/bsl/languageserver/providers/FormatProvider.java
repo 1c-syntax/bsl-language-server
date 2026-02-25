@@ -112,8 +112,8 @@ public final class FormatProvider {
     if (tokens.isEmpty()) {
       return Collections.emptyList();
     }
-    var firstToken = tokens.get(0);
-    var lastToken = tokens.get(tokens.size() - 1);
+    var firstToken = tokens.getFirst();
+    var lastToken = tokens.getLast();
 
     var locale = documentContext.getScriptVariantLocale();
     return getTextEdits(
@@ -204,7 +204,7 @@ public final class FormatProvider {
 
     var newTextBuilder = new StringBuilder();
 
-    var firstToken = filteredTokens.get(0);
+    var firstToken = filteredTokens.getFirst();
     String indentation = insertSpaces ? StringUtils.repeat(' ', tabSize) : "\t";
 
     int currentIndentLevel = (firstToken.getCharPositionInLine() - startCharacter) / indentation.length();
@@ -323,7 +323,7 @@ public final class FormatProvider {
       previousTokenType = tokenType;
     }
 
-    var lastToken = tokens.get(tokens.size() - 1);
+    var lastToken = tokens.getLast();
     if (lastToken.getText().endsWith("\n") || lastToken.getText().endsWith("\r")) {
       newTextBuilder.append("\n");
 

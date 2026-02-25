@@ -141,7 +141,6 @@ class UnsafeFindByCodeDiagnosticTest extends AbstractDiagnosticTest<UnsafeFindBy
    *
    * @param pathToFile путь к тестовому файлу относительно корня проекта
    * @return контекст документа для тестирования
-   * @throws Exception если произошла ошибка при чтении файла или инициализации контекста
    */
   @SneakyThrows
   DocumentContext createDocumentContextFromFile(String pathToFile) {

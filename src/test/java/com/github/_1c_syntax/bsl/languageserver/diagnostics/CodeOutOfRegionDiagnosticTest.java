@@ -68,10 +68,10 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
     assertThat(diagnostics, true)
       .hasRange(4, 0, 5, 8)
     ;
-    assertThat(diagnostics.get(0).getRelatedInformation())
+    assertThat(diagnostics.getFirst().getRelatedInformation())
       .isNotNull()
       .isNotEmpty();
-    assertThat(diagnostics.get(0).getRelatedInformation().size()).isEqualTo(4);
+    assertThat(diagnostics.getFirst().getRelatedInformation().size()).isEqualTo(4);
   }
 
   @Test

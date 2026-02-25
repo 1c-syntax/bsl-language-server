@@ -138,7 +138,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
   }
 
   private boolean isAdjacent(Token comment, List<Token> currentGroup) {
-    var last = currentGroup.get(currentGroup.size() - 1);
+    var last = currentGroup.getLast();
     return last.getLine() + 1 == comment.getLine()
       && onlyEmptyDelimiters(last.getTokenIndex(), comment.getTokenIndex());
   }
@@ -163,15 +163,15 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
       return true;
     }
 
-    final var first = commentGroup.get(0);
-    final var last = commentGroup.get(commentGroup.size() - 1);
+    final var first = commentGroup.getFirst();
+    final var last = commentGroup.getLast();
 
     return methodDescriptions.stream().noneMatch(methodDescription -> methodDescription.contains(first, last));
   }
 
   private void checkCommentGroup(List<Token> commentGroup) {
-    var firstComment = commentGroup.get(0);
-    var lastComment = commentGroup.get(commentGroup.size() - 1);
+    var firstComment = commentGroup.getFirst();
+    var lastComment = commentGroup.getLast();
 
     for (var comment : commentGroup) {
       if (isTextParsedAsCode(comment.getText())) {

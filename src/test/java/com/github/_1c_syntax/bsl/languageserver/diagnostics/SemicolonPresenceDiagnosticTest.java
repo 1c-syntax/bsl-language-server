@@ -55,7 +55,7 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
 
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
-      diagnostics.get(0),
+      diagnostics.getFirst(),
       Ranges.create(6, 10, 6, 10)
     );
 
@@ -65,11 +65,11 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
       .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
 
       .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
-      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+      .matches(codeAction -> codeAction.getDiagnostics().getFirst().equals(diagnostics.getFirst()))
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().equals(";")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).getFirst().getNewText().equals(";")
       )
     ;
   }

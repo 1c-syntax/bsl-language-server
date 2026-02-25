@@ -83,7 +83,7 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
     when(tabularSection.getName()).thenReturn("Тара");
     tabularSections.add(tabularSection);
 
-    var tabAttribute = spy(tabularSection.getAttributes().get(0));
+    var tabAttribute = spy(tabularSection.getAttributes().getFirst());
     when(tabAttribute.getName()).thenReturn("Тара");
     when(tabularSection.getAttributes()).thenReturn(List.of(tabAttribute));
 

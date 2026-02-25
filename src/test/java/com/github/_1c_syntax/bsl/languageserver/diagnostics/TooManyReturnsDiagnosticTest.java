@@ -42,7 +42,7 @@ class TooManyReturnsDiagnosticTest extends AbstractDiagnosticTest<TooManyReturns
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(11, 8, 11, 21);
-    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(5);
+    assertThat(diagnostics.getFirst().getRelatedInformation()).hasSize(5);
 
   }
 

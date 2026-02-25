@@ -98,7 +98,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var startLine = 0;
     var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
-      startLine = ctx.getTokens().get(0).getLine();
+      startLine = ctx.getTokens().getFirst().getLine();
       startEmptyLines = "\n".repeat(startLine - 1);
     }
 

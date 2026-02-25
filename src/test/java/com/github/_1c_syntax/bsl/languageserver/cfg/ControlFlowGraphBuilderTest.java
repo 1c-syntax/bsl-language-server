@@ -888,7 +888,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(subs).hasSize(1);
     
     // Build CFG - should not throw ClassCastException
-    var sub = subs.get(0);
+    var sub = subs.getFirst();
     var codeBlock = sub.procedure().subCodeBlock().codeBlock();
     
     var builder = new CfgBuildingParseTreeVisitor();
@@ -932,6 +932,6 @@ class ControlFlowGraphBuilderTest {
 
   private String textOfCurrentNode(ControlFlowGraphWalker walker) {
     var block = (BasicBlockVertex) walker.getCurrentNode();
-    return block.statements().get(0).getText();
+    return block.statements().getFirst().getText();
   }
 }
