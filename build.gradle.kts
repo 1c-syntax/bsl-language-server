@@ -148,13 +148,13 @@ dependencies {
 
     // spring
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
-        exclude("com.vaadin.external.google:android-json")
+        exclude(group = "com.vaadin.external.google", module = "android-json")
     }
 
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // test utils
-    testImplementation("org.jmockit:jmockit:1.50")
+    testImplementation("com.github.hazendaz.jmockit:jmockit:2.1.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -229,7 +229,8 @@ tasks.test {
     maxHeapSize = "2g"
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
-    jvmArgs("-javaagent:${jmockitPath}")
+    val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
+    jvmArgs("-javaagent:${jmockitPath}", "-javaagent:${mockitoAgentPath}")
 
     // Cleanup test cache directories after tests complete
     doLast {
