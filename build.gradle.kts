@@ -148,7 +148,7 @@ dependencies {
 
     // spring
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
-        exclude("com.vaadin.external.google:android-json")
+        exclude(group = "com.vaadin.external.google", module = "android-json")
     }
 
     testImplementation("org.junit.jupiter:junit-jupiter")
