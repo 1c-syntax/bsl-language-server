@@ -240,11 +240,11 @@ public class SarifReporter implements DiagnosticReporter {
   private static Result createResult(FileInfo fileInfo, Diagnostic diagnostic) {
     var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
 
-    var message = new Message().withText(diagnostic.getMessage());
+    var message = new Message().withText(diagnostic.getMessage().getLeft());
     var ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
     var level = severityToResultLevel.get(diagnostic.getSeverity());
     var analysisTarget = new ArtifactLocation().withUri(uri);
-    var locations = List.of(createLocation(diagnostic.getMessage(), uri, diagnostic.getRange()));
+    var locations = List.of(createLocation(diagnostic.getMessage().getLeft(), uri, diagnostic.getRange()));
     var relatedLocations = Optional.ofNullable(diagnostic.getRelatedInformation())
       .stream()
       .flatMap(Collection::stream)

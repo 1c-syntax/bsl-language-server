@@ -60,12 +60,12 @@ class PairingBrokenTransactionDiagnosticTest extends AbstractDiagnosticTest<Pair
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(110, 8, 110, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(108, 8, 108, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))
-        && diagnostic.getMessage().matches(".*CommitTransaction.*"))
+        && diagnostic.getMessage().getLeft().matches(".*CommitTransaction.*"))
       .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))
-        && diagnostic.getMessage().matches(".*RollbackTransaction.*")))
+        && diagnostic.getMessage().getLeft().matches(".*RollbackTransaction.*")))
       .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(45, 4, 45, 22))
-        && diagnostic.getMessage().matches(".*ЗафиксироватьТранзакцию.*")))
+        && diagnostic.getMessage().getLeft().matches(".*ЗафиксироватьТранзакцию.*")))
       .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(45, 4, 45, 22))
-        && diagnostic.getMessage().matches(".*ОтменитьТранзакцию.*")));
+        && diagnostic.getMessage().getLeft().matches(".*ОтменитьТранзакцию.*")));
   }
 }

@@ -112,7 +112,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageSpace))
+      .filter(diagnostic -> diagnostic.getMessage().getLeft().equals(diagnosticMessageSpace))
       .forEach((Diagnostic diagnostic) -> {
         var range = diagnostic.getRange();
         var textEdit = new TextEdit(
@@ -124,7 +124,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
       });
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageDash))
+      .filter(diagnostic -> diagnostic.getMessage().getLeft().equals(diagnosticMessageDash))
       .forEach((Diagnostic diagnostic) -> {
         var range = diagnostic.getRange();
         var textEdit = new TextEdit(

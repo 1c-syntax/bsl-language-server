@@ -54,9 +54,9 @@ class OrdinaryAppSupportDiagnosticTest extends AbstractDiagnosticTest<OrdinaryAp
       .hasSize(2)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(Ranges.create(1, 0, 9)))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Установите свойство \"Использовать обычные формы в управляемом режиме\" установить в Ложь"))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Установите свойство \"Использовать управляемые формы в обычном приложении\" в Истина"))
     ;
   }

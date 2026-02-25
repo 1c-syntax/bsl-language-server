@@ -120,7 +120,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
       .hasSize(1)
-      .noneMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.Справочник1"));
+      .noneMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("для `Справочник.Справочник1"));
   }
 
   @Test
@@ -155,10 +155,10 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
       .hasSize(3)
-      .allMatch(diagnostic -> diagnostic.getMessage().contains("Запрещено использовать имя `РегистрСведений` для"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Документ.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `РегистрСведений.РегистрСведений"))
+      .allMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Запрещено использовать имя `РегистрСведений` для"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("для `Справочник.РегистрСведений"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("для `Документ.РегистрСведений"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("для `РегистрСведений.РегистрСведений"))
     ;
   }
 }

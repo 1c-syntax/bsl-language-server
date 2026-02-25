@@ -51,7 +51,7 @@ class TSLintReportEntry {
 
   TSLintReportEntry(String fileName, Diagnostic diagnostic) {
     endPosition = new EntryPosition(diagnostic.getRange().getEnd());
-    failure = diagnostic.getMessage();
+    failure = diagnostic.getMessage().getLeft();
     name = fileName;
     ruleName = DiagnosticCode.getStringValue(diagnostic.getCode());
     ruleSeverity = SEVERITY_MAP.get(diagnostic.getSeverity());

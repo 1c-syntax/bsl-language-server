@@ -138,7 +138,7 @@ public class GenericIssueReport {
     }
 
     public Location(String filePath, Diagnostic diagnostic) {
-      message = diagnostic.getMessage();
+      message = diagnostic.getMessage().getLeft();
       this.filePath = filePath;
       textRange = new TextRange(diagnostic.getRange());
     }

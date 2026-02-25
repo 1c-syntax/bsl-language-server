@@ -52,7 +52,7 @@ class ProtectedModuleDiagnosticTest extends AbstractDiagnosticTest<ProtectedModu
       .hasSize(1)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(getRange()))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Исходный код модуля отсутствует из-за защиты паролем. ОбщийМодуль.ОбщийМодуль1"))
     ;
   }

@@ -130,11 +130,11 @@ class JUnitTestSuites {
       for (Diagnostic diagnostic : diagnostics) {
         type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
         Position startRange = diagnostic.getRange().getStart();
-        message = diagnostic.getMessage();
+        message = diagnostic.getMessage().getLeft();
         value.add("line: %d, column: %d, text: %s".formatted(
           startRange.getLine() + 1,
           startRange.getCharacter(),
-          diagnostic.getMessage()
+          diagnostic.getMessage().getLeft()
         ));
       }
 

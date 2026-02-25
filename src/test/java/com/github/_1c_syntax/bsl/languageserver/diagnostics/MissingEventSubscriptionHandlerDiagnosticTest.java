@@ -54,17 +54,17 @@ class MissingEventSubscriptionHandlerDiagnosticTest extends AbstractDiagnosticTe
       .hasSize(6)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(Ranges.create(0, 0, 7)))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Создайте модуль \"ОбщийПодпискиНаСобытия\" или исправьте некорректный обработчик подписки на событие \"ПриЗаписиСправочника\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Исправьте некорректный обработчик \"CommonModule.ОбщийПодпискиНаСобытия\" у подписки на событие \"ПриЗаписиДокумента\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Добавьте \"Сервер\" модулю \"КлиентскийОбщийМодуль\" или исправьте некорректный обработчик подписки на событие \"ПередЗаписьюДокумента\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Заполните обработчик подписки на событие \"ПередЗаписьюКонстанты\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Создайте процедуру \"ПервыйОбщийМодуль.ПодпискаНаСобытиеПриУстановкеНовогоКода\" или исправьте некорректный обработчик подписки на событие \"ПриУстановкеНовогоКода\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
         .equals("Добавьте \"Экспорт\" процедуре \"ПервыйОбщийМодуль.РегистрацияИзмененийПередУдалением\"  или исправьте некорректный обработчик подписки на событие \"РегистрацияИзмененийПередУдалением\""))
 
     ;

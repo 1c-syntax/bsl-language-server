@@ -45,13 +45,13 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(1, 8, 1, 17))
           && diagnostic.getRelatedInformation().size() == 4
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка2\"")
       )
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(10, 9, 10, 19))
           && diagnostic.getRelatedInformation().size() == 4
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка22\"")
           && diagnostic.getRelatedInformation().get(3).getMessage()
           .equals("\"СтрОкА22\"")
@@ -93,25 +93,25 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(1, 8, 1, 17))
           && diagnostic.getRelatedInformation().size() == 4
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка2\"")
       )
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(10, 9, 10, 19))
           && diagnostic.getRelatedInformation().size() == 6
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка22\"")
       )
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(3, 35, 3, 44))
           && diagnostic.getRelatedInformation().size() == 3
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка3\"")
       )
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(19, 12, 19, 34))
           && diagnostic.getRelatedInformation().size() == 3
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Выбрать Первые 1 Из \"")
       )
     ;
@@ -131,7 +131,7 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(1, 8, 1, 17))
           && diagnostic.getRelatedInformation().size() == 4
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка2\"")
       )
     ;
@@ -153,7 +153,7 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(10, 9, 10, 19))
           && diagnostic.getRelatedInformation().size() == 6
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка22\"")
       )
     ;
@@ -173,7 +173,7 @@ class DuplicateStringLiteralDiagnosticTest extends AbstractDiagnosticTest<Duplic
       .anyMatch(diagnostic ->
         diagnostic.getRange().equals(Ranges.create(10, 9, 10, 19))
           && diagnostic.getRelatedInformation().size() == 4
-          && diagnostic.getMessage()
+          && diagnostic.getMessage().getLeft()
           .equals("Необходимо избавиться от многократного использования строкового литерала \"Строка22\"")
           && diagnostic.getRelatedInformation().get(3).getMessage()
           .equals("\"СтрОкА22\"")

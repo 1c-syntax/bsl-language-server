@@ -95,8 +95,8 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("Справочник1.Реквизит"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("Справочник1.ТабличнаяЧасть"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Справочник1.Реквизит"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Справочник1.ТабличнаяЧасть"))
     ;
   }
 
@@ -146,10 +146,10 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
 
     assertThat(diagnostics)
       .hasSize(16)
-      .noneMatch(diagnostic -> diagnostic.getMessage().contains("имя `Справочник.Справочник1"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `Документ.Документ1.Реквизит"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `Документ.Документ1.ТабличнаяЧасть"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("имя `РегистрСведений.РегистрСведений1.Измерение"))
+      .noneMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `Справочник.Справочник1"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `Документ.Документ1.Реквизит"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `Документ.Документ1.ТабличнаяЧасть"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `РегистрСведений.РегистрСведений1.Измерение"))
     ;
   }
 

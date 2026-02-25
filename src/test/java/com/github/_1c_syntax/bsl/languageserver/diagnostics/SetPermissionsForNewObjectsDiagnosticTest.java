@@ -42,7 +42,7 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     var diagnostics = getDiagnostics();
     assertThat(diagnostics)
       .hasSize(1)
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("Роль1"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Роль1"))
     ;
   }
 
@@ -58,8 +58,8 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     var diagnostics = getDiagnostics();
     assertThat(diagnostics)
       .hasSize(2)//Роль1 и ПолныеПрава
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("Роль1"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("ПолныеПрава"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Роль1"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("ПолныеПрава"))
     ;
   }
 
@@ -75,7 +75,7 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     var diagnostics = getDiagnostics();
     assertThat(diagnostics)
       .hasSize(1)
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("ПолныеПрава"))
+      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("ПолныеПрава"))
     ;
   }
 

@@ -70,7 +70,7 @@ public class CodeQualityReportEntry {
   private final Location location;
 
   public CodeQualityReportEntry(String path, Diagnostic diagnostic, DiagnosticInfo diagnosticInfo) {
-    this.description = diagnostic.getMessage();
+    this.description = diagnostic.getMessage().getLeft();
     this.checkName = diagnosticInfo.getCode().getStringValue();
     var fingerprintData = path + "//" + this.checkName + "//" + diagnostic.getRange();
     this.fingerprint = sha256Hex(fingerprintData);
