@@ -229,7 +229,11 @@ tasks.test {
     maxHeapSize = "2g"
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
-    jvmArgs("-javaagent:${jmockitPath}")
+    jvmArgs(
+        "-javaagent:${jmockitPath}",
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+        "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED"
+    )
 
     // Cleanup test cache directories after tests complete
     doLast {
