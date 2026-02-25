@@ -78,8 +78,8 @@ dependencies {
     api("org.ehcache:ehcache:3.11.1")
 
     // lsp4j core
-    api("org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0")
-    api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:0.24.0")
+    api("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
+    api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.31.0")
