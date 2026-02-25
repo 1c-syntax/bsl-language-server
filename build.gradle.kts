@@ -122,7 +122,7 @@ dependencies {
     implementation("org.apache.commons:commons-exec:1.6.0")
 
     // progress bar
-    implementation("me.tongfei:progressbar:0.10.1")
+    implementation("me.tongfei:progressbar:0.10.2")
 
     // (de)serialization
     implementation("tools.jackson.core:jackson-databind")
