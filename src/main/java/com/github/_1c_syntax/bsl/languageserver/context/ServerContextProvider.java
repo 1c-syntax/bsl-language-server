@@ -87,7 +87,7 @@ public class ServerContextProvider {
    */
   public ServerContext addWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
-    return addWorkspace(uri);
+    return addWorkspace(uri, workspaceFolder.getName());
   }
 
   /**
@@ -97,6 +97,17 @@ public class ServerContextProvider {
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(URI workspaceUri) {
+    return addWorkspace(workspaceUri, null);
+  }
+
+  /**
+   * Добавить workspace по URI и создать для нее контекст сервера.
+   *
+   * @param workspaceUri URI корня workspace
+   * @param workspaceName имя workspace (если null — извлекается из URI)
+   * @return созданный контекст сервера
+   */
+  public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
     var uri = Absolute.uri(workspaceUri);
     
     if (contexts.containsKey(uri)) {
@@ -107,7 +118,11 @@ public class ServerContextProvider {
     Path rootPath = Absolute.path(uri);
 
     // Set workspace context for scoped bean resolution
-    WorkspaceContextHolder.set(uri.toString());
+    if (workspaceName != null) {
+      WorkspaceContextHolder.set(uri.toString(), workspaceName);
+    } else {
+      WorkspaceContextHolder.set(uri.toString());
+    }
     try {
       // Get new ServerContext instance from Spring (prototype scope)
       var serverContext = serverContextProvider.getObject();

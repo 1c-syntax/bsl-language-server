@@ -24,19 +24,33 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import javax.annotation.Nullable;
 
 /**
- * ThreadLocal-хранилище текущего workspace URI.
- * Используется {@link WorkspaceScope} для определения ключа scope.
+ * ThreadLocal-хранилище текущего workspace URI и имени.
+ * Используется {@link WorkspaceScope} для определения ключа scope,
+ * а также для именования потоков в per-workspace ForkJoinPool.
  */
 public final class WorkspaceContextHolder {
 
   private static final ThreadLocal<String> CURRENT_WORKSPACE = new ThreadLocal<>();
+  private static final ThreadLocal<String> CURRENT_WORKSPACE_NAME = new ThreadLocal<>();
 
   private WorkspaceContextHolder() {
     // utility class
   }
 
+  /**
+   * Установить workspace URI и имя.
+   */
+  public static void set(String workspaceUri, String workspaceName) {
+    CURRENT_WORKSPACE.set(workspaceUri);
+    CURRENT_WORKSPACE_NAME.set(workspaceName);
+  }
+
+  /**
+   * Установить workspace URI. Имя извлекается из последнего сегмента пути URI.
+   */
   public static void set(String workspaceUri) {
     CURRENT_WORKSPACE.set(workspaceUri);
+    CURRENT_WORKSPACE_NAME.set(extractName(workspaceUri));
   }
 
   @Nullable
@@ -44,7 +58,19 @@ public final class WorkspaceContextHolder {
     return CURRENT_WORKSPACE.get();
   }
 
+  @Nullable
+  public static String getName() {
+    return CURRENT_WORKSPACE_NAME.get();
+  }
+
   public static void clear() {
     CURRENT_WORKSPACE.remove();
+    CURRENT_WORKSPACE_NAME.remove();
+  }
+
+  private static String extractName(String workspaceUri) {
+    var path = workspaceUri.replaceAll("/+$", "");
+    var lastSlash = path.lastIndexOf('/');
+    return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
   }
 }

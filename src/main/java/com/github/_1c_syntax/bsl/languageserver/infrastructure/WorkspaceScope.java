@@ -42,6 +42,7 @@ public class WorkspaceScope implements Scope {
   static final String DEFAULT_WORKSPACE_KEY = "__default__";
 
   private final ConcurrentHashMap<String, Map<String, Object>> store = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Map<String, Runnable>> destructionCallbacks = new ConcurrentHashMap<>();
 
   @Override
   public Object get(String name, ObjectFactory<?> objectFactory) {
@@ -61,7 +62,10 @@ public class WorkspaceScope implements Scope {
 
   @Override
   public void registerDestructionCallback(String name, Runnable callback) {
-    // destruction callbacks not needed for workspace-scoped beans
+    var key = resolveKey();
+    destructionCallbacks
+      .computeIfAbsent(key, k -> new ConcurrentHashMap<>())
+      .put(name, callback);
   }
 
   @Override
@@ -77,9 +81,13 @@ public class WorkspaceScope implements Scope {
   }
 
   /**
-   * Удалить все бины workspace.
+   * Удалить все бины workspace, предварительно вызвав destruction callbacks.
    */
   public void removeWorkspace(String workspaceUri) {
+    var callbacks = destructionCallbacks.remove(workspaceUri);
+    if (callbacks != null) {
+      callbacks.values().forEach(Runnable::run);
+    }
     store.remove(workspaceUri);
   }
 
