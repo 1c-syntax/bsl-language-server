@@ -190,15 +190,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var allContexts = serverContextProvider.getAllContexts();
     var tasks = allContexts.stream()
       .map((ServerContext serverContext) -> {
-        // Set ThreadLocal to resolve workspace-scoped executor proxy
-        WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
-        try {
+        try (var ctx = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri().toString())) {
           return CompletableFuture.runAsync(
             serverContext::populateContext,
             populateContextExecutor
           );
-        } finally {
-          WorkspaceContextHolder.clear();
         }
       })
       .toArray(CompletableFuture[]::new);

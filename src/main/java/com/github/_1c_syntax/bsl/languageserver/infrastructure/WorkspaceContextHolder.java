@@ -22,11 +22,27 @@
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.Callable;
 
 /**
  * ThreadLocal-хранилище текущего workspace URI и имени.
  * Используется {@link WorkspaceScope} для определения ключа scope,
  * а также для именования потоков в per-workspace ForkJoinPool.
+ * <p>
+ * Предпочтительный способ использования — через try-with-resources:
+ * <pre>{@code
+ * try (var ctx = WorkspaceContextHolder.forUri(workspaceUri)) {
+ *   // workspace-scoped proxy beans resolve здесь
+ * }
+ * }</pre>
+ * или через wrap-методы:
+ * <pre>{@code
+ * WorkspaceContextHolder.run(workspaceUri, () -> {
+ *   // workspace-scoped proxy beans resolve здесь
+ * });
+ *
+ * var result = WorkspaceContextHolder.call(workspaceUri, () -> computeResult());
+ * }</pre>
  */
 public final class WorkspaceContextHolder {
 
@@ -35,6 +51,69 @@ public final class WorkspaceContextHolder {
 
   private WorkspaceContextHolder() {
     // utility class
+  }
+
+  /**
+   * Создать AutoCloseable-контекст workspace с URI и именем.
+   * При закрытии восстанавливает предыдущее значение ThreadLocal.
+   */
+  public static WorkspaceContext forUri(String workspaceUri, String workspaceName) {
+    var previous = new WorkspaceContext(get(), getName());
+    set(workspaceUri, workspaceName);
+    return previous;
+  }
+
+  /**
+   * Создать AutoCloseable-контекст workspace с URI.
+   * Имя извлекается из последнего сегмента пути URI.
+   * При закрытии восстанавливает предыдущее значение ThreadLocal.
+   */
+  public static WorkspaceContext forUri(String workspaceUri) {
+    var previous = new WorkspaceContext(get(), getName());
+    set(workspaceUri);
+    return previous;
+  }
+
+  /**
+   * Выполнить действие в контексте workspace с URI.
+   * Имя извлекается из последнего сегмента пути URI.
+   * При завершении восстанавливает предыдущее значение ThreadLocal.
+   */
+  public static void run(String workspaceUri, Runnable action) {
+    try (var ctx = forUri(workspaceUri)) {
+      action.run();
+    }
+  }
+
+  /**
+   * Выполнить действие в контексте workspace с URI и именем.
+   * При завершении восстанавливает предыдущее значение ThreadLocal.
+   */
+  public static void run(String workspaceUri, String workspaceName, Runnable action) {
+    try (var ctx = forUri(workspaceUri, workspaceName)) {
+      action.run();
+    }
+  }
+
+  /**
+   * Вычислить значение в контексте workspace с URI.
+   * Имя извлекается из последнего сегмента пути URI.
+   * При завершении восстанавливает предыдущее значение ThreadLocal.
+   */
+  public static <T> T call(String workspaceUri, Callable<T> action) throws Exception {
+    try (var ctx = forUri(workspaceUri)) {
+      return action.call();
+    }
+  }
+
+  /**
+   * Вычислить значение в контексте workspace с URI и именем.
+   * При завершении восстанавливает предыдущее значение ThreadLocal.
+   */
+  public static <T> T call(String workspaceUri, String workspaceName, Callable<T> action) throws Exception {
+    try (var ctx = forUri(workspaceUri, workspaceName)) {
+      return action.call();
+    }
   }
 
   /**
@@ -72,5 +151,31 @@ public final class WorkspaceContextHolder {
     var path = workspaceUri.replaceAll("/+$", "");
     var lastSlash = path.lastIndexOf('/');
     return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
+  }
+
+  /**
+   * AutoCloseable-обёртка для workspace-контекста.
+   * При закрытии восстанавливает предыдущее значение ThreadLocal.
+   */
+  public static final class WorkspaceContext implements AutoCloseable {
+    @Nullable
+    private final String previousUri;
+    @Nullable
+    private final String previousName;
+
+    private WorkspaceContext(@Nullable String previousUri, @Nullable String previousName) {
+      this.previousUri = previousUri;
+      this.previousName = previousName;
+    }
+
+    @Override
+    public void close() {
+      if (previousUri != null) {
+        CURRENT_WORKSPACE.set(previousUri);
+        CURRENT_WORKSPACE_NAME.set(previousName);
+      } else {
+        clear();
+      }
+    }
   }
 }

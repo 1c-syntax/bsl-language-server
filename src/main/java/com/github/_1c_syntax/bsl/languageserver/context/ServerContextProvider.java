@@ -110,12 +110,9 @@ public class ServerContextProvider {
     Path rootPath = Absolute.path(uri);
 
     // Set workspace context for scoped bean resolution
-    if (workspaceName != null) {
-      WorkspaceContextHolder.set(uri.toString(), workspaceName);
-    } else {
-      WorkspaceContextHolder.set(uri.toString());
-    }
-    try {
+    try (var ctx = workspaceName != null
+      ? WorkspaceContextHolder.forUri(uri.toString(), workspaceName)
+      : WorkspaceContextHolder.forUri(uri.toString())) {
       // Get new ServerContext instance from Spring (prototype scope)
       var serverContext = serverContextProvider.getObject();
 
@@ -135,8 +132,6 @@ public class ServerContextProvider {
       workspaceRoots.put(uri, rootPath);
 
       return serverContext;
-    } finally {
-      WorkspaceContextHolder.clear();
     }
   }
 

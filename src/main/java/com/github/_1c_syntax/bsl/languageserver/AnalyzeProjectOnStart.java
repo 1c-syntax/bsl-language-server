@@ -56,9 +56,7 @@ public class AnalyzeProjectOnStart {
   public void handleEvent(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
 
-    // Set ThreadLocal to resolve workspace-scoped proxy beans
-    WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
-    try {
+    try (var ctx = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri().toString())) {
       if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
         return;
       }
@@ -88,8 +86,6 @@ public class AnalyzeProjectOnStart {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Interrupted while analyzing project on start", e);
-    } finally {
-      WorkspaceContextHolder.clear();
     }
   }
 

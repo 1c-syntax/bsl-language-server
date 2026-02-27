@@ -121,13 +121,8 @@ public class BSLWorkspaceService implements WorkspaceService {
         // Add new workspace folders
         event.getAdded().forEach((WorkspaceFolder folder) -> {
           var serverContext = serverContextProvider.addWorkspace(folder);
-          // Set ThreadLocal to resolve workspace-scoped executor proxy
-          WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
-          try {
-            CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor);
-          } finally {
-            WorkspaceContextHolder.clear();
-          }
+          WorkspaceContextHolder.run(serverContext.getWorkspaceUri().toString(),
+            () -> CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor));
         });
         
         LOGGER.info("Workspace folders changed. Added: {}, Removed: {}",

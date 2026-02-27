@@ -165,9 +165,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     // Create workspace for srcDir (factory will create per-workspace configuration)
     var context = serverContextProvider.addWorkspace(srcDir.toUri());
 
-    // Set ThreadLocal to resolve workspace-scoped proxy beans
-    WorkspaceContextHolder.set(srcDir.toUri().toString());
-    try {
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri().toString())) {
       // In analyze mode, -c affects both global and per-workspace settings
       // since there is always exactly one workspace
       configuration.update(configurationFile);
@@ -203,8 +201,6 @@ public class AnalyzeCommand implements Callable<Integer> {
       var outputDir = Absolute.path(outputDirOption);
       aggregator.report(analysisInfo, outputDir);
       return 0;
-    } finally {
-      WorkspaceContextHolder.clear();
     }
   }
 
