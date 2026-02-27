@@ -55,13 +55,13 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   /**
    * Конфигурация language server.
    */
-  private final LanguageServerConfiguration configuration;
+  protected final LanguageServerConfiguration configuration;
 
   private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
-    var complexityThreshold = getComplexityThreshold(documentContext);
+    var complexityThreshold = getComplexityThreshold();
     var methodsComplexity = getMethodsComplexity(documentContext);
     return documentContext.getSymbolTree().getMethods().stream()
       .filter(methodSymbol -> methodsComplexity.getOrDefault(methodSymbol, complexityThreshold - 1) >= complexityThreshold)
@@ -103,7 +103,7 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
 
-  private int getComplexityThreshold(DocumentContext documentContext) {
+  private int getComplexityThreshold() {
     var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_COMPLEXITY_THRESHOLD;

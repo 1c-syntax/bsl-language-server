@@ -99,7 +99,7 @@ public class RunAllTestsCodeLensSupplier
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, DefaultCodeLensData data) {
     var path = Path.of(documentContext.getUri());
 
-    var options = getConfiguration().getCodeLensOptions().getTestRunnerAdapterOptions();
+    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunAllTestsArguments();
     runText = runText.formatted(path);

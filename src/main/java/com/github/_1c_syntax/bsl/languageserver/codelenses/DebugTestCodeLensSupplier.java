@@ -85,7 +85,7 @@ public class DebugTestCodeLensSupplier
       return Collections.emptyList();
     }
 
-    var options = getConfiguration().getCodeLensOptions().getTestRunnerAdapterOptions();
+    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     if (options.getDebugTestArguments().isEmpty()) {
       return Collections.emptyList();
@@ -118,7 +118,7 @@ public class DebugTestCodeLensSupplier
     var path = Path.of(documentContext.getUri());
     var testId = data.getTestId();
 
-    var options = getConfiguration().getCodeLensOptions().getTestRunnerAdapterOptions();
+    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getDebugTestArguments();
     runText = runText.formatted(path, testId);

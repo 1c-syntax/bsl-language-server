@@ -115,7 +115,7 @@ public class RunTestCodeLensSupplier
     var path = Path.of(documentContext.getUri());
     var testId = data.getTestId();
 
-    var options = getConfiguration().getCodeLensOptions().getTestRunnerAdapterOptions();
+    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
     var executable = options.getExecutableForCurrentOS();
     String runText = executable + " " + options.getRunTestArguments();
     runText = runText.formatted(path, testId);
