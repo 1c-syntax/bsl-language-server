@@ -26,21 +26,17 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
-  @Autowired
-  @SuppressWarnings("NullAway.Init")
-  private LanguageServerConfiguration configuration;
-
   protected Pattern pattern;
+  private final LanguageServerConfiguration serverConfiguration;
 
-  protected AbstractCommonModuleNameDiagnostic(String regexp) {
+  protected AbstractCommonModuleNameDiagnostic(LanguageServerConfiguration serverConfiguration, String regexp) {
+    this.serverConfiguration = serverConfiguration;
     this.pattern = CaseInsensitivePattern.compile(regexp);
   }
 
@@ -104,6 +100,6 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   private boolean isClientOrdinaryAppIfNeed(CommonModule commonModule) {
     return commonModule.isClientOrdinaryApplication()
-      || !configuration.getDiagnosticsOptions().isOrdinaryAppSupport();
+      || !serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport();
   }
 }

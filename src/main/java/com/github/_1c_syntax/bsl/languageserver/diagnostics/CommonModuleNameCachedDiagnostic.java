@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -49,8 +49,8 @@ public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDi
 
   private static final String REGEXP = "повторноеиспользование|повтисп|cached";
 
-  public CommonModuleNameCachedDiagnostic() {
-    super(REGEXP);
+  public CommonModuleNameCachedDiagnostic(LanguageServerConfiguration serverConfiguration) {
+    super(serverConfiguration, REGEXP);
   }
 
   @Override
