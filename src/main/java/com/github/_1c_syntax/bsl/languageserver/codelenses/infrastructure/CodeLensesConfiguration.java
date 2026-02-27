@@ -78,7 +78,7 @@ public class CodeLensesConfiguration {
   public List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers(
     @Qualifier("codeLensSuppliersById") Map<String, CodeLensSupplier<CodeLensData>> codeLensSuppliersById
   ) {
-    // Возвращаем все сапплаеры отсортированными. Фильтрация по конфигурации 
+    // Возвращаем все сапплаеры отсортированными. Фильтрация по конфигурации
     // будет происходить в CodeLensProvider с учётом per-workspace настроек.
     return codeLensSuppliersById.values().stream()
       .sorted(Comparator.comparing(o ->

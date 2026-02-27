@@ -51,13 +51,13 @@ public class TestUtils {
   private static ServerContext getServerContext() {
     var provider = TestApplicationContext.getBean(ServerContextProvider.class);
     var metadataPath = Absolute.path(PATH_TO_METADATA);
-    
+
     // Check if workspace already registered
     var existingContext = provider.getServerContext(metadataPath.toUri());
     if (existingContext.isPresent()) {
       return existingContext.get();
     }
-    
+
     // Register new workspace
     var workspaceFolder = new WorkspaceFolder(metadataPath.toUri().toString(), TEST_WORKSPACE_NAME);
     var context = provider.addWorkspace(workspaceFolder);
@@ -86,7 +86,7 @@ public class TestUtils {
   private static ServerContext getServerContextForFile(Path filePath) {
     var provider = TestApplicationContext.getBean(ServerContextProvider.class);
     var allContexts = provider.getAllContexts();
-    
+
     if (allContexts.isEmpty()) {
       // No contexts registered - create new one for parent directory
       var absolutePath = Absolute.path(filePath);
@@ -149,19 +149,19 @@ public class TestUtils {
    */
   private static ServerContext getServerContextForUri(URI uri) {
     var provider = TestApplicationContext.getBean(ServerContextProvider.class);
-    
+
     // Check if workspace already registered for this URI
     var existingContext = provider.getServerContext(uri);
     if (existingContext.isPresent()) {
       return existingContext.get();
     }
-    
+
     // For file URIs, register workspace for parent directory
     if ("file".equalsIgnoreCase(uri.getScheme())) {
       var path = Path.of(uri);
       return getServerContextForFile(path);
     }
-    
+
     // For non-file URIs (like fake URIs), use default metadata workspace
     return getServerContext();
   }

@@ -61,8 +61,8 @@ public class ReferenceIndex {
 
   private final ServerContextProvider serverContextProvider;
   private final StringInterner stringInterner;
-  private final SymbolOccurrenceRepository symbolOccurrenceRepository;
   private final LocationRepository locationRepository;
+  private final SymbolOccurrenceRepository symbolOccurrenceRepository;
 
   /**
    * Получить ссылки на символ.

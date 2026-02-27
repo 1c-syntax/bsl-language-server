@@ -59,7 +59,7 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
     relatedMessage = this.info.getResourceString("identicalConditionRelatedMessage");
   }
 
-@Override
+  @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
     checkedConditions.clear();
 

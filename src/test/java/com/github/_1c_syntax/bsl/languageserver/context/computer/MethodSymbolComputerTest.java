@@ -275,12 +275,12 @@ class MethodSymbolComputerTest {
   void testOwner() {
 
     var path = Absolute.path(PATH_TO_METADATA);
-    
+
     // Create workspace for the path
     serverContextProvider.clear();
     var serverContext = serverContextProvider.addWorkspace(path.toUri());
     serverContext.setConfigurationRoot(path);
-    
+
     checkModule(serverContext, PATH_TO_MODULE_FILE, 7);
     checkModule(serverContext, PATH_TO_CATALOG_FILE, 2);
     checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, 1);

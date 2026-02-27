@@ -81,7 +81,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     var parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
-    
+
     List<SemanticTokenEntry> entries = new ArrayList<>();
 
     // Собираем информацию о контекстах строк

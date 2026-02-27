@@ -46,8 +46,6 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class DescriptionFormatter {
 
-  private final Resources resources;
-
   private static final String PROCEDURE_KEY = "procedure";
   private static final String FUNCTION_KEY = "function";
   private static final String ANNOTATION_KEY = "annotation";
@@ -59,6 +57,8 @@ public class DescriptionFormatter {
   private static final String EXAMPLES_KEY = "examples";
   private static final String CALL_OPTIONS_KEY = "callOptions";
   private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
+
+  private final Resources resources;
 
   public void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
     if (!newContent.isEmpty()) {

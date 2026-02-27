@@ -45,7 +45,7 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
     } catch (Exception e) {
       // Ignore if provider not available yet
     }
-    
+
     testContext.markApplicationContextDirty(DirtiesContext.HierarchyMode.EXHAUSTIVE);
     testContext.setAttribute(DependencyInjectionTestExecutionListener.REINJECT_DEPENDENCIES_ATTRIBUTE, Boolean.TRUE);
   }

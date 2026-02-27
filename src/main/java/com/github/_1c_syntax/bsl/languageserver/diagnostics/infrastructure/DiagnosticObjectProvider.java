@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * Провайдер для создания экземпляров диагностик.
  * <p>
- * Заменяет функциональность {@code DiagnosticBeanPostProcessor} — 
+ * Заменяет функциональность {@code DiagnosticBeanPostProcessor} —
  * устанавливает {@link DiagnosticInfo} и применяет конфигурацию параметров.
  */
 @Component
@@ -68,13 +68,13 @@ public class DiagnosticObjectProvider {
   @SuppressWarnings("unchecked")
   public <T extends BSLDiagnostic> T get(DiagnosticInfo info, LanguageServerConfiguration configuration) {
     T diagnostic = (T) applicationContext.getBean(info.getDiagnosticClass());
-    
+
     // Set DiagnosticInfo (was done in DiagnosticBeanPostProcessor.postProcessBeforeInitialization)
     diagnostic.setInfo(info);
-    
+
     // Initialize after info is set (replaces @PostConstruct in diagnostics that need info)
     diagnostic.initAfterInfoSet();
-    
+
     // Configure diagnostic parameters (was done in DiagnosticBeanPostProcessor.postProcessAfterInitialization)
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
       configuration.getDiagnosticsOptions().getParameters().get(info.getCode().getStringValue());
@@ -82,7 +82,7 @@ public class DiagnosticObjectProvider {
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
       diagnostic.configure(diagnosticConfiguration.getRight());
     }
-    
+
     return diagnostic;
   }
 

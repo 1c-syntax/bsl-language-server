@@ -61,7 +61,7 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
     relatedMessage = this.info.getResourceString("nestedConstructorRelatedMessage");
   }
 
-@Override
+  @Override
   public ParseTree visitNewExpression(NewExpressionContext ctx) {
 
     BSLParser.TypeNameContext typeName = ctx.typeName();

@@ -123,13 +123,13 @@ class WorkspaceEventsTest {
     // then - BeforeWorkspaceRemovedEvent should be published before WorkspaceRemovedEvent
     assertThat(eventCollector.getBeforeRemovedEvents()).hasSize(1);
     assertThat(eventCollector.getRemovedEvents()).hasSize(1);
-    
+
     var beforeEvent = eventCollector.getBeforeRemovedEvents().get(0);
     var afterEvent = eventCollector.getRemovedEvents().get(0);
-    
+
     // Both events should have the same workspace URI
     assertThat(beforeEvent.getWorkspaceUri()).isEqualTo(afterEvent.getWorkspaceUri());
-    
+
     // BeforeRemoved event has access to serverContext, Removed event doesn't guarantee it
     assertThat(beforeEvent.getServerContext()).isNotNull();
   }

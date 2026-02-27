@@ -94,7 +94,7 @@ class ServerContextProviderTest {
     // given
     var workspaceUri1 = Absolute.path(PATH_TO_METADATA).toUri().toString();
     var workspaceFolder1 = new WorkspaceFolder(workspaceUri1, "workspace-1");
-    
+
     var workspaceUri2 = Absolute.path(PATH_TO_METADATA).getParent().toUri().toString();
     var workspaceFolder2 = new WorkspaceFolder(workspaceUri2, "workspace-2");
 

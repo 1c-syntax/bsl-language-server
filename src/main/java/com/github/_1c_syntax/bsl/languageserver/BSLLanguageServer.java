@@ -100,7 +100,7 @@ import java.util.concurrent.ExecutorService;
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static final CapabilitiesOptions DEFAULT_CAPABILITIES = new CapabilitiesOptions();
-  
+
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
@@ -151,7 +151,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private void setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
-    
+
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
       var rootUri = resolveRootUri(params);
       if (rootUri == null) {
@@ -431,11 +431,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private static WorkspaceServerCapabilities getWorkspaceCapabilities() {
     var workspaceCapabilities = new WorkspaceServerCapabilities();
-    
+
     var workspaceFoldersOptions = new WorkspaceFoldersOptions();
     workspaceFoldersOptions.setSupported(Boolean.TRUE);
     workspaceFoldersOptions.setChangeNotifications(Boolean.TRUE);
-    
+
     workspaceCapabilities.setWorkspaceFolders(workspaceFoldersOptions);
     return workspaceCapabilities;
   }

@@ -69,52 +69,52 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     relatedMessage = this.info.getResourceString("parentStatementRelatedMessage");
   }
 
-@Override
+  @Override
   public void enterIfStatement(BSLParser.IfStatementContext ctx) {
     enterNode(ctx);
   }
 
-@Override
+  @Override
   public void exitIfStatement(BSLParser.IfStatementContext ctx) {
     exitNode(ctx);
   }
 
-@Override
+  @Override
   public void enterWhileStatement(BSLParser.WhileStatementContext ctx) {
     enterNode(ctx);
   }
 
-@Override
+  @Override
   public void exitWhileStatement(BSLParser.WhileStatementContext ctx) {
     exitNode(ctx);
   }
 
-@Override
+  @Override
   public void enterForStatement(BSLParser.ForStatementContext ctx) {
     enterNode(ctx);
   }
 
-@Override
+  @Override
   public void exitForStatement(BSLParser.ForStatementContext ctx) {
     exitNode(ctx);
   }
 
-@Override
+  @Override
   public void enterForEachStatement(BSLParser.ForEachStatementContext ctx) {
     enterNode(ctx);
   }
 
-@Override
+  @Override
   public void exitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     exitNode(ctx);
   }
 
-@Override
+  @Override
   public void enterTryStatement(BSLParser.TryStatementContext ctx) {
     enterNode(ctx);
   }
 
-@Override
+  @Override
   public void exitTryStatement(BSLParser.TryStatementContext ctx) {
     exitNode(ctx);
   }

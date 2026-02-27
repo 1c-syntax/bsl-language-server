@@ -45,7 +45,7 @@ class BSLLSBindingTest {
   void testGetDiagnosticInfos() {
     // given
     var configuration = new LanguageServerConfiguration();
-    
+
     // when
     var diagnosticInfos = BSLLSBinding.getDiagnosticInfos(configuration);
 

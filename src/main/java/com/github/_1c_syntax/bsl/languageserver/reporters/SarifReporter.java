@@ -182,7 +182,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
 
   private Tool createTool(LanguageServerConfiguration configuration) {
     var diagnosticInfoValues = diagnosticInfos.getByCode().values();
-    
+
     var name = serverInfo.getName();
     var organization = "1c-syntax";
     var version = serverInfo.getVersion();

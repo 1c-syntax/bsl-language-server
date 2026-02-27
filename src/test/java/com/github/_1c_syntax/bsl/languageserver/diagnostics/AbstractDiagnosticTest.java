@@ -56,7 +56,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractS
   private DiagnosticInfos diagnosticInfos;
 
   private final Class<T> diagnosticClass;
-  
+
   /**
    * Per-workspace configuration from ServerContext.
    * Tests should use this instead of injected beans.

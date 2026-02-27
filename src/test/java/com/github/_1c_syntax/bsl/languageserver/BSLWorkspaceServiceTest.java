@@ -322,7 +322,7 @@ class BSLWorkspaceServiceTest {
     var newWorkspaceDir = tempDir.resolve("new-workspace").toFile();
     newWorkspaceDir.mkdir();
     var workspaceFolder = new WorkspaceFolder(newWorkspaceDir.toURI().toString(), "new-workspace");
-    
+
     var event = new WorkspaceFoldersChangeEvent(
       List.of(workspaceFolder),
       List.of()
@@ -336,7 +336,7 @@ class BSLWorkspaceServiceTest {
     // then
     var uri = Absolute.uri(newWorkspaceDir.toURI());
     assertThat(serverContextProvider.getServerContext(uri)).isPresent();
-    
+
     // cleanup
     serverContextProvider.removeWorkspace(workspaceFolder);
   }
@@ -345,7 +345,7 @@ class BSLWorkspaceServiceTest {
   void testDidChangeWorkspaceFolders_RemoveWorkspace() {
     // given
     var workspaceFolder = new WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
-    
+
     var event = new WorkspaceFoldersChangeEvent(
       List.of(),
       List.of(workspaceFolder)
@@ -368,7 +368,7 @@ class BSLWorkspaceServiceTest {
     newWorkspaceDir.mkdir();
     var workspaceFolderToAdd = new WorkspaceFolder(newWorkspaceDir.toURI().toString(), "new-workspace-2");
     var workspaceFolderToRemove = new WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
-    
+
     var event = new WorkspaceFoldersChangeEvent(
       List.of(workspaceFolderToAdd),
       List.of(workspaceFolderToRemove)
@@ -384,7 +384,7 @@ class BSLWorkspaceServiceTest {
     var uriRemoved = Absolute.uri(tempDir.toUri());
     assertThat(serverContextProvider.getServerContext(uriAdded)).isPresent();
     assertThat(serverContextProvider.getServerContext(uriRemoved)).isEmpty();
-    
+
     // cleanup
     serverContextProvider.removeWorkspace(workspaceFolderToAdd);
   }

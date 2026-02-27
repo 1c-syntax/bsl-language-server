@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
-import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
 import com.github._1c_syntax.bsl.mdclasses.MDClasses;
 import com.github._1c_syntax.bsl.types.ModuleType;

@@ -101,7 +101,7 @@ public class ServerContextProvider {
    */
   public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
     var uri = Absolute.uri(workspaceUri);
-    
+
     if (contexts.containsKey(uri)) {
       LOGGER.debug("Workspace {} already exists", uri);
       return contexts.get(uri);
@@ -145,7 +145,7 @@ public class ServerContextProvider {
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
     workspaceScope.removeWorkspace(uri.toString());
-    
+
     if (serverContext != null) {
       serverContext.clear();
     }
@@ -180,11 +180,11 @@ public class ServerContextProvider {
     if (indexed != null) {
       return Optional.of(indexed);
     }
-    
+
     // Fall back to URI-based lookup for new documents
     // URI is already normalized by caller
     var documentUriString = documentUri.toString();
-    
+
     return contexts.keySet().stream()
       .filter(workspaceUri -> documentUriString.startsWith(workspaceUri.toString()))
       .findFirst()

@@ -289,7 +289,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   @Test
   void testFindCommonModuleVariableReferences() throws IOException {
     initServerContext(PATH_TO_METADATA);
-    
+
 
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
@@ -331,7 +331,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   @Test
   void testCommonModuleVariableReassignment() throws IOException {
     initServerContext(PATH_TO_METADATA);
-    
+
 
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexCommonModuleReassignment.bsl"
@@ -374,7 +374,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   @Test
   void testCommonModuleModuleLevelVariable() throws IOException {
     initServerContext(PATH_TO_METADATA);
-    
+
 
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexCommonModuleLevel.bsl"
@@ -415,7 +415,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   @Test
   void testCommonModuleVariableIsolationBetweenMethods() throws IOException {
     initServerContext(PATH_TO_METADATA);
-    
+
 
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexCommonModuleIsolation.bsl"
@@ -514,7 +514,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     // Тест для проверки поведения: при наведении на ОбщийМодуль() должно показываться описание метода,
     // а не информация о модуле "ПервыйОбщийМодуль"
     initServerContext(PATH_TO_METADATA);
-    
+
 
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"

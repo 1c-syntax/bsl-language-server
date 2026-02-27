@@ -77,7 +77,7 @@ public class FormatCommand implements Callable<Integer> {
   private static final Pattern COMMA_PATTERN = Pattern.compile(",");
   private final ServerContextProvider serverContextProvider;
   private final FormatProvider formatProvider;
-  
+
   private ServerContext serverContext;
 
   @Option(
@@ -100,7 +100,7 @@ public class FormatCommand implements Callable<Integer> {
 
   public Integer call() {
     serverContextProvider.clear();
-    
+
     String[] filePaths = COMMA_PATTERN.split(srcDirOption);
 
     List<File> files = findFilesForFormatting(filePaths);
@@ -108,7 +108,7 @@ public class FormatCommand implements Callable<Integer> {
     if (files.isEmpty()) {
       return 1;
     }
-    
+
     // Create workspace based on first file path
     Path srcDir = Absolute.path(filePaths[0]);
     if (!srcDir.toFile().isDirectory()) {

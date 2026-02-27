@@ -41,8 +41,8 @@ import java.util.StringJoiner;
 @RequiredArgsConstructor
 public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<ModuleSymbol> {
 
-  private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
+  private final DescriptionFormatter descriptionFormatter;
 
   @Override
   public MarkupContent getContent(ModuleSymbol symbol) {

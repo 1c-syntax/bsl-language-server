@@ -158,7 +158,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     var configurationFile = new File(configurationOption);
-    
+
     // Update global configuration
     globalConfiguration.update(configurationFile);
 

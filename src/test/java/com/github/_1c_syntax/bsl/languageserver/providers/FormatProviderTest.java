@@ -150,7 +150,7 @@ class FormatProviderTest {
   void testFormatRuKeywordsWithoutUpperCase() throws IOException {
     var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
     var formattedFile = new File("./src/test/resources/providers/format_formattedWithoutUpperCaseKeywordsRu.bsl");
-    
+
     // given
     DocumentFormattingParams params = new DocumentFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
@@ -163,7 +163,7 @@ class FormatProviderTest {
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
-    
+
     // Configure for this workspace
     configuration.update(new File("./src/test/resources/.bsl-language-server-not-uppercase-format.json"));
 
@@ -180,7 +180,7 @@ class FormatProviderTest {
   @Test
   void testDisabledKeywordsFormatting() throws IOException {
     var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
-    
+
     // given
     DocumentFormattingParams params = new DocumentFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
@@ -192,7 +192,7 @@ class FormatProviderTest {
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
-    
+
     // Configure for this workspace
     configuration.update(new File("./src/test/resources/.bsl-language-server-format-keywords-off.json"));
 

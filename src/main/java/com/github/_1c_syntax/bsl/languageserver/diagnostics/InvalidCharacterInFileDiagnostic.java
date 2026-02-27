@@ -76,7 +76,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
     diagnosticMessageSpace = info.getResourceString("diagnosticMessageSpace");
   }
 
-@Override
+  @Override
   public void check() {
 
     Set<Integer> stringTokenTypes = Set.of(
@@ -101,7 +101,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
       });
   }
 
-@Override
+  @Override
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,

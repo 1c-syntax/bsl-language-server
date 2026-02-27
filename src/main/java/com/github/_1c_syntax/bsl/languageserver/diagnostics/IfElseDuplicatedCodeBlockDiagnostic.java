@@ -59,7 +59,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
     relatedMessage = this.info.getResourceString("identicalCodeBlockRelatedMessage");
   }
 
-@Override
+  @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
     checkedBlocks.clear();
     List<BSLParser.CodeBlockContext> codeBlocks = new ArrayList<>();

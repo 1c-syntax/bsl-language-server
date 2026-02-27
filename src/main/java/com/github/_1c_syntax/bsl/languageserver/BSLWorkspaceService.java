@@ -114,17 +114,17 @@ public class BSLWorkspaceService implements WorkspaceService {
     CompletableFuture.runAsync(
       () -> {
         var event = params.getEvent();
-        
+
         // Remove old workspace folders
         event.getRemoved().forEach(serverContextProvider::removeWorkspace);
-        
+
         // Add new workspace folders
         event.getAdded().forEach((WorkspaceFolder folder) -> {
           var serverContext = serverContextProvider.addWorkspace(folder);
           WorkspaceContextHolder.run(serverContext.getWorkspaceUri().toString(),
             () -> CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor));
         });
-        
+
         LOGGER.info("Workspace folders changed. Added: {}, Removed: {}",
           event.getAdded().size(), event.getRemoved().size());
       },
