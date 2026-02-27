@@ -92,9 +92,7 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
   @TestConfiguration
   static class TestConfig {
     @Bean
-    public AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier(
-      LanguageServerConfiguration configuration
-    ) {
+    public AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> supplier(LanguageServerConfiguration configuration) {
       return new AbstractRunTestsCodeLensSupplier<>(configuration) {
 
         @Override

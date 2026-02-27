@@ -48,9 +48,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ExtractStructureConstructorSupplierTest {
 
   @Autowired
-  private ExtractStructureConstructorSupplier codeActionSupplier;
-  @Autowired
   private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private ExtractStructureConstructorSupplier codeActionSupplier;
   private DocumentContext documentContext;
   private CodeActionParams params;
 

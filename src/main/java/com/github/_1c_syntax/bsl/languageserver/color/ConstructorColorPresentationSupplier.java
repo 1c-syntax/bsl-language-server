@@ -42,10 +42,10 @@ import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_
 @RequiredArgsConstructor
 public class ConstructorColorPresentationSupplier implements ColorPresentationSupplier {
 
-  private final LanguageServerConfiguration configuration;
-
   private static final String VIA_CONSTRUCTOR_KEY = "viaConstructor";
   private static final String NEW_COLOR_CONSTRUCTOR_KEY = "newColorConstructor";
+
+  private final LanguageServerConfiguration configuration;
 
   @Override
   public List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params) {

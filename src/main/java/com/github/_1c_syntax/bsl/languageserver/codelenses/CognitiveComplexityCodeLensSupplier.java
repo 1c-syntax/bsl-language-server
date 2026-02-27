@@ -38,10 +38,10 @@ import java.util.Map;
 public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
   public CognitiveComplexityCodeLensSupplier(
-    ToggleCognitiveComplexityInlayHintsCommandSupplier commandSupplier,
-    LanguageServerConfiguration configuration
+    LanguageServerConfiguration configuration,
+    ToggleCognitiveComplexityInlayHintsCommandSupplier commandSupplier
   ) {
-    super(commandSupplier, configuration);
+    super(configuration, commandSupplier);
   }
 
   @Override

@@ -40,14 +40,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DiagnosticDescriptionDocumentLinkSupplierTest {
 
   @Autowired
+  private LanguageServerConfiguration configuration;
+
+  @Autowired
   private DiagnosticDescriptionDocumentLinkSupplier supplier;
 
   private static final String SITE_URL = "https://1c-syntax.github.io/bsl-language-server/";
   private static final String SITE_EN_URL = "https://1c-syntax.github.io/bsl-language-server/en/";
   private static final String DIAGNOSTIC_CODE = "CanonicalSpellingKeywords";
-
-  @Autowired
-  private LanguageServerConfiguration configuration;
 
   @BeforeEach
   void init() {

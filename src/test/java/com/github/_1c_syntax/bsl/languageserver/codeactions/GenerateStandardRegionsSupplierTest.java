@@ -45,9 +45,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GenerateStandardRegionsSupplierTest {
 
   @Autowired
-  private GenerateStandardRegionsSupplier codeActionSupplier;
-  @Autowired
   private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private GenerateStandardRegionsSupplier codeActionSupplier;
 
   @Test
   void testGetCodeActions() {

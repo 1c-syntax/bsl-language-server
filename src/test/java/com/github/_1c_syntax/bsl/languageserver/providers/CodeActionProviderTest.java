@@ -55,9 +55,9 @@ class CodeActionProviderTest {
   @Autowired
   private CodeActionProvider codeActionProvider;
   @Autowired
-  private StringInterner stringInterner;
-  @Autowired
   private LanguageServerConfiguration configuration;
+  @Autowired
+  private StringInterner stringInterner;
 
   private DocumentContext documentContext;
 

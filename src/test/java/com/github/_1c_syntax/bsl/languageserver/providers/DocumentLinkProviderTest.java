@@ -35,9 +35,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentLinkProviderTest {
 
   @Autowired
-  private DocumentLinkProvider documentLinkProvider;
-  @Autowired
   private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private DocumentLinkProvider documentLinkProvider;
 
   @Test
   void testProviderCanGetResultFromEnabledComputers() {
@@ -46,8 +47,7 @@ class DocumentLinkProviderTest {
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
     
     // Configure for this workspace
-    configuration
-      .getDocumentLinkOptions().setShowDiagnosticDescription(true);
+    configuration.getDocumentLinkOptions().setShowDiagnosticDescription(true);
     
     // На текущий момент единственный DocumentLinkSupplier - это показ ссылок на документацию
     // по рассчитанным диагностикам.

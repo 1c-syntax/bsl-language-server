@@ -47,6 +47,7 @@ class ConstructorColorPresentationSupplierTest {
 
   @Autowired
   private ConstructorColorPresentationSupplier supplier;
+
   @Autowired
   private LanguageServerConfiguration configuration;
 

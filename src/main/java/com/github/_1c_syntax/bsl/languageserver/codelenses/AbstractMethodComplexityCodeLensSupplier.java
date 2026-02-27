@@ -52,8 +52,12 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   private static final String TITLE_KEY = "title";
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
-  private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
+  /**
+   * Конфигурация language server.
+   */
   private final LanguageServerConfiguration configuration;
+
+  private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
 
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {

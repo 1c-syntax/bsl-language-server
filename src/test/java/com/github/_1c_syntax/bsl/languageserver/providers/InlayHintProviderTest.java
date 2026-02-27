@@ -51,9 +51,9 @@ class InlayHintProviderTest {
   @Autowired
   private InlayHintProvider provider;
   @Autowired
-  private CognitiveComplexityInlayHintSupplier supplier;
-  @Autowired
   private LanguageServerConfiguration configuration;
+  @Autowired
+  private CognitiveComplexityInlayHintSupplier supplier;
 
   private DocumentContext documentContext;
 

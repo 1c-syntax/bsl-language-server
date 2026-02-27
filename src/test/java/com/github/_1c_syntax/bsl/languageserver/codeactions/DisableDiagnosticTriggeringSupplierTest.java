@@ -46,9 +46,10 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 class DisableDiagnosticTriggeringSupplierTest {
 
   @Autowired
-  private DisableDiagnosticTriggeringSupplier codeActionSupplier;
-  @Autowired
   private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private DisableDiagnosticTriggeringSupplier codeActionSupplier;
 
   @Test
   void testGetCodeActions() {

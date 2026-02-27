@@ -47,6 +47,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
 
   @Autowired
   private SourceDefinedMethodCallInlayHintSupplier supplier;
+
   @Autowired
   private LanguageServerConfiguration configuration;
 

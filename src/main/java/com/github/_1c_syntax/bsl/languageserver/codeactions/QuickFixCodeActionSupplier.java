@@ -71,9 +71,7 @@ public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
 
     Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
 
-    QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(
-      quickFixProviderClass
-    );
+    QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(quickFixProviderClass);
     return quickFixInstance.getQuickFixes(
       Collections.singletonList(diagnostic),
       params,

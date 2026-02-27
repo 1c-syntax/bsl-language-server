@@ -58,6 +58,7 @@ class DebugTestCodeLensSupplierTest {
   private TestRunnerAdapter testRunnerAdapter;
 
   private DocumentContext documentContext;
+
   @Autowired
   private LanguageServerConfiguration configuration;
 

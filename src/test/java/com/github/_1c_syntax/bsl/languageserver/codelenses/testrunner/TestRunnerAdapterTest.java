@@ -34,6 +34,7 @@ class TestRunnerAdapterTest {
 
   @Autowired
   private TestRunnerAdapter testRunnerAdapter;
+
   @Autowired
   private LanguageServerConfiguration configuration;
 

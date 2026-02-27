@@ -57,9 +57,9 @@ import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvi
 @RequiredArgsConstructor
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
-  private final Resources resources;
-
   private static final String ALL_DIAGNOSTIC_NAME = "";
+
+  private final Resources resources;
 
   /**
    * При необходимости создает {@code CodeAction} для создания служебного комментария отключающего срабатывание
@@ -100,7 +100,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       result.addAll(
         actionDisableDiagnostic(
           name -> createCodeAction(
-            getMessage(documentContext, "file", name),
+            getMessage("file", name),
             createInFileTextEdits(":" + name),
             documentContext
           ),
@@ -111,7 +111,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
     result.add(
       createCodeAction(
-        getMessage(documentContext, "fileAll"),
+        getMessage("fileAll"),
         createInFileTextEdits(ALL_DIAGNOSTIC_NAME),
         documentContext
       )
@@ -126,7 +126,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   ) {
     var result = actionDisableDiagnostic(
       name -> createCodeAction(
-        getMessage(documentContext, "line", name),
+        getMessage("line", name),
         createInLineTextEdits(":" + name, lastToken, params),
         documentContext
       ),
@@ -134,7 +134,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     );
     result.add(
       createCodeAction(
-        getMessage(documentContext, "lineAll"),
+        getMessage("lineAll"),
         createInLineTextEdits(ALL_DIAGNOSTIC_NAME, lastToken, params),
         documentContext
       )
@@ -149,7 +149,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   ) {
     var result = actionDisableDiagnostic(
       name -> createCodeAction(
-        getMessage(documentContext, "range", name),
+        getMessage("range", name),
         createInRegionTextEdits(":" + name, lastToken, params),
         documentContext
       ),
@@ -157,7 +157,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     );
     result.add(
       createCodeAction(
-        getMessage(documentContext, "rangeAll"),
+        getMessage("rangeAll"),
         createInRegionTextEdits(ALL_DIAGNOSTIC_NAME, lastToken, params),
         documentContext
       )
@@ -220,11 +220,11 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     return codeAction;
   }
 
-  private String getMessage(DocumentContext documentContext, String key) {
+  private String getMessage(String key) {
     return resources.getResourceString(this.getClass(), key);
   }
 
-  private String getMessage(DocumentContext documentContext, String key, Object... args) {
+  private String getMessage(String key, Object... args) {
     return resources.getResourceString(this.getClass(), key, args);
   }
 

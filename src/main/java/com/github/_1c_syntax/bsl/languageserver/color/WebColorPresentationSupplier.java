@@ -45,10 +45,10 @@ import static com.github._1c_syntax.bsl.languageserver.color.BSLColor.MAX_COLOR_
 @RequiredArgsConstructor
 public class WebColorPresentationSupplier implements ColorPresentationSupplier {
 
-  private final LanguageServerConfiguration configuration;
-
   private static final String VIA_WEB_COLOR_KEY = "viaWebColors";
   private static final String WEB_COLOR_DOT_KEY = "webColorDot";
+
+  private final LanguageServerConfiguration configuration;
 
   @Override
   public List<ColorPresentation> getColorPresentation(DocumentContext documentContext, ColorPresentationParams params) {

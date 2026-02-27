@@ -78,9 +78,7 @@ public class QuickFixSupplier {
    * @return Экземпляр провайдера быстрых исправлений
    */
   @SuppressWarnings("unchecked")
-  public QuickFixProvider getQuickFixInstance(
-    Class<? extends QuickFixProvider> quickFixProviderClass
-  ) {
+  public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
     var diagnosticInfo = diagnosticInfos.getByClass().get(diagnosticClass);
     return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticInfo, configuration);

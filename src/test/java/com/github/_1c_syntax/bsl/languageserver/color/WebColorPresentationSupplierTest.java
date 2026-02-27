@@ -47,6 +47,7 @@ class WebColorPresentationSupplierTest {
 
   @Autowired
   private WebColorPresentationSupplier supplier;
+
   @Autowired
   private LanguageServerConfiguration configuration;
 

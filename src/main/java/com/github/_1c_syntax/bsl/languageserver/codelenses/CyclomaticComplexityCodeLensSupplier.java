@@ -38,10 +38,10 @@ import java.util.Map;
 public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
   public CyclomaticComplexityCodeLensSupplier(
-    ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier,
-    LanguageServerConfiguration configuration
+    LanguageServerConfiguration configuration,
+    ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier
   ) {
-    super(commandSupplier, configuration);
+    super(configuration, commandSupplier);
   }
 
   @Override

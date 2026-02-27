@@ -54,13 +54,13 @@ class CodeLensProviderTest {
   @Autowired
   private CodeLensProvider codeLensProvider;
   @Autowired
+  private LanguageServerConfiguration configuration;
+  @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
   @Autowired
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
   @Autowired
   private LanguageClientHolder clientHolder;
-  @Autowired
-  private LanguageServerConfiguration configuration;
 
   @Test
   void testGetCodeLens() {

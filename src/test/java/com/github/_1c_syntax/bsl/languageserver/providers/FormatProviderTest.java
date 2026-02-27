@@ -165,8 +165,7 @@ class FormatProviderTest {
     );
     
     // Configure for this workspace
-    configuration
-      .update(new File("./src/test/resources/.bsl-language-server-not-uppercase-format.json"));
+    configuration.update(new File("./src/test/resources/.bsl-language-server-not-uppercase-format.json"));
 
     // when
     List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
@@ -195,8 +194,7 @@ class FormatProviderTest {
     );
     
     // Configure for this workspace
-    configuration
-      .update(new File("./src/test/resources/.bsl-language-server-format-keywords-off.json"));
+    configuration.update(new File("./src/test/resources/.bsl-language-server-format-keywords-off.json"));
 
     // when
     List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);

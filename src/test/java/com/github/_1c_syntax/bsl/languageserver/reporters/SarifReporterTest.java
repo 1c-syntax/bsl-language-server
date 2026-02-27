@@ -67,6 +67,7 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
   private DiagnosticInfos diagnosticInfosBean;
 
   private Collection<DiagnosticInfo> diagnosticInfos;
+
   @Autowired
   private LanguageServerConfiguration configuration;
 
