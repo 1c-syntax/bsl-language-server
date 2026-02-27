@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,9 +34,6 @@ class DescriptionFormatterTest {
   @Autowired
   private DescriptionFormatter descriptionFormatter;
 
-  @Autowired
-  private Resources resources;
-
   @Test
   void whenParameterOfMethodHasAnnotations_thenAnnotationIsAddedToParameterSignatureDescription() {
     // given
@@ -45,8 +41,7 @@ class DescriptionFormatterTest {
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("МетодСАннотациямиПараметров").orElseThrow();
 
     // when
-    var description = descriptionFormatter.getParametersSignatureDescription(
-      resources, methodSymbol);
+    var description = descriptionFormatter.getParametersSignatureDescription(methodSymbol);
 
     // then
     assertThat(description).isEqualTo("&Повторяемый Парам1, Парам2");

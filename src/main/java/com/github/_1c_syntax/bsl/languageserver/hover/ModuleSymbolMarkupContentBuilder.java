@@ -88,10 +88,10 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     }
 
     // Флаги доступности
-    var flags = getModuleFlags(resources, commonModule);
+    var flags = getModuleFlags(commonModule);
 
     if (!flags.isEmpty()) {
-      var flagsHeader = "**" + getResourceString(resources, "availability") + ":** ";
+      var flagsHeader = "**" + getResourceString("availability") + ":** ";
       moduleInfoBuilder.add(flagsHeader + String.join(", ", flags));
       moduleInfoBuilder.add("");
     }
@@ -105,41 +105,41 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     };
 
     if (!reuseKey.isEmpty()) {
-      var reuseHeader = "**" + getResourceString(resources, "returnValuesReuse") + ":** ";
-      moduleInfoBuilder.add(reuseHeader + getResourceString(resources, reuseKey));
+      var reuseHeader = "**" + getResourceString("returnValuesReuse") + ":** ";
+      moduleInfoBuilder.add(reuseHeader + getResourceString(reuseKey));
     }
 
     return moduleInfoBuilder.toString();
   }
 
-  private List<String> getModuleFlags(Resources resources, CommonModule commonModule) {
+  private List<String> getModuleFlags(CommonModule commonModule) {
     var flags = new ArrayList<String>();
 
     if (commonModule.isServer()) {
-      flags.add(getResourceString(resources, "server"));
+      flags.add(getResourceString("server"));
     }
     if (commonModule.isClientManagedApplication()) {
-      flags.add(getResourceString(resources, "clientManagedApplication"));
+      flags.add(getResourceString("clientManagedApplication"));
     }
     if (commonModule.isClientOrdinaryApplication()) {
-      flags.add(getResourceString(resources, "clientOrdinaryApplication"));
+      flags.add(getResourceString("clientOrdinaryApplication"));
     }
     if (commonModule.isExternalConnection()) {
-      flags.add(getResourceString(resources, "externalConnection"));
+      flags.add(getResourceString("externalConnection"));
     }
     if (commonModule.isServerCall()) {
-      flags.add(getResourceString(resources, "serverCall"));
+      flags.add(getResourceString("serverCall"));
     }
     if (commonModule.isPrivileged()) {
-      flags.add(getResourceString(resources, "privilegedMode"));
+      flags.add(getResourceString("privilegedMode"));
     }
     if (commonModule.isGlobal()) {
-      flags.add(getResourceString(resources, "global"));
+      flags.add(getResourceString("global"));
     }
     return flags;
   }
 
-  private String getResourceString(Resources resources, String key) {
+  private String getResourceString(String key) {
     return resources.getResourceString(getClass(), key);
   }
 }

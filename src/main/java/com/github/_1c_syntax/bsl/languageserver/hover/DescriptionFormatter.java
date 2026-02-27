@@ -84,7 +84,7 @@ public class DescriptionFormatter {
 
     if (!parameters.isBlank()) {
       var parametersSection = new StringJoiner("\n");
-      var header = "**" + getResourceString(resources, PARAMETERS_KEY) + ":**";
+      var header = "**" + getResourceString(PARAMETERS_KEY) + ":**";
       parametersSection.add(header);
       parametersSection.add("");
       parametersSection.add(parameters);
@@ -104,7 +104,7 @@ public class DescriptionFormatter {
     var returnedValue = result.toString();
 
     if (!returnedValue.isEmpty()) {
-      returnedValue = "**" + getResourceString(resources, RETURNED_VALUE_KEY) + ":**\n\n" + returnedValue;
+      returnedValue = "**" + getResourceString(RETURNED_VALUE_KEY) + ":**\n\n" + returnedValue;
     }
 
     return returnedValue;
@@ -114,7 +114,7 @@ public class DescriptionFormatter {
     return methodSymbol.getDescription()
       .map(MethodDescription::getExamples)
       .filter(example -> !example.isEmpty())
-      .map(codeBlock -> "**" + getResourceString(resources, EXAMPLES_KEY) + ":**\n\n" + "```bsl\n" + codeBlock + "\n```")
+      .map(codeBlock -> "**" + getResourceString(EXAMPLES_KEY) + ":**\n\n" + "```bsl\n" + codeBlock + "\n```")
       .orElseGet(String::new);
   }
 
@@ -122,7 +122,7 @@ public class DescriptionFormatter {
     return methodSymbol.getDescription()
       .map(MethodDescription::getCallOptions)
       .filter(callOption -> !callOption.isEmpty())
-      .map(codeBlock -> "**" + getResourceString(resources, CALL_OPTIONS_KEY) + ":**\n\n" + "```bsl\n" + codeBlock + "\n```")
+      .map(codeBlock -> "**" + getResourceString(CALL_OPTIONS_KEY) + ":**\n\n" + "```bsl\n" + codeBlock + "\n```")
       .orElseGet(String::new);
   }
 
@@ -176,15 +176,15 @@ public class DescriptionFormatter {
 
     String methodKind;
     if (methodSymbol.isFunction()) {
-      methodKind = getResourceString(resources, FUNCTION_KEY);
+      methodKind = getResourceString(FUNCTION_KEY);
     } else {
-      methodKind = getResourceString(resources, PROCEDURE_KEY);
+      methodKind = getResourceString(PROCEDURE_KEY);
     }
     var methodName = methodSymbol.getName();
 
-    var parameters = getParametersSignatureDescription(resources, methodSymbol);
+    var parameters = getParametersSignatureDescription(methodSymbol);
     var returnedValueType = getReturnedValueTypeDescriptionPart(methodSymbol);
-    var export = methodSymbol.isExport() ? (" " + getResourceString(resources, EXPORT_KEY)) : "";
+    var export = methodSymbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
 
     return signatureTemplate.formatted(
       methodKind,
@@ -198,10 +198,10 @@ public class DescriptionFormatter {
   public String getSignature(AnnotationSymbol symbol, MethodSymbol methodSymbol) {
     var signatureTemplate = "```bsl\n%s &%s(%s)\n```";
 
-    var annotationKind = getResourceString(resources, ANNOTATION_KEY);
+    var annotationKind = getResourceString(ANNOTATION_KEY);
     var annotationName = symbol.getName();
 
-    var parameters = getParametersSignatureDescription(resources, methodSymbol);
+    var parameters = getParametersSignatureDescription(methodSymbol);
 
     return signatureTemplate.formatted(
       annotationKind,
@@ -213,9 +213,9 @@ public class DescriptionFormatter {
   public String getSignature(VariableSymbol symbol) {
     var signatureTemplate = "```bsl\n%s %s%s\n```";
 
-    var varKey = getResourceString(resources, VARIABLE_KEY);
+    var varKey = getResourceString(VARIABLE_KEY);
     var name = symbol.getName();
-    var export = symbol.isExport() ? (" " + getResourceString(resources, EXPORT_KEY)) : "";
+    var export = symbol.isExport() ? (" " + getResourceString(EXPORT_KEY)) : "";
 
     return signatureTemplate.formatted(
       varKey,
@@ -224,7 +224,7 @@ public class DescriptionFormatter {
     );
   }
 
-  public String getParametersSignatureDescription(Resources resources, MethodSymbol methodSymbol) {
+  public String getParametersSignatureDescription(MethodSymbol methodSymbol) {
     var parametersDescription = new StringJoiner(", ");
     methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
       var parameter = new StringBuilder();
@@ -232,7 +232,7 @@ public class DescriptionFormatter {
       var parameterName = parameterDefinition.getName();
 
       if (parameterDefinition.isByValue()) {
-        parameter.append(getResourceString(resources, VAL_KEY)).append(" ");
+        parameter.append(getResourceString(VAL_KEY)).append(" ");
       }
       parameter.append(parameterName);
 
@@ -360,7 +360,7 @@ public class DescriptionFormatter {
     return result.toString();
   }
 
-  private String getResourceString(Resources resources, String key) {
+  private String getResourceString(String key) {
     return resources.getResourceString(getClass(), key);
   }
 

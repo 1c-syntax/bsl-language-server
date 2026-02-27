@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
@@ -39,6 +40,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
 
+  private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
 
@@ -85,17 +87,17 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
 
   private String getVariableInfo(VariableSymbol symbol) {
     return switch (symbol.getKind()) {
-      case GLOBAL -> getResourceString(resources, "globalVariable");
-      case MODULE -> getResourceString(resources, "moduleVariable");
-      case LOCAL -> getResourceString(resources, "localVariable").formatted(symbol.getScope().getName());
-      case PARAMETER -> getResourceString(resources, "methodParameter").formatted(symbol.getScope().getName());
+      case GLOBAL -> getResourceString("globalVariable");
+      case MODULE -> getResourceString("moduleVariable");
+      case LOCAL -> getResourceString("localVariable").formatted(symbol.getScope().getName());
+      case PARAMETER -> getResourceString("methodParameter").formatted(symbol.getScope().getName());
       case DYNAMIC -> symbol.getScope().getSymbolKind() == SymbolKind.Module
-        ? getResourceString(resources, "dynamicVariableOfModule")
-        : getResourceString(resources, "dynamicVariableOfMethod").formatted(symbol.getScope().getName());
+        ? getResourceString("dynamicVariableOfModule")
+        : getResourceString("dynamicVariableOfMethod").formatted(symbol.getScope().getName());
     };
   }
 
-  private String getResourceString(Resources resources, String key) {
+  private String getResourceString(String key) {
     return resources.getResourceString(getClass(), key);
   }
 

@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,16 +38,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTest {
+class MethodSymbolMarkupContentBuilderTest {
 
   @Autowired
   private MethodSymbolMarkupContentBuilder markupContentBuilder;
 
+  @Autowired
+  private ServerContext serverContext;
+
   private static final String PATH_TO_FILE = "./src/test/resources/hover/methodSymbolMarkupContentBuilder.bsl";
 
-  @BeforeEach
+  @PostConstruct
   void prepareServerContext() {
-    initServerContext(Path.of(PATH_TO_METADATA));
+    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
+    serverContext.populateContext();
   }
 
   @Test
@@ -118,7 +122,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
   void testContentFromManagerModule() {
 
     // given
-    var documentContext = context.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
+    var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
 
     // when
@@ -142,7 +146,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
   @Test
   void testMethodsFromCommonModule() {
     // given
-    var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var documentContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     // when

@@ -24,19 +24,19 @@ package com.github._1c_syntax.bsl.languageserver.documentlink;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterEachTestMethod
+@DirtiesContext
 class DiagnosticDescriptionDocumentLinkSupplierTest {
 
   @Autowired
@@ -49,7 +49,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
   private static final String SITE_EN_URL = "https://1c-syntax.github.io/bsl-language-server/en/";
   private static final String DIAGNOSTIC_CODE = "CanonicalSpellingKeywords";
 
-  @BeforeEach
+  @PostConstruct
   void init() {
     configuration.reset();
     configuration.getDocumentLinkOptions().setShowDiagnosticDescription(true);
