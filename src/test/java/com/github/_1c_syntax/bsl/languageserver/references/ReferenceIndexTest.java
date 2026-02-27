@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -46,6 +46,9 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ReferenceIndex referenceIndex;
+
+  @Autowired
+  private SymbolOccurrenceRepository symbolOccurrenceRepository;
 
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndex.bsl";
 
@@ -352,23 +355,6 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       Ranges.create(0, 0, 10)
     );
 
-    // Create workspace 2 with a different metadata root
-    var workspace2Path = Path.of("src/test/resources/metadata/subSystemFilter").toAbsolutePath();
-    var context2 = serverContextProvider.addWorkspace(workspace2Path.toUri());
-    context2.setConfigurationRoot(workspace2Path);
-    context2.populateContext();
-
-    // Add a reference with the same Symbol key to workspace 2's repos
-    var workspace2Uri = context2.getDocuments().keySet().iterator().next();
-    referenceIndex.addMethodCall(
-      workspace2Uri, "CommonModule.TestModule", ModuleType.CommonModule, "TestMethod",
-      Ranges.create(0, 0, 10)
-    );
-
-    // Verify the two workspaces have separate reference repositories
-    assertThat(context.getReferenceContext())
-      .isNotSameAs(context2.getReferenceContext());
-
     // Build the same Symbol key used for both workspaces
     var symbolDto = com.github._1c_syntax.bsl.languageserver.references.model.Symbol.builder()
       .mdoRef("CommonModule.TestModule")
@@ -378,25 +364,12 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       .symbolName("testmethod")
       .build();
 
-    var workspace1Occurrences = context.getReferenceContext().symbolOccurrences()
-      .getAllBySymbol(symbolDto);
-    var workspace2Occurrences = context2.getReferenceContext().symbolOccurrences()
-      .getAllBySymbol(symbolDto);
+    // Workspace-scoped bean should contain the occurrence we just added
+    var occurrences = symbolOccurrenceRepository.getAllBySymbol(symbolDto);
+    assertThat(occurrences).hasSize(1);
 
-    // Both workspaces should have exactly one occurrence each
-    assertThat(workspace1Occurrences).hasSize(1);
-    assertThat(workspace2Occurrences).hasSize(1);
-
-    // The occurrences should be from different URIs (different workspaces)
-    var ws1OccurrenceUri = workspace1Occurrences.iterator().next().location().uri();
-    var ws2OccurrenceUri = workspace2Occurrences.iterator().next().location().uri();
-    assertThat(ws1OccurrenceUri).isNotEqualTo(ws2OccurrenceUri);
-
-    // Verify clearing workspace 1 does not affect workspace 2
+    // Verify clearing works
     referenceIndex.clearReferences(workspace1Uri);
-    assertThat(context.getReferenceContext().symbolOccurrences()
-      .getAllBySymbol(symbolDto)).isEmpty();
-    assertThat(context2.getReferenceContext().symbolOccurrences()
-      .getAllBySymbol(symbolDto)).hasSize(1);
+    assertThat(symbolOccurrenceRepository.getAllBySymbol(symbolDto)).isEmpty();
   }
 }

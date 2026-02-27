@@ -22,6 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Map;
@@ -31,6 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Хранилище зарегистрированных аннотаций для одного workspace.
  */
+@Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class AnnotationRepository {
 
   private final Map<String, AnnotationSymbol> annotations = new ConcurrentHashMap<>();

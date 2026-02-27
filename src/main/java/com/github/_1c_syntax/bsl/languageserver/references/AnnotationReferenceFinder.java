@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -60,12 +61,12 @@ import java.util.Optional;
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
   private final ServerContextProvider serverContextProvider;
+  private final AnnotationRepository annotationRepository;
 
   @EventListener
   public void handleContextRefresh(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
-    var annotations = serverContext.getReferenceContext().annotations();
-    annotations.clear();
+    annotationRepository.clear();
     serverContext.getDocuments()
       .values()
       .forEach(this::findAndRegisterAnnotation);
@@ -74,16 +75,14 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
   @EventListener
   public void handleDocumentContextChange(DocumentContextContentChangedEvent event) {
     DocumentContext documentContext = event.getSource();
-    var annotations = documentContext.getServerContext().getReferenceContext().annotations();
 
-    annotations.removeByUri(documentContext.getUri());
+    annotationRepository.removeByUri(documentContext.getUri());
     findAndRegisterAnnotation(documentContext);
   }
 
   @EventListener
   public void handleServerContextDocumentRemovedEvent(ServerContextDocumentRemovedEvent event) {
-    var annotations = event.getSource().getReferenceContext().annotations();
-    annotations.removeByUri(event.getUri());
+    annotationRepository.removeByUri(event.getUri());
   }
 
   private void findAndRegisterAnnotation(DocumentContext documentContext) {
@@ -109,16 +108,13 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .flatMap(annotationName -> methodSymbolAnnotationPair.map(Pair::getLeft)
         .map(methodSymbol -> AnnotationSymbol.from(annotationName, methodSymbol)))
       .ifPresent((AnnotationSymbol annotationSymbol) -> {
-        var annotations = documentContext.getServerContext().getReferenceContext().annotations();
-        annotations.register(annotationSymbol);
+        annotationRepository.register(annotationSymbol);
       });
   }
 
-  private static Optional<AnnotationSymbol> getAnnotationSymbol(DocumentContext documentContext,
-                                                          BSLParser.AnnotationNameContext annotationNode) {
+  private Optional<AnnotationSymbol> getAnnotationSymbol(BSLParser.AnnotationNameContext annotationNode) {
     var annotationName = annotationNode.getText();
-    return documentContext.getServerContext().getReferenceContext().annotations()
-      .findByName(annotationName);
+    return annotationRepository.findByName(annotationName);
   }
 
   @Override
@@ -163,7 +159,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
                                                              DocumentContext documentContext) {
     var annotationNode = (BSLParser.AnnotationContext) annotationName.getParent();
 
-    return getAnnotationSymbol(documentContext, annotationName)
+    return getAnnotationSymbol(annotationName)
       .map(annotationSymbol -> Reference.of(
         documentContext.getSymbolTree().getModule(),
         annotationSymbol,
@@ -218,7 +214,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .map(BSLParser.AnnotationContext.class::cast)
 
       .map(BSLParser.AnnotationContext::annotationName)
-      .flatMap(annotationName -> getAnnotationSymbol(documentContext, annotationName))
+      .flatMap(this::getAnnotationSymbol)
       .flatMap(AnnotationSymbol::getParent)
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast)

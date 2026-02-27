@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.references.model.ReferenceContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -114,12 +113,6 @@ public class ServerContext {
   @Getter
   @Setter
   private Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByClass = Collections.emptyMap();
-
-  /**
-   * Хранилища ссылок на символы для данного workspace.
-   */
-  @Getter
-  private final ReferenceContext referenceContext = ReferenceContext.create();
 
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
