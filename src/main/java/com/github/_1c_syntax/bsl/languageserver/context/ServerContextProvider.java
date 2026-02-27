@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.WorkspaceFolder;
@@ -56,7 +55,6 @@ public class ServerContextProvider {
 
   private final ObjectProvider<ServerContext> serverContextProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
-  private final Resources resources;
   private final WorkspaceScope workspaceScope;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
@@ -66,12 +64,10 @@ public class ServerContextProvider {
   public ServerContextProvider(
     ObjectProvider<ServerContext> serverContextProvider,
     LanguageServerConfiguration languageServerConfiguration,
-    Resources resources,
     WorkspaceScope workspaceScope
   ) {
     this.serverContextProvider = serverContextProvider;
     this.languageServerConfiguration = languageServerConfiguration;
-    this.resources = resources;
     this.workspaceScope = workspaceScope;
   }
 
@@ -128,9 +124,6 @@ public class ServerContextProvider {
       // Access workspace-scoped LSC (triggers lazy creation with @PostConstruct init())
       // and store on ServerContext for navigation-based access
       serverContext.setLanguageServerConfiguration(languageServerConfiguration);
-
-      // Access workspace-scoped Resources and store on ServerContext
-      serverContext.setResources(resources);
 
       var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
         languageServerConfiguration,

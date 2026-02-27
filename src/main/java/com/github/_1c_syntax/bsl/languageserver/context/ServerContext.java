@@ -85,11 +85,6 @@ public class ServerContext {
   @Getter
   @Setter
   @SuppressWarnings("NullAway.Init")
-  private Resources resources;
-
-  @Getter
-  @Setter
-  @SuppressWarnings("NullAway.Init")
   private LanguageServerConfiguration languageServerConfiguration;
 
   @Getter
