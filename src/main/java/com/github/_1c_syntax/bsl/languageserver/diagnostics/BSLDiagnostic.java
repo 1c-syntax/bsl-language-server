@@ -54,16 +54,4 @@ public interface BSLDiagnostic {
   default void configure(Map<String, Object> configuration) {
     DiagnosticHelper.configureDiagnostic(this, configuration);
   }
-
-  /**
-   * Инициализация после установки {@link DiagnosticInfo}.
-   * <p>
-   * Вызывается после {@link #setInfo(DiagnosticInfo)} для выполнения дополнительной
-   * инициализации, которая требует доступа к info.
-   * <p>
-   * Реализация по умолчанию - пустая.
-   */
-  default void initAfterInfoSet() {
-    // default implementation is empty
-  }
 }

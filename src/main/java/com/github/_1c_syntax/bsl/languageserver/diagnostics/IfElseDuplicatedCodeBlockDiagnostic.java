@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -54,8 +55,8 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
   private String relatedMessage;
   private final Set<BSLParser.CodeBlockContext> checkedBlocks = new HashSet<>();
 
-  @Override
-  public void initAfterInfoSet() {
+  @PostConstruct
+  public void init() {
     relatedMessage = this.info.getResourceString("identicalCodeBlockRelatedMessage");
   }
 

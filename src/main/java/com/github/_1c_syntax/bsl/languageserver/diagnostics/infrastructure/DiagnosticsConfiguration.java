@@ -78,8 +78,9 @@ public class DiagnosticsConfiguration {
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
-        .filter(info -> AnnotationUtils.findAnnotation(info.getDiagnosticClass(), Disabled.class) == null)
-        .<BSLDiagnostic>map(info -> diagnosticObjectProvider.get(info, configuration))
+        .map(DiagnosticInfo::getDiagnosticClass)
+        .filter(diagnostic -> AnnotationUtils.findAnnotation(diagnostic, Disabled.class) == null)
+        .map(diagnosticObjectProvider::get)
         .collect(Collectors.toList());
     } else {
       return Collections.emptyList();

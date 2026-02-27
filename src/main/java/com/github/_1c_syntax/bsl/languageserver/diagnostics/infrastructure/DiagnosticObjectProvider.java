@@ -21,69 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-
-/**
- * Провайдер для создания экземпляров диагностик.
- * <p>
- * Заменяет функциональность {@code DiagnosticBeanPostProcessor} —
- * устанавливает {@link DiagnosticInfo} и применяет конфигурацию параметров.
- */
 @Component
 @RequiredArgsConstructor
 public class DiagnosticObjectProvider {
 
   private final ApplicationContext applicationContext;
 
-  /**
-   * Получить экземпляр диагностики без инициализации.
-   * <p>
-   * Используется для получения "голого" бина. Для полноценной работы
-   * диагностики необходимо вызвать {@link #get(DiagnosticInfo, LanguageServerConfiguration)}.
-   *
-   * @param clazz класс диагностики
-   * @return экземпляр диагностики без установленного {@link DiagnosticInfo}
-   */
   public <T extends BSLDiagnostic> T get(Class<T> clazz) {
     return applicationContext.getBean(clazz);
-  }
-
-  /**
-   * Получить полностью инициализированный экземпляр диагностики.
-   * <p>
-   * Устанавливает {@link DiagnosticInfo} и применяет конфигурацию параметров.
-   *
-   * @param info          метаданные диагностики
-   * @param configuration per-workspace конфигурация
-   * @return инициализированный экземпляр диагностики
-   */
-  @SuppressWarnings("unchecked")
-  public <T extends BSLDiagnostic> T get(DiagnosticInfo info, LanguageServerConfiguration configuration) {
-    T diagnostic = (T) applicationContext.getBean(info.getDiagnosticClass());
-
-    // Set DiagnosticInfo (was done in DiagnosticBeanPostProcessor.postProcessBeforeInitialization)
-    diagnostic.setInfo(info);
-
-    // Initialize after info is set (replaces @PostConstruct in diagnostics that need info)
-    diagnostic.initAfterInfoSet();
-
-    // Configure diagnostic parameters (was done in DiagnosticBeanPostProcessor.postProcessAfterInitialization)
-    Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnosticsOptions().getParameters().get(info.getCode().getStringValue());
-
-    if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-      diagnostic.configure(diagnosticConfiguration.getRight());
-    }
-
-    return diagnostic;
   }
 
 }

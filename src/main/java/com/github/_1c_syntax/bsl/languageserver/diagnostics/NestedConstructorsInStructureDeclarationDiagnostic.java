@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.NewExpressionContext;
+import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -56,8 +57,8 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
 
   private String relatedMessage;
 
-  @Override
-  public void initAfterInfoSet() {
+  @PostConstruct
+  public void init() {
     relatedMessage = this.info.getResourceString("nestedConstructorRelatedMessage");
   }
 
