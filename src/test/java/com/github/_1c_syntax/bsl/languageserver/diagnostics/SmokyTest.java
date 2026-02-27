@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -36,6 +37,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
@@ -53,6 +55,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 @Slf4j
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class SmokyTest extends AbstractServerContextAwareTest {
+
+  @Autowired
+  private DiagnosticInfos diagnosticInfosBean;
 
   private LanguageServerConfiguration configuration;
 
@@ -115,7 +120,7 @@ class SmokyTest extends AbstractServerContextAwareTest {
     var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
-    var diagnosticInfos = context.getDiagnosticInfosByCode().values();
+    var diagnosticInfos = diagnosticInfosBean.getByCode().values();
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
       .map(DiagnosticInfo::getCode)
       .collect(Collectors.toMap(
@@ -144,7 +149,7 @@ class SmokyTest extends AbstractServerContextAwareTest {
   @Test
   void testExtraMinForComplexity() {
     // нельзя ставить отрицательное значение
-    var diagnosticInfos = context.getDiagnosticInfosByCode().values();
+    var diagnosticInfos = diagnosticInfosBean.getByCode().values();
     diagnosticInfos.forEach(diagnosticInfo ->
       assertThat(diagnosticInfo.getExtraMinForComplexity())
         .as(diagnosticInfo.getCode().getStringValue())

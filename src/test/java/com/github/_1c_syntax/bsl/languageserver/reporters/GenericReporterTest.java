@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -59,6 +60,9 @@ class GenericReporterTest extends AbstractServerContextAwareTest {
   @Autowired
   private GenericIssueReporter reporter;
 
+  @Autowired
+  private DiagnosticInfos diagnosticInfosBean;
+
   private Map<String, DiagnosticInfo> diagnosticInfos;
 
   private final File file = new File("./bsl-generic-json.json");
@@ -66,7 +70,7 @@ class GenericReporterTest extends AbstractServerContextAwareTest {
   @BeforeEach
   void setUp() {
     initServerContext(SOURCE_DIR, false);
-    diagnosticInfos = context.getDiagnosticInfosByCode();
+    diagnosticInfos = diagnosticInfosBean.getByCode();
     FileUtils.deleteQuietly(file);
   }
 

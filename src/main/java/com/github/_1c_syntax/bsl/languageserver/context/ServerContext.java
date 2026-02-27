@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -98,21 +96,6 @@ public class ServerContext {
   @Setter
   @Nullable
   private URI workspaceUri;
-
-  /**
-   * Коллекция DiagnosticInfo для данного workspace.
-   * Создаётся с per-workspace LanguageServerConfiguration.
-   */
-  @Getter
-  @Setter
-  private Map<String, DiagnosticInfo> diagnosticInfosByCode = Collections.emptyMap();
-
-  /**
-   * Коллекция DiagnosticInfo по классам диагностик.
-   */
-  @Getter
-  @Setter
-  private Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByClass = Collections.emptyMap();
 
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);

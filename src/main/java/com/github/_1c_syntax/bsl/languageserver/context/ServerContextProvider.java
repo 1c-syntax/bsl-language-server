@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -58,7 +57,6 @@ public class ServerContextProvider {
   private final ObjectProvider<ServerContext> serverContextProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
   private final Resources resources;
-  private final DiagnosticInfosFactory diagnosticInfosFactory;
   private final WorkspaceScope workspaceScope;
 
   private final Map<URI, ServerContext> contexts = new ConcurrentHashMap<>();
@@ -69,13 +67,11 @@ public class ServerContextProvider {
     ObjectProvider<ServerContext> serverContextProvider,
     LanguageServerConfiguration languageServerConfiguration,
     Resources resources,
-    DiagnosticInfosFactory diagnosticInfosFactory,
     WorkspaceScope workspaceScope
   ) {
     this.serverContextProvider = serverContextProvider;
     this.languageServerConfiguration = languageServerConfiguration;
     this.resources = resources;
-    this.diagnosticInfosFactory = diagnosticInfosFactory;
     this.workspaceScope = workspaceScope;
   }
 
@@ -135,14 +131,6 @@ public class ServerContextProvider {
 
       // Access workspace-scoped Resources and store on ServerContext
       serverContext.setResources(resources);
-
-      // Create per-workspace DiagnosticInfo collections
-      serverContext.setDiagnosticInfosByCode(
-        diagnosticInfosFactory.createDiagnosticInfosByCode(languageServerConfiguration)
-      );
-      serverContext.setDiagnosticInfosByClass(
-        diagnosticInfosFactory.createDiagnosticInfosByClass(languageServerConfiguration)
-      );
 
       var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
         languageServerConfiguration,

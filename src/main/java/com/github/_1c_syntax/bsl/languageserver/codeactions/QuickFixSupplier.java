@@ -22,10 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfosFactory;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -44,7 +43,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class QuickFixSupplier {
 
-  private final DiagnosticInfosFactory diagnosticInfosFactory;
+  private final DiagnosticInfos diagnosticInfos;
   private final DiagnosticObjectProvider diagnosticObjectProvider;
   private final LanguageServerConfiguration configuration;
 
@@ -56,18 +55,16 @@ public class QuickFixSupplier {
    * Получить класс провайдера быстрых исправлений для указанного кода диагностики.
    *
    * @param diagnosticCode Код диагностики
-   * @param serverContext Контекст сервера для получения DiagnosticInfo
    * @param <T> Тип кода диагностики (строка или число)
    * @return Класс провайдера быстрых исправлений, если диагностика поддерживает quick fix
    */
   @SuppressWarnings("unchecked")
   public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
-    T diagnosticCode,
-    ServerContext serverContext
+    T diagnosticCode
   ) {
-    var diagnosticInfos = serverContext.getDiagnosticInfosByCode();
+    var diagnosticInfosByCode = diagnosticInfos.getByCode();
     return Optional.ofNullable(
-      diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
+      diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnosticCode))
     )
       .map(DiagnosticInfo::getDiagnosticClass)
       .filter(QuickFixProvider.class::isAssignableFrom)
@@ -78,16 +75,14 @@ public class QuickFixSupplier {
    * Получить экземпляр провайдера быстрых исправлений.
    *
    * @param quickFixProviderClass Класс провайдера быстрых исправлений
-   * @param serverContext Контекст сервера для получения конфигурации и DiagnosticInfo
    * @return Экземпляр провайдера быстрых исправлений
    */
   @SuppressWarnings("unchecked")
   public QuickFixProvider getQuickFixInstance(
-    Class<? extends QuickFixProvider> quickFixProviderClass,
-    ServerContext serverContext
+    Class<? extends QuickFixProvider> quickFixProviderClass
   ) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
-    var diagnosticInfo = serverContext.getDiagnosticInfosByClass().get(diagnosticClass);
+    var diagnosticInfo = diagnosticInfos.getByClass().get(diagnosticClass);
     return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticInfo, configuration);
   }
 

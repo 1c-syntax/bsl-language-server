@@ -25,9 +25,12 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Custom Spring Scope для per-workspace бинов.
@@ -89,6 +92,22 @@ public class WorkspaceScope implements Scope {
       callbacks.values().forEach(Runnable::run);
     }
     store.remove(workspaceUri);
+  }
+
+  /**
+   * Get all instances of a bean across all workspaces.
+   *
+   * @param beanName the bean name
+   * @param type the expected type
+   * @return collection of all instances
+   */
+  @SuppressWarnings("unchecked")
+  public <T> Collection<T> getAllInstances(String beanName, Class<T> type) {
+    return store.values().stream()
+      .map(beans -> beans.get(beanName))
+      .filter(Objects::nonNull)
+      .map(type::cast)
+      .collect(Collectors.toList());
   }
 
   private static String resolveKey() {

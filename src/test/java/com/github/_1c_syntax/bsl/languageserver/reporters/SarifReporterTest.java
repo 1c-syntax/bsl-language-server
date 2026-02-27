@@ -27,6 +27,7 @@ import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.SarifSchema210;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -62,6 +63,9 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
   @Autowired
   private SarifReporter reporter;
 
+  @Autowired
+  private DiagnosticInfos diagnosticInfosBean;
+
   private Collection<DiagnosticInfo> diagnosticInfos;
   private LanguageServerConfiguration configuration;
 
@@ -70,7 +74,7 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
   @BeforeEach
   void setUp() {
     initServerContext(SOURCE_DIR, false);
-    diagnosticInfos = context.getDiagnosticInfosByCode().values();
+    diagnosticInfos = diagnosticInfosBean.getByCode().values();
     configuration = context.getLanguageServerConfiguration();
     FileUtils.deleteQuietly(file);
   }

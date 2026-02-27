@@ -40,8 +40,8 @@ import com.contrastsecurity.sarif.Tool;
 import com.contrastsecurity.sarif.ToolComponent;
 import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
@@ -94,8 +94,8 @@ public class SarifReporter extends AbstractDiagnosticReporter {
 
   private final ServerInfo serverInfo;
 
-  public SarifReporter(ServerContextProvider serverContextProvider, ServerInfo serverInfo) {
-    super(serverContextProvider);
+  public SarifReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos, ServerInfo serverInfo) {
+    super(serverContextProvider, diagnosticInfos);
     this.serverInfo = serverInfo;
   }
 
@@ -134,7 +134,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
     var serverContext = getServerContext(analysisInfo);
     var configuration = serverContext.getLanguageServerConfiguration();
     
-    var tool = createTool(serverContext);
+    var tool = createTool(configuration);
     var invocation = createInvocation(configuration);
     var results = createResults(analysisInfo);
 
@@ -176,16 +176,15 @@ public class SarifReporter extends AbstractDiagnosticReporter {
       ;
   }
 
-  private Tool createTool(ServerContext serverContext) {
-    var configuration = serverContext.getLanguageServerConfiguration();
-    var diagnosticInfos = serverContext.getDiagnosticInfosByCode().values();
+  private Tool createTool(LanguageServerConfiguration configuration) {
+    var diagnosticInfoValues = diagnosticInfos.getByCode().values();
     
     var name = serverInfo.getName();
     var organization = "1c-syntax";
     var version = serverInfo.getVersion();
     var informationUri = URI.create(configuration.getSiteRoot());
     var language = configuration.getLanguage().getLanguageCode();
-    var rules = diagnosticInfos.stream()
+    var rules = diagnosticInfoValues.stream()
       .map(SarifReporter::createReportingDescriptor)
       .collect(Collectors.toSet());
 

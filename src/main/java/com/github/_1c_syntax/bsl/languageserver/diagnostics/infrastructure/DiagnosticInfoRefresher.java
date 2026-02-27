@@ -22,9 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -38,22 +35,20 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class DiagnosticInfoRefresher {
 
-  private final ServerContextProvider serverContextProvider;
+  private final DiagnosticInfos diagnosticInfos;
 
   /**
-   * Handles configuration change events by refreshing diagnostic info instances.
+   * Handles configuration change events by refreshing diagnostic info instances
+   * for the workspace whose configuration changed.
    * <p>
-   * DiagnosticInfo holds a reference to LanguageServerConfiguration, so refresh()
-   * will read the already-updated configuration values.
+   * The event is published synchronously from LanguageServerConfiguration.update(),
+   * so the workspace ThreadLocal is already set — the proxy resolves to the correct instance.
    *
    * @param event the configuration change event
    */
   @EventListener
   public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
     LOGGER.debug("Refreshing diagnostic info instances after configuration change");
-    serverContextProvider.getAllContexts().stream()
-      .map(ServerContext::getDiagnosticInfosByCode)
-      .flatMap(map -> map.values().stream())
-      .forEach(DiagnosticInfo::refresh);
+    diagnosticInfos.refresh();
   }
 }

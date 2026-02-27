@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 public class DiagnosticsConfiguration {
 
   private final DiagnosticObjectProvider diagnosticObjectProvider;
+  private final DiagnosticInfos diagnosticInfos;
 
   @Bean
   @Scope("prototype")
@@ -67,7 +68,7 @@ public class DiagnosticsConfiguration {
       return Collections.emptyList();
     }
 
-    var diagnosticInfosByClass = serverContext.getDiagnosticInfosByClass();
+    var diagnosticInfosByClass = diagnosticInfos.getByClass();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     if (needToComputeDiagnostics(documentContext, diagnosticsOptions)) {

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import jakarta.annotation.PostConstruct;
@@ -50,6 +51,9 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractS
 
   @Autowired
   private DiagnosticObjectProvider diagnosticObjectProvider;
+
+  @Autowired
+  private DiagnosticInfos diagnosticInfos;
 
   private final Class<T> diagnosticClass;
   
@@ -84,7 +88,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> extends AbstractS
     // Initialize server context to get per-workspace configuration and DiagnosticInfo
     initServerContext();
     configuration = context.getLanguageServerConfiguration();
-    var diagnosticInfo = context.getDiagnosticInfosByClass().get(diagnosticClass);
+    var diagnosticInfo = diagnosticInfos.getByClass().get(diagnosticClass);
     diagnosticInstance = diagnosticObjectProvider.get(diagnosticInfo, configuration);
     configuration.reset();
   }

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +37,8 @@ import java.nio.file.Path;
 @Component
 public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
-  public GenericIssueReporter(ServerContextProvider serverContextProvider) {
-    super(serverContextProvider);
+  public GenericIssueReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos) {
+    super(serverContextProvider, diagnosticInfos);
   }
 
   @Override

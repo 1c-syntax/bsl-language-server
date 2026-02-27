@@ -71,7 +71,7 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
   ) {
 
     Optional<Class<? extends QuickFixProvider>> quickFixClass = 
-      quickFixSupplier.getQuickFixClass(diagnosticCode, documentContext.getServerContext());
+      quickFixSupplier.getQuickFixClass(diagnosticCode);
 
     if (quickFixClass.isEmpty()) {
       return Collections.emptyList();
@@ -98,8 +98,7 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
 
     Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
     QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(
-      quickFixProviderClass,
-      documentContext.getServerContext()
+      quickFixProviderClass
     );
 
     return quickFixInstance.getQuickFixes(

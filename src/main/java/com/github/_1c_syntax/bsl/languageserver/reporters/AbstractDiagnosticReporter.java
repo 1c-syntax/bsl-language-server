@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ import java.util.Map;
 public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
 
   protected final ServerContextProvider serverContextProvider;
+  protected final DiagnosticInfos diagnosticInfos;
 
   /**
    * Получить ServerContext для workspace из AnalysisInfo.
@@ -51,6 +53,6 @@ public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
    * Получить DiagnosticInfo по коду для workspace из AnalysisInfo.
    */
   protected Map<String, DiagnosticInfo> getDiagnosticInfosByCode(AnalysisInfo analysisInfo) {
-    return getServerContext(analysisInfo).getDiagnosticInfosByCode();
+    return diagnosticInfos.getByCode();
   }
 }
