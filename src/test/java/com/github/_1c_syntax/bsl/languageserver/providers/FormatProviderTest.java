@@ -89,7 +89,7 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
 
-    TextEdit textEdit = textEdits.get(0);
+    TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
@@ -114,7 +114,7 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
 
-    TextEdit textEdit = textEdits.get(0);
+    TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
 
   }
@@ -142,7 +142,7 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
 
-    TextEdit textEdit = textEdits.get(0);
+    TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
@@ -173,7 +173,7 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
 
-    TextEdit textEdit = textEdits.get(0);
+    TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
@@ -202,7 +202,7 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
 
-    TextEdit textEdit = textEdits.get(0);
+    TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(fileContent);
   }
 
@@ -231,7 +231,7 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
 
-    TextEdit textEdit = textEdits.get(0);
+    TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
@@ -257,7 +257,7 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
 
-    TextEdit textEdit = textEdits.get(0);
+    TextEdit textEdit = textEdits.getFirst();
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
   }
 
@@ -280,7 +280,7 @@ class FormatProviderTest {
 
     // then
     assertThat(textEdits).hasSize(1);
-    assertThat(textEdits.get(0).getNewText()).isEqualTo("Возврат -1 > -2");
+    assertThat(textEdits.getFirst().getNewText()).isEqualTo("Возврат -1 > -2");
 
   }
 

@@ -73,7 +73,7 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
     List<? extends BSLParser.StatementContext> statements = codeBlock.statement();
 
     if (statements.size() == 1) {
-      BSLParser.CompoundStatementContext compoundStatement = statements.get(0).compoundStatement();
+      BSLParser.CompoundStatementContext compoundStatement = statements.getFirst().compoundStatement();
 
       if (compoundStatement != null) {
         return compoundStatement.returnStatement() != null;

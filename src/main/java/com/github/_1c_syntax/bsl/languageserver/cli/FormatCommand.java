@@ -174,7 +174,7 @@ public class FormatCommand implements Callable<Integer> {
       return;
     }
 
-    final TextEdit textEdit = formatting.get(0);
+    final TextEdit textEdit = formatting.getFirst();
     final String newText = textEdit.getNewText();
     FileUtils.writeStringToFile(file, newText, StandardCharsets.UTF_8);
   }

@@ -101,7 +101,7 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
 
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
-      diagnostics.get(0),
+      diagnostics.getFirst(),
       Ranges.create(6, 10, 6, 20)
     );
 
@@ -111,11 +111,11 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
       .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
 
       .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
-      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+      .matches(codeAction -> codeAction.getDiagnostics().getFirst().equals(diagnostics.getFirst()))
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().startsWith("// ")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).getFirst().getNewText().startsWith("// ")
       );
   }
 
@@ -134,11 +134,11 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
       .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
 
       .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
-      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(1)))
+      .matches(codeAction -> codeAction.getDiagnostics().getFirst().equals(diagnostics.get(1)))
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().startsWith("// ")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).getFirst().getNewText().startsWith("// ")
       );
   }
 }

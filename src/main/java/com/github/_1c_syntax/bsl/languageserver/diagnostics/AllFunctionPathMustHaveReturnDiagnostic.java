@@ -128,15 +128,13 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
   }
 
   private Optional<ParserRuleContext> nonExplicitReturnNode(CfgVertex v, ControlFlowGraph graph) {
-    if (v instanceof BasicBlockVertex basicBlock) {
-      return checkBasicBlockExitingNode(basicBlock);
-    } else if (v instanceof LoopVertex loop) {
-      return checkLoopExitingNode(loop);
-    } else if (v instanceof ConditionalVertex conditional) {
-      return checkElseIfClauseExitingNode(conditional, graph);
-    }
+    return switch (v) {
+      case BasicBlockVertex basicBlock -> checkBasicBlockExitingNode(basicBlock);
+      case LoopVertex loop -> checkLoopExitingNode(loop);
+      case ConditionalVertex conditional -> checkElseIfClauseExitingNode(conditional, graph);
+      default -> v.getAst();
+    };
 
-    return v.getAst();
   }
 
   private Optional<ParserRuleContext> checkElseIfClauseExitingNode(ConditionalVertex v, ControlFlowGraph graph) {
@@ -159,7 +157,7 @@ public class AllFunctionPathMustHaveReturnDiagnostic extends AbstractVisitorDiag
 
   private static Optional<ParserRuleContext> checkBasicBlockExitingNode(BasicBlockVertex block) {
     if (!block.statements().isEmpty()) {
-      var lastStatement = block.statements().get(block.statements().size() - 1);
+      var lastStatement = block.statements().getLast();
 
       var nodes = Trees.findAllRuleNodes(lastStatement, BSLParser.RULE_returnStatement, BSLParser.RULE_raiseStatement);
       if (nodes.isEmpty()) {

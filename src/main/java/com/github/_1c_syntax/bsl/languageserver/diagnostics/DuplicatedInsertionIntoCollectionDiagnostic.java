@@ -137,7 +137,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
                                                BSLParser.AccessCallContext accessCallContext) {
     final var methodCallContext = accessCallContext.methodCall();
     final var callParams = methodCallContext.doCall().callParamList().callParam();
-    final var firstParamContext = callParams.get(0);
+    final var firstParamContext = callParams.getFirst();
     if (firstParamContext.getChildCount() == 0) {
       return null;
     }
@@ -218,7 +218,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
       return false;
     }
     final var first = duplicates.get(currIndex);
-    var alreadyAdd = !listForIssue.isEmpty() && listForIssue.get(listForIssue.size() - 1) == first;
+    var alreadyAdd = !listForIssue.isEmpty() && listForIssue.getLast() == first;
     for (int i = currIndex + 1; i < duplicates.size(); i++) {
       final var next = duplicates.get(i);
       if (hasValidChange(first, next)) {

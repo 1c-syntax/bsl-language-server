@@ -267,6 +267,6 @@ class CallHierarchyProviderTest {
 
     List<CallHierarchyItem> items = provider.prepareCallHierarchy(documentContext, params);
 
-    return items.get(0);
+    return items.getFirst();
   }
 }

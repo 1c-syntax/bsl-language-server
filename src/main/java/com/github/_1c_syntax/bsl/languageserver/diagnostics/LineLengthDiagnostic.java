@@ -150,7 +150,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
       return false;
     }
 
-    var first = descriptionRanges.get(0);
+    var first = descriptionRanges.getFirst();
     if (first.startLine() + 1 > token.getLine()) {
       return false;
     } else if (first.endLine() + 1 < token.getLine()) {

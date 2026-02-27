@@ -176,6 +176,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       return null;
     }
 
+
     try {
       return new File(rootPath).getCanonicalFile().toURI().toString();
     } catch (IOException e) {

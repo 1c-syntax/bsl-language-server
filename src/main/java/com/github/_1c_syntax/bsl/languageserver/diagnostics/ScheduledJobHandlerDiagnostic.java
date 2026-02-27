@@ -99,7 +99,7 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
       .map(ScheduledJob::getName)
       .reduce((s, s2) -> s.concat(", ").concat(s2))
       .orElseThrow();
-    final var mdScheduledJob = mdScheduledJobs.get(0).getMethodName();
+    final var mdScheduledJob = mdScheduledJobs.getFirst().getMethodName();
     final var methodPath = getFullName(mdScheduledJob.getModuleName(), mdScheduledJob.getMethodName());
 
     addDiagnostic(info.getResourceString(DOUBLE_MESSAGE, methodPath, scheduleJobNames));

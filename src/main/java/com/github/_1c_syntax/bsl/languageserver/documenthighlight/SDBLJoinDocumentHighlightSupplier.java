@@ -29,13 +29,13 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.Position;
-import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Поставщик подсветки для конструкций JOIN в SDBL-запросах.
@@ -79,13 +79,14 @@ public class SDBLJoinDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
 
   private boolean isJoinKeyword(int tokenType) {
     return tokenType == SDBLLexer.JOIN
-      || tokenType == SDBLLexer.LEFT
-      || tokenType == SDBLLexer.RIGHT
-      || tokenType == SDBLLexer.FULL
-      || tokenType == SDBLLexer.INNER
-      || tokenType == SDBLLexer.OUTER
-      || tokenType == SDBLLexer.ON_EN
-      || tokenType == SDBLLexer.PO_RU;
+      || tokenType == SDBLLexer.LEFT_JOIN
+      || tokenType == SDBLLexer.LEFT_OUTER_JOIN
+      || tokenType == SDBLLexer.RIGHT_JOIN
+      || tokenType == SDBLLexer.RIGHT_OUTER_JOIN
+      || tokenType == SDBLLexer.FULL_JOIN
+      || tokenType == SDBLLexer.FULL_OUTER_JOIN
+      || tokenType == SDBLLexer.INNER_JOIN
+      || tokenType == SDBLLexer.BY;
   }
 
   private SDBLParser.@Nullable JoinPartContext findJoinPartAtPosition(
@@ -107,20 +108,17 @@ public class SDBLJoinDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
     List<DocumentHighlight> highlights = new ArrayList<>();
 
     // LEFT/RIGHT/FULL/INNER
-    addTerminalHighlight(highlights, joinCtx.LEFT());
-    addTerminalHighlight(highlights, joinCtx.RIGHT());
-    addTerminalHighlight(highlights, joinCtx.FULL());
-    addTerminalHighlight(highlights, joinCtx.INNER());
+    if(joinCtx.leftJoin() != null) {
+      addTokenHighlight(highlights, joinCtx.leftJoin().keyword);
+    } else if(joinCtx.rightJoin() != null) {
+      addTokenHighlight(highlights, joinCtx.rightJoin().keyword);
+    } else if(joinCtx.fullJoin() != null) {
+      addTokenHighlight(highlights, joinCtx.fullJoin().keyword);
+    } else if(joinCtx.innerJoin() != null) {
+      addTokenHighlight(highlights, joinCtx.innerJoin().keyword);
+    }
 
-    // OUTER (опционально после LEFT/RIGHT/FULL)
-    addTerminalHighlight(highlights, joinCtx.OUTER());
-
-    // JOIN
-    addTerminalHighlight(highlights, joinCtx.JOIN());
-
-    // ON/ПО
-    addTerminalHighlight(highlights, joinCtx.ON_EN());
-    addTerminalHighlight(highlights, joinCtx.PO_RU());
+    addTerminalHighlight(highlights, joinCtx.BY());
 
     return highlights;
   }

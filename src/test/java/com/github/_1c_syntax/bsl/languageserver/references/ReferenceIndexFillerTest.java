@@ -168,7 +168,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     var references = referenceIndex.getReferencesFrom(scopeMethod.get());
     assertThat(references).hasSize(13);
 
-    var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
+    var targetVariable = documentContext.getSymbolTree().getVariables().getFirst();
     var usage = referenceIndex.getReferencesTo(targetVariable);
     assertThat(usage).hasSize(5);
   }
@@ -489,7 +489,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     referenceIndexFiller.fill(documentContext);
 
     var uri = documentContext.getUri();
-    var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
+    var targetVariable = documentContext.getSymbolTree().getVariables().getFirst();
 
     // Проверяем, что ссылки на переменные есть
     var usage = referenceIndex.getReferencesTo(targetVariable);

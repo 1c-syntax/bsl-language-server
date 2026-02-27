@@ -78,7 +78,7 @@ class DiagnosticInfoTest extends AbstractServerContextAwareTest {
 
     Assertions.assertThat(diagnosticInfo.getDefaultConfiguration()).isNotEmpty();
 
-    var parameter = diagnosticInfo.getParameters().get(0);
+    var parameter = diagnosticInfo.getParameters().getFirst();
     assertThat(parameter.getDescription())
       .isEqualTo("Считать комментарий в блоке кодом");
 
@@ -131,7 +131,7 @@ class DiagnosticInfoTest extends AbstractServerContextAwareTest {
     Assertions.assertThat(diagnosticInfo.getParameters()).hasSize(1);
     Assertions.assertThat(diagnosticInfo.canLocateOnProject()).isFalse();
 
-    var parameter = diagnosticInfo.getParameters().get(0);
+    var parameter = diagnosticInfo.getParameters().getFirst();
     assertThat(parameter.getDescription())
       .isEqualTo("Заявленные языки");
 
@@ -175,7 +175,7 @@ class DiagnosticInfoTest extends AbstractServerContextAwareTest {
     var diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration, stringInterner);
 
     // then
-    assertThat(diagnosticEnInfo.getParameters().get(0).getDescription())
+    assertThat(diagnosticEnInfo.getParameters().getFirst().getDescription())
       .isEqualTo("Comment as code");
   }
 }

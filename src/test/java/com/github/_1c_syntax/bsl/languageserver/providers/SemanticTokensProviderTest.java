@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -212,7 +213,7 @@ class SemanticTokensProviderTest {
     assertThat(decoded).isNotEmpty();
 
     // First token should be at line 0
-    assertThat(decoded.get(0).line).isZero();
+    assertThat(decoded.getFirst().line).isZero();
 
     // Tokens should be ordered by position
     for (int i = 1; i < decoded.size(); i++) {
@@ -928,8 +929,7 @@ class SemanticTokensProviderTest {
       new ExpectedToken(7, 56, 3, SemanticTokenTypes.Keyword, "КАК"),
       new ExpectedToken(7, 60, 5, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "Курсы"),
       // Line 8: ИНДЕКСИРОВАТЬ ПО Валюта, Период
-      new ExpectedToken(8, 3, 13, SemanticTokenTypes.Keyword, "ИНДЕКСИРОВАТЬ"),
-      new ExpectedToken(8, 17, 2, SemanticTokenTypes.Keyword, "ПО"),
+      new ExpectedToken(8, 3, 16, SemanticTokenTypes.Keyword, "ИНДЕКСИРОВАТЬ ПО"),
       // Second query - line 10: ВЫБРАТЬ
       new ExpectedToken(10, 3, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
       // Line 14: ИЗ ВТ_Курсы КАК ВТ
@@ -938,8 +938,7 @@ class SemanticTokensProviderTest {
       new ExpectedToken(14, 15, 3, SemanticTokenTypes.Keyword, "КАК"),
       new ExpectedToken(14, 19, 2, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "ВТ"),
       // Line 15: ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Валюты КАК СпрВалюта
-      new ExpectedToken(15, 3, 5, SemanticTokenTypes.Keyword, "ЛЕВОЕ"),
-      new ExpectedToken(15, 9, 10, SemanticTokenTypes.Keyword, "СОЕДИНЕНИЕ"),
+      new ExpectedToken(15, 3, 16, SemanticTokenTypes.Keyword, "ЛЕВОЕ СОЕДИНЕНИЕ"),
       new ExpectedToken(15, 20, 10, SemanticTokenTypes.Namespace, "Справочник"),
       new ExpectedToken(15, 31, 6, SemanticTokenTypes.Class, "Валюты"),
       new ExpectedToken(15, 38, 3, SemanticTokenTypes.Keyword, "КАК"),
@@ -968,7 +967,7 @@ class SemanticTokensProviderTest {
     // Sort tokens by position
     var sortedTokens = decoded.stream()
       .filter(t -> t.line == 1)
-      .sorted((a, b) -> Integer.compare(a.start, b.start))
+      .sorted(Comparator.comparingInt(a -> a.start))
       .toList();
 
     // Verify no overlaps
@@ -1211,7 +1210,7 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     assertThat(delta.getResultId()).isNotNull();
     assertThat(delta.getEdits()).isNotEmpty();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     assertThat(edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0))
       .isGreaterThan(0);
   }
@@ -1273,7 +1272,7 @@ class SemanticTokensProviderTest {
     // then - should return delta with small edits (just the new token + changed deltaLine)
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     // For inserting at beginning: prefix=0, suffix should match most of the old data
     // deleteCount should be small (just the first deltaLine that changed)
     // insertData should be the new token + updated first deltaLine
@@ -1315,7 +1314,7 @@ class SemanticTokensProviderTest {
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
     assertThat(delta.getEdits()).isNotEmpty();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     // For insertion in middle:
     // - prefix matches up to insertion point
     // - suffix matches tokens after insertion (they have same relative deltaLine)
@@ -1385,7 +1384,7 @@ class SemanticTokensProviderTest {
     //   Note: "А" is NOT in suffix because its deltaStart changed (boundary token)
     // - Edit deletes: old "А" (1 token = 5 integers)
     // - Edit inserts: "Новая", ",", new "А" (3 tokens = 15 integers)
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     assertThat(edit.getStart())
       .as("Edit should start after the prefix match (Перем = 5 integers)")
       .isEqualTo(5);

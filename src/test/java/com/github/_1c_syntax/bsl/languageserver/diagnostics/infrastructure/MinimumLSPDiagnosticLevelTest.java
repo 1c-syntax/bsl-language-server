@@ -104,9 +104,9 @@ class MinimumLSPDiagnosticLevelTest extends AbstractServerContextAwareTest {
     var hasHintOrInformation = diagnostics.stream()
       .map(BSLDiagnostic::getInfo)
       .map(DiagnosticInfo::getLSPSeverity)
-      .anyMatch(severity -> 
-        severity == org.eclipse.lsp4j.DiagnosticSeverity.Hint 
-        || severity == org.eclipse.lsp4j.DiagnosticSeverity.Information
+      .anyMatch(severity ->
+        severity == org.eclipse.lsp4j.DiagnosticSeverity.Hint
+          || severity == org.eclipse.lsp4j.DiagnosticSeverity.Information
       );
 
     // With default configuration, we should have diagnostics with Hint or Information severity

@@ -114,7 +114,7 @@ class GenericReporterTest extends AbstractServerContextAwareTest {
 
     var documentContext = TestUtils.getDocumentContext("");
     Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
-    diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
+    diagnostics.getFirst().setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
     FileInfo fileInfo = new FileInfo(SOURCE_DIR, documentContext, diagnostics);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), SOURCE_DIR);
@@ -128,7 +128,7 @@ class GenericReporterTest extends AbstractServerContextAwareTest {
     assertThat(report).isNotNull();
     assertThat(report.getIssues()).isNotNull();
     assertThat(report.getIssues()).hasSize(3);
-    assertThat(report.getIssues().get(0).getPrimaryLocation()).isNotNull();
+    assertThat(report.getIssues().getFirst().getPrimaryLocation()).isNotNull();
     assertThat(report.getIssues().get(0).getSecondaryLocations()).isNotNull();
     assertThat(report.getIssues().get(0).getSecondaryLocations()).hasSize(1);
     assertThat(report.getIssues().get(2).getRuleId()).isEqualTo(secondInfo.getCode().getStringValue());

@@ -431,7 +431,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
     if (tokensUnboxed.isEmpty()) {
       lines = 0;
     } else {
-      lines = tokensUnboxed.get(tokensUnboxed.size() - 1).getLine();
+      lines = tokensUnboxed.getLast().getLine();
     }
     metricsTemp.setLines(lines);
 

@@ -191,7 +191,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
         List<ParseTree> allRuleNodes = new ArrayList<>(Trees.findAllRuleNodes(acceptor, BSLParser.RULE_accessProperty));
         if (!allRuleNodes.isEmpty()) {
 
-          BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext) allRuleNodes.get(0);
+          BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext) allRuleNodes.getFirst();
           return PATTERN_TIMEOUT.matcher(accessProperty.getText()).find();
 
         }

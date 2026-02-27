@@ -261,7 +261,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     // т.к. список реверснут, берем первый элемент
-    ParserRuleContext endCurrentBlockNode = statements.get(0);
+    ParserRuleContext endCurrentBlockNode = statements.getFirst();
 
     if (preprocRange != null) {
       // пройдем по всем стейтам (с конца идем) и ищем первый, находящийся в том же блоке

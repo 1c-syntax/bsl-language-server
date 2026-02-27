@@ -50,6 +50,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -115,13 +116,13 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
 
     assertThat(report).isNotNull();
 
-    var run = report.getRuns().get(0);
+    var run = report.getRuns().getFirst();
 
     assertThat(run.getTool().getDriver().getName()).isEqualTo("BSL Language Server");
     assertThat(run.getTool().getDriver().getRules())
       .hasSize(diagnosticInfos.size());
 
-    var invocation = run.getInvocations().get(0);
+    var invocation = run.getInvocations().getFirst();
     assertThat(invocation.getRuleConfigurationOverrides())
       .hasSizeGreaterThan(0)
       .anyMatch(configurationOverride -> configurationOverride.getDescriptor().getId().equals("Typo")
@@ -142,7 +143,7 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
       .matches(result -> result.getAnalysisTarget().getUri().equals(documentContext.getUri().toString()))
 
       .extracting(Result::getLocations)
-      .extracting(locations -> locations.get(0))
+      .extracting(List::getFirst)
       .extracting(Location::getPhysicalLocation)
       .extracting(PhysicalLocation::getRegion)
 

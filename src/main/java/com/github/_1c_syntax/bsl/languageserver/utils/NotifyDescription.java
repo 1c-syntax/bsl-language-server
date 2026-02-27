@@ -107,7 +107,7 @@ public class NotifyDescription {
     return Optional.ofNullable(callParamContext.expression())
       .map(BSLParser.ExpressionContext::member)
       .filter(Predicate.not(List::isEmpty))
-      .map(member -> member.get(0));
+      .map(List::getFirst);
   }
 
 }

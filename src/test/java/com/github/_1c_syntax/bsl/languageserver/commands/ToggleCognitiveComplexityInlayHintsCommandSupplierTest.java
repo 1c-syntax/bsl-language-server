@@ -53,7 +53,7 @@ class ToggleCognitiveComplexityInlayHintsCommandSupplierTest {
 
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().getFirst();
 
     var methodName = firstMethod.getName();
 

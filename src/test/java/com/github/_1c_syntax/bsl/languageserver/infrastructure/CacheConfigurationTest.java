@@ -89,7 +89,7 @@ class CacheConfigurationTest {
     }
     
     try {
-      Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+      Files.walkFileTree(directory, new SimpleFileVisitor<>() {
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
           try {
@@ -99,7 +99,7 @@ class CacheConfigurationTest {
           }
           return FileVisitResult.CONTINUE;
         }
-        
+
         @Override
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
           try {

@@ -85,7 +85,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       List<DiagnosticRelatedInformation> relatedInformation = createRelatedInformations(ctx);
       if (!relatedInformation.isEmpty()) {
         diagnosticStorage.addDiagnostic(
-          relatedInformation.get(0).getLocation().getRange(),
+          relatedInformation.getFirst().getLocation().getRange(),
           relatedInformation);
       }
       return ctx;

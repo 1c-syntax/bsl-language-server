@@ -59,7 +59,7 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
     List<CodeAction> quickFixes = getQuickFixes(externalRegionDiagnostic);
     assertThat(quickFixes).hasSize(1);
 
-    final CodeAction quickFix = quickFixes.get(0);
+    final CodeAction quickFix = quickFixes.getFirst();
 
     assertThat(quickFix)
       .of(diagnosticInstance)

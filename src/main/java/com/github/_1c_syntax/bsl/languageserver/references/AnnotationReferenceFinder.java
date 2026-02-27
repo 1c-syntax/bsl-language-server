@@ -236,7 +236,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
   }
 
   private static Optional<String> getAnnotationName(Annotation annotation) {
-    var annotationParameterDefinition = annotation.getParameters().get(0);
+    var annotationParameterDefinition = annotation.getParameters().getFirst();
     return Optional.of(annotationParameterDefinition)
       .map(AnnotationParameterDefinition::value)
       .map(Either::getLeft);

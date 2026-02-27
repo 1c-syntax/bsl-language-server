@@ -56,7 +56,7 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
 
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().getFirst();
 
     var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
     var range = firstMethod.getRange();
@@ -91,13 +91,13 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
   void testInlayHintsShowParametersWithTheSameName() {
 
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
     configuration.getInlayHintOptions().getParameters().put(
       supplier.getId(),
       Either.forRight(Map.of("showParametersWithTheSameName", true))
     );
 
-    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().getFirst();
 
     var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
     var range = firstMethod.getRange();

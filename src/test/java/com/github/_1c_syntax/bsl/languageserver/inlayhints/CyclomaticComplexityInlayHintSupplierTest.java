@@ -52,7 +52,7 @@ class CyclomaticComplexityInlayHintSupplierTest {
 
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().getFirst();
     var methodName = firstMethod.getName();
 
     var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());

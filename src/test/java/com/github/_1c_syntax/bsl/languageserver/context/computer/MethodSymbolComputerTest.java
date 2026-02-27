@@ -59,8 +59,8 @@ class MethodSymbolComputerTest {
 
     assertThat(methods.size()).isEqualTo(25);
 
-    assertThat(methods.get(0).getName()).isEqualTo("Один");
-    assertThat(methods.get(0).getDescription()).isNotPresent();
+    assertThat(methods.getFirst().getName()).isEqualTo("Один");
+    assertThat(methods.getFirst().getDescription()).isNotPresent();
     assertThat(methods.get(0).getRange()).isEqualTo(Ranges.create(1, 0, 3, 14));
     assertThat(methods.get(0).getSubNameRange()).isEqualTo(Ranges.create(1, 10, 1, 14));
 
@@ -93,9 +93,9 @@ class MethodSymbolComputerTest {
     assertThat(methodSymbol.getCompilerDirectiveKind()).isEmpty();
     var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
-    assertThat(annotations.get(0).getName()).isEqualTo("После");
-    assertThat(annotations.get(0).getParameters()).isEmpty();
+    assertThat(annotations.getFirst().getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.getFirst().getName()).isEqualTo("После");
+    assertThat(annotations.getFirst().getParameters()).isEmpty();
 
     methodSymbol = methods.get(10);
     assertThat(methodSymbol.getName()).isEqualTo("Метод11");
@@ -155,12 +155,12 @@ class MethodSymbolComputerTest {
     assertThat(methodSymbol.getName()).isEqualTo("Метод20");
     assertThat(methodSymbol.getCompilerDirectiveKind()).isEmpty();
     assertThat(methodSymbol.getAnnotations()).hasSize(1);
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.CUSTOM);
 
-    var parameters = methodSymbol.getAnnotations().get(0).getParameters();
+    var parameters = methodSymbol.getAnnotations().getFirst().getParameters();
     assertThat(parameters).hasSize(3);
 
-    assertThat(parameters.get(0).name()).isEqualTo("ДажеСПараметром");
+    assertThat(parameters.getFirst().name()).isEqualTo("ДажеСПараметром");
     assertThat(parameters.get(0).optional()).isTrue();
     assertThat(parameters.get(0).value().getLeft()).isEqualTo("Да");
 
@@ -175,23 +175,23 @@ class MethodSymbolComputerTest {
     // BEFORE
     methodSymbol = methods.get(20);
     assertThat(methodSymbol.getName()).isEqualTo("Р_Перед");
-    assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("Перед");
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.BEFORE);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("Перед");
+    assertThat(methodSymbol.getAnnotations().getFirst().getName()).isEqualTo("Перед");
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.BEFORE);
+    assertThat(methodSymbol.getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("Перед");
 
     // AFTER
     methodSymbol = methods.get(21);
     assertThat(methodSymbol.getName()).isEqualTo("Р_После");
-    assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("После");
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("После");
+    assertThat(methodSymbol.getAnnotations().getFirst().getName()).isEqualTo("После");
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(methodSymbol.getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("После");
 
     // AROUND
     methodSymbol = methods.get(22);
     assertThat(methodSymbol.getName()).isEqualTo("Р_Вместо");
-    assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("Вместо");
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.AROUND);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("Вместо");
+    assertThat(methodSymbol.getAnnotations().getFirst().getName()).isEqualTo("Вместо");
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.AROUND);
+    assertThat(methodSymbol.getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("Вместо");
   }
 
   @Test
@@ -202,8 +202,8 @@ class MethodSymbolComputerTest {
 
     List<ParameterDefinition> parameters = methods.get(2).getParameters();
     assertThat(parameters.size()).isEqualTo(4);
-    assertThat(parameters.get(0).getName()).isEqualTo("Парам");
-    assertThat(parameters.get(0).isByValue()).isFalse();
+    assertThat(parameters.getFirst().getName()).isEqualTo("Парам");
+    assertThat(parameters.getFirst().isByValue()).isFalse();
     assertThat(parameters.get(0).isOptional()).isFalse();
     assertThat(parameters.get(0).getRange()).isEqualTo(Ranges.create(14, 12, 17));
 
@@ -234,17 +234,17 @@ class MethodSymbolComputerTest {
 
     parameters = methods.get(24).getParameters();
     assertThat(parameters.get(0).getName()).isEqualTo("Парам1");
-    assertThat(parameters.get(0).getAnnotations()).hasSize(1);
-    assertThat(parameters.get(0).getAnnotations().get(0).getName()).isEqualTo("Повторяемый");
-    assertThat(parameters.get(0).getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
-    assertThat(parameters.get(0).getAnnotations().get(0).getParameters()).isEmpty();
+    assertThat(parameters.getFirst().getAnnotations()).hasSize(1);
+    assertThat(parameters.getFirst().getAnnotations().getFirst().getName()).isEqualTo("Повторяемый");
+    assertThat(parameters.get(0).getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(parameters.get(0).getAnnotations().getFirst().getParameters()).isEmpty();
     assertThat(parameters.get(1).getName()).isEqualTo("Парам2");
     assertThat(parameters.get(1).getAnnotations()).hasSize(1);
-    assertThat(parameters.get(1).getAnnotations().get(0).getName()).isEqualTo("ДругаяАннотация");
-    assertThat(parameters.get(1).getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
-    assertThat(parameters.get(1).getAnnotations().get(0).getParameters()).hasSize(1);
-    assertThat(parameters.get(1).getAnnotations().get(0).getParameters().get(0).name()).isEmpty();
-    assertThat(parameters.get(1).getAnnotations().get(0).getParameters().get(0).value().getLeft()).isEqualTo("СПараметром");
+    assertThat(parameters.get(1).getAnnotations().getFirst().getName()).isEqualTo("ДругаяАннотация");
+    assertThat(parameters.get(1).getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(parameters.get(1).getAnnotations().getFirst().getParameters()).hasSize(1);
+    assertThat(parameters.get(1).getAnnotations().getFirst().getParameters().getFirst().name()).isEmpty();
+    assertThat(parameters.get(1).getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("СПараметром");
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).getAnnotations()).isEmpty();
 
@@ -292,8 +292,8 @@ class MethodSymbolComputerTest {
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTestParseError.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.get(0).getName()).isEqualTo("Выполнить");
-    assertThat(methods.get(0).getSubNameRange()).isEqualTo(Ranges.create(0, 10, 0, 19));
+    assertThat(methods.getFirst().getName()).isEqualTo("Выполнить");
+    assertThat(methods.getFirst().getSubNameRange()).isEqualTo(Ranges.create(0, 10, 0, 19));
 
   }
 
@@ -301,7 +301,7 @@ class MethodSymbolComputerTest {
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
     var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.getFirst().getKind()).isEqualTo(AnnotationKind.AFTER);
   }
 
   private void checkModule(
@@ -315,7 +315,7 @@ class MethodSymbolComputerTest {
     serverContext.rebuildDocument(documentContext);
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
-    assertThat(methods.get(0).getName()).isEqualTo("Тест");
-    assertThat(methods.get(0).getOwner()).isEqualTo(documentContext);
+    assertThat(methods.getFirst().getName()).isEqualTo("Тест");
+    assertThat(methods.getFirst().getOwner()).isEqualTo(documentContext);
   }
 }

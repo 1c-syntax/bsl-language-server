@@ -217,7 +217,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private void visitDescendantCodeBlock(BSLParser.@Nullable CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
-      .map(e -> e.children)
+      .map(ParserRuleContext::getChildren)
       .stream()
       .flatMap(Collection::stream)
       .forEach(t -> t.accept(this));

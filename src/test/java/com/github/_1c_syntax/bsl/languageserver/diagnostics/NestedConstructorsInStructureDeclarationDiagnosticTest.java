@@ -58,7 +58,7 @@ class NestedConstructorsInStructureDeclarationDiagnosticTest
     relatedInformation.add(Ranges.create(11, 33, 11, 69));
 
     checkDiagnosticContent(
-      diagnostics.get(0),
+      diagnostics.getFirst(),
       Ranges.create(10, 16, 12, 36),
       relatedInformation);
 

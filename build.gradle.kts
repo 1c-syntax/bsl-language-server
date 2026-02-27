@@ -1,7 +1,7 @@
 import org.apache.tools.ant.filters.EscapeUnicode
-import java.util.*
-import java.text.SimpleDateFormat
 import org.jreleaser.model.Active.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 plugins {
     `java-library`
@@ -17,13 +17,13 @@ plugins {
     id("com.github.ben-manes.versions") version "0.53.0"
     id("org.springframework.boot") version "4.0.1"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.0.0"
+    id("io.sentry.jvm.gradle") version "6.1.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.21.0"
     id("org.sonarqube") version "7.2.2.6593"
     id("me.champeau.jmh") version "0.7.3"
-    id("com.gorylenko.gradle-git-properties") version "2.5.5"
+    id("com.gorylenko.gradle-git-properties") version "2.5.7"
 }
 
 repositories {
@@ -76,59 +76,55 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
-    api("com.github.ben-manes.caffeine", "caffeine", "3.2.3")
+    api("com.github.ben-manes.caffeine:caffeine:3.2.3")
     api("org.ehcache:ehcache:3.11.1")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.24.0")
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j.websocket.jakarta", "0.24.0")
+    api("org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0")
+    api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:0.24.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax", "bsl-parser", "0.30.0") {
-        exclude("com.ibm.icu", "*")
-        exclude("org.antlr", "ST4")
-        exclude("org.antlr", "antlr-runtime")
-    }
-    api("io.github.1c-syntax", "utils", "0.6.9")
-    api("io.github.1c-syntax", "mdclasses", "0.17.4")
-    api("io.github.1c-syntax", "bsl-common-library", "0.9.2")
-    api("io.github.1c-syntax", "supportconf", "0.15.0")
+    api("io.github.1c-syntax:bsl-parser:0.31.0")
+    api("io.github.1c-syntax:utils:0.7.0")
+    api("io.github.1c-syntax:mdclasses:0.18.0")
+    api("io.github.1c-syntax:bsl-common-library:0.10.0")
+    api("io.github.1c-syntax:supportconf:0.16.0")
 
     // nullability annotations
-    api("org.jspecify", "jspecify", "1.0.0")
+    api("org.jspecify:jspecify:1.0.0")
 
     // JLanguageTool
-    implementation("org.languagetool", "languagetool-core", languageToolVersion){
+    implementation("org.languagetool:languagetool-core:$languageToolVersion") {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
     }
-    implementation("org.languagetool", "language-en", languageToolVersion){
-        exclude("commons-logging", "commons-logging")
+    implementation("org.languagetool:language-en:$languageToolVersion") {
+        exclude("commons-logging:commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
     }
-    implementation("org.languagetool", "language-ru", languageToolVersion){
+    implementation("org.languagetool:language-ru:$languageToolVersion") {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
     }
 
     // AOP
-    implementation("org.aspectj", "aspectjrt", "1.9.25.1")
+    implementation("org.aspectj:aspectjrt:1.9.25.1")
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.21.0")
-    implementation("commons-beanutils", "commons-beanutils", "1.11.0"){
+    implementation("commons-io:commons-io:2.21.0")
+    implementation("commons-beanutils:commons-beanutils:1.11.0") {
         exclude("commons-logging", "commons-logging")
     }
-    implementation("commons-codec", "commons-codec", "1.20.0")
-    implementation("org.apache.commons", "commons-lang3", "3.20.0")
-    implementation("org.apache.commons", "commons-collections4", "4.5.0")
-    implementation("org.apache.commons", "commons-exec", "1.6.0")
+    implementation("commons-codec:commons-codec:1.21.0")
+    implementation("org.apache.commons:commons-lang3:3.20.0")
+    implementation("org.apache.commons:commons-collections4:4.5.0")
+    implementation("org.apache.commons:commons-exec:1.6.0")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.10.1")
+    implementation("me.tongfei:progressbar:0.10.2")
 
     // (de)serialization
     implementation("tools.jackson.core:jackson-databind")
@@ -136,39 +132,39 @@ dependencies {
     implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
-    implementation("org.jgrapht", "jgrapht-core", "1.5.2")
+    implementation("org.jgrapht:jgrapht-core:1.5.2")
 
     // SARIF serialization
-    implementation("com.contrastsecurity", "java-sarif", "2.0")
+    implementation("com.contrastsecurity:java-sarif:2.0")
 
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
             strictly("33.5.0-jre")
-       }
+        }
     }
-    
+
     // COMPILE
 
     // TEST
 
     // spring
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
-        exclude("com.vaadin.external.google", "android-json")
+        exclude(group = "com.vaadin.external.google", module = "android-json")
     }
 
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // test utils
-    testImplementation("org.jmockit", "jmockit", "1.50")
-    testImplementation("org.awaitility", "awaitility", "4.3.0")
+    testImplementation("com.github.hazendaz.jmockit:jmockit:2.1.0")
+    testImplementation("org.awaitility:awaitility:4.3.0")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     withSourcesJar()
     withJavadocJar()
 }
@@ -235,7 +231,8 @@ tasks.test {
     maxHeapSize = "2g"
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
-    jvmArgs("-javaagent:${jmockitPath}")
+    val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
+    jvmArgs("-javaagent:${jmockitPath}", "-javaagent:${mockitoAgentPath}")
 
     // Cleanup test cache directories after tests complete
     doLast {
@@ -280,7 +277,7 @@ jmh {
 sentry {
     org.set("1c-syntax")
     projectName.set("bsl-language-server")
-    
+
     // Включить source context только при наличии токена аутентификации
     includeSourceContext = System.getenv("SENTRY_AUTH_TOKEN") != null
 }
@@ -338,7 +335,10 @@ sonarqube {
         property("sonar.projectKey", "1c-syntax_bsl-language-server")
         property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
-        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml")
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "${layout.buildDirectory.get()}/reports/jacoco/test/jacoco.xml"
+        )
     }
 }
 

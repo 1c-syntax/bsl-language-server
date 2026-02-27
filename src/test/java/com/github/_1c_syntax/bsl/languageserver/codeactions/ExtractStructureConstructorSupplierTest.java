@@ -68,7 +68,7 @@ class ExtractStructureConstructorSupplierTest {
       .hasSize(1)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Unwrap constructor"));
 
-    assertThat((((ArrayList<?>) (codeActions.get(0).getEdit().getChanges().values()).toArray()[0])))
+    assertThat((((ArrayList<?>) (codeActions.getFirst().getEdit().getChanges().values()).toArray()[0])))
       .hasSize(4)
       .anyMatch(textedit -> ((TextEdit) textedit).getNewText().equals("()"))
       .anyMatch(textedit -> ((TextEdit) textedit).getNewText().equals("Структура.Insert(\"а\", а);\n"))
@@ -177,7 +177,7 @@ class ExtractStructureConstructorSupplierTest {
     assertThat(codeActions)
       .hasSize(1)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Unwrap constructor"));
-    assertThat((((ArrayList<?>) (codeActions.get(0).getEdit().getChanges().values()).toArray()[0])))
+    assertThat((((ArrayList<?>) (codeActions.getFirst().getEdit().getChanges().values()).toArray()[0])))
       .hasSize(4)
       .anyMatch(textedit -> ((TextEdit) textedit).getNewText().equals("()"))
       .anyMatch(textedit -> ((TextEdit) textedit).getNewText().equals("Чтото.Поле.Insert(\"а\", а);\n"))
