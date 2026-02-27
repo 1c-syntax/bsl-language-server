@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import io.sentry.Sentry;
 import io.sentry.protocol.SentryId;
@@ -54,6 +56,9 @@ public class SentryAspect {
   private LanguageClientHolder languageClientHolder;
 
   @Setter(onMethod_ = {@Autowired})
+  private LanguageServerConfiguration configuration;
+
+  @Setter(onMethod_ = {@Autowired})
   private GlobalLanguageServerConfiguration globalConfiguration;
 
   @AfterThrowing(value = "Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()", throwing = "ex")
@@ -80,7 +85,10 @@ public class SentryAspect {
           return;
         }
         var messageType = MessageType.Info;
-        var message = Resources.getResourceString(globalConfiguration.getLanguage(), getClass(), "logMessage", sentryId);
+        var language = WorkspaceContextHolder.get() != null
+          ? configuration.getLanguage()
+          : globalConfiguration.getLanguage();
+        var message = Resources.getResourceString(language, getClass(), "logMessage", sentryId);
         var messageParams = new MessageParams(messageType, message);
 
         languageClientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));
