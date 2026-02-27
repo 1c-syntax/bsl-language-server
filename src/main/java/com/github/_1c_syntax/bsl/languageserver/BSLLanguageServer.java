@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
@@ -188,10 +189,18 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     // Populate all workspace contexts
     var allContexts = serverContextProvider.getAllContexts();
     var tasks = allContexts.stream()
-      .map((ServerContext serverContext) -> CompletableFuture.runAsync(
-          serverContext::populateContext,
-          populateContextExecutor
-        ))
+      .map((ServerContext serverContext) -> {
+        // Set ThreadLocal to resolve workspace-scoped executor proxy
+        WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
+        try {
+          return CompletableFuture.runAsync(
+            serverContext::populateContext,
+            populateContextExecutor
+          );
+        } finally {
+          WorkspaceContextHolder.clear();
+        }
+      })
       .toArray(CompletableFuture[]::new);
 
     CompletableFuture.allOf(tasks)

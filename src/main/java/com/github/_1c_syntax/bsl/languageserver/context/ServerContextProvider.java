@@ -127,6 +127,8 @@ public class ServerContextProvider {
       // Get new ServerContext instance from Spring (prototype scope)
       var serverContext = serverContextProvider.getObject();
 
+      serverContext.setWorkspaceUri(uri);
+
       // Access workspace-scoped LSC (triggers lazy creation with @PostConstruct init())
       // and store on ServerContext for navigation-based access
       serverContext.setLanguageServerConfiguration(languageServerConfiguration);

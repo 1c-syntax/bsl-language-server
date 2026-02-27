@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +68,8 @@ public class AnalyzeProjectOnStart {
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage(serverContext, "filesSuffix"));
     progress.beginProgress(getMessage(serverContext, "analyzeProject"));
 
+    // Set ThreadLocal to resolve workspace-scoped executor proxy
+    WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
     try {
       executor.submit(() ->
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
@@ -78,12 +81,13 @@ public class AnalyzeProjectOnStart {
           serverContext.tryClearDocument(documentContext);
         })
       ).get();
-
     } catch (ExecutionException e) {
       throw new RuntimeException("Can't analyze project on start", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Interrupted while analyzing project on start", e);
+    } finally {
+      WorkspaceContextHolder.clear();
     }
 
     progress.endProgress(getMessage(serverContext, "projectAnalyzed"));

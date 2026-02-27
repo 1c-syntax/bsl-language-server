@@ -24,10 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import io.sentry.spring7.SentryTaskDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -35,10 +38,13 @@ import java.util.concurrent.ForkJoinWorkerThread;
 /**
  * Конфигурация исполнителей для обработки асинхронных задач.
  * <p>
- * Исполнители, в которых запускаются {@code parallelStream()}, оборачиваются в {@link ForkJoinPool},
- * чтобы параллельные потоки работали в выделенном пуле, а не в {@code ForkJoinPool.commonPool()}.
- * Внешняя задача оборачивается через {@link ContextPropagatingExecutorService}
- * для прокидывания Sentry/MDC контекста из вызывающего потока.
+ * ForkJoinPool-исполнители (в которых запускаются {@code parallelStream()}) создаются
+ * per-workspace — каждый воркспейс получает свой набор пулов. Worker threads
+ * устанавливают workspace URI в ThreadLocal при старте ({@code onStart()}),
+ * что гарантирует корректную работу workspace-scoped proxy в fork-задачах.
+ * <p>
+ * Исключение: {@code computeConfigurationExecutor} — singleton, т.к. вызывает
+ * внешнюю библиотеку MDClasses, не использующую ThreadLocal из BSL LS.
  * <p>
  * Остальные исполнители реализуются через {@link ThreadPoolTaskExecutor} (cached thread pool)
  * с {@link TaskDecorator} для прокидывания контекста.
@@ -81,33 +87,37 @@ public class ExecutorConfiguration {
   }
 
   // --- ForkJoinPool beans (parallelStream runs inside) ---
-  // Wrapped in ContextPropagatingExecutorService for Sentry/MDC propagation
-  // into the outer submitted task. Inner parallelStream forks inherit the FJP
-  // but not the ThreadLocal context.
+  // Per-workspace: worker threads set workspace URI in onStart(),
+  // so parallelStream forks always have correct ThreadLocal context.
 
   @Bean(destroyMethod = "shutdown")
+  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService populateContextExecutor() {
-    return createForkJoinExecutorService("populate-context-");
+    return createWorkspaceForkJoinPool("populate-context-");
   }
 
+  // computeConfigurationExecutor — singleton, вызывает MDClasses (не использует ThreadLocal BSL LS)
   @Bean(destroyMethod = "shutdown")
   public ExecutorService computeConfigurationExecutor() {
-    return createForkJoinExecutorService("compute-configuration-");
+    return createSharedForkJoinExecutorService("compute-configuration-");
   }
 
   @Bean(destroyMethod = "shutdown")
+  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService diagnosticComputerExecutor() {
-    return createForkJoinExecutorService("diagnostic-computer-");
+    return createWorkspaceForkJoinPool("diagnostic-computer-");
   }
 
   @Bean(destroyMethod = "shutdown")
+  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService analyzeOnStartExecutor() {
-    return createForkJoinExecutorService("analyze-on-start-");
+    return createWorkspaceForkJoinPool("analyze-on-start-");
   }
 
   @Bean(destroyMethod = "shutdown")
+  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService semanticTokensExecutor() {
-    return createForkJoinExecutorService("semantic-tokens-");
+    return createWorkspaceForkJoinPool("semantic-tokens-");
   }
 
   private ThreadPoolTaskExecutor createThreadPoolExecutor(
@@ -120,7 +130,17 @@ public class ExecutorConfiguration {
     return executor;
   }
 
-  private ExecutorService createForkJoinExecutorService(String threadNamePrefix) {
+  private ExecutorService createWorkspaceForkJoinPool(String prefix) {
+    var workspaceUri = Optional.ofNullable(WorkspaceContextHolder.get())
+      .orElse(WorkspaceScope.DEFAULT_WORKSPACE_KEY);
+    var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
+      .orElse("default");
+    var factory = new WorkspaceAwareFJWTFactory(workspaceUri, workspaceName, prefix);
+    var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
+    return new ContextPropagatingExecutorService(pool);
+  }
+
+  private ExecutorService createSharedForkJoinExecutorService(String threadNamePrefix) {
     var factory = new NamedForkJoinWorkerThreadFactory(threadNamePrefix);
     var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     return new ContextPropagatingExecutorService(pool);
@@ -131,6 +151,25 @@ public class ExecutorConfiguration {
     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
       var thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
       thread.setName(prefix + thread.getPoolIndex());
+      return thread;
+    }
+  }
+
+  private record WorkspaceAwareFJWTFactory(
+    String workspaceUri,
+    String workspaceName,
+    String prefix
+  ) implements ForkJoinPool.ForkJoinWorkerThreadFactory {
+    @Override
+    public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+      var thread = new ForkJoinWorkerThread(pool) {
+        @Override
+        protected void onStart() {
+          WorkspaceContextHolder.set(workspaceUri, workspaceName);
+          super.onStart();
+        }
+      };
+      thread.setName(prefix + workspaceName + "-" + thread.getPoolIndex());
       return thread;
     }
   }

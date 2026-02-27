@@ -95,6 +95,11 @@ public class ServerContext {
   @SuppressWarnings("NullAway.Init")
   private LanguageServerConfiguration languageServerConfiguration;
 
+  @Getter
+  @Setter
+  @Nullable
+  private URI workspaceUri;
+
   /**
    * Коллекция DiagnosticInfo для данного workspace.
    * Создаётся с per-workspace LanguageServerConfiguration.

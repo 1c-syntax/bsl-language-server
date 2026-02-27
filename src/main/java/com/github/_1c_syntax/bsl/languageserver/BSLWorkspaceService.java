@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.utils.Absolute;
@@ -120,8 +121,13 @@ public class BSLWorkspaceService implements WorkspaceService {
         // Add new workspace folders
         event.getAdded().forEach((WorkspaceFolder folder) -> {
           var serverContext = serverContextProvider.addWorkspace(folder);
-          // Async population of context for new workspace
-          CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor);
+          // Set ThreadLocal to resolve workspace-scoped executor proxy
+          WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
+          try {
+            CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor);
+          } finally {
+            WorkspaceContextHolder.clear();
+          }
         });
         
         LOGGER.info("Workspace folders changed. Added: {}, Removed: {}",
