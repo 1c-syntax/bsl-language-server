@@ -49,13 +49,13 @@ jobs:
       run: ./gradlew check --stacktrace
     - name: Archive test results
       if: always()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: Test Results (Java ${{ matrix.java_version }}.${{ matrix.os }})
         path: "**/test-results/test/**/*.xml"
     - name: Publish Test report
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
         path: build/reports/tests/test    
