@@ -143,6 +143,8 @@ public class AnalyzeCommand implements Callable<Integer> {
   private final ServerContextProvider serverContextProvider;
   private final LanguageServerConfiguration configuration;
 
+  private ServerContext serverContext;
+
   public Integer call() {
 
     var workspaceDir = Absolute.path(workspaceDirOption);
@@ -163,7 +165,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     globalConfiguration.update(configurationFile);
 
     // Create workspace for srcDir (factory will create per-workspace configuration)
-    var context = serverContextProvider.addWorkspace(srcDir.toUri());
+    serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri().toString())) {
       // In analyze mode, -c affects both global and per-workspace settings
@@ -171,16 +173,16 @@ public class AnalyzeCommand implements Callable<Integer> {
       configuration.update(configurationFile);
 
       var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-      context.setConfigurationRoot(configurationPath);
+      serverContext.setConfigurationRoot(configurationPath);
 
       var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
-      context.populateContext(files);
+      serverContext.populateContext(files);
 
       List<FileInfo> fileInfos;
       if (silentMode) {
         fileInfos = files.parallelStream()
-          .map((File file) -> getFileInfoFromFile(context, workspaceDir, file))
+          .map((File file) -> getFileInfoFromFile(workspaceDir, file))
           .collect(Collectors.toList());
       } else {
         try (ProgressBar pb = new ProgressBarBuilder()
@@ -191,7 +193,7 @@ public class AnalyzeCommand implements Callable<Integer> {
           fileInfos = files.parallelStream()
             .map((File file) -> {
               pb.step();
-              return getFileInfoFromFile(context, workspaceDir, file);
+              return getFileInfoFromFile(workspaceDir, file);
             })
             .collect(Collectors.toList());
         }
@@ -209,9 +211,9 @@ public class AnalyzeCommand implements Callable<Integer> {
   }
 
   @SneakyThrows
-  private FileInfo getFileInfoFromFile(ServerContext context, Path srcDir, File file) {
-    var documentContext = context.addDocument(Absolute.uri(file));
-    context.rebuildDocument(documentContext);
+  private FileInfo getFileInfoFromFile(Path srcDir, File file) {
+    var documentContext = serverContext.addDocument(Absolute.uri(file));
+    serverContext.rebuildDocument(documentContext);
 
     var filePath = srcDir.relativize(Absolute.path(file));
     var diagnostics = documentContext.getDiagnostics();
@@ -221,7 +223,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     var fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
-    context.tryClearDocument(documentContext);
+    serverContext.tryClearDocument(documentContext);
 
     return fileInfo;
   }
