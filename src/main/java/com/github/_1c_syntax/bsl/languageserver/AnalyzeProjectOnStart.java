@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -47,6 +47,7 @@ public class AnalyzeProjectOnStart {
   private final DiagnosticProvider diagnosticProvider;
   private final LanguageClientHolder languageClientHolder;
   private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final LanguageServerConfiguration configuration;
   @Qualifier("analyzeOnStartExecutor")
   private final ExecutorService executor;
 
@@ -54,23 +55,22 @@ public class AnalyzeProjectOnStart {
   @Async
   public void handleEvent(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
-    var configuration = serverContext.getLanguageServerConfiguration();
 
-    if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
-      return;
-    }
-
-    if (!languageClientHolder.isConnected()) {
-      return;
-    }
-
-    var documentContexts = serverContext.getDocuments().values();
-    var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage(serverContext, "filesSuffix"));
-    progress.beginProgress(getMessage(serverContext, "analyzeProject"));
-
-    // Set ThreadLocal to resolve workspace-scoped executor proxy
+    // Set ThreadLocal to resolve workspace-scoped proxy beans
     WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
     try {
+      if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
+        return;
+      }
+
+      if (!languageClientHolder.isConnected()) {
+        return;
+      }
+
+      var documentContexts = serverContext.getDocuments().values();
+      var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
+      progress.beginProgress(getMessage("analyzeProject"));
+
       executor.submit(() ->
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
           progress.tick();
@@ -81,6 +81,8 @@ public class AnalyzeProjectOnStart {
           serverContext.tryClearDocument(documentContext);
         })
       ).get();
+
+      progress.endProgress(getMessage("projectAnalyzed"));
     } catch (ExecutionException e) {
       throw new RuntimeException("Can't analyze project on start", e);
     } catch (InterruptedException e) {
@@ -89,12 +91,10 @@ public class AnalyzeProjectOnStart {
     } finally {
       WorkspaceContextHolder.clear();
     }
-
-    progress.endProgress(getMessage(serverContext, "projectAnalyzed"));
   }
 
-  private String getMessage(ServerContext serverContext, String key) {
-    Language language = serverContext.getLanguageServerConfiguration().getLanguage();
+  private String getMessage(String key) {
+    Language language = configuration.getLanguage();
     return Resources.getResourceString(language, getClass(), key);
   }
 

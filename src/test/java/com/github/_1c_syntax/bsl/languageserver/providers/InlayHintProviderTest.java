@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.CognitiveComplexityInlayHintSupplier;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
@@ -51,6 +52,8 @@ class InlayHintProviderTest {
   private InlayHintProvider provider;
   @Autowired
   private CognitiveComplexityInlayHintSupplier supplier;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   private DocumentContext documentContext;
 
@@ -96,7 +99,6 @@ class InlayHintProviderTest {
   void testDisabledSupplierIsNotEnabled() {
 
     // given
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.getInlayHintOptions().getParameters().put(supplier.getId(), Either.forLeft(false));
 
     var params = new InlayHintParams();

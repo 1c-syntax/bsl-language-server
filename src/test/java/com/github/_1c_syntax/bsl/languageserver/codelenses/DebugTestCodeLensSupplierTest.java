@@ -58,13 +58,13 @@ class DebugTestCodeLensSupplierTest {
   private TestRunnerAdapter testRunnerAdapter;
 
   private DocumentContext documentContext;
+  @Autowired
   private LanguageServerConfiguration configuration;
 
   @BeforeEach
   void init() {
     var filePath = "./src/test/resources/codelenses/DebugTestCodeLensSupplier.os";
     documentContext = TestUtils.getDocumentContextFromFile(filePath);
-    configuration = documentContext.getServerContext().getLanguageServerConfiguration();
   }
 
   @Test

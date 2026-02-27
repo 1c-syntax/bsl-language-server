@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.Gson;
@@ -58,6 +59,8 @@ class CodeLensProviderTest {
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
   @Autowired
   private LanguageClientHolder clientHolder;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testGetCodeLens() {
@@ -85,7 +88,6 @@ class CodeLensProviderTest {
     prepareCodeLensRefreshSupport(true);
 
     var documentContext = TestUtils.getDocumentContext("");
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
 
     // when
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
@@ -103,7 +105,6 @@ class CodeLensProviderTest {
     prepareCodeLensRefreshSupport(false);
 
     var documentContext = TestUtils.getDocumentContext("");
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
 
     // when
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
@@ -118,7 +119,6 @@ class CodeLensProviderTest {
     // given
     // no connected language client
     var documentContext = TestUtils.getDocumentContext("");
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
 
     // when
     var event = new LanguageServerConfigurationChangedEvent(configuration);

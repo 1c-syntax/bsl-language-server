@@ -93,10 +93,17 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   );
 
   private final ServerInfo serverInfo;
+  private final LanguageServerConfiguration configuration;
 
-  public SarifReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos, ServerInfo serverInfo) {
+  public SarifReporter(
+    ServerContextProvider serverContextProvider,
+    DiagnosticInfos diagnosticInfos,
+    ServerInfo serverInfo,
+    LanguageServerConfiguration configuration
+  ) {
     super(serverContextProvider, diagnosticInfos);
     this.serverInfo = serverInfo;
+    this.configuration = configuration;
   }
 
   @Override
@@ -131,9 +138,6 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   }
 
   private Run createRun(AnalysisInfo analysisInfo) {
-    var serverContext = getServerContext(analysisInfo);
-    var configuration = serverContext.getLanguageServerConfiguration();
-    
     var tool = createTool(configuration);
     var invocation = createInvocation(configuration);
     var results = createResults(analysisInfo);

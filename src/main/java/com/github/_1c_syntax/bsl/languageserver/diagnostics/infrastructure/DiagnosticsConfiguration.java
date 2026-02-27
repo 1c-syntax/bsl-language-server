@@ -55,18 +55,11 @@ public class DiagnosticsConfiguration {
 
   private final DiagnosticObjectProvider diagnosticObjectProvider;
   private final DiagnosticInfos diagnosticInfos;
+  private final LanguageServerConfiguration configuration;
 
   @Bean
   @Scope("prototype")
   public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
-
-    var serverContext = documentContext.getServerContext();
-    var configuration = serverContext.getLanguageServerConfiguration();
-    
-    // If configuration is not set (shouldn't happen in normal operation), return empty list
-    if (configuration == null) {
-      return Collections.emptyList();
-    }
 
     var diagnosticInfosByClass = diagnosticInfos.getByClass();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();

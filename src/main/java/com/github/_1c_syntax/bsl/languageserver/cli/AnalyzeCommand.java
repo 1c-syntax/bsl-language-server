@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -140,6 +141,7 @@ public class AnalyzeCommand implements Callable<Integer> {
   private final ReportersAggregator aggregator;
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerContextProvider serverContextProvider;
+  private final LanguageServerConfiguration configuration;
 
   public Integer call() {
 
@@ -162,43 +164,48 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     // Create workspace for srcDir (factory will create per-workspace configuration)
     var context = serverContextProvider.addWorkspace(srcDir.toUri());
-    
-    // In analyze mode, -c affects both global and per-workspace settings
-    // since there is always exactly one workspace
-    context.getLanguageServerConfiguration().update(configurationFile);
 
-    var configuration = context.getLanguageServerConfiguration();
-    var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context.setConfigurationRoot(configurationPath);
+    // Set ThreadLocal to resolve workspace-scoped proxy beans
+    WorkspaceContextHolder.set(srcDir.toUri().toString());
+    try {
+      // In analyze mode, -c affects both global and per-workspace settings
+      // since there is always exactly one workspace
+      configuration.update(configurationFile);
 
-    var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+      var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+      context.setConfigurationRoot(configurationPath);
 
-    context.populateContext(files);
+      var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
-    List<FileInfo> fileInfos;
-    if (silentMode) {
-      fileInfos = files.parallelStream()
-        .map((File file) -> getFileInfoFromFile(context, workspaceDir, file))
-        .collect(Collectors.toList());
-    } else {
-      try (ProgressBar pb = new ProgressBarBuilder()
-        .setTaskName("Analyzing files...")
-        .setInitialMax(files.size())
-        .setStyle(ProgressBarStyle.ASCII)
-        .build()) {
+      context.populateContext(files);
+
+      List<FileInfo> fileInfos;
+      if (silentMode) {
         fileInfos = files.parallelStream()
-          .map((File file) -> {
-            pb.step();
-            return getFileInfoFromFile(context, workspaceDir, file);
-          })
+          .map((File file) -> getFileInfoFromFile(context, workspaceDir, file))
           .collect(Collectors.toList());
+      } else {
+        try (ProgressBar pb = new ProgressBarBuilder()
+          .setTaskName("Analyzing files...")
+          .setInitialMax(files.size())
+          .setStyle(ProgressBarStyle.ASCII)
+          .build()) {
+          fileInfos = files.parallelStream()
+            .map((File file) -> {
+              pb.step();
+              return getFileInfoFromFile(context, workspaceDir, file);
+            })
+            .collect(Collectors.toList());
+        }
       }
-    }
 
-    var analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
-    var outputDir = Absolute.path(outputDirOption);
-    aggregator.report(analysisInfo, outputDir);
-    return 0;
+      var analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
+      var outputDir = Absolute.path(outputDirOption);
+      aggregator.report(analysisInfo, outputDir);
+      return 0;
+    } finally {
+      WorkspaceContextHolder.clear();
+    }
   }
 
   public String[] getReportersOptions() {

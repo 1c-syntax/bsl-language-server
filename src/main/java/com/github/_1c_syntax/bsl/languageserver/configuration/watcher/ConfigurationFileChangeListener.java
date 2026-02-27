@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -70,16 +70,15 @@ public class ConfigurationFileChangeListener {
    *
    * @param configurationFile Изменившийся файл конфигурации
    * @param eventKind         Тип события, произошедшего с файлом.
-   * @param serverContext     Контекст сервера для данного воркспейса.
+   * @param configuration     Конфигурация воркспейса
    * @param workspaceUri      URI воркспейса
    */
   public void onWorkspaceChange(
     File configurationFile,
     WatchEvent.Kind<?> eventKind,
-    ServerContext serverContext,
+    LanguageServerConfiguration configuration,
     java.net.URI workspaceUri
   ) {
-    var configuration = serverContext.getLanguageServerConfiguration();
     if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {
       configuration.update(configurationFile);
       LOGGER.info("BSL Language Server configuration for workspace {} has been reloaded", workspaceUri);

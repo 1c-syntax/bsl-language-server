@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -48,6 +49,8 @@ class ExtractStructureConstructorSupplierTest {
 
   @Autowired
   private ExtractStructureConstructorSupplier codeActionSupplier;
+  @Autowired
+  private LanguageServerConfiguration configuration;
   private DocumentContext documentContext;
   private CodeActionParams params;
 
@@ -186,7 +189,7 @@ class ExtractStructureConstructorSupplierTest {
   void setRange(Range range) {
     String filePath = "./src/test/resources/suppliers/extractStructureConstructor.bsl";
     documentContext = TestUtils.getDocumentContextFromFile(filePath);
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.color;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -46,6 +47,8 @@ class ConstructorColorPresentationSupplierTest {
 
   @Autowired
   private ConstructorColorPresentationSupplier supplier;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   private DocumentContext documentContext;
 
@@ -57,7 +60,6 @@ class ConstructorColorPresentationSupplierTest {
   @Test
   void getColorPresentationRu() {
     // given
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.setLanguage(Language.RU);
     var params = new ColorPresentationParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -77,7 +79,6 @@ class ConstructorColorPresentationSupplierTest {
   @Test
   void getColorPresentationEn() {
     // given
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.setLanguage(Language.EN);
     var params = new ColorPresentationParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));

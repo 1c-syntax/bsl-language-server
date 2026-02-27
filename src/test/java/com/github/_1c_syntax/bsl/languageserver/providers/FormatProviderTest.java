@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -50,6 +51,8 @@ class FormatProviderTest {
 
   @Autowired
   private FormatProvider formatProvider;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testRangeFormat() throws IOException {
@@ -162,7 +165,7 @@ class FormatProviderTest {
     );
     
     // Configure for this workspace
-    documentContext.getServerContext().getLanguageServerConfiguration()
+    configuration
       .update(new File("./src/test/resources/.bsl-language-server-not-uppercase-format.json"));
 
     // when
@@ -192,7 +195,7 @@ class FormatProviderTest {
     );
     
     // Configure for this workspace
-    documentContext.getServerContext().getLanguageServerConfiguration()
+    configuration
       .update(new File("./src/test/resources/.bsl-language-server-format-keywords-off.json"));
 
     // when
@@ -222,7 +225,7 @@ class FormatProviderTest {
     );
 
     // Set language in per-workspace configuration
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     // when
     List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);

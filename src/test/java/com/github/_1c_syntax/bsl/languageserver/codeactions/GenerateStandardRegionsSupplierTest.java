@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
@@ -45,6 +46,8 @@ class GenerateStandardRegionsSupplierTest {
 
   @Autowired
   private GenerateStandardRegionsSupplier codeActionSupplier;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testGetCodeActions() {
@@ -52,7 +55,7 @@ class GenerateStandardRegionsSupplierTest {
     // given
     String filePath = "./src/test/resources/suppliers/generateRegion.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 

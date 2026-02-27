@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -46,6 +47,8 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
 
   @Autowired
   private SourceDefinedMethodCallInlayHintSupplier supplier;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testDefaultInlayHints() {
@@ -88,7 +91,6 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
 
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.getInlayHintOptions().getParameters().put(
       supplier.getId(),
       Either.forRight(Map.of("showParametersWithTheSameName", true))

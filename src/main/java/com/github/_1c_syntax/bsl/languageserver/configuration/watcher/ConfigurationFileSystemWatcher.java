@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.utils.Absolute;
@@ -82,7 +82,7 @@ public class ConfigurationFileSystemWatcher {
   // Per-workspace config watching
   private final Map<URI, WatchKey> workspaceWatchKeys = new ConcurrentHashMap<>();
   private final Map<URI, Path> workspaceRegisteredPaths = new ConcurrentHashMap<>();
-  private final Map<URI, ServerContext> workspaceContexts = new ConcurrentHashMap<>();
+  private final Map<URI, LanguageServerConfiguration> workspaceConfigurations = new ConcurrentHashMap<>();
 
   @PostConstruct
   public void init() throws IOException {
@@ -98,7 +98,7 @@ public class ConfigurationFileSystemWatcher {
     workspaceWatchKeys.values().forEach(WatchKey::cancel);
     workspaceWatchKeys.clear();
     workspaceRegisteredPaths.clear();
-    workspaceContexts.clear();
+    workspaceConfigurations.clear();
     watchService.close();
   }
 
@@ -143,10 +143,10 @@ public class ConfigurationFileSystemWatcher {
   @Synchronized
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
     var workspaceUri = event.getWorkspaceUri();
-    var serverContext = event.getServerContext();
+    var configuration = event.getServerContext().getLanguageServerConfiguration();
 
     LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
-    registerWorkspaceWatchService(workspaceUri, serverContext);
+    registerWorkspaceWatchService(workspaceUri, configuration);
   }
 
   /**
@@ -165,7 +165,7 @@ public class ConfigurationFileSystemWatcher {
       watchKey.cancel();
     }
     workspaceRegisteredPaths.remove(workspaceUri);
-    workspaceContexts.remove(workspaceUri);
+    workspaceConfigurations.remove(workspaceUri);
   }
 
   private void watchGlobalConfig() {
@@ -188,9 +188,9 @@ public class ConfigurationFileSystemWatcher {
 
   private void watchWorkspaceConfig(URI workspaceUri, WatchKey watchKey) {
     var registeredPath = workspaceRegisteredPaths.get(workspaceUri);
-    var serverContext = workspaceContexts.get(workspaceUri);
+    var configuration = workspaceConfigurations.get(workspaceUri);
 
-    if (registeredPath == null || serverContext == null) {
+    if (registeredPath == null || configuration == null) {
       return;
     }
 
@@ -202,10 +202,10 @@ public class ConfigurationFileSystemWatcher {
       }
 
       var file = new File(registeredPath.toFile(), context.toFile().getName());
-      if (isWorkspaceConfigurationFile(file, serverContext)
+      if (isWorkspaceConfigurationFile(file, configuration)
         && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
         lastModified = file.lastModified();
-        listener.onWorkspaceChange(file, watchEvent.kind(), serverContext, workspaceUri);
+        listener.onWorkspaceChange(file, watchEvent.kind(), configuration, workspaceUri);
       }
     }
     watchKey.reset();
@@ -245,8 +245,7 @@ public class ConfigurationFileSystemWatcher {
   }
 
   @SneakyThrows
-  private void registerWorkspaceWatchService(URI workspaceUri, ServerContext serverContext) {
-    var configuration = serverContext.getLanguageServerConfiguration();
+  private void registerWorkspaceWatchService(URI workspaceUri, LanguageServerConfiguration configuration) {
     var configFile = configuration.getConfigurationFile();
 
     Path configDir;
@@ -285,7 +284,7 @@ public class ConfigurationFileSystemWatcher {
 
     workspaceWatchKeys.put(workspaceUri, watchKey);
     workspaceRegisteredPaths.put(workspaceUri, configDir);
-    workspaceContexts.put(workspaceUri, serverContext);
+    workspaceConfigurations.put(workspaceUri, configuration);
 
     LOGGER.debug("Watch for workspace configuration file changes in {}", configDir);
   }
@@ -300,8 +299,7 @@ public class ConfigurationFileSystemWatcher {
     return absolutePathname.equals(absoluteConfigurationFile);
   }
 
-  private boolean isWorkspaceConfigurationFile(File pathname, ServerContext serverContext) {
-    var configuration = serverContext.getLanguageServerConfiguration();
+  private boolean isWorkspaceConfigurationFile(File pathname, LanguageServerConfiguration configuration) {
     var configFile = configuration.getConfigurationFile();
     if (configFile != null) {
       var absolutePathname = Absolute.path(pathname);

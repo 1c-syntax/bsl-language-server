@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -46,6 +47,8 @@ class DisableDiagnosticTriggeringSupplierTest {
 
   @Autowired
   private DisableDiagnosticTriggeringSupplier codeActionSupplier;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testGetCodeActions() {
@@ -53,7 +56,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -88,7 +91,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -128,7 +131,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggering.bsl"
     );
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -168,7 +171,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -193,7 +196,7 @@ class DisableDiagnosticTriggeringSupplierTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
     );
-    documentContext.getServerContext().getLanguageServerConfiguration().setLanguage(Language.EN);
+    configuration.setLanguage(Language.EN);
 
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 

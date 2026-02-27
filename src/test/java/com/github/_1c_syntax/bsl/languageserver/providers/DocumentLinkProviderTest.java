@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,8 @@ class DocumentLinkProviderTest {
 
   @Autowired
   private DocumentLinkProvider documentLinkProvider;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testProviderCanGetResultFromEnabledComputers() {
@@ -43,7 +46,7 @@ class DocumentLinkProviderTest {
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
     
     // Configure for this workspace
-    documentContext.getServerContext().getLanguageServerConfiguration()
+    configuration
       .getDocumentLinkOptions().setShowDiagnosticDescription(true);
     
     // На текущий момент единственный DocumentLinkSupplier - это показ ссылок на документацию

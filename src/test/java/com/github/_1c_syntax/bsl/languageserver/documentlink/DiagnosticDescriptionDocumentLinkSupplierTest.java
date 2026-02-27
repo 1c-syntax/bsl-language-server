@@ -46,12 +46,11 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
   private static final String SITE_EN_URL = "https://1c-syntax.github.io/bsl-language-server/en/";
   private static final String DIAGNOSTIC_CODE = "CanonicalSpellingKeywords";
 
+  @Autowired
   private LanguageServerConfiguration configuration;
 
   @BeforeEach
   void init() {
-    var documentContext = getDocumentContext();
-    configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.reset();
     configuration.getDocumentLinkOptions().setShowDiagnosticDescription(true);
   }

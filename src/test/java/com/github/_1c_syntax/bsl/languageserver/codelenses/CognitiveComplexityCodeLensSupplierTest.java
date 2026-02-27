@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData;
 import com.github._1c_syntax.bsl.languageserver.commands.complexity.ToggleComplexityInlayHintsCommandArguments;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -45,6 +46,8 @@ class CognitiveComplexityCodeLensSupplierTest {
 
   @Autowired
   private CognitiveComplexityCodeLensSupplier supplier;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testGetCodeLens() {
@@ -93,7 +96,6 @@ class CognitiveComplexityCodeLensSupplierTest {
 
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
-    var configuration = documentContext.getServerContext().getLanguageServerConfiguration();
     configuration.getCodeLensOptions().getParameters().put(
       supplier.getId(),
       Either.forRight(Map.of("complexityThreshold", 1))

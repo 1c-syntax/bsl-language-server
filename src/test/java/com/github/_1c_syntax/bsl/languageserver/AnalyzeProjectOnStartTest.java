@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -61,6 +63,7 @@ class AnalyzeProjectOnStartTest {
   private LanguageClientHolder languageClientHolder;
 
   private ServerContext serverContext;
+  @Autowired
   private LanguageServerConfiguration configuration;
 
   @BeforeEach
@@ -68,7 +71,12 @@ class AnalyzeProjectOnStartTest {
     serverContextProvider.clear();
     var realContext = serverContextProvider.addWorkspace(TEST_WORKSPACE_URI);
     serverContext = Mockito.spy(realContext);
-    configuration = serverContext.getLanguageServerConfiguration();
+    WorkspaceContextHolder.set(TEST_WORKSPACE_URI.toString());
+  }
+
+  @AfterEach
+  void tearDown() {
+    WorkspaceContextHolder.clear();
   }
 
   @Test

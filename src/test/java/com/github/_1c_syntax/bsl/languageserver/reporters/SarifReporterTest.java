@@ -67,6 +67,7 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
   private DiagnosticInfos diagnosticInfosBean;
 
   private Collection<DiagnosticInfo> diagnosticInfos;
+  @Autowired
   private LanguageServerConfiguration configuration;
 
   private final File file = new File("./bsl-ls.sarif");
@@ -75,7 +76,6 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
   void setUp() {
     initServerContext(SOURCE_DIR, false);
     diagnosticInfos = diagnosticInfosBean.getByCode().values();
-    configuration = context.getLanguageServerConfiguration();
     FileUtils.deleteQuietly(file);
   }
 
