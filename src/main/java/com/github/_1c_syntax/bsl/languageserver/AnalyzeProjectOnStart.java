@@ -56,6 +56,10 @@ public class AnalyzeProjectOnStart {
   public void handleEvent(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
 
+    if (serverContext.getWorkspaceUri() == null) {
+      return;
+    }
+
     try (var ctx = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri().toString())) {
       if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
         return;

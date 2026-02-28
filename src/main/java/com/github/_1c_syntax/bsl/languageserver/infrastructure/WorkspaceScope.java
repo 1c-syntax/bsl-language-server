@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -36,13 +35,11 @@ import java.util.stream.Collectors;
  * Custom Spring Scope для per-workspace бинов.
  * <p>
  * Ключ scope — workspace URI из {@link WorkspaceContextHolder}.
- * Когда workspace URI не установлен (например, при старте приложения),
- * используется дефолтный ключ {@code __default__}.
+ * Если workspace URI не установлен, выбрасывается исключение.
  */
 public class WorkspaceScope implements Scope {
 
   public static final String SCOPE_NAME = "workspace";
-  static final String DEFAULT_WORKSPACE_KEY = "__default__";
 
   private final ConcurrentHashMap<String, Map<String, Object>> store = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Map<String, Runnable>> destructionCallbacks = new ConcurrentHashMap<>();
@@ -111,6 +108,10 @@ public class WorkspaceScope implements Scope {
   }
 
   private static String resolveKey() {
-    return Optional.ofNullable(WorkspaceContextHolder.get()).orElse(DEFAULT_WORKSPACE_KEY);
+    var key = WorkspaceContextHolder.get();
+    if (key == null) {
+      throw new IllegalStateException("Workspace context is not set. Use WorkspaceContextHolder.forUri() before accessing workspace-scoped beans.");
+    }
+    return key;
   }
 }

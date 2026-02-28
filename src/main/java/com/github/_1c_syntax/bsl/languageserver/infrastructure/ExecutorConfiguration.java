@@ -131,8 +131,10 @@ public class ExecutorConfiguration {
   }
 
   private ExecutorService createWorkspaceForkJoinPool(String prefix) {
-    var workspaceUri = Optional.ofNullable(WorkspaceContextHolder.get())
-      .orElse(WorkspaceScope.DEFAULT_WORKSPACE_KEY);
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      throw new IllegalStateException("Workspace context is not set when creating ForkJoinPool");
+    }
     var workspaceName = Optional.ofNullable(WorkspaceContextHolder.getName())
       .orElse("default");
     var factory = new WorkspaceAwareFJWTFactory(workspaceUri, workspaceName, prefix);

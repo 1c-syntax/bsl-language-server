@@ -157,24 +157,31 @@ public class LanguageServerConfiguration {
       return;
     }
 
+    // During @PostConstruct, use loadConfigurationFile() directly instead of update()
+    // to avoid firing LanguageServerConfigurationChangedEvent via AOP.
+    // This prevents circular dependency: LSC -> event -> DiagnosticInfos -> LSC (in creation).
+
     // 1. Прямой путь к конфигурации (из application.properties)
     var configFile = new File(defaultConfigFileName);
     if (configFile.isFile()) {
-      update(configFile);
+      loadConfigurationFile(configFile);
+      this.configurationFile = configFile;
       return;
     }
 
     // 2. Конфиг в workspace
     var workspaceConfig = workspaceRoot.resolve(defaultConfigFileName).toFile();
     if (workspaceConfig.isFile()) {
-      update(workspaceConfig);
+      loadConfigurationFile(workspaceConfig);
+      this.configurationFile = workspaceConfig;
       return;
     }
 
     // 3. Глобальная конфигурация
     var globalConfig = new File(globalConfigPath);
     if (globalConfig.isFile()) {
-      update(globalConfig);
+      loadConfigurationFile(globalConfig);
+      this.configurationFile = globalConfig;
     }
   }
 

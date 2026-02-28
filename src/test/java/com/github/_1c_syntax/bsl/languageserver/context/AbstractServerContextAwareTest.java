@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,8 @@ public abstract class AbstractServerContextAwareTest {
   protected void initServerContext() {
     serverContextProvider.clear();
     context = serverContextProvider.addWorkspace(EMPTY_WORKSPACE_URI);
+    // Re-set workspace context for scoped bean resolution in tests
+    WorkspaceContextHolder.set(EMPTY_WORKSPACE_URI.toString());
   }
 
   protected void initServerContext(String path) {
@@ -69,8 +72,11 @@ public abstract class AbstractServerContextAwareTest {
 
   protected void initServerContext(Path configurationRoot, boolean populate) {
     serverContextProvider.clear();
-    context = serverContextProvider.addWorkspace(configurationRoot.toUri());
+    var uri = configurationRoot.toUri();
+    context = serverContextProvider.addWorkspace(uri);
     context.setConfigurationRoot(configurationRoot);
+    // Re-set workspace context for scoped bean resolution in tests
+    WorkspaceContextHolder.set(uri.toString());
     if (populate) {
       context.populateContext();
     }

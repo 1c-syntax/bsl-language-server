@@ -245,7 +245,10 @@ public class ServerContextProvider {
    * Очистить все workspaces.
    */
   public void clear() {
-    contexts.values().forEach(ServerContext::clear);
+    contexts.forEach((uri, serverContext) -> {
+      serverContext.clear();
+      workspaceScope.removeWorkspace(uri.toString());
+    });
     contexts.clear();
     workspaceRoots.clear();
     documentIndex.clear();

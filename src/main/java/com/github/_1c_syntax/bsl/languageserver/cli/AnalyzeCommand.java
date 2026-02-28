@@ -179,10 +179,16 @@ public class AnalyzeCommand implements Callable<Integer> {
 
       serverContext.populateContext(files);
 
+      var workspaceUri = WorkspaceContextHolder.get();
+      var workspaceName = WorkspaceContextHolder.getName();
+
       List<FileInfo> fileInfos;
       if (silentMode) {
         fileInfos = files.parallelStream()
-          .map((File file) -> getFileInfoFromFile(workspaceDir, file))
+          .map((File file) -> {
+            propagateWorkspaceContext(workspaceUri, workspaceName);
+            return getFileInfoFromFile(workspaceDir, file);
+          })
           .collect(Collectors.toList());
       } else {
         try (ProgressBar pb = new ProgressBarBuilder()
@@ -192,6 +198,7 @@ public class AnalyzeCommand implements Callable<Integer> {
           .build()) {
           fileInfos = files.parallelStream()
             .map((File file) -> {
+              propagateWorkspaceContext(workspaceUri, workspaceName);
               pb.step();
               return getFileInfoFromFile(workspaceDir, file);
             })
@@ -211,6 +218,12 @@ public class AnalyzeCommand implements Callable<Integer> {
   }
 
   @SneakyThrows
+  private static void propagateWorkspaceContext(String workspaceUri, String workspaceName) {
+    if (workspaceUri != null) {
+      WorkspaceContextHolder.set(workspaceUri, workspaceName != null ? workspaceName : "");
+    }
+  }
+
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
     var documentContext = serverContext.addDocument(Absolute.uri(file));
     serverContext.rebuildDocument(documentContext);

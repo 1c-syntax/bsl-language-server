@@ -41,6 +41,11 @@ class WorkspaceContextHolderTest {
     WorkspaceContextHolder.clear();
   }
 
+  @org.junit.jupiter.api.BeforeEach
+  void setUp() {
+    WorkspaceContextHolder.clear();
+  }
+
   // forUri (AutoCloseable) tests
 
   @Test

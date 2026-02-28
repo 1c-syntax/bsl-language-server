@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
@@ -134,7 +135,16 @@ public class ServerContext {
 
     LOGGER.debug("Populating context...");
 
+    var workspaceUri = WorkspaceContextHolder.get();
+    var workspaceName = WorkspaceContextHolder.getName();
+
     files.parallelStream().forEach((File file) -> {
+
+      // Propagate workspace context to ForkJoinPool worker threads.
+      // Always set (not just when null) because worker threads may have stale values from prior tasks.
+      if (workspaceUri != null) {
+        WorkspaceContextHolder.set(workspaceUri, workspaceName != null ? workspaceName : "");
+      }
 
       workDoneProgressReporter.tick();
 

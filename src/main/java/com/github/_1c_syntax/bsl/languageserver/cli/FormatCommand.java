@@ -118,8 +118,14 @@ public class FormatCommand implements Callable<Integer> {
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri().toString())) {
+      var workspaceUri = WorkspaceContextHolder.get();
+      var workspaceName = WorkspaceContextHolder.getName();
+
       if (silentMode) {
-        files.parallelStream().forEach(this::formatFile);
+        files.parallelStream().forEach(file -> {
+          propagateWorkspaceContext(workspaceUri, workspaceName);
+          formatFile(file);
+        });
       } else {
         try (ProgressBar pb = new ProgressBarBuilder()
           .setTaskName("Formatting files...")
@@ -128,6 +134,7 @@ public class FormatCommand implements Callable<Integer> {
           .build()) {
           files.parallelStream()
             .forEach((File file) -> {
+              propagateWorkspaceContext(workspaceUri, workspaceName);
               pb.step();
               formatFile(file);
             });
@@ -155,6 +162,12 @@ public class FormatCommand implements Callable<Integer> {
     }
 
     return files;
+  }
+
+  private static void propagateWorkspaceContext(String workspaceUri, String workspaceName) {
+    if (workspaceUri != null) {
+      WorkspaceContextHolder.set(workspaceUri, workspaceName != null ? workspaceName : "");
+    }
   }
 
   @SneakyThrows

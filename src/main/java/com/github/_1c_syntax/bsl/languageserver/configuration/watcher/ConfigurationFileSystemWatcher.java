@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import com.sun.nio.file.SensitivityWatchEventModifier;
 import jakarta.annotation.PostConstruct;
@@ -117,7 +118,9 @@ public class ConfigurationFileSystemWatcher {
     for (var entry : workspaceWatchKeys.entrySet()) {
       var workspaceUri = entry.getKey();
       var watchKey = entry.getValue();
-      watchWorkspaceConfig(workspaceUri, watchKey);
+      WorkspaceContextHolder.run(workspaceUri.toString(), () ->
+        watchWorkspaceConfig(workspaceUri, watchKey)
+      );
     }
   }
 

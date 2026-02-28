@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,10 +66,12 @@ class ConfigurationFileSystemWatcherTest {
   void setUp() {
     serverContextProvider.clear();
     serverContext = serverContextProvider.addWorkspace(workspaceDir.toUri());
+    WorkspaceContextHolder.set(workspaceDir.toUri().toString());
   }
 
   @AfterEach
   void tearDown() {
+    WorkspaceContextHolder.clear();
     serverContextProvider.clear();
   }
 
@@ -105,6 +108,7 @@ class ConfigurationFileSystemWatcherTest {
   @Test
   void testWorkspaceConfigFileChange() throws IOException {
     // given
+    var workspaceUri = workspaceDir.toUri().toString();
     var configuration = serverContext.getLanguageServerConfiguration();
     var configFile = new File(workspaceDir.toFile(), ".bsl-language-server.json");
     var content = "{\"diagnostics\": {\"computeTrigger\": \"onType\"}}";
@@ -120,6 +124,7 @@ class ConfigurationFileSystemWatcherTest {
     FileUtils.writeStringToFile(configFile, content, StandardCharsets.UTF_8);
 
     await().atMost(10, SECONDS).untilAsserted(() -> {
+      WorkspaceContextHolder.set(workspaceUri);
       // when
       watcher.watch();
       // then
@@ -131,6 +136,7 @@ class ConfigurationFileSystemWatcherTest {
     FileUtils.delete(configFile);
 
     await().atMost(10, SECONDS).untilAsserted(() -> {
+      WorkspaceContextHolder.set(workspaceUri);
       // when
       watcher.watch();
       // then - should return to default (ONSAVE)

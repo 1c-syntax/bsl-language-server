@@ -1,2 +1,3 @@
 org.springframework.test.context.TestExecutionListener=\
-com.github._1c_syntax.bsl.languageserver.util.RefreshContextTestExecutionListener
+com.github._1c_syntax.bsl.languageserver.util.RefreshContextTestExecutionListener,\
+com.github._1c_syntax.bsl.languageserver.util.WorkspaceContextTestExecutionListener
