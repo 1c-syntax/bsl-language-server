@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -116,23 +117,25 @@ public class FormatCommand implements Callable<Integer> {
     }
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
-    if (silentMode) {
-      files.parallelStream().forEach(this::formatFile);
-    } else {
-      try (ProgressBar pb = new ProgressBarBuilder()
-        .setTaskName("Formatting files...")
-        .setInitialMax(files.size())
-        .setStyle(ProgressBarStyle.ASCII)
-        .build()) {
-        files.parallelStream()
-          .forEach((File file) -> {
-            pb.step();
-            formatFile(file);
-          });
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri().toString())) {
+      if (silentMode) {
+        files.parallelStream().forEach(this::formatFile);
+      } else {
+        try (ProgressBar pb = new ProgressBarBuilder()
+          .setTaskName("Formatting files...")
+          .setInitialMax(files.size())
+          .setStyle(ProgressBarStyle.ASCII)
+          .build()) {
+          files.parallelStream()
+            .forEach((File file) -> {
+              pb.step();
+              formatFile(file);
+            });
+        }
       }
-    }
 
-    return 0;
+      return 0;
+    }
   }
 
   private List<File> findFilesForFormatting(String[] filePaths) {
