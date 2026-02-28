@@ -30,8 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -46,16 +46,15 @@ import org.springframework.beans.factory.annotation.Autowired;
     DiagnosticTag.UNPREDICTABLE
   }
 )
+@RequiredArgsConstructor
 public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
 
-  @Autowired
-  @SuppressWarnings("NullAway.Init")
-  private LanguageServerConfiguration configuration;
+  private final LanguageServerConfiguration serverConfiguration;
 
   @Override
   protected void check() {
 
-    if (!configuration.getDiagnosticsOptions().isOrdinaryAppSupport()) {
+    if (!serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport()) {
       return;
     }
 

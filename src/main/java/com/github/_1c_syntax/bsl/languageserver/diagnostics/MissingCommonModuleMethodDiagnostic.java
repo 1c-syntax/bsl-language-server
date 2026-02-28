@@ -32,11 +32,11 @@ import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenc
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
@@ -49,11 +49,10 @@ import java.util.Optional;
     DiagnosticTag.ERROR
   }
 )
+@RequiredArgsConstructor
 public class MissingCommonModuleMethodDiagnostic extends AbstractDiagnostic {
   public static final String PRIVATE_METHOD_MESSAGE = "privateMethod";
-
-  @Autowired
-  private LocationRepository locationRepository;
+  private final LocationRepository locationRepository;
 
   private static String getMethodNameByLocation(ParserRuleContext node, Range range) {
     return Trees.findTerminalNodeContainsPosition(node, range.getStart())

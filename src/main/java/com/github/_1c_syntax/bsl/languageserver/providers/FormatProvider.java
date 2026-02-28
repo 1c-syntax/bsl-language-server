@@ -114,8 +114,7 @@ public final class FormatProvider {
     return getTextEdits(
       tokens,
       locale,
-      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions(),
-      configuration
+      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
     );
   }
 
@@ -140,8 +139,7 @@ public final class FormatProvider {
       .collect(Collectors.toList());
 
     return getTextEdits(
-      tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions(),
-      configuration);
+      tokens, documentContext.getScriptVariantLocale(), params.getRange(), startCharacter, params.getOptions());
   }
 
   @EventListener
@@ -164,11 +162,10 @@ public final class FormatProvider {
     Locale languageLocale,
     Range range,
     int startCharacter,
-    FormattingOptions options,
-    LanguageServerConfiguration configuration
+    FormattingOptions options
   ) {
 
-    String newText = getNewText(tokens, languageLocale, range, startCharacter, options, configuration);
+    String newText = getNewText(tokens, languageLocale, range, startCharacter, options);
 
     if (newText.isEmpty()) {
       return Collections.emptyList();
@@ -185,8 +182,7 @@ public final class FormatProvider {
     Locale languageLocale,
     Range range,
     int startCharacter,
-    FormattingOptions options,
-    LanguageServerConfiguration configuration
+    FormattingOptions options
   ) {
 
     if (tokens.isEmpty()) {
@@ -292,7 +288,7 @@ public final class FormatProvider {
       if (tokenType == BSLLexer.LINE_COMMENT) {
         addedText = addedText.trim();
       } else if (keywordTypes.contains(tokenType)) {
-        addedText = checkAndFormatKeyword(token, languageLocale, configuration);
+        addedText = checkAndFormatKeyword(token, languageLocale);
       }
       newTextBuilder.append(addedText);
 
@@ -335,7 +331,7 @@ public final class FormatProvider {
     return newTextBuilder.toString();
   }
 
-  private String checkAndFormatKeyword(Token token, Locale languageLocale, LanguageServerConfiguration configuration) {
+  private String checkAndFormatKeyword(Token token, Locale languageLocale) {
     var needFormatKeyword = configuration.getFormattingOptions().isUseKeywordsFormatting();
     if (needFormatKeyword) {
       var useUpperCase = configuration.getFormattingOptions().isUseUpperCaseForOrNotAndKeywords();
