@@ -71,7 +71,7 @@ class AnalyzeProjectOnStartTest {
     serverContextProvider.clear();
     var realContext = serverContextProvider.addWorkspace(TEST_WORKSPACE_URI);
     serverContext = Mockito.spy(realContext);
-    WorkspaceContextHolder.set(TEST_WORKSPACE_URI.toString());
+    WorkspaceContextHolder.set(realContext.getWorkspaceUri().toString());
   }
 
   @AfterEach
