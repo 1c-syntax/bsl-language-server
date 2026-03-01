@@ -39,6 +39,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,10 +52,11 @@ class CacheConfigurationTest {
 
   @AfterEach
   void tearDown() {
-    // Close additional managers first (in reverse order for better cleanup)
-    for (int i = additionalManagers.size() - 1; i >= 0; i--) {
-      closeManager(additionalManagers.get(i));
-    }
+    // Close additional managers in parallel to avoid serial lock-file retry delays on Windows
+    var closeFutures = additionalManagers.stream()
+      .map(manager -> CompletableFuture.runAsync(() -> closeManager(manager)))
+      .toArray(CompletableFuture[]::new);
+    CompletableFuture.allOf(closeFutures).join();
     additionalManagers.clear();
     
     // Close main manager
