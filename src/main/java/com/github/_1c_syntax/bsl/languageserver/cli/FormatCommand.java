@@ -36,6 +36,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -44,6 +45,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import static picocli.CommandLine.Command;
@@ -78,6 +81,8 @@ public class FormatCommand implements Callable<Integer> {
   private static final Pattern COMMA_PATTERN = Pattern.compile(",");
   private final ServerContextProvider serverContextProvider;
   private final FormatProvider formatProvider;
+  @Qualifier("cliExecutor")
+  private final ExecutorService cliExecutor;
 
   private ServerContext serverContext;
 
@@ -118,30 +123,33 @@ public class FormatCommand implements Callable<Integer> {
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri().toString())) {
-      var workspaceUri = WorkspaceContextHolder.get();
-      var workspaceName = WorkspaceContextHolder.getName();
 
       if (silentMode) {
-        files.parallelStream().forEach(file -> {
-          propagateWorkspaceContext(workspaceUri, workspaceName);
-          formatFile(file);
-        });
+        cliExecutor.submit(() ->
+          files.parallelStream().forEach(this::formatFile)
+        ).get();
       } else {
         try (ProgressBar pb = new ProgressBarBuilder()
           .setTaskName("Formatting files...")
           .setInitialMax(files.size())
           .setStyle(ProgressBarStyle.ASCII)
           .build()) {
-          files.parallelStream()
-            .forEach((File file) -> {
-              propagateWorkspaceContext(workspaceUri, workspaceName);
-              pb.step();
-              formatFile(file);
-            });
+          cliExecutor.submit(() ->
+            files.parallelStream()
+              .forEach((File file) -> {
+                pb.step();
+                formatFile(file);
+              })
+          ).get();
         }
       }
 
       return 0;
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Error formatting files", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Interrupted while formatting files", e);
     }
   }
 
@@ -162,12 +170,6 @@ public class FormatCommand implements Callable<Integer> {
     }
 
     return files;
-  }
-
-  private static void propagateWorkspaceContext(String workspaceUri, String workspaceName) {
-    if (workspaceUri != null) {
-      WorkspaceContextHolder.set(workspaceUri, workspaceName != null ? workspaceName : "");
-    }
   }
 
   @SneakyThrows

@@ -120,6 +120,12 @@ public class ExecutorConfiguration {
     return createWorkspaceForkJoinPool("semantic-tokens-");
   }
 
+  @Bean(destroyMethod = "shutdown")
+  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
+  public ExecutorService cliExecutor() {
+    return createWorkspaceForkJoinPool("cli-");
+  }
+
   private ThreadPoolTaskExecutor createThreadPoolExecutor(
     TaskDecorator taskDecorator, String threadNamePrefix) {
     var executor = new ThreadPoolTaskExecutor();

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.documentlink;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,9 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
   @Autowired
   private DiagnosticDescriptionDocumentLinkSupplier supplier;
+
+  @Autowired
+  private DiagnosticInfos diagnosticInfos;
 
   private static final String SITE_URL = "https://1c-syntax.github.io/bsl-language-server/";
   private static final String SITE_EN_URL = "https://1c-syntax.github.io/bsl-language-server/en/";
@@ -115,6 +119,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setUseDevSite(false);
+    diagnosticInfos.refresh();
     documentContext = getDocumentContext();
     var documentLinks = supplier.getDocumentLinks(documentContext);
 
@@ -124,6 +129,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setUseDevSite(true);
+    diagnosticInfos.refresh();
     documentContext = getDocumentContext();
     documentLinks = supplier.getDocumentLinks(documentContext);
 
@@ -134,6 +140,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
     // when
     configuration.setUseDevSite(true);
     configuration.setLanguage(Language.EN);
+    diagnosticInfos.refresh();
     documentContext = getDocumentContext();
     documentLinks = supplier.getDocumentLinks(documentContext);
 
@@ -184,6 +191,7 @@ class DiagnosticDescriptionDocumentLinkSupplierTest {
 
     // when
     configuration.setSiteRoot("https://fake");
+    diagnosticInfos.refresh();
     documentContext = getDocumentContext();
     documentLinks = supplier.getDocumentLinks(documentContext);
 

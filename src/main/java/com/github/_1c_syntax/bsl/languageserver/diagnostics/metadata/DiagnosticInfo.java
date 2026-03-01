@@ -71,6 +71,8 @@ public class DiagnosticInfo {
 
   private Optional<DiagnosticMetadata> metadataOverride;
   private org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
+  private String cachedCodeDescriptionHref;
+  private Language cachedLanguage;
 
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
@@ -81,6 +83,7 @@ public class DiagnosticInfo {
     this.configuration = configuration;
     this.stringInterner = stringInterner;
 
+    cachedLanguage = safeGetLanguage();
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
@@ -88,11 +91,14 @@ public class DiagnosticInfo {
     // Get metadata override from configuration if exists
     metadataOverride = computeMetadataOverride();
     lspSeverity = computeLSPSeverity();
+    cachedCodeDescriptionHref = computeCodeDescriptionHref();
   }
 
   public void refresh() {
     metadataOverride = computeMetadataOverride();
     lspSeverity = computeLSPSeverity();
+    cachedLanguage = safeGetLanguage();
+    cachedCodeDescriptionHref = computeCodeDescriptionHref();
   }
 
   public DiagnosticCode getCode() {
@@ -100,7 +106,11 @@ public class DiagnosticInfo {
   }
 
   public String getDiagnosticCodeDescriptionHref() {
-    var language = configuration.getLanguage();
+    return cachedCodeDescriptionHref;
+  }
+
+  private String computeCodeDescriptionHref() {
+    var language = cachedLanguage;
     var useDevSite = configuration.isUseDevSite();
 
     var siteRoot = configuration.getSiteRoot();
@@ -121,7 +131,7 @@ public class DiagnosticInfo {
   }
 
   public String getDescription() {
-    var langCode = configuration.getLanguage().getLanguageCode();
+    var langCode = cachedLanguage.getLanguageCode();
 
     var resourceName = langCode + "/" + diagnosticCode.getStringValue() + ".md";
     var descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
@@ -148,11 +158,11 @@ public class DiagnosticInfo {
   }
 
   public String getResourceString(String key) {
-    return Resources.getResourceString(configuration.getLanguage(), diagnosticClass, key);
+    return Resources.getResourceString(cachedLanguage, diagnosticClass, key);
   }
 
   public String getResourceString(String key, Object... args) {
-    return Resources.getResourceString(configuration.getLanguage(), diagnosticClass, key, args);
+    return Resources.getResourceString(cachedLanguage, diagnosticClass, key, args);
   }
 
   public DiagnosticType getType() {
@@ -294,6 +304,15 @@ public class DiagnosticInfo {
     var metadataFromConfig = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
 
     return Optional.ofNullable(metadataFromConfig);
+  }
+
+  private Language safeGetLanguage() {
+    try {
+      var language = configuration.getLanguage();
+      return language != null ? language : Language.RU;
+    } catch (Exception e) {
+      return Language.RU;
+    }
   }
 
   private static org.eclipse.lsp4j.@Nullable DiagnosticSeverity parseLspSeverity(String severityString) {

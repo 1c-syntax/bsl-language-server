@@ -31,12 +31,12 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
@@ -46,6 +46,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Option;
@@ -142,6 +144,8 @@ public class AnalyzeCommand implements Callable<Integer> {
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerContextProvider serverContextProvider;
   private final LanguageServerConfiguration configuration;
+  @Qualifier("cliExecutor")
+  private final ExecutorService cliExecutor;
 
   private ServerContext serverContext;
 
@@ -179,30 +183,27 @@ public class AnalyzeCommand implements Callable<Integer> {
 
       serverContext.populateContext(files);
 
-      var workspaceUri = WorkspaceContextHolder.get();
-      var workspaceName = WorkspaceContextHolder.getName();
-
       List<FileInfo> fileInfos;
       if (silentMode) {
-        fileInfos = files.parallelStream()
-          .map((File file) -> {
-            propagateWorkspaceContext(workspaceUri, workspaceName);
-            return getFileInfoFromFile(workspaceDir, file);
-          })
-          .collect(Collectors.toList());
+        fileInfos = cliExecutor.submit(() ->
+          files.parallelStream()
+            .map((File file) -> getFileInfoFromFile(workspaceDir, file))
+            .collect(Collectors.toList())
+        ).get();
       } else {
         try (ProgressBar pb = new ProgressBarBuilder()
           .setTaskName("Analyzing files...")
           .setInitialMax(files.size())
           .setStyle(ProgressBarStyle.ASCII)
           .build()) {
-          fileInfos = files.parallelStream()
-            .map((File file) -> {
-              propagateWorkspaceContext(workspaceUri, workspaceName);
-              pb.step();
-              return getFileInfoFromFile(workspaceDir, file);
-            })
-            .collect(Collectors.toList());
+          fileInfos = cliExecutor.submit(() ->
+            files.parallelStream()
+              .map((File file) -> {
+                pb.step();
+                return getFileInfoFromFile(workspaceDir, file);
+              })
+              .collect(Collectors.toList())
+          ).get();
         }
       }
 
@@ -210,18 +211,16 @@ public class AnalyzeCommand implements Callable<Integer> {
       var outputDir = Absolute.path(outputDirOption);
       aggregator.report(analysisInfo, outputDir);
       return 0;
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Error analyzing files", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Interrupted while analyzing files", e);
     }
   }
 
   public String[] getReportersOptions() {
     return reportersOptions.clone();
-  }
-
-  @SneakyThrows
-  private static void propagateWorkspaceContext(String workspaceUri, String workspaceName) {
-    if (workspaceUri != null) {
-      WorkspaceContextHolder.set(workspaceUri, workspaceName != null ? workspaceName : "");
-    }
   }
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {

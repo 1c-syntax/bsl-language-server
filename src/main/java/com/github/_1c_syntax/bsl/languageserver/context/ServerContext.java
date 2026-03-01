@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
@@ -81,6 +80,8 @@ public class ServerContext {
   private final GlobalLanguageServerConfiguration globalConfiguration;
   @Qualifier("computeConfigurationExecutor")
   private final ExecutorService computeConfigurationExecutor;
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService populateContextExecutor;
 
   @Getter
   @Setter
@@ -135,34 +136,33 @@ public class ServerContext {
 
     LOGGER.debug("Populating context...");
 
-    var workspaceUri = WorkspaceContextHolder.get();
-    var workspaceName = WorkspaceContextHolder.getName();
+    try {
+      populateContextExecutor.submit(() ->
+        files.parallelStream().forEach((File file) -> {
+          workDoneProgressReporter.tick();
 
-    files.parallelStream().forEach((File file) -> {
-
-      // Propagate workspace context to ForkJoinPool worker threads.
-      // Always set (not just when null) because worker threads may have stale values from prior tasks.
-      if (workspaceUri != null) {
-        WorkspaceContextHolder.set(workspaceUri, workspaceName != null ? workspaceName : "");
-      }
-
-      workDoneProgressReporter.tick();
-
-      var uri = Absolute.uri(file.toURI());
-      var lock = getDocumentLock(uri);
-      lock.writeLock().lock();
-      try {
-        var documentContext = documents.get(uri);
-        if (documentContext == null) {
-          documentContext = createDocumentContext(uri);
-          rebuildDocument(documentContext);
-          documentContext.freezeComputedData();
-          tryClearDocument(documentContext);
-        }
-      } finally {
-        lock.writeLock().unlock();
-      }
-    });
+          var uri = Absolute.uri(file.toURI());
+          var lock = getDocumentLock(uri);
+          lock.writeLock().lock();
+          try {
+            var documentContext = documents.get(uri);
+            if (documentContext == null) {
+              documentContext = createDocumentContext(uri);
+              rebuildDocument(documentContext);
+              documentContext.freezeComputedData();
+              tryClearDocument(documentContext);
+            }
+          } finally {
+            lock.writeLock().unlock();
+          }
+        })
+      ).get();
+    } catch (ExecutionException e) {
+      throw new RuntimeException("Error populating context", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Interrupted while populating context", e);
+    }
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
