@@ -121,7 +121,7 @@ public class BSLWorkspaceService implements WorkspaceService {
         // Add new workspace folders
         event.getAdded().forEach((WorkspaceFolder folder) -> {
           var serverContext = serverContextProvider.addWorkspace(folder);
-          WorkspaceContextHolder.run(serverContext.getWorkspaceUri().toString(),
+          WorkspaceContextHolder.run(serverContext.getWorkspaceUri(),
             () -> CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor));
         });
 

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,8 +32,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkspaceContextHolderTest {
 
-  private static final String URI_1 = "file:///workspace1";
-  private static final String URI_2 = "file:///workspace2";
+  private static final URI URI_1 = URI.create("file:///workspace1");
+  private static final URI URI_2 = URI.create("file:///workspace2");
   private static final String NAME_1 = "workspace1";
   private static final String NAME_2 = "workspace2";
 
@@ -117,7 +118,7 @@ class WorkspaceContextHolderTest {
 
   @Test
   void run_setsAndClearsContext() {
-    var captured = new AtomicReference<String>();
+    var captured = new AtomicReference<URI>();
 
     WorkspaceContextHolder.run(URI_1, () -> captured.set(WorkspaceContextHolder.get()));
 
@@ -202,14 +203,14 @@ class WorkspaceContextHolderTest {
 
   @Test
   void forUri_extractsNameFromUri() {
-    try (var ctx = WorkspaceContextHolder.forUri("file:///path/to/my-project")) {
+    try (var ctx = WorkspaceContextHolder.forUri(URI.create("file:///path/to/my-project"))) {
       assertThat(WorkspaceContextHolder.getName()).isEqualTo("my-project");
     }
   }
 
   @Test
   void forUri_extractsNameFromUriWithTrailingSlash() {
-    try (var ctx = WorkspaceContextHolder.forUri("file:///path/to/my-project/")) {
+    try (var ctx = WorkspaceContextHolder.forUri(URI.create("file:///path/to/my-project/"))) {
       assertThat(WorkspaceContextHolder.getName()).isEqualTo("my-project");
     }
   }

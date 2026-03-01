@@ -111,8 +111,8 @@ public class ServerContextProvider {
 
     // Set workspace context for scoped bean resolution
     try (var ctx = workspaceName != null
-      ? WorkspaceContextHolder.forUri(uri.toString(), workspaceName)
-      : WorkspaceContextHolder.forUri(uri.toString())) {
+      ? WorkspaceContextHolder.forUri(uri, workspaceName)
+      : WorkspaceContextHolder.forUri(uri)) {
       // Get new ServerContext instance from Spring (prototype scope)
       var serverContext = serverContextProvider.getObject();
 
@@ -144,7 +144,7 @@ public class ServerContextProvider {
     var uri = Absolute.uri(workspaceFolder.getUri());
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
-    workspaceScope.removeWorkspace(uri.toString());
+    workspaceScope.removeWorkspace(uri);
 
     if (serverContext != null) {
       serverContext.clear();
@@ -247,7 +247,7 @@ public class ServerContextProvider {
   public void clear() {
     contexts.forEach((uri, serverContext) -> {
       serverContext.clear();
-      workspaceScope.removeWorkspace(uri.toString());
+      workspaceScope.removeWorkspace(uri);
     });
     contexts.clear();
     workspaceRoots.clear();

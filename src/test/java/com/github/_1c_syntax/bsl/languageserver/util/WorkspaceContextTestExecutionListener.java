@@ -27,6 +27,8 @@ import org.springframework.core.Ordered;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
 
+import java.net.URI;
+
 /**
  * Устанавливает workspace ThreadLocal для всех @SpringBootTest тестов,
  * чтобы workspace-scoped proxy бины могли резолвиться.
@@ -34,7 +36,7 @@ import org.springframework.test.context.support.AbstractTestExecutionListener;
 @NoArgsConstructor
 public class WorkspaceContextTestExecutionListener extends AbstractTestExecutionListener {
 
-  private static final String DEFAULT_TEST_WORKSPACE = "file:///test-workspace";
+  private static final URI DEFAULT_TEST_WORKSPACE = URI.create("file:///test-workspace");
 
   @Override
   public int getOrder() {

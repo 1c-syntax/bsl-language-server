@@ -46,6 +46,7 @@ public class WorkspaceNameThreadLocalAccessor implements ThreadLocalAccessor<Str
     // this accessor only restores already-captured values
     var currentUri = WorkspaceContextHolder.get();
     if (currentUri != null) {
+      // bypass normalization — URI is already normalized
       WorkspaceContextHolder.set(currentUri, value);
     }
   }

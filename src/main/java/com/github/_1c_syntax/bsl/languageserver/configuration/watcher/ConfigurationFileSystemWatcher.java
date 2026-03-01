@@ -118,7 +118,7 @@ public class ConfigurationFileSystemWatcher {
     for (var entry : workspaceWatchKeys.entrySet()) {
       var workspaceUri = entry.getKey();
       var watchKey = entry.getValue();
-      WorkspaceContextHolder.run(workspaceUri.toString(), () ->
+      WorkspaceContextHolder.run(workspaceUri, () ->
         watchWorkspaceConfig(workspaceUri, watchKey)
       );
     }

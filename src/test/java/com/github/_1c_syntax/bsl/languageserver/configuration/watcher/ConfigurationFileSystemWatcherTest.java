@@ -66,7 +66,7 @@ class ConfigurationFileSystemWatcherTest {
   void setUp() {
     serverContextProvider.clear();
     serverContext = serverContextProvider.addWorkspace(workspaceDir.toUri());
-    WorkspaceContextHolder.set(serverContext.getWorkspaceUri().toString());
+    WorkspaceContextHolder.set(serverContext.getWorkspaceUri());
   }
 
   @AfterEach
@@ -108,7 +108,7 @@ class ConfigurationFileSystemWatcherTest {
   @Test
   void testWorkspaceConfigFileChange() throws IOException {
     // given
-    var workspaceUri = workspaceDir.toUri().toString();
+    var workspaceUri = serverContext.getWorkspaceUri();
     var configuration = serverContext.getLanguageServerConfiguration();
     var configFile = new File(workspaceDir.toFile(), ".bsl-language-server.json");
     var content = "{\"diagnostics\": {\"computeTrigger\": \"onType\"}}";

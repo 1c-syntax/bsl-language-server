@@ -151,7 +151,7 @@ public class LanguageServerConfiguration {
 
     Path workspaceRoot;
     try {
-      workspaceRoot = Absolute.path(URI.create(workspaceUri));
+      workspaceRoot = Absolute.path(workspaceUri);
     } catch (Exception e) {
       LOGGER.debug("Cannot resolve workspace path from URI: {}", workspaceUri);
       return;

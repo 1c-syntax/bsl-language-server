@@ -25,6 +25,7 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -41,8 +42,8 @@ public class WorkspaceScope implements Scope {
 
   public static final String SCOPE_NAME = "workspace";
 
-  private final ConcurrentHashMap<String, Map<String, Object>> store = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Map<String, Runnable>> destructionCallbacks = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<URI, Map<String, Object>> store = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<URI, Map<String, Runnable>> destructionCallbacks = new ConcurrentHashMap<>();
 
   @Override
   public Object get(String name, ObjectFactory<?> objectFactory) {
@@ -77,13 +78,14 @@ public class WorkspaceScope implements Scope {
   @Override
   @Nullable
   public String getConversationId() {
-    return WorkspaceContextHolder.get();
+    var uri = WorkspaceContextHolder.get();
+    return uri != null ? uri.toString() : null;
   }
 
   /**
    * Удалить все бины workspace, предварительно вызвав destruction callbacks.
    */
-  public void removeWorkspace(String workspaceUri) {
+  public void removeWorkspace(URI workspaceUri) {
     var callbacks = destructionCallbacks.remove(workspaceUri);
     if (callbacks != null) {
       callbacks.values().forEach(Runnable::run);
@@ -107,7 +109,7 @@ public class WorkspaceScope implements Scope {
       .collect(Collectors.toList());
   }
 
-  private static String resolveKey() {
+  private static URI resolveKey() {
     var key = WorkspaceContextHolder.get();
     if (key == null) {
       throw new IllegalStateException("Workspace context is not set. Use WorkspaceContextHolder.forUri() before accessing workspace-scoped beans.");

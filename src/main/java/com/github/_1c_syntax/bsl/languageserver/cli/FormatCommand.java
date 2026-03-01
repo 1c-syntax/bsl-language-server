@@ -122,7 +122,7 @@ public class FormatCommand implements Callable<Integer> {
     }
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
-    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri().toString())) {
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
 
       if (silentMode) {
         cliExecutor.submit(() ->

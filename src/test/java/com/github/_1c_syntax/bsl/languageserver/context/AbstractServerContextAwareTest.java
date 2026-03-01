@@ -53,7 +53,7 @@ public abstract class AbstractServerContextAwareTest {
     serverContextProvider.clear();
     context = serverContextProvider.addWorkspace(EMPTY_WORKSPACE_URI);
     // Re-set workspace context for scoped bean resolution in tests
-    WorkspaceContextHolder.set(context.getWorkspaceUri().toString());
+    WorkspaceContextHolder.set(context.getWorkspaceUri());
   }
 
   protected void initServerContext(String path) {
@@ -76,7 +76,7 @@ public abstract class AbstractServerContextAwareTest {
     context = serverContextProvider.addWorkspace(uri);
     context.setConfigurationRoot(configurationRoot);
     // Re-set workspace context for scoped bean resolution in tests
-    WorkspaceContextHolder.set(context.getWorkspaceUri().toString());
+    WorkspaceContextHolder.set(context.getWorkspaceUri());
     if (populate) {
       context.populateContext();
     }

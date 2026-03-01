@@ -21,13 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import com.github._1c_syntax.utils.Absolute;
+
 import javax.annotation.Nullable;
+import java.net.URI;
 import java.util.concurrent.Callable;
 
 /**
  * ThreadLocal-хранилище текущего workspace URI и имени.
  * Используется {@link WorkspaceScope} для определения ключа scope,
  * а также для именования потоков в per-workspace ForkJoinPool.
+ * <p>
+ * URI нормализуется через {@link Absolute#uri(URI)} при установке,
+ * что исключает рассогласование ключей на разных ОС.
  * <p>
  * Предпочтительный способ использования — через try-with-resources:
  * <pre>{@code
@@ -46,7 +52,7 @@ import java.util.concurrent.Callable;
  */
 public final class WorkspaceContextHolder {
 
-  private static final ThreadLocal<String> CURRENT_WORKSPACE = new ThreadLocal<>();
+  private static final ThreadLocal<URI> CURRENT_WORKSPACE = new ThreadLocal<>();
   private static final ThreadLocal<String> CURRENT_WORKSPACE_NAME = new ThreadLocal<>();
 
   private WorkspaceContextHolder() {
@@ -57,7 +63,7 @@ public final class WorkspaceContextHolder {
    * Создать AutoCloseable-контекст workspace с URI и именем.
    * При закрытии восстанавливает предыдущее значение ThreadLocal.
    */
-  public static WorkspaceContext forUri(String workspaceUri, String workspaceName) {
+  public static WorkspaceContext forUri(URI workspaceUri, String workspaceName) {
     var previous = new WorkspaceContext(get(), getName());
     set(workspaceUri, workspaceName);
     return previous;
@@ -68,7 +74,7 @@ public final class WorkspaceContextHolder {
    * Имя извлекается из последнего сегмента пути URI.
    * При закрытии восстанавливает предыдущее значение ThreadLocal.
    */
-  public static WorkspaceContext forUri(String workspaceUri) {
+  public static WorkspaceContext forUri(URI workspaceUri) {
     var previous = new WorkspaceContext(get(), getName());
     set(workspaceUri);
     return previous;
@@ -79,7 +85,7 @@ public final class WorkspaceContextHolder {
    * Имя извлекается из последнего сегмента пути URI.
    * При завершении восстанавливает предыдущее значение ThreadLocal.
    */
-  public static void run(String workspaceUri, Runnable action) {
+  public static void run(URI workspaceUri, Runnable action) {
     try (var ctx = forUri(workspaceUri)) {
       action.run();
     }
@@ -89,7 +95,7 @@ public final class WorkspaceContextHolder {
    * Выполнить действие в контексте workspace с URI и именем.
    * При завершении восстанавливает предыдущее значение ThreadLocal.
    */
-  public static void run(String workspaceUri, String workspaceName, Runnable action) {
+  public static void run(URI workspaceUri, String workspaceName, Runnable action) {
     try (var ctx = forUri(workspaceUri, workspaceName)) {
       action.run();
     }
@@ -100,7 +106,7 @@ public final class WorkspaceContextHolder {
    * Имя извлекается из последнего сегмента пути URI.
    * При завершении восстанавливает предыдущее значение ThreadLocal.
    */
-  public static <T> T call(String workspaceUri, Callable<T> action) throws Exception {
+  public static <T> T call(URI workspaceUri, Callable<T> action) throws Exception {
     try (var ctx = forUri(workspaceUri)) {
       return action.call();
     }
@@ -110,30 +116,32 @@ public final class WorkspaceContextHolder {
    * Вычислить значение в контексте workspace с URI и именем.
    * При завершении восстанавливает предыдущее значение ThreadLocal.
    */
-  public static <T> T call(String workspaceUri, String workspaceName, Callable<T> action) throws Exception {
+  public static <T> T call(URI workspaceUri, String workspaceName, Callable<T> action) throws Exception {
     try (var ctx = forUri(workspaceUri, workspaceName)) {
       return action.call();
     }
   }
 
   /**
-   * Установить workspace URI и имя.
+   * Установить workspace URI и имя. URI нормализуется через {@link Absolute#uri(URI)}.
    */
-  public static void set(String workspaceUri, String workspaceName) {
-    CURRENT_WORKSPACE.set(workspaceUri);
+  public static void set(URI workspaceUri, String workspaceName) {
+    CURRENT_WORKSPACE.set(normalize(workspaceUri));
     CURRENT_WORKSPACE_NAME.set(workspaceName);
   }
 
   /**
    * Установить workspace URI. Имя извлекается из последнего сегмента пути URI.
+   * URI нормализуется через {@link Absolute#uri(URI)}.
    */
-  public static void set(String workspaceUri) {
-    CURRENT_WORKSPACE.set(workspaceUri);
-    CURRENT_WORKSPACE_NAME.set(extractName(workspaceUri));
+  public static void set(URI workspaceUri) {
+    var normalized = normalize(workspaceUri);
+    CURRENT_WORKSPACE.set(normalized);
+    CURRENT_WORKSPACE_NAME.set(extractName(normalized));
   }
 
   @Nullable
-  public static String get() {
+  public static URI get() {
     return CURRENT_WORKSPACE.get();
   }
 
@@ -147,8 +155,21 @@ public final class WorkspaceContextHolder {
     CURRENT_WORKSPACE_NAME.remove();
   }
 
-  private static String extractName(String workspaceUri) {
-    var path = workspaceUri.replaceAll("/+$", "");
+  private static URI normalize(URI uri) {
+    try {
+      return Absolute.uri(uri);
+    } catch (Exception e) {
+      // fallback for non-file URIs or synthetic test URIs
+      return uri;
+    }
+  }
+
+  private static String extractName(URI workspaceUri) {
+    var path = workspaceUri.getPath();
+    if (path == null) {
+      return workspaceUri.toString();
+    }
+    path = path.replaceAll("/+$", "");
     var lastSlash = path.lastIndexOf('/');
     return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
   }
@@ -159,11 +180,11 @@ public final class WorkspaceContextHolder {
    */
   public static final class WorkspaceContext implements AutoCloseable {
     @Nullable
-    private final String previousUri;
+    private final URI previousUri;
     @Nullable
     private final String previousName;
 
-    private WorkspaceContext(@Nullable String previousUri, @Nullable String previousName) {
+    private WorkspaceContext(@Nullable URI previousUri, @Nullable String previousName) {
       this.previousUri = previousUri;
       this.previousName = previousName;
     }

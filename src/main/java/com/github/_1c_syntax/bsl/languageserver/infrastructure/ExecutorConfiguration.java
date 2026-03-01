@@ -30,6 +30,7 @@ import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
@@ -164,7 +165,7 @@ public class ExecutorConfiguration {
   }
 
   private record WorkspaceAwareFJWTFactory(
-    String workspaceUri,
+    URI workspaceUri,
     String workspaceName,
     String prefix
   ) implements ForkJoinPool.ForkJoinWorkerThreadFactory {

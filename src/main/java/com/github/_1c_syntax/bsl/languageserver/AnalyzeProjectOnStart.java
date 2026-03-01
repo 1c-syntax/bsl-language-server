@@ -60,7 +60,7 @@ public class AnalyzeProjectOnStart {
       return;
     }
 
-    try (var ctx = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri().toString())) {
+    try (var ctx = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
       if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
         return;
       }

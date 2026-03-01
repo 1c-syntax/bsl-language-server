@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import io.micrometer.context.ThreadLocalAccessor;
 
+import java.net.URI;
+
 /**
  * Micrometer SPI для автоматической пропагации workspace URI через executors.
  */
-public class WorkspaceThreadLocalAccessor implements ThreadLocalAccessor<String> {
+public class WorkspaceThreadLocalAccessor implements ThreadLocalAccessor<URI> {
 
   private static final String KEY = "workspaceUri";
 
@@ -36,12 +38,12 @@ public class WorkspaceThreadLocalAccessor implements ThreadLocalAccessor<String>
   }
 
   @Override
-  public String getValue() {
+  public URI getValue() {
     return WorkspaceContextHolder.get();
   }
 
   @Override
-  public void setValue(String value) {
+  public void setValue(URI value) {
     WorkspaceContextHolder.set(value);
   }
 

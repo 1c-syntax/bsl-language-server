@@ -171,7 +171,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     // Create workspace for srcDir (factory will create per-workspace configuration)
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
-    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri().toString())) {
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
       // In analyze mode, -c affects both global and per-workspace settings
       // since there is always exactly one workspace
       configuration.update(configurationFile);
