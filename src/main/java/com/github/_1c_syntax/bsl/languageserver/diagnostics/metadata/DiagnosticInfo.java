@@ -83,7 +83,7 @@ public class DiagnosticInfo {
     this.configuration = configuration;
     this.stringInterner = stringInterner;
 
-    cachedLanguage = safeGetLanguage();
+    cachedLanguage = configuration.getLanguage();
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
@@ -97,7 +97,7 @@ public class DiagnosticInfo {
   public void refresh() {
     metadataOverride = computeMetadataOverride();
     lspSeverity = computeLSPSeverity();
-    cachedLanguage = safeGetLanguage();
+    cachedLanguage = configuration.getLanguage();
     cachedCodeDescriptionHref = computeCodeDescriptionHref();
   }
 
@@ -306,14 +306,6 @@ public class DiagnosticInfo {
     return Optional.ofNullable(metadataFromConfig);
   }
 
-  private Language safeGetLanguage() {
-    try {
-      var language = configuration.getLanguage();
-      return language != null ? language : Language.RU;
-    } catch (Exception e) {
-      return Language.RU;
-    }
-  }
 
   private static org.eclipse.lsp4j.@Nullable DiagnosticSeverity parseLspSeverity(String severityString) {
     if (severityString == null || severityString.isEmpty()) {
