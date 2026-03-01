@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import com.github._1c_syntax.utils.Absolute;
-
 import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.concurrent.Callable;
@@ -32,8 +30,7 @@ import java.util.concurrent.Callable;
  * Используется {@link WorkspaceScope} для определения ключа scope,
  * а также для именования потоков в per-workspace ForkJoinPool.
  * <p>
- * URI нормализуется через {@link Absolute#uri(URI)} при установке,
- * что исключает рассогласование ключей на разных ОС.
+ * URI должен быть нормализован вызывающим кодом перед передачей в {@code set()}.
  * <p>
  * Предпочтительный способ использования — через try-with-resources:
  * <pre>{@code
@@ -123,21 +120,20 @@ public final class WorkspaceContextHolder {
   }
 
   /**
-   * Установить workspace URI и имя. URI нормализуется через {@link Absolute#uri(URI)}.
+   * Установить workspace URI и имя. URI должен быть уже нормализован вызывающим кодом.
    */
   public static void set(URI workspaceUri, String workspaceName) {
-    CURRENT_WORKSPACE.set(normalize(workspaceUri));
+    CURRENT_WORKSPACE.set(workspaceUri);
     CURRENT_WORKSPACE_NAME.set(workspaceName);
   }
 
   /**
    * Установить workspace URI. Имя извлекается из последнего сегмента пути URI.
-   * URI нормализуется через {@link Absolute#uri(URI)}.
+   * URI должен быть уже нормализован вызывающим кодом.
    */
   public static void set(URI workspaceUri) {
-    var normalized = normalize(workspaceUri);
-    CURRENT_WORKSPACE.set(normalized);
-    CURRENT_WORKSPACE_NAME.set(extractName(normalized));
+    CURRENT_WORKSPACE.set(workspaceUri);
+    CURRENT_WORKSPACE_NAME.set(extractName(workspaceUri));
   }
 
   @Nullable
@@ -155,14 +151,6 @@ public final class WorkspaceContextHolder {
     CURRENT_WORKSPACE_NAME.remove();
   }
 
-  private static URI normalize(URI uri) {
-    try {
-      return Absolute.uri(uri);
-    } catch (Exception e) {
-      // fallback for non-file URIs or synthetic test URIs
-      return uri;
-    }
-  }
 
   private static String extractName(URI workspaceUri) {
     var path = workspaceUri.getPath();

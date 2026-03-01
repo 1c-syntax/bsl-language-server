@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,8 +33,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkspaceContextHolderTest {
 
-  private static final URI URI_1 = URI.create("file:///workspace1");
-  private static final URI URI_2 = URI.create("file:///workspace2");
+  private static final URI URI_1 = Absolute.uri(URI.create("file:///workspace1"));
+  private static final URI URI_2 = Absolute.uri(URI.create("file:///workspace2"));
   private static final String NAME_1 = "workspace1";
   private static final String NAME_2 = "workspace2";
 
