@@ -88,8 +88,7 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   @Override
   public boolean isApplicable(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var serverContext = documentContext.getServerContext();
-    var testSources = getSelf().getTestSources(serverContext.getConfigurationRoot(), configuration);
+    var testSources = getSelf().getTestSources(documentContext.getServerContext().getConfigurationRoot());
 
     return clientIsSupported
       && documentContext.getFileType() == FileType.OS
@@ -109,11 +108,10 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
    * public для работы @Cachable.
    *
    * @param configurationRoot Корень конфигурации
-   * @param configuration     Конфигурация сервера
    * @return Список исходных файлов тестов
    */
   @Cacheable
-  public Set<URI> getTestSources(@Nullable Path configurationRoot, LanguageServerConfiguration configuration) {
+  public Set<URI> getTestSources(@Nullable Path configurationRoot) {
     var configurationRootString = Optional.ofNullable(configurationRoot)
       .map(Path::toString)
       .orElse("");
