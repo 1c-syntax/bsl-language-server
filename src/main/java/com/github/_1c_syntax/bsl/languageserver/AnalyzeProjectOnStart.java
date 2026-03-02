@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
@@ -56,23 +55,19 @@ public class AnalyzeProjectOnStart {
   public void handleEvent(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
 
-    if (serverContext.getWorkspaceUri() == null) {
+    if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
       return;
     }
 
-    try (var ctx = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
-      if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
-        return;
-      }
+    if (!languageClientHolder.isConnected()) {
+      return;
+    }
 
-      if (!languageClientHolder.isConnected()) {
-        return;
-      }
+    var documentContexts = serverContext.getDocuments().values();
+    var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
+    progress.beginProgress(getMessage("analyzeProject"));
 
-      var documentContexts = serverContext.getDocuments().values();
-      var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
-      progress.beginProgress(getMessage("analyzeProject"));
-
+    try {
       executor.submit(() ->
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
           progress.tick();

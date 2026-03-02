@@ -81,7 +81,7 @@ public class SymbolProvider {
     }
 
     // Search for symbols in all workspace contexts
-    return serverContextProvider.getAllContexts().stream()
+    return serverContextProvider.getAllContexts().values().stream()
       .flatMap(serverContext -> serverContext.getDocuments().values().stream())
       .flatMap(SymbolProvider::getSymbolPairs)
       .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())

@@ -98,7 +98,7 @@ public class TestUtils {
       return provider.addWorkspace(workspaceFolder);
     } else if (allContexts.size() == 1) {
       // Single context - use it
-      return allContexts.iterator().next();
+      return allContexts.values().iterator().next();
     } else {
       // Multiple contexts - test must explicitly specify which one to use
       throw new IllegalStateException(

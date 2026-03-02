@@ -37,7 +37,6 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -232,12 +231,12 @@ public class ServerContextProvider {
   }
 
   /**
-   * Получить все контексты серверов.
+   * Получить все контексты серверов с их URI.
    *
-   * @return неизменяемая коллекция всех контекстов серверов
+   * @return неизменяемая карта URI → контекст сервера
    */
-  public Collection<ServerContext> getAllContexts() {
-    return Collections.unmodifiableCollection(contexts.values());
+  public Map<URI, ServerContext> getAllContexts() {
+    return Collections.unmodifiableMap(contexts);
   }
 
   /**
