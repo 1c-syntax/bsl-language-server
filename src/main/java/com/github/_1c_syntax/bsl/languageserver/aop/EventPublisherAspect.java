@@ -129,7 +129,7 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   }
 
   @AfterReturning(
-    pointcut = "Pointcuts.isServerContextProvider() && Pointcuts.isAddWorkspaceCall() && args(workspaceUri)",
+    pointcut = "Pointcuts.isServerContextProvider() && Pointcuts.isAddWorkspaceCall() && args(workspaceUri, *)",
     returning = "serverContext"
   )
   public void workspaceAdded(JoinPoint joinPoint, URI workspaceUri, ServerContext serverContext) {

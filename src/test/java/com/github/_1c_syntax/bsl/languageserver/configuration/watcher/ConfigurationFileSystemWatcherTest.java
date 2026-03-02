@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,7 +66,7 @@ class ConfigurationFileSystemWatcherTest {
   @BeforeEach
   void setUp() {
     serverContextProvider.clear();
-    serverContext = serverContextProvider.addWorkspace(workspaceDir.toUri());
+    serverContext = serverContextProvider.addWorkspace(Absolute.uri(workspaceDir.toUri()));
     WorkspaceContextHolder.set(serverContext.getWorkspaceUri());
   }
 

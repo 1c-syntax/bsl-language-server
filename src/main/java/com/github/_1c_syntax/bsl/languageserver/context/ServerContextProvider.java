@@ -100,23 +100,22 @@ public class ServerContextProvider {
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
-    var uri = Absolute.uri(workspaceUri);
 
-    if (contexts.containsKey(uri)) {
-      LOGGER.debug("Workspace {} already exists", uri);
-      return contexts.get(uri);
+    if (contexts.containsKey(workspaceUri)) {
+      LOGGER.debug("Workspace {} already exists", workspaceUri);
+      return contexts.get(workspaceUri);
     }
 
-    Path rootPath = Absolute.path(uri);
+    Path rootPath = Absolute.path(workspaceUri);
 
     // Set workspace context for scoped bean resolution
     try (var ctx = workspaceName != null
-      ? WorkspaceContextHolder.forUri(uri, workspaceName)
-      : WorkspaceContextHolder.forUri(uri)) {
+      ? WorkspaceContextHolder.forUri(workspaceUri, workspaceName)
+      : WorkspaceContextHolder.forUri(workspaceUri)) {
       // Get new ServerContext instance from Spring (prototype scope)
       var serverContext = serverContextProvider.getObject();
 
-      serverContext.setWorkspaceUri(uri);
+      serverContext.setWorkspaceUri(workspaceUri);
 
       // Access workspace-scoped LSC (triggers lazy creation with @PostConstruct init())
       // and store on ServerContext for navigation-based access
@@ -128,8 +127,8 @@ public class ServerContextProvider {
       );
       serverContext.setConfigurationRoot(configurationRoot);
 
-      contexts.put(uri, serverContext);
-      workspaceRoots.put(uri, rootPath);
+      contexts.put(workspaceUri, serverContext);
+      workspaceRoots.put(workspaceUri, rootPath);
 
       return serverContext;
     }
