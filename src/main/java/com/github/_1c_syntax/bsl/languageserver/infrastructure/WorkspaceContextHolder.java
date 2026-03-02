@@ -157,7 +157,7 @@ public final class WorkspaceContextHolder {
     if (path == null) {
       return workspaceUri.toString();
     }
-    path = path.replaceAll("/+$", "");
+    path = path.replaceAll("/++$", "");
     var lastSlash = path.lastIndexOf('/');
     return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
   }
