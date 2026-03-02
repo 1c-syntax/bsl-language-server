@@ -107,10 +107,11 @@ public class ServerContextProvider {
 
     Path rootPath = Absolute.path(workspaceUri);
 
+    var name = workspaceName != null ? workspaceName : extractWorkspaceName(workspaceUri);
+    WorkspaceContextHolder.registerWorkspace(workspaceUri, name);
+
     // Set workspace context for scoped bean resolution
-    try (var ctx = workspaceName != null
-      ? WorkspaceContextHolder.forUri(workspaceUri, workspaceName)
-      : WorkspaceContextHolder.forUri(workspaceUri)) {
+    try (var ctx = WorkspaceContextHolder.forUri(workspaceUri)) {
       // Get new ServerContext instance from Spring (prototype scope)
       var serverContext = serverContextProvider.getObject();
 
@@ -143,6 +144,7 @@ public class ServerContextProvider {
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
     workspaceScope.removeWorkspace(uri);
+    WorkspaceContextHolder.unregisterWorkspace(uri);
 
     if (serverContext != null) {
       serverContext.clear();
@@ -246,6 +248,7 @@ public class ServerContextProvider {
     contexts.forEach((uri, serverContext) -> {
       serverContext.clear();
       workspaceScope.removeWorkspace(uri);
+      WorkspaceContextHolder.unregisterWorkspace(uri);
     });
     contexts.clear();
     workspaceRoots.clear();
@@ -269,6 +272,18 @@ public class ServerContextProvider {
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     documentIndex.remove(event.getUri());
+  }
+
+  private static String extractWorkspaceName(URI workspaceUri) {
+    var path = workspaceUri.getPath();
+    if (path == null) {
+      return workspaceUri.toString();
+    }
+    while (path.endsWith("/")) {
+      path = path.substring(0, path.length() - 1);
+    }
+    var lastSlash = path.lastIndexOf('/');
+    return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
   }
 
 }

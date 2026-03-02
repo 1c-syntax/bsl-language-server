@@ -41,11 +41,15 @@ class WorkspaceContextHolderTest {
   @AfterEach
   void tearDown() {
     WorkspaceContextHolder.clear();
+    WorkspaceContextHolder.unregisterWorkspace(URI_1);
+    WorkspaceContextHolder.unregisterWorkspace(URI_2);
   }
 
   @org.junit.jupiter.api.BeforeEach
   void setUp() {
     WorkspaceContextHolder.clear();
+    WorkspaceContextHolder.registerWorkspace(URI_1, NAME_1);
+    WorkspaceContextHolder.registerWorkspace(URI_2, NAME_2);
   }
 
   // forUri (AutoCloseable) tests
@@ -200,19 +204,23 @@ class WorkspaceContextHolderTest {
     assertThat(WorkspaceContextHolder.get()).isNull();
   }
 
-  // extractName tests
+  // registered name resolution tests
 
   @Test
-  void forUri_extractsNameFromUri() {
-    try (var ctx = WorkspaceContextHolder.forUri(URI.create("file:///path/to/my-project"))) {
+  void forUri_usesRegisteredName() {
+    var uri = URI.create("file:///path/to/my-project");
+    WorkspaceContextHolder.registerWorkspace(uri, "my-project");
+    try (var ctx = WorkspaceContextHolder.forUri(uri)) {
       assertThat(WorkspaceContextHolder.getName()).isEqualTo("my-project");
     }
+    WorkspaceContextHolder.unregisterWorkspace(uri);
   }
 
   @Test
-  void forUri_extractsNameFromUriWithTrailingSlash() {
-    try (var ctx = WorkspaceContextHolder.forUri(URI.create("file:///path/to/my-project/"))) {
-      assertThat(WorkspaceContextHolder.getName()).isEqualTo("my-project");
-    }
+  void forUri_throwsForUnregisteredWorkspace() {
+    var uri = URI.create("file:///unknown/workspace");
+    assertThatThrownBy(() -> WorkspaceContextHolder.forUri(uri))
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("Workspace not registered");
   }
 }

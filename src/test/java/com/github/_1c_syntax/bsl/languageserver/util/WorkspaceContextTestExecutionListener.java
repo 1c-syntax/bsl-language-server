@@ -37,6 +37,7 @@ import java.net.URI;
 public class WorkspaceContextTestExecutionListener extends AbstractTestExecutionListener {
 
   private static final URI DEFAULT_TEST_WORKSPACE = URI.create("file:///test-workspace");
+  private static final String DEFAULT_TEST_WORKSPACE_NAME = "test-workspace";
 
   @Override
   public int getOrder() {
@@ -60,6 +61,7 @@ public class WorkspaceContextTestExecutionListener extends AbstractTestExecution
 
   private void ensureWorkspaceContext() {
     if (WorkspaceContextHolder.get() == null) {
+      WorkspaceContextHolder.registerWorkspace(DEFAULT_TEST_WORKSPACE, DEFAULT_TEST_WORKSPACE_NAME);
       WorkspaceContextHolder.set(DEFAULT_TEST_WORKSPACE);
     }
   }

@@ -23,7 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import javax.annotation.Nullable;
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ThreadLocal-хранилище текущего workspace URI и имени.
@@ -51,9 +53,25 @@ public final class WorkspaceContextHolder {
 
   private static final ThreadLocal<URI> CURRENT_WORKSPACE = new ThreadLocal<>();
   private static final ThreadLocal<String> CURRENT_WORKSPACE_NAME = new ThreadLocal<>();
+  private static final Map<URI, String> WORKSPACE_NAMES = new ConcurrentHashMap<>();
 
   private WorkspaceContextHolder() {
     // utility class
+  }
+
+  /**
+   * Зарегистрировать имя workspace для данного URI.
+   * После регистрации вызовы {@link #forUri(URI)} будут использовать это имя.
+   */
+  public static void registerWorkspace(URI workspaceUri, String name) {
+    WORKSPACE_NAMES.put(workspaceUri, name);
+  }
+
+  /**
+   * Удалить регистрацию workspace.
+   */
+  public static void unregisterWorkspace(URI workspaceUri) {
+    WORKSPACE_NAMES.remove(workspaceUri);
   }
 
   /**
@@ -128,12 +146,20 @@ public final class WorkspaceContextHolder {
   }
 
   /**
-   * Установить workspace URI. Имя извлекается из последнего сегмента пути URI.
-   * URI должен быть уже нормализован вызывающим кодом.
+   * Установить workspace URI. Имя берётся из реестра зарегистрированных workspace.
+   * URI должен быть уже нормализован и зарегистрирован через {@link #registerWorkspace}.
+   *
+   * @throws IllegalStateException если workspace не зарегистрирован
    */
   public static void set(URI workspaceUri) {
+    var name = WORKSPACE_NAMES.get(workspaceUri);
+    if (name == null) {
+      throw new IllegalStateException(
+        "Workspace not registered: " + workspaceUri + ". Call registerWorkspace() first."
+      );
+    }
     CURRENT_WORKSPACE.set(workspaceUri);
-    CURRENT_WORKSPACE_NAME.set(extractName(workspaceUri));
+    CURRENT_WORKSPACE_NAME.set(name);
   }
 
   @Nullable
@@ -151,16 +177,6 @@ public final class WorkspaceContextHolder {
     CURRENT_WORKSPACE_NAME.remove();
   }
 
-
-  private static String extractName(URI workspaceUri) {
-    var path = workspaceUri.getPath();
-    if (path == null) {
-      return workspaceUri.toString();
-    }
-    path = path.replaceAll("/++$", "");
-    var lastSlash = path.lastIndexOf('/');
-    return lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
-  }
 
   /**
    * AutoCloseable-обёртка для workspace-контекста.
