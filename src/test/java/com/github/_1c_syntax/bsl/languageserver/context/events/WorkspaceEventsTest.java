@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.events;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +53,11 @@ class WorkspaceEventsTest {
   @TempDir
   Path workspaceDir;
 
+  private URI workspaceUri;
+
   @BeforeEach
   void setUp() {
+    workspaceUri = Absolute.uri(workspaceDir.toUri());
     eventCollector.clear();
   }
 
@@ -65,12 +70,12 @@ class WorkspaceEventsTest {
   @Test
   void testWorkspaceAddedEventPublished() {
     // when
-    var serverContext = serverContextProvider.addWorkspace(workspaceDir.toUri());
+    var serverContext = serverContextProvider.addWorkspace(workspaceUri);
 
     // then
     assertThat(eventCollector.getAddedEvents()).hasSize(1);
     var event = eventCollector.getAddedEvents().get(0);
-    assertThat(event.getWorkspaceUri()).isEqualTo(workspaceDir.toUri());
+    assertThat(event.getWorkspaceUri()).isEqualTo(workspaceUri);
     assertThat(event.getServerContext()).isSameAs(serverContext);
     assertThat(event.getSource()).isSameAs(serverContextProvider);
   }
@@ -78,17 +83,17 @@ class WorkspaceEventsTest {
   @Test
   void testBeforeWorkspaceRemovedEventPublished() {
     // given
-    var serverContext = serverContextProvider.addWorkspace(workspaceDir.toUri());
+    var serverContext = serverContextProvider.addWorkspace(workspaceUri);
     eventCollector.clear();
 
     // when
-    var workspaceFolder = new WorkspaceFolder(workspaceDir.toUri().toString(), "test");
+    var workspaceFolder = new WorkspaceFolder(workspaceUri.toString(), "test");
     serverContextProvider.removeWorkspace(workspaceFolder);
 
     // then
     assertThat(eventCollector.getBeforeRemovedEvents()).hasSize(1);
     var event = eventCollector.getBeforeRemovedEvents().get(0);
-    assertThat(event.getWorkspaceUri()).isEqualTo(workspaceDir.toUri());
+    assertThat(event.getWorkspaceUri()).isEqualTo(workspaceUri);
     assertThat(event.getServerContext()).isSameAs(serverContext);
     assertThat(event.getSource()).isSameAs(serverContextProvider);
   }
@@ -96,28 +101,28 @@ class WorkspaceEventsTest {
   @Test
   void testWorkspaceRemovedEventPublished() {
     // given
-    serverContextProvider.addWorkspace(workspaceDir.toUri());
+    serverContextProvider.addWorkspace(workspaceUri);
     eventCollector.clear();
 
     // when
-    var workspaceFolder = new WorkspaceFolder(workspaceDir.toUri().toString(), "test");
+    var workspaceFolder = new WorkspaceFolder(workspaceUri.toString(), "test");
     serverContextProvider.removeWorkspace(workspaceFolder);
 
     // then
     assertThat(eventCollector.getRemovedEvents()).hasSize(1);
     var event = eventCollector.getRemovedEvents().get(0);
-    assertThat(event.getWorkspaceUri()).isEqualTo(workspaceDir.toUri());
+    assertThat(event.getWorkspaceUri()).isEqualTo(workspaceUri);
     assertThat(event.getSource()).isSameAs(serverContextProvider);
   }
 
   @Test
   void testEventOrder() {
     // given
-    serverContextProvider.addWorkspace(workspaceDir.toUri());
+    serverContextProvider.addWorkspace(workspaceUri);
     eventCollector.clear();
 
     // when
-    var workspaceFolder = new WorkspaceFolder(workspaceDir.toUri().toString(), "test");
+    var workspaceFolder = new WorkspaceFolder(workspaceUri.toString(), "test");
     serverContextProvider.removeWorkspace(workspaceFolder);
 
     // then - BeforeWorkspaceRemovedEvent should be published before WorkspaceRemovedEvent
