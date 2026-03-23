@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.QueryContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.SdblAstTokenCollector;
@@ -38,22 +39,30 @@ import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
+import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 /**
@@ -83,44 +92,18 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private static final Pattern LAMBDA_ARROW_PATTERN = Pattern.compile("->\\s*");
 
-  private static final Set<Integer> LAMBDA_NUMBER_TYPES = Set.of(
-    BSLLexer.DECIMAL,
-    BSLLexer.FLOAT
-  );
+  private static final ThreadLocal<Boolean> PROCESSING_LAMBDA = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
-  private static final Set<Integer> LAMBDA_OPERATOR_TYPES = Set.of(
-    BSLLexer.LPAREN,
-    BSLLexer.RPAREN,
-    BSLLexer.LBRACK,
-    BSLLexer.RBRACK,
-    BSLLexer.COMMA,
-    BSLLexer.SEMICOLON,
-    BSLLexer.COLON,
-    BSLLexer.DOT,
-    BSLLexer.PLUS,
-    BSLLexer.MINUS,
-    BSLLexer.MUL,
-    BSLLexer.QUOTIENT,
-    BSLLexer.MODULO,
-    BSLLexer.ASSIGN,
-    BSLLexer.NOT_EQUAL,
-    BSLLexer.LESS,
-    BSLLexer.LESS_OR_EQUAL,
-    BSLLexer.GREATER,
-    BSLLexer.GREATER_OR_EQUAL,
-    BSLLexer.QUESTION,
-    BSLLexer.TILDA
-  );
-
-  private static final Set<Integer> LAMBDA_SPECIAL_LITERALS = Set.of(
-    BSLLexer.UNDEFINED,
-    BSLLexer.TRUE,
-    BSLLexer.FALSE,
-    BSLLexer.NULL
-  );
+  private static final AtomicLong VIRTUAL_DOC_COUNTER = new AtomicLong();
 
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
+  private final ServerContext serverContext;
+  private final SemanticTokensLegend legend;
+
+  @Autowired
+  @Lazy
+  private List<SemanticTokensSupplier> allSuppliers;
 
   private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
 
@@ -466,7 +449,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
    * Работает только для файлов OneScript (.os).
    */
   private Map<Token, List<SubToken>> collectLambdaStringContexts(DocumentContext documentContext) {
-    if (documentContext.getFileType() != FileType.OS) {
+    if (documentContext.getFileType() != FileType.OS || PROCESSING_LAMBDA.get()) {
       return Map.of();
     }
 
@@ -516,7 +499,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
    * Для группы токенов одного строкового литерала проверяет наличие {@code ->},
    * токенизирует тело лямбды через BSLTokenizer и маппит позиции обратно в документ.
    */
-  private static void collectLambdaSubTokensForGroup(List<Token> group, Map<Token, List<SubToken>> result) {
+  private void collectLambdaSubTokensForGroup(List<Token> group, Map<Token, List<SubToken>> result) {
     String fullContent = extractLambdaFullContent(group);
 
     var arrowMatcher = LAMBDA_ARROW_PATTERN.matcher(fullContent);
@@ -534,8 +517,20 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Arrow (->) itself
     addSubTokenAtOffset(arrowStart, 2, SemanticTokenTypes.Operator, segments, result);
 
-    // Body (after ->)
-    collectLambdaBodyTokens(fullContent.substring(arrowEnd), arrowEnd, segments, result);
+    // Body (after ->) — delegate to all semantic token suppliers via virtual DocumentContext
+    var bodyEntries = collectLambdaBodyTokensViaSuppliers(group, arrowEnd);
+    for (var entry : bodyEntries) {
+      for (var segment : segments) {
+        if (segment.docLine() == entry.line()
+          && entry.start() >= segment.docCharStart()
+          && entry.start() < segment.docCharStart() + segment.length()) {
+          String typeName = legend.getTokenTypes().get(entry.type());
+          result.computeIfAbsent(segment.token(), k -> new ArrayList<>())
+            .add(new SubToken(entry.start(), entry.length(), typeName));
+          break;
+        }
+      }
+    }
 
     for (Token groupToken : group) {
       var list = result.get(groupToken);
@@ -543,6 +538,93 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
         list.sort(Comparator.comparingInt(SubToken::start));
       }
     }
+  }
+
+  private List<SemanticTokenEntry> collectLambdaBodyTokensViaSuppliers(List<Token> group, int arrowEnd) {
+    String paddedContent = buildPaddedLambdaBody(group, arrowEnd);
+    if (paddedContent.isBlank()) {
+      return List.of();
+    }
+
+    var virtualUri = Absolute.uri(
+      URI.create("file:///virtual-lambda-" + VIRTUAL_DOC_COUNTER.incrementAndGet() + ".os")
+    );
+
+    try {
+      var virtualDoc = serverContext.addDocument(virtualUri);
+      serverContext.rebuildDocument(virtualDoc, paddedContent, 1);
+
+      PROCESSING_LAMBDA.set(Boolean.TRUE);
+      try {
+        return allSuppliers.stream()
+          .filter(s -> s != this)
+          .map(s -> s.getSemanticTokens(virtualDoc))
+          .flatMap(Collection::stream)
+          .toList();
+      } finally {
+        PROCESSING_LAMBDA.set(Boolean.FALSE);
+      }
+    } finally {
+      serverContext.removeDocument(virtualUri);
+    }
+  }
+
+  private static String buildPaddedLambdaBody(List<Token> group, int arrowEnd) {
+    var segments = buildContentSegments(group);
+    String fullContent = extractLambdaFullContent(group);
+
+    var lineContents = new TreeMap<Integer, StringBuilder>();
+
+    for (var segment : segments) {
+      int segStart = segment.contentOffset();
+      int segEnd = segStart + segment.length();
+
+      if (segEnd <= arrowEnd) {
+        continue;
+      }
+
+      int bodyStartInSeg = Math.max(0, arrowEnd - segStart);
+      int docCol = segment.docCharStart() + bodyStartInSeg;
+      String content = fullContent.substring(segStart + bodyStartInSeg, segEnd);
+
+      var lineSb = lineContents.computeIfAbsent(segment.docLine(), k -> new StringBuilder());
+      while (lineSb.length() < docCol) {
+        lineSb.append(' ');
+      }
+      lineSb.append(content);
+    }
+
+    if (lineContents.isEmpty()) {
+      return "";
+    }
+
+    int maxLine = lineContents.lastKey();
+    var sb = new StringBuilder();
+    for (int line = 0; line <= maxLine; line++) {
+      if (line > 0) {
+        sb.append('\n');
+      }
+      var lineSb = lineContents.get(line);
+      if (lineSb != null) {
+        sb.append(lineSb);
+      }
+    }
+
+    return removeDoubleQuotesPreservingPositions(sb.toString());
+  }
+
+  private static String removeDoubleQuotesPreservingPositions(String text) {
+    var sb = new StringBuilder(text.length());
+    for (int i = 0; i < text.length(); i++) {
+      if (i + 1 < text.length() && text.charAt(i) == '"' && text.charAt(i + 1) == '"') {
+        sb.append('"');
+        sb.append(' ');
+        i++;
+      } else {
+        sb.append(text.charAt(i));
+      }
+    }
+    return sb.toString();
   }
 
   private static void collectLambdaParamTokens(
@@ -567,32 +649,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       int cleanedOffset = paramToken.getStartIndex();
       int originalOffset = mapCleanedOffsetToOriginal(paramsPart, cleanedParams, cleanedOffset);
       int tokenLength = (int) paramToken.getText().codePoints().count();
-      addSubTokenAtOffset(baseOffset + originalOffset, tokenLength, semanticType, segments, result);
-    }
-  }
-
-  private static void collectLambdaBodyTokens(
-    String lambdaBody, int baseOffset, List<ContentSegment> segments, Map<Token, List<SubToken>> result
-  ) {
-    String cleanedBody = lambdaBody.replace("\"\"", "\"");
-    if (cleanedBody.isBlank()) {
-      return;
-    }
-
-    var tokenizer = new BSLTokenizer(cleanedBody);
-    for (Token bslToken : tokenizer.getTokens()) {
-      if (bslToken.getChannel() != Token.DEFAULT_CHANNEL || bslToken.getType() == Token.EOF) {
-        continue;
-      }
-
-      String semanticType = mapLambdaTokenToSemanticType(bslToken.getType());
-      if (semanticType == null) {
-        continue;
-      }
-
-      int cleanedOffset = bslToken.getStartIndex();
-      int originalOffset = mapCleanedOffsetToOriginal(lambdaBody, cleanedBody, cleanedOffset);
-      int tokenLength = (int) bslToken.getText().codePoints().count();
       addSubTokenAtOffset(baseOffset + originalOffset, tokenLength, semanticType, segments, result);
     }
   }
@@ -671,28 +727,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
 
     return segments;
-  }
-
-  private static String mapLambdaTokenToSemanticType(int bslTokenType) {
-    if (LAMBDA_NUMBER_TYPES.contains(bslTokenType)) {
-      return SemanticTokenTypes.Number;
-    }
-    if (LAMBDA_OPERATOR_TYPES.contains(bslTokenType)) {
-      return SemanticTokenTypes.Operator;
-    }
-    if (LAMBDA_SPECIAL_LITERALS.contains(bslTokenType)) {
-      return SemanticTokenTypes.Keyword;
-    }
-    if (bslTokenType == BSLLexer.DATETIME) {
-      return SemanticTokenTypes.String;
-    }
-
-    String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(bslTokenType);
-    if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
-      return SemanticTokenTypes.Keyword;
-    }
-
-    return null;
   }
 
   private static final Set<Integer> LAMBDA_PARAM_OPERATOR_TYPES = Set.of(
