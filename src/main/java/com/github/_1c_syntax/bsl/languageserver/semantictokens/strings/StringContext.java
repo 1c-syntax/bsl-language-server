@@ -37,27 +37,17 @@ public enum StringContext {
    * Строка в контексте вызова НСтр/NStr внутри СтрШаблон/StrTemplate или наоборот.
    * Например: СтрШаблон(НСтр("ru = 'Текст %1'"), Параметр)
    */
-  NSTR_AND_STR_TEMPLATE,
-  /**
-   * Строка в контексте вызова лямбда-метода (например, Лямбда.Выражение(...)).
-   * Содержимое строки интерпретируется как BSL-выражение и подсвечивается
-   * с выделением ключевых слов, операторов и чисел.
-   */
-  LAMBDA;
+  NSTR_AND_STR_TEMPLATE;
 
   /**
    * Объединяет два контекста.
    * Если контексты разные (NSTR и STR_TEMPLATE), возвращает NSTR_AND_STR_TEMPLATE.
-   * Контекст LAMBDA не объединяется с другими контекстами - побеждает первый назначенный.
    *
    * @param other другой контекст для объединения
    * @return объединённый контекст
    */
   public StringContext combine(StringContext other) {
     if (this == other) {
-      return this;
-    }
-    if (this == LAMBDA || other == LAMBDA) {
       return this;
     }
     return NSTR_AND_STR_TEMPLATE;

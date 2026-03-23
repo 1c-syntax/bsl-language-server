@@ -39,17 +39,16 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Visitor для поиска вызовов НСтр, СтрШаблон и лямбда-функций.
+ * Visitor для поиска вызовов НСтр и СтрШаблон.
  * <p>
  * Собирает информацию о строковых токенах, находящихся в контексте
- * вызовов НСтр/NStr, СтрШаблон/StrTemplate и лямбда-функций.
+ * вызовов НСтр/NStr и СтрШаблон/StrTemplate.
  * <p>
  * Также поддерживает поиск строк-шаблонов, которые присвоены переменным,
  * а затем используются в вызове СтрШаблон.
  * <p>
  * Дополнительно поддерживает конфигурируемые функции-шаблонизаторы,
- * аналогичные СтрШаблон (например, СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку),
- * и конфигурируемые лямбда-функции (например, Лямбда.Выражение из sfaqer/lambdas).
+ * аналогичные СтрШаблон (например, СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку).
  */
 public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
 
@@ -62,24 +61,16 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
 
   private final Map<Token, StringContext> contexts;
   private final ParsedStrTemplateMethods parsedMethods;
-  private final ParsedStrTemplateMethods parsedLambdaMethods;
 
   /**
-   * Создаёт visitor для сбора контекстов строк с конфигурируемыми функциями-шаблонизаторами
-   * и лямбда-функциями.
+   * Создаёт visitor для сбора контекстов строк с конфигурируемыми функциями-шаблонизаторами.
    *
-   * @param contexts            Map для заполнения контекстами строк
-   * @param parsedMethods       Предварительно разобранные паттерны функций-шаблонизаторов
-   * @param parsedLambdaMethods Предварительно разобранные паттерны лямбда-функций
+   * @param contexts      Map для заполнения контекстами строк
+   * @param parsedMethods Предварительно разобранные паттерны функций-шаблонизаторов
    */
-  public SpecialContextVisitor(
-    Map<Token, StringContext> contexts,
-    ParsedStrTemplateMethods parsedMethods,
-    ParsedStrTemplateMethods parsedLambdaMethods
-  ) {
+  public SpecialContextVisitor(Map<Token, StringContext> contexts, ParsedStrTemplateMethods parsedMethods) {
     this.contexts = contexts;
     this.parsedMethods = parsedMethods;
-    this.parsedLambdaMethods = parsedLambdaMethods;
   }
 
   @Override
@@ -92,8 +83,6 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       context = StringContext.STR_TEMPLATE;
     } else if (isConfiguredStrTemplateCall(ctx)) {
       context = StringContext.STR_TEMPLATE;
-    } else if (isConfiguredLambdaCall(ctx)) {
-      context = StringContext.LAMBDA;
     }
 
     if (context != null) {
@@ -146,10 +135,8 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     var moduleNameLower = moduleName.toLowerCase(Locale.ENGLISH);
 
     StringContext context = null;
-    if (isModuleMethodMatch(moduleNameLower, methodName, parsedMethods)) {
+    if (isModuleMethodMatch(moduleNameLower, methodName)) {
       context = StringContext.STR_TEMPLATE;
-    } else if (isModuleMethodMatch(moduleNameLower, methodName, parsedLambdaMethods)) {
-      context = StringContext.LAMBDA;
     }
 
     if (context != null) {
@@ -169,22 +156,10 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
   }
 
   /**
-   * Проверяет, является ли вызов глобального метода конфигурируемой лямбда-функцией.
+   * Проверяет, соответствует ли пара "модуль.метод" конфигурируемым паттернам.
    */
-  private boolean isConfiguredLambdaCall(BSLParser.GlobalMethodCallContext ctx) {
-    var methodName = ctx.methodName().getText().toLowerCase(Locale.ENGLISH);
-    return parsedLambdaMethods.localMethods().contains(methodName);
-  }
-
-  /**
-   * Проверяет, соответствует ли пара "модуль.метод" паттернам.
-   */
-  private static boolean isModuleMethodMatch(
-    String moduleName,
-    String methodName,
-    ParsedStrTemplateMethods patterns
-  ) {
-    var moduleMethods = patterns.moduleMethodPairs().get(moduleName);
+  private boolean isModuleMethodMatch(String moduleName, String methodName) {
+    var moduleMethods = parsedMethods.moduleMethodPairs().get(moduleName);
     return moduleMethods != null && moduleMethods.contains(methodName);
   }
 
@@ -202,7 +177,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       var stringTokens = getStringTokensFromParam(firstParam);
 
       if (stringTokens.isEmpty()
-        && (context == StringContext.STR_TEMPLATE || context == StringContext.LAMBDA)) {
+        && context == StringContext.STR_TEMPLATE) {
         // Первый параметр не строковый литерал - возможно, это переменная
         // Пытаемся найти присвоение этой переменной
         stringTokens = findStringTokensFromVariable(firstParam, callContext);

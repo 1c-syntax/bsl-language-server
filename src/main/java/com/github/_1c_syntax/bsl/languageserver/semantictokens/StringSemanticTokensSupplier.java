@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.QueryContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.SdblAstTokenCollector;
@@ -36,9 +37,9 @@ import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.TokenPosi
 import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -53,6 +54,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Сапплаер семантических токенов для строк BSL и запросов SDBL.
@@ -64,7 +66,7 @@ import java.util.Set;
  *   <li>НСтр/NStr: подсвечивает языковые ключи (ru=, en=)</li>
  *   <li>СтрШаблон/StrTemplate: подсвечивает плейсхолдеры (%1, %2)</li>
  *   <li>Конфигурируемые функции-шаблонизаторы: подсвечивает плейсхолдеры (%1, %2)</li>
- *   <li>Лямбда-выражения: подсвечивает BSL-код внутри строк (ключевые слова, операторы, числа)</li>
+ *   <li>Лямбда-выражения (только для .os файлов): подсвечивает BSL-код в теле лямбды</li>
  *   <li>Обычные строки: выдаёт токен для всей строки</li>
  * </ul>
  */
@@ -78,6 +80,8 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     BSLLexer.STRINGSTART,
     BSLLexer.STRINGTAIL
   );
+
+  private static final Pattern LAMBDA_ARROW_PATTERN = Pattern.compile("->\\s*");
 
   private static final Set<Integer> LAMBDA_NUMBER_TYPES = Set.of(
     BSLLexer.DECIMAL,
@@ -108,7 +112,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     BSLLexer.TILDA
   );
 
-  private static final Set<Integer> LAMBDA_SPEC_LITERALS = Set.of(
+  private static final Set<Integer> LAMBDA_SPECIAL_LITERALS = Set.of(
     BSLLexer.UNDEFINED,
     BSLLexer.TRUE,
     BSLLexer.FALSE,
@@ -119,28 +123,26 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final LanguageServerConfiguration configuration;
 
   private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
-  private volatile ParsedStrTemplateMethods parsedLambdaMethods;
 
   @PostConstruct
   private void init() {
-    updateParsedMethods();
+    updateParsedStrTemplateMethods();
   }
 
   /**
    * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    * <p>
-   * Обновляет кэшированные паттерны при изменении конфигурации.
+   * Обновляет кэшированные паттерны функций-шаблонизаторов при изменении конфигурации.
    *
    * @param event Событие
    */
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    updateParsedMethods();
+    updateParsedStrTemplateMethods();
   }
 
-  private void updateParsedMethods() {
+  private void updateParsedStrTemplateMethods() {
     parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
-    parsedLambdaMethods = configuration.getSemanticTokensOptions().getParsedLambdaMethods();
   }
 
   @Override
@@ -150,6 +152,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Собираем информацию о контекстах строк
     var specialStringContexts = collectSpecialStringContexts(documentContext);
     var queryStringContexts = collectQueryStringContexts(documentContext);
+    var lambdaStringContexts = collectLambdaStringContexts(documentContext);
 
     // Обрабатываем все строковые токены
     var stringTokens = documentContext.getTokensFromDefaultChannel().stream()
@@ -157,7 +160,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       .toList();
 
     for (Token stringToken : stringTokens) {
-      processStringToken(entries, stringToken, specialStringContexts, queryStringContexts);
+      processStringToken(entries, stringToken, specialStringContexts, queryStringContexts, lambdaStringContexts);
     }
 
     return entries;
@@ -167,7 +170,8 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     List<SemanticTokenEntry> entries,
     Token stringToken,
     Map<Token, StringContext> specialContexts,
-    Map<Token, QueryContext> queryContexts
+    Map<Token, QueryContext> queryContexts,
+    Map<Token, List<SubToken>> lambdaContexts
   ) {
     // Проверяем, является ли строка частью запроса
     var queryContext = queryContexts.get(stringToken);
@@ -176,13 +180,16 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       return;
     }
 
-    // Проверяем специальные контексты (НСтр, СтрШаблон, Лямбда)
+    // Проверяем, содержит ли строка лямбда-выражение
+    var lambdaSubTokens = lambdaContexts.get(stringToken);
+    if (lambdaSubTokens != null) {
+      processLambdaString(entries, stringToken, lambdaSubTokens);
+      return;
+    }
+
+    // Проверяем специальные контексты (НСтр, СтрШаблон)
     var context = specialContexts.get(stringToken);
     if (context != null) {
-      if (context == StringContext.LAMBDA) {
-        processLambdaString(entries, stringToken);
-        return;
-      }
       processSpecialContext(entries, stringToken, context);
       return;
     }
@@ -349,138 +356,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
   }
 
-  /**
-   * Обрабатывает строку в контексте лямбда-выражения.
-   * <p>
-   * Содержимое строки токенизируется с помощью BSL-лексера,
-   * и для каждого BSL-токена создаётся соответствующий семантический токен.
-   * Нераспознанные части строки (промежутки между BSL-токенами) подсвечиваются как строка.
-   */
-  private void processLambdaString(
-    List<SemanticTokenEntry> entries,
-    Token stringToken
-  ) {
-    var stringRange = Ranges.create(stringToken);
-    String tokenText = stringToken.getText();
-    int tokenLine = stringToken.getLine() - 1; // 0-indexed
-    int tokenStart = stringToken.getCharPositionInLine();
-    int stringEnd = stringRange.getEnd().getCharacter();
-
-    // Определяем смещение содержимого внутри строкового токена
-    // STRING: "content" -> offset=1, STRINGSTART: "content -> offset=1
-    // STRINGPART: |content -> offset=1, STRINGTAIL: |content" -> offset=1
-    int contentOffset = 1; // После `"` или `|`
-
-    // Определяем конец содержимого (до закрывающей кавычки, если есть)
-    int tokenType = stringToken.getType();
-    boolean hasClosingQuote = (tokenType == BSLLexer.STRING || tokenType == BSLLexer.STRINGTAIL);
-    int contentEndInToken = hasClosingQuote ? tokenText.length() - 1 : tokenText.length();
-
-    if (contentOffset >= contentEndInToken) {
-      // Пустое содержимое - добавляем как строку
-      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
-      return;
-    }
-
-    String content = tokenText.substring(contentOffset, contentEndInToken);
-
-    // Токенизируем содержимое с помощью BSL-лексера
-    var charStream = CharStreams.fromString(content);
-    var lexer = new BSLLexer(charStream);
-    lexer.removeErrorListeners(); // Подавляем ошибки парсинга
-
-    List<Token> bslTokens = new ArrayList<>();
-    Token bslToken = lexer.nextToken();
-    while (bslToken.getType() != Token.EOF) {
-      bslTokens.add(bslToken);
-      bslToken = lexer.nextToken();
-    }
-
-    if (bslTokens.isEmpty()) {
-      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
-      return;
-    }
-
-    // Позиция содержимого в документе
-    int contentStartInDoc = tokenStart + contentOffset;
-
-    List<SubToken> subTokens = new ArrayList<>();
-
-    for (Token lambdaToken : bslTokens) {
-      if (lambdaToken.getChannel() != Token.DEFAULT_CHANNEL) {
-        continue;
-      }
-      if (lambdaToken.getType() == Token.EOF) {
-        continue;
-      }
-
-      int bslTokenStart = lambdaToken.getCharPositionInLine();
-      int bslTokenLength = (int) lambdaToken.getText().codePoints().count();
-      String semanticType = mapBslTokenToSemanticType(lambdaToken.getType());
-
-      if (semanticType != null) {
-        subTokens.add(new SubToken(
-          contentStartInDoc + bslTokenStart,
-          bslTokenLength,
-          semanticType
-        ));
-      }
-    }
-
-    if (subTokens.isEmpty()) {
-      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
-      return;
-    }
-
-    subTokens.sort(Comparator.comparingInt(SubToken::start));
-
-    // Разбиваем строку на части вокруг BSL-токенов
-    int currentPos = tokenStart;
-
-    for (SubToken subToken : subTokens) {
-      if (currentPos < subToken.start()) {
-        helper.addEntry(entries, tokenLine, currentPos, subToken.start() - currentPos, SemanticTokenTypes.String);
-      }
-      helper.addEntry(entries, tokenLine, subToken.start(), subToken.length(), subToken.type());
-      currentPos = subToken.start() + subToken.length();
-    }
-
-    if (currentPos < stringEnd) {
-      helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, SemanticTokenTypes.String);
-    }
-  }
-
-  /**
-   * Маппинг типа BSL-токена на тип семантического токена для лямбда-выражений.
-   *
-   * @param bslTokenType Тип BSL-токена
-   * @return Тип семантического токена или null, если маппинг не найден
-   */
-  private static String mapBslTokenToSemanticType(int bslTokenType) {
-    if (LAMBDA_NUMBER_TYPES.contains(bslTokenType)) {
-      return SemanticTokenTypes.Number;
-    }
-    if (LAMBDA_OPERATOR_TYPES.contains(bslTokenType)) {
-      return SemanticTokenTypes.Operator;
-    }
-    if (LAMBDA_SPEC_LITERALS.contains(bslTokenType)) {
-      return SemanticTokenTypes.Keyword;
-    }
-    if (bslTokenType == BSLLexer.DATETIME) {
-      return SemanticTokenTypes.String;
-    }
-
-    String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(bslTokenType);
-    if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
-      return SemanticTokenTypes.Keyword;
-    }
-
-    return null;
-  }
-
   private Map<Token, StringContext> collectSpecialStringContexts(DocumentContext documentContext) {
     Map<Token, StringContext> contexts = new HashMap<>();
-    var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods, parsedLambdaMethods);
+    var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods);
     visitor.visit(documentContext.getAst());
     return contexts;
   }
@@ -546,5 +424,307 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
 
     return contexts;
+  }
+
+  // ==================== Lambda String Processing ====================
+
+  private void processLambdaString(
+    List<SemanticTokenEntry> entries,
+    Token stringToken,
+    List<SubToken> subTokens
+  ) {
+    var stringRange = Ranges.create(stringToken);
+    int tokenLine = stringToken.getLine() - 1;
+    int tokenStart = stringToken.getCharPositionInLine();
+    int stringEnd = stringRange.getEnd().getCharacter();
+
+    if (subTokens.isEmpty()) {
+      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
+      return;
+    }
+
+    int currentPos = tokenStart;
+
+    for (SubToken subToken : subTokens) {
+      if (currentPos < subToken.start()) {
+        helper.addEntry(entries, tokenLine, currentPos, subToken.start() - currentPos, SemanticTokenTypes.String);
+      }
+      helper.addEntry(entries, tokenLine, subToken.start(), subToken.length(), subToken.type());
+      currentPos = subToken.start() + subToken.length();
+    }
+
+    if (currentPos < stringEnd) {
+      helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, SemanticTokenTypes.String);
+    }
+  }
+
+  /**
+   * Собирает контексты лямбда-строк: для каждого строкового токена, входящего
+   * в строковый литерал с оператором {@code ->}, вычисляет список подтокенов
+   * (ключевые слова, операторы, числа) с их позициями в документе.
+   * <p>
+   * Работает только для файлов OneScript (.os).
+   */
+  private Map<Token, List<SubToken>> collectLambdaStringContexts(DocumentContext documentContext) {
+    if (documentContext.getFileType() != FileType.OS) {
+      return Map.of();
+    }
+
+    var stringTokens = documentContext.getTokensFromDefaultChannel().stream()
+      .filter(token -> STRING_TYPES.contains(token.getType()))
+      .toList();
+
+    var groups = groupStringTokens(stringTokens);
+    Map<Token, List<SubToken>> result = new HashMap<>();
+
+    for (var group : groups) {
+      collectLambdaSubTokensForGroup(group, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Группирует строковые токены в последовательности, составляющие один строковый литерал.
+   * STRING — однострочный литерал (сам себе группа).
+   * STRINGSTART, STRINGPART*, STRINGTAIL — многострочный литерал (одна группа).
+   */
+  private static List<List<Token>> groupStringTokens(List<Token> stringTokens) {
+    List<List<Token>> groups = new ArrayList<>();
+    List<Token> currentGroup = null;
+
+    for (Token token : stringTokens) {
+      int type = token.getType();
+      if (type == BSLLexer.STRING) {
+        groups.add(List.of(token));
+      } else if (type == BSLLexer.STRINGSTART) {
+        currentGroup = new ArrayList<>();
+        currentGroup.add(token);
+      } else if (currentGroup != null && (type == BSLLexer.STRINGPART || type == BSLLexer.STRINGTAIL)) {
+        currentGroup.add(token);
+        if (type == BSLLexer.STRINGTAIL) {
+          groups.add(currentGroup);
+          currentGroup = null;
+        }
+      }
+    }
+
+    return groups;
+  }
+
+  /**
+   * Для группы токенов одного строкового литерала проверяет наличие {@code ->},
+   * токенизирует тело лямбды через BSLTokenizer и маппит позиции обратно в документ.
+   */
+  private static void collectLambdaSubTokensForGroup(List<Token> group, Map<Token, List<SubToken>> result) {
+    String fullContent = extractLambdaFullContent(group);
+
+    var arrowMatcher = LAMBDA_ARROW_PATTERN.matcher(fullContent);
+    if (!arrowMatcher.find()) {
+      return;
+    }
+
+    var segments = buildContentSegments(group);
+    int arrowStart = arrowMatcher.start();
+    int arrowEnd = arrowMatcher.end();
+
+    // Parameters (before ->)
+    collectLambdaParamTokens(fullContent.substring(0, arrowStart), 0, segments, result);
+
+    // Arrow (->) itself
+    addSubTokenAtOffset(arrowStart, 2, SemanticTokenTypes.Operator, segments, result);
+
+    // Body (after ->)
+    collectLambdaBodyTokens(fullContent.substring(arrowEnd), arrowEnd, segments, result);
+
+    for (Token groupToken : group) {
+      var list = result.get(groupToken);
+      if (list != null) {
+        list.sort(Comparator.comparingInt(SubToken::start));
+      }
+    }
+  }
+
+  private static void collectLambdaParamTokens(
+    String paramsPart, int baseOffset, List<ContentSegment> segments, Map<Token, List<SubToken>> result
+  ) {
+    String cleanedParams = paramsPart.replace("\"\"", "\"");
+    if (cleanedParams.isBlank()) {
+      return;
+    }
+
+    var tokenizer = new BSLTokenizer(cleanedParams);
+    for (Token paramToken : tokenizer.getTokens()) {
+      if (paramToken.getChannel() != Token.DEFAULT_CHANNEL || paramToken.getType() == Token.EOF) {
+        continue;
+      }
+
+      String semanticType = mapLambdaParamTokenToSemanticType(paramToken.getType());
+      if (semanticType == null) {
+        continue;
+      }
+
+      int cleanedOffset = paramToken.getStartIndex();
+      int originalOffset = mapCleanedOffsetToOriginal(paramsPart, cleanedParams, cleanedOffset);
+      int tokenLength = (int) paramToken.getText().codePoints().count();
+      addSubTokenAtOffset(baseOffset + originalOffset, tokenLength, semanticType, segments, result);
+    }
+  }
+
+  private static void collectLambdaBodyTokens(
+    String lambdaBody, int baseOffset, List<ContentSegment> segments, Map<Token, List<SubToken>> result
+  ) {
+    String cleanedBody = lambdaBody.replace("\"\"", "\"");
+    if (cleanedBody.isBlank()) {
+      return;
+    }
+
+    var tokenizer = new BSLTokenizer(cleanedBody);
+    for (Token bslToken : tokenizer.getTokens()) {
+      if (bslToken.getChannel() != Token.DEFAULT_CHANNEL || bslToken.getType() == Token.EOF) {
+        continue;
+      }
+
+      String semanticType = mapLambdaTokenToSemanticType(bslToken.getType());
+      if (semanticType == null) {
+        continue;
+      }
+
+      int cleanedOffset = bslToken.getStartIndex();
+      int originalOffset = mapCleanedOffsetToOriginal(lambdaBody, cleanedBody, cleanedOffset);
+      int tokenLength = (int) bslToken.getText().codePoints().count();
+      addSubTokenAtOffset(baseOffset + originalOffset, tokenLength, semanticType, segments, result);
+    }
+  }
+
+  private static void addSubTokenAtOffset(
+    int absoluteOffset, int tokenLength, String semanticType,
+    List<ContentSegment> segments, Map<Token, List<SubToken>> result
+  ) {
+    for (var segment : segments) {
+      if (absoluteOffset >= segment.contentOffset
+        && absoluteOffset < segment.contentOffset + segment.length) {
+        int docColumn = segment.docCharStart + (absoluteOffset - segment.contentOffset);
+        result.computeIfAbsent(segment.token, k -> new ArrayList<>())
+          .add(new SubToken(docColumn, tokenLength, semanticType));
+        break;
+      }
+    }
+  }
+
+  private static String extractLambdaFullContent(List<Token> group) {
+    var sb = new StringBuilder();
+    for (Token token : group) {
+      String text = token.getText();
+      int type = token.getType();
+      if (type == BSLLexer.STRING) {
+        sb.append(text, 1, text.length() - 1);
+      } else if (type == BSLLexer.STRINGSTART) {
+        sb.append(text.substring(1));
+      } else if (type == BSLLexer.STRINGPART) {
+        sb.append('\n');
+        sb.append(text.substring(1));
+      } else if (type == BSLLexer.STRINGTAIL) {
+        sb.append('\n');
+        sb.append(text, 1, text.length() - 1);
+      }
+    }
+    return sb.toString();
+  }
+
+  private record ContentSegment(int contentOffset, int length, int docLine, int docCharStart, Token token) {
+  }
+
+  private static List<ContentSegment> buildContentSegments(List<Token> group) {
+    List<ContentSegment> segments = new ArrayList<>();
+    int contentOffset = 0;
+
+    for (Token token : group) {
+      String text = token.getText();
+      int type = token.getType();
+      int tokenLine = token.getLine() - 1;
+      int tokenCharStart = token.getCharPositionInLine();
+
+      int segmentStartInDoc;
+      int segmentLength;
+
+      if (type == BSLLexer.STRING) {
+        segmentStartInDoc = tokenCharStart + 1;
+        segmentLength = text.length() - 2;
+      } else if (type == BSLLexer.STRINGSTART) {
+        segmentStartInDoc = tokenCharStart + 1;
+        segmentLength = text.length() - 1;
+      } else if (type == BSLLexer.STRINGPART) {
+        contentOffset++;
+        segmentStartInDoc = tokenCharStart + 1;
+        segmentLength = text.length() - 1;
+      } else if (type == BSLLexer.STRINGTAIL) {
+        contentOffset++;
+        segmentStartInDoc = tokenCharStart + 1;
+        segmentLength = text.length() - 2;
+      } else {
+        continue;
+      }
+
+      segments.add(new ContentSegment(contentOffset, segmentLength, tokenLine, segmentStartInDoc, token));
+      contentOffset += segmentLength;
+    }
+
+    return segments;
+  }
+
+  private static String mapLambdaTokenToSemanticType(int bslTokenType) {
+    if (LAMBDA_NUMBER_TYPES.contains(bslTokenType)) {
+      return SemanticTokenTypes.Number;
+    }
+    if (LAMBDA_OPERATOR_TYPES.contains(bslTokenType)) {
+      return SemanticTokenTypes.Operator;
+    }
+    if (LAMBDA_SPECIAL_LITERALS.contains(bslTokenType)) {
+      return SemanticTokenTypes.Keyword;
+    }
+    if (bslTokenType == BSLLexer.DATETIME) {
+      return SemanticTokenTypes.String;
+    }
+
+    String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(bslTokenType);
+    if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
+      return SemanticTokenTypes.Keyword;
+    }
+
+    return null;
+  }
+
+  private static final Set<Integer> LAMBDA_PARAM_OPERATOR_TYPES = Set.of(
+    BSLLexer.LPAREN,
+    BSLLexer.RPAREN,
+    BSLLexer.COMMA
+  );
+
+  private static String mapLambdaParamTokenToSemanticType(int bslTokenType) {
+    if (bslTokenType == BSLLexer.IDENTIFIER) {
+      return SemanticTokenTypes.Parameter;
+    }
+    if (LAMBDA_PARAM_OPERATOR_TYPES.contains(bslTokenType)) {
+      return SemanticTokenTypes.Operator;
+    }
+    return null;
+  }
+
+  private static int mapCleanedOffsetToOriginal(String original, String cleaned, int cleanedOffset) {
+    int origIdx = 0;
+    int cleanIdx = 0;
+    while (cleanIdx < cleanedOffset && origIdx < original.length()) {
+      if (origIdx + 1 < original.length()
+        && original.charAt(origIdx) == '"'
+        && original.charAt(origIdx + 1) == '"') {
+        origIdx += 2;
+        cleanIdx++;
+      } else {
+        origIdx++;
+        cleanIdx++;
+      }
+    }
+    return origIdx;
   }
 }
