@@ -613,18 +613,44 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     return removeDoubleQuotesPreservingPositions(sb.toString());
   }
 
+  private static final Pattern QUOTE_PAIR_PATTERN = Pattern.compile(
+    "(?:\"{12}|\"{10}|\"{8}|\"{6}|\"{4}|\"{2})"
+  );
+
+  /**
+   * Заменяет экранированные двойные кавычки {@code ""} на одинарную кавычку {@code "}
+   * с пробелом для сохранения позиций. Чередует: opening {@code ""} → {@code  "} (пробел + кавычка),
+   * closing {@code ""} → {@code " } (кавычка + пробел). Аналог QueryComputer.removeDoubleQuotes.
+   */
   private static String removeDoubleQuotesPreservingPositions(String text) {
-    var sb = new StringBuilder(text.length());
-    for (int i = 0; i < text.length(); i++) {
-      if (i + 1 < text.length() && text.charAt(i) == '"' && text.charAt(i + 1) == '"') {
-        sb.append('"');
-        sb.append(' ');
-        i++;
+    var leftQuoteFound = false;
+    var matcher = QUOTE_PAIR_PATTERN.matcher(text);
+    var newText = text;
+    var textLength = text.length();
+    var strings = new java.util.StringJoiner("");
+    while (matcher.find()) {
+      var quotesLineLength = matcher.group(0).length();
+      var emptyString = " ".repeat(quotesLineLength / 2);
+      strings.add(newText.substring(0, matcher.start()) + (leftQuoteFound ? "" : emptyString)
+        + matcher.group(0).substring(0, quotesLineLength / 2) + (leftQuoteFound ? emptyString : ""));
+
+      if (matcher.end() < textLength) {
+        newText = newText.substring(matcher.end());
+        textLength = newText.length();
       } else {
-        sb.append(text.charAt(i));
+        newText = "";
+        break;
       }
+
+      matcher = QUOTE_PAIR_PATTERN.matcher(newText);
+      leftQuoteFound = !leftQuoteFound;
     }
-    return sb.toString();
+
+    if (!newText.isEmpty()) {
+      strings.add(newText);
+    }
+
+    return strings.toString();
   }
 
   private static void collectLambdaParamTokens(
