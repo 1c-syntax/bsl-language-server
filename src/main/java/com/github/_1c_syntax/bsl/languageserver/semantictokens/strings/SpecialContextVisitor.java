@@ -201,14 +201,10 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       var firstParam = callParams.getFirst();
       var stringTokens = getStringTokensFromParam(firstParam);
 
-      if (stringTokens.isEmpty() && context == StringContext.STR_TEMPLATE) {
+      if (stringTokens.isEmpty()
+        && (context == StringContext.STR_TEMPLATE || context == StringContext.LAMBDA)) {
         // Первый параметр не строковый литерал - возможно, это переменная
         // Пытаемся найти присвоение этой переменной
-        stringTokens = findStringTokensFromVariable(firstParam, callContext);
-      }
-
-      if (stringTokens.isEmpty() && context == StringContext.LAMBDA) {
-        // Для лямбд также поддерживаем строку из переменной
         stringTokens = findStringTokensFromVariable(firstParam, callContext);
       }
 

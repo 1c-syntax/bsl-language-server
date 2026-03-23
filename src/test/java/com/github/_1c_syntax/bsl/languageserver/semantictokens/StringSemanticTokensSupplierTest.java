@@ -889,10 +889,11 @@ class StringSemanticTokensSupplierTest {
     // then - keywords should be highlighted
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(1, 29, 4, SemanticTokenTypes.Keyword, "Если"),
+      new ExpectedToken(1, 36, 1, SemanticTokenTypes.Operator, ">"),
+      new ExpectedToken(1, 38, 1, SemanticTokenTypes.Number, "0"),
       new ExpectedToken(1, 40, 5, SemanticTokenTypes.Keyword, "Тогда"),
       new ExpectedToken(1, 46, 7, SemanticTokenTypes.Keyword, "Возврат"),
-      new ExpectedToken(1, 56, 9, SemanticTokenTypes.Keyword, "КонецЕсли"),
-      new ExpectedToken(1, 38, 1, SemanticTokenTypes.Number, "0")
+      new ExpectedToken(1, 56, 9, SemanticTokenTypes.Keyword, "КонецЕсли")
     ));
   }
 }
