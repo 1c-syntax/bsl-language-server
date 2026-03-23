@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -63,6 +64,7 @@ import java.util.Set;
  *   <li>НСтр/NStr: подсвечивает языковые ключи (ru=, en=)</li>
  *   <li>СтрШаблон/StrTemplate: подсвечивает плейсхолдеры (%1, %2)</li>
  *   <li>Конфигурируемые функции-шаблонизаторы: подсвечивает плейсхолдеры (%1, %2)</li>
+ *   <li>Лямбда-выражения: подсвечивает BSL-код внутри строк (ключевые слова, операторы, числа)</li>
  *   <li>Обычные строки: выдаёт токен для всей строки</li>
  * </ul>
  */
@@ -77,30 +79,68 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     BSLLexer.STRINGTAIL
   );
 
+  private static final Set<Integer> LAMBDA_NUMBER_TYPES = Set.of(
+    BSLLexer.DECIMAL,
+    BSLLexer.FLOAT
+  );
+
+  private static final Set<Integer> LAMBDA_OPERATOR_TYPES = Set.of(
+    BSLLexer.LPAREN,
+    BSLLexer.RPAREN,
+    BSLLexer.LBRACK,
+    BSLLexer.RBRACK,
+    BSLLexer.COMMA,
+    BSLLexer.SEMICOLON,
+    BSLLexer.COLON,
+    BSLLexer.DOT,
+    BSLLexer.PLUS,
+    BSLLexer.MINUS,
+    BSLLexer.MUL,
+    BSLLexer.QUOTIENT,
+    BSLLexer.MODULO,
+    BSLLexer.ASSIGN,
+    BSLLexer.NOT_EQUAL,
+    BSLLexer.LESS,
+    BSLLexer.LESS_OR_EQUAL,
+    BSLLexer.GREATER,
+    BSLLexer.GREATER_OR_EQUAL,
+    BSLLexer.QUESTION,
+    BSLLexer.TILDA
+  );
+
+  private static final Set<Integer> LAMBDA_SPEC_LITERALS = Set.of(
+    BSLLexer.UNDEFINED,
+    BSLLexer.TRUE,
+    BSLLexer.FALSE,
+    BSLLexer.NULL
+  );
+
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
 
   private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
+  private volatile ParsedStrTemplateMethods parsedLambdaMethods;
 
   @PostConstruct
   private void init() {
-    updateParsedStrTemplateMethods();
+    updateParsedMethods();
   }
 
   /**
    * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    * <p>
-   * Обновляет кэшированные паттерны функций-шаблонизаторов при изменении конфигурации.
+   * Обновляет кэшированные паттерны при изменении конфигурации.
    *
    * @param event Событие
    */
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    updateParsedStrTemplateMethods();
+    updateParsedMethods();
   }
 
-  private void updateParsedStrTemplateMethods() {
+  private void updateParsedMethods() {
     parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
+    parsedLambdaMethods = configuration.getSemanticTokensOptions().getParsedLambdaMethods();
   }
 
   @Override
@@ -136,9 +176,13 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       return;
     }
 
-    // Проверяем специальные контексты (НСтр, СтрШаблон)
+    // Проверяем специальные контексты (НСтр, СтрШаблон, Лямбда)
     var context = specialContexts.get(stringToken);
     if (context != null) {
+      if (context == StringContext.LAMBDA) {
+        processLambdaString(entries, stringToken);
+        return;
+      }
       processSpecialContext(entries, stringToken, context);
       return;
     }
@@ -305,9 +349,138 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
   }
 
+  /**
+   * Обрабатывает строку в контексте лямбда-выражения.
+   * <p>
+   * Содержимое строки токенизируется с помощью BSL-лексера,
+   * и для каждого BSL-токена создаётся соответствующий семантический токен.
+   * Нераспознанные части строки (промежутки между BSL-токенами) подсвечиваются как строка.
+   */
+  private void processLambdaString(
+    List<SemanticTokenEntry> entries,
+    Token stringToken
+  ) {
+    var stringRange = Ranges.create(stringToken);
+    String tokenText = stringToken.getText();
+    int tokenLine = stringToken.getLine() - 1; // 0-indexed
+    int tokenStart = stringToken.getCharPositionInLine();
+    int stringEnd = stringRange.getEnd().getCharacter();
+
+    // Определяем смещение содержимого внутри строкового токена
+    // STRING: "content" -> offset=1, STRINGSTART: "content -> offset=1
+    // STRINGPART: |content -> offset=1, STRINGTAIL: |content" -> offset=1
+    int contentOffset = 1; // После `"` или `|`
+
+    // Определяем конец содержимого (до закрывающей кавычки, если есть)
+    int tokenType = stringToken.getType();
+    boolean hasClosingQuote = (tokenType == BSLLexer.STRING || tokenType == BSLLexer.STRINGTAIL);
+    int contentEndInToken = hasClosingQuote ? tokenText.length() - 1 : tokenText.length();
+
+    if (contentOffset >= contentEndInToken) {
+      // Пустое содержимое - добавляем как строку
+      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
+      return;
+    }
+
+    String content = tokenText.substring(contentOffset, contentEndInToken);
+
+    // Токенизируем содержимое с помощью BSL-лексера
+    var charStream = CharStreams.fromString(content);
+    var lexer = new BSLLexer(charStream);
+    lexer.removeErrorListeners(); // Подавляем ошибки парсинга
+
+    List<Token> bslTokens = new ArrayList<>();
+    Token bslToken = lexer.nextToken();
+    while (bslToken.getType() != Token.EOF) {
+      bslTokens.add(bslToken);
+      bslToken = lexer.nextToken();
+    }
+
+    if (bslTokens.isEmpty()) {
+      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
+      return;
+    }
+
+    // Позиция содержимого в документе
+    int contentStartInDoc = tokenStart + contentOffset;
+
+    List<SubToken> subTokens = new ArrayList<>();
+
+    for (Token lambdaToken : bslTokens) {
+      if (lambdaToken.getChannel() != Token.DEFAULT_CHANNEL) {
+        continue;
+      }
+      if (lambdaToken.getType() == Token.EOF) {
+        continue;
+      }
+
+      int bslTokenStart = lambdaToken.getCharPositionInLine();
+      int bslTokenLength = (int) lambdaToken.getText().codePoints().count();
+      String semanticType = mapBslTokenToSemanticType(lambdaToken.getType());
+
+      if (semanticType != null) {
+        subTokens.add(new SubToken(
+          contentStartInDoc + bslTokenStart,
+          bslTokenLength,
+          semanticType
+        ));
+      }
+    }
+
+    if (subTokens.isEmpty()) {
+      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
+      return;
+    }
+
+    subTokens.sort(Comparator.comparingInt(SubToken::start));
+
+    // Разбиваем строку на части вокруг BSL-токенов
+    int currentPos = tokenStart;
+
+    for (SubToken subToken : subTokens) {
+      if (currentPos < subToken.start()) {
+        helper.addEntry(entries, tokenLine, currentPos, subToken.start() - currentPos, SemanticTokenTypes.String);
+      }
+      helper.addEntry(entries, tokenLine, subToken.start(), subToken.length(), subToken.type());
+      currentPos = subToken.start() + subToken.length();
+    }
+
+    if (currentPos < stringEnd) {
+      helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, SemanticTokenTypes.String);
+    }
+  }
+
+  /**
+   * Маппинг типа BSL-токена на тип семантического токена для лямбда-выражений.
+   *
+   * @param bslTokenType Тип BSL-токена
+   * @return Тип семантического токена или null, если маппинг не найден
+   */
+  private static String mapBslTokenToSemanticType(int bslTokenType) {
+    if (LAMBDA_NUMBER_TYPES.contains(bslTokenType)) {
+      return SemanticTokenTypes.Number;
+    }
+    if (LAMBDA_OPERATOR_TYPES.contains(bslTokenType)) {
+      return SemanticTokenTypes.Operator;
+    }
+    if (LAMBDA_SPEC_LITERALS.contains(bslTokenType)) {
+      return SemanticTokenTypes.Keyword;
+    }
+    if (bslTokenType == BSLLexer.DATETIME) {
+      return SemanticTokenTypes.String;
+    }
+
+    String symbolicName = BSLLexer.VOCABULARY.getSymbolicName(bslTokenType);
+    if (symbolicName != null && symbolicName.endsWith("_KEYWORD") && !symbolicName.startsWith("PREPROC_")) {
+      return SemanticTokenTypes.Keyword;
+    }
+
+    return null;
+  }
+
   private Map<Token, StringContext> collectSpecialStringContexts(DocumentContext documentContext) {
     Map<Token, StringContext> contexts = new HashMap<>();
-    var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods);
+    var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods, parsedLambdaMethods);
     visitor.visit(documentContext.getAst());
     return contexts;
   }

@@ -39,7 +39,8 @@ import java.util.Set;
  * Настройки для семантических токенов.
  * <p>
  * Позволяет указать дополнительные функции-шаблонизаторы строк,
- * аналогичные СтрШаблон/StrTemplate, для подсветки плейсхолдеров (%1, %2 и т.д.).
+ * аналогичные СтрШаблон/StrTemplate, для подсветки плейсхолдеров (%1, %2 и т.д.),
+ * а также функции для лямбда-выражений (например, из библиотеки sfaqer/lambdas).
  */
 @Getter
 @AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
@@ -55,6 +56,11 @@ public class SemanticTokensOptions {
     "СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку",
     // Английский вариант
     "StringFunctionsClientServer.SubstituteParametersToString"
+  );
+
+  private static final List<String> DEFAULT_LAMBDA_METHODS = List.of(
+    // sfaqer/lambdas - основной API
+    "Лямбда.Выражение"
   );
 
   /**
@@ -75,10 +81,31 @@ public class SemanticTokensOptions {
   private List<String> strTemplateMethods = new ArrayList<>(DEFAULT_STR_TEMPLATE_METHODS);
 
   /**
+   * Список паттернов "Модуль.Метод" для функций, принимающих лямбда-выражения в виде строк.
+   * <p>
+   * Содержимое строк внутри вызовов этих функций будет интерпретироваться как BSL-выражение
+   * и подсвечиваться с выделением ключевых слов, операторов и чисел.
+   * <p>
+   * Формат: "ИмяМодуля.ИмяМетода", например:
+   * <ul>
+   *   <li>"Лямбда.Выражение" - вызов из библиотеки sfaqer/lambdas</li>
+   * </ul>
+   * <p>
+   * По умолчанию включает стандартные варианты из sfaqer/lambdas.
+   */
+  private List<String> lambdaMethods = new ArrayList<>(DEFAULT_LAMBDA_METHODS);
+
+  /**
    * Кэшированные разобранные паттерны функций-шаблонизаторов.
    */
   @JsonIgnore
-  private ParsedStrTemplateMethods parsedStrTemplateMethods = parseStrTemplateMethods(DEFAULT_STR_TEMPLATE_METHODS);
+  private ParsedStrTemplateMethods parsedStrTemplateMethods = parseMethodPatterns(DEFAULT_STR_TEMPLATE_METHODS);
+
+  /**
+   * Кэшированные разобранные паттерны лямбда-функций.
+   */
+  @JsonIgnore
+  private ParsedStrTemplateMethods parsedLambdaMethods = parseMethodPatterns(DEFAULT_LAMBDA_METHODS);
 
   /**
    * Устанавливает список паттернов функций-шаблонизаторов и пересчитывает кэш.
@@ -87,7 +114,17 @@ public class SemanticTokensOptions {
    */
   public void setStrTemplateMethods(List<String> strTemplateMethods) {
     this.strTemplateMethods = strTemplateMethods;
-    this.parsedStrTemplateMethods = parseStrTemplateMethods(strTemplateMethods);
+    this.parsedStrTemplateMethods = parseMethodPatterns(strTemplateMethods);
+  }
+
+  /**
+   * Устанавливает список паттернов лямбда-функций и пересчитывает кэш.
+   *
+   * @param lambdaMethods Список паттернов
+   */
+  public void setLambdaMethods(List<String> lambdaMethods) {
+    this.lambdaMethods = lambdaMethods;
+    this.parsedLambdaMethods = parseMethodPatterns(lambdaMethods);
   }
 
   /**
@@ -100,7 +137,17 @@ public class SemanticTokensOptions {
     return parsedStrTemplateMethods;
   }
 
-  private static ParsedStrTemplateMethods parseStrTemplateMethods(List<String> methods) {
+  /**
+   * Возвращает предварительно разобранные паттерны лямбда-функций.
+   *
+   * @return Разобранные паттерны для быстрого поиска
+   */
+  @JsonIgnore
+  public ParsedStrTemplateMethods getParsedLambdaMethods() {
+    return parsedLambdaMethods;
+  }
+
+  private static ParsedStrTemplateMethods parseMethodPatterns(List<String> methods) {
     var localMethods = new HashSet<String>();
     var moduleMethodPairs = new HashMap<String, Set<String>>();
 

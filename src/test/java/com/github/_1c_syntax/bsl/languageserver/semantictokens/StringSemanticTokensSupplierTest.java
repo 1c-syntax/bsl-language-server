@@ -771,4 +771,128 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(1, 86, 2, SemanticTokenTypes.Parameter, "%2")
     ));
   }
+
+  // ==================== Lambda String Tests ====================
+
+  @Test
+  void testLambdaExpressionWithArrowAndKeyword() {
+    // given - Лямбда.Выражение with arrow operator and Возврат keyword
+    String bsl = """
+      Процедура Тест()
+        Р = Лямбда.Выражение("А -> Возврат А > 5");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - operators and keywords inside the lambda string should be highlighted
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 26, 1, SemanticTokenTypes.Operator, "-"),
+      new ExpectedToken(1, 27, 1, SemanticTokenTypes.Operator, ">"),
+      new ExpectedToken(1, 29, 7, SemanticTokenTypes.Keyword, "Возврат"),
+      new ExpectedToken(1, 39, 1, SemanticTokenTypes.Operator, ">"),
+      new ExpectedToken(1, 41, 1, SemanticTokenTypes.Number, "5")
+    ));
+  }
+
+  @Test
+  void testLambdaExpressionWithNumber() {
+    // given - Lambda with numeric literals
+    String bsl = """
+      Процедура Тест()
+        Р = Лямбда.Выражение("Х -> Х + 10");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - operator and number should be highlighted
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 31, 1, SemanticTokenTypes.Operator, "+"),
+      new ExpectedToken(1, 33, 2, SemanticTokenTypes.Number, "10")
+    ));
+  }
+
+  @Test
+  void testLambdaExpressionWithBooleanLiteral() {
+    // given - Lambda with special literal (Истина)
+    String bsl = """
+      Процедура Тест()
+        Р = Лямбда.Выражение("Х -> Истина");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - Истина should be highlighted as keyword
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 29, 6, SemanticTokenTypes.Keyword, "Истина")
+    ));
+  }
+
+  @Test
+  void testLambdaRegularStringNotAffected() {
+    // given - Regular string (not in lambda context) should not be processed as lambda
+    String bsl = """
+      Процедура Тест()
+        Текст = "Возврат Истина";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - entire string should be one String token, not split into BSL tokens
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(1, 10, 16, SemanticTokenTypes.String, "\"Возврат Истина\"")
+    ));
+  }
+
+  @Test
+  void testLambdaWithParenthesizedParams() {
+    // given - Lambda with parenthesized parameter list: (А, Б) -> А + Б
+    String bsl = """
+      Процедура Тест()
+        Р = Лямбда.Выражение("(А, Б) -> А + Б");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - parentheses, comma, arrow, and plus should be operators
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 24, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 26, 1, SemanticTokenTypes.Operator, ","),
+      new ExpectedToken(1, 29, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 31, 1, SemanticTokenTypes.Operator, "-"),
+      new ExpectedToken(1, 32, 1, SemanticTokenTypes.Operator, ">"),
+      new ExpectedToken(1, 36, 1, SemanticTokenTypes.Operator, "+")
+    ));
+  }
+
+  @Test
+  void testLambdaWithIfKeyword() {
+    // given - Lambda with Если keyword
+    String bsl = """
+      Процедура Тест()
+        Р = Лямбда.Выражение("Х -> Если Х > 0 Тогда Возврат Х КонецЕсли");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - keywords should be highlighted
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 29, 4, SemanticTokenTypes.Keyword, "Если"),
+      new ExpectedToken(1, 40, 5, SemanticTokenTypes.Keyword, "Тогда"),
+      new ExpectedToken(1, 46, 7, SemanticTokenTypes.Keyword, "Возврат"),
+      new ExpectedToken(1, 56, 9, SemanticTokenTypes.Keyword, "КонецЕсли"),
+      new ExpectedToken(1, 38, 1, SemanticTokenTypes.Number, "0")
+    ));
+  }
 }
