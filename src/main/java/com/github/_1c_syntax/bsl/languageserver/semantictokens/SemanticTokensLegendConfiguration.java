@@ -63,7 +63,8 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Property,  // Added for SDBL field names
       SemanticTokenTypes.Class,  // Added for SDBL metadata object names (e.g. Справочник.Контрагенты, РегистрСведений.КурсыВалют)
       SemanticTokenTypes.Enum,  // Added for SDBL enum types (Перечисление.Пол)
-      SemanticTokenTypes.EnumMember  // Added for predefined elements and enum values
+      SemanticTokenTypes.EnumMember,  // Added for predefined elements and enum values
+      CustomSemanticTokenTypes.SOURCE  // Neutral token to override TextMate string scope in lambda bodies
     );
 
     List<String> tokenModifiers = List.of(
