@@ -972,4 +972,28 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(1, 19, 1, SemanticTokenTypes.Operator, "+")
     ));
   }
+
+  @Test
+  void testLambdaParameterReferencesHighlighted() {
+    // given - lambda with parameters used in body
+    String os = """
+      Процедура Тест()
+        Р = "(Элемент) -> Элемент + 1";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - param in header, arrow, param reference in body, operator, number
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 8, 7, SemanticTokenTypes.Parameter, "Элемент"),
+      new ExpectedToken(1, 15, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 17, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 20, 7, SemanticTokenTypes.Parameter, "Элемент (ref)"),
+      new ExpectedToken(1, 28, 1, SemanticTokenTypes.Operator, "+"),
+      new ExpectedToken(1, 30, 1, SemanticTokenTypes.Number, "1")
+    ));
+  }
 }

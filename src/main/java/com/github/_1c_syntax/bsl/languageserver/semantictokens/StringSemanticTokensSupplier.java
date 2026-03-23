@@ -62,7 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -93,8 +93,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private static final Pattern LAMBDA_ARROW_PATTERN = Pattern.compile("->\\s*");
 
   private static final ThreadLocal<Boolean> PROCESSING_LAMBDA = ThreadLocal.withInitial(() -> Boolean.FALSE);
-
-  private static final AtomicLong VIRTUAL_DOC_COUNTER = new AtomicLong();
 
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
@@ -524,6 +522,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     int arrowStart = arrowMatcher.start();
     int arrowEnd = arrowMatcher.end();
 
+    // Extract parameter names for function wrapper
+    var paramNames = extractLambdaParamNames(fullContent.substring(0, arrowStart));
+
     // Parameters (before ->)
     collectLambdaParamTokens(fullContent.substring(0, arrowStart), 0, segments, result);
 
@@ -531,7 +532,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     addSubTokenAtOffset(arrowStart, 2, SemanticTokenTypes.Operator, segments, result);
 
     // Body (after ->) — delegate to all semantic token suppliers via virtual DocumentContext
-    var bodyEntries = collectLambdaBodyTokensViaSuppliers(group, arrowEnd);
+    var bodyEntries = collectLambdaBodyTokensViaSuppliers(group, arrowEnd, paramNames);
     for (var entry : bodyEntries) {
       for (var segment : segments) {
         if (segment.docLine() == entry.line()
@@ -553,15 +554,21 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
   }
 
-  private List<SemanticTokenEntry> collectLambdaBodyTokensViaSuppliers(List<Token> group, int arrowEnd) {
-    String paddedContent = buildPaddedLambdaBody(group, arrowEnd);
+  private List<SemanticTokenEntry> collectLambdaBodyTokensViaSuppliers(
+    List<Token> group, int arrowEnd, List<String> paramNames
+  ) {
+    String paddedContent = buildPaddedLambdaBody(group, arrowEnd, paramNames);
     if (paddedContent.isBlank()) {
       return List.of();
     }
 
     var virtualUri = Absolute.uri(
-      URI.create("file:///virtual-lambda-" + VIRTUAL_DOC_COUNTER.incrementAndGet() + ".os")
+      URI.create("file:///virtual-lambda-" + UUID.randomUUID() + ".os")
     );
+
+    // Determine which lines belong to the real body (exclude fake header/footer)
+    int firstBodyLine = getFirstBodyLine(group, arrowEnd);
+    int lastBodyLine = getLastBodyLine(group, arrowEnd);
 
     try {
       var virtualDoc = serverContext.addDocument(virtualUri);
@@ -573,6 +580,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
           .filter(s -> s != this)
           .map(s -> s.getSemanticTokens(virtualDoc))
           .flatMap(Collection::stream)
+          .filter(entry -> entry.line() >= firstBodyLine && entry.line() <= lastBodyLine)
           .toList();
       } finally {
         PROCESSING_LAMBDA.set(Boolean.FALSE);
@@ -582,7 +590,32 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
   }
 
-  private static String buildPaddedLambdaBody(List<Token> group, int arrowEnd) {
+  private static int getFirstBodyLine(List<Token> group, int arrowEnd) {
+    var segments = buildContentSegments(group);
+    for (var segment : segments) {
+      int segEnd = segment.contentOffset() + segment.length();
+      if (segEnd > arrowEnd) {
+        return segment.docLine();
+      }
+    }
+    return 0;
+  }
+
+  private static int getLastBodyLine(List<Token> group, int arrowEnd) {
+    var segments = buildContentSegments(group);
+    int lastLine = 0;
+    for (var segment : segments) {
+      int segEnd = segment.contentOffset() + segment.length();
+      if (segEnd > arrowEnd) {
+        lastLine = segment.docLine();
+      }
+    }
+    return lastLine;
+  }
+
+  private static final String RETURN_KEYWORD = "Возврат";
+
+  private static String buildPaddedLambdaBody(List<Token> group, int arrowEnd, List<String> paramNames) {
     var segments = buildContentSegments(group);
     String fullContent = extractLambdaFullContent(group);
 
@@ -611,16 +644,42 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       return "";
     }
 
+    int firstBodyLine = lineContents.firstKey();
     int maxLine = lineContents.lastKey();
+    boolean canWrapInFunction = firstBodyLine > 0 && !paramNames.isEmpty();
+
     var sb = new StringBuilder();
-    for (int line = 0; line <= maxLine; line++) {
-      if (line > 0) {
-        sb.append('\n');
+
+    // Insert fake function header at line 0
+    if (canWrapInFunction) {
+      String bodyText = fullContent.substring(arrowEnd);
+      boolean bodyHasReturn = bodyText.toLowerCase(java.util.Locale.ENGLISH).contains("возврат")
+        || bodyText.toLowerCase(java.util.Locale.ENGLISH).contains("return");
+
+      sb.append("Функция _Лямбда(");
+      sb.append(String.join(", ", paramNames));
+      sb.append(')');
+      if (!bodyHasReturn) {
+        sb.append(' ').append(RETURN_KEYWORD);
       }
+    } else {
+      var line0 = lineContents.get(0);
+      if (line0 != null) {
+        sb.append(line0);
+      }
+    }
+
+    for (int line = 1; line <= maxLine; line++) {
+      sb.append('\n');
       var lineSb = lineContents.get(line);
       if (lineSb != null) {
         sb.append(lineSb);
       }
+    }
+
+    // Append КонецФункции on a new line after body
+    if (canWrapInFunction) {
+      sb.append("\nКонецФункции");
     }
 
     return removeDoubleQuotesPreservingPositions(sb.toString());
@@ -664,6 +723,21 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
 
     return strings.toString();
+  }
+
+  private static List<String> extractLambdaParamNames(String paramsPart) {
+    var names = new ArrayList<String>();
+    String cleaned = paramsPart.replace("\"\"", "\"");
+    if (cleaned.isBlank()) {
+      return names;
+    }
+    var tokenizer = new BSLTokenizer(cleaned);
+    for (Token token : tokenizer.getTokens()) {
+      if (token.getChannel() == Token.DEFAULT_CHANNEL && token.getType() == BSLLexer.IDENTIFIER) {
+        names.add(token.getText());
+      }
+    }
+    return names;
   }
 
   private static void collectLambdaParamTokens(
