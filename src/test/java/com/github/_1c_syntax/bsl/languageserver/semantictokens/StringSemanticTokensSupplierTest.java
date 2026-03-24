@@ -1032,6 +1032,51 @@ class StringSemanticTokensSupplierTest {
   }
 
   @Test
+  void testStrTemplatePlaceholdersInLambdaParams() {
+    // given — StrTemplate wrapping a lambda: %1 in params should highlight as Parameter
+    String os = """
+      Процедура Тест()
+        Поделка.ДобавитьЗавязь(СтрШаблон(
+          "&Завязь(""%1"", Тип = ""%1"") () -> Новый %1",
+          ТестовыйНабор
+        ));
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — %1 in params (left of ->) highlighted as Parameter
+    //        %1 in body (right of ->) tokenized by BSL lexer (% + 1)
+    helper.assertContainsTokens(decoded, List.of(
+      // annotation
+      new ExpectedToken(2, 5, 1, SemanticTokenTypes.Decorator, "&"),
+      new ExpectedToken(2, 6, 6, SemanticTokenTypes.Decorator, "Завязь"),
+      new ExpectedToken(2, 12, 1, SemanticTokenTypes.Operator, "("),
+      // escape quotes around first %1
+      new ExpectedToken(2, 13, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
+      // %1 — StrTemplate placeholder in params
+      new ExpectedToken(2, 15, 2, SemanticTokenTypes.Parameter, "%1 in params"),
+      new ExpectedToken(2, 17, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing"),
+      new ExpectedToken(2, 19, 1, SemanticTokenTypes.Operator, ","),
+      // Тип = ""%1""
+      new ExpectedToken(2, 21, 3, SemanticTokenTypes.Parameter, "Тип"),
+      new ExpectedToken(2, 25, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(2, 27, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
+      new ExpectedToken(2, 29, 2, SemanticTokenTypes.Parameter, "%1 in params #2"),
+      new ExpectedToken(2, 31, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing"),
+      new ExpectedToken(2, 33, 1, SemanticTokenTypes.Operator, ")"),
+      // ()
+      new ExpectedToken(2, 35, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(2, 36, 1, SemanticTokenTypes.Operator, ")"),
+      // ->
+      new ExpectedToken(2, 38, 2, SemanticTokenTypes.Operator, "->"),
+      // body: Новый keyword
+      new ExpectedToken(2, 41, 5, SemanticTokenTypes.Keyword, "Новый")
+    ));
+  }
+
+  @Test
   void testNestedLambdaHighlighting() {
     // given — multiline outer lambda with inline inner lambda ("" Параметр -> ..."")
     // and multiline inner lambda (""\n|...\n|"")

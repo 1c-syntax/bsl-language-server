@@ -138,7 +138,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Собираем информацию о контекстах строк
     var specialStringContexts = collectSpecialStringContexts(documentContext);
     var queryStringContexts = collectQueryStringContexts(documentContext);
-    var lambdaStringContexts = collectLambdaStringContexts(documentContext);
+    var lambdaStringContexts = collectLambdaStringContexts(documentContext, specialStringContexts);
 
     // Обрабатываем все строковые токены
     var stringTokens = documentContext.getTokensFromDefaultChannel().stream()
@@ -464,7 +464,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
    * <p>
    * Работает только для файлов OneScript (.os).
    */
-  private Map<Token, List<SubToken>> collectLambdaStringContexts(DocumentContext documentContext) {
+  private Map<Token, List<SubToken>> collectLambdaStringContexts(
+    DocumentContext documentContext, Map<Token, StringContext> specialStringContexts
+  ) {
     if (documentContext.getFileType() != FileType.OS) {
       return Map.of();
     }
@@ -477,7 +479,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     Map<Token, List<SubToken>> result = new HashMap<>();
 
     for (var group : groups) {
-      collectLambdaSubTokensForGroup(group, result);
+      collectLambdaSubTokensForGroup(group, result, specialStringContexts);
     }
 
     return result;
@@ -515,7 +517,10 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
    * Для группы токенов одного строкового литерала проверяет наличие {@code ->},
    * токенизирует тело лямбды через BSLTokenizer и маппит позиции обратно в документ.
    */
-  private void collectLambdaSubTokensForGroup(List<Token> group, Map<Token, List<SubToken>> result) {
+  private void collectLambdaSubTokensForGroup(
+    List<Token> group, Map<Token, List<SubToken>> result,
+    Map<Token, StringContext> specialStringContexts
+  ) {
     String fullContent = extractLambdaFullContent(group);
 
     var arrowMatcher = LAMBDA_ARROW_PATTERN.matcher(fullContent);
@@ -535,6 +540,16 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
     // Parameters (before ->)
     collectLambdaParamTokens(fullContent.substring(0, arrowStart), 0, segments, result);
+
+    // StrTemplate/NStr placeholders in params area (left of ->)
+    StringContext groupContext = group.stream()
+      .map(specialStringContexts::get)
+      .filter(java.util.Objects::nonNull)
+      .findFirst()
+      .orElse(null);
+    if (groupContext != null) {
+      collectSpecialContextSubTokens(fullContent.substring(0, arrowStart), 0, segments, result, groupContext);
+    }
 
     // Arrow (->) itself
     addSubTokenAtOffset(arrowStart, 2, SemanticTokenTypes.Operator, segments, result);
@@ -815,6 +830,31 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
         idx += 2;
       } else {
         idx++;
+      }
+    }
+  }
+
+  /**
+   * Сканирует текст на наличие плейсхолдеров СтрШаблон ({@code %1}..{@code %10})
+   * и/или ключей языка НСтр и добавляет SubToken'ы.
+   */
+  private static void collectSpecialContextSubTokens(
+    String text, int baseOffset, List<ContentSegment> segments,
+    Map<Token, List<SubToken>> result, StringContext context
+  ) {
+    if (context == StringContext.STR_TEMPLATE || context == StringContext.NSTR_AND_STR_TEMPLATE) {
+      var positions = MultilingualStringAnalyser.findPlaceholderPositions(text);
+      for (var position : positions) {
+        addSubTokenAtOffset(baseOffset + position.start(), position.length(),
+          SemanticTokenTypes.Parameter, segments, result);
+      }
+    }
+
+    if (context == StringContext.NSTR || context == StringContext.NSTR_AND_STR_TEMPLATE) {
+      var positions = MultilingualStringAnalyser.findLanguageKeyPositions(text);
+      for (var position : positions) {
+        addSubTokenAtOffset(baseOffset + position.start(), position.length(),
+          SemanticTokenTypes.Property, segments, result);
       }
     }
   }
