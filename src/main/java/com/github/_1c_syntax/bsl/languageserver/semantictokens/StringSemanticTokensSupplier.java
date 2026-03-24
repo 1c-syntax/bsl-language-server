@@ -92,8 +92,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private static final Pattern LAMBDA_ARROW_PATTERN = Pattern.compile("->\\s*");
 
-  private static final ThreadLocal<Boolean> PROCESSING_LAMBDA = ThreadLocal.withInitial(() -> Boolean.FALSE);
-
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
   private final ServerContext serverContext;
@@ -460,7 +458,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
    * Работает только для файлов OneScript (.os).
    */
   private Map<Token, List<SubToken>> collectLambdaStringContexts(DocumentContext documentContext) {
-    if (documentContext.getFileType() != FileType.OS || PROCESSING_LAMBDA.get()) {
+    if (documentContext.getFileType() != FileType.OS) {
       return Map.of();
     }
 
@@ -574,17 +572,11 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       var virtualDoc = serverContext.addDocument(virtualUri);
       serverContext.rebuildDocument(virtualDoc, paddedContent, 1);
 
-      PROCESSING_LAMBDA.set(Boolean.TRUE);
-      try {
-        return allSuppliers.stream()
-          .filter(s -> s != this)
-          .map(s -> s.getSemanticTokens(virtualDoc))
-          .flatMap(Collection::stream)
-          .filter(entry -> entry.line() >= firstBodyLine && entry.line() <= lastBodyLine)
-          .toList();
-      } finally {
-        PROCESSING_LAMBDA.set(Boolean.FALSE);
-      }
+      return allSuppliers.stream()
+        .map(s -> s.getSemanticTokens(virtualDoc))
+        .flatMap(Collection::stream)
+        .filter(entry -> entry.line() >= firstBodyLine && entry.line() <= lastBodyLine)
+        .toList();
     } finally {
       serverContext.removeDocument(virtualUri);
     }
