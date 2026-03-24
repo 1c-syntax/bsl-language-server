@@ -48,7 +48,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -98,8 +97,16 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final SemanticTokensLegend legend;
 
   @Autowired
-  @Lazy
-  private List<SemanticTokensSupplier> allSuppliers;
+  private org.springframework.context.ApplicationContext applicationContext;
+
+  private volatile List<SemanticTokensSupplier> allSuppliers;
+
+  private List<SemanticTokensSupplier> getAllSuppliers() {
+    if (allSuppliers == null) {
+      allSuppliers = new ArrayList<>(applicationContext.getBeansOfType(SemanticTokensSupplier.class).values());
+    }
+    return allSuppliers;
+  }
 
   private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
 
@@ -572,7 +579,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       var virtualDoc = serverContext.addDocument(virtualUri);
       serverContext.rebuildDocument(virtualDoc, paddedContent, 1);
 
-      return allSuppliers.stream()
+      return getAllSuppliers().stream()
         .map(s -> s.getSemanticTokens(virtualDoc))
         .flatMap(Collection::stream)
         .filter(entry -> entry.line() >= firstBodyLine && entry.line() <= lastBodyLine)
@@ -837,7 +844,21 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private static final Set<Integer> LAMBDA_PARAM_OPERATOR_TYPES = Set.of(
     BSLLexer.LPAREN,
     BSLLexer.RPAREN,
-    BSLLexer.COMMA
+    BSLLexer.COMMA,
+    BSLLexer.ASSIGN
+  );
+
+  private static final Set<Integer> ANNOTATION_SYMBOL_TYPES = Set.of(
+    BSLLexer.ANNOTATION_CUSTOM_SYMBOL,
+    BSLLexer.ANNOTATION_BEFORE_SYMBOL,
+    BSLLexer.ANNOTATION_AFTER_SYMBOL,
+    BSLLexer.ANNOTATION_AROUND_SYMBOL,
+    BSLLexer.ANNOTATION_CHANGEANDVALIDATE_SYMBOL,
+    BSLLexer.ANNOTATION_ATSERVER_SYMBOL,
+    BSLLexer.ANNOTATION_ATCLIENT_SYMBOL,
+    BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLLexer.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
+    BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
   );
 
   private static String mapLambdaParamTokenToSemanticType(int bslTokenType) {
@@ -845,6 +866,27 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       return SemanticTokenTypes.Parameter;
     }
     if (LAMBDA_PARAM_OPERATOR_TYPES.contains(bslTokenType)) {
+      return SemanticTokenTypes.Operator;
+    }
+    if (bslTokenType == BSLLexer.AMPERSAND || ANNOTATION_SYMBOL_TYPES.contains(bslTokenType)) {
+      return SemanticTokenTypes.Decorator;
+    }
+    if (bslTokenType == BSLLexer.STRING) {
+      return SemanticTokenTypes.String;
+    }
+    if (bslTokenType == BSLLexer.FLOAT || bslTokenType == BSLLexer.DECIMAL) {
+      return SemanticTokenTypes.Number;
+    }
+    if (bslTokenType == BSLLexer.DATETIME) {
+      return SemanticTokenTypes.Number;
+    }
+    if (bslTokenType == BSLLexer.TRUE
+      || bslTokenType == BSLLexer.FALSE
+      || bslTokenType == BSLLexer.UNDEFINED
+      || bslTokenType == BSLLexer.NULL) {
+      return SemanticTokenTypes.Keyword;
+    }
+    if (bslTokenType == BSLLexer.PLUS || bslTokenType == BSLLexer.MINUS) {
       return SemanticTokenTypes.Operator;
     }
     return null;

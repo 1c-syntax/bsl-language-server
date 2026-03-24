@@ -996,4 +996,87 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(1, 30, 1, SemanticTokenTypes.Number, "1")
     ));
   }
+
+  @Test
+  void testLambdaWithAnnotations() {
+    // given - lambda with annotations before parameters
+    String os = """
+      Процедура Тест()
+        Р = "&Набор &Завязь(""Имя"", Тип = ""Значение"") () -> 1";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - annotations, annotation params, lambda parens, arrow, body
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Decorator, "&"),
+      new ExpectedToken(1, 8, 5, SemanticTokenTypes.Decorator, "Набор"),
+      new ExpectedToken(1, 14, 1, SemanticTokenTypes.Decorator, "&"),
+      new ExpectedToken(1, 15, 6, SemanticTokenTypes.Decorator, "Завязь"),
+      new ExpectedToken(1, 21, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 22, 5, SemanticTokenTypes.String, "\"Имя\" (mapped from cleaned)"),
+      new ExpectedToken(1, 29, 1, SemanticTokenTypes.Operator, ","),
+      new ExpectedToken(1, 31, 3, SemanticTokenTypes.Parameter, "Тип"),
+      new ExpectedToken(1, 35, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(1, 37, 10, SemanticTokenTypes.String, "\"Значение\" (mapped from cleaned)"),
+      new ExpectedToken(1, 49, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 51, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 52, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 54, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 57, 1, SemanticTokenTypes.Number, "1")
+    ));
+  }
+
+  @Test
+  void testNestedLambdaHighlighting() {
+    // given — multiline outer lambda with inline inner lambda ("" Параметр -> ..."")
+    // and multiline inner lambda (""\n|...\n|"")
+    String os = "Процедура Тест()\n"
+      + "  Р = \"Результат, Настройка ->\n"
+      + "  |\n"
+      + "  |  Результат.Слить(\n"
+      + "  |    Настройка.Ключ,\n"
+      + "  |    Настройка.Значение,\n"
+      + "  |    \"\" Параметр -> Параметр + 1\"\",\n"
+      + "  |    \"\"\n"
+      + "  |    |Старое, Новое ->\n"
+      + "  |    |  Если ТипЗнч(Старое) = Тип(\"\"\"\"МножествоСоответствие\"\"\"\") Тогда\n"
+      + "  |    |    Старое.ДобавитьВсе(Новое);\n"
+      + "  |    |  КонецЕсли;\n"
+      + "  |    |\n"
+      + "  |    |  Возврат Старое;\n"
+      + "  |    |\"\"\n"
+      + "  |  );\n"
+      + "  |\n"
+      + "  |  Возврат Результат;\n"
+      + "  |\";\n"
+      + "КонецПроцедуры\n";
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — outer lambda params
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 9, SemanticTokenTypes.Parameter, "Результат"),
+      new ExpectedToken(1, 18, 9, SemanticTokenTypes.Parameter, "Настройка"),
+      new ExpectedToken(1, 28, 2, SemanticTokenTypes.Operator, "outer ->")
+    ));
+
+    // inline inner lambda on line 6: "" Параметр -> Параметр + 1""
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(6, 10, 8, SemanticTokenTypes.Parameter, "Параметр (inline inner param)"),
+      new ExpectedToken(6, 19, 2, SemanticTokenTypes.Operator, "-> (inline inner arrow)"),
+      new ExpectedToken(6, 33, 1, SemanticTokenTypes.Number, "1 (inline inner body)")
+    ));
+
+    // multiline inner lambda on lines 8+: Старое, Новое ->
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(8, 8, 6, SemanticTokenTypes.Parameter, "Старое (nested param)"),
+      new ExpectedToken(8, 16, 5, SemanticTokenTypes.Parameter, "Новое (nested param)"),
+      new ExpectedToken(8, 22, 2, SemanticTokenTypes.Operator, "-> (nested arrow)"),
+      new ExpectedToken(9, 10, 4, SemanticTokenTypes.Keyword, "Если (nested body keyword)")
+    ));
+  }
 }
