@@ -42,4 +42,14 @@ public class CustomSemanticTokenTypes {
    * стандартным цветом текста.
    */
   public final String SOURCE = "source";
+
+  /**
+   * Тип токена для экранированных двойных кавычек {@code ""} внутри строковых литералов.
+   * <p>
+   * В BSL двойная кавычка внутри строки экранируется удвоением: {@code ""}.
+   * Этот тип позволяет отображать экранирование аналогично escape-последовательностям
+   * ({@code \n}, {@code \t}) в других языках — с цветом {@code constant.character.escape}
+   * в TextMate-темах.
+   */
+  public final String STRING_ESCAPE = "stringEscape";
 }

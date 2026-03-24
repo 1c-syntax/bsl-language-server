@@ -530,6 +530,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Extract parameter names for function wrapper
     var paramNames = extractLambdaParamNames(fullContent.substring(0, arrowStart));
 
+    // Escaped double quotes "" — both before and after ->
+    collectEscapedQuoteTokens(fullContent, segments, result);
+
     // Parameters (before ->)
     collectLambdaParamTokens(fullContent.substring(0, arrowStart), 0, segments, result);
 
@@ -555,6 +558,24 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       var list = result.get(groupToken);
       if (list != null) {
         list.sort(Comparator.comparingInt(SubToken::start));
+        removeOverlappingTokens(list);
+      }
+    }
+  }
+
+  /**
+   * Удаляет токены, перекрывающиеся с предыдущими. Первый токен в позиции
+   * (escape-кавычки добавляются раньше body-токенов) имеет приоритет.
+   */
+  private static void removeOverlappingTokens(List<SubToken> tokens) {
+    var it = tokens.iterator();
+    int lastEnd = -1;
+    while (it.hasNext()) {
+      var token = it.next();
+      if (token.start() < lastEnd) {
+        it.remove();
+      } else {
+        lastEnd = token.start() + token.length();
       }
     }
   }
@@ -776,6 +797,24 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
         result.computeIfAbsent(segment.token, k -> new ArrayList<>())
           .add(new SubToken(docColumn, tokenLength, semanticType));
         break;
+      }
+    }
+  }
+
+  /**
+   * Сканирует содержимое лямбда-строки на наличие экранированных кавычек {@code ""}
+   * и добавляет для них SubToken'ы с типом {@code stringEscape}.
+   */
+  private static void collectEscapedQuoteTokens(
+    String fullContent, List<ContentSegment> segments, Map<Token, List<SubToken>> result
+  ) {
+    int idx = 0;
+    while (idx < fullContent.length() - 1) {
+      if (fullContent.charAt(idx) == '"' && fullContent.charAt(idx + 1) == '"') {
+        addSubTokenAtOffset(idx, 2, CustomSemanticTokenTypes.STRING_ESCAPE, segments, result);
+        idx += 2;
+      } else {
+        idx++;
       }
     }
   }
