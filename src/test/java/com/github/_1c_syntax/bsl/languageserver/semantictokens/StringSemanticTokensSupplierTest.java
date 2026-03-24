@@ -1071,8 +1071,9 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(2, 36, 1, SemanticTokenTypes.Operator, ")"),
       // ->
       new ExpectedToken(2, 38, 2, SemanticTokenTypes.Operator, "->"),
-      // body: Новый keyword
-      new ExpectedToken(2, 41, 5, SemanticTokenTypes.Keyword, "Новый")
+      // body: Новый keyword and %1 as StrTemplate placeholder
+      new ExpectedToken(2, 41, 5, SemanticTokenTypes.Keyword, "Новый"),
+      new ExpectedToken(2, 47, 2, SemanticTokenTypes.Parameter, "%1 in body")
     ));
   }
 

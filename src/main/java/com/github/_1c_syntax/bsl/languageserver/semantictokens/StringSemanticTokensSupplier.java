@@ -554,6 +554,11 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Arrow (->) itself
     addSubTokenAtOffset(arrowStart, 2, SemanticTokenTypes.Operator, segments, result);
 
+    // StrTemplate/NStr placeholders in body area (right of ->)
+    if (groupContext != null) {
+      collectSpecialContextSubTokens(fullContent.substring(arrowEnd), arrowEnd, segments, result, groupContext);
+    }
+
     // Body (after ->) — delegate to all semantic token suppliers via virtual DocumentContext
     var bodyEntries = collectLambdaBodyTokensViaSuppliers(group, arrowEnd, paramNames);
     for (var entry : bodyEntries) {
