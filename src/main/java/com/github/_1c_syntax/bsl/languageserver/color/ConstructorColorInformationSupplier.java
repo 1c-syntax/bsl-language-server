@@ -96,7 +96,7 @@ public class ConstructorColorInformationSupplier implements ColorInformationSupp
     return Optional.ofNullable(callParams.callParam(colorPosition))
       .map(BSLParser.CallParamContext::expression)
       .filter(expression -> expression.getTokens().size() == 1)
-      .map(expression -> expression.getTokens().get(0))
+      .map(expression -> expression.getTokens().getFirst())
       .map(Token::getText)
       .map(ConstructorColorInformationSupplier::tryParseInteger)
       .map(colorValue -> (double) colorValue / MAX_COLOR_COMPONENT_VALUE)

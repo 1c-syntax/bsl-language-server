@@ -64,7 +64,7 @@ class NestedStatementsDiagnosticTest extends AbstractDiagnosticTest<NestedStatem
     assertThat(diagnostics).hasSize(1);
     Assertions.assertThat(diagnostics, true)
       .hasRange(50, 6, 50, 10);
-    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(7);
+    assertThat(diagnostics.getFirst().getRelatedInformation()).hasSize(7);
 
   }
 }

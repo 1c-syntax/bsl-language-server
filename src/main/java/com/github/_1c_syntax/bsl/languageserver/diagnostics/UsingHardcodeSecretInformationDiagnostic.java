@@ -94,7 +94,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     var matcher = searchWords.matcher(ctx.getStart().getText());
     if (matcher.find()) {
       List<Token> list = ctx.expression().getTokens();
-      if (list.size() == 1 && isNotEmptyStringByToken(list.get(0))) {
+      if (list.size() == 1 && isNotEmptyStringByToken(list.getFirst())) {
         diagnosticStorage.addDiagnostic(ctx);
       }
     }
@@ -116,7 +116,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
     List<Token> list = ctx.expression().getTokens();
     if (list.size() == 1) {
-      processCheckAssignmentKey(ctx, list.get(0).getText());
+      processCheckAssignmentKey(ctx, list.getFirst().getText());
     }
     return super.visitAccessIndex(ctx);
   }
@@ -212,7 +212,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     BSLParser.NewExpressionContext ctx,
     List<? extends BSLParser.CallParamContext> list
   ) {
-    String[] arr = list.get(0).getText().split(",");
+    String[] arr = list.getFirst().getText().split(",");
     for (var index = 0; index < arr.length; index++) {
       var matcher = searchWords.matcher(getClearString(arr[index]));
       if (matcher.find() && list.size() > index + 1 && isNotEmptyStringByToken(list.get(index + 1).getStart())) {

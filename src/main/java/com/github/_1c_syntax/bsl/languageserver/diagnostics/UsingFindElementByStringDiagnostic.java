@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
@@ -51,11 +52,11 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
   );
 
   @Override
-  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
+  public @Nullable ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
     var matcher = pattern.matcher(ctx.methodName().getText());
     if (matcher.matches()) {
-      BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().get(0);
-      if (param.children == null ||
+      BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().getFirst();
+      if (param.getChildren().isEmpty() ||
         param.getStart().getType() == BSLParser.STRING ||
         param.getStart().getType() == BSLParser.DECIMAL) {
         diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));

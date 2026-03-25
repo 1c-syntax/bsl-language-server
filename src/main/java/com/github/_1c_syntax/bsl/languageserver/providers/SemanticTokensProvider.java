@@ -252,11 +252,7 @@ public class SemanticTokensProvider {
     }
 
     // Token is on the end line - check if it starts before range end
-    if (tokenLine == endLine && tokenStart >= endChar) {
-      return false;
-    }
-
-    return true;
+    return tokenLine != endLine || tokenStart < endChar;
   }
 
   /**

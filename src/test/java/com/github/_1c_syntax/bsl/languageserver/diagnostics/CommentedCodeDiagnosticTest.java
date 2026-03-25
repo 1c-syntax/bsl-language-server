@@ -98,13 +98,13 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   @Test
   void testQuickFixRemoveCode() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0));
+    List<CodeAction> quickFixes = getQuickFixes(diagnostics.getFirst());
 
     assertThat(quickFixes)
       .hasSize(1);
 
-    final CodeAction fix = quickFixes.get(0);
-    assertThat(fix).of(diagnosticInstance).in(getDocumentContext()).fixes(diagnostics.get(0));
+    final CodeAction fix = quickFixes.getFirst();
+    assertThat(fix).of(diagnosticInstance).in(getDocumentContext()).fixes(diagnostics.getFirst());
 
   }
 }

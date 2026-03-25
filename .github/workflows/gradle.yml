@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java_version: ['17', '21', '25']
+        java_version: ['21', '25']
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
     - uses: actions/checkout@v6
@@ -49,13 +49,13 @@ jobs:
       run: ./gradlew check --stacktrace
     - name: Archive test results
       if: always()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: Test Results (Java ${{ matrix.java_version }}.${{ matrix.os }})
         path: "**/test-results/test/**/*.xml"
     - name: Publish Test report
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
         path: build/reports/tests/test    
@@ -70,7 +70,7 @@ jobs:
     if: always() && needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
       - name: Publish Test Results

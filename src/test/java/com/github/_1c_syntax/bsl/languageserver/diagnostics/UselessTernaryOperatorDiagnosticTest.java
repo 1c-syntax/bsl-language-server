@@ -61,10 +61,10 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
     final DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    final Diagnostic directDiagnostic = diagnostics.get(0);
+    final Diagnostic directDiagnostic = diagnostics.getFirst();
     List<CodeAction> directQuickFixes = getQuickFixes(directDiagnostic);
     assertThat(directQuickFixes).hasSize(1);
-    final CodeAction directQuickFix = directQuickFixes.get(0);
+    final CodeAction directQuickFix = directQuickFixes.getFirst();
     assertThat(directQuickFix)
       .of(diagnosticInstance)
       .in(documentContext)
@@ -75,7 +75,7 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
     final Diagnostic reversDiagnostic = diagnostics.get(1);
     List<CodeAction> reversQuickFixes = getQuickFixes(reversDiagnostic);
     assertThat(reversQuickFixes).hasSize(1);
-    final CodeAction reversQuickFix = reversQuickFixes.get(0);
+    final CodeAction reversQuickFix = reversQuickFixes.getFirst();
     assertThat(reversQuickFix)
       .of(diagnosticInstance)
       .in(documentContext)

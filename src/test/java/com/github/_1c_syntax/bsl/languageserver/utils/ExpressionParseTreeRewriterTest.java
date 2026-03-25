@@ -243,7 +243,7 @@ class ExpressionParseTreeRewriterTest {
     assertThat(binary.getRight()).isInstanceOf(MethodCallNode.class);
 
     var call = (MethodCallNode) binary.getRight();
-    assertThat(call.arguments().get(0)).isInstanceOf(BinaryOperationNode.class);
+    assertThat(call.arguments().getFirst()).isInstanceOf(BinaryOperationNode.class);
   }
 
   @Test

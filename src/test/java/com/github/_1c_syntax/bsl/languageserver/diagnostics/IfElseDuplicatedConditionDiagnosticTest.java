@@ -50,7 +50,7 @@ class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticTest<IfE
     relatedInformation.add(Ranges.create(9, 10, 9, 21));
 
     checkDiagnosticContent(
-      diagnostics.get(0),
+      diagnostics.getFirst(),
       Ranges.create(3, 10, 3, 15),
       relatedInformation);
 

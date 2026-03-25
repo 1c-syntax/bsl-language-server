@@ -107,14 +107,14 @@ class DocumentSymbolProviderTest {
       .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
     ;
 
-    DocumentSymbol method = externalRegion.getChildren().get(0);
+    DocumentSymbol method = externalRegion.getChildren().getFirst();
     assertThat(method.getChildren())
       .hasSize(1)
       .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)
       .allMatch(documentSymbol -> documentSymbol.getName().equals("ВнутренняяОбласть1"))
     ;
 
-    DocumentSymbol internalRegion1 = method.getChildren().get(0);
+    DocumentSymbol internalRegion1 = method.getChildren().getFirst();
     assertThat(internalRegion1.getChildren())
       .hasSize(1)
       .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)

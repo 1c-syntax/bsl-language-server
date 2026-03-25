@@ -567,12 +567,12 @@ public abstract class AbstractMagicValueDiagnostic extends AbstractVisitorDiagno
       return true;
     }
 
-    var firstParam = callParams.get(0);
+    var firstParam = callParams.getFirst();
     var tokens = firstParam.getTokens();
     if (tokens.isEmpty()) {
       return false;
     }
-    return tokens.get(0).getType() == BSLParser.STRING;
+    return tokens.getFirst().getType() == BSLParser.STRING;
   }
 
   /**

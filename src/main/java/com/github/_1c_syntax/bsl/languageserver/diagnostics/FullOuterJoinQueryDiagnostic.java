@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Optional;
+
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -45,10 +47,7 @@ public class FullOuterJoinQueryDiagnostic extends AbstractSDBLVisitorDiagnostic 
 
   @Override
   public ParseTree visitJoinPart(SDBLParser.JoinPartContext ctx) {
-    if (ctx.FULL() != null && ctx.JOIN() != null) {
-      diagnosticStorage.addDiagnostic(ctx.FULL(), ctx.JOIN());
-    }
-
+    Optional.ofNullable(ctx.fullJoin()).ifPresent(diagnosticStorage::addDiagnostic);
     return super.visitJoinPart(ctx);
   }
 }

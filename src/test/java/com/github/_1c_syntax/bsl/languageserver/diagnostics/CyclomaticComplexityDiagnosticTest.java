@@ -46,7 +46,7 @@ class CyclomaticComplexityDiagnosticTest extends AbstractDiagnosticTest<Cyclomat
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 32);
-    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(21);
+    assertThat(diagnostics.getFirst().getRelatedInformation()).hasSize(21);
   }
 
   @Test

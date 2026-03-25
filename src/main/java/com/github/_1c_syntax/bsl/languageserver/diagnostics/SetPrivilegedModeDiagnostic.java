@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -65,10 +66,10 @@ public class SetPrivilegedModeDiagnostic extends AbstractFindMethodDiagnostic {
       .map(BSLParser.DoCallContext::callParamList)
       .map(BSLParser.CallParamListContext::callParam)
       .filter(callParamContexts -> callParamContexts.size() == 1)
-      .map(callParamContexts -> callParamContexts.get(0))
+      .map(List::getFirst)
       .map(BSLParser.CallParamContext::expression)
       .map(BSLParser.ExpressionContext::member)
-      .map(memberContexts -> memberContexts.get(0))
+      .map(List::getFirst)
       .map(BSLParser.MemberContext::constValue)
       .filter(constValueContext -> constValueContext.FALSE() != null)
       .isPresent();
