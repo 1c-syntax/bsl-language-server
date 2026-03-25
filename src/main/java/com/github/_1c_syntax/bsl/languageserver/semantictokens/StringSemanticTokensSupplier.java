@@ -584,10 +584,25 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
-   * Удаляет токены, перекрывающиеся с предыдущими. Первый токен в позиции
-   * (escape-кавычки добавляются раньше body-токенов) имеет приоритет.
+   * Удаляет токены, перекрывающиеся с escape-кавычками или другими приоритетными токенами.
+   * Escape-кавычки ({@code ""}) имеют абсолютный приоритет: любой другой токен,
+   * пересекающийся с escape-кавычкой, удаляется. Затем выполняется стандартный
+   * проход слева направо для удаления оставшихся перекрытий.
    */
   private static void removeOverlappingTokens(List<SubToken> tokens) {
+    // Escape tokens have absolute priority — remove any non-escape tokens that overlap
+    var escapeIntervals = tokens.stream()
+      .filter(t -> CustomSemanticTokenTypes.STRING_ESCAPE.equals(t.type()))
+      .map(t -> new int[]{t.start(), t.start() + t.length()})
+      .toList();
+
+    if (!escapeIntervals.isEmpty()) {
+      tokens.removeIf(t -> !CustomSemanticTokenTypes.STRING_ESCAPE.equals(t.type())
+        && escapeIntervals.stream().anyMatch(e ->
+          t.start() < e[1] && (t.start() + t.length()) > e[0]));
+    }
+
+    // Standard left-to-right overlap removal for remaining tokens
     var it = tokens.iterator();
     int lastEnd = -1;
     while (it.hasNext()) {

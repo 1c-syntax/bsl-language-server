@@ -1126,6 +1126,12 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(8, 22, 2, SemanticTokenTypes.Operator, "-> (nested arrow)"),
       new ExpectedToken(9, 10, 4, SemanticTokenTypes.Keyword, "Если (nested body keyword)")
     ));
+
+    // escape quotes: opening "" on line 7, closing |"" on line 14
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(7, 7, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "opening \"\" of nested multiline lambda"),
+      new ExpectedToken(14, 8, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "closing |\"\" of nested multiline lambda")
+    ));
   }
 
   @Test
