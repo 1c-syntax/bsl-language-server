@@ -433,11 +433,11 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Opening delimiter: " for STRING/STRINGSTART, | for STRINGPART/STRINGTAIL
     helper.addEntry(entries, tokenLine, tokenStart, 1, SemanticTokenTypes.String);
 
-    // Fill gaps between sub-tokens with SOURCE to override TextMate string scope
+    // Fill gaps between sub-tokens with String
     int currentPos = tokenStart + 1;
     for (SubToken subToken : subTokens) {
       if (currentPos < subToken.start()) {
-        helper.addEntry(entries, tokenLine, currentPos, subToken.start() - currentPos, CustomSemanticTokenTypes.SOURCE);
+        helper.addEntry(entries, tokenLine, currentPos, subToken.start() - currentPos, SemanticTokenTypes.String);
       }
       helper.addEntry(entries, tokenLine, subToken.start(), subToken.length(), subToken.type());
       currentPos = subToken.start() + subToken.length();
@@ -445,15 +445,13 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
     // Closing quote: only for STRING and STRINGTAIL
     if (tokenType == BSLLexer.STRING || tokenType == BSLLexer.STRINGTAIL) {
-      // Fill gap before closing quote with SOURCE
       int closingQuotePos = stringEnd - 1;
       if (currentPos < closingQuotePos) {
-        helper.addEntry(entries, tokenLine, currentPos, closingQuotePos - currentPos, CustomSemanticTokenTypes.SOURCE);
+        helper.addEntry(entries, tokenLine, currentPos, closingQuotePos - currentPos, SemanticTokenTypes.String);
       }
       helper.addEntry(entries, tokenLine, closingQuotePos, 1, SemanticTokenTypes.String);
     } else if (currentPos < stringEnd) {
-      // For STRINGSTART/STRINGPART, fill remaining with SOURCE
-      helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, CustomSemanticTokenTypes.SOURCE);
+      helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, SemanticTokenTypes.String);
     }
   }
 
