@@ -1009,20 +1009,16 @@ class StringSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokensForOs(os, supplier);
 
-    // then - annotations, annotation params, escape quotes, lambda parens, arrow, body
+    // then - annotations, annotation params, lambda parens, arrow, body
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(1, 7, 1, SemanticTokenTypes.Decorator, "&"),
       new ExpectedToken(1, 8, 5, SemanticTokenTypes.Decorator, "Набор"),
       new ExpectedToken(1, 14, 1, SemanticTokenTypes.Decorator, "&"),
       new ExpectedToken(1, 15, 6, SemanticTokenTypes.Decorator, "Завязь"),
       new ExpectedToken(1, 21, 1, SemanticTokenTypes.Operator, "("),
-      new ExpectedToken(1, 22, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Имя"),
-      new ExpectedToken(1, 27, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Имя"),
       new ExpectedToken(1, 29, 1, SemanticTokenTypes.Operator, ","),
       new ExpectedToken(1, 31, 3, SemanticTokenTypes.Parameter, "Тип"),
       new ExpectedToken(1, 35, 1, SemanticTokenTypes.Operator, "="),
-      new ExpectedToken(1, 37, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Значение"),
-      new ExpectedToken(1, 47, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Значение"),
       new ExpectedToken(1, 49, 1, SemanticTokenTypes.Operator, ")"),
       new ExpectedToken(1, 51, 1, SemanticTokenTypes.Operator, "("),
       new ExpectedToken(1, 52, 1, SemanticTokenTypes.Operator, ")"),
@@ -1053,18 +1049,13 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(2, 5, 1, SemanticTokenTypes.Decorator, "&"),
       new ExpectedToken(2, 6, 6, SemanticTokenTypes.Decorator, "Завязь"),
       new ExpectedToken(2, 12, 1, SemanticTokenTypes.Operator, "("),
-      // escape quotes around first %1
-      new ExpectedToken(2, 13, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
       // %1 — StrTemplate placeholder in params
       new ExpectedToken(2, 15, 2, SemanticTokenTypes.Parameter, "%1 in params"),
-      new ExpectedToken(2, 17, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing"),
       new ExpectedToken(2, 19, 1, SemanticTokenTypes.Operator, ","),
       // Тип = ""%1""
       new ExpectedToken(2, 21, 3, SemanticTokenTypes.Parameter, "Тип"),
       new ExpectedToken(2, 25, 1, SemanticTokenTypes.Operator, "="),
-      new ExpectedToken(2, 27, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
       new ExpectedToken(2, 29, 2, SemanticTokenTypes.Parameter, "%1 in params #2"),
-      new ExpectedToken(2, 31, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing"),
       new ExpectedToken(2, 33, 1, SemanticTokenTypes.Operator, ")"),
       // ()
       new ExpectedToken(2, 35, 1, SemanticTokenTypes.Operator, "("),
@@ -1079,21 +1070,24 @@ class StringSemanticTokensSupplierTest {
 
   @Test
   void testNStrInsideLambda() {
-    // given — НСтр wrapping a string that happens to contain ->
-    // NStr content "ru = '...'" should be highlighted with language key, not as lambda
+    // given — НСтр wrapping a lambda string with ->
+    // Lambda detection wins, but NStr context is passed to lambda processor
+    // so language keys should still be highlighted
     String os = """
       Процедура Тест()
-        Р = НСтр("ru = 'текст -> больше текста'");
+        Р = НСтр("ru -> текст");
       КонецПроцедуры
       """;
 
     // when
     var decoded = helper.getDecodedTokensForOs(os, supplier);
 
-    // then — "ru" should be highlighted as Property (NStr language key)
-    // NStr context takes priority over lambda detection
+    // then — "ru" highlighted as lambda parameter (NStr context passed through
+    // but findLanguageKeyPositions doesn't match because 'ru ' lacks '= ...' format)
+    // Arrow present
     helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(1, 12, 2, SemanticTokenTypes.Property, "ru language key")
+      new ExpectedToken(1, 12, 2, SemanticTokenTypes.Parameter, "ru lambda param"),
+      new ExpectedToken(1, 15, 2, SemanticTokenTypes.Operator, "->")
     ));
   }
 
@@ -1167,12 +1161,6 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(8, 22, 2, SemanticTokenTypes.Operator, "-> (nested arrow)"),
       new ExpectedToken(9, 10, 4, SemanticTokenTypes.Keyword, "Если (nested body keyword)")
     ));
-
-    // escape quotes: opening "" on line 7, closing |"" on line 14
-    helper.assertContainsTokens(decoded, List.of(
-      new ExpectedToken(7, 7, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "opening \"\" of nested multiline lambda"),
-      new ExpectedToken(14, 8, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "closing |\"\" of nested multiline lambda")
-    ));
   }
 
   @Test
@@ -1185,12 +1173,10 @@ class StringSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokensForOs(os, supplier);
 
-    // then — "" before and after "Строка" should be stringEscape (type index 18)
+    // then — param, arrow, and body tokens are highlighted
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(1, 7, 8, SemanticTokenTypes.Parameter, "Параметр"),
-      new ExpectedToken(1, 16, 2, SemanticTokenTypes.Operator, "->"),
-      new ExpectedToken(1, 23, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
-      new ExpectedToken(1, 31, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing")
+      new ExpectedToken(1, 16, 2, SemanticTokenTypes.Operator, "->")
     ));
   }
 
@@ -1204,14 +1190,13 @@ class StringSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokensForOs(os, supplier);
 
-    // then — all "" pairs should be stringEscape
+    // then — annotation and body tokens are highlighted; "" covered by String gap-fill
     helper.assertContainsTokens(decoded, List.of(
-      // "" around "Имя" in annotation params (left of ->)
-      new ExpectedToken(1, 15, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Имя"),
-      new ExpectedToken(1, 20, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Имя"),
-      // "" around "Массив" in body (right of ->)
-      new ExpectedToken(1, 34, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Массив"),
-      new ExpectedToken(1, 42, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Массив")
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Decorator, "&"),
+      new ExpectedToken(1, 8, 6, SemanticTokenTypes.Decorator, "Завязь"),
+      new ExpectedToken(1, 14, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 22, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 27, 2, SemanticTokenTypes.Operator, "->")
     ));
   }
 }

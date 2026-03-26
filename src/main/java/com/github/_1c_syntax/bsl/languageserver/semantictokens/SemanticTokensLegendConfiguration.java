@@ -63,8 +63,7 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenTypes.Property,  // Added for SDBL field names
       SemanticTokenTypes.Class,  // Added for SDBL metadata object names (e.g. Справочник.Контрагенты, РегистрСведений.КурсыВалют)
       SemanticTokenTypes.Enum,  // Added for SDBL enum types (Перечисление.Пол)
-      SemanticTokenTypes.EnumMember,  // Added for predefined elements and enum values
-      CustomSemanticTokenTypes.STRING_ESCAPE  // Escaped double quotes "" in lambda strings
+      SemanticTokenTypes.EnumMember  // Added for predefined elements and enum values
     );
 
     List<String> tokenModifiers = List.of(

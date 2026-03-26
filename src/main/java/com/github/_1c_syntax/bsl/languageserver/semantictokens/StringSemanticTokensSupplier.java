@@ -47,7 +47,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -95,15 +95,17 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final LanguageServerConfiguration configuration;
   private final ServerContext serverContext;
   private final SemanticTokensLegend legend;
-
-  @Autowired
-  private org.springframework.context.ApplicationContext applicationContext;
+  private final ObjectProvider<List<SemanticTokensSupplier>> suppliersProvider;
 
   private volatile List<SemanticTokensSupplier> allSuppliers;
 
   private List<SemanticTokensSupplier> getAllSuppliers() {
     if (allSuppliers == null) {
-      allSuppliers = new ArrayList<>(applicationContext.getBeansOfType(SemanticTokensSupplier.class).values());
+      var list = new java.util.ArrayList<>(suppliersProvider.getObject());
+      if (list.stream().noneMatch(StringSemanticTokensSupplier.class::isInstance)) {
+        list.add(this);
+      }
+      allSuppliers = list;
     }
     return allSuppliers;
   }
@@ -166,19 +168,15 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       return;
     }
 
-    // Проверяем специальные контексты (НСтр, СтрШаблон)
-    var context = specialContexts.get(stringToken);
-
-    // НСтр-строки имеют формат "ru = '...'" и не являются лямбдами,
-    // даже если содержимое включает ->
-    if (context != StringContext.NSTR) {
-      var lambdaSubTokens = lambdaContexts.get(stringToken);
-      if (lambdaSubTokens != null) {
-        processLambdaString(entries, stringToken, lambdaSubTokens);
-        return;
-      }
+    // Проверяем, содержит ли строка лямбда-выражение
+    var lambdaSubTokens = lambdaContexts.get(stringToken);
+    if (lambdaSubTokens != null) {
+      processLambdaString(entries, stringToken, lambdaSubTokens);
+      return;
     }
 
+    // Проверяем специальные контексты (НСтр, СтрШаблон)
+    var context = specialContexts.get(stringToken);
     if (context != null) {
       processSpecialContext(entries, stringToken, context);
       return;
@@ -537,13 +535,8 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Extract parameter names for function wrapper
     var paramNames = extractLambdaParamNames(fullContent.substring(0, arrowStart));
 
-    // Escaped double quotes "" — both before and after ->
-    collectEscapedQuoteTokens(fullContent, segments, result);
-
-    // Parameters (before ->)
-    collectLambdaParamTokens(fullContent.substring(0, arrowStart), 0, segments, result);
-
     // StrTemplate/NStr placeholders in params area (left of ->)
+    // Must be before collectLambdaParamTokens so NStr language keys take priority
     StringContext groupContext = group.stream()
       .map(specialStringContexts::get)
       .filter(java.util.Objects::nonNull)
@@ -552,6 +545,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     if (groupContext != null) {
       collectSpecialContextSubTokens(fullContent.substring(0, arrowStart), 0, segments, result, groupContext);
     }
+
+    // Parameters (before ->)
+    collectLambdaParamTokens(fullContent.substring(0, arrowStart), 0, segments, result);
 
     // Arrow (->) itself
     addSubTokenAtOffset(arrowStart, 2, SemanticTokenTypes.Operator, segments, result);
@@ -586,25 +582,10 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
-   * Удаляет токены, перекрывающиеся с escape-кавычками или другими приоритетными токенами.
-   * Escape-кавычки ({@code ""}) имеют абсолютный приоритет: любой другой токен,
-   * пересекающийся с escape-кавычкой, удаляется. Затем выполняется стандартный
-   * проход слева направо для удаления оставшихся перекрытий.
+   * Удаляет перекрывающиеся токены: стандартный проход слева направо,
+   * первый токен на каждой позиции сохраняется, перекрывающиеся удаляются.
    */
   private static void removeOverlappingTokens(List<SubToken> tokens) {
-    // Escape tokens have absolute priority — remove any non-escape tokens that overlap
-    var escapeIntervals = tokens.stream()
-      .filter(t -> CustomSemanticTokenTypes.STRING_ESCAPE.equals(t.type()))
-      .map(t -> new int[]{t.start(), t.start() + t.length()})
-      .toList();
-
-    if (!escapeIntervals.isEmpty()) {
-      tokens.removeIf(t -> !CustomSemanticTokenTypes.STRING_ESCAPE.equals(t.type())
-        && escapeIntervals.stream().anyMatch(e ->
-          t.start() < e[1] && (t.start() + t.length()) > e[0]));
-    }
-
-    // Standard left-to-right overlap removal for remaining tokens
     var it = tokens.iterator();
     int lastEnd = -1;
     while (it.hasNext()) {
@@ -839,24 +820,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
-   * Сканирует содержимое лямбда-строки на наличие экранированных кавычек {@code ""}
-   * и добавляет для них SubToken'ы с типом {@code stringEscape}.
-   */
-  private static void collectEscapedQuoteTokens(
-    String fullContent, List<ContentSegment> segments, Map<Token, List<SubToken>> result
-  ) {
-    int idx = 0;
-    while (idx < fullContent.length() - 1) {
-      if (fullContent.charAt(idx) == '"' && fullContent.charAt(idx + 1) == '"') {
-        addSubTokenAtOffset(idx, 2, CustomSemanticTokenTypes.STRING_ESCAPE, segments, result);
-        idx += 2;
-      } else {
-        idx++;
-      }
-    }
-  }
-
-  /**
    * Сканирует текст на наличие плейсхолдеров СтрШаблон ({@code %1}..{@code %10})
    * и/или ключей языка НСтр и добавляет SubToken'ы.
    */
@@ -971,9 +934,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
     if (bslTokenType == BSLLexer.AMPERSAND || ANNOTATION_SYMBOL_TYPES.contains(bslTokenType)) {
       return SemanticTokenTypes.Decorator;
-    }
-    if (bslTokenType == BSLLexer.STRING) {
-      return SemanticTokenTypes.String;
     }
     if (bslTokenType == BSLLexer.FLOAT || bslTokenType == BSLLexer.DECIMAL) {
       return SemanticTokenTypes.Number;
