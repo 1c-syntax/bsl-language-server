@@ -134,15 +134,10 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
     var methodName = methodCall.methodName().getText().toLowerCase(Locale.ENGLISH);
     var moduleNameLower = moduleName.toLowerCase(Locale.ENGLISH);
 
-    StringContext context = null;
     if (isModuleMethodMatch(moduleNameLower, methodName)) {
-      context = StringContext.STR_TEMPLATE;
-    }
-
-    if (context != null) {
       var doCall = methodCall.doCall();
       if (doCall != null) {
-        processMethodCallParams(doCall, context, ctx);
+        processMethodCallParams(doCall, StringContext.STR_TEMPLATE, ctx);
       }
     }
   }
@@ -176,8 +171,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
       var firstParam = callParams.getFirst();
       var stringTokens = getStringTokensFromParam(firstParam);
 
-      if (stringTokens.isEmpty()
-        && context == StringContext.STR_TEMPLATE) {
+      if (stringTokens.isEmpty() && context == StringContext.STR_TEMPLATE) {
         // Первый параметр не строковый литерал - возможно, это переменная
         // Пытаемся найти присвоение этой переменной
         stringTokens = findStringTokensFromVariable(firstParam, callContext);

@@ -1078,6 +1078,47 @@ class StringSemanticTokensSupplierTest {
   }
 
   @Test
+  void testNStrInsideLambda() {
+    // given — НСтр wrapping a string that happens to contain ->
+    // NStr content "ru = '...'" should be highlighted with language key, not as lambda
+    String os = """
+      Процедура Тест()
+        Р = НСтр("ru = 'текст -> больше текста'");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — "ru" should be highlighted as Property (NStr language key)
+    // NStr context takes priority over lambda detection
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 12, 2, SemanticTokenTypes.Property, "ru language key")
+    ));
+  }
+
+  @Test
+  void testStrTemplateVariableWithLambda() {
+    // given — StrTemplate with lambda string assigned to variable first
+    String os = """
+      Процедура Тест()
+        Шаблон = "Параметр -> Новый %1";
+        Р = СтрШаблон(Шаблон, "Массив");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — %1 should be highlighted as Parameter (StrTemplate via variable)
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 12, 8, SemanticTokenTypes.Parameter, "Параметр (lambda param)"),
+      new ExpectedToken(1, 21, 2, SemanticTokenTypes.Operator, "-> (lambda arrow)"),
+      new ExpectedToken(1, 30, 2, SemanticTokenTypes.Parameter, "%1 placeholder")
+    ));
+  }
+
+  @Test
   void testNestedLambdaHighlighting() {
     // given — multiline outer lambda with inline inner lambda ("" Параметр -> ..."")
     // and multiline inner lambda (""\n|...\n|"")

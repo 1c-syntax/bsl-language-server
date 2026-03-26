@@ -166,15 +166,19 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       return;
     }
 
-    // Проверяем, содержит ли строка лямбда-выражение
-    var lambdaSubTokens = lambdaContexts.get(stringToken);
-    if (lambdaSubTokens != null) {
-      processLambdaString(entries, stringToken, lambdaSubTokens);
-      return;
-    }
-
     // Проверяем специальные контексты (НСтр, СтрШаблон)
     var context = specialContexts.get(stringToken);
+
+    // НСтр-строки имеют формат "ru = '...'" и не являются лямбдами,
+    // даже если содержимое включает ->
+    if (context != StringContext.NSTR) {
+      var lambdaSubTokens = lambdaContexts.get(stringToken);
+      if (lambdaSubTokens != null) {
+        processLambdaString(entries, stringToken, lambdaSubTokens);
+        return;
+      }
+    }
+
     if (context != null) {
       processSpecialContext(entries, stringToken, context);
       return;
