@@ -1122,7 +1122,6 @@ class StringSemanticTokensSupplierTest {
   }
 
   @Test
-  @SuppressWarnings("java:S6126")
   void testNestedLambdaHighlighting() {
     // given — multiline outer lambda with inline inner lambda ("" Параметр -> ..."")
     // and multiline inner lambda (""\n|...\n|"")
@@ -1180,7 +1179,6 @@ class StringSemanticTokensSupplierTest {
   }
 
   @Test
-  @SuppressWarnings("java:S6126")
   void testEscapedDoubleQuotesHighlighting() {
     // given — lambda with "" escape sequences in body
     String os = "Процедура Тест()\n"
@@ -1200,7 +1198,6 @@ class StringSemanticTokensSupplierTest {
   }
 
   @Test
-  @SuppressWarnings("java:S6126")
   void testEscapedDoubleQuotesInParamsAndBody() {
     // given — "" in annotation params (left of ->) and in body (right of ->)
     String os = "Процедура Тест()\n"
