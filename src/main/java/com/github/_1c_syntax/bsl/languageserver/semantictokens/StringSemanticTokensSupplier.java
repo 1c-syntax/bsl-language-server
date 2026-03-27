@@ -59,8 +59,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -81,16 +84,51 @@ import java.util.regex.Pattern;
  */
 @Component
 @RequiredArgsConstructor
+@SuppressWarnings({"java:S6411", "java:S1200"})
 public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private static final Set<Integer> STRING_TYPES = Set.of(
-    BSLLexer.STRING,
-    BSLLexer.STRINGPART,
-    BSLLexer.STRINGSTART,
-    BSLLexer.STRINGTAIL
+    BSLLexer.STRING, BSLLexer.STRINGPART, BSLLexer.STRINGSTART, BSLLexer.STRINGTAIL
   );
 
   private static final Pattern LAMBDA_ARROW_PATTERN = Pattern.compile("->\\s*");
+
+  private static final String RETURN_KEYWORD = "Возврат";
+
+  private static final Pattern QUOTE_PAIR_PATTERN =
+    Pattern.compile("(?:\"{12}|\"{10}|\"{8}|\"{6}|\"{4}|\"{2})");
+
+  private static final Set<Integer> LAMBDA_PARAM_OPERATOR_TYPES =
+    Set.of(BSLLexer.LPAREN, BSLLexer.RPAREN, BSLLexer.COMMA, BSLLexer.ASSIGN);
+
+  private static final Set<Integer> ANNOTATION_SYMBOL_TYPES = Set.of(
+    BSLLexer.ANNOTATION_CUSTOM_SYMBOL, BSLLexer.ANNOTATION_BEFORE_SYMBOL,
+    BSLLexer.ANNOTATION_AFTER_SYMBOL, BSLLexer.ANNOTATION_AROUND_SYMBOL,
+    BSLLexer.ANNOTATION_CHANGEANDVALIDATE_SYMBOL, BSLLexer.ANNOTATION_ATSERVER_SYMBOL,
+    BSLLexer.ANNOTATION_ATCLIENT_SYMBOL, BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLLexer.ANNOTATION_ATCLIENTATSERVER_SYMBOL, BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
+  );
+
+  private static final int ESCAPE_QUOTE_LENGTH = 2;
+  private static final int ARROW_LENGTH = 2;
+
+  private static final Map<Integer, String> PARAM_TOKEN_TYPE_MAP = createParamTokenTypeMap();
+
+  private static Map<Integer, String> createParamTokenTypeMap() {
+    var map = new HashMap<Integer, String>();
+    map.put(BSLLexer.IDENTIFIER, SemanticTokenTypes.Parameter);
+    map.put(BSLLexer.AMPERSAND, SemanticTokenTypes.Decorator);
+    map.put(BSLLexer.STRING, SemanticTokenTypes.String);
+    LAMBDA_PARAM_OPERATOR_TYPES.forEach(t -> map.put(t, SemanticTokenTypes.Operator));
+    ANNOTATION_SYMBOL_TYPES.forEach(t -> map.put(t, SemanticTokenTypes.Decorator));
+    List.of(BSLLexer.FLOAT, BSLLexer.DECIMAL, BSLLexer.DATETIME)
+      .forEach(t -> map.put(t, SemanticTokenTypes.Number));
+    List.of(BSLLexer.TRUE, BSLLexer.FALSE, BSLLexer.UNDEFINED, BSLLexer.NULL)
+      .forEach(t -> map.put(t, SemanticTokenTypes.Keyword));
+    List.of(BSLLexer.PLUS, BSLLexer.MINUS)
+      .forEach(t -> map.put(t, SemanticTokenTypes.Operator));
+    return Map.copyOf(map);
+  }
 
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
@@ -98,10 +136,10 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final SemanticTokensLegend legend;
   private final ObjectProvider<List<SemanticTokensSupplier>> suppliersProvider;
 
+  private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
+
   @SuppressWarnings("NullAway.Init")
   private List<SemanticTokensSupplier> allSuppliers;
-
-  private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
 
   @PostConstruct
   private void init() {
@@ -419,15 +457,16 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     List<SubToken> subTokens
   ) {
     var stringRange = Ranges.create(stringToken);
-    int tokenLine = stringToken.getLine() - 1;
-    int tokenStart = stringToken.getCharPositionInLine();
-    int stringEnd = stringRange.getEnd().getCharacter();
-    int tokenType = stringToken.getType();
 
     if (subTokens.isEmpty()) {
       helper.addRange(entries, stringRange, SemanticTokenTypes.String);
       return;
     }
+
+    var tokenLine = stringToken.getLine() - 1;
+    var tokenStart = stringToken.getCharPositionInLine();
+    var stringEnd = stringRange.getEnd().getCharacter();
+    var tokenType = stringToken.getType();
 
     // Opening delimiter: " for STRING/STRINGSTART, | for STRINGPART/STRINGTAIL
     helper.addEntry(entries, tokenLine, tokenStart, 1, SemanticTokenTypes.String);
@@ -444,13 +483,15 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
     // Closing quote: only for STRING and STRINGTAIL
     if (tokenType == BSLLexer.STRING || tokenType == BSLLexer.STRINGTAIL) {
-      int closingQuotePos = stringEnd - 1;
+      var closingQuotePos = stringEnd - 1;
       if (currentPos < closingQuotePos) {
         helper.addEntry(entries, tokenLine, currentPos, closingQuotePos - currentPos, SemanticTokenTypes.String);
       }
       helper.addEntry(entries, tokenLine, closingQuotePos, 1, SemanticTokenTypes.String);
-    } else if (currentPos < stringEnd) {
-      helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, SemanticTokenTypes.String);
+    } else {
+      if (currentPos < stringEnd) {
+        helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, SemanticTokenTypes.String);
+      }
     }
   }
 
@@ -492,18 +533,22 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     List<Token> currentGroup = null;
 
     for (Token token : stringTokens) {
-      int type = token.getType();
-      if (type == BSLLexer.STRING) {
-        groups.add(List.of(token));
-      } else if (type == BSLLexer.STRINGSTART) {
-        currentGroup = new ArrayList<>();
-        currentGroup.add(token);
-      } else if (currentGroup != null && (type == BSLLexer.STRINGPART || type == BSLLexer.STRINGTAIL)) {
-        currentGroup.add(token);
-        if (type == BSLLexer.STRINGTAIL) {
-          groups.add(currentGroup);
-          currentGroup = null;
+      switch (token.getType()) {
+        case BSLLexer.STRING -> groups.add(List.of(token));
+        case BSLLexer.STRINGSTART -> {
+          currentGroup = new ArrayList<>();
+          currentGroup.add(token);
         }
+        case BSLLexer.STRINGPART, BSLLexer.STRINGTAIL -> {
+          if (currentGroup != null) {
+            currentGroup.add(token);
+            if (token.getType() == BSLLexer.STRINGTAIL) {
+              groups.add(currentGroup);
+              currentGroup = null;
+            }
+          }
+        }
+        default -> { /* skip unexpected token types */ }
       }
     }
 
@@ -518,7 +563,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     List<Token> group, Map<Token, List<SubToken>> result,
     Map<Token, StringContext> specialStringContexts
   ) {
-    String fullContent = extractLambdaFullContent(group);
+    var fullContent = extractLambdaFullContent(group);
 
     var arrowMatcher = LAMBDA_ARROW_PATTERN.matcher(fullContent);
     if (!arrowMatcher.find()) {
@@ -526,8 +571,8 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
 
     var segments = buildContentSegments(group);
-    int arrowStart = arrowMatcher.start();
-    int arrowEnd = arrowMatcher.end();
+    var arrowStart = arrowMatcher.start();
+    var arrowEnd = arrowMatcher.end();
 
     // Extract parameter names for function wrapper
     var paramNames = extractLambdaParamNames(fullContent.substring(0, arrowStart));
@@ -537,9 +582,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
     // StrTemplate/NStr placeholders in params area (left of ->)
     // Must be before collectLambdaParamTokens so NStr language keys take priority
-    StringContext groupContext = group.stream()
+    var groupContext = group.stream()
       .map(specialStringContexts::get)
-      .filter(java.util.Objects::nonNull)
+      .filter(Objects::nonNull)
       .findFirst()
       .orElse(null);
     if (groupContext != null) {
@@ -550,7 +595,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     collectLambdaParamTokens(fullContent.substring(0, arrowStart), 0, segments, result);
 
     // Arrow (->) itself
-    addSubTokenAtOffset(arrowStart, 2, SemanticTokenTypes.Operator, segments, result);
+    addSubTokenAtOffset(arrowStart, ARROW_LENGTH, SemanticTokenTypes.Operator, segments, result);
 
     // StrTemplate/NStr placeholders in body area (right of ->)
     if (groupContext != null) {
@@ -559,24 +604,30 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
     // Body (after ->) — delegate to all semantic token suppliers via virtual DocumentContext
     var bodyEntries = collectLambdaBodyTokensViaSuppliers(group, arrowEnd, paramNames);
-    for (var entry : bodyEntries) {
-      for (var segment : segments) {
-        if (segment.docLine() == entry.line()
-          && entry.start() >= segment.docCharStart()
-          && entry.start() < segment.docCharStart() + segment.length()) {
-          String typeName = legend.getTokenTypes().get(entry.type());
-          result.computeIfAbsent(segment.token(), k -> new ArrayList<>())
-            .add(new SubToken(entry.start(), entry.length(), typeName));
-          break;
-        }
-      }
-    }
+    mapBodyTokensToResult(bodyEntries, segments, result);
 
     for (Token groupToken : group) {
       var list = result.get(groupToken);
       if (list != null) {
         list.sort(Comparator.comparingInt(SubToken::start));
         removeOverlappingTokens(list);
+      }
+    }
+  }
+
+  private void mapBodyTokensToResult(
+    List<SemanticTokenEntry> bodyEntries, List<ContentSegment> segments, Map<Token, List<SubToken>> result
+  ) {
+    for (var entry : bodyEntries) {
+      for (var segment : segments) {
+        if (segment.docLine() == entry.line()
+          && entry.start() >= segment.docCharStart()
+          && entry.start() < segment.docCharStart() + segment.length()) {
+          var typeName = legend.getTokenTypes().get(entry.type());
+          result.computeIfAbsent(segment.token(), k -> new ArrayList<>())
+            .add(new SubToken(entry.start(), entry.length(), typeName));
+          break;
+        }
       }
     }
   }
@@ -641,77 +692,37 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   private static int getFirstBodyLine(List<Token> group, int arrowEnd) {
-    var segments = buildContentSegments(group);
-    for (var segment : segments) {
-      int segEnd = segment.contentOffset() + segment.length();
-      if (segEnd > arrowEnd) {
-        return segment.docLine();
-      }
-    }
-    return 0;
+    return buildContentSegments(group).stream()
+      .filter(s -> s.contentOffset() + s.length() > arrowEnd)
+      .findFirst()
+      .map(ContentSegment::docLine)
+      .orElse(0);
   }
 
   private static int getLastBodyLine(List<Token> group, int arrowEnd) {
-    var segments = buildContentSegments(group);
-    int lastLine = 0;
-    for (var segment : segments) {
-      int segEnd = segment.contentOffset() + segment.length();
-      if (segEnd > arrowEnd) {
-        lastLine = segment.docLine();
-      }
-    }
-    return lastLine;
+    return buildContentSegments(group).stream()
+      .filter(s -> s.contentOffset() + s.length() > arrowEnd)
+      .mapToInt(ContentSegment::docLine)
+      .max()
+      .orElse(0);
   }
-
-  private static final String RETURN_KEYWORD = "Возврат";
 
   private static String buildPaddedLambdaBody(List<Token> group, int arrowEnd, List<String> paramNames) {
     var segments = buildContentSegments(group);
-    String fullContent = extractLambdaFullContent(group);
-
-    var lineContents = new TreeMap<Integer, StringBuilder>();
-
-    for (var segment : segments) {
-      int segStart = segment.contentOffset();
-      int segEnd = segStart + segment.length();
-
-      if (segEnd <= arrowEnd) {
-        continue;
-      }
-
-      int bodyStartInSeg = Math.max(0, arrowEnd - segStart);
-      int docCol = segment.docCharStart() + bodyStartInSeg;
-      String content = fullContent.substring(segStart + bodyStartInSeg, segEnd);
-
-      var lineSb = lineContents.computeIfAbsent(segment.docLine(), k -> new StringBuilder());
-      while (lineSb.length() < docCol) {
-        lineSb.append(' ');
-      }
-      lineSb.append(content);
-    }
+    var fullContent = extractLambdaFullContent(group);
+    var lineContents = fillBodyLineContents(segments, fullContent, arrowEnd);
 
     if (lineContents.isEmpty()) {
       return "";
     }
 
-    int firstBodyLine = lineContents.firstKey();
-    int maxLine = lineContents.lastKey();
-    boolean canWrapInFunction = firstBodyLine > 0 && !paramNames.isEmpty();
+    var firstBodyLine = lineContents.firstKey();
+    var maxLine = lineContents.lastKey();
+    var canWrapInFunction = firstBodyLine > 0 && !paramNames.isEmpty();
 
     var sb = new StringBuilder();
-
-    // Insert fake function header at line 0
     if (canWrapInFunction) {
-      String bodyText = fullContent.substring(arrowEnd);
-      boolean bodyHasReturn = bodyText.toLowerCase(java.util.Locale.ENGLISH).contains("возврат")
-        || bodyText.toLowerCase(java.util.Locale.ENGLISH).contains("return");
-
-      sb.append("Функция _Лямбда(");
-      sb.append(String.join(", ", paramNames));
-      sb.append(')');
-      if (!bodyHasReturn) {
-        sb.append(' ').append(RETURN_KEYWORD);
-      }
+      sb.append(buildFunctionHeader(paramNames, fullContent.substring(arrowEnd)));
     } else {
       var line0 = lineContents.get(0);
       if (line0 != null) {
@@ -719,7 +730,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       }
     }
 
-    for (int line = 1; line <= maxLine; line++) {
+    for (var line = 1; line <= maxLine; line++) {
       sb.append('\n');
       var lineSb = lineContents.get(line);
       if (lineSb != null) {
@@ -727,7 +738,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       }
     }
 
-    // Append КонецФункции on a new line after body
     if (canWrapInFunction) {
       sb.append("\nКонецФункции");
     }
@@ -735,9 +745,34 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     return removeDoubleQuotesPreservingPositions(sb.toString());
   }
 
-  private static final Pattern QUOTE_PAIR_PATTERN = Pattern.compile(
-    "(?:\"{12}|\"{10}|\"{8}|\"{6}|\"{4}|\"{2})"
-  );
+  private static TreeMap<Integer, StringBuilder> fillBodyLineContents(
+    List<ContentSegment> segments, String fullContent, int arrowEnd
+  ) {
+    var lineContents = new TreeMap<Integer, StringBuilder>();
+    for (var segment : segments) {
+      var segStart = segment.contentOffset();
+      var segEnd = segStart + segment.length();
+      if (segEnd <= arrowEnd) {
+        continue;
+      }
+      var bodyStartInSeg = Math.max(0, arrowEnd - segStart);
+      var docCol = segment.docCharStart() + bodyStartInSeg;
+      var content = fullContent.substring(segStart + bodyStartInSeg, segEnd);
+      var lineSb = lineContents.computeIfAbsent(segment.docLine(), k -> new StringBuilder());
+      while (lineSb.length() < docCol) {
+        lineSb.append(' ');
+      }
+      lineSb.append(content);
+    }
+    return lineContents;
+  }
+
+  private static String buildFunctionHeader(List<String> paramNames, String bodyText) {
+    var bodyLower = bodyText.toLowerCase(Locale.ENGLISH);
+    var hasReturn = bodyLower.contains("возврат") || bodyLower.contains("return");
+    var header = "Функция _Лямбда(" + String.join(", ", paramNames) + ")";
+    return hasReturn ? header : header + " " + RETURN_KEYWORD;
+  }
 
   /**
    * Заменяет экранированные двойные кавычки {@code ""} на одинарную кавычку {@code "}
@@ -749,12 +784,12 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     var matcher = QUOTE_PAIR_PATTERN.matcher(text);
     var newText = text;
     var textLength = text.length();
-    var strings = new java.util.StringJoiner("");
+    var strings = new StringJoiner("");
     while (matcher.find()) {
       var quotesLineLength = matcher.group(0).length();
-      var emptyString = " ".repeat(quotesLineLength / 2);
+      var emptyString = " ".repeat(quotesLineLength / ESCAPE_QUOTE_LENGTH);
       strings.add(newText.substring(0, matcher.start()) + (leftQuoteFound ? "" : emptyString)
-        + matcher.group(0).substring(0, quotesLineLength / 2) + (leftQuoteFound ? emptyString : ""));
+        + matcher.group(0).substring(0, quotesLineLength / ESCAPE_QUOTE_LENGTH) + (leftQuoteFound ? emptyString : ""));
 
       if (matcher.end() < textLength) {
         newText = newText.substring(matcher.end());
@@ -793,26 +828,22 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private static void collectLambdaParamTokens(
     String paramsPart, int baseOffset, List<ContentSegment> segments, Map<Token, List<SubToken>> result
   ) {
-    String cleanedParams = paramsPart.replace("\"\"", "\"");
+    var cleanedParams = paramsPart.replace("\"\"", "\"");
     if (cleanedParams.isBlank()) {
       return;
     }
 
     var tokenizer = new BSLTokenizer(cleanedParams);
     for (Token paramToken : tokenizer.getTokens()) {
-      if (paramToken.getChannel() != Token.DEFAULT_CHANNEL || paramToken.getType() == Token.EOF) {
-        continue;
+      if (paramToken.getChannel() == Token.DEFAULT_CHANNEL && paramToken.getType() != Token.EOF) {
+        var semanticType = mapLambdaParamTokenToSemanticType(paramToken.getType());
+        if (semanticType != null) {
+          var cleanedOffset = paramToken.getStartIndex();
+          var originalOffset = mapCleanedOffsetToOriginal(paramsPart, cleanedOffset);
+          var tokenLength = (int) paramToken.getText().codePoints().count();
+          addSubTokenAtOffset(baseOffset + originalOffset, tokenLength, semanticType, segments, result);
+        }
       }
-
-      String semanticType = mapLambdaParamTokenToSemanticType(paramToken.getType());
-      if (semanticType == null) {
-        continue;
-      }
-
-      int cleanedOffset = paramToken.getStartIndex();
-      int originalOffset = mapCleanedOffsetToOriginal(paramsPart, cleanedParams, cleanedOffset);
-      int tokenLength = (int) paramToken.getText().codePoints().count();
-      addSubTokenAtOffset(baseOffset + originalOffset, tokenLength, semanticType, segments, result);
     }
   }
 
@@ -838,11 +869,11 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private static void collectEscapedQuoteTokens(
     String fullContent, List<ContentSegment> segments, Map<Token, List<SubToken>> result
   ) {
-    int idx = 0;
+    var idx = 0;
     while (idx < fullContent.length() - 1) {
       if (fullContent.charAt(idx) == '"' && fullContent.charAt(idx + 1) == '"') {
-        addSubTokenAtOffset(idx, 2, CustomSemanticTokenTypes.STRING_ESCAPE, segments, result);
-        idx += 2;
+        addSubTokenAtOffset(idx, ESCAPE_QUOTE_LENGTH, CustomSemanticTokenTypes.STRING_ESCAPE, segments, result);
+        idx += ESCAPE_QUOTE_LENGTH;
       } else {
         idx++;
       }
@@ -877,18 +908,13 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private static String extractLambdaFullContent(List<Token> group) {
     var sb = new StringBuilder();
     for (Token token : group) {
-      String text = token.getText();
-      int type = token.getType();
-      if (type == BSLLexer.STRING) {
-        sb.append(text, 1, text.length() - 1);
-      } else if (type == BSLLexer.STRINGSTART) {
-        sb.append(text.substring(1));
-      } else if (type == BSLLexer.STRINGPART) {
-        sb.append('\n');
-        sb.append(text.substring(1));
-      } else if (type == BSLLexer.STRINGTAIL) {
-        sb.append('\n');
-        sb.append(text, 1, text.length() - 1);
+      var text = token.getText();
+      switch (token.getType()) {
+        case BSLLexer.STRING -> sb.append(text, 1, text.length() - 1);
+        case BSLLexer.STRINGSTART -> sb.append(text.substring(1));
+        case BSLLexer.STRINGPART -> sb.append('\n').append(text.substring(1));
+        case BSLLexer.STRINGTAIL -> sb.append('\n').append(text, 1, text.length() - 1);
+        default -> { /* non-string token types are skipped */ }
       }
     }
     return sb.toString();
@@ -902,30 +928,36 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     int contentOffset = 0;
 
     for (Token token : group) {
-      String text = token.getText();
-      int type = token.getType();
-      int tokenLine = token.getLine() - 1;
-      int tokenCharStart = token.getCharPositionInLine();
+      var text = token.getText();
+      var type = token.getType();
+      var tokenLine = token.getLine() - 1;
+      var tokenCharStart = token.getCharPositionInLine();
 
       int segmentStartInDoc;
       int segmentLength;
 
-      if (type == BSLLexer.STRING) {
-        segmentStartInDoc = tokenCharStart + 1;
-        segmentLength = text.length() - 2;
-      } else if (type == BSLLexer.STRINGSTART) {
-        segmentStartInDoc = tokenCharStart + 1;
-        segmentLength = text.length() - 1;
-      } else if (type == BSLLexer.STRINGPART) {
-        contentOffset++;
-        segmentStartInDoc = tokenCharStart + 1;
-        segmentLength = text.length() - 1;
-      } else if (type == BSLLexer.STRINGTAIL) {
-        contentOffset++;
-        segmentStartInDoc = tokenCharStart + 1;
-        segmentLength = text.length() - 2;
-      } else {
-        continue;
+      switch (type) {
+        case BSLLexer.STRING -> {
+          segmentStartInDoc = tokenCharStart + 1;
+          segmentLength = text.length() - ESCAPE_QUOTE_LENGTH;
+        }
+        case BSLLexer.STRINGSTART -> {
+          segmentStartInDoc = tokenCharStart + 1;
+          segmentLength = text.length() - 1;
+        }
+        case BSLLexer.STRINGPART -> {
+          contentOffset++;
+          segmentStartInDoc = tokenCharStart + 1;
+          segmentLength = text.length() - 1;
+        }
+        case BSLLexer.STRINGTAIL -> {
+          contentOffset++;
+          segmentStartInDoc = tokenCharStart + 1;
+          segmentLength = text.length() - ESCAPE_QUOTE_LENGTH;
+        }
+        default -> {
+          continue;
+        }
       }
 
       segments.add(new ContentSegment(contentOffset, segmentLength, tokenLine, segmentStartInDoc, token));
@@ -935,66 +967,19 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     return segments;
   }
 
-  private static final Set<Integer> LAMBDA_PARAM_OPERATOR_TYPES = Set.of(
-    BSLLexer.LPAREN,
-    BSLLexer.RPAREN,
-    BSLLexer.COMMA,
-    BSLLexer.ASSIGN
-  );
-
-  private static final Set<Integer> ANNOTATION_SYMBOL_TYPES = Set.of(
-    BSLLexer.ANNOTATION_CUSTOM_SYMBOL,
-    BSLLexer.ANNOTATION_BEFORE_SYMBOL,
-    BSLLexer.ANNOTATION_AFTER_SYMBOL,
-    BSLLexer.ANNOTATION_AROUND_SYMBOL,
-    BSLLexer.ANNOTATION_CHANGEANDVALIDATE_SYMBOL,
-    BSLLexer.ANNOTATION_ATSERVER_SYMBOL,
-    BSLLexer.ANNOTATION_ATCLIENT_SYMBOL,
-    BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
-    BSLLexer.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
-    BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
-  );
-
   @Nullable
   private static String mapLambdaParamTokenToSemanticType(int bslTokenType) {
-    if (bslTokenType == BSLLexer.IDENTIFIER) {
-      return SemanticTokenTypes.Parameter;
-    }
-    if (LAMBDA_PARAM_OPERATOR_TYPES.contains(bslTokenType)) {
-      return SemanticTokenTypes.Operator;
-    }
-    if (bslTokenType == BSLLexer.AMPERSAND || ANNOTATION_SYMBOL_TYPES.contains(bslTokenType)) {
-      return SemanticTokenTypes.Decorator;
-    }
-    if (bslTokenType == BSLLexer.STRING) {
-      return SemanticTokenTypes.String;
-    }
-    if (bslTokenType == BSLLexer.FLOAT || bslTokenType == BSLLexer.DECIMAL) {
-      return SemanticTokenTypes.Number;
-    }
-    if (bslTokenType == BSLLexer.DATETIME) {
-      return SemanticTokenTypes.Number;
-    }
-    if (bslTokenType == BSLLexer.TRUE
-      || bslTokenType == BSLLexer.FALSE
-      || bslTokenType == BSLLexer.UNDEFINED
-      || bslTokenType == BSLLexer.NULL) {
-      return SemanticTokenTypes.Keyword;
-    }
-    if (bslTokenType == BSLLexer.PLUS || bslTokenType == BSLLexer.MINUS) {
-      return SemanticTokenTypes.Operator;
-    }
-    return null;
+    return PARAM_TOKEN_TYPE_MAP.get(bslTokenType);
   }
 
-  private static int mapCleanedOffsetToOriginal(String original, String cleaned, int cleanedOffset) {
-    int origIdx = 0;
-    int cleanIdx = 0;
+  private static int mapCleanedOffsetToOriginal(String original, int cleanedOffset) {
+    var origIdx = 0;
+    var cleanIdx = 0;
     while (cleanIdx < cleanedOffset && origIdx < original.length()) {
       if (origIdx + 1 < original.length()
         && original.charAt(origIdx) == '"'
         && original.charAt(origIdx + 1) == '"') {
-        origIdx += 2;
+        origIdx += ESCAPE_QUOTE_LENGTH;
         cleanIdx++;
       } else {
         origIdx++;
