@@ -535,6 +535,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Extract parameter names for function wrapper
     var paramNames = extractLambdaParamNames(fullContent.substring(0, arrowStart));
 
+    // Escaped double quotes "" — both before and after ->
+    collectEscapedQuoteTokens(fullContent, segments, result);
+
     // StrTemplate/NStr placeholders in params area (left of ->)
     // Must be before collectLambdaParamTokens so NStr language keys take priority
     StringContext groupContext = group.stream()
@@ -582,10 +585,22 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
-   * Удаляет перекрывающиеся токены: стандартный проход слева направо,
-   * первый токен на каждой позиции сохраняется, перекрывающиеся удаляются.
+   * Удаляет перекрывающиеся токены. Escape-кавычки ({@code ""}) имеют абсолютный
+   * приоритет: любой другой токен, пересекающийся с escape-кавычкой, удаляется.
+   * Затем выполняется стандартный проход слева направо.
    */
   private static void removeOverlappingTokens(List<SubToken> tokens) {
+    var escapeIntervals = tokens.stream()
+      .filter(t -> CustomSemanticTokenTypes.STRING_ESCAPE.equals(t.type()))
+      .map(t -> new int[]{t.start(), t.start() + t.length()})
+      .toList();
+
+    if (!escapeIntervals.isEmpty()) {
+      tokens.removeIf(t -> !CustomSemanticTokenTypes.STRING_ESCAPE.equals(t.type())
+        && escapeIntervals.stream().anyMatch(e ->
+          t.start() < e[1] && (t.start() + t.length()) > e[0]));
+    }
+
     var it = tokens.iterator();
     int lastEnd = -1;
     while (it.hasNext()) {
@@ -820,6 +835,24 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   /**
+   * Сканирует содержимое лямбда-строки на наличие экранированных кавычек {@code ""}
+   * и добавляет для них SubToken'ы с типом {@code stringEscape}.
+   */
+  private static void collectEscapedQuoteTokens(
+    String fullContent, List<ContentSegment> segments, Map<Token, List<SubToken>> result
+  ) {
+    int idx = 0;
+    while (idx < fullContent.length() - 1) {
+      if (fullContent.charAt(idx) == '"' && fullContent.charAt(idx + 1) == '"') {
+        addSubTokenAtOffset(idx, 2, CustomSemanticTokenTypes.STRING_ESCAPE, segments, result);
+        idx += 2;
+      } else {
+        idx++;
+      }
+    }
+  }
+
+  /**
    * Сканирует текст на наличие плейсхолдеров СтрШаблон ({@code %1}..{@code %10})
    * и/или ключей языка НСтр и добавляет SubToken'ы.
    */
@@ -934,6 +967,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
     if (bslTokenType == BSLLexer.AMPERSAND || ANNOTATION_SYMBOL_TYPES.contains(bslTokenType)) {
       return SemanticTokenTypes.Decorator;
+    }
+    if (bslTokenType == BSLLexer.STRING) {
+      return SemanticTokenTypes.String;
     }
     if (bslTokenType == BSLLexer.FLOAT || bslTokenType == BSLLexer.DECIMAL) {
       return SemanticTokenTypes.Number;
