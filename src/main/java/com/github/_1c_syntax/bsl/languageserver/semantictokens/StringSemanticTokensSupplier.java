@@ -47,6 +47,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -97,24 +98,20 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final SemanticTokensLegend legend;
   private final ObjectProvider<List<SemanticTokensSupplier>> suppliersProvider;
 
-  private volatile List<SemanticTokensSupplier> allSuppliers;
-
-  private List<SemanticTokensSupplier> getAllSuppliers() {
-    if (allSuppliers == null) {
-      var list = new java.util.ArrayList<>(suppliersProvider.getObject());
-      if (list.stream().noneMatch(StringSemanticTokensSupplier.class::isInstance)) {
-        list.add(this);
-      }
-      allSuppliers = list;
-    }
-    return allSuppliers;
-  }
+  @SuppressWarnings("NullAway.Init")
+  private List<SemanticTokensSupplier> allSuppliers;
 
   private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
 
   @PostConstruct
   private void init() {
     updateParsedStrTemplateMethods();
+
+    var list = new ArrayList<>(suppliersProvider.getObject());
+    if (list.stream().noneMatch(StringSemanticTokensSupplier.class::isInstance)) {
+      list.add(this);
+    }
+    allSuppliers = list;
   }
 
   /**
@@ -633,7 +630,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       var virtualDoc = serverContext.addDocument(virtualUri);
       serverContext.rebuildDocument(virtualDoc, paddedContent, 1);
 
-      return getAllSuppliers().stream()
+      return allSuppliers.stream()
         .map(s -> s.getSemanticTokens(virtualDoc))
         .flatMap(Collection::stream)
         .filter(entry -> entry.line() >= firstBodyLine && entry.line() <= lastBodyLine)
@@ -958,6 +955,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
   );
 
+  @Nullable
   private static String mapLambdaParamTokenToSemanticType(int bslTokenType) {
     if (bslTokenType == BSLLexer.IDENTIFIER) {
       return SemanticTokenTypes.Parameter;
