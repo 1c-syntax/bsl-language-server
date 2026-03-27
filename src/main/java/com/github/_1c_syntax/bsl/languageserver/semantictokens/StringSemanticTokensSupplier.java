@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
@@ -41,12 +39,9 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -85,36 +80,16 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   private final SemanticTokensLegend legend;
   private final ObjectProvider<List<SemanticTokensSupplier>> suppliersProvider;
 
-  private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
-
   @SuppressWarnings("NullAway.Init")
   private List<SemanticTokensSupplier> allSuppliers;
 
   @PostConstruct
   private void init() {
-    updateParsedStrTemplateMethods();
-
     var list = new ArrayList<>(suppliersProvider.getObject());
     if (list.stream().noneMatch(StringSemanticTokensSupplier.class::isInstance)) {
       list.add(this);
     }
     allSuppliers = list;
-  }
-
-  /**
-   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
-   * <p>
-   * Обновляет кэшированные паттерны функций-шаблонизаторов при изменении конфигурации.
-   *
-   * @param event Событие
-   */
-  @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    updateParsedStrTemplateMethods();
-  }
-
-  private void updateParsedStrTemplateMethods() {
-    parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
   }
 
   @Override
@@ -250,10 +225,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     if (astOverride != null) {
       // Используем переопределённую длину, если она задана
       int effectiveLength = astOverride.overrideLength() > 0 ? astOverride.overrideLength() : length;
-      var range = new Range(
-        new Position(zeroIndexedLine, start),
-        new Position(zeroIndexedLine, start + effectiveLength)
-      );
+      var range = Ranges.create(zeroIndexedLine, start, start + effectiveLength);
       helper.addRange(entries, range, astOverride.type(), astOverride.modifiers());
       return effectiveLength;
     }
@@ -262,10 +234,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     var tokenType = token.getType();
     var semanticTypeAndModifiers = SdblTokenTypes.getTokenTypeAndModifiers(tokenType);
     if (semanticTypeAndModifiers != null) {
-      var range = new Range(
-        new Position(zeroIndexedLine, start),
-        new Position(zeroIndexedLine, start + length)
-      );
+      var range = Ranges.create(zeroIndexedLine, start, start + length);
       helper.addRange(entries, range, semanticTypeAndModifiers.type(), semanticTypeAndModifiers.modifiers());
     }
     return length;
@@ -331,7 +300,8 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private Map<Token, StringContext> collectSpecialStringContexts(DocumentContext documentContext) {
     Map<Token, StringContext> contexts = new HashMap<>();
-    var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods);
+    var parsedMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
+    var visitor = new SpecialContextVisitor(contexts, parsedMethods);
     visitor.visit(documentContext.getAst());
     return contexts;
   }

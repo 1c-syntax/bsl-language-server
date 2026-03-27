@@ -1125,26 +1125,28 @@ class StringSemanticTokensSupplierTest {
   void testNestedLambdaHighlighting() {
     // given — multiline outer lambda with inline inner lambda ("" Параметр -> ..."")
     // and multiline inner lambda (""\n|...\n|"")
-    String os = "Процедура Тест()\n"
-      + "  Р = \"Результат, Настройка ->\n"
-      + "  |\n"
-      + "  |  Результат.Слить(\n"
-      + "  |    Настройка.Ключ,\n"
-      + "  |    Настройка.Значение,\n"
-      + "  |    \"\" Параметр -> Параметр + 1\"\",\n"
-      + "  |    \"\"\n"
-      + "  |    |Старое, Новое ->\n"
-      + "  |    |  Если ТипЗнч(Старое) = Тип(\"\"\"\"МножествоСоответствие\"\"\"\") Тогда\n"
-      + "  |    |    Старое.ДобавитьВсе(Новое);\n"
-      + "  |    |  КонецЕсли;\n"
-      + "  |    |\n"
-      + "  |    |  Возврат Старое;\n"
-      + "  |    |\"\"\n"
-      + "  |  );\n"
-      + "  |\n"
-      + "  |  Возврат Результат;\n"
-      + "  |\";\n"
-      + "КонецПроцедуры\n";
+    String os = """
+        Процедура Тест()
+          Р = "Результат, Настройка ->
+          |
+          |  Результат.Слить(
+          |    Настройка.Ключ,
+          |    Настройка.Значение,
+          |    "" Параметр -> Параметр + 1"",
+          |    ""
+          |    |Старое, Новое ->
+          |    |  Если ТипЗнч(Старое) = Тип(""\""МножествоСоответствие""\"") Тогда
+          |    |    Старое.ДобавитьВсе(Новое);
+          |    |  КонецЕсли;
+          |    |
+          |    |  Возврат Старое;
+          |    |""
+          |  );
+          |
+          |  Возврат Результат;
+          |";
+        КонецПроцедуры
+        """;
 
     // when
     var decoded = helper.getDecodedTokensForOs(os, supplier);
@@ -1181,9 +1183,11 @@ class StringSemanticTokensSupplierTest {
   @Test
   void testEscapedDoubleQuotesHighlighting() {
     // given — lambda with "" escape sequences in body
-    String os = "Процедура Тест()\n"
-      + "  Р = \"Параметр -> Тип(\"\"Строка\"\")\";\n"
-      + "КонецПроцедуры\n";
+    String os = """
+        Процедура Тест()
+          Р = "Параметр -> Тип(""Строка"")";
+        КонецПроцедуры
+        """;
 
     // when
     var decoded = helper.getDecodedTokensForOs(os, supplier);
@@ -1200,9 +1204,11 @@ class StringSemanticTokensSupplierTest {
   @Test
   void testEscapedDoubleQuotesInParamsAndBody() {
     // given — "" in annotation params (left of ->) and in body (right of ->)
-    String os = "Процедура Тест()\n"
-      + "  Р = \"&Завязь(\"\"Имя\"\") () -> Тип(\"\"Массив\"\")\";\n"
-      + "КонецПроцедуры\n";
+    String os = """
+        Процедура Тест()
+          Р = "&Завязь(""Имя"") () -> Тип(""Массив"")";
+        КонецПроцедуры
+        """;
 
     // when
     var decoded = helper.getDecodedTokensForOs(os, supplier);

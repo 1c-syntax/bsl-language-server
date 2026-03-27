@@ -86,6 +86,20 @@ public class LambdaStringTokenizer {
 
   private static final Map<Integer, String> PARAM_TOKEN_TYPE_MAP = createParamTokenTypeMap();
 
+  private final ServerContext serverContext;
+  private final SemanticTokensLegend legend;
+  private final List<SemanticTokensSupplier> allSuppliers;
+
+  public LambdaStringTokenizer(
+    ServerContext serverContext,
+    SemanticTokensLegend legend,
+    List<SemanticTokensSupplier> allSuppliers
+  ) {
+    this.serverContext = serverContext;
+    this.legend = legend;
+    this.allSuppliers = List.copyOf(allSuppliers);
+  }
+
   private static Map<Integer, String> createParamTokenTypeMap() {
     var map = new HashMap<Integer, String>();
     map.put(BSLLexer.IDENTIFIER, SemanticTokenTypes.Parameter);
@@ -100,20 +114,6 @@ public class LambdaStringTokenizer {
     List.of(BSLLexer.PLUS, BSLLexer.MINUS)
       .forEach(t -> map.put(t, SemanticTokenTypes.Operator));
     return Map.copyOf(map);
-  }
-
-  private final ServerContext serverContext;
-  private final SemanticTokensLegend legend;
-  private final List<SemanticTokensSupplier> allSuppliers;
-
-  public LambdaStringTokenizer(
-    ServerContext serverContext,
-    SemanticTokensLegend legend,
-    List<SemanticTokensSupplier> allSuppliers
-  ) {
-    this.serverContext = serverContext;
-    this.legend = legend;
-    this.allSuppliers = allSuppliers;
   }
 
   /**
@@ -160,20 +160,28 @@ public class LambdaStringTokenizer {
           currentGroup = new ArrayList<>();
           currentGroup.add(token);
         }
-        case BSLLexer.STRINGPART, BSLLexer.STRINGTAIL -> {
-          if (currentGroup != null) {
-            currentGroup.add(token);
-            if (token.getType() == BSLLexer.STRINGTAIL) {
-              groups.add(currentGroup);
-              currentGroup = null;
-            }
-          }
-        }
+        case BSLLexer.STRINGPART, BSLLexer.STRINGTAIL ->
+          currentGroup = addToMultilineGroup(token, currentGroup, groups);
         default -> { /* skip unexpected token types */ }
       }
     }
 
     return groups;
+  }
+
+  @Nullable
+  private static List<Token> addToMultilineGroup(
+    Token token, @Nullable List<Token> currentGroup, List<List<Token>> groups
+  ) {
+    if (currentGroup == null) {
+      return null;
+    }
+    currentGroup.add(token);
+    if (token.getType() == BSLLexer.STRINGTAIL) {
+      groups.add(currentGroup);
+      return null;
+    }
+    return currentGroup;
   }
 
   /**
@@ -392,7 +400,7 @@ public class LambdaStringTokenizer {
     var bodyLower = bodyText.toLowerCase(Locale.ENGLISH);
     var hasReturn = bodyLower.contains("возврат") || bodyLower.contains("return");
     var header = "Функция _Лямбда(" + String.join(", ", paramNames) + ")";
-    return hasReturn ? header : header + " " + RETURN_KEYWORD;
+    return hasReturn ? header : (header + " " + RETURN_KEYWORD);
   }
 
   /**
@@ -546,7 +554,7 @@ public class LambdaStringTokenizer {
 
   private static List<ContentSegment> buildContentSegments(List<Token> group) {
     List<ContentSegment> segments = new ArrayList<>();
-    int contentOffset = 0;
+    var contentOffset = 0;
 
     for (Token token : group) {
       var text = token.getText();
