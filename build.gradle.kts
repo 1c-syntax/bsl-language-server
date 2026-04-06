@@ -75,7 +75,7 @@ dependencies {
 
     // кэширование
     api("com.github.ben-manes.caffeine:caffeine:3.2.3")
-    api("org.ehcache:ehcache:3.11.1")
+    api("org.ehcache:ehcache:3.12.0")
 
     // lsp4j core
     api("org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0")
