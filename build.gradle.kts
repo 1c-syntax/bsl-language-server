@@ -130,7 +130,7 @@ dependencies {
     implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
-    implementation("org.jgrapht:jgrapht-core:1.5.2")
+    implementation("org.jgrapht:jgrapht-core:1.5.3")
 
     // SARIF serialization
     implementation("com.contrastsecurity:java-sarif:2.0")
