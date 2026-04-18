@@ -38,7 +38,7 @@ import java.util.Set;
  * <p>
  * Для каждой строки файла определяет автора (по email из git blame)
  * и помечает строку как игнорируемую, если email автора входит
- * в список {@code gitBlameIgnoredAuthors} из конфигурации.
+ * в список {@code ingoredAuthors} из конфигурации.
  */
 @Slf4j
 public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
@@ -64,39 +64,40 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
 
     try {
       var repoBuilder = new FileRepositoryBuilder();
-      var repository = repoBuilder
+      try (var repository = repoBuilder
         .findGitDir(file)
-        .build();
+        .build()) {
 
-      if (repository.getDirectory() == null) {
-        return Data.empty();
-      }
-
-      var workTree = repository.getWorkTree().toPath();
-      var relativePath = workTree.relativize(file.toPath())
-        .toString()
-        .replace('\\', '/');
-
-      try (var git = new Git(repository)) {
-        var blameResult = git.blame()
-          .setFilePath(relativePath)
-          .call();
-
-        if (blameResult == null) {
+        if (repository.getDirectory() == null) {
           return Data.empty();
         }
 
-        Set<Integer> ignoredLines = new HashSet<>();
-        int lineCount = blameResult.getResultContents().size();
+        var workTree = repository.getWorkTree().toPath();
+        var relativePath = workTree.relativize(file.toPath())
+          .toString()
+          .replace('\\', '/');
 
-        for (int i = 0; i < lineCount; i++) {
-          var author = blameResult.getSourceAuthor(i);
-          if (author != null && ignoredAuthors.contains(author.getEmailAddress())) {
-            ignoredLines.add(i); // JGit lines are 0-indexed, same as LSP
+        try (var git = new Git(repository)) {
+          var blameResult = git.blame()
+            .setFilePath(relativePath)
+            .call();
+
+          if (blameResult == null) {
+            return Data.empty();
           }
-        }
 
-        return new Data(Collections.unmodifiableSet(ignoredLines));
+          Set<Integer> ignoredLines = new HashSet<>();
+          int lineCount = blameResult.getResultContents().size();
+
+          for (int i = 0; i < lineCount; i++) {
+            var author = blameResult.getSourceAuthor(i);
+            if (author != null && ignoredAuthors.contains(author.getEmailAddress())) {
+              ignoredLines.add(i); // JGit lines are 0-indexed, same as LSP
+            }
+          }
+
+          return new Data(Collections.unmodifiableSet(ignoredLines));
+        }
       }
     } catch (Exception e) {
       LOGGER.debug("Failed to compute git blame for {}", uri, e);
