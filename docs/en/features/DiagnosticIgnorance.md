@@ -13,7 +13,7 @@ To configure, specify the list of email addresses in the `gitBlameIgnoredAuthors
 ```json
 {
   "diagnostics": {
-    "gitBlameIgnoredAuthors": [
+    "ingoredAuthors": [
       "developer@example.com",
       "legacy-author@company.com"
     ]

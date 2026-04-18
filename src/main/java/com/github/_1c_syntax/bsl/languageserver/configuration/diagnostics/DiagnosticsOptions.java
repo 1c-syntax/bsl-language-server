@@ -66,5 +66,5 @@ public class DiagnosticsOptions {
   @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
   private Map<String, DiagnosticMetadata> metadata = new HashMap<>();
 
-  private Set<String> gitBlameIgnoredAuthors = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+  private Set<String> ingoredAuthors = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 }
