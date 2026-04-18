@@ -137,6 +137,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
     = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
   private final Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
+  private final Lazy<GitBlameComputer.Data> gitBlameIgnoranceData
+    = new Lazy<>(this::computeGitBlameIgnorance, computeLock);
   private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
   private final Lazy<List<Diagnostic>> diagnostics = new Lazy<>(this::computeDiagnostics, diagnosticsLock);
 
@@ -248,6 +250,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return diagnosticIgnoranceData.getOrCompute();
   }
 
+  public GitBlameComputer.Data getGitBlameIgnorance() {
+    return gitBlameIgnoranceData.getOrCompute();
+  }
+
   public ModuleType getModuleType() {
     return moduleType.getOrCompute();
   }
@@ -348,6 +354,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
         cyclomaticComplexityData.clear();
         metrics.clear();
         diagnosticIgnoranceData.clear();
+        gitBlameIgnoranceData.clear();
       }
     } finally {
       releaseLocks();
@@ -453,6 +460,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
     Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer = new DiagnosticIgnoranceComputer(this);
     return diagnosticIgnoranceComputer.compute();
+  }
+
+  private GitBlameComputer.Data computeGitBlameIgnorance() {
+    var ignoredAuthors = configuration.getDiagnosticsOptions().getGitBlameIgnoredAuthors();
+    return new GitBlameComputer(uri, ignoredAuthors).compute();
   }
 
   private List<Diagnostic> computeDiagnostics() {

@@ -36,6 +36,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
@@ -63,4 +65,6 @@ public class DiagnosticsOptions {
 
   @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
   private Map<String, DiagnosticMetadata> metadata = new HashMap<>();
+
+  private Set<String> gitBlameIgnoredAuthors = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 }

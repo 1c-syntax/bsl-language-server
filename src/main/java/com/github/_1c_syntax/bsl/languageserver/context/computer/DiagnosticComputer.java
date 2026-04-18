@@ -75,6 +75,7 @@ public abstract class DiagnosticComputer {
 
   private List<Diagnostic> internalCompute(DocumentContext documentContext) {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
+    GitBlameComputer.Data gitBlameIgnorance = documentContext.getGitBlameIgnorance();
 
     return diagnostics(documentContext).parallelStream()
       .flatMap((BSLDiagnostic diagnostic) -> {
@@ -91,6 +92,7 @@ public abstract class DiagnosticComputer {
         }
       })
       .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
       .toList();
 
   }
