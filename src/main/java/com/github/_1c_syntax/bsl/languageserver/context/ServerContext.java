@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.BslLsExecutors;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
@@ -45,14 +45,12 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -74,16 +72,21 @@ public class ServerContext {
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final LanguageServerConfiguration languageServerConfiguration;
+  private final BslLsExecutors bslLsExecutors;
 
-  private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
+  private final Map<URI, DocumentContext> documents = new ConcurrentHashMap<>();
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @Nullable
   @Setter
   @Getter
   private Path configurationRoot;
-  private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
+  private final Map<URI, String> mdoRefs = new ConcurrentHashMap<>();
+  /**
+   * Внутренний EnumMap не потокобезопасен; создаётся обёрнутый в
+   * {@link Collections#synchronizedMap(Map)} (см. {@link #addMdoRefByUri(URI, DocumentContext)}).
+   */
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
-    = Collections.synchronizedMap(new HashMap<>());
+    = new ConcurrentHashMap<>();
   private final Map<URI, ReadWriteLock> documentLocks = new ConcurrentHashMap<>();
 
   private final Map<DocumentContext, State> states = new ConcurrentHashMap<>();
@@ -400,13 +403,16 @@ public class ServerContext {
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
-    var factory = new NamedForkJoinWorkerThreadFactory("compute-configuration-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-
     CF configuration;
     try {
-      configuration = (CF) executorService.submit(
-        () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
+      // Если уже выполняемся на потоке CPU-пула — считаем inline, иначе
+      // submit + get() в тот же пул может привести к starvation/deadlock.
+      if (bslLsExecutors.isInCpuPool()) {
+        configuration = (CF) MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS);
+      } else {
+        configuration = (CF) bslLsExecutors.getCpuExecutor().submit(
+          () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
+      }
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
@@ -414,8 +420,6 @@ public class ServerContext {
       LOGGER.error("Can't parse configuration metadata. Interrupted exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
       Thread.currentThread().interrupt();
-    } finally {
-      executorService.shutdown();
     }
 
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
@@ -429,7 +433,7 @@ public class ServerContext {
     mdoRefs.put(uri, mdoRef);
     documentsByMDORef.computeIfAbsent(
       mdoRef,
-      k -> new EnumMap<>(ModuleType.class)
+      k -> Collections.synchronizedMap(new EnumMap<>(ModuleType.class))
     ).put(documentContext.getModuleType(), documentContext);
   }
 

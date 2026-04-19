@@ -24,11 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.BslLsExecutors;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokens;
@@ -51,10 +49,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 
 /**
  * Провайдер для предоставления семантических токенов.
@@ -73,27 +70,19 @@ public class SemanticTokensProvider {
    */
   private static final int PARALLEL_PROCESSING_THRESHOLD = 1000;
 
-  @SuppressWarnings("NullAway.Init")
-  private ExecutorService executorService;
+  /**
+   * Минимальное число поставщиков, при котором имеет смысл идти в parallel stream.
+   */
+  private static final int PARALLEL_SUPPLIERS_THRESHOLD = 4;
 
   private final List<SemanticTokensSupplier> suppliers;
+  private final BslLsExecutors executors;
 
   /**
    * Cache for storing previous token data by resultId.
    * Key: resultId, Value: token data list
    */
   private final Map<String, CachedTokenData> tokenCache = new ConcurrentHashMap<>();
-
-  @PostConstruct
-  private void init() {
-    var factory = new NamedForkJoinWorkerThreadFactory("semantic-tokens-");
-    executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-  }
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
 
   /**
    * Cached semantic token data associated with a document.
@@ -115,13 +104,9 @@ public class SemanticTokensProvider {
     DocumentContext documentContext,
     @SuppressWarnings("unused") SemanticTokensParams params
   ) {
-    // Collect tokens from all suppliers in parallel
     var entries = collectTokens(documentContext);
-
-    // Build delta-encoded data as int array
     int[] data = toDeltaEncodedArray(entries);
 
-    // Generate a unique resultId and cache the data
     String resultId = generateResultId();
     cacheTokenData(resultId, documentContext.getUri(), data);
 
@@ -142,28 +127,19 @@ public class SemanticTokensProvider {
     String previousResultId = params.getPreviousResultId();
     CachedTokenData previousData = tokenCache.get(previousResultId);
 
-    // Collect tokens from all suppliers in parallel
     var entries = collectTokens(documentContext);
-
-    // Build delta-encoded data as int array
     int[] currentData = toDeltaEncodedArray(entries);
 
-    // Generate new resultId
     String resultId = generateResultId();
 
-    // If previous data is not available or belongs to a different document, return full tokens
     if (previousData == null || !previousData.uri().equals(documentContext.getUri())) {
       cacheTokenData(resultId, documentContext.getUri(), currentData);
       return Either.forLeft(new SemanticTokens(resultId, toList(currentData)));
     }
 
-    // Compute delta edits
     List<SemanticTokensEdit> edits = computeEdits(previousData.data(), currentData);
 
-    // Cache the new data
     cacheTokenData(resultId, documentContext.getUri(), currentData);
-
-    // Remove the old cached data
     tokenCache.remove(previousResultId);
 
     var delta = new SemanticTokensDelta();
@@ -185,16 +161,10 @@ public class SemanticTokensProvider {
   ) {
     Range range = params.getRange();
 
-    // Collect tokens from all suppliers in parallel
     var entries = collectTokens(documentContext);
-
-    // Filter tokens that fall within the specified range
     var filteredEntries = filterTokensByRange(entries, range);
-
-    // Build delta-encoded data as int array
     int[] data = toDeltaEncodedArray(filteredEntries);
 
-    // Range requests do not use resultId caching as per LSP specification
     return new SemanticTokens(toList(data));
   }
 
@@ -217,15 +187,12 @@ public class SemanticTokensProvider {
     int endLine = range.getEnd().getLine();
     int endChar = range.getEnd().getCharacter();
 
-    // Use parallel stream for large collections to leverage multiple cores
     var stream = entries.size() > PARALLEL_PROCESSING_THRESHOLD
       ? entries.parallelStream()
       : entries.stream();
 
     return stream
-      // Quick line-based pre-filter (simple integer comparison)
       .filter(token -> token.line() >= startLine && token.line() <= endLine)
-      // Detailed check for boundary lines only
       .filter(token -> isTokenInRangeDetailed(token, startLine, startChar, endLine, endChar))
       .toList();
   }
@@ -246,12 +213,10 @@ public class SemanticTokensProvider {
     int tokenStart = token.start();
     int tokenEnd = tokenStart + token.length();
 
-    // Token is on the start line - check if it ends after range start
     if (tokenLine == startLine && tokenEnd <= startChar) {
       return false;
     }
 
-    // Token is on the end line - check if it starts before range end
     return tokenLine != endLine || tokenStart < endChar;
   }
 
@@ -288,16 +253,10 @@ public class SemanticTokensProvider {
     tokenCache.entrySet().removeIf(entry -> entry.getValue().uri().equals(uri));
   }
 
-  /**
-   * Generate a unique result ID for caching.
-   */
   private static String generateResultId() {
     return UUID.randomUUID().toString();
   }
 
-  /**
-   * Cache token data with the given resultId.
-   */
   private void cacheTokenData(String resultId, URI uri, int[] data) {
     tokenCache.put(resultId, new CachedTokenData(uri, data));
   }
@@ -318,7 +277,6 @@ public class SemanticTokensProvider {
       return List.of();
     }
 
-    // Находим первый отличающийся токен и одновременно вычисляем сумму deltaLine для prefix
     int firstDiffToken = 0;
     int prefixAbsLine = 0;
     int minTokens = Math.min(prevTokenCount, currTokenCount);
@@ -332,16 +290,14 @@ public class SemanticTokensProvider {
           break outer;
         }
       }
-      prefixAbsLine += prev[base]; // накапливаем deltaLine
+      prefixAbsLine += prev[base];
       firstDiffToken = i + 1;
     }
 
-    // Если все токены одинаковые
     if (firstDiffToken == minTokens && prevTokenCount == currTokenCount) {
       return List.of();
     }
 
-    // Вычисляем смещение строк инкрементально от prefixAbsLine
     int prevSuffixAbsLine = prefixAbsLine;
     for (int i = firstDiffToken; i < prevTokenCount; i++) {
       prevSuffixAbsLine += prev[i * TOKEN_SIZE];
@@ -352,10 +308,8 @@ public class SemanticTokensProvider {
     }
     int lineOffset = currSuffixAbsLine - prevSuffixAbsLine;
 
-    // Находим последний отличающийся токен с учётом смещения строк
     int suffixMatchTokens = findSuffixMatchWithOffset(prev, curr, firstDiffToken, lineOffset, TOKEN_SIZE);
 
-    // Вычисляем границы редактирования
     int deleteEndToken = prevTokenCount - suffixMatchTokens;
     int insertEndToken = currTokenCount - suffixMatchTokens;
 
@@ -367,7 +321,6 @@ public class SemanticTokensProvider {
       return List.of();
     }
 
-    // Создаём список для вставки из среза массива
     List<Integer> insertData = toList(Arrays.copyOfRange(curr, deleteStart, insertEnd));
 
     var edit = new SemanticTokensEdit();
@@ -399,7 +352,7 @@ public class SemanticTokensProvider {
                                                int tokenSize) {
     final int DELTA_LINE_INDEX = 0;
     final int DELTA_START_INDEX = 1;
-    
+
     int prevTokenCount = prev.length / tokenSize;
     int currTokenCount = curr.length / tokenSize;
 
@@ -414,11 +367,8 @@ public class SemanticTokensProvider {
       int prevIdx = (prevTokenCount - 1 - i) * tokenSize;
       int currIdx = (currTokenCount - 1 - i) * tokenSize;
 
-      // Для граничного токена при inline-редактировании (lineOffset == 0)
-      // разрешаем различие в deltaStart
       int firstFieldToCheck = (!foundBoundary && lineOffset == 0) ? DELTA_START_INDEX + 1 : DELTA_START_INDEX;
-      
-      // Проверяем поля кроме deltaLine (и возможно deltaStart для граничного токена)
+
       boolean otherFieldsMatch = true;
       for (int j = firstFieldToCheck; j < tokenSize; j++) {
         if (prev[prevIdx + j] != curr[currIdx + j]) {
@@ -431,34 +381,22 @@ public class SemanticTokensProvider {
         break;
       }
 
-      // Теперь проверяем deltaLine
       int prevDeltaLine = prev[prevIdx + DELTA_LINE_INDEX];
       int currDeltaLine = curr[currIdx + DELTA_LINE_INDEX];
 
       if (prevDeltaLine == currDeltaLine) {
-        // Если это потенциальный граничный токен при inline-редактировании, проверяем deltaStart
         if (!foundBoundary && lineOffset == 0) {
           int prevDeltaStart = prev[prevIdx + DELTA_START_INDEX];
           int currDeltaStart = curr[currIdx + DELTA_START_INDEX];
           if (prevDeltaStart != currDeltaStart) {
-            // Граничный токен при inline-редактировании.
-            // НЕ включаем его в suffix match, чтобы он попал в edit и клиент получил
-            // обновлённое значение deltaStart. Аналогично обработке граничного токена
-            // при lineOffset != 0.
             foundBoundary = true;
             continue;
           }
         }
-        // Полное совпадение
         suffixMatch++;
       } else if (!foundBoundary && currDeltaLine - prevDeltaLine == lineOffset) {
-        // Граничный токен при вставке/удалении строк.
-        // НЕ включаем его в suffix match, чтобы он попал в edit и клиент получил
-        // обновлённое значение deltaLine. Это критично для случая, когда добавляются
-        // только пустые строки без нового кода.
         foundBoundary = true;
       } else {
-        // Не совпадает
         break;
       }
     }
@@ -467,29 +405,44 @@ public class SemanticTokensProvider {
   }
 
   /**
-   * Collect tokens from all suppliers in parallel using ForkJoinPool.
+   * Собирает токены со всех поставщиков на общем CPU-пуле из {@link BslLsExecutors}.
+   * Распараллеливается только когда поставщиков достаточно много.
    */
   private List<SemanticTokenEntry> collectTokens(DocumentContext documentContext) {
-    return CompletableFuture
-      .supplyAsync(
-        () -> suppliers.parallelStream()
-          .map(supplier -> supplier.getSemanticTokens(documentContext))
-          .flatMap(Collection::stream)
-          .toList(),
-        executorService
-      )
-      .join();
+    if (suppliers.isEmpty()) {
+      return List.of();
+    }
+
+    java.util.function.Supplier<List<SemanticTokenEntry>> task = () -> {
+      var stream = suppliers.size() >= PARALLEL_SUPPLIERS_THRESHOLD
+        ? suppliers.parallelStream()
+        : suppliers.stream();
+      return stream
+        .map(supplier -> supplier.getSemanticTokens(documentContext))
+        .flatMap(Collection::stream)
+        .toList();
+    };
+
+    if (executors != null && executors.isInCpuPool()) {
+      return task.get();
+    }
+
+    var pool = executors == null ? ForkJoinPool.commonPool() : executors.getCpuExecutor();
+    return pool.invoke(ForkJoinTask.adapt(
+      (java.util.concurrent.Callable<List<SemanticTokenEntry>>) task::get
+    ));
   }
 
   private static int[] toDeltaEncodedArray(List<SemanticTokenEntry> entries) {
-    // de-dup and sort
+    if (entries.isEmpty()) {
+      return new int[0];
+    }
     Set<SemanticTokenEntry> uniq = new HashSet<>(entries);
     List<SemanticTokenEntry> sorted = new ArrayList<>(uniq);
     sorted.sort(Comparator
       .comparingInt(SemanticTokenEntry::line)
       .thenComparingInt(SemanticTokenEntry::start));
 
-    // Use int[] to avoid boxing overhead during computation
     int[] data = new int[sorted.size() * 5];
     var prevLine = 0;
     var prevChar = 0;
@@ -515,7 +468,17 @@ public class SemanticTokensProvider {
     return data;
   }
 
+  /**
+   * Преобразует {@code int[]} в {@code List<Integer>}, обязательный для LSP4J.
+   */
   private static List<Integer> toList(int[] array) {
-    return Arrays.stream(array).boxed().toList();
+    if (array.length == 0) {
+      return List.of();
+    }
+    Integer[] boxed = new Integer[array.length];
+    for (int i = 0; i < array.length; i++) {
+      boxed[i] = array[i];
+    }
+    return Arrays.asList(boxed);
   }
 }

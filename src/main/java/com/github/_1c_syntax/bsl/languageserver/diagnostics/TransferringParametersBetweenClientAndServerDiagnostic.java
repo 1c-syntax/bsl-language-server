@@ -155,7 +155,7 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   }
 
   private boolean hasClientModuleVariable(String variableName) {
-    return Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_moduleVar).stream()
+    return documentContext.getCachedRuleNodes(BSLParser.RULE_moduleVar).stream()
       .filter(BSLParser.ModuleVarContext.class::isInstance)
       .map(BSLParser.ModuleVarContext.class::cast)
       .filter(ctx -> hasVariableWithName(ctx, variableName))

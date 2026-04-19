@@ -23,42 +23,37 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.BslLsExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
+import java.util.concurrent.ForkJoinTask;
 
 /**
  * Вычислитель диагностик для документа.
  * <p>
- * Абстрактный класс, обеспечивающий параллельное вычисление диагностик
- * всеми зарегистрированными анализаторами с обработкой ошибок.
+ * Параллельно прогоняет все зарегистрированные диагностики на общем CPU-пуле из
+ * {@link BslLsExecutors}. Если вызов уже происходит из этого пула, работа
+ * выполняется на текущем потоке без дополнительного {@code submit/join}.
  */
 @Component
 @Slf4j
 public abstract class DiagnosticComputer {
 
-  private ExecutorService executorService;
+  /** Минимальное число диагностик, при котором уход в parallel stream окупается. */
+  private static final int PARALLEL_DIAGNOSTICS_THRESHOLD = 8;
 
-  @PostConstruct
-  private void init() {
-    var factory = new NamedForkJoinWorkerThreadFactory("diagnostic-computer-");
-    executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-  }
+  private BslLsExecutors executors;
 
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
+  @Autowired
+  void setExecutors(BslLsExecutors executors) {
+    this.executors = executors;
   }
 
   /**
@@ -68,15 +63,28 @@ public abstract class DiagnosticComputer {
    * @return Список найденных диагностик
    */
   public List<Diagnostic> compute(DocumentContext documentContext) {
-    return CompletableFuture
-      .supplyAsync(() -> internalCompute(documentContext), executorService)
-      .join();
+    if (executors != null && executors.isInCpuPool()) {
+      return internalCompute(documentContext);
+    }
+
+    var pool = executors == null ? ForkJoinPool.commonPool() : executors.getCpuExecutor();
+    return pool.invoke(ForkJoinTask.adapt(
+      (java.util.concurrent.Callable<List<Diagnostic>>) () -> internalCompute(documentContext)
+    ));
   }
 
   private List<Diagnostic> internalCompute(DocumentContext documentContext) {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
-    return diagnostics(documentContext).parallelStream()
+    List<BSLDiagnostic> diagnostics = diagnostics(documentContext);
+    if (diagnostics.isEmpty()) {
+      return List.of();
+    }
+
+    boolean parallel = diagnostics.size() >= PARALLEL_DIAGNOSTICS_THRESHOLD;
+    var stream = parallel ? diagnostics.parallelStream() : diagnostics.stream();
+
+    List<Diagnostic> raw = stream
       .flatMap((BSLDiagnostic diagnostic) -> {
         try {
           return diagnostic.getDiagnostics(documentContext).stream();
@@ -86,13 +94,22 @@ public abstract class DiagnosticComputer {
             diagnostic.getInfo().getCode()
           );
           LOGGER.error(message, e);
-
-          return Stream.empty();
+          return java.util.stream.Stream.empty();
         }
       })
-      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
       .toList();
 
+    if (raw.isEmpty()) {
+      return List.of();
+    }
+
+    List<Diagnostic> result = new ArrayList<>(raw.size());
+    for (Diagnostic d : raw) {
+      if (!diagnosticIgnorance.diagnosticShouldBeIgnored(d)) {
+        result.add(d);
+      }
+    }
+    return result;
   }
 
   @Lookup("diagnostics")

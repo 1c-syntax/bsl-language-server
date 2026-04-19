@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.BslLsExecutors;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
@@ -117,7 +118,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -127,7 +127,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -166,21 +165,24 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
-
-  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
+  private final BslLsExecutors bslLsExecutors;
 
   // Executors per document URI to serialize didChange operations and avoid race conditions
   private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
+
+  /**
+   * @return общий ограниченный пул для обработки запросов LSP.
+   */
+  private ExecutorService executorService() {
+    return bslLsExecutors.getLspExecutor();
+  }
 
   private boolean clientSupportsPullDiagnostics;
 
   @PreDestroy
   private void onDestroy() {
-    // Shutdown all document executors
     documentExecutors.values().forEach(DocumentChangeExecutor::shutdown);
     documentExecutors.clear();
-
-    executorService.shutdown();
   }
 
   @Override
@@ -859,7 +861,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return waitFuture.thenCompose(ignored ->
       CompletableFutures.computeAsync(
-        executorService,
+        executorService(),
         cancelChecker -> {
           cancelChecker.checkCanceled();
           var lock = context.getDocumentLock(documentContext.getUri());

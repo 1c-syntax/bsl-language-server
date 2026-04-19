@@ -50,6 +50,7 @@ import lombok.Locked;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -65,11 +66,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -98,6 +102,15 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Nullable
   private String content;
+
+  /**
+   * Fingerprint текущего {@link #content} (хэш + длина).
+   * <p>
+   * Используется для быстрого сравнения нового текста с уже разобранным:
+   * если совпадает — повторный парсинг и пересчёт {@link #symbolTree} не выполняются.
+   * Значение {@code 0} означает «хэш не вычислен / контента нет».
+   */
+  private long contentHashAndLength;
 
   @Getter
   private int version;
@@ -142,6 +155,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
+  /**
+   * Кэш узлов AST, собранных по {@code ruleIndex}, по всему дереву документа.
+   * Очищается вместе с AST в {@link #clearSecondaryData()}.
+   *
+   * @see #getCachedRuleNodes(int)
+   */
+  private final Map<Integer, Collection<? extends ParseTree>> ruleNodesCache = new ConcurrentHashMap<>();
+
   public DocumentContext(URI uri) {
     this.uri = uri;
     this.fileType = computeFileType(uri);
@@ -175,13 +196,25 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   public List<Token> getTokensFromDefaultChannel() {
-    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).toList();
+    final List<Token> tokens = getTokens();
+    final List<Token> result = new java.util.ArrayList<>(tokens.size());
+    for (Token token : tokens) {
+      if (token.getChannel() == DEFAULT_CHANNEL) {
+        result.add(token);
+      }
+    }
+    return result;
   }
 
   public List<Token> getComments() {
-    return getTokens().stream()
-      .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
-      .toList();
+    final List<Token> tokens = getTokens();
+    final List<Token> result = new java.util.ArrayList<>();
+    for (Token token : tokens) {
+      if (token.getType() == BSLLexer.LINE_COMMENT) {
+        result.add(token);
+      }
+    }
+    return result;
   }
 
   @Locked("computeLock")
@@ -274,6 +307,24 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return queries.getOrCompute();
   }
 
+  /**
+   * Возвращает все узлы AST с указанным {@code ruleIndex}, обходя дерево
+   * только один раз на документ. Результаты переиспользуются всеми вызывающими.
+   * <p>
+   * Используйте в диагностиках вместо
+   * {@code Trees.findAllRuleNodes(documentContext.getAst(), ruleIndex)}, если
+   * то же правило нужно нескольким независимым диагностикам.
+   *
+   * @param ruleIndex константа {@code BSLParser.RULE_*}
+   * @return неизменяемое представление коллекции узлов
+   */
+  public Collection<? extends ParseTree> getCachedRuleNodes(int ruleIndex) {
+    return ruleNodesCache.computeIfAbsent(
+      ruleIndex,
+      idx -> Collections.unmodifiableCollection(Trees.findAllRuleNodes(getAst(), idx))
+    );
+  }
+
   public List<Diagnostic> getDiagnostics() {
     return diagnostics.getOrCompute();
   }
@@ -304,11 +355,26 @@ public class DocumentContext implements Comparable<DocumentContext> {
         return;
       }
 
+      // Stage-cache: при идентичном контенте пропускаем перепарсинг и
+      // пересчёт SymbolTree, обновляем только версию и зависимые данные.
+      // Хэш + длина — быстрый предфильтр, equals — гарантия от коллизий
+      // (например, "Aa" и "BB" имеют одинаковый String.hashCode()).
+      long newHash = computeContentHash(content);
+      if (this.content != null
+        && tokenizer != null
+        && this.contentHashAndLength == newHash
+        && this.content.equals(content)) {
+        this.version = version;
+        clearDependantData();
+        return;
+      }
+
       if (!isComputedDataFrozen) {
         clearSecondaryData();
       }
 
       this.content = content;
+      this.contentHashAndLength = newHash;
       if (tokenizer != null) {
         tokenizer.rebuild(content);
       } else {
@@ -321,6 +387,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
       releaseLocks();
     }
 
+  }
+
+  /**
+   * Лёгкий fingerprint содержимого: длина в высоких 32 битах + {@link String#hashCode()}
+   * в младших. Не криптостойкий — нужен только для определения «текст не менялся».
+   */
+  private static long computeContentHash(String content) {
+    return ((long) content.length() << 32) ^ (content.hashCode() & 0xFFFFFFFFL);
   }
 
   protected void rebuildFromFileSystem() {
@@ -338,9 +412,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
     try {
 
       content = null;
+      contentHashAndLength = 0;
       contentList.clear();
       tokenizer = null;
       queries.clear();
+      ruleNodesCache.clear();
       clearDependantData();
 
       if (!isComputedDataFrozen) {
@@ -416,32 +492,53 @@ public class DocumentContext implements Comparable<DocumentContext> {
     var metricsTemp = new MetricStorage();
     final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
 
-    metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
-    metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
+    int functions = 0;
+    for (MethodSymbol m : methodsUnboxed) {
+      if (m.isFunction()) {
+        functions++;
+      }
+    }
+    metricsTemp.setFunctions(functions);
+    metricsTemp.setProcedures(methodsUnboxed.size() - functions);
 
-    int[] nclocData = getTokensFromDefaultChannel().stream()
-      .mapToInt(Token::getLine)
-      .distinct().toArray();
-    metricsTemp.setNclocData(nclocData);
-    metricsTemp.setNcloc(nclocData.length);
-
-    int lines;
+    // One-pass обход токенов: NCLOC, comments и lines считаются за один проход.
     final List<Token> tokensUnboxed = getTokens();
     if (tokensUnboxed.isEmpty()) {
-      lines = 0;
+      metricsTemp.setNclocData(new int[0]);
+      metricsTemp.setNcloc(0);
+      metricsTemp.setLines(0);
+      metricsTemp.setComments(0);
     } else {
-      lines = tokensUnboxed.getLast().getLine();
+      final java.util.BitSet nclocLines = new java.util.BitSet();
+      final java.util.BitSet commentLines = new java.util.BitSet();
+      int lastLine = 0;
+      for (Token token : tokensUnboxed) {
+        int line = token.getLine();
+        if (line > lastLine) {
+          lastLine = line;
+        }
+        int channel = token.getChannel();
+        int type = token.getType();
+        if (channel == DEFAULT_CHANNEL) {
+          nclocLines.set(line);
+        }
+        if (type == BSLLexer.LINE_COMMENT) {
+          commentLines.set(line);
+        }
+      }
+
+      int[] nclocData = new int[nclocLines.cardinality()];
+      int idx = 0;
+      for (int line = nclocLines.nextSetBit(0); line >= 0; line = nclocLines.nextSetBit(line + 1)) {
+        nclocData[idx++] = line;
+      }
+      metricsTemp.setNclocData(nclocData);
+      metricsTemp.setNcloc(nclocData.length);
+      metricsTemp.setLines(lastLine);
+      metricsTemp.setComments(commentLines.cardinality());
     }
-    metricsTemp.setLines(lines);
 
-    int comments = (int) getComments()
-      .stream()
-      .map(Token::getLine)
-      .distinct()
-      .count();
-    metricsTemp.setComments(comments);
-
-    int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
+    int statements = getCachedRuleNodes(BSLParser.RULE_statement).size();
     metricsTemp.setStatements(statements);
 
     metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().fileComplexity());
