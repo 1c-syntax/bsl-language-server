@@ -395,6 +395,15 @@ public class ServerContext {
     return documentContext;
   }
 
+  /**
+   * Загрузить метаданные конфигурации 1С из {@link #configurationRoot}.
+   * <p>
+   * Если уже выполняемся на потоке CPU-пула — чтение и разбор делаем на
+   * текущем потоке, чтобы избежать starvation/deadlock'а от
+   * {@code submit().get()} в тот же пул.
+   *
+   * @return разобранная конфигурация или пустая, если корень не задан
+   */
   private CF computeConfigurationMetadata() {
     if (configurationRoot == null) {
       return (CF) MDClasses.createConfiguration();
@@ -427,6 +436,12 @@ public class ServerContext {
     return configuration;
   }
 
+  /**
+   * Регистрирует документ в индексе по {@code mdoRef}.
+   * Внутренний {@link EnumMap} оборачивается в
+   * {@link Collections#synchronizedMap(Map)}, чтобы конкурентные {@code put}
+   * для разных типов модулей одного объекта были безопасны.
+   */
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
     var mdoRef = documentContext.getMdoRef();
 

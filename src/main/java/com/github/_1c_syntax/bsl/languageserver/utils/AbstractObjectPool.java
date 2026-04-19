@@ -58,6 +58,11 @@ public abstract class AbstractObjectPool<T> {
   private final ConcurrentLinkedDeque<T> available = new ConcurrentLinkedDeque<>();
   private final AtomicInteger inUse = new AtomicInteger(0);
 
+  /**
+   * Создать новый экземпляр объекта пула, когда свободных нет.
+   *
+   * @return созданный экземпляр
+   */
   protected abstract T create();
 
   /**
@@ -66,7 +71,7 @@ public abstract class AbstractObjectPool<T> {
    * @return экземпляр пула
    */
   public T checkOut() {
-    T instance = available.pollFirst();
+    var instance = available.pollFirst();
     if (instance == null) {
       instance = create();
     }
@@ -76,22 +81,16 @@ public abstract class AbstractObjectPool<T> {
 
   /**
    * Вернуть экземпляр в пул.
-   * <p>
-   * {@code null} игнорируется — это снимает риск NPE из {@code finally}-веток
-   * вызывающего кода, где экземпляр мог не быть выдан.
    *
    * @param instance возвращаемый экземпляр
    */
   public void checkIn(T instance) {
-    if (instance == null) {
-      return;
-    }
     available.offerLast(instance);
     inUse.decrementAndGet();
   }
 
   @Override
   public String toString() {
-    return "Pool available=%d inUse=%d".formatted(available.size(), inUse.get());
+    return "Pool inUse=%d".formatted(inUse.get());
   }
 }

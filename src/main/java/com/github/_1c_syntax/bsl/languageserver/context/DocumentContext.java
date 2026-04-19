@@ -66,6 +66,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -95,6 +97,14 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
+
+  /**
+   * Сдвиг для упаковки длины контента в старшие 32 бита fingerprint'а.
+   *
+   * @see #computeContentHash(String)
+   */
+  private static final int CONTENT_LENGTH_SHIFT = 32;
+  private static final long CONTENT_HASH_MASK = 0xFFFFFFFFL;
 
   @Getter
   @EqualsAndHashCode.Include
@@ -161,7 +171,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    *
    * @see #getCachedRuleNodes(int)
    */
-  private final Map<Integer, Collection<? extends ParseTree>> ruleNodesCache = new ConcurrentHashMap<>();
+  private final Map<Integer, Collection<ParseTree>> ruleNodesCache = new ConcurrentHashMap<>();
 
   public DocumentContext(URI uri) {
     this.uri = uri;
@@ -195,9 +205,15 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return tokenizer.getTokens();
   }
 
+  /**
+   * Возвращает токены {@linkplain Token#DEFAULT_CHANNEL канала по умолчанию},
+   * то есть код без скрытых каналов (whitespace, комментарии).
+   *
+   * @return токены кода
+   */
   public List<Token> getTokensFromDefaultChannel() {
-    final List<Token> tokens = getTokens();
-    final List<Token> result = new java.util.ArrayList<>(tokens.size());
+    final var tokens = getTokens();
+    final var result = new ArrayList<Token>(tokens.size());
     for (Token token : tokens) {
       if (token.getChannel() == DEFAULT_CHANNEL) {
         result.add(token);
@@ -206,9 +222,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return result;
   }
 
+  /**
+   * Возвращает токены однострочных комментариев документа.
+   *
+   * @return токены {@code //}-комментариев
+   */
   public List<Token> getComments() {
-    final List<Token> tokens = getTokens();
-    final List<Token> result = new java.util.ArrayList<>();
+    final var tokens = getTokens();
+    final var result = new ArrayList<Token>();
     for (Token token : tokens) {
       if (token.getType() == BSLLexer.LINE_COMMENT) {
         result.add(token);
@@ -318,7 +339,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * @param ruleIndex константа {@code BSLParser.RULE_*}
    * @return неизменяемое представление коллекции узлов
    */
-  public Collection<? extends ParseTree> getCachedRuleNodes(int ruleIndex) {
+  public Collection<ParseTree> getCachedRuleNodes(int ruleIndex) {
     return ruleNodesCache.computeIfAbsent(
       ruleIndex,
       idx -> Collections.unmodifiableCollection(Trees.findAllRuleNodes(getAst(), idx))
@@ -343,12 +364,23 @@ public class DocumentContext implements Comparable<DocumentContext> {
     isComputedDataFrozen = false;
   }
 
+  /**
+   * Перестроить документ под новое содержимое.
+   * <p>
+   * Если новая версия совпадает с текущей или новый текст идентичен уже
+   * разобранному (по {@link #computeContentHash(String)} + {@link String#equals(Object)}) —
+   * перепарсинг и пересчёт {@link SymbolTree} пропускаются, обновляются только
+   * версия документа и зависимые данные.
+   *
+   * @param content новое содержимое документа
+   * @param version версия документа из протокола LSP
+   */
   protected void rebuild(String content, int version) {
     acquireLocks();
 
     try {
 
-      boolean versionMatches = version == this.version && version != 0;
+      var versionMatches = version == this.version && version != 0;
 
       if (versionMatches && (this.content != null)) {
         clearDependantData();
@@ -359,7 +391,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       // пересчёт SymbolTree, обновляем только версию и зависимые данные.
       // Хэш + длина — быстрый предфильтр, equals — гарантия от коллизий
       // (например, "Aa" и "BB" имеют одинаковый String.hashCode()).
-      long newHash = computeContentHash(content);
+      var newHash = computeContentHash(content);
       if (this.content != null
         && tokenizer != null
         && this.contentHashAndLength == newHash
@@ -394,9 +426,13 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * в младших. Не криптостойкий — нужен только для определения «текст не менялся».
    */
   private static long computeContentHash(String content) {
-    return ((long) content.length() << 32) ^ (content.hashCode() & 0xFFFFFFFFL);
+    return ((long) content.length() << CONTENT_LENGTH_SHIFT) ^ (content.hashCode() & CONTENT_HASH_MASK);
   }
 
+  /**
+   * Перестроить документ, прочитав содержимое из файла на диске.
+   * Используется при первичной загрузке проекта (CLI {@code analyze}).
+   */
   protected void rebuildFromFileSystem() {
     try {
       var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
@@ -406,6 +442,12 @@ public class DocumentContext implements Comparable<DocumentContext> {
     }
   }
 
+  /**
+   * Очистить производные данные документа (AST, токенайзер, кэши, метрики).
+   * <p>
+   * Если документ помечен {@link #freezeComputedData()} — данные о сложности,
+   * метриках и подавлении диагностик сохраняются.
+   */
   protected void clearSecondaryData() {
     acquireLocks();
 
@@ -488,11 +530,32 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return cyclomaticComplexityComputer.compute();
   }
 
+  /**
+   * Собрать сводные метрики документа: число процедур/функций, NCLOC,
+   * комментариев, операторов и метрики сложности.
+   *
+   * @return заполненный {@link MetricStorage}
+   */
   private MetricStorage computeMetrics() {
     var metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
 
-    int functions = 0;
+    fillMethodMetrics(metricsTemp);
+    fillTokenMetrics(metricsTemp);
+
+    metricsTemp.setStatements(getCachedRuleNodes(BSLParser.RULE_statement).size());
+    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().fileComplexity());
+    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().fileComplexity());
+
+    return metricsTemp;
+  }
+
+  /**
+   * Заполняет в {@code metricsTemp} число процедур и функций по символьному дереву.
+   */
+  private void fillMethodMetrics(MetricStorage metricsTemp) {
+    final var methodsUnboxed = symbolTree.getMethods();
+
+    var functions = 0;
     for (MethodSymbol m : methodsUnboxed) {
       if (m.isFunction()) {
         functions++;
@@ -500,51 +563,56 @@ public class DocumentContext implements Comparable<DocumentContext> {
     }
     metricsTemp.setFunctions(functions);
     metricsTemp.setProcedures(methodsUnboxed.size() - functions);
+  }
 
-    // One-pass обход токенов: NCLOC, comments и lines считаются за один проход.
-    final List<Token> tokensUnboxed = getTokens();
+  /**
+   * One-pass обход токенов: заполняет NCLOC, число комментариев и общее число
+   * строк в {@code metricsTemp} за один проход.
+   */
+  private void fillTokenMetrics(MetricStorage metricsTemp) {
+    final var tokensUnboxed = getTokens();
     if (tokensUnboxed.isEmpty()) {
       metricsTemp.setNclocData(new int[0]);
       metricsTemp.setNcloc(0);
       metricsTemp.setLines(0);
       metricsTemp.setComments(0);
-    } else {
-      final java.util.BitSet nclocLines = new java.util.BitSet();
-      final java.util.BitSet commentLines = new java.util.BitSet();
-      int lastLine = 0;
-      for (Token token : tokensUnboxed) {
-        int line = token.getLine();
-        if (line > lastLine) {
-          lastLine = line;
-        }
-        int channel = token.getChannel();
-        int type = token.getType();
-        if (channel == DEFAULT_CHANNEL) {
-          nclocLines.set(line);
-        }
-        if (type == BSLLexer.LINE_COMMENT) {
-          commentLines.set(line);
-        }
-      }
-
-      int[] nclocData = new int[nclocLines.cardinality()];
-      int idx = 0;
-      for (int line = nclocLines.nextSetBit(0); line >= 0; line = nclocLines.nextSetBit(line + 1)) {
-        nclocData[idx++] = line;
-      }
-      metricsTemp.setNclocData(nclocData);
-      metricsTemp.setNcloc(nclocData.length);
-      metricsTemp.setLines(lastLine);
-      metricsTemp.setComments(commentLines.cardinality());
+      return;
     }
 
-    int statements = getCachedRuleNodes(BSLParser.RULE_statement).size();
-    metricsTemp.setStatements(statements);
+    final var nclocLines = new BitSet();
+    final var commentLines = new BitSet();
+    var lastLine = 0;
+    for (Token token : tokensUnboxed) {
+      var line = token.getLine();
+      if (line > lastLine) {
+        lastLine = line;
+      }
+      if (token.getChannel() == DEFAULT_CHANNEL) {
+        nclocLines.set(line);
+      }
+      if (token.getType() == BSLLexer.LINE_COMMENT) {
+        commentLines.set(line);
+      }
+    }
 
-    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().fileComplexity());
-    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().fileComplexity());
+    metricsTemp.setNclocData(toLineArray(nclocLines));
+    metricsTemp.setNcloc(nclocLines.cardinality());
+    metricsTemp.setLines(lastLine);
+    metricsTemp.setComments(commentLines.cardinality());
+  }
 
-    return metricsTemp;
+  /**
+   * Преобразует {@link BitSet} с номерами строк в плотный {@code int[]} в
+   * возрастающем порядке.
+   */
+  private static int[] toLineArray(BitSet lines) {
+    var data = new int[lines.cardinality()];
+    var idx = 0;
+    for (var line = lines.nextSetBit(0); line >= 0; line = lines.nextSetBit(line + 1)) {
+      data[idx] = line;
+      idx++;
+    }
+    return data;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {

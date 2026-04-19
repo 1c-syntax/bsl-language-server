@@ -32,8 +32,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
+import java.util.stream.Stream;
 
 /**
  * Вычислитель диагностик для документа.
@@ -51,6 +53,11 @@ public abstract class DiagnosticComputer {
 
   private BslLsExecutors executors;
 
+  /**
+   * Сеттер для Spring DI; вызывается фреймворком на этапе инициализации.
+   *
+   * @param executors общий holder исполнителей
+   */
   @Autowired
   void setExecutors(BslLsExecutors executors) {
     this.executors = executors;
@@ -69,22 +76,27 @@ public abstract class DiagnosticComputer {
 
     var pool = executors == null ? ForkJoinPool.commonPool() : executors.getCpuExecutor();
     return pool.invoke(ForkJoinTask.adapt(
-      (java.util.concurrent.Callable<List<Diagnostic>>) () -> internalCompute(documentContext)
+      (Callable<List<Diagnostic>>) () -> internalCompute(documentContext)
     ));
   }
 
+  /**
+   * Параллельно (или последовательно для маленьких наборов) прогоняет все
+   * диагностики и возвращает плоский список найденных, отфильтрованный по
+   * подавлению из {@link DiagnosticIgnoranceComputer}.
+   */
   private List<Diagnostic> internalCompute(DocumentContext documentContext) {
-    DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
+    var diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
-    List<BSLDiagnostic> diagnostics = diagnostics(documentContext);
+    var diagnostics = diagnostics(documentContext);
     if (diagnostics.isEmpty()) {
       return List.of();
     }
 
-    boolean parallel = diagnostics.size() >= PARALLEL_DIAGNOSTICS_THRESHOLD;
+    var parallel = diagnostics.size() >= PARALLEL_DIAGNOSTICS_THRESHOLD;
     var stream = parallel ? diagnostics.parallelStream() : diagnostics.stream();
 
-    List<Diagnostic> raw = stream
+    var raw = stream
       .flatMap((BSLDiagnostic diagnostic) -> {
         try {
           return diagnostic.getDiagnostics(documentContext).stream();
@@ -94,7 +106,7 @@ public abstract class DiagnosticComputer {
             diagnostic.getInfo().getCode()
           );
           LOGGER.error(message, e);
-          return java.util.stream.Stream.empty();
+          return Stream.empty();
         }
       })
       .toList();
@@ -103,7 +115,7 @@ public abstract class DiagnosticComputer {
       return List.of();
     }
 
-    List<Diagnostic> result = new ArrayList<>(raw.size());
+    var result = new ArrayList<Diagnostic>(raw.size());
     for (Diagnostic d : raw) {
       if (!diagnosticIgnorance.diagnosticShouldBeIgnored(d)) {
         result.add(d);
@@ -112,6 +124,14 @@ public abstract class DiagnosticComputer {
     return result;
   }
 
+  /**
+   * Список диагностик, применимых к данному документу. Реализация генерируется
+   * Spring через {@link Lookup} — выбираются включённые диагностики из бина
+   * {@code diagnostics} по конфигурации.
+   *
+   * @param documentContext документ, для которого подбираются диагностики
+   * @return список диагностических правил
+   */
   @Lookup("diagnostics")
   protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
 }

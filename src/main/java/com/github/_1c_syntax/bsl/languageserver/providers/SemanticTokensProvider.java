@@ -49,9 +49,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
+import java.util.function.Supplier;
 
 /**
  * Провайдер для предоставления семантических токенов.
@@ -413,7 +415,7 @@ public class SemanticTokensProvider {
       return List.of();
     }
 
-    java.util.function.Supplier<List<SemanticTokenEntry>> task = () -> {
+    Supplier<List<SemanticTokenEntry>> task = () -> {
       var stream = suppliers.size() >= PARALLEL_SUPPLIERS_THRESHOLD
         ? suppliers.parallelStream()
         : suppliers.stream();
@@ -429,7 +431,7 @@ public class SemanticTokensProvider {
 
     var pool = executors == null ? ForkJoinPool.commonPool() : executors.getCpuExecutor();
     return pool.invoke(ForkJoinTask.adapt(
-      (java.util.concurrent.Callable<List<SemanticTokenEntry>>) task::get
+      (Callable<List<SemanticTokenEntry>>) task::get
     ));
   }
 
@@ -475,8 +477,8 @@ public class SemanticTokensProvider {
     if (array.length == 0) {
       return List.of();
     }
-    Integer[] boxed = new Integer[array.length];
-    for (int i = 0; i < array.length; i++) {
+    var boxed = new Integer[array.length];
+    for (var i = 0; i < array.length; i++) {
       boxed[i] = array[i];
     }
     return Arrays.asList(boxed);

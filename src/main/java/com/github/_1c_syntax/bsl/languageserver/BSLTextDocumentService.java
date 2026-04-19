@@ -170,6 +170,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   // Executors per document URI to serialize didChange operations and avoid race conditions
   private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
 
+  private boolean clientSupportsPullDiagnostics;
+
   /**
    * @return общий ограниченный пул для обработки запросов LSP.
    */
@@ -177,8 +179,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return bslLsExecutors.getLspExecutor();
   }
 
-  private boolean clientSupportsPullDiagnostics;
-
+  /**
+   * Корректное завершение работы: останавливает per-document воркеры
+   * {@link DocumentChangeExecutor}. Вызывается Spring через {@link PreDestroy}.
+   */
   @PreDestroy
   private void onDestroy() {
     documentExecutors.values().forEach(DocumentChangeExecutor::shutdown);
