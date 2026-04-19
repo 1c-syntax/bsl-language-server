@@ -45,41 +45,53 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Generic object pool.
+ * Lock-free пул объектов.
  *
  * @param <T> Type T of Object in the Pool
  */
 public abstract class AbstractObjectPool<T> {
 
-  private final Set<T> available = new HashSet<>();
-  private final Set<T> inUse = new HashSet<>();
+  private final ConcurrentLinkedDeque<T> available = new ConcurrentLinkedDeque<>();
+  private final AtomicInteger inUse = new AtomicInteger(0);
 
+  /**
+   * Создать новый экземпляр объекта пула, когда свободных нет.
+   *
+   * @return созданный экземпляр
+   */
   protected abstract T create();
 
   /**
-   * Checkout object from pool.
+   * Получить экземпляр из пула; при отсутствии свободного — создать новый.
+   *
+   * @return экземпляр пула
    */
-  public synchronized T checkOut() {
-    if (available.isEmpty()) {
-      available.add(create());
+  public T checkOut() {
+    var instance = available.pollFirst();
+    if (instance == null) {
+      instance = create();
     }
-    T instance = available.iterator().next();
-    available.remove(instance);
-    inUse.add(instance);
+    inUse.incrementAndGet();
     return instance;
   }
 
-  public synchronized void checkIn(T instance) {
-    inUse.remove(instance);
-    available.add(instance);
+  /**
+   * Вернуть экземпляр в пул.
+   *
+   * @param instance возвращаемый экземпляр
+   */
+  public void checkIn(T instance) {
+    available.offerLast(instance);
+    inUse.decrementAndGet();
   }
 
   @Override
-  public synchronized String toString() {
-    return "Pool available=%d inUse=%d".formatted(available.size(), inUse.size());
+  @SuppressWarnings("java:S2250") // toString вызывается только для отладки/логов, O(n) size() тут приемлемо
+  public String toString() {
+    return "Pool available=%d inUse=%d".formatted(available.size(), inUse.get());
   }
 }
