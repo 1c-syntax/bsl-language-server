@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -126,24 +125,25 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
   }
 
   private void check(int ruleID) {
-    checkTree(Trees.findAllRuleNodes(documentContext.getAst(), ruleID).stream());
+    checkTree(documentContext.getCachedRuleNodes(ruleID).stream().map(ParseTree.class::cast));
   }
 
   private void checkLValue() {
-    checkTree(Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_lValue).stream()
+    checkTree(documentContext.getCachedRuleNodes(BSLParser.RULE_lValue).stream()
       .filter(ctx -> ((BSLParser.LValueContext) ctx).IDENTIFIER() != null)
       .map(ctx -> ((BSLParser.LValueContext) ctx).IDENTIFIER()));
   }
 
   private void checkParameters() {
-    checkTree(Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_param).stream()
+    checkTree(documentContext.getCachedRuleNodes(BSLParser.RULE_param).stream()
       .filter(ctx -> ((BSLParser.ParamContext) ctx).IDENTIFIER() != null)
       .map(ctx -> ((BSLParser.ParamContext) ctx).IDENTIFIER()));
   }
 
   private void checkLabel() {
-    checkTree(Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_labelName).stream()
-      .filter(ctx -> ctx.getParent() instanceof BSLParser.GotoStatementContext));
+    checkTree(documentContext.getCachedRuleNodes(BSLParser.RULE_labelName).stream()
+      .filter(ctx -> ctx.getParent() instanceof BSLParser.GotoStatementContext)
+      .map(ParseTree.class::cast));
   }
 
   private void checkTree(Stream<ParseTree> tree) {

@@ -50,6 +50,7 @@ import lombok.Locked;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -65,11 +66,16 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -142,6 +148,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
+  /**
+   * Кэш узлов AST, собранных по {@code ruleIndex}, по всему дереву документа.
+   * Очищается вместе с AST в {@link #clearSecondaryData()}.
+   *
+   * @see #getCachedRuleNodes(int)
+   */
+  private final Map<Integer, Collection<ParseTree>> ruleNodesCache = new ConcurrentHashMap<>();
+
   public DocumentContext(URI uri) {
     this.uri = uri;
     this.fileType = computeFileType(uri);
@@ -174,14 +188,37 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return tokenizer.getTokens();
   }
 
+  /**
+   * Возвращает токены {@linkplain Token#DEFAULT_CHANNEL канала по умолчанию},
+   * то есть код без скрытых каналов (whitespace, комментарии).
+   *
+   * @return токены кода
+   */
   public List<Token> getTokensFromDefaultChannel() {
-    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).toList();
+    final var tokens = getTokens();
+    final var result = new ArrayList<Token>(tokens.size());
+    for (Token token : tokens) {
+      if (token.getChannel() == DEFAULT_CHANNEL) {
+        result.add(token);
+      }
+    }
+    return result;
   }
 
+  /**
+   * Возвращает токены однострочных комментариев документа.
+   *
+   * @return токены {@code //}-комментариев
+   */
   public List<Token> getComments() {
-    return getTokens().stream()
-      .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
-      .toList();
+    final var tokens = getTokens();
+    final var result = new ArrayList<Token>();
+    for (Token token : tokens) {
+      if (token.getType() == BSLLexer.LINE_COMMENT) {
+        result.add(token);
+      }
+    }
+    return result;
   }
 
   @Locked("computeLock")
@@ -274,6 +311,24 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return queries.getOrCompute();
   }
 
+  /**
+   * Возвращает все узлы AST с указанным {@code ruleIndex}, обходя дерево
+   * только один раз на документ. Результаты переиспользуются всеми вызывающими.
+   * <p>
+   * Используйте в диагностиках вместо
+   * {@code Trees.findAllRuleNodes(documentContext.getAst(), ruleIndex)}, если
+   * то же правило нужно нескольким независимым диагностикам.
+   *
+   * @param ruleIndex константа {@code BSLParser.RULE_*}
+   * @return неизменяемое представление коллекции узлов
+   */
+  public Collection<ParseTree> getCachedRuleNodes(int ruleIndex) {
+    return ruleNodesCache.computeIfAbsent(
+      ruleIndex,
+      idx -> Collections.unmodifiableCollection(Trees.findAllRuleNodes(getAst(), idx))
+    );
+  }
+
   public List<Diagnostic> getDiagnostics() {
     return diagnostics.getOrCompute();
   }
@@ -323,6 +378,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   }
 
+  /**
+   * Перестроить документ, прочитав содержимое из файла на диске.
+   * Используется при первичной загрузке проекта (CLI {@code analyze}).
+   */
   protected void rebuildFromFileSystem() {
     try {
       var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
@@ -332,6 +391,12 @@ public class DocumentContext implements Comparable<DocumentContext> {
     }
   }
 
+  /**
+   * Очистить производные данные документа (AST, токенайзер, кэши, метрики).
+   * <p>
+   * Если документ помечен {@link #freezeComputedData()} — данные о сложности,
+   * метриках и подавлении диагностик сохраняются.
+   */
   protected void clearSecondaryData() {
     acquireLocks();
 
@@ -341,6 +406,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       contentList.clear();
       tokenizer = null;
       queries.clear();
+      ruleNodesCache.clear();
       clearDependantData();
 
       if (!isComputedDataFrozen) {
@@ -412,42 +478,89 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return cyclomaticComplexityComputer.compute();
   }
 
+  /**
+   * Собрать сводные метрики документа: число процедур/функций, NCLOC,
+   * комментариев, операторов и метрики сложности.
+   *
+   * @return заполненный {@link MetricStorage}
+   */
   private MetricStorage computeMetrics() {
     var metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
 
-    metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
-    metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
+    fillMethodMetrics(metricsTemp);
+    fillTokenMetrics(metricsTemp);
 
-    int[] nclocData = getTokensFromDefaultChannel().stream()
-      .mapToInt(Token::getLine)
-      .distinct().toArray();
-    metricsTemp.setNclocData(nclocData);
-    metricsTemp.setNcloc(nclocData.length);
-
-    int lines;
-    final List<Token> tokensUnboxed = getTokens();
-    if (tokensUnboxed.isEmpty()) {
-      lines = 0;
-    } else {
-      lines = tokensUnboxed.getLast().getLine();
-    }
-    metricsTemp.setLines(lines);
-
-    int comments = (int) getComments()
-      .stream()
-      .map(Token::getLine)
-      .distinct()
-      .count();
-    metricsTemp.setComments(comments);
-
-    int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
-    metricsTemp.setStatements(statements);
-
+    metricsTemp.setStatements(getCachedRuleNodes(BSLParser.RULE_statement).size());
     metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().fileComplexity());
     metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().fileComplexity());
 
     return metricsTemp;
+  }
+
+  /**
+   * Заполняет в {@code metricsTemp} число процедур и функций по символьному дереву.
+   */
+  private void fillMethodMetrics(MetricStorage metricsTemp) {
+    final var methodsUnboxed = symbolTree.getMethods();
+
+    var functions = 0;
+    for (MethodSymbol m : methodsUnboxed) {
+      if (m.isFunction()) {
+        functions++;
+      }
+    }
+    metricsTemp.setFunctions(functions);
+    metricsTemp.setProcedures(methodsUnboxed.size() - functions);
+  }
+
+  /**
+   * One-pass обход токенов: заполняет NCLOC, число комментариев и общее число
+   * строк в {@code metricsTemp} за один проход.
+   */
+  private void fillTokenMetrics(MetricStorage metricsTemp) {
+    final var tokensUnboxed = getTokens();
+    if (tokensUnboxed.isEmpty()) {
+      metricsTemp.setNclocData(new int[0]);
+      metricsTemp.setNcloc(0);
+      metricsTemp.setLines(0);
+      metricsTemp.setComments(0);
+      return;
+    }
+
+    final var nclocLines = new BitSet();
+    final var commentLines = new BitSet();
+    var lastLine = 0;
+    for (Token token : tokensUnboxed) {
+      var line = token.getLine();
+      if (line > lastLine) {
+        lastLine = line;
+      }
+      if (token.getChannel() == DEFAULT_CHANNEL) {
+        nclocLines.set(line);
+      }
+      if (token.getType() == BSLLexer.LINE_COMMENT) {
+        commentLines.set(line);
+      }
+    }
+
+    metricsTemp.setNclocData(toLineArray(nclocLines));
+    metricsTemp.setNcloc(nclocLines.cardinality());
+    metricsTemp.setLines(lastLine);
+    metricsTemp.setComments(commentLines.cardinality());
+  }
+
+  /**
+   * Преобразует {@link BitSet} с номерами строк в плотный {@code int[]} в
+   * возрастающем порядке.
+   */
+  private static int[] toLineArray(BitSet lines) {
+    var data = new int[lines.cardinality()];
+    var idx = 0;
+    for (var line = lines.nextSetBit(0); line >= 0; line = lines.nextSetBit(line + 1)) {
+      data[idx] = line;
+      idx++;
+    }
+    return data;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
