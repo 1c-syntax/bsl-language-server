@@ -45,8 +45,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Lock-free пул объектов.
@@ -56,7 +57,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractObjectPool<T> {
 
   private final ConcurrentLinkedDeque<T> available = new ConcurrentLinkedDeque<>();
-  private final AtomicInteger inUse = new AtomicInteger(0);
+  private final Set<T> inUse = ConcurrentHashMap.newKeySet();
 
   /**
    * Создать новый экземпляр объекта пула, когда свободных нет.
@@ -71,12 +72,15 @@ public abstract class AbstractObjectPool<T> {
    * @return экземпляр пула
    */
   public T checkOut() {
-    var instance = available.pollFirst();
-    if (instance == null) {
-      instance = create();
+    while (true) {
+      var instance = available.pollFirst();
+      if (instance == null) {
+        instance = create();
+      }
+      if (inUse.add(instance)) {
+        return instance;
+      }
     }
-    inUse.incrementAndGet();
-    return instance;
   }
 
   /**
@@ -85,13 +89,15 @@ public abstract class AbstractObjectPool<T> {
    * @param instance возвращаемый экземпляр
    */
   public void checkIn(T instance) {
+    if (!inUse.remove(instance)) {
+      return;
+    }
     available.offerLast(instance);
-    inUse.decrementAndGet();
   }
 
   @Override
   @SuppressWarnings("java:S2250") // toString вызывается только для отладки/логов, O(n) size() тут приемлемо
   public String toString() {
-    return "Pool available=%d inUse=%d".formatted(available.size(), inUse.get());
+    return "Pool available=%d inUse=%d".formatted(available.size(), inUse.size());
   }
 }
