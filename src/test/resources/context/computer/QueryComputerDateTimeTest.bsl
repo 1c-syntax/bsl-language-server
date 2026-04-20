@@ -1,4 +1,4 @@
-Функция Тест()
+Функция Тест1()
     Запрос = "ВЫБРАТЬ РАЗРЕШЕННЫЕ
     | втТаблицаРезультат._НомерExcel_ КАК _НомерExcel_,
     | ДПВ.Ссылка
@@ -20,16 +20,34 @@
 КонецФункции
 
 Функция Тест2()
-    // String concatenation with ДАТАВРЕМЯ on same line as another string token
-    F = "" "Выбрать Поле1 Из Справочник.Контрагенты Где Поле1 = ДАТАВРЕМЯ(0001, 01, 01)"
-КонецФункции
+    // Adjacent string tokens on same line after a large line gap
+    // reproduces StringIndexOutOfBoundsException from issue
+    F = "Выбрать
+    |  Поле1 Из Справочник.Контрагенты КАК Контрагенты
 
-Функция Тест3()
-    // Adjacent strings with query content and date time
-    F = "ДАТАВРЕМЯ(0001, 01, 01)" "Выбрать * Поместить ВТ Из Справочник.Контрагенты"
-КонецФункции
 
-Функция Тест4()
-    // Test with concatenated strings forming a query
-    F = "" "Выбрать" "Валюты.Код, ДАТАВРЕМЯ(0001, 01, 01) Из Справочник.Валюты КАК Валюты"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    |Из" ""
 КонецФункции
