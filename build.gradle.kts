@@ -14,7 +14,7 @@ plugins {
     id("io.freefair.javadoc-utf-8") version "9.2.0"
     id("io.freefair.aspectj.post-compile-weaving") version "9.2.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
-    id("com.github.ben-manes.versions") version "0.53.0"
+    id("com.github.ben-manes.versions") version "0.54.0"
     id("org.springframework.boot") version "4.0.1"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "6.4.0"
