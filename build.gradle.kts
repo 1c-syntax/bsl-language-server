@@ -112,7 +112,7 @@ dependencies {
     implementation("org.aspectj:aspectjrt:1.9.25.1")
 
     // commons utils
-    implementation("commons-io:commons-io:2.21.0")
+    implementation("commons-io:commons-io:2.22.0")
     implementation("commons-beanutils:commons-beanutils:1.11.0") {
         exclude("commons-logging", "commons-logging")
     }
