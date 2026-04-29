@@ -14,11 +14,11 @@ A = ?(B = 1, True, False);
 A = ?(B = 0, False, True);
 ```
 
-Suspicious operators
+Suspicious operators (both branches are the same boolean constant, the result does not depend on the condition)
 
 ```Bsl
 A = ?(B = 1, True, True);
 ```
 ```Bsl
-A = ?(B = 0, 0, False);
+A = ?(B = 0, False, False);
 ```
