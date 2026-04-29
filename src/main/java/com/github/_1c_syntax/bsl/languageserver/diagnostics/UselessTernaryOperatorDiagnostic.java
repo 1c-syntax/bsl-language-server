@@ -68,15 +68,19 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
       if (condition != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
-      } else if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE) {
-        diagnosticStorage.addDiagnostic(ctx, DiagnosticStorage.createAdditionalData(exp.get(INDEX_CONDITION).getText()));
-      } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE) {
-        diagnosticStorage.addDiagnostic(ctx,
-          DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(INDEX_CONDITION).getText())));
-      } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX) {
-        diagnosticStorage.addDiagnostic(ctx);
+      } else if (trueBranch != SKIPPED_RULE_INDEX && falseBranch != SKIPPED_RULE_INDEX) {
+        if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE) {
+          diagnosticStorage.addDiagnostic(ctx,
+            DiagnosticStorage.createAdditionalData(exp.get(INDEX_CONDITION).getText()));
+        } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE) {
+          diagnosticStorage.addDiagnostic(ctx,
+            DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(INDEX_CONDITION).getText())));
+        } else {
+          // обе ветки - одна и та же булева константа: результат не зависит от условия
+          diagnosticStorage.addDiagnostic(ctx);
+        }
       } else {
-        // остальное - не ошибка
+        // только одна из веток - булева константа, упростить нельзя
       }
     }
 
