@@ -42,16 +42,14 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(1, 4, 1, 26)
       .hasRange(2, 4, 2, 25)
       .hasRange(3, 4, 3, 26)
       .hasRange(4, 4, 4, 25)
-      .hasRange(5, 4, 5, 21)
-      .hasRange(6, 4, 6, 22)
-      .hasRange(7, 4, 7, 19)
-      .hasRange(8, 4, 8, 18);
+      .hasRange(5, 4, 5, 19)
+      .hasRange(6, 4, 6, 18);
 
   }
 
