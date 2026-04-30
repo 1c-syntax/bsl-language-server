@@ -31,12 +31,24 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+/**
+ * Тесты диагностики {@link UselessTernaryOperatorDiagnostic}.
+ * Проверяют срабатывания на бесполезных тернарных операторах, корректность
+ * быстрых исправлений и устойчивость к некорректному синтаксису.
+ */
 class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<UselessTernaryOperatorDiagnostic> {
 
   UselessTernaryOperatorDiagnosticTest() {
     super(UselessTernaryOperatorDiagnostic.class);
   }
 
+  /**
+   * Проверяет диапазоны срабатываний диагностики на наборе бесполезных
+   * тернарных операторов в {@code UselessTernaryOperatorDiagnostic.bsl}:
+   * упрощаемые ({@code TRUE/FALSE}, {@code FALSE/TRUE}), одинаковые булевы
+   * ветки и константные условия. Тернарники, в которых булевой константой
+   * является только одна ветка, считаются валидными и в счёт не идут.
+   */
   @Test
   void test() {
 
@@ -53,6 +65,11 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
 
   }
 
+  /**
+   * Проверяет быстрые исправления для двух упрощаемых случаев:
+   * прямого ({@code ?(X, Истина, Ложь)} → {@code X}) и обратного
+   * ({@code ?(X, Ложь, Истина)} → {@code НЕ X}).
+   */
   @Test
   void testQuickFix() {
 
@@ -82,10 +99,13 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
       .hasNewText("НЕ (Б=0)");
   }
 
+  /**
+   * Проверяет, что на некорректном синтаксисе тернарного оператора
+   * (пример: {@code Return ?(table.Count() = 1, undefined, );}) диагностика
+   * не падает с {@link NullPointerException}.
+   */
   @Test
   void testMalformedTernaryOperatorDoesNotThrowNPE() {
-    // Проверяем, что на некорректном синтаксисе не падает NullPointerException
-    // Пример из issue: Return ?(table.Count() = 1, undefined, );
     var documentContext = getDocumentContext("UselessTernaryOperatorDiagnosticMalformed");
     
     assertThatCode(() -> getDiagnostics(documentContext))
