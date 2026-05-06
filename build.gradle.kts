@@ -60,7 +60,7 @@ gitProperties {
     customProperty("git.build.time", buildTime())
 }
 
-val languageToolVersion = "6.7"
+val languageToolVersion = "6.8"
 
 dependencies {
 
