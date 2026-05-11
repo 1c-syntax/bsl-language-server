@@ -258,6 +258,35 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
   }
 
   @Test
+  void testPreprocessorWrappingElsifBranches_MissingReturnInsidePreprocessor() {
+    // An elsif branch INSIDE the preprocessor block has no return — diagnostic expected.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            А = 3;
+          ИначеЕсли Условие4 Тогда
+            Возврат 4;
+          #КонецЕсли
+          Иначе
+            Возврат 5;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 12);
+  }
+
+  @Test
   void testPreprocessorWrappingElsifBranches_MultiplePreprocessorBlocks() {
     // Multiple preprocessor blocks wrapping different elsif branches — no crash, and
     // function with return+raise on all paths should produce no diagnostic.
