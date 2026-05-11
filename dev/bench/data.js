@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778522121114,
+  "lastUpdate": 1778525085661,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35123,6 +35123,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0404950580138965",
             "extra": "mean: 67.25263627370198 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "29034f78c488c5679cf330f0e75b1fc8998dbadc",
+          "message": "Merge pull request #3808 from 1c-syntax/copilot/fix-false-positive-diagnostic\n\nFix false positive metadata diagnostics on support-locked objects",
+          "timestamp": "2026-05-11T20:04:39+02:00",
+          "tree_id": "67dfceb18535bd3ba279b2e283ce31ca8043a152",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/29034f78c488c5679cf330f0e75b1fc8998dbadc"
+        },
+        "date": 1778525078542,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 66.98629037539165,
+            "unit": "sec",
+            "range": "stddev: 0.5999219006156556",
+            "extra": "mean: 66.98629037539165 sec\nrounds: 3"
           }
         ]
       }
