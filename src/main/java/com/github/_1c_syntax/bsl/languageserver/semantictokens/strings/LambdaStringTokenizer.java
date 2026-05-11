@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
@@ -57,6 +58,7 @@ import java.util.regex.Pattern;
  * Экземпляр создаётся на каждый вызов и не является Spring-компонентом.
  * Работает только для файлов OneScript (.os).
  */
+@Slf4j
 public class LambdaStringTokenizer {
 
   private static final Set<Integer> STRING_TYPES = Set.of(
@@ -316,7 +318,11 @@ public class LambdaStringTokenizer {
         .filter(entry -> entry.line() >= firstBodyLine && entry.line() <= lastBodyLine)
         .toList();
     } finally {
-      serverContext.removeDocument(virtualUri);
+      try {
+        serverContext.removeDocument(virtualUri);
+      } catch (IllegalStateException e) {
+        LOGGER.warn("Could not remove virtual lambda document {}: {}", virtualUri, e.getMessage());
+      }
     }
   }
 

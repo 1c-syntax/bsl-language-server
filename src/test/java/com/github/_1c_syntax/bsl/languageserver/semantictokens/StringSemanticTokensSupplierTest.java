@@ -1223,4 +1223,102 @@ class StringSemanticTokensSupplierTest {
       new ExpectedToken(1, 42, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Массив")
     ));
   }
+
+  // ==================== Lambda Edge Cases ====================
+
+  @Test
+  void testLambdaEmptyBodyDoesNotCrash() {
+    // given — arrow present but body is empty
+    String os = """
+      Процедура Тест()
+        Р = "Х -> ";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — parameter and arrow are highlighted; no crash; no body tokens
+    assertThat(decoded).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "Х"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->")
+    ));
+  }
+
+  @Test
+  void testLambdaWhitespaceOnlyBodyDoesNotCrash() {
+    // given — arrow present but body contains only whitespace
+    String os = """
+      Процедура Тест()
+        Р = "Х ->   ";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — parameter and arrow are highlighted; no crash; no body tokens
+    assertThat(decoded).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "Х"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->")
+    ));
+  }
+
+  @Test
+  void testGreaterThanMinusIsNotAnArrow() {
+    // given — "> -" looks similar to "->" but is NOT a lambda arrow
+    String os = """
+      Процедура Тест()
+        Р = "Х > -";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — plain string token, no lambda sub-tokens
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(1, 6, 7, SemanticTokenTypes.String, "\"Х > -\"")
+    ));
+  }
+
+  @Test
+  void testMinusSpaceGreaterThanIsNotAnArrow() {
+    // given — "- >" (with a space between minus and greater) is NOT a lambda arrow
+    String os = """
+      Процедура Тест()
+        Р = "Х - >";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — plain string token, no lambda sub-tokens
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(1, 6, 7, SemanticTokenTypes.String, "\"Х - >\"")
+    ));
+  }
+
+  @Test
+  void testLambdaMultipleArrowsUsesFirstArrow() {
+    // given — two "->" in the same string; only the first is the lambda arrow
+    String os = """
+      Процедура Тест()
+        Р = "А -> Б -> В";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — А is the lambda parameter; first -> is the lambda arrow
+    assertThat(decoded).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "А"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->")
+    ));
+  }
 }
