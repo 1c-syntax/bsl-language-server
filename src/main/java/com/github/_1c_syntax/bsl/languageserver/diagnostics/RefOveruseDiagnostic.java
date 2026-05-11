@@ -295,7 +295,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     if (refIndex > LAST_INDEX_OF_TABLE_DOT_REF) {
       return true;
     }
-    var tabName = children.get(0).getText();
+    var tabName = children.getFirst().getText();
     return dataSourceWithTabularSectionNames.getOrDefault(tabName, Collections.emptyList()).isEmpty();
   }
 
@@ -312,7 +312,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static List<ParseTree> extractFirstMetadataTypeName(SDBLParser.ColumnContext ctx) {
     final var mdoName = ctx.mdoName;
-    final var children = ctx.children;
+    final var children = ctx.getChildren();
     if (mdoName == null || children.size() < COUNT_OF_TABLE_DOT_REF_DOT_REF
       || !METADATA_TYPES.contains(mdoName.getStart().getType())) {
       return children;

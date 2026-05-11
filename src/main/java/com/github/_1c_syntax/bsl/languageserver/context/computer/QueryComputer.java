@@ -98,7 +98,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var startLine = 0;
     var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
-      startLine = ctx.getTokens().get(0).getLine();
+      startLine = ctx.getTokens().getFirst().getLine();
       startEmptyLines = "\n".repeat(startLine - 1);
     }
 
@@ -109,6 +109,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var partString = "";
     var strings = new StringJoiner("\n");
     var stringsBuff = new StringJoiner("\n");
+    var lineStartLine = startLine;
     for (Token token : ctx.getTokens()) {
 
       // бывает несколько токенов строки в одной строе файла
@@ -120,13 +121,14 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
       // если новый токен строки находится на той же строке файла, что и предыдущий, то добавляем его к ней
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
-        var newString = getString(startLine, token);
+        var newString = getString(lineStartLine, token);
         if (newString.length() > partString.length()) {
           partString = newString.substring(partString.length());
         } else {
           partString = "";
         }
       } else {
+        lineStartLine = startLine;
         partString = getString(startLine, token);
       }
 

@@ -84,7 +84,7 @@ class ReferencesProviderTest {
     // then
     assertThat(references).hasSize(1);
 
-    var reference = references.get(0);
+    var reference = references.getFirst();
 
     assertThat(reference.getUri()).isEqualTo(documentContext.getUri().toString());
     assertThat(reference.getRange()).isEqualTo(Ranges.create(4, 0, 10));

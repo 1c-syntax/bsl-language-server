@@ -31,40 +31,55 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+/**
+ * Тесты диагностики {@link UselessTernaryOperatorDiagnostic}.
+ * Проверяют срабатывания на бесполезных тернарных операторах, корректность
+ * быстрых исправлений и устойчивость к некорректному синтаксису.
+ */
 class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<UselessTernaryOperatorDiagnostic> {
 
   UselessTernaryOperatorDiagnosticTest() {
     super(UselessTernaryOperatorDiagnostic.class);
   }
 
+  /**
+   * Проверяет диапазоны срабатываний диагностики на наборе бесполезных
+   * тернарных операторов в {@code UselessTernaryOperatorDiagnostic.bsl}:
+   * упрощаемые ({@code TRUE/FALSE}, {@code FALSE/TRUE}), одинаковые булевы
+   * ветки и константные условия. Тернарники, в которых булевой константой
+   * является только одна ветка, считаются валидными и в счёт не идут.
+   */
   @Test
   void test() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(1, 4, 1, 26)
       .hasRange(2, 4, 2, 25)
       .hasRange(3, 4, 3, 26)
       .hasRange(4, 4, 4, 25)
-      .hasRange(5, 4, 5, 21)
-      .hasRange(6, 4, 6, 22)
-      .hasRange(7, 4, 7, 19)
-      .hasRange(8, 4, 8, 18);
+      .hasRange(5, 4, 5, 19)
+      .hasRange(6, 4, 6, 18);
 
   }
 
+  /**
+   * Проверяет быстрые исправления для двух упрощаемых случаев:
+   * прямого ({@code ?(X, Истина, Ложь)} → {@code X}) и обратного
+   * ({@code ?(X, Ложь, Истина)} → {@code НЕ X}).
+   */
   @Test
   void testQuickFix() {
 
     final DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    final Diagnostic directDiagnostic = diagnostics.get(0);
+    final Diagnostic directDiagnostic = diagnostics.getFirst();
     List<CodeAction> directQuickFixes = getQuickFixes(directDiagnostic);
     assertThat(directQuickFixes).hasSize(1);
-    final CodeAction directQuickFix = directQuickFixes.get(0);
+    final CodeAction directQuickFix = directQuickFixes.getFirst();
     assertThat(directQuickFix)
       .of(diagnosticInstance)
       .in(documentContext)
@@ -75,7 +90,7 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
     final Diagnostic reversDiagnostic = diagnostics.get(1);
     List<CodeAction> reversQuickFixes = getQuickFixes(reversDiagnostic);
     assertThat(reversQuickFixes).hasSize(1);
-    final CodeAction reversQuickFix = reversQuickFixes.get(0);
+    final CodeAction reversQuickFix = reversQuickFixes.getFirst();
     assertThat(reversQuickFix)
       .of(diagnosticInstance)
       .in(documentContext)
@@ -84,10 +99,13 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
       .hasNewText("НЕ (Б=0)");
   }
 
+  /**
+   * Проверяет, что на некорректном синтаксисе тернарного оператора
+   * (пример: {@code Return ?(table.Count() = 1, undefined, );}) диагностика
+   * не падает с {@link NullPointerException}.
+   */
   @Test
   void testMalformedTernaryOperatorDoesNotThrowNPE() {
-    // Проверяем, что на некорректном синтаксисе не падает NullPointerException
-    // Пример из issue: Return ?(table.Count() = 1, undefined, );
     var documentContext = getDocumentContext("UselessTernaryOperatorDiagnosticMalformed");
     
     assertThatCode(() -> getDiagnostics(documentContext))

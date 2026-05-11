@@ -288,7 +288,7 @@ public class ModuleReference {
       .map(BSLParser.DoCallContext::callParamList)
       .map(BSLParser.CallParamListContext::callParam)
       .filter(params -> !params.isEmpty())
-      .map(params -> params.get(0))
+      .map(List::getFirst)
       .map(BSLParser.CallParamContext::getText)
       .map(Strings::trimQuotes);
   }

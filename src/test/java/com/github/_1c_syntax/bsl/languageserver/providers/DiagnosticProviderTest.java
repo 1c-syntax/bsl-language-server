@@ -127,7 +127,7 @@ class DiagnosticProviderTest {
     assertThat(fullReport.getItems()).hasSizeGreaterThan(0);
     
     // Verify diagnostics have required fields
-    Diagnostic firstDiagnostic = fullReport.getItems().get(0);
+    Diagnostic firstDiagnostic = fullReport.getItems().getFirst();
     assertThat(firstDiagnostic.getRange()).isNotNull();
     assertThat(firstDiagnostic.getMessage()).isNotNull();
     assertThat(firstDiagnostic.getSource()).isEqualTo(DiagnosticProvider.SOURCE);

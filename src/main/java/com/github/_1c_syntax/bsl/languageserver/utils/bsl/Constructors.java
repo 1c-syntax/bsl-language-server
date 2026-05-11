@@ -66,7 +66,7 @@ public class Constructors {
     if (list.isEmpty()) {
       return Optional.empty();
     } else {
-      return Optional.of(list.get(0));
+      return Optional.of(list.getFirst());
     }
   }
 }

@@ -152,7 +152,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
       .map(BSLParser.CallParamContext::expression)
       .map(BSLParser.ExpressionContext::member)
       .filter(memberContexts -> memberContexts.size() == 1)
-      .map(memberContexts -> memberContexts.get(0))
+      .map(List::getFirst)
       .map(BSLParser.MemberContext::complexIdentifier)
       .filter(identifier -> identifier.IDENTIFIER() != null);
     if (complexIdentifier.isEmpty()) {

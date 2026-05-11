@@ -58,7 +58,7 @@ class ModuleReferenceTest {
 
     assertThat(assignments).hasSize(1);
 
-    var expression = assignments.get(0).expression();
+    var expression = assignments.getFirst().expression();
     assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isTrue();
 
     var moduleName = ModuleReference.extractCommonModuleName(expression, DEFAULT_ACCESSORS);
@@ -84,7 +84,7 @@ class ModuleReferenceTest {
 
     assertThat(assignments).hasSize(1);
 
-    var expression = assignments.get(0).expression();
+    var expression = assignments.getFirst().expression();
 
     // With default accessors - should not match
     assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isFalse();

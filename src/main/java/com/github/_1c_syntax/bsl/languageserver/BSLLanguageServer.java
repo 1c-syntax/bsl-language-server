@@ -146,7 +146,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
       return;
     }
 
-    var rootUri = workspaceFolders.get(0).getUri();
+    var rootUri = workspaceFolders.getFirst().getUri();
     Path rootPath;
     try {
       rootPath = new File(new URI(rootUri).getPath()).getCanonicalFile().toPath();

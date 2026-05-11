@@ -199,4 +199,5 @@ class SemanticTokensOptionsTest {
     assertThat(parsed.moduleMethodPairs().get("module"))
       .contains("submodule.method");
   }
+
 }

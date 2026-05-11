@@ -88,7 +88,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   private static int getEofTokenLine(List<Token> tokens) {
-    return tokens.get(tokens.size() - 1).getLine();
+    return tokens.getLast().getLine();
   }
 
   private void addIssue(int startEmptyLine, int lastEmptyLine) {

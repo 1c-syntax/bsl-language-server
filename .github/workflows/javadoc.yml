@@ -27,7 +27,7 @@ jobs:
           result=$(.github/scripts/check-pr-exists.sh "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.repository }}")
           echo "has_pr=$result" >> $GITHUB_OUTPUT
 
-  build:
+  build-javadoc:
     needs: [gatekeeper, check-pr-exists]
     if: needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     runs-on: ubuntu-latest

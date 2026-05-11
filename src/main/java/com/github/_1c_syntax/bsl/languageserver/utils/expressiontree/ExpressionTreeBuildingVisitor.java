@@ -92,7 +92,8 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     var nestingCount = operatorsInFly.size();
     recursionLevel++;
 
-    if (Trees.nodeContainsErrors(ctx) || (ctx.getChildCount() == 0 || ctx.children.stream().anyMatch(ErrorNode.class::isInstance))) {
+    if (Trees.nodeContainsErrors(ctx)
+      || (ctx.getChildCount() == 0 || ctx.getChildren().stream().anyMatch(ErrorNode.class::isInstance))) {
       var errorExpressionNode = new ErrorExpressionNode(ctx);
       if (recursionLevel > 0) {
         operands.push(errorExpressionNode);
@@ -108,14 +109,13 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     if (count > 1) {
       for (var i = 1; i < count; ++i) {
         var child = ctx.getChild(i);
-        if (child instanceof BSLParser.OperationContext operationContext) {
-          visitOperation(operationContext);
-        } else if (child instanceof BSLParser.MemberContext memberContext) {
-          visitMember(memberContext);
-        } else if (child instanceof BSLParser.PreprocessorContext) {
-          // просто пропускаем
-        } else {
-          throw new IllegalStateException();
+        switch (child) {
+          case BSLParser.OperationContext operationContext -> visitOperation(operationContext);
+          case BSLParser.MemberContext memberContext -> visitMember(memberContext);
+          case BSLParser.PreprocessorContext preprocessorContext -> {
+            // просто пропускаем
+          }
+          case null, default -> throw new IllegalStateException();
         }
       }
     }
@@ -150,7 +150,9 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
 
     // В случае ошибки парсинга member может быть пустой.
-    if (Trees.nodeContainsErrors(ctx) || ctx.getChildCount() == 0 || ctx.children.stream().anyMatch(ErrorNode.class::isInstance)) {
+    if (Trees.nodeContainsErrors(ctx)
+      || ctx.getChildCount() == 0
+      || ctx.getChildren().stream().anyMatch(ErrorNode.class::isInstance)) {
       operands.push(new ErrorExpressionNode(ctx));
       return ctx;
     }
@@ -168,7 +170,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
 
     if (unaryModifier != null) {
       visitUnaryModifier(unaryModifier);
-      childIndex = ctx.children.indexOf(unaryModifier) + 1;
+      childIndex = ctx.getChildren().indexOf(unaryModifier) + 1;
     }
 
     if (ctx.waitExpression() != null) {
@@ -318,7 +320,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     if (ctx.IDENTIFIER() != null) {
       operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
     } else {
-      var childVariant = ctx.children.get(0);
+      var childVariant = ctx.getChildren().getFirst();
       childVariant.accept(this);
     }
 
@@ -362,7 +364,7 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
     ConstructorCallNode callNode;
     if (typeName == null) {
       // function style
-      var typeNameArg = args.get(0);
+      var typeNameArg = args.getFirst();
       if (typeNameArg.expression() == null) {
         operands.push(new ErrorExpressionNode(ctx));
         return ctx;

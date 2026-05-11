@@ -33,6 +33,8 @@ import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
@@ -769,6 +771,554 @@ class StringSemanticTokensSupplierTest {
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(1, 73, 2, SemanticTokenTypes.Parameter, "%1"),
       new ExpectedToken(1, 86, 2, SemanticTokenTypes.Parameter, "%2")
+    ));
+  }
+
+  // ==================== Lambda String Tests (OS files only) ====================
+
+  @Test
+  void testBslFileReturnsNoLambdaTokens() {
+    // given - BSL file should not produce lambda tokens even if string contains ->
+    String bsl = """
+      Процедура Тест()
+        Р = "А -> Возврат А > 5";
+      КонецПроцедуры
+      """;
+
+    // when - BSL context (default)
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - just a plain string token, no lambda sub-tokens
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(1, 6, 20, SemanticTokenTypes.String, "\"А -> Возврат А > 5\"")
+    ));
+  }
+
+  @Test
+  void testLambdaSimpleExpression() {
+    // given - OS file with lambda in any string containing ->
+    String os = """
+      Процедура Тест()
+        Р = "А -> Возврат А > 5";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - param А, arrow ->, and body tokens
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "А"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 12, 7, SemanticTokenTypes.Keyword, "Возврат"),
+      new ExpectedToken(1, 22, 1, SemanticTokenTypes.Operator, ">"),
+      new ExpectedToken(1, 24, 1, SemanticTokenTypes.Number, "5")
+    ));
+  }
+
+  @Test
+  void testLambdaDetectedInAnyString() {
+    // given - Lambda not in Лямбда.Выражение, but in arbitrary function
+    String os = """
+      Процедура Тест()
+        Р = МояФункция("А -> Возврат А + 1");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - should detect lambda by -> regardless of method name
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 18, 1, SemanticTokenTypes.Parameter, "А"),
+      new ExpectedToken(1, 20, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 23, 7, SemanticTokenTypes.Keyword, "Возврат"),
+      new ExpectedToken(1, 33, 1, SemanticTokenTypes.Operator, "+"),
+      new ExpectedToken(1, 35, 1, SemanticTokenTypes.Number, "1")
+    ));
+  }
+
+  @Test
+  void testLambdaRegularStringWithoutArrowNotAffected() {
+    // given - OS file, string without -> should be plain STRING
+    String os = """
+      Процедура Тест()
+        Текст = "Возврат Истина";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - plain string, no lambda processing
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(1, 10, 16, SemanticTokenTypes.String, "\"Возврат Истина\"")
+    ));
+  }
+
+  @Test
+  void testLambdaWithBooleanLiteral() {
+    // given
+    String os = """
+      Процедура Тест()
+        Р = "Х -> Истина";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "Х"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 12, 6, SemanticTokenTypes.Keyword, "Истина")
+    ));
+  }
+
+  @Test
+  void testLambdaWithIfKeyword() {
+    // given
+    String os = """
+      Процедура Тест()
+        Р = "Х -> Если Х > 0 Тогда Возврат Х КонецЕсли";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "Х"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 12, 4, SemanticTokenTypes.Keyword, "Если"),
+      new ExpectedToken(1, 19, 1, SemanticTokenTypes.Operator, ">"),
+      new ExpectedToken(1, 21, 1, SemanticTokenTypes.Number, "0"),
+      new ExpectedToken(1, 23, 5, SemanticTokenTypes.Keyword, "Тогда"),
+      new ExpectedToken(1, 29, 7, SemanticTokenTypes.Keyword, "Возврат"),
+      new ExpectedToken(1, 39, 9, SemanticTokenTypes.Keyword, "КонецЕсли")
+    ));
+  }
+
+  @Test
+  void testLambdaScreenshotExample() {
+    // given - realistic lambda usage
+    String os = """
+      Если Элемент.Фильтровать("Элемент -> Элемент.Задержка() <= 0 ").СодержитЗначение() Тогда
+        Результат = Очередь.Взять();
+      КонецЕсли;
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - param, arrow, operators and number inside lambda body should be highlighted
+    assertThat(decoded).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 26, 7, SemanticTokenTypes.Parameter, "Элемент"),
+      new ExpectedToken(0, 34, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(0, 44, 1, SemanticTokenTypes.Operator, "."),
+      new ExpectedToken(0, 53, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(0, 54, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(0, 56, 2, SemanticTokenTypes.Operator, "<="),
+      new ExpectedToken(0, 59, 1, SemanticTokenTypes.Number, "0")
+    ));
+  }
+
+  @Test
+  void testLambdaMultilineString() {
+    // given - Multiline string literal with lambda
+    String os = """
+      Процедура Тест()
+        Р = "Х ->
+        | Возврат Х + 1";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - param and arrow on first line, body tokens on the second line
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "Х"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(2, 4, 7, SemanticTokenTypes.Keyword, "Возврат"),
+      new ExpectedToken(2, 14, 1, SemanticTokenTypes.Operator, "+"),
+      new ExpectedToken(2, 16, 1, SemanticTokenTypes.Number, "1")
+    ));
+  }
+
+  @Test
+  void testLambdaMultipleParameters() {
+    // given - lambda with multiple parameters in parentheses
+    String os = """
+      Процедура Тест()
+        Р = "(А, Б) -> А + Б";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - parens, params, commas, arrow, and body operators
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 8, 1, SemanticTokenTypes.Parameter, "А"),
+      new ExpectedToken(1, 9, 1, SemanticTokenTypes.Operator, ","),
+      new ExpectedToken(1, 11, 1, SemanticTokenTypes.Parameter, "Б"),
+      new ExpectedToken(1, 12, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 14, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 19, 1, SemanticTokenTypes.Operator, "+")
+    ));
+  }
+
+  @Test
+  void testLambdaParameterReferencesHighlighted() {
+    // given - lambda with parameters used in body
+    String os = """
+      Процедура Тест()
+        Р = "(Элемент) -> Элемент + 1";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - param in header, arrow, param reference in body, operator, number
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 8, 7, SemanticTokenTypes.Parameter, "Элемент"),
+      new ExpectedToken(1, 15, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 17, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 20, 7, SemanticTokenTypes.Parameter, "Элемент (ref)"),
+      new ExpectedToken(1, 28, 1, SemanticTokenTypes.Operator, "+"),
+      new ExpectedToken(1, 30, 1, SemanticTokenTypes.Number, "1")
+    ));
+  }
+
+  @Test
+  void testLambdaWithAnnotations() {
+    // given - lambda with annotations before parameters
+    String os = """
+      Процедура Тест()
+        Р = "&Набор &Завязь(""Имя"", Тип = ""Значение"") () -> 1";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - annotations, annotation params, escape quotes, lambda parens, arrow, body
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Decorator, "&"),
+      new ExpectedToken(1, 8, 5, SemanticTokenTypes.Decorator, "Набор"),
+      new ExpectedToken(1, 14, 1, SemanticTokenTypes.Decorator, "&"),
+      new ExpectedToken(1, 15, 6, SemanticTokenTypes.Decorator, "Завязь"),
+      new ExpectedToken(1, 21, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 22, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Имя"),
+      new ExpectedToken(1, 27, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Имя"),
+      new ExpectedToken(1, 29, 1, SemanticTokenTypes.Operator, ","),
+      new ExpectedToken(1, 31, 3, SemanticTokenTypes.Parameter, "Тип"),
+      new ExpectedToken(1, 35, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(1, 37, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Значение"),
+      new ExpectedToken(1, 47, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Значение"),
+      new ExpectedToken(1, 49, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 51, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(1, 52, 1, SemanticTokenTypes.Operator, ")"),
+      new ExpectedToken(1, 54, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 57, 1, SemanticTokenTypes.Number, "1")
+    ));
+  }
+
+  @Test
+  void testStrTemplatePlaceholdersInLambdaParams() {
+    // given — StrTemplate wrapping a lambda: %1 in params should highlight as Parameter
+    String os = """
+      Процедура Тест()
+        Поделка.ДобавитьЗавязь(СтрШаблон(
+          "&Завязь(""%1"", Тип = ""%1"") () -> Новый %1",
+          ТестовыйНабор
+        ));
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — %1 in params (left of ->) highlighted as Parameter
+    //        %1 in body (right of ->) tokenized by BSL lexer (% + 1)
+    helper.assertContainsTokens(decoded, List.of(
+      // annotation
+      new ExpectedToken(2, 5, 1, SemanticTokenTypes.Decorator, "&"),
+      new ExpectedToken(2, 6, 6, SemanticTokenTypes.Decorator, "Завязь"),
+      new ExpectedToken(2, 12, 1, SemanticTokenTypes.Operator, "("),
+      // escape quotes around first %1
+      new ExpectedToken(2, 13, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
+      // %1 — StrTemplate placeholder in params
+      new ExpectedToken(2, 15, 2, SemanticTokenTypes.Parameter, "%1 in params"),
+      new ExpectedToken(2, 17, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing"),
+      new ExpectedToken(2, 19, 1, SemanticTokenTypes.Operator, ","),
+      // Тип = ""%1""
+      new ExpectedToken(2, 21, 3, SemanticTokenTypes.Parameter, "Тип"),
+      new ExpectedToken(2, 25, 1, SemanticTokenTypes.Operator, "="),
+      new ExpectedToken(2, 27, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
+      new ExpectedToken(2, 29, 2, SemanticTokenTypes.Parameter, "%1 in params #2"),
+      new ExpectedToken(2, 31, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing"),
+      new ExpectedToken(2, 33, 1, SemanticTokenTypes.Operator, ")"),
+      // ()
+      new ExpectedToken(2, 35, 1, SemanticTokenTypes.Operator, "("),
+      new ExpectedToken(2, 36, 1, SemanticTokenTypes.Operator, ")"),
+      // ->
+      new ExpectedToken(2, 38, 2, SemanticTokenTypes.Operator, "->"),
+      // body: Новый keyword and %1 as StrTemplate placeholder
+      new ExpectedToken(2, 41, 5, SemanticTokenTypes.Keyword, "Новый"),
+      new ExpectedToken(2, 47, 2, SemanticTokenTypes.Parameter, "%1 in body")
+    ));
+  }
+
+  @Test
+  void testNStrInsideLambda() {
+    // given — НСтр wrapping a lambda string with ->
+    // Lambda detection wins, but NStr context is passed to lambda processor
+    // so language keys should still be highlighted
+    String os = """
+      Процедура Тест()
+        Р = НСтр("ru -> текст");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — "ru" highlighted as lambda parameter (NStr context passed through
+    // but findLanguageKeyPositions doesn't match because 'ru ' lacks '= ...' format)
+    // Arrow present
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 12, 2, SemanticTokenTypes.Parameter, "ru lambda param"),
+      new ExpectedToken(1, 15, 2, SemanticTokenTypes.Operator, "->")
+    ));
+  }
+
+  @Test
+  void testStrTemplateVariableWithLambda() {
+    // given — StrTemplate with lambda string assigned to variable first
+    String os = """
+      Процедура Тест()
+        Шаблон = "Параметр -> Новый %1";
+        Р = СтрШаблон(Шаблон, "Массив");
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — %1 should be highlighted as Parameter (StrTemplate via variable)
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 12, 8, SemanticTokenTypes.Parameter, "Параметр (lambda param)"),
+      new ExpectedToken(1, 21, 2, SemanticTokenTypes.Operator, "-> (lambda arrow)"),
+      new ExpectedToken(1, 30, 2, SemanticTokenTypes.Parameter, "%1 placeholder")
+    ));
+  }
+
+  @Test
+  void testNestedLambdaHighlighting() {
+    // given — multiline outer lambda with inline inner lambda ("" Параметр -> ..."")
+    // and multiline inner lambda (""\n|...\n|"")
+    String os = """
+        Процедура Тест()
+          Р = "Результат, Настройка ->
+          |
+          |  Результат.Слить(
+          |    Настройка.Ключ,
+          |    Настройка.Значение,
+          |    "" Параметр -> Параметр + 1"",
+          |    ""
+          |    |Старое, Новое ->
+          |    |  Если ТипЗнч(Старое) = Тип(""\""МножествоСоответствие""\"") Тогда
+          |    |    Старое.ДобавитьВсе(Новое);
+          |    |  КонецЕсли;
+          |    |
+          |    |  Возврат Старое;
+          |    |""
+          |  );
+          |
+          |  Возврат Результат;
+          |";
+        КонецПроцедуры
+        """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — outer lambda params
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 9, SemanticTokenTypes.Parameter, "Результат"),
+      new ExpectedToken(1, 18, 9, SemanticTokenTypes.Parameter, "Настройка"),
+      new ExpectedToken(1, 28, 2, SemanticTokenTypes.Operator, "outer ->")
+    ));
+
+    // inline inner lambda on line 6: "" Параметр -> Параметр + 1""
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(6, 10, 8, SemanticTokenTypes.Parameter, "Параметр (inline inner param)"),
+      new ExpectedToken(6, 19, 2, SemanticTokenTypes.Operator, "-> (inline inner arrow)"),
+      new ExpectedToken(6, 33, 1, SemanticTokenTypes.Number, "1 (inline inner body)")
+    ));
+
+    // multiline inner lambda on lines 8+: Старое, Новое ->
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(8, 8, 6, SemanticTokenTypes.Parameter, "Старое (nested param)"),
+      new ExpectedToken(8, 16, 5, SemanticTokenTypes.Parameter, "Новое (nested param)"),
+      new ExpectedToken(8, 22, 2, SemanticTokenTypes.Operator, "-> (nested arrow)"),
+      new ExpectedToken(9, 10, 4, SemanticTokenTypes.Keyword, "Если (nested body keyword)")
+    ));
+
+    // escape quotes: opening "" on line 7, closing |"" on line 14
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(7, 7, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "opening \"\" of nested multiline lambda"),
+      new ExpectedToken(14, 8, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "closing |\"\" of nested multiline lambda")
+    ));
+  }
+
+  @Test
+  void testEscapedDoubleQuotesHighlighting() {
+    // given — lambda with "" escape sequences in body
+    String os = """
+        Процедура Тест()
+          Р = "Параметр -> Тип(""Строка"")";
+        КонецПроцедуры
+        """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — "" before and after "Строка" should be stringEscape
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 8, SemanticTokenTypes.Parameter, "Параметр"),
+      new ExpectedToken(1, 16, 2, SemanticTokenTypes.Operator, "->"),
+      new ExpectedToken(1, 23, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening"),
+      new ExpectedToken(1, 31, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing")
+    ));
+  }
+
+  @Test
+  void testEscapedDoubleQuotesInParamsAndBody() {
+    // given — "" in annotation params (left of ->) and in body (right of ->)
+    String os = """
+        Процедура Тест()
+          Р = "&Завязь(""Имя"") () -> Тип(""Массив"")";
+        КонецПроцедуры
+        """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — all "" pairs should be stringEscape
+    helper.assertContainsTokens(decoded, List.of(
+      // "" around "Имя" in annotation params (left of ->)
+      new ExpectedToken(1, 15, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Имя"),
+      new ExpectedToken(1, 20, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Имя"),
+      // "" around "Массив" in body (right of ->)
+      new ExpectedToken(1, 34, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" opening Массив"),
+      new ExpectedToken(1, 42, 2, CustomSemanticTokenTypes.STRING_ESCAPE, "\"\" closing Массив")
+    ));
+  }
+
+  // ==================== Lambda Edge Cases ====================
+
+  @Test
+  void testLambdaEmptyBodyDoesNotCrash() {
+    // given — arrow present but body is empty
+    String os = """
+      Процедура Тест()
+        Р = "Х -> ";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — parameter and arrow are highlighted; no crash; no body tokens
+    assertThat(decoded).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "Х"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->")
+    ));
+  }
+
+  @Test
+  void testLambdaWhitespaceOnlyBodyDoesNotCrash() {
+    // given — arrow present but body contains only whitespace
+    String os = """
+      Процедура Тест()
+        Р = "Х ->   ";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — parameter and arrow are highlighted; no crash; no body tokens
+    assertThat(decoded).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "Х"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->")
+    ));
+  }
+
+  @Test
+  void testGreaterThanMinusIsNotAnArrow() {
+    // given — "> -" looks similar to "->" but is NOT a lambda arrow
+    String os = """
+      Процедура Тест()
+        Р = "Х > -";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — plain string token, no lambda sub-tokens
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(1, 6, 7, SemanticTokenTypes.String, "\"Х > -\"")
+    ));
+  }
+
+  @Test
+  void testMinusSpaceGreaterThanIsNotAnArrow() {
+    // given — "- >" (with a space between minus and greater) is NOT a lambda arrow
+    String os = """
+      Процедура Тест()
+        Р = "Х - >";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — plain string token, no lambda sub-tokens
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(1, 6, 7, SemanticTokenTypes.String, "\"Х - >\"")
+    ));
+  }
+
+  @Test
+  void testLambdaMultipleArrowsUsesFirstArrow() {
+    // given — two "->" in the same string; only the first is the lambda arrow
+    String os = """
+      Процедура Тест()
+        Р = "А -> Б -> В";
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then — А is the lambda parameter; first -> is the lambda arrow
+    assertThat(decoded).isNotEmpty();
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 7, 1, SemanticTokenTypes.Parameter, "А"),
+      new ExpectedToken(1, 9, 2, SemanticTokenTypes.Operator, "->")
     ));
   }
 }

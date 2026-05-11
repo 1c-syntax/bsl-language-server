@@ -85,7 +85,7 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
 
     var parameters = maybeDoCall
       .map(BSLParser.DoCallContext::callParamList)
-      .map(callParamListContext -> callParamListContext.children)
+      .map(ParserRuleContext::getChildren)
       .orElse(Collections.emptyList())
       .stream()
       .filter(Predicate.not(TerminalNode.class::isInstance))
@@ -96,12 +96,12 @@ public class ExtractStructureConstructorSupplier implements CodeActionSupplier {
       return Collections.emptyList();
     }
 
-    var firstParam = parameters.get(0);
+    var firstParam = parameters.getFirst();
     if (firstParam.getTokens().isEmpty()) {
       return Collections.emptyList();
     }
 
-    var firstToken = firstParam.getTokens().get(0);
+    var firstToken = firstParam.getTokens().getFirst();
     if (firstToken.getType() != BSLLexer.STRING) {
       return Collections.emptyList();
     }

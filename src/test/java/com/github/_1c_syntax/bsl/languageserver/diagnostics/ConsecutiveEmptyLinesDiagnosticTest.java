@@ -301,7 +301,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
     assertThat(quickFixes).hasSize(1);
 
-    final CodeAction quickFix = quickFixes.get(0);
+    final CodeAction quickFix = quickFixes.getFirst();
 
     if (haveFix) {
       assertThat(quickFix).of(diagnosticInstance).in(documentContext)

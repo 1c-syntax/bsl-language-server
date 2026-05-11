@@ -156,7 +156,7 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
               literal.getText()
             )).collect(Collectors.toList());
 
-          var firstLiteral = literals.get(0);
+          var firstLiteral = literals.getFirst();
           diagnosticStorage.addDiagnostic(firstLiteral, info.getMessage(firstLiteral.getText()), relatedInformation);
         }
       });

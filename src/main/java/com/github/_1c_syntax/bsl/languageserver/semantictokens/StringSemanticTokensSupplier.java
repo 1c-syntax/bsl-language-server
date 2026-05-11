@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
+import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.LambdaStringTokenizer;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.QueryContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.SdblAstTokenCollector;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.SdblTokenTypes;
@@ -39,10 +39,9 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.springframework.context.event.EventListener;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -63,6 +62,7 @@ import java.util.Set;
  *   <li>НСтр/NStr: подсвечивает языковые ключи (ru=, en=)</li>
  *   <li>СтрШаблон/StrTemplate: подсвечивает плейсхолдеры (%1, %2)</li>
  *   <li>Конфигурируемые функции-шаблонизаторы: подсвечивает плейсхолдеры (%1, %2)</li>
+ *   <li>Лямбда-выражения (только для .os файлов): подсвечивает BSL-код в теле лямбды</li>
  *   <li>Обычные строки: выдаёт токен для всей строки</li>
  * </ul>
  */
@@ -71,36 +71,25 @@ import java.util.Set;
 public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private static final Set<Integer> STRING_TYPES = Set.of(
-    BSLLexer.STRING,
-    BSLLexer.STRINGPART,
-    BSLLexer.STRINGSTART,
-    BSLLexer.STRINGTAIL
+    BSLLexer.STRING, BSLLexer.STRINGPART, BSLLexer.STRINGSTART, BSLLexer.STRINGTAIL
   );
 
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
+  private final ServerContext serverContext;
+  private final SemanticTokensLegend legend;
+  private final ObjectProvider<List<SemanticTokensSupplier>> suppliersProvider;
 
-  private volatile ParsedStrTemplateMethods parsedStrTemplateMethods;
+  @SuppressWarnings("NullAway.Init")
+  private List<SemanticTokensSupplier> allSuppliers;
 
   @PostConstruct
   private void init() {
-    updateParsedStrTemplateMethods();
-  }
-
-  /**
-   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
-   * <p>
-   * Обновляет кэшированные паттерны функций-шаблонизаторов при изменении конфигурации.
-   *
-   * @param event Событие
-   */
-  @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    updateParsedStrTemplateMethods();
-  }
-
-  private void updateParsedStrTemplateMethods() {
-    parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
+    var list = new ArrayList<>(suppliersProvider.getObject());
+    if (list.stream().noneMatch(StringSemanticTokensSupplier.class::isInstance)) {
+      list.add(this);
+    }
+    allSuppliers = list;
   }
 
   @Override
@@ -110,6 +99,8 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Собираем информацию о контекстах строк
     var specialStringContexts = collectSpecialStringContexts(documentContext);
     var queryStringContexts = collectQueryStringContexts(documentContext);
+    var lambdaStringContexts = new LambdaStringTokenizer(serverContext, legend, allSuppliers)
+      .collect(documentContext, specialStringContexts);
 
     // Обрабатываем все строковые токены
     var stringTokens = documentContext.getTokensFromDefaultChannel().stream()
@@ -117,7 +108,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
       .toList();
 
     for (Token stringToken : stringTokens) {
-      processStringToken(entries, stringToken, specialStringContexts, queryStringContexts);
+      processStringToken(entries, stringToken, specialStringContexts, queryStringContexts, lambdaStringContexts);
     }
 
     return entries;
@@ -127,12 +118,20 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     List<SemanticTokenEntry> entries,
     Token stringToken,
     Map<Token, StringContext> specialContexts,
-    Map<Token, QueryContext> queryContexts
+    Map<Token, QueryContext> queryContexts,
+    Map<Token, List<SubToken>> lambdaContexts
   ) {
     // Проверяем, является ли строка частью запроса
     var queryContext = queryContexts.get(stringToken);
     if (queryContext != null) {
       processQueryString(entries, stringToken, queryContext);
+      return;
+    }
+
+    // Проверяем, содержит ли строка лямбда-выражение
+    var lambdaSubTokens = lambdaContexts.get(stringToken);
+    if (lambdaSubTokens != null) {
+      processLambdaString(entries, stringToken, lambdaSubTokens);
       return;
     }
 
@@ -226,10 +225,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     if (astOverride != null) {
       // Используем переопределённую длину, если она задана
       int effectiveLength = astOverride.overrideLength() > 0 ? astOverride.overrideLength() : length;
-      var range = new Range(
-        new Position(zeroIndexedLine, start),
-        new Position(zeroIndexedLine, start + effectiveLength)
-      );
+      var range = Ranges.create(zeroIndexedLine, start, start + effectiveLength);
       helper.addRange(entries, range, astOverride.type(), astOverride.modifiers());
       return effectiveLength;
     }
@@ -238,10 +234,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     var tokenType = token.getType();
     var semanticTypeAndModifiers = SdblTokenTypes.getTokenTypeAndModifiers(tokenType);
     if (semanticTypeAndModifiers != null) {
-      var range = new Range(
-        new Position(zeroIndexedLine, start),
-        new Position(zeroIndexedLine, start + length)
-      );
+      var range = Ranges.create(zeroIndexedLine, start, start + length);
       helper.addRange(entries, range, semanticTypeAndModifiers.type(), semanticTypeAndModifiers.modifiers());
     }
     return length;
@@ -307,7 +300,8 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private Map<Token, StringContext> collectSpecialStringContexts(DocumentContext documentContext) {
     Map<Token, StringContext> contexts = new HashMap<>();
-    var visitor = new SpecialContextVisitor(contexts, parsedStrTemplateMethods);
+    var parsedMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
+    var visitor = new SpecialContextVisitor(contexts, parsedMethods);
     visitor.visit(documentContext.getAst());
     return contexts;
   }
@@ -373,5 +367,51 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
 
     return contexts;
+  }
+
+  // ==================== Lambda String Processing ====================
+
+  private void processLambdaString(
+    List<SemanticTokenEntry> entries,
+    Token stringToken,
+    List<SubToken> subTokens
+  ) {
+    var stringRange = Ranges.create(stringToken);
+
+    if (subTokens.isEmpty()) {
+      helper.addRange(entries, stringRange, SemanticTokenTypes.String);
+      return;
+    }
+
+    var tokenLine = stringToken.getLine() - 1;
+    var tokenStart = stringToken.getCharPositionInLine();
+    var stringEnd = stringRange.getEnd().getCharacter();
+    var tokenType = stringToken.getType();
+
+    // Opening delimiter: " for STRING/STRINGSTART, | for STRINGPART/STRINGTAIL
+    helper.addEntry(entries, tokenLine, tokenStart, 1, SemanticTokenTypes.String);
+
+    // Fill gaps between sub-tokens with String
+    int currentPos = tokenStart + 1;
+    for (SubToken subToken : subTokens) {
+      if (currentPos < subToken.start()) {
+        helper.addEntry(entries, tokenLine, currentPos, subToken.start() - currentPos, SemanticTokenTypes.String);
+      }
+      helper.addEntry(entries, tokenLine, subToken.start(), subToken.length(), subToken.type());
+      currentPos = subToken.start() + subToken.length();
+    }
+
+    // Closing quote: only for STRING and STRINGTAIL
+    if (tokenType == BSLLexer.STRING || tokenType == BSLLexer.STRINGTAIL) {
+      var closingQuotePos = stringEnd - 1;
+      if (currentPos < closingQuotePos) {
+        helper.addEntry(entries, tokenLine, currentPos, closingQuotePos - currentPos, SemanticTokenTypes.String);
+      }
+      helper.addEntry(entries, tokenLine, closingQuotePos, 1, SemanticTokenTypes.String);
+    } else {
+      if (currentPos < stringEnd) {
+        helper.addEntry(entries, tokenLine, currentPos, stringEnd - currentPos, SemanticTokenTypes.String);
+      }
+    }
   }
 }
