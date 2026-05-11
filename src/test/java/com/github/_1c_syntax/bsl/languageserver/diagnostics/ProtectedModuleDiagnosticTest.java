@@ -33,6 +33,7 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 class ProtectedModuleDiagnosticTest extends AbstractDiagnosticTest<ProtectedModuleDiagnostic> {
   ProtectedModuleDiagnosticTest() {
@@ -52,7 +53,7 @@ class ProtectedModuleDiagnosticTest extends AbstractDiagnosticTest<ProtectedModu
       .hasSize(1)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(getRange()))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Исходный код модуля отсутствует из-за защиты паролем. ОбщийМодуль.ОбщийМодуль1"))
     ;
   }

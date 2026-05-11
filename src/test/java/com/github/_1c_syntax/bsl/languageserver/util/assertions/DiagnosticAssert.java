@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 import java.util.Objects;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnostic> {
 
@@ -76,8 +77,8 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
       failWithMessage("Expected diagnostic's range to be <%s> but was <%s>", expectedRange.toString(), actualRange.toString());
     }
 
-    if (!Objects.equals(message, actual.getMessage())) {
-      failWithMessage("Expected diagnostic's message to be <%s> but was <%s>", message, actual.getMessage());
+    if (!Objects.equals(message, DiagnosticMessage.getStringValue(actual))) {
+      failWithMessage("Expected diagnostic's message to be <%s> but was <%s>", message, DiagnosticMessage.getStringValue(actual));
     }
 
     // return the current assertion for method chaining
@@ -102,8 +103,8 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
       failWithMessage("Expected diagnostic's range to be <%s> but was <%s>", expectedRange.toString(), actualRange.toString());
     }
 
-    if (!Objects.equals(expectedMessage, actual.getMessage())) {
-      failWithMessage("Expected diagnostic's expectedMessage to be <%s> but was <%s>", expectedMessage, actual.getMessage());
+    if (!Objects.equals(expectedMessage, DiagnosticMessage.getStringValue(actual))) {
+      failWithMessage("Expected diagnostic's expectedMessage to be <%s> but was <%s>", expectedMessage, DiagnosticMessage.getStringValue(actual));
     }
 
     List<DiagnosticRelatedInformation> actualRelatedInformation = actual.getRelatedInformation();

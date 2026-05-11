@@ -37,6 +37,7 @@ import java.util.Optional;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<ForbiddenMetadataNameDiagnostic> {
   ForbiddenMetadataNameDiagnosticTest() {
@@ -120,7 +121,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
       .hasSize(1)
-      .noneMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.Справочник1"));
+      .noneMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Справочник.Справочник1"));
   }
 
   @Test
@@ -155,10 +156,10 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
       .hasSize(3)
-      .allMatch(diagnostic -> diagnostic.getMessage().contains("Запрещено использовать имя `РегистрСведений` для"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Документ.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `РегистрСведений.РегистрСведений"))
+      .allMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Запрещено использовать имя `РегистрСведений` для"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Справочник.РегистрСведений"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Документ.РегистрСведений"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `РегистрСведений.РегистрСведений"))
     ;
   }
 }

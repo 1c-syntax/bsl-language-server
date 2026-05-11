@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -112,7 +113,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageSpace))
+      .filter(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).equals(diagnosticMessageSpace))
       .forEach((Diagnostic diagnostic) -> {
         var range = diagnostic.getRange();
         var textEdit = new TextEdit(
@@ -124,7 +125,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
       });
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageDash))
+      .filter(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).equals(diagnosticMessageDash))
       .forEach((Diagnostic diagnostic) -> {
         var range = diagnostic.getRange();
         var textEdit = new TextEdit(
