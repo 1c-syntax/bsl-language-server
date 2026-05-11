@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.lsp4j.Diagnostic;
 
@@ -33,6 +34,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * Вычислитель игнорирования диагностик на основе данных git blame.
@@ -49,7 +51,7 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
 
   public GitBlameComputer(URI uri, Set<String> ignoredAuthors) {
     this.uri = uri;
-    this.ignoredAuthors = ignoredAuthors;
+    this.ignoredAuthors = Set.copyOf(ignoredAuthors);
   }
 
   @Override
@@ -64,46 +66,43 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
     }
 
     try {
-      var repoBuilder = new FileRepositoryBuilder();
-      try (var repository = repoBuilder
-        .findGitDir(file)
-        .build()) {
-
-        if (repository.getDirectory() == null) {
-          return Data.empty();
-        }
-
-        var workTree = repository.getWorkTree().toPath();
-        var relativePath = workTree.relativize(file.toPath())
-          .toString()
-          .replace('\\', '/');
-
-        try (var git = new Git(repository)) {
-          var blameResult = git.blame()
-            .setFilePath(relativePath)
-            .call();
-
-          if (blameResult == null) {
-            return Data.empty();
-          }
-
-          Set<Integer> ignoredLines = new HashSet<>();
-          int lineCount = blameResult.getResultContents().size();
-
-          for (int i = 0; i < lineCount; i++) {
-            var author = blameResult.getSourceAuthor(i);
-            if (author != null && ignoredAuthors.contains(author.getEmailAddress().toLowerCase(Locale.ROOT))) {
-              ignoredLines.add(i); // JGit lines are 0-indexed, same as LSP
-            }
-          }
-
-          return new Data(Collections.unmodifiableSet(ignoredLines));
-        }
-      }
+      return computeWithGit(file);
     } catch (Exception e) {
       LOGGER.debug("Failed to compute git blame for {}", uri, e);
       return Data.empty();
     }
+  }
+
+  private Data computeWithGit(File file) throws Exception {
+    var repoBuilder = new FileRepositoryBuilder();
+    try (var repository = repoBuilder.findGitDir(file).build()) {
+      if (repository.getDirectory() == null) {
+        return Data.empty();
+      }
+
+      var workTree = repository.getWorkTree().toPath();
+      var relativePath = workTree.relativize(file.toPath()).toString().replace('\\', '/');
+
+      try (var git = new Git(repository)) {
+        var blameResult = git.blame().setFilePath(relativePath).call();
+
+        if (blameResult == null) {
+          return Data.empty();
+        }
+
+        var lineCount = blameResult.getResultContents().size();
+        var ignoredLines = IntStream.range(0, lineCount)
+          .filter(i -> isAuthorIgnored(blameResult.getSourceAuthor(i)))
+          .boxed()
+          .collect(HashSet<Integer>::new, HashSet::add, HashSet::addAll);
+
+        return new Data(Collections.unmodifiableSet(ignoredLines));
+      }
+    }
+  }
+
+  private boolean isAuthorIgnored(PersonIdent author) {
+    return author != null && ignoredAuthors.contains(author.getEmailAddress().toLowerCase(Locale.ROOT));
   }
 
   /**
@@ -112,15 +111,13 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
   @AllArgsConstructor
   public static class Data {
 
-    private static final Data EMPTY = new Data(Collections.emptySet());
-
     private final Set<Integer> ignoredLines;
 
     /**
      * @return Пустой экземпляр (нет игнорируемых строк).
      */
     public static Data empty() {
-      return EMPTY;
+      return new Data(Collections.emptySet());
     }
 
     /**
