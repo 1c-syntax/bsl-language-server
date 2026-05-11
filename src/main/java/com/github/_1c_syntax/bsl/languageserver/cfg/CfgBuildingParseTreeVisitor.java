@@ -603,8 +603,7 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
     // repeated full-tree traversals on large blocks.
     boolean foundSelf = false;
     var depth = 0;
-    for (int i = 0; i < codeBlock.getChildCount(); i++) {
-      var child = codeBlock.getChild(i);
+    for (var child : codeBlock.getChildren()) {
       if (!foundSelf) {
         if (child == statement) {
           foundSelf = true;
