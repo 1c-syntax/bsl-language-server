@@ -44,6 +44,7 @@ import java.util.stream.Collectors;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<ScheduledJobHandlerDiagnostic> {
@@ -65,17 +66,17 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     assertThat(diagnostics, true)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(getRange()))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Укажите существующий обработчик вместо несуществующего \"ПервыйОбщийМодуль.НесуществующийМетод\" у регламентного задания \"РегламентноеЗаданиеНесуществующийМетод\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте \"Экспорт\" методу \"ПервыйОбщийМодуль.Тест\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗаданиеПриватныйМетод\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" регламентного задания \"РегламентноеЗадание1\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" регламентного задания \"РегламентноеЗадание2\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Исправьте дубли использования одного обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" в разных регламентных заданиях. Задания: \"РегламентноеЗадание1, РегламентноеЗадание2\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Исправьте некорректный обработчик \"ПервыйОбщийМодуль.ВерсионированиеПриЗаписи\" предопределенного регламентного задания \"РегламентноеЗаданиеПредопределенноеНесколькоПараметров\" - у метода не должно быть параметров"))
       .hasSize(6)
     ;
@@ -89,7 +90,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler(methodPath);
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Укажите существующий обработчик вместо несуществующего \"\" у регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;
@@ -102,7 +103,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler(methodPath);
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Создайте общий модуль \"НесуществующийМодуль\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;
@@ -115,7 +116,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler(methodPath);
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Установите флаг \"Сервер\" общему модулю \"КлиентскийОбщийМодуль\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;
@@ -136,7 +137,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикБезТела");
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.ОбработчикБезТела\" регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;

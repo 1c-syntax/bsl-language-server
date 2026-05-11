@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -191,7 +192,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
-      String diagnosticMessage = diagnostic.getMessage().getLeft().toLowerCase(Locale.ENGLISH);
+      String diagnosticMessage = DiagnosticMessage.getStringValue(diagnostic.getMessage()).toLowerCase(Locale.ENGLISH);
 
       // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
       var missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");

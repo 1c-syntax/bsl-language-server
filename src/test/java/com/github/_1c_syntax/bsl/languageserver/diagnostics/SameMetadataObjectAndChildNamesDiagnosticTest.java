@@ -42,6 +42,7 @@ import java.util.Optional;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTest<SameMetadataObjectAndChildNamesDiagnostic> {
   SameMetadataObjectAndChildNamesDiagnosticTest() {
@@ -95,8 +96,8 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Справочник1.Реквизит"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Справочник1.ТабличнаяЧасть"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Справочник1.Реквизит"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Справочник1.ТабличнаяЧасть"))
     ;
   }
 
@@ -146,10 +147,10 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
 
     assertThat(diagnostics)
       .hasSize(16)
-      .noneMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `Справочник.Справочник1"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `Документ.Документ1.Реквизит"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `Документ.Документ1.ТабличнаяЧасть"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("имя `РегистрСведений.РегистрСведений1.Измерение"))
+      .noneMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("имя `Справочник.Справочник1"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("имя `Документ.Документ1.Реквизит"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("имя `Документ.Документ1.ТабличнаяЧасть"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("имя `РегистрСведений.РегистрСведений1.Измерение"))
     ;
   }
 

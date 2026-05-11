@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @CleanupContextBeforeClassAndAfterClass
 class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<SetPermissionsForNewObjectsDiagnostic> {
@@ -42,7 +43,7 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     var diagnostics = getDiagnostics();
     assertThat(diagnostics)
       .hasSize(1)
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Роль1"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Роль1"))
     ;
   }
 
@@ -58,8 +59,8 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     var diagnostics = getDiagnostics();
     assertThat(diagnostics)
       .hasSize(2)//Роль1 и ПолныеПрава
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("Роль1"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("ПолныеПрава"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Роль1"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("ПолныеПрава"))
     ;
   }
 
@@ -75,7 +76,7 @@ class SetPermissionsForNewObjectsDiagnosticTest extends AbstractDiagnosticTest<S
     var diagnostics = getDiagnostics();
     assertThat(diagnostics)
       .hasSize(1)
-      .anyMatch(diagnostic -> diagnostic.getMessage().getLeft().contains("ПолныеПрава"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("ПолныеПрава"))
     ;
   }
 

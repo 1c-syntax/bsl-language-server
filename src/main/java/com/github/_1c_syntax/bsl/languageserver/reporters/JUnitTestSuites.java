@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @JsonRootName("testsuites")
 class JUnitTestSuites {
@@ -130,11 +131,11 @@ class JUnitTestSuites {
       for (Diagnostic diagnostic : diagnostics) {
         type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
         Position startRange = diagnostic.getRange().getStart();
-        message = diagnostic.getMessage().getLeft();
+        message = DiagnosticMessage.getStringValue(diagnostic.getMessage());
         value.add("line: %d, column: %d, text: %s".formatted(
           startRange.getLine() + 1,
           startRange.getCharacter(),
-          diagnostic.getMessage().getLeft()
+          DiagnosticMessage.getStringValue(diagnostic.getMessage())
         ));
       }
 

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 class PairingBrokenTransactionDiagnosticTest extends AbstractDiagnosticTest<PairingBrokenTransactionDiagnostic> {
 
@@ -60,12 +61,12 @@ class PairingBrokenTransactionDiagnosticTest extends AbstractDiagnosticTest<Pair
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(110, 8, 110, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(108, 8, 108, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))
-        && diagnostic.getMessage().getLeft().matches(".*CommitTransaction.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*CommitTransaction.*"))
       .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))
-        && diagnostic.getMessage().getLeft().matches(".*RollbackTransaction.*")))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*RollbackTransaction.*")))
       .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(45, 4, 45, 22))
-        && diagnostic.getMessage().getLeft().matches(".*ЗафиксироватьТранзакцию.*")))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*ЗафиксироватьТранзакцию.*")))
       .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(45, 4, 45, 22))
-        && diagnostic.getMessage().getLeft().matches(".*ОтменитьТранзакцию.*")));
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*ОтменитьТранзакцию.*")));
   }
 }
