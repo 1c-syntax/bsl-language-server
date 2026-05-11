@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -38,6 +39,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("measures")
+// Очищаем кэш контекста после класса: иначе оставшийся в кэше контекст с
+// уничтоженными destroySingletons() бинами будет повторно использован другим
+// тест-классом с тем же профилем и упадёт при автосвязывании. Также гарантирует
+// сброс измерителя в singleton-аспекте MeasuresAspect (через @PreDestroy).
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MeasuresSubsystemTest {
 
   @Autowired
