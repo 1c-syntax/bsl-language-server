@@ -77,8 +77,8 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
       failWithMessage("Expected diagnostic's range to be <%s> but was <%s>", expectedRange.toString(), actualRange.toString());
     }
 
-    if (!Objects.equals(message, DiagnosticMessage.getStringValue(actual.getMessage()))) {
-      failWithMessage("Expected diagnostic's message to be <%s> but was <%s>", message, DiagnosticMessage.getStringValue(actual.getMessage()));
+    if (!Objects.equals(message, DiagnosticMessage.getStringValue(actual))) {
+      failWithMessage("Expected diagnostic's message to be <%s> but was <%s>", message, DiagnosticMessage.getStringValue(actual));
     }
 
     // return the current assertion for method chaining
@@ -103,8 +103,8 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
       failWithMessage("Expected diagnostic's range to be <%s> but was <%s>", expectedRange.toString(), actualRange.toString());
     }
 
-    if (!Objects.equals(expectedMessage, DiagnosticMessage.getStringValue(actual.getMessage()))) {
-      failWithMessage("Expected diagnostic's expectedMessage to be <%s> but was <%s>", expectedMessage, DiagnosticMessage.getStringValue(actual.getMessage()));
+    if (!Objects.equals(expectedMessage, DiagnosticMessage.getStringValue(actual))) {
+      failWithMessage("Expected diagnostic's expectedMessage to be <%s> but was <%s>", expectedMessage, DiagnosticMessage.getStringValue(actual));
     }
 
     List<DiagnosticRelatedInformation> actualRelatedInformation = actual.getRelatedInformation();

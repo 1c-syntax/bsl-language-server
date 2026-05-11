@@ -26,18 +26,9 @@ import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 
-public class DiagnosticMessage extends Either<String, MarkupContent> {
+public final class DiagnosticMessage {
 
-  public DiagnosticMessage(String message) {
-    super(message, null);
-  }
-
-  public DiagnosticMessage(String left, MarkupContent right) {
-    super(left, right);
-  }
-
-  public String getStringValue() {
-    return getStringValue(this);
+  private DiagnosticMessage() {
   }
 
   public static String getStringValue(Either<String, MarkupContent> message) {

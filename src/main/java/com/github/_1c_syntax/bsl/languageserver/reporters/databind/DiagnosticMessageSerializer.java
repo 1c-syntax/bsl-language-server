@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import tools.jackson.core.JsonGenerator;
@@ -37,6 +38,6 @@ public class DiagnosticMessageSerializer extends ValueSerializer<Either<String, 
     JsonGenerator gen,
     SerializationContext serializers
   ) {
-    gen.writeString(value.getLeft());
+    gen.writeString(DiagnosticMessage.getStringValue(value));
   }
 }
