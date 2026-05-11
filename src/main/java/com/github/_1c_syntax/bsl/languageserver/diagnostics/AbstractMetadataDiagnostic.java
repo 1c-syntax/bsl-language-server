@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -30,6 +31,7 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +63,9 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    * Область для регистрации замечания
    */
   private @Nullable Range diagnosticRange;
+
+  @Autowired
+  private LanguageServerConfiguration languageServerConfiguration;
 
   /**
    * Конструктор с указанием типов объектов метаданных для проверки.
@@ -176,7 +181,7 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   }
 
   private boolean needToAnalyzeMdo(MD mdo) {
-    var skipMode = info.skipSupportMode();
+    var skipMode = languageServerConfiguration.getDiagnosticsOptions().getSkipSupport();
     var variant = mdo.getSupportVariant();
 
     if (variant == SupportVariant.NONE) {

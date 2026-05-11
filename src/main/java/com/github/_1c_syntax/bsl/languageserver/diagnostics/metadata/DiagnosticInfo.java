@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -274,10 +273,6 @@ public class DiagnosticInfo {
     return metadataOverride
       .map(DiagnosticMetadata::extraMinForComplexity)
       .orElseGet(diagnosticMetadata::extraMinForComplexity);
-  }
-
-  public SkipSupport skipSupportMode() {
-    return configuration.getDiagnosticsOptions().getSkipSupport();
   }
 
   public Map<String, Object> getDefaultConfiguration() {
