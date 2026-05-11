@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776619214387,
+  "lastUpdate": 1778519528529,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35061,6 +35061,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5115100699813417",
             "extra": "mean: 67.12392139434814 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c2d3a720f6f72608521df7cdb66945a69d46136b",
+          "message": "Merge pull request #3822 from 1c-syntax/copilot/fix-diagnostic-computation-error\n\nFix CFG builder crash when preprocessor directives span across elsif boundaries",
+          "timestamp": "2026-05-11T18:56:53+02:00",
+          "tree_id": "49bd78f2ed5c4315cac4536cd01225dbc5a6d0ef",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c2d3a720f6f72608521df7cdb66945a69d46136b"
+        },
+        "date": 1778519522360,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 66.59960110982259,
+            "unit": "sec",
+            "range": "stddev: 1.7308806027947294",
+            "extra": "mean: 66.59960110982259 sec\nrounds: 3"
           }
         ]
       }
