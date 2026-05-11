@@ -111,13 +111,15 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
   @AllArgsConstructor
   public static class Data {
 
+    private static final Data EMPTY = new Data(Collections.emptySet());
+
     private final Set<Integer> ignoredLines;
 
     /**
      * @return Пустой экземпляр (нет игнорируемых строк).
      */
     public static Data empty() {
-      return new Data(Collections.emptySet());
+      return EMPTY;
     }
 
     /**
