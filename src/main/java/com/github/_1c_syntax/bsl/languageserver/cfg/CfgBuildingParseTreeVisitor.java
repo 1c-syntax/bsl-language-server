@@ -598,15 +598,12 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
       return false;
     }
 
-    // Count preproc_if and preproc_endif after this statement in the same codeBlock
-    var children = codeBlock.children;
-    if (children == null) {
-      return false;
-    }
-
+    // Count preproc_if and preproc_endif after this statement in the same codeBlock.
+    // Only check direct preprocessor children of sibling StatementContext nodes to avoid
+    // repeated full-tree traversals on large blocks.
     boolean foundSelf = false;
     var depth = 0;
-    for (var child : children) {
+    for (var child : codeBlock.getChildren()) {
       if (!foundSelf) {
         if (child == statement) {
           foundSelf = true;
@@ -615,14 +612,18 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
         continue;
       }
 
-      // Check for nested preproc_if/preproc_endif in sibling statements/preprocessors
-      var preprocIfs = Trees.findAllRuleNodes(child, BSLParser.RULE_preproc_if);
-      var preprocEndifs = Trees.findAllRuleNodes(child, BSLParser.RULE_preproc_endif);
-      depth += preprocIfs.size();
-      depth -= preprocEndifs.size();
-
-      if (depth == 0) {
-        return true;
+      if (child instanceof BSLParser.StatementContext statementChild) {
+        var preprocessor = statementChild.preprocessor();
+        if (preprocessor != null) {
+          if (preprocessor.preproc_if() != null) {
+            depth++;
+          } else if (preprocessor.preproc_endif() != null) {
+            depth--;
+            if (depth == 0) {
+              return true;
+            }
+          }
+        }
       }
     }
 
