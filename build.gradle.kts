@@ -231,6 +231,21 @@ tasks.test {
     // Increase heap size to prevent OOM during test execution with EhCache
     maxHeapSize = "2g"
 
+    // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
+    // Использование форков, а не потоков, обусловлено тем, что многие тесты
+    // изменяют общее состояние Spring-контекста (@DirtiesContext,
+    // @CleanupContextBeforeClassAndAfterClass) и статические кэши, поэтому
+    // потоковая параллельность внутри одной JVM небезопасна. Каждый форк —
+    // изолированная JVM со своим Spring-контекстом.
+    //
+    // Уровень параллелизма можно переопределить Gradle-свойством
+    // `maxParallelForks` (например, `-PmaxParallelForks=4`). По умолчанию
+    // используется половина доступных процессоров, ограниченная диапазоном
+    // от 1 до 4, чтобы ограничить общий расход памяти (maxHeapSize по 2g
+    // на форк).
+    maxParallelForks = (project.findProperty("maxParallelForks") as String?)?.toIntOrNull()
+        ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
+
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
     jvmArgs("-javaagent:${jmockitPath}", "-javaagent:${mockitoAgentPath}")
