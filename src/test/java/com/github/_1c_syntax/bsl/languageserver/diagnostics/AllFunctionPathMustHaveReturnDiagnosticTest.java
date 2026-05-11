@@ -313,4 +313,128 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
 
     assertThat(diagnostics).isEmpty();
   }
+
+  @Test
+  void testNestedPreprocessorDepth2_NoError() {
+    // Two nested statement-level preprocessor blocks (#Если inside #Если), all branches return.
+    // hasMatchingEndIfInSameCodeBlock must correctly count depth > 1.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          #Если Клиент Тогда
+          ИначеЕсли Условие3 Тогда
+            Возврат 3;
+          #КонецЕсли
+          ИначеЕсли Условие4 Тогда
+            Возврат 4;
+          #КонецЕсли
+          Иначе
+            Возврат 5;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testNestedPreprocessorDepth2_MissingReturnInInnerBranch() {
+    // Two nested statement-level preprocessor blocks — missing return in inner branch is caught.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          #Если Клиент Тогда
+          ИначеЕсли Условие3 Тогда
+            А = 3;
+          #КонецЕсли
+          ИначеЕсли Условие4 Тогда
+            Возврат 4;
+          #КонецЕсли
+          Иначе
+            Возврат 5;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 12);
+  }
+
+  @Test
+  void testNestedCodeBlockWithPreprocessor_NoError() {
+    // #Если А wraps an elsif branch; between #Если А and #КонецЕсли А there is a sibling
+    // statement whose nested codeBlock contains its own balanced #Если Б/#КонецЕсли Б.
+    // Depth tracking must treat the inner pair as neutral (net 0) and correctly find the
+    // matching #КонецЕсли for the outer #Если А.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            Если ВложенноеУсловие Тогда
+              #Если Клиент Тогда
+              А = 1;
+              #КонецЕсли
+            КонецЕсли;
+            Возврат 3;
+          #КонецЕсли
+          Иначе
+            Возврат 4;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testNestedCodeBlockWithPreprocessor_MissingReturn() {
+    // Same structure but with a missing return — diagnostic must still be detected.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            Если ВложенноеУсловие Тогда
+              #Если Клиент Тогда
+              А = 1;
+              #КонецЕсли
+            КонецЕсли;
+            А = 3;
+          #КонецЕсли
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 12);
+  }
 }
