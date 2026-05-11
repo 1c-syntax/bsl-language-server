@@ -8,12 +8,12 @@
 
 BSL LS поддерживает фильтрацию диагностик на основе данных `git blame`. Если задан список email-адресов авторов, диагностики не будут срабатывать на строках кода, автором которых (по данным git) является один из указанных авторов.
 
-Для настройки укажите список email-адресов в поле `gitBlameIgnoredAuthors` секции `diagnostics` конфигурационного файла `.bsl-language-server.json`:
+Для настройки укажите список email-адресов в поле `ignoredAuthors` секции `diagnostics` конфигурационного файла `.bsl-language-server.json`:
 
 ```json
 {
   "diagnostics": {
-    "ingoredAuthors": [
+    "ignoredAuthors": [
       "developer@example.com",
       "legacy-author@company.com"
     ]

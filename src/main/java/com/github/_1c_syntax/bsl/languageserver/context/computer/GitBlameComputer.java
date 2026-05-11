@@ -31,6 +31,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -38,7 +39,7 @@ import java.util.Set;
  * <p>
  * Для каждой строки файла определяет автора (по email из git blame)
  * и помечает строку как игнорируемую, если email автора входит
- * в список {@code ingoredAuthors} из конфигурации.
+ * в список {@code ignoredAuthors} из конфигурации.
  */
 @Slf4j
 public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
@@ -91,7 +92,7 @@ public class GitBlameComputer implements Computer<GitBlameComputer.Data> {
 
           for (int i = 0; i < lineCount; i++) {
             var author = blameResult.getSourceAuthor(i);
-            if (author != null && ignoredAuthors.contains(author.getEmailAddress())) {
+            if (author != null && ignoredAuthors.contains(author.getEmailAddress().toLowerCase(Locale.ROOT))) {
               ignoredLines.add(i); // JGit lines are 0-indexed, same as LSP
             }
           }

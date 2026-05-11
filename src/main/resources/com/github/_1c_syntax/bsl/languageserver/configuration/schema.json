@@ -1007,8 +1007,8 @@
                         }
                     }
                 },
-                "ingoredAuthors": {
-                    "$id": "#/properties/ingoredAuthors",
+                "ignoredAuthors": {
+                    "$id": "#/properties/ignoredAuthors",
                     "type": "array",
                     "title": "Git blame ignored authors. Diagnostics will not fire on lines authored by these email addresses.",
                     "items": {

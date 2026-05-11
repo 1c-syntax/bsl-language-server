@@ -8,12 +8,12 @@ Instead of manually mark a comment as irrelevant every time, BSL LS provides fun
 
 BSL LS supports filtering diagnostics based on `git blame` data. If a list of author email addresses is configured, diagnostics will not fire on lines of code whose author (according to git) is one of the specified authors.
 
-To configure, specify the list of email addresses in the `gitBlameIgnoredAuthors` field of the `diagnostics` section in `.bsl-language-server.json`:
+To configure, specify the list of email addresses in the `ignoredAuthors` field of the `diagnostics` section in `.bsl-language-server.json`:
 
 ```json
 {
   "diagnostics": {
-    "ingoredAuthors": [
+    "ignoredAuthors": [
       "developer@example.com",
       "legacy-author@company.com"
     ]

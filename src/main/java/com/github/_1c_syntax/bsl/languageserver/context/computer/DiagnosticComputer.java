@@ -81,7 +81,7 @@ public abstract class DiagnosticComputer {
   private List<Diagnostic> internalCompute(DocumentContext documentContext) {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
-    var ignoredAuthors = configuration.getDiagnosticsOptions().getIngoredAuthors();
+    var ignoredAuthors = configuration.getDiagnosticsOptions().getIgnoredAuthors();
     GitBlameComputer.Data gitBlameIgnorance = ignoredAuthors.isEmpty()
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();

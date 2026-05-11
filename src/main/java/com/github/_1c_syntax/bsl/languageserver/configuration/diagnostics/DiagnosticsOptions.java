@@ -23,21 +23,27 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataMapDeserializer;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
@@ -66,5 +72,16 @@ public class DiagnosticsOptions {
   @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
   private Map<String, DiagnosticMetadata> metadata = new HashMap<>();
 
-  private Set<String> ingoredAuthors = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+  @Setter(AccessLevel.NONE)
+  private Set<String> ignoredAuthors = new HashSet<>();
+
+  @JsonSetter("ignoredAuthors")
+  public void setIgnoredAuthors(Set<String> authors) {
+    this.ignoredAuthors = authors == null
+      ? new HashSet<>()
+      : authors.stream()
+        .filter(Objects::nonNull)
+        .map(s -> s.toLowerCase(Locale.ROOT))
+        .collect(Collectors.toCollection(HashSet::new));
+  }
 }
