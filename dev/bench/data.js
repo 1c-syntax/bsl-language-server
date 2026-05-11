@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778519528529,
+  "lastUpdate": 1778522121114,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35092,6 +35092,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7308806027947294",
             "extra": "mean: 66.59960110982259 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2a5b77d76c6f7300f76b07a3972d87c4ecb2a1c1",
+          "message": "Merge pull request #3839 from 1c-syntax/copilot/update-lsp4ij-to-version-1-0\n\nUpdate Eclipse LSP4J from 0.24.0 to 1.0.0",
+          "timestamp": "2026-05-11T19:22:27+02:00",
+          "tree_id": "2dead346ee776240a075c9333152438ff3ac7451",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2a5b77d76c6f7300f76b07a3972d87c4ecb2a1c1"
+        },
+        "date": 1778522114356,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 67.25263627370198,
+            "unit": "sec",
+            "range": "stddev: 1.0404950580138965",
+            "extra": "mean: 67.25263627370198 sec\nrounds: 3"
           }
         ]
       }
