@@ -240,8 +240,9 @@ tasks.test {
     //
     // Уровень параллелизма можно переопределить Gradle-свойством
     // `maxParallelForks` (например, `-PmaxParallelForks=4`). По умолчанию
-    // используется половина доступных процессоров, но не более 4, чтобы
-    // ограничить общий расход памяти (maxHeapSize по 2g на форк).
+    // используется половина доступных процессоров, ограниченная диапазоном
+    // от 1 до 4, чтобы ограничить общий расход памяти (maxHeapSize по 2g
+    // на форк).
     maxParallelForks = (project.findProperty("maxParallelForks") as String?)?.toIntOrNull()
         ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
 
