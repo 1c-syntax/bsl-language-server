@@ -4,6 +4,27 @@ The static analyzer detects problems, errors, and flaws in the code in accordanc
 
 Instead of manually mark a comment as irrelevant every time, BSL LS provides functionality that allows you to hide or screen individual sections of code from triggering diagnostics.
 
+## Filtering by line authorship (git blame)
+
+BSL LS supports filtering diagnostics based on `git blame` data. If a list of author email addresses is configured, diagnostics will not fire on lines of code whose author (according to git) is one of the specified authors.
+
+To configure, specify the list of email addresses in the `ignoredAuthors` field of the `diagnostics` section in `.bsl-language-server.json`:
+
+```json
+{
+  "diagnostics": {
+    "ignoredAuthors": [
+      "developer@example.com",
+      "legacy-author@company.com"
+    ]
+  }
+}
+```
+
+If the list is empty (the default), git blame filtering is not performed.
+
+**Requirements:** the file must be in a git repository and committed. Filtering is not applied to lines with uncommitted changes.
+
 ## Description
 
 To hide part of the code from the BSL LS analyzer, you must add a special comment to the code.   
