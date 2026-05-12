@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
@@ -31,7 +30,6 @@ import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -44,8 +42,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 
 @DirtiesContext
 class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalWindowsDiagnostic> {
-  @MockitoSpyBean
-  private ServerContext context;
 
   UsingModalWindowsDiagnosticTest() {
     super(UsingModalWindowsDiagnostic.class);
@@ -120,10 +116,14 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     var testFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
-    var configuration = spy(context.getConfiguration());
+    var serverContext = spy(context);
+    var configuration = spy(serverContext.getConfiguration());
     when(((Configuration) configuration).getModalityUseMode()).thenReturn(useMode);
-    when(context.getConfiguration()).thenReturn(configuration);
+    when(serverContext.getConfiguration()).thenReturn(configuration);
 
-    return TestUtils.getDocumentContext(testFile.toUri(), getText());
+    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText(), serverContext));
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+
+    return documentContext;
   }
 }
