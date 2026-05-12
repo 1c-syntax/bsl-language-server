@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.utils.Absolute;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -54,10 +53,9 @@ public class BSLFiles {
    * @return найденные файлы; пустая коллекция, если ничего не найдено
    */
   public static Collection<File> listBslFiles(Path srcDir, @Nullable List<String> excludePaths) {
-    var normalizedSrcDir = Absolute.path(srcDir);
     var exclusions = PathExclusionUtils.filters(excludePaths);
     var fileFilter = BSL_FILE_FILTER.and(exclusions.fileFilter());
 
-    return FileUtils.listFiles(normalizedSrcDir.toFile(), fileFilter, exclusions.directoryFilter());
+    return FileUtils.listFiles(srcDir.toFile(), fileFilter, exclusions.directoryFilter());
   }
 }
