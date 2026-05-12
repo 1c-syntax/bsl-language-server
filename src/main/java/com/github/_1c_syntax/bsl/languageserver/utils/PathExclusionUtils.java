@@ -51,6 +51,9 @@ import java.util.Optional;
 @UtilityClass
 public class PathExclusionUtils {
 
+  /** Суффикс «совпадает с любым потомком» в glob-паттерне (например, в {@code **\/.git/**}). */
+  private static final String DESCENDANTS_SUFFIX = "/**";
+
   /** Пара фильтров для {@code FileUtils.listFiles}: {@code true} — путь оставить. */
   public record ExclusionFilters(IOFileFilter directoryFilter, IOFileFilter fileFilter) {
     /** Никого не исключать. */
@@ -124,13 +127,14 @@ public class PathExclusionUtils {
 
     // "**/.git/**" — каталог обрезаем по короткой форме (".git"),
     // файлы — оригинальным паттерном на случай, если directory-фильтр уже пропустил.
-    if (pattern.endsWith("/**")) {
-      tryGlobFilter(pattern.substring(0, pattern.length() - 3)).ifPresent(dirExcluders::add);
+    if (pattern.endsWith(DESCENDANTS_SUFFIX)) {
+      tryGlobFilter(pattern.substring(0, pattern.length() - DESCENDANTS_SUFFIX.length()))
+        .ifPresent(dirExcluders::add);
       tryGlobFilter(pattern).ifPresent(fileExcluders::add);
       return;
     }
 
-    tryGlobFilter(pattern).ifPresent(filter -> {
+    tryGlobFilter(pattern).ifPresent((IOFileFilter filter) -> {
       dirExcluders.add(filter);
       fileExcluders.add(filter);
     });
@@ -142,7 +146,7 @@ public class PathExclusionUtils {
    * с предупреждением в лог.
    */
   private static Optional<IOFileFilter> tryGlobFilter(String glob) {
-    var fullGlob = glob.startsWith("**/") || glob.startsWith("/") ? glob : "**/" + glob;
+    var fullGlob = (glob.startsWith("**/") || glob.startsWith("/")) ? glob : "**/" + glob;
     try {
       var matcher = FileSystems.getDefault().getPathMatcher("glob:" + fullGlob);
       return Optional.of(new PathMatcherFileFilter(forwardSlashAware(matcher)));
@@ -203,9 +207,6 @@ public class PathExclusionUtils {
 
     @Override
     public boolean accept(File file) {
-      if (file == null) {
-        return false;
-      }
       var path = file.toPath();
       for (var i = 0; i < path.getNameCount(); i++) {
         if (path.getName(i).toString().equals(name)) {
