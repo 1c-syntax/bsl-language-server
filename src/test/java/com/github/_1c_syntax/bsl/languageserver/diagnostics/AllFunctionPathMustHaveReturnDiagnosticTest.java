@@ -132,4 +132,309 @@ class AllFunctionPathMustHaveReturnDiagnosticTest extends AbstractDiagnosticTest
     assertThat(diagnostics).isEmpty();
 
   }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches_NoError() {
+    // All paths have returns (via return + raise) — no diagnostic expected.
+    // Previously caused Diagnostic computation error (NoSuchElementException).
+    var sample =
+      """
+        Функция МенеджерОбъектаПоИмени(Имя)
+          Перем КлассОМ, Менеджер;
+          ЧастиИмени = СтрРазделить(Имя, ".");
+          Если ЧастиИмени.Количество() > 0 Тогда
+            КлассОМ = ВРег(ЧастиИмени[0]);
+          КонецЕсли;
+          Если      КлассОМ = "ПЛАНОБМЕНА" Тогда
+            Менеджер = ПланыОбмена;
+          ИначеЕсли КлассОМ = "СПРАВОЧНИК" Тогда
+            Менеджер = Справочники;
+          ИначеЕсли КлассОМ = "ДОКУМЕНТ" Тогда
+            Менеджер = Документы;
+          #Если НЕ МобильноеПриложениеСервер Тогда
+          ИначеЕсли КлассОМ = "ОТЧЕТ" Тогда
+            Менеджер = Отчеты;
+          ИначеЕсли КлассОМ = "ОБРАБОТКА" Тогда
+            Менеджер = Обработки;
+          #КонецЕсли
+          КонецЕсли;
+          Если Менеджер <> Неопределено Тогда
+            Возврат Менеджер;
+          КонецЕсли;
+          ВызватьИсключение "Ошибка";
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches_MissingReturnOutsidePreprocessor() {
+    // Missing return OUTSIDE the preprocessor block — diagnostic expected.
+    // The function does something after the if-chain but has no return/raise at the end.
+    var sample =
+      """
+        Функция МенеджерОбъектаПоИмени(Имя)
+          Перем КлассОМ, Менеджер;
+          Если      КлассОМ = "ПЛАНОБМЕНА" Тогда
+            Менеджер = ПланыОбмена;
+          ИначеЕсли КлассОМ = "СПРАВОЧНИК" Тогда
+            Менеджер = Справочники;
+          #Если НЕ МобильноеПриложениеСервер Тогда
+          ИначеЕсли КлассОМ = "ОТЧЕТ" Тогда
+            Менеджер = Отчеты;
+          #КонецЕсли
+          КонецЕсли;
+          Если Менеджер <> Неопределено Тогда
+            Возврат Менеджер;
+          КонецЕсли;
+          Сообщить("Не найден менеджер");
+          // Missing return/raise at end — function exits without value
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 30);
+  }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches_MissingReturnInBranchOutsidePreprocessor() {
+    // One branch OUTSIDE the preprocessor block has no return — diagnostic expected.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            // no return here
+            А = 1;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            Возврат 3;
+          #КонецЕсли
+          Иначе
+            Возврат 4;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 12);
+  }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches_AllBranchesReturn() {
+    // All branches (including those wrapped by preprocessor) have returns — no diagnostic.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            Возврат 3;
+          ИначеЕсли Условие4 Тогда
+            Возврат 4;
+          #КонецЕсли
+          Иначе
+            Возврат 5;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches_MissingReturnInsidePreprocessor() {
+    // An elsif branch INSIDE the preprocessor block has no return — diagnostic expected.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            А = 3;
+          ИначеЕсли Условие4 Тогда
+            Возврат 4;
+          #КонецЕсли
+          Иначе
+            Возврат 5;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 12);
+  }
+
+  @Test
+  void testPreprocessorWrappingElsifBranches_MultiplePreprocessorBlocks() {
+    // Multiple preprocessor blocks wrapping different elsif branches — no crash, and
+    // function with return+raise on all paths should produce no diagnostic.
+    var sample =
+      """
+        Функция Тест(Знач Вид)
+          Если Вид = "А" Тогда
+            Возврат 1;
+          #Если НЕ МобильноеПриложениеСервер Тогда
+          ИначеЕсли Вид = "Б" Тогда
+            Возврат 2;
+          #КонецЕсли
+          #Если НЕ ВебКлиент Тогда
+          ИначеЕсли Вид = "В" Тогда
+            Возврат 3;
+          #КонецЕсли
+          Иначе
+            Возврат 0;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testNestedPreprocessorDepth2_NoError() {
+    // Two nested statement-level preprocessor blocks (#Если inside #Если), all branches return.
+    // hasMatchingEndIfInSameCodeBlock must correctly count depth > 1.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          #Если Клиент Тогда
+          ИначеЕсли Условие3 Тогда
+            Возврат 3;
+          #КонецЕсли
+          ИначеЕсли Условие4 Тогда
+            Возврат 4;
+          #КонецЕсли
+          Иначе
+            Возврат 5;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testNestedPreprocessorDepth2_MissingReturnInInnerBranch() {
+    // Two nested statement-level preprocessor blocks — missing return in inner branch is caught.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          #Если Клиент Тогда
+          ИначеЕсли Условие3 Тогда
+            А = 3;
+          #КонецЕсли
+          ИначеЕсли Условие4 Тогда
+            Возврат 4;
+          #КонецЕсли
+          Иначе
+            Возврат 5;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 12);
+  }
+
+  @Test
+  void testNestedCodeBlockWithPreprocessor_NoError() {
+    // #Если А wraps an elsif branch; between #Если А and #КонецЕсли А there is a sibling
+    // statement whose nested codeBlock contains its own balanced #Если Б/#КонецЕсли Б.
+    // Depth tracking must treat the inner pair as neutral (net 0) and correctly find the
+    // matching #КонецЕсли for the outer #Если А.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            Если ВложенноеУсловие Тогда
+              #Если Клиент Тогда
+              А = 1;
+              #КонецЕсли
+            КонецЕсли;
+            Возврат 3;
+          #КонецЕсли
+          Иначе
+            Возврат 4;
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testNestedCodeBlockWithPreprocessor_MissingReturn() {
+    // Same structure but with a missing return — diagnostic must still be detected.
+    var sample =
+      """
+        Функция Тест()
+          Если Условие1 Тогда
+            Возврат 1;
+          ИначеЕсли Условие2 Тогда
+            Возврат 2;
+          #Если Сервер Тогда
+          ИначеЕсли Условие3 Тогда
+            Если ВложенноеУсловие Тогда
+              #Если Клиент Тогда
+              А = 1;
+              #КонецЕсли
+            КонецЕсли;
+            А = 3;
+          #КонецЕсли
+          КонецЕсли;
+        КонецФункции""";
+
+    var documentContext = TestUtils.getDocumentContext(sample);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 12);
+  }
 }

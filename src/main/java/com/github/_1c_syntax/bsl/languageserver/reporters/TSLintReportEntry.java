@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 
 import java.util.EnumMap;
 import java.util.Map;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @Getter
 class TSLintReportEntry {
@@ -51,7 +52,7 @@ class TSLintReportEntry {
 
   TSLintReportEntry(String fileName, Diagnostic diagnostic) {
     endPosition = new EntryPosition(diagnostic.getRange().getEnd());
-    failure = diagnostic.getMessage();
+    failure = DiagnosticMessage.getStringValue(diagnostic.getMessage());
     name = fileName;
     ruleName = DiagnosticCode.getStringValue(diagnostic.getCode());
     ruleSeverity = SEVERITY_MAP.get(diagnostic.getSeverity());

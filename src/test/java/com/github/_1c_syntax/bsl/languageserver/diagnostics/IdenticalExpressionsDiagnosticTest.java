@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 
 class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<IdenticalExpressionsDiagnostic> {
@@ -77,7 +78,7 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.getFirst().getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
+    assertThat(DiagnosticMessage.getStringValue(diagnostics.getFirst().getMessage())).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
   }
 
   @Test
@@ -112,7 +113,7 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.getFirst().getMessage()).contains("60");
+    assertThat(DiagnosticMessage.getStringValue(diagnostics.getFirst().getMessage())).contains("60");
 
   }
 

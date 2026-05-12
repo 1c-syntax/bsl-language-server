@@ -33,6 +33,7 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @DirtiesContext
 class OrdinaryAppSupportDiagnosticTest extends AbstractDiagnosticTest<OrdinaryAppSupportDiagnostic> {
@@ -54,9 +55,9 @@ class OrdinaryAppSupportDiagnosticTest extends AbstractDiagnosticTest<OrdinaryAp
       .hasSize(2)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(Ranges.create(1, 0, 9)))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Установите свойство \"Использовать обычные формы в управляемом режиме\" установить в Ложь"))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Установите свойство \"Использовать управляемые формы в обычном приложении\" в Истина"))
     ;
   }

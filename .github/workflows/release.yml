@@ -54,7 +54,7 @@ jobs:
                 path: ./${{ matrix.app-image }}
 
             - name: Upload assets to release
-              uses: AButler/upload-release-assets@v3.0
+              uses: AButler/upload-release-assets@v4.0
               with:
                   files: './bsl-language-server_${{ matrix.prefix }}.zip'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -65,7 +65,7 @@ jobs:
 
             - name: Upload jar to release
               if: matrix.prefix == 'nix'
-              uses: AButler/upload-release-assets@v3.0
+              uses: AButler/upload-release-assets@v4.0
               with:
                   files: './build/libs/*.jar'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}

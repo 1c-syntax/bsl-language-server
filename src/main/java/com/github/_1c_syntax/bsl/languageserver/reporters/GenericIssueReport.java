@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 public class GenericIssueReport {
 
@@ -138,7 +139,7 @@ public class GenericIssueReport {
     }
 
     public Location(String filePath, Diagnostic diagnostic) {
-      message = diagnostic.getMessage();
+      message = DiagnosticMessage.getStringValue(diagnostic.getMessage());
       this.filePath = filePath;
       textRange = new TextRange(diagnostic.getRange());
     }

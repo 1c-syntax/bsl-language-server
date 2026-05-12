@@ -21,11 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -45,8 +47,11 @@ import java.util.stream.Stream;
  * всеми зарегистрированными анализаторами с обработкой ошибок.
  */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public abstract class DiagnosticComputer {
+
+  private final LanguageServerConfiguration configuration;
 
   private ExecutorService executorService;
 
@@ -76,6 +81,11 @@ public abstract class DiagnosticComputer {
   private List<Diagnostic> internalCompute(DocumentContext documentContext) {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
+    var ignoredAuthors = configuration.getDiagnosticsOptions().getIgnoredAuthors();
+    GitBlameComputer.Data gitBlameIgnorance = ignoredAuthors.isEmpty()
+      ? GitBlameComputer.Data.empty()
+      : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
+
     return diagnostics(documentContext).parallelStream()
       .flatMap((BSLDiagnostic diagnostic) -> {
         try {
@@ -91,6 +101,7 @@ public abstract class DiagnosticComputer {
         }
       })
       .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
       .toList();
 
   }

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
+import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 /**
@@ -37,9 +38,19 @@ public abstract class DiagnosticMixIn {
   @JsonDeserialize(using = DiagnosticCodeDeserializer.class)
   private Either<String, Number> code;
 
+  @JsonSerialize(using = DiagnosticMessageSerializer.class)
+  @JsonDeserialize(using = DiagnosticMessageDeserializer.class)
+  private Either<String, MarkupContent> message;
+
   @JsonIgnore
   public abstract void setCode(String code);
 
   @JsonProperty
   public abstract void setCode(Either<String, Number> code);
+
+  @JsonIgnore
+  public abstract void setMessage(String message);
+
+  @JsonProperty
+  public abstract void setMessage(Either<String, MarkupContent> message);
 }

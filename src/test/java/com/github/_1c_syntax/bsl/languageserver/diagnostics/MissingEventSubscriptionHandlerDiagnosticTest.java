@@ -33,6 +33,7 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @DirtiesContext
 class MissingEventSubscriptionHandlerDiagnosticTest extends AbstractDiagnosticTest<MissingEventSubscriptionHandlerDiagnostic> {
@@ -54,17 +55,17 @@ class MissingEventSubscriptionHandlerDiagnosticTest extends AbstractDiagnosticTe
       .hasSize(6)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(Ranges.create(0, 0, 7)))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Создайте модуль \"ОбщийПодпискиНаСобытия\" или исправьте некорректный обработчик подписки на событие \"ПриЗаписиСправочника\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Исправьте некорректный обработчик \"CommonModule.ОбщийПодпискиНаСобытия\" у подписки на событие \"ПриЗаписиДокумента\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте \"Сервер\" модулю \"КлиентскийОбщийМодуль\" или исправьте некорректный обработчик подписки на событие \"ПередЗаписьюДокумента\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Заполните обработчик подписки на событие \"ПередЗаписьюКонстанты\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Создайте процедуру \"ПервыйОбщийМодуль.ПодпискаНаСобытиеПриУстановкеНовогоКода\" или исправьте некорректный обработчик подписки на событие \"ПриУстановкеНовогоКода\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте \"Экспорт\" процедуре \"ПервыйОбщийМодуль.РегистрацияИзмененийПередУдалением\"  или исправьте некорректный обработчик подписки на событие \"РегистрацияИзмененийПередУдалением\""))
 
     ;
