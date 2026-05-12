@@ -87,7 +87,7 @@ public class RunAllTestsCodeLensSupplier
       return Collections.emptyList();
     }
 
-    var firstMethod = methods.get(0);
+    var firstMethod = methods.getFirst();
 
     return List.of(toCodeLens(firstMethod, documentContext));
   }

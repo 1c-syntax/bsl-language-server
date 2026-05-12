@@ -97,7 +97,7 @@ public final class MethodSymbolComputer
     }
 
     if (!declaration.annotation().isEmpty()) {
-      startNode = declaration.annotation().get(0).AMPERSAND();
+      startNode = declaration.annotation().getFirst().AMPERSAND();
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
@@ -132,7 +132,7 @@ public final class MethodSymbolComputer
     }
 
     if (!declaration.annotation().isEmpty()) {
-      startNode = declaration.annotation().get(0).AMPERSAND();
+      startNode = declaration.annotation().getFirst().AMPERSAND();
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
@@ -190,7 +190,7 @@ public final class MethodSymbolComputer
       .map(compilerDirectiveContext -> compilerDirectiveContext.getStop().getType())
       .filter(SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES::contains)
       .findAny()
-      .orElseGet(() -> compilerDirectiveContexts.get(0).getStop().getType());
+      .orElseGet(() -> compilerDirectiveContexts.getFirst().getStop().getType());
 
     return CompilerDirectiveKind.of(tokenType);
 

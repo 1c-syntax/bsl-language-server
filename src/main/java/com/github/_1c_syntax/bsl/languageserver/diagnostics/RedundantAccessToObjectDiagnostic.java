@@ -139,8 +139,8 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
 
     if (
       PATTERN.matcher(identifier.getText()).matches()
-        && modifiers.get(0) != null
-        && modifiers.get(0).accessIndex() == null
+        && modifiers.getFirst() != null
+        && modifiers.getFirst().accessIndex() == null
     ) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
@@ -200,8 +200,8 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     var modifiers = acceptor.modifier();
     return modifiers == null
       || modifiers.isEmpty()
-      || modifiers.get(0) == null
-      || modifiers.get(0).accessIndex() == null;
+      || modifiers.getFirst() == null
+      || modifiers.getFirst().accessIndex() == null;
   }
 
   private static boolean hasAccessProperty(BSLParser.AcceptorContext acceptor) {

@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -96,10 +96,10 @@ class MinimumLSPDiagnosticLevelTest {
     // Verify we have diagnostics with different LSP severities
     var hasHintOrInformation = diagnostics.stream()
       .map(BSLDiagnostic::getInfo)
-      .map(info -> info.getLSPSeverity())
-      .anyMatch(severity -> 
-        severity == org.eclipse.lsp4j.DiagnosticSeverity.Hint 
-        || severity == org.eclipse.lsp4j.DiagnosticSeverity.Information
+      .map(DiagnosticInfo::getLSPSeverity)
+      .anyMatch(severity ->
+        severity == org.eclipse.lsp4j.DiagnosticSeverity.Hint
+          || severity == org.eclipse.lsp4j.DiagnosticSeverity.Information
       );
 
     // With default configuration, we should have diagnostics with Hint or Information severity

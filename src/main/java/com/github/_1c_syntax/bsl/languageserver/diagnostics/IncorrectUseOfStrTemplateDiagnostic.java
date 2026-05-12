@@ -32,6 +32,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -77,7 +78,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       return false;
     }
 
-    var templateString = getTemplateString(params.get(0));
+    var templateString = getTemplateString(params.getFirst());
     if (templateString == null) {
       return false;
     }
@@ -141,7 +142,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     return expressionContext
       .map(BSLParser.ExpressionContext::member)
       .filter(memberContexts -> memberContexts.size() == 1)
-      .map(memberContexts -> memberContexts.get(0))
+      .map(List::getFirst)
       .flatMap(memberContext -> calcStringForMemberContext(memberContext, isFullSearch));
   }
 
@@ -192,7 +193,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
   @Nullable
   private static ParserRuleContext getPreviousNode(ParserRuleContext node, int ruleStatement) {
 
-    final var children = node.getParent().children;
+    final var children = node.getParent().getChildren();
     final var pos = children.indexOf(node);
     if (pos > 0) {
       for (int i = pos - 1; i >= 0; i--) {
@@ -221,7 +222,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       .map(BSLParser.CallParamContext::expression)
       .map(BSLParser.ExpressionContext::member)
       .filter(memberContexts -> memberContexts.size() == 1)
-      .map(memberContexts -> memberContexts.get(0))
+      .map(List::getFirst)
       .map(BSLParser.MemberContext::complexIdentifier)
       .map(BSLParser.ComplexIdentifierContext::globalMethodCall)
       .filter(globalMethodCallContext -> nstrPattern.matcher(globalMethodCallContext.methodName().getText()).matches())

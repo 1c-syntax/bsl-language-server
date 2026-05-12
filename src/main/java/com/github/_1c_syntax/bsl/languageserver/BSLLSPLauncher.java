@@ -155,7 +155,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
 
   private static String[] addDefaultCommand(String[] args) {
     List<String> tmpList = new ArrayList<>(Arrays.asList(args));
-    tmpList.add(0, DEFAULT_COMMAND);
+    tmpList.addFirst(DEFAULT_COMMAND);
     args = tmpList.toArray(new String[0]);
     return args;
   }

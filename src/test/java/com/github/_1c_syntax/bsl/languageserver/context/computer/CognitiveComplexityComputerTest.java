@@ -51,7 +51,7 @@ class CognitiveComplexityComputerTest {
     final Map<MethodSymbol, Integer> methodsComplexity = data.methodsComplexity();
 
     //then
-    MethodSymbol example1 = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol example1 = documentContext.getSymbolTree().getMethods().getFirst();
     Integer example1Complexity = methodsComplexity.get(example1);
     assertThat(example1Complexity).isEqualTo(19);
 

@@ -92,7 +92,7 @@ class ModuleSymbolMarkupContentBuilderTest {
     assertThat(blocks).hasSizeGreaterThanOrEqualTo(1);
 
     // Для ManagerModule используется локализованный mdoRef
-    assertThat(blocks.get(0)).contains("Справочник.Справочник1");
+    assertThat(blocks.getFirst()).contains("Справочник.Справочник1");
   }
 
   @Test
@@ -112,7 +112,7 @@ class ModuleSymbolMarkupContentBuilderTest {
     assertThat(blocks).hasSizeGreaterThanOrEqualTo(1);
 
     // Для ObjectModule используется локализованный mdoRef
-    assertThat(blocks.get(0)).contains("Справочник.Справочник1");
+    assertThat(blocks.getFirst()).contains("Справочник.Справочник1");
   }
 
   @Test

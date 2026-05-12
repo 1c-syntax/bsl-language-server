@@ -40,7 +40,7 @@ class SourceDefinedSymbolDeclarationReferenceFinderTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/SourceDefinedSymbolDeclarationReferenceFinder.bsl");
     var module = documentContext.getSymbolTree().getModule();
-    var method = documentContext.getSymbolTree().getMethods().get(0);
+    var method = documentContext.getSymbolTree().getMethods().getFirst();
 
     // when
     var optionalReference = referenceFinder.findReference(documentContext.getUri(), new Position(0, 15));

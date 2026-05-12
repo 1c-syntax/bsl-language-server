@@ -252,11 +252,7 @@ public class SemanticTokensProvider {
     }
 
     // Token is on the end line - check if it starts before range end
-    if (tokenLine == endLine && tokenStart >= endChar) {
-      return false;
-    }
-
-    return true;
+    return tokenLine != endLine || tokenStart < endChar;
   }
 
   /**
@@ -440,16 +436,21 @@ public class SemanticTokensProvider {
       int currDeltaLine = curr[currIdx + DELTA_LINE_INDEX];
 
       if (prevDeltaLine == currDeltaLine) {
-        // Полное совпадение (или совпадение с учётом deltaStart при inline-редактировании)
-        suffixMatch++;
-        // Если это был граничный токен при inline-редактировании, отмечаем его найденным
+        // Если это потенциальный граничный токен при inline-редактировании, проверяем deltaStart
         if (!foundBoundary && lineOffset == 0) {
           int prevDeltaStart = prev[prevIdx + DELTA_START_INDEX];
           int currDeltaStart = curr[currIdx + DELTA_START_INDEX];
           if (prevDeltaStart != currDeltaStart) {
+            // Граничный токен при inline-редактировании.
+            // НЕ включаем его в suffix match, чтобы он попал в edit и клиент получил
+            // обновлённое значение deltaStart. Аналогично обработке граничного токена
+            // при lineOffset != 0.
             foundBoundary = true;
+            continue;
           }
         }
+        // Полное совпадение
+        suffixMatch++;
       } else if (!foundBoundary && currDeltaLine - prevDeltaLine == lineOffset) {
         // Граничный токен при вставке/удалении строк.
         // НЕ включаем его в suffix match, чтобы он попал в edit и клиент получил

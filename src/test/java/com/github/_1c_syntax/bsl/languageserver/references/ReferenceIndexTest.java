@@ -179,7 +179,7 @@ class ReferenceIndexTest {
       .collect(Collectors.toList());
 
     // then
-    var reference = referencesTo.get(0);
+    var reference = referencesTo.getFirst();
     assertThat(reference.from()).isEqualTo(methodSymbol);
     assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
     assertThat(reference.selectionRange()).isEqualTo(Ranges.create(8, 26, 45));
@@ -217,7 +217,7 @@ class ReferenceIndexTest {
       .collect(Collectors.toList());
 
     // then
-    var reference = referencesTo.get(0);
+    var reference = referencesTo.getFirst();
     assertThat(reference.from()).isEqualTo(methodSymbol);
     assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
     assertThat(reference.selectionRange()).isEqualTo(Ranges.create(22, 42, 61));

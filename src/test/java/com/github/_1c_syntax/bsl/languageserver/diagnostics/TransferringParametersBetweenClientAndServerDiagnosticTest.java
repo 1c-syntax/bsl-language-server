@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -78,13 +77,13 @@ class TransferringParametersBetweenClientAndServerDiagnosticTest extends Abstrac
       Процедура Метод(Парам)
       КонецПроцедуры
       """;
-    
+
     var documentContext = TestUtils.getDocumentContext(code);
-    
+
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("cachedValueNames", "КэшированныеЗначения");
     diagnosticInstance.configure(configuration);
-    
+
     var diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics, true)
@@ -109,13 +108,13 @@ class TransferringParametersBetweenClientAndServerDiagnosticTest extends Abstrac
       Процедура Метод(Парам)
       КонецПроцедуры
       """;
-    
+
     var documentContext = TestUtils.getDocumentContext(code);
-    
+
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("cachedValueNames", "КэшированныеЗначения");
     diagnosticInstance.configure(configuration);
-    
+
     var diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics, true)
@@ -143,13 +142,13 @@ class TransferringParametersBetweenClientAndServerDiagnosticTest extends Abstrac
       Процедура Метод(Парам)
       КонецПроцедуры
       """;
-    
+
     var documentContext = TestUtils.getDocumentContext(code);
-    
+
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("cachedValueNames", "КэшированныеЗначения");
     diagnosticInstance.configure(configuration);
-    
+
     var diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics, true)

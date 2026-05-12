@@ -46,7 +46,7 @@ public class BasicBlockVertex extends CfgVertex {
       return super.getAst();
     }
 
-    return Optional.of(statements.get(0));
+    return Optional.of(statements.getFirst());
   }
 
   @Override

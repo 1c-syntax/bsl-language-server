@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -212,7 +213,7 @@ class SemanticTokensProviderTest {
     assertThat(decoded).isNotEmpty();
 
     // First token should be at line 0
-    assertThat(decoded.get(0).line).isZero();
+    assertThat(decoded.getFirst().line).isZero();
 
     // Tokens should be ordered by position
     for (int i = 1; i < decoded.size(); i++) {
@@ -928,8 +929,7 @@ class SemanticTokensProviderTest {
       new ExpectedToken(7, 56, 3, SemanticTokenTypes.Keyword, "КАК"),
       new ExpectedToken(7, 60, 5, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "Курсы"),
       // Line 8: ИНДЕКСИРОВАТЬ ПО Валюта, Период
-      new ExpectedToken(8, 3, 13, SemanticTokenTypes.Keyword, "ИНДЕКСИРОВАТЬ"),
-      new ExpectedToken(8, 17, 2, SemanticTokenTypes.Keyword, "ПО"),
+      new ExpectedToken(8, 3, 16, SemanticTokenTypes.Keyword, "ИНДЕКСИРОВАТЬ ПО"),
       // Second query - line 10: ВЫБРАТЬ
       new ExpectedToken(10, 3, 7, SemanticTokenTypes.Keyword, "ВЫБРАТЬ"),
       // Line 14: ИЗ ВТ_Курсы КАК ВТ
@@ -938,8 +938,7 @@ class SemanticTokensProviderTest {
       new ExpectedToken(14, 15, 3, SemanticTokenTypes.Keyword, "КАК"),
       new ExpectedToken(14, 19, 2, SemanticTokenTypes.Variable, SemanticTokenModifiers.Declaration, "ВТ"),
       // Line 15: ЛЕВОЕ СОЕДИНЕНИЕ Справочник.Валюты КАК СпрВалюта
-      new ExpectedToken(15, 3, 5, SemanticTokenTypes.Keyword, "ЛЕВОЕ"),
-      new ExpectedToken(15, 9, 10, SemanticTokenTypes.Keyword, "СОЕДИНЕНИЕ"),
+      new ExpectedToken(15, 3, 16, SemanticTokenTypes.Keyword, "ЛЕВОЕ СОЕДИНЕНИЕ"),
       new ExpectedToken(15, 20, 10, SemanticTokenTypes.Namespace, "Справочник"),
       new ExpectedToken(15, 31, 6, SemanticTokenTypes.Class, "Валюты"),
       new ExpectedToken(15, 38, 3, SemanticTokenTypes.Keyword, "КАК"),
@@ -968,7 +967,7 @@ class SemanticTokensProviderTest {
     // Sort tokens by position
     var sortedTokens = decoded.stream()
       .filter(t -> t.line == 1)
-      .sorted((a, b) -> Integer.compare(a.start, b.start))
+      .sorted(Comparator.comparingInt(a -> a.start))
       .toList();
 
     // Verify no overlaps
@@ -1211,7 +1210,7 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     assertThat(delta.getResultId()).isNotNull();
     assertThat(delta.getEdits()).isNotEmpty();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     assertThat(edit.getDeleteCount() + (edit.getData() != null ? edit.getData().size() : 0))
       .isGreaterThan(0);
   }
@@ -1273,7 +1272,7 @@ class SemanticTokensProviderTest {
     // then - should return delta with small edits (just the new token + changed deltaLine)
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     // For inserting at beginning: prefix=0, suffix should match most of the old data
     // deleteCount should be small (just the first deltaLine that changed)
     // insertData should be the new token + updated first deltaLine
@@ -1315,7 +1314,7 @@ class SemanticTokensProviderTest {
     assertThat(result.isRight()).isTrue();
     var delta = result.getRight();
     assertThat(delta.getEdits()).isNotEmpty();
-    var edit = delta.getEdits().get(0);
+    var edit = delta.getEdits().getFirst();
     // For insertion in middle: 
     // - prefix matches up to insertion point
     // - suffix matches tokens after insertion (they have same relative deltaLine)
@@ -1381,25 +1380,80 @@ class SemanticTokensProviderTest {
     // 
     // With lineOffset=0 inline edit handling:
     // - Prefix match: "Перем" (1 token = 5 integers)
-    // - Suffix match: "А" and ";" (2 tokens = 10 integers)
-    //   Note: "А" matches because the algorithm allows deltaStart to differ when lineOffset=0
-    // - Edit deletes: nothing (0 integers)
-    // - Edit inserts: "Новая" and "," (2 tokens = 10 integers)
-    var edit = delta.getEdits().get(0);
+    // - Suffix match: ";" (1 token = 5 integers)
+    //   Note: "А" is NOT in suffix because its deltaStart changed (boundary token)
+    // - Edit deletes: old "А" (1 token = 5 integers)
+    // - Edit inserts: "Новая", ",", new "А" (3 tokens = 15 integers)
+    var edit = delta.getEdits().getFirst();
     assertThat(edit.getStart())
       .as("Edit should start after the prefix match (Перем = 5 integers)")
       .isEqualTo(5);
     assertThat(edit.getDeleteCount())
-      .as("Edit should delete nothing (suffix match includes А and ;)")
-      .isEqualTo(0);
+      .as("Edit should delete old А token (1 token = 5 integers)")
+      .isEqualTo(5);
     assertThat(edit.getData())
-      .as("Edit should insert Новая and , tokens (2 tokens = 10 integers)")
+      .as("Edit should insert Новая, comma, and А tokens (3 tokens = 15 integers)")
       .isNotNull()
-      .hasSize(10);
+      .hasSize(15);
     
     // Verify the edit is optimal (smaller than sending all new tokens)
     int editSize = edit.getDeleteCount() + edit.getData().size();
     assertThat(editSize).isLessThan(tokens2.getData().size());
+  }
+
+  @Test
+  void deltaWithTokenModifiedInline_shouldUpdateDeltaStartForFollowingTokens() {
+    // given - simulate modifying a token on the same line (e.g., adding "1" to identifier)
+    // This reproduces the bug: when editing a token inline, following tokens on the same line
+    // should have their deltaStart updated in the delta edit, not kept from the old data.
+    String bsl1 = """
+      Процедура Имя(Параметр)
+        А = Параметр + "Строка";
+      КонецПроцедуры
+      """;
+
+    String bsl2 = """
+      Процедура Имя(Параметр)
+        А = Параметр1 + "Строка";
+      КонецПроцедуры
+      """;
+
+    DocumentContext context1 = TestUtils.getDocumentContext(bsl1);
+    referenceIndexFiller.fill(context1);
+    TextDocumentIdentifier textDocId1 = TestUtils.getTextDocumentIdentifier(context1.getUri());
+    SemanticTokens tokens1 = provider.getSemanticTokensFull(context1, new SemanticTokensParams(textDocId1));
+
+    DocumentContext context2 = TestUtils.getDocumentContext(context1.getUri(), bsl2);
+    referenceIndexFiller.fill(context2);
+    SemanticTokens tokens2 = provider.getSemanticTokensFull(context2, new SemanticTokensParams(textDocId1));
+
+    // when
+    var deltaParams = new SemanticTokensDeltaParams(textDocId1, tokens1.getResultId());
+    var result = provider.getSemanticTokensFullDelta(context2, deltaParams);
+
+    // then - apply delta to original and verify it produces correct tokens
+    assertThat(result.isRight()).isTrue();
+    var delta = result.getRight();
+    assertThat(delta.getEdits()).isNotEmpty();
+
+    // Apply the delta edit to the original token data to reconstruct the new data
+    List<Integer> reconstructed = new ArrayList<>(tokens1.getData());
+    for (var edit : delta.getEdits()) {
+      int start = edit.getStart();
+      int deleteCount = edit.getDeleteCount();
+      List<Integer> data = edit.getData() != null ? edit.getData() : List.of();
+      for (int i = 0; i < deleteCount; i++) {
+        reconstructed.remove(start);
+      }
+      for (int i = 0; i < data.size(); i++) {
+        reconstructed.add(start + i, data.get(i));
+      }
+    }
+
+    // The reconstructed data should exactly match the full tokens from bsl2
+    assertThat(reconstructed)
+      .as("Applying delta to original tokens should produce the same result as full tokens")
+      .isEqualTo(tokens2.getData());
   }
 
   @Test

@@ -28,7 +28,6 @@ import io.sentry.SentryOptions;
 import io.sentry.protocol.Geo;
 import io.sentry.protocol.User;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.ServerInfo;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
