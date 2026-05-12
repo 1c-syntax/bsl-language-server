@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -31,7 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,6 +49,9 @@ class ServerContextTest {
 
   @Autowired
   private ServerContext serverContext;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testConfigurationMetadata() {
@@ -122,6 +128,23 @@ class ServerContextTest {
 
     // then
     assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
+  }
+
+  @Test
+  void testPopulateContextExcludesPathsFromConfig() {
+    Path path = Absolute.path(PATH_TO_METADATA);
+    serverContext.setConfigurationRoot(path);
+    configuration.setExcludePaths(List.of("CommonModules"));
+
+    serverContext.populateContext();
+
+    var documents = serverContext.getDocuments();
+    assertThat(documents).isNotEmpty();
+    var commonModuleUris = documents.keySet().stream()
+      .map(URI::getPath)
+      .filter(p -> p.contains("CommonModules"))
+      .toList();
+    assertThat(commonModuleUris).isEmpty();
   }
 
   private DocumentContext addDocumentContext(ServerContext serverContext, String path) {

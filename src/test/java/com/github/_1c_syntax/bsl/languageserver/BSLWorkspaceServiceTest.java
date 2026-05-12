@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
@@ -55,11 +56,17 @@ import static org.mockito.Mockito.when;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class BSLWorkspaceServiceTest {
 
+  private static final File FIXTURE_BSL = new File("./src/test/resources/cli/test.bsl");
+  private static final File FIXTURE_FORMATTABLE_BSL = new File("./src/test/resources/providers/format.bsl");
+
   @Autowired
   private BSLWorkspaceService workspaceService;
 
   @Autowired
   private ServerContext serverContext;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @TempDir
   Path tempDir;
@@ -97,13 +104,10 @@ class BSLWorkspaceServiceTest {
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
 
     // when
-    workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(200)).until(() -> true);
+    assertThatCode(() -> workspaceService.didChangeWatchedFiles(params)).doesNotThrowAnyException();
 
     // then
-    // Для открытого файла событие Created должно быть проигнорировано
-    // Документ должен остаться в контексте
-    assertThat(serverContext.getDocument(uri)).isNotNull();
+    await().untilAsserted(() -> assertThat(serverContext.getDocument(uri)).isNotNull());
   }
 
   @Test
@@ -116,19 +120,19 @@ class BSLWorkspaceServiceTest {
     serverContext.rebuildDocument(documentContext);
     serverContext.tryClearDocument(documentContext);
 
-    // Изменяем содержимое файла
-    FileUtils.writeStringToFile(testFile, "// Новое содержимое\nПроцедура Тест()\nКонецПроцедуры\n", StandardCharsets.UTF_8);
+    FileUtils.copyFile(FIXTURE_FORMATTABLE_BSL, testFile);
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Changed);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
 
     // then
-    assertThat(serverContext.getDocument(uri)).isNotNull();
-    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+    await().untilAsserted(() -> {
+      assertThat(serverContext.getDocument(uri)).isNotNull();
+      assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+    });
   }
 
   @Test
@@ -141,21 +145,16 @@ class BSLWorkspaceServiceTest {
     var documentContext = serverContext.addDocument(uri);
     serverContext.openDocument(documentContext, content, 1);
 
-    // Изменяем содержимое файла на диске
-    var newContentOnDisk = "// Измененное содержимое\n";
-    FileUtils.writeStringToFile(testFile, newContentOnDisk, StandardCharsets.UTF_8);
+    FileUtils.copyFile(FIXTURE_FORMATTABLE_BSL, testFile);
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Changed);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(200)).until(() -> true);
 
     // then
-    // Для открытого файла событие Changed должно быть проигнорировано
-    // Документ должен остаться в контексте
-    assertThat(serverContext.getDocument(uri)).isNotNull();
+    await().untilAsserted(() -> assertThat(serverContext.getDocument(uri)).isNotNull());
   }
 
   @Test
@@ -233,12 +232,13 @@ class BSLWorkspaceServiceTest {
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
 
     // when
-    workspaceService.didChangeWatchedFiles(params);
-    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+    assertThatCode(() -> workspaceService.didChangeWatchedFiles(params)).doesNotThrowAnyException();
 
     // then
-    // Не должно быть исключений
-    assertThat(serverContext.getDocument(uri)).isNull();
+    await()
+      .atMost(Duration.ofSeconds(2))
+      .during(Duration.ofMillis(200))
+      .until(() -> serverContext.getDocument(uri) == null);
   }
 
   @Test
@@ -281,32 +281,75 @@ class BSLWorkspaceServiceTest {
   }
 
   @Test
+  void testDidChangeWatchedFiles_Created_ExcludedPath() throws IOException {
+    // given
+    serverContext.setConfigurationRoot(tempDir);
+    configuration.setExcludePaths(List.of(".git"));
+
+    var excludedDir = tempDir.resolve(".git").toFile();
+    assertThat(excludedDir.mkdirs()).isTrue();
+    var testFile = new File(excludedDir, "excluded.bsl");
+    FileUtils.copyFile(FIXTURE_BSL, testFile);
+    var uri = Absolute.uri(testFile.toURI());
+
+    var fileEvent = new FileEvent(uri.toString(), FileChangeType.Created);
+
+    // when
+    workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(fileEvent)));
+
+    // then
+    await()
+      .atMost(Duration.ofSeconds(2))
+      .during(Duration.ofMillis(300))
+      .until(() -> serverContext.getDocument(uri) == null);
+  }
+
+  @Test
+  void testDidChangeWatchedFiles_Changed_ExcludedPathNotAdded() throws IOException {
+    // given
+    serverContext.setConfigurationRoot(tempDir);
+    configuration.setExcludePaths(List.of(".git"));
+
+    var excludedDir = tempDir.resolve(".git").toFile();
+    assertThat(excludedDir.mkdirs()).isTrue();
+    var testFile = new File(excludedDir, "excluded_changed.bsl");
+    FileUtils.copyFile(FIXTURE_BSL, testFile);
+    var uri = Absolute.uri(testFile.toURI());
+
+    assertThat(serverContext.getDocument(uri)).isNull();
+
+    var fileEvent = new FileEvent(uri.toString(), FileChangeType.Changed);
+
+    // when
+    workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(fileEvent)));
+
+    // then
+    await()
+      .atMost(Duration.ofSeconds(2))
+      .during(Duration.ofMillis(300))
+      .until(() -> serverContext.getDocument(uri) == null);
+  }
+
+  @Test
   void testDidChangeConfiguration_WithNullSettings() {
     // given
-    // Мокируем params с getSettings(), возвращающим null
-    // Это соответствует реальному сценарию, когда некоторые LSP клиенты
-    // отправляют workspace/didChangeConfiguration без настроек
     var params = mock(DidChangeConfigurationParams.class);
     when(params.getSettings()).thenReturn(null);
 
-    // when/then
-    // Не должно быть исключений при вызове с null settings
+    // when / then
     assertThatCode(() -> workspaceService.didChangeConfiguration(params))
       .doesNotThrowAnyException();
   }
 
   /**
-   * Создает временный тестовый файл с базовым содержимым.
+   * Создаёт временный BSL-файл из фикстуры {@code cli/test.bsl}.
+   *
+   * @param fileName имя файла во временном каталоге
+   * @return созданный файл
    */
   private File createTestFile(String fileName) throws IOException {
     var file = tempDir.resolve(fileName).toFile();
-    var content = """
-      // Тестовый файл
-      Процедура ТестоваяПроцедура()
-        Сообщить("Тест");
-      КонецПроцедуры
-      """;
-    FileUtils.writeStringToFile(file, content, StandardCharsets.UTF_8);
+    FileUtils.copyFile(FIXTURE_BSL, file);
     return file;
   }
 }
