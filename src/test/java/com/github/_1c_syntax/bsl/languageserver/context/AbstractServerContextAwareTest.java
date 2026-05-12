@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,8 +43,12 @@ public abstract class AbstractServerContextAwareTest {
 
   @BeforeEach
   void resetContext() {
-    // Reset context field to ensure clean state between tests
     context = null;
+  }
+
+  @AfterEach
+  void cleanupWorkspace() {
+    serverContextProvider.clear();
   }
 
   /**
@@ -52,7 +57,6 @@ public abstract class AbstractServerContextAwareTest {
   protected void initServerContext() {
     serverContextProvider.clear();
     context = serverContextProvider.addWorkspace(EMPTY_WORKSPACE_URI);
-    // Re-set workspace context for scoped bean resolution in tests
     WorkspaceContextHolder.set(context.getWorkspaceUri());
   }
 
@@ -75,7 +79,6 @@ public abstract class AbstractServerContextAwareTest {
     var uri = configurationRoot.toUri();
     context = serverContextProvider.addWorkspace(uri);
     context.setConfigurationRoot(configurationRoot);
-    // Re-set workspace context for scoped bean resolution in tests
     WorkspaceContextHolder.set(context.getWorkspaceUri());
     if (populate) {
       context.populateContext();

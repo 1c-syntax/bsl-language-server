@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -245,13 +246,9 @@ public class ServerContextProvider {
    * Очистить все workspaces.
    */
   public void clear() {
-    contexts.forEach((uri, serverContext) -> {
-      serverContext.clear();
-      workspaceScope.removeWorkspace(uri);
-      WorkspaceContextHolder.unregisterWorkspace(uri);
-    });
-    contexts.clear();
-    workspaceRoots.clear();
+    new ArrayList<>(contexts.keySet()).forEach(uri ->
+      removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
+    );
     documentIndex.clear();
     LOGGER.debug("Cleared all workspaces");
   }

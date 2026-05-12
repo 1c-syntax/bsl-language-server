@@ -21,8 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +37,19 @@ class SourceDefinedSymbolDeclarationReferenceFinderTest {
 
   @Autowired
   private SourceDefinedSymbolDeclarationReferenceFinder referenceFinder;
+
+  @Autowired
+  private ServerContextProvider serverContextProvider;
+
+  @BeforeEach
+  void setUp() {
+    serverContextProvider.clear();
+  }
+
+  @AfterEach
+  void tearDown() {
+    serverContextProvider.clear();
+  }
 
   @Test
   void testFindReferenceOnMethodDeclaration() {
