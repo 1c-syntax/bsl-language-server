@@ -48,6 +48,7 @@ class AnalyzeCommandTest {
   @TempDir
   Path tempDir;
 
+  /** Анализ с конфигом, содержащим excludePaths, отрабатывает успешно (исключённые файлы пропускаются). */
   @Test
   void callWithExcludePathsConfigFiltersFiles() {
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
@@ -61,6 +62,7 @@ class AnalyzeCommandTest {
     assertThat(exitCode).isZero();
   }
 
+  /** Несуществующий workspaceDir — команда возвращает код 1 (ошибка). */
   @Test
   void callReturnsOneWhenWorkspaceDirDoesNotExist() {
     var nonexistentWorkspace = tempDir.resolve("nonexistent_workspace").toAbsolutePath().toString();
@@ -76,6 +78,7 @@ class AnalyzeCommandTest {
     assertThat(exitCode).isOne();
   }
 
+  /** Несуществующий srcDir — команда возвращает код 1 (ошибка). */
   @Test
   void callReturnsOneWhenSrcDirDoesNotExist() {
     var nonexistentSrc = tempDir.resolve("nonexistent_src").toAbsolutePath().toString();
@@ -91,6 +94,7 @@ class AnalyzeCommandTest {
     assertThat(exitCode).isOne();
   }
 
+  /** Без флага {@code silent} анализ выводит прогресс-бар и завершается успешно. */
   @Test
   void callWithoutSilentRunsWithProgressBar() {
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
@@ -104,6 +108,7 @@ class AnalyzeCommandTest {
     assertThat(exitCode).isZero();
   }
 
+  /** Возвращает абсолютный путь к тестовому конфигу с {@code excludePaths}. */
   private static String resolveConfigPath() {
     var resource = AnalyzeCommandTest.class.getResource("/.bsl-language-server-exclude-paths.json");
     if (resource == null) {

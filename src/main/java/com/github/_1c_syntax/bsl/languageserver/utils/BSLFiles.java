@@ -45,8 +45,13 @@ public class BSLFiles {
   private static final IOFileFilter BSL_FILE_FILTER = new SuffixFileFilter(BSL_EXTENSIONS);
 
   /**
-   * @param srcDir       каталог поиска
-   * @param excludePaths паттерны исключения; {@code null}/пусто — без фильтрации
+   * Возвращает все BSL/OS файлы внутри {@code srcDir}, не попадающие под {@code excludePaths}.
+   * Каталоги, совпадающие с паттернами исключения, не разворачиваются.
+   *
+   * @param srcDir       корневой каталог поиска
+   * @param excludePaths паттерны исключения (см. {@link PathExclusionUtils}); {@code null} или пустой
+   *                     список означает «без фильтрации»
+   * @return найденные файлы; пустая коллекция, если ничего не найдено
    */
   public static Collection<File> listBslFiles(Path srcDir, @Nullable List<String> excludePaths) {
     var normalizedSrcDir = Absolute.path(srcDir);

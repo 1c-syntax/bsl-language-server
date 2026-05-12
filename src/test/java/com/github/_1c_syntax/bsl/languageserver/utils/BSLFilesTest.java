@@ -31,10 +31,12 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/** Интеграционные тесты {@link BSLFiles#listBslFiles} на временной файловой системе. */
 class BSLFilesTest {
 
   private static final String SRC_MODULE_BSL = "src/Module.bsl";
 
+  /** Без excludePaths возвращаются все .bsl/.os файлы внутри корня. */
   @Test
   void listBslFilesReturnsAllBslFilesWhenNoExclusions(@TempDir Path projectRoot) throws IOException {
     Path moduleFile = createBslFile(projectRoot, SRC_MODULE_BSL);
@@ -50,6 +52,7 @@ class BSLFilesTest {
     );
   }
 
+  /** Каталоги с именами из excludePaths (".git", "node_modules") не разворачиваются при обходе. */
   @Test
   void listBslFilesSkipsExcludedDirectoriesBySimpleName(@TempDir Path projectRoot) throws IOException {
     Path keep = createBslFile(projectRoot, SRC_MODULE_BSL);
@@ -61,6 +64,7 @@ class BSLFilesTest {
     assertThat(found).containsExactly(keep.toFile());
   }
 
+  /** Glob "**\/.git/**" обрезает обход в самой .git-директории на любом уровне вложенности. */
   @Test
   void listBslFilesSkipsExcludedDirectoriesByDoubleStarSuffix(@TempDir Path projectRoot) throws IOException {
     Path keep = createBslFile(projectRoot, SRC_MODULE_BSL);
@@ -71,6 +75,7 @@ class BSLFilesTest {
     assertThat(found).containsExactly(keep.toFile());
   }
 
+  /** Файлы с расширениями вне списка BSL/OS не попадают в результат (даже без excludePaths). */
   @Test
   void listBslFilesIgnoresFilesNotInBslExtensions(@TempDir Path projectRoot) throws IOException {
     Path bsl = createBslFile(projectRoot, SRC_MODULE_BSL);
@@ -81,6 +86,7 @@ class BSLFilesTest {
     assertThat(found).containsExactly(bsl.toFile());
   }
 
+  /** Создаёт пустой BSL-файл по относительному пути в корне теста. */
   private static Path createBslFile(Path root, String relative) throws IOException {
     var file = root.resolve(relative);
     Files.createDirectories(file.getParent());

@@ -99,6 +99,10 @@ public class PathExclusionUtils {
     return new ExclusionFilters(notExcludedFilter(dirExcluders), notExcludedFilter(fileExcluders));
   }
 
+  /**
+   * Классифицирует {@code pattern} по типу и добавляет соответствующий
+   * {@link IOFileFilter} в нужный список исключений (для каталогов и/или для файлов).
+   */
   private static void addExcluders(
     String pattern,
     List<IOFileFilter> dirExcluders,
@@ -132,6 +136,11 @@ public class PathExclusionUtils {
     });
   }
 
+  /**
+   * Компилирует {@code glob} в {@link PathMatcherFileFilter}, дополняя префиксом
+   * {@code **\/} для матчинга на любой глубине. Невалидные паттерны пропускаются
+   * с предупреждением в лог.
+   */
   private static Optional<IOFileFilter> tryGlobFilter(String glob) {
     var fullGlob = glob.startsWith("**/") || glob.startsWith("/") ? glob : "**/" + glob;
     try {
@@ -143,7 +152,11 @@ public class PathExclusionUtils {
     }
   }
 
-  /** На системах с {@code \\}-разделителем приводит путь к {@code /} перед матчингом. */
+  /**
+   * На системах с {@code \\}-разделителем оборачивает {@code delegate} так, чтобы
+   * входной путь предварительно приводился к виду с {@code /}-разделителем.
+   * На Linux/macOS возвращает {@code delegate} как есть.
+   */
   private static PathMatcher forwardSlashAware(PathMatcher delegate) {
     if ("/".equals(FileSystems.getDefault().getSeparator())) {
       return delegate;
@@ -151,6 +164,10 @@ public class PathExclusionUtils {
     return path -> delegate.matches(toForwardSlashPath(path));
   }
 
+  /**
+   * Пересобирает {@link Path} из его сегментов, объединённых через {@code /}.
+   * Используется для приведения Windows-путей к виду, понимаемому glob-паттернами с {@code /}.
+   */
   private static Path toForwardSlashPath(Path path) {
     if (path.getNameCount() == 0) {
       return path;
@@ -162,6 +179,10 @@ public class PathExclusionUtils {
     return path.getFileSystem().getPath(String.join("/", names));
   }
 
+  /**
+   * Объединяет {@code excluders} через {@code OR} и инвертирует результат:
+   * итоговый фильтр пропускает только те пути, которые не совпали ни с одним excluder.
+   */
   private static IOFileFilter notExcludedFilter(List<IOFileFilter> excluders) {
     if (excluders.isEmpty()) {
       return TrueFileFilter.INSTANCE;
@@ -170,11 +191,12 @@ public class PathExclusionUtils {
     return new NotFileFilter(excluded);
   }
 
-  /** Матчит путь, если хотя бы один его сегмент равен {@code name}. */
+  /** Фильтр-матчер по простому имени: путь принимается, если содержит сегмент с именем {@code name}. */
   private static final class SegmentFileFilter extends AbstractFileFilter {
 
     private final String name;
 
+    /** @param name имя сегмента, по которому матчатся пути */
     private SegmentFileFilter(String name) {
       this.name = name;
     }

@@ -130,6 +130,7 @@ class ServerContextTest {
     assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
   }
 
+  /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */
   @Test
   void testPopulateContextExcludesPathsFromConfig() {
     Path path = Absolute.path(PATH_TO_METADATA);

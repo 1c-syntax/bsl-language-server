@@ -30,6 +30,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/** Тесты {@link PathExclusionUtils}: одиночная проверка {@code isExcluded} и фабрика {@code filters}. */
 class PathExclusionUtilsTest {
 
   private static final String GIT = ".git";
@@ -38,30 +39,35 @@ class PathExclusionUtilsTest {
   private static final String PROJECT = "project";
   private static final String MODULE_BSL = "Module.bsl";
 
+  /** {@code patterns == null} — путь не считается исключённым. */
   @Test
   void isExcludedReturnsFalseWhenPatternsIsNull() {
     Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
     assertThat(PathExclusionUtils.isExcluded(path, null)).isFalse();
   }
 
+  /** Пустой список паттернов — путь не считается исключённым. */
   @Test
   void isExcludedReturnsFalseWhenPatternsIsEmpty() {
     Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
     assertThat(PathExclusionUtils.isExcluded(path, List.of())).isFalse();
   }
 
+  /** Простое имя сегмента (например, ".git") должно матчить путь, содержащий такой сегмент. */
   @Test
   void isExcludedReturnsTrueWhenPathMatchesSimpleNamePattern() {
     Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
     assertThat(PathExclusionUtils.isExcluded(path, List.of(GIT))).isTrue();
   }
 
+  /** Glob "**\/.git/**" корректно матчит файл в любой вложенной .git-директории. */
   @Test
   void isExcludedReturnsTrueWhenPathMatchesGlobPattern() {
     Path path = Path.of(PROJECT).toAbsolutePath().resolve("repo").resolve(GIT).resolve("refs").resolve("HEAD");
     assertThat(PathExclusionUtils.isExcluded(path, List.of("**/.git/**"))).isTrue();
   }
 
+  /** Если путь не совпадает ни с одним паттерном — возвращается false. */
   @Test
   void isExcludedReturnsFalseWhenPathDoesNotMatchAnyPattern() {
     Path path = Path.of(PROJECT).toAbsolutePath()
@@ -69,6 +75,7 @@ class PathExclusionUtilsTest {
     assertThat(PathExclusionUtils.isExcluded(path, List.of(GIT, NODE_MODULES))).isFalse();
   }
 
+  /** {@code null}/blank-элементы в списке игнорируются, остальные паттерны применяются. */
   @Test
   void isExcludedSkipsNullAndBlankPatterns() {
     Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
@@ -79,24 +86,28 @@ class PathExclusionUtilsTest {
     assertThat(PathExclusionUtils.isExcluded(path, patternsWithNullAndBlank)).isTrue();
   }
 
+  /** Простое имя матчит путь, содержащий каталог с этим именем (даже если файл лежит глубже). */
   @Test
   void isExcludedMatchesDirectorySegmentWithSimpleName() {
     Path path = Path.of("workspace").toAbsolutePath().resolve(NODE_MODULES).resolve("pkg").resolve("index.bsl");
     assertThat(PathExclusionUtils.isExcluded(path, List.of(NODE_MODULES))).isTrue();
   }
 
+  /** Невалидный glob-паттерн не должен ронять выполнение — путь просто считается не исключённым. */
   @Test
   void isExcludedReturnsFalseWhenGlobPatternIsInvalid() {
     Path path = Path.of(PROJECT).toAbsolutePath().resolve("src").resolve(MODULE_BSL);
     assertThat(PathExclusionUtils.isExcluded(path, List.of("**[invalid"))).isFalse();
   }
 
+  /** Glob без префикса "**\/" автоматически дополняется им и матчит файл на любой глубине. */
   @Test
   void isExcludedAutoAddsRecursivePrefixForBareGlob() {
     Path path = Path.of(PROJECT).toAbsolutePath().resolve("sub").resolve("temp.tmp");
     assertThat(PathExclusionUtils.isExcluded(path, List.of("*.tmp"))).isTrue();
   }
 
+  /** {@code null}, пустой список и список из blank-строк дают синглтон {@link PathExclusionUtils.ExclusionFilters#NONE}. */
   @Test
   void filtersReturnsNoneWhenPatternsAreNullOrBlank() {
     assertThat(PathExclusionUtils.filters(null)).isSameAs(PathExclusionUtils.ExclusionFilters.NONE);
@@ -108,6 +119,7 @@ class PathExclusionUtilsTest {
     assertThat(PathExclusionUtils.filters(blankOnly)).isSameAs(PathExclusionUtils.ExclusionFilters.NONE);
   }
 
+  /** Синглтон {@code NONE} использует {@link TrueFileFilter#INSTANCE} для обоих фильтров. */
   @Test
   void filtersNoneExposesTrueFileFilter() {
     var filters = PathExclusionUtils.filters(null);
@@ -115,6 +127,7 @@ class PathExclusionUtilsTest {
     assertThat(filters.fileFilter()).isSameAs(TrueFileFilter.INSTANCE);
   }
 
+  /** Простое имя сегмента применяется и к directoryFilter, и к fileFilter. */
   @Test
   void filtersSimpleNameAppliesToBothDirectoriesAndFiles() {
     Path root = Path.of(PROJECT).toAbsolutePath();
@@ -131,6 +144,7 @@ class PathExclusionUtilsTest {
     assertThat(filters.fileFilter().accept(otherFile.toFile())).isTrue();
   }
 
+  /** Паттерн вида "**\/.git/**" обрезает обход целиком на самой .git-директории. */
   @Test
   void filtersWithDoubleStarSuffixPrunesMatchingDirectory() {
     Path root = Path.of(PROJECT).toAbsolutePath();
@@ -147,6 +161,7 @@ class PathExclusionUtilsTest {
     assertThat(filters.fileFilter().accept(keepFile.toFile())).isTrue();
   }
 
+  /** Trailing slash ("build/") делает паттерн directory-only — файлы внутри не отфильтровываются индивидуально. */
   @Test
   void filtersWithTrailingSlashIsDirectoryOnly() {
     Path root = Path.of(PROJECT).toAbsolutePath();
@@ -159,12 +174,14 @@ class PathExclusionUtilsTest {
     assertThat(filters.fileFilter().accept(buildFile.toFile())).isTrue();
   }
 
+  /** Невалидный glob полностью игнорируется и приводит к синглтону NONE. */
   @Test
   void filtersIgnoreInvalidGlobPattern() {
     var filters = PathExclusionUtils.filters(List.of("**[invalid"));
     assertThat(filters).isSameAs(PathExclusionUtils.ExclusionFilters.NONE);
   }
 
+  /** Glob "*.tmp" автоматически становится "**\/*.tmp" и матчит вложенные файлы. */
   @Test
   void filtersAutoPrefixBareGlobMatchesAtAnyDepth() {
     Path root = Path.of(PROJECT).toAbsolutePath();
@@ -177,6 +194,7 @@ class PathExclusionUtilsTest {
     assertThat(filters.fileFilter().accept(bslFile.toFile())).isTrue();
   }
 
+  /** Сам корневой каталог не должен исключаться даже паттерном "**\/*.bsl". */
   @Test
   void filtersDoubleStarPatternKeepsRootItself() {
     Path root = Path.of(PROJECT).toAbsolutePath();

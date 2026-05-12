@@ -280,6 +280,7 @@ class BSLWorkspaceServiceTest {
     assertThat(serverContext.getDocument(uri3)).isNull();
   }
 
+  /** Событие создания файла внутри excluded-каталога не приводит к добавлению его в контекст. */
   @Test
   void testDidChangeWatchedFiles_Created_ExcludedPath() throws IOException {
     // given
@@ -304,6 +305,7 @@ class BSLWorkspaceServiceTest {
       .until(() -> serverContext.getDocument(uri) == null);
   }
 
+  /** Событие изменения для неизвестного файла внутри excluded-каталога — файл не добавляется. */
   @Test
   void testDidChangeWatchedFiles_Changed_ExcludedPathNotAdded() throws IOException {
     // given

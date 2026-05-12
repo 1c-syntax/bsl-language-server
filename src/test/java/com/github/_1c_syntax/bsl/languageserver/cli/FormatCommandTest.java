@@ -59,6 +59,7 @@ class FormatCommandTest {
   @TempDir
   Path tempDir;
 
+  /** Форматирование с настроенным {@code excludePaths} проходит успешно. */
   @Test
   void callWithExcludePathsRunsSuccessfully() throws Exception {
     serverContext.setConfigurationRoot(tempDir);
@@ -74,6 +75,7 @@ class FormatCommandTest {
     assertThat(exitCode).isZero();
   }
 
+  /** Если в указанном каталоге нет BSL/OS файлов — команда возвращает код 1. */
   @Test
   void callReturnsOneWhenNoFilesFound() throws Exception {
     serverContext.setConfigurationRoot(tempDir);
@@ -88,6 +90,7 @@ class FormatCommandTest {
     assertThat(exitCode).isOne();
   }
 
+  /** Несуществующий путь логируется и пропускается; при отсутствии файлов возвращается код 1. */
   @Test
   void callSkipsNonExistentPathAndReturnsOneWhenNoFiles() {
     serverContext.setConfigurationRoot(tempDir);
@@ -99,6 +102,7 @@ class FormatCommandTest {
     assertThat(exitCode).isOne();
   }
 
+  /** Можно передать путь к одному файлу — он будет отформатирован. */
   @Test
   void callFormatsSingleFile() throws Exception {
     serverContext.setConfigurationRoot(tempDir);
@@ -114,6 +118,7 @@ class FormatCommandTest {
     assertThat(exitCode).isZero();
   }
 
+  /** Опция {@code -s} принимает несколько путей через запятую, файлы собираются из всех. */
   @Test
   void callWithCommaSeparatedPathsFormatsFromBoth() throws Exception {
     serverContext.setConfigurationRoot(tempDir);
@@ -129,6 +134,7 @@ class FormatCommandTest {
     assertThat(exitCode).isZero();
   }
 
+  /** Без флага {@code -q} форматирование выводит прогресс-бар и завершается успешно. */
   @Test
   void callWithoutSilentShowsProgressBar() throws Exception {
     serverContext.setConfigurationRoot(tempDir);
