@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.PathExclusionUtils;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
@@ -42,6 +44,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +57,7 @@ import java.util.concurrent.Executors;
  * запросы на уровне всей рабочей области (поиск символов, изменение конфигурации,
  * выполнение команд и мониторинг изменений файлов).
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BSLWorkspaceService implements WorkspaceService {
@@ -147,10 +151,14 @@ public class BSLWorkspaceService implements WorkspaceService {
    * выполняет его парсинг и анализ, после чего сразу очищает вторичные данные
    * для экономии памяти. Для открытых файлов обработка пропускается,
    * т.к. их содержимое управляется через события textDocument/didOpen.
+   * Пути, попадающие под {@code excludePaths} из конфигурации, пропускаются.
    *
    * @param uri URI созданного файла
    */
   private void handleCreatedFileEvent(URI uri) {
+    if (isExcludedPath(uri)) {
+      return;
+    }
     var documentContext = serverContext.addDocument(uri);
 
     var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
@@ -168,13 +176,17 @@ public class BSLWorkspaceService implements WorkspaceService {
    * после чего очищает вторичные данные. Для открытых файлов обработка пропускается,
    * т.к. их актуальное содержимое управляется через события textDocument/didChange.
    * <p>
-   * Если файл отсутствует в контексте, добавляет его и обрабатывает аналогично созданному.
+   * Если файл отсутствует в контексте, добавляет его и обрабатывает аналогично созданному;
+   * при этом пути из {@code excludePaths} пропускаются.
    *
    * @param uri URI измененного файла
    */
   private void handleChangedFileEvent(URI uri) {
     var documentContext = serverContext.getDocument(uri);
     if (documentContext == null) {
+      if (isExcludedPath(uri)) {
+        return;
+      }
       documentContext = serverContext.addDocument(uri);
     }
 
@@ -182,6 +194,22 @@ public class BSLWorkspaceService implements WorkspaceService {
     if (!isDocumentOpened) {
       serverContext.rebuildDocument(documentContext);
       serverContext.tryClearDocument(documentContext);
+    }
+  }
+
+  /** Проверяет, входит ли путь по uri в excludePaths относительно корня конфигурации. */
+  private boolean isExcludedPath(URI uri) {
+    var root = serverContext.getConfigurationRoot();
+    var patterns = configuration.getExcludePaths();
+    if (root == null || patterns.isEmpty()) {
+      return false;
+    }
+    try {
+      var path = Absolute.path(Paths.get(uri));
+      return PathExclusionUtils.isExcluded(root, path, patterns);
+    } catch (IllegalArgumentException e) {
+      LOGGER.debug("Не удалось вычислить путь для проверки исключений, путь не считается исключённым: {}", uri, e);
+      return false;
     }
   }
 }

@@ -1108,6 +1108,15 @@
             "title": "Path to root directory of configuration files.",
             "default": null
         },
+        "excludePaths": {
+            "$id": "#/properties/excludePaths",
+            "type": "array",
+            "title": "Path patterns to exclude from indexing. Patterns are matched against paths relative to the configuration root (e.g. directory names \".git\", \"node_modules\" or glob \"**/.git/**\", \"**/.*\"). Only BSL/OS files under excluded paths are skipped from indexing and analysis.",
+            "items": {
+                "type": "string"
+            },
+            "default": []
+        },
         "sendErrors": {
             "$id": "#/properties/sendErrors",
             "type": "string",

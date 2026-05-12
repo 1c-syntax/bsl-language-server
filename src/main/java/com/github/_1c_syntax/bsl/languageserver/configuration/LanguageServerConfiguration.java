@@ -55,6 +55,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
@@ -117,6 +119,12 @@ public class LanguageServerConfiguration {
 
   @Nullable
   private Path configurationRoot;
+
+  /**
+   * Паттерны путей для исключения из индексации (простые имена каталогов или glob).
+   * Сопоставление выполняется относительно корня конфигурации.
+   */
+  private List<String> excludePaths = new ArrayList<>();
 
   @JsonIgnore
   @Setter(value = AccessLevel.NONE)

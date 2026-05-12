@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,7 +40,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -76,6 +77,7 @@ public class FormatCommand implements Callable<Integer> {
   private static final Pattern COMMA_PATTERN = Pattern.compile(",");
   private final ServerContext serverContext;
   private final FormatProvider formatProvider;
+  private final LanguageServerConfiguration configuration;
 
   @Option(
     names = {"-h", "--help"},
@@ -126,16 +128,19 @@ public class FormatCommand implements Callable<Integer> {
   }
 
   private List<File> findFilesForFormatting(String[] filePaths) {
+    var excludePaths = configuration.getExcludePaths();
     List<File> files = new ArrayList<>();
     for (String filePath : filePaths) {
-      Path srcDir = Absolute.path(filePath);
+      var srcDir = Absolute.path(filePath);
       if (!srcDir.toFile().exists()) {
         LOGGER.error("Source dir `{}` is not exists", srcDir);
         continue;
       }
 
-      if(srcDir.toFile().isDirectory()) {
-        files.addAll(FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true));
+      if (srcDir.toFile().isDirectory()) {
+        var configurationRoot = serverContext.getConfigurationRoot();
+        var excludeRoot = configurationRoot != null ? configurationRoot : srcDir;
+        files.addAll(BSLFiles.listBslFiles(srcDir, excludeRoot, excludePaths));
       } else {
         files.add(srcDir.toFile());
       }
