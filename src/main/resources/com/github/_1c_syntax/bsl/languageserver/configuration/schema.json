@@ -1006,6 +1006,16 @@
                             }
                         }
                     }
+                },
+                "ignoredAuthors": {
+                    "$id": "#/properties/ignoredAuthors",
+                    "type": "array",
+                    "title": "Git blame ignored authors. Diagnostics will not fire on lines authored by these email addresses.",
+                    "items": {
+                        "type": "string",
+                        "description": "Author email address as recorded in git blame."
+                    },
+                    "default": []
                 }
             }
         },

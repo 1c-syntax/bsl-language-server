@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
@@ -37,6 +39,7 @@ import java.util.Optional;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<ForbiddenMetadataNameDiagnostic> {
   ForbiddenMetadataNameDiagnosticTest() {
@@ -120,7 +123,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
       .hasSize(1)
-      .noneMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.Справочник1"));
+      .noneMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Справочник.Справочник1"));
   }
 
   @Test
@@ -155,10 +158,54 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
       .hasSize(3)
-      .allMatch(diagnostic -> diagnostic.getMessage().contains("Запрещено использовать имя `РегистрСведений` для"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Документ.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `РегистрСведений.РегистрСведений"))
+      .allMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Запрещено использовать имя `РегистрСведений` для"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Справочник.РегистрСведений"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Документ.РегистрСведений"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `РегистрСведений.РегистрСведений"))
     ;
+  }
+
+  @Test
+  void testSkipSupportLockedMdoInSessionModule() {
+    var docCtx = spy(getDocumentContext());
+
+    var mdoList = new ArrayList<MD>();
+
+    for (var originalMdo : context.getConfiguration().getChildren()) {
+      var mockedMdo = spy(originalMdo);
+      when(mockedMdo.getName()).thenReturn("РегистрСведений");
+
+      var ref = spy(originalMdo.getMdoReference());
+      var updatedRefRu = originalMdo.getMdoReference().getMdoRefRu()
+        .replace("." + originalMdo.getName(), ".РегистрСведений");
+      when(ref.getMdoRefRu()).thenReturn(updatedRefRu);
+      when(mockedMdo.getMdoReference()).thenReturn(ref);
+
+      if (originalMdo instanceof ModuleOwner) {
+        when(((ModuleOwner) mockedMdo).getModules()).thenReturn(Collections.emptyList());
+      }
+
+      // Mark every MDO as not editable (locked on support)
+      when(mockedMdo.getSupportVariant()).thenReturn(SupportVariant.NOT_EDITABLE);
+
+      mdoList.add(mockedMdo);
+    }
+
+    var spyConfig = spy(context.getConfiguration());
+    when(spyConfig.getChildren()).thenReturn(mdoList);
+
+    var spyServerCtx = spy(docCtx.getServerContext());
+    when(spyServerCtx.getConfiguration()).thenReturn(spyConfig);
+    when(docCtx.getServerContext()).thenReturn(spyServerCtx);
+
+    when(docCtx.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    // Enable skip support for locked MDOs
+    configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
+
+    List<Diagnostic> results = diagnosticInstance.getDiagnostics(docCtx);
+
+    // All MDOs are NOT_EDITABLE and skipSupport is WITH_SUPPORT_LOCKED, so none should produce diagnostics
+    assertThat(results).isEmpty();
   }
 }

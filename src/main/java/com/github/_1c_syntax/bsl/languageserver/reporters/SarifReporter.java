@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 /**
  * Репортер в формат SARIF.
@@ -252,11 +253,11 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   private static Result createResult(FileInfo fileInfo, Diagnostic diagnostic) {
     var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
 
-    var message = new Message().withText(diagnostic.getMessage());
+    var message = new Message().withText(DiagnosticMessage.getStringValue(diagnostic.getMessage()));
     var ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
     var level = severityToResultLevel.get(diagnostic.getSeverity());
     var analysisTarget = new ArtifactLocation().withUri(uri);
-    var locations = List.of(createLocation(diagnostic.getMessage(), uri, diagnostic.getRange()));
+    var locations = List.of(createLocation(DiagnosticMessage.getStringValue(diagnostic.getMessage()), uri, diagnostic.getRange()));
     var relatedLocations = Optional.ofNullable(diagnostic.getRelatedInformation())
       .stream()
       .flatMap(Collection::stream)

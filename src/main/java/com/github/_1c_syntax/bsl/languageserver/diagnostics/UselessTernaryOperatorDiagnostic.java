@@ -57,6 +57,23 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
   private static final int INDEX_TRUE_BRANCH = 1;
   private static final int INDEX_FALSE_BRANCH = 2;
 
+  /**
+   * Проверяет тернарный оператор {@code ?(условие, ветка1, ветка2)} на бесполезность.
+   * Диагностика срабатывает, если:
+   * <ul>
+   *   <li>условие — булева константа ({@code Истина}/{@code Ложь}), т.е. результат всегда известен;</li>
+   *   <li>обе ветки — булевы константы:
+   *     <ul>
+   *       <li>{@code ?(X, Истина, Ложь)} — упрощается до {@code X} (предлагается quickfix);</li>
+   *       <li>{@code ?(X, Ложь, Истина)} — упрощается до {@code НЕ X} (предлагается quickfix);</li>
+   *       <li>обе ветки одинаковы ({@code ?(X, Истина, Истина)} / {@code ?(X, Ложь, Ложь)}) —
+   *           результат не зависит от условия.</li>
+   *     </ul>
+   *   </li>
+   * </ul>
+   * Если булевой константой является только одна из веток, упростить выражение нельзя
+   * и диагностика не срабатывает.
+   */
   @Override
   public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
     var exp = ctx.expression();
@@ -68,21 +85,31 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
       if (condition != SKIPPED_RULE_INDEX) {
         diagnosticStorage.addDiagnostic(ctx);
-      } else if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE) {
-        diagnosticStorage.addDiagnostic(ctx, DiagnosticStorage.createAdditionalData(exp.get(INDEX_CONDITION).getText()));
-      } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE) {
-        diagnosticStorage.addDiagnostic(ctx,
-          DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(INDEX_CONDITION).getText())));
-      } else if (trueBranch != SKIPPED_RULE_INDEX || falseBranch != SKIPPED_RULE_INDEX) {
-        diagnosticStorage.addDiagnostic(ctx);
+      } else if (trueBranch != SKIPPED_RULE_INDEX && falseBranch != SKIPPED_RULE_INDEX) {
+        if (trueBranch == BSLParser.TRUE && falseBranch == BSLParser.FALSE) {
+          diagnosticStorage.addDiagnostic(ctx,
+            DiagnosticStorage.createAdditionalData(exp.get(INDEX_CONDITION).getText()));
+        } else if (trueBranch == BSLParser.FALSE && falseBranch == BSLParser.TRUE) {
+          diagnosticStorage.addDiagnostic(ctx,
+            DiagnosticStorage.createAdditionalData(getAdaptedText(exp.get(INDEX_CONDITION).getText())));
+        } else {
+          // обе ветки - одна и та же булева константа: результат не зависит от условия
+          diagnosticStorage.addDiagnostic(ctx);
+        }
       } else {
-        // остальное - не ошибка
+        // только одна из веток - булева константа, упростить нельзя
       }
     }
 
     return super.visitTernaryOperator(ctx);
   }
 
+  /**
+   * Формирует быстрые исправления для срабатываний диагностики, к которым приложен
+   * текст замены (см. {@link DiagnosticStorage.DiagnosticAdditionalData}).
+   * Соответствует случаям {@code ?(X, Истина, Ложь)} и {@code ?(X, Ложь, Истина)},
+   * где тернарный оператор заменяется на выражение условия (или его отрицание).
+   */
   @Override
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
@@ -110,10 +137,27 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
   }
 
+  /**
+   * Оборачивает текст условия в шаблон для quickfix отрицания
+   * (см. ресурс {@code quickFixAdaptedText}, например {@code "НЕ (%s)"}).
+   *
+   * @param text исходный текст условия тернарного оператора
+   * @return текст замены для случая {@code ?(X, Ложь, Истина)} → {@code НЕ X}
+   */
   private String getAdaptedText(String text) {
     return info.getResourceString("quickFixAdaptedText", text);
   }
 
+  /**
+   * Возвращает индекс булевого токена ({@link BSLParser#TRUE} или {@link BSLParser#FALSE}),
+   * если выражение является булевой константой, иначе {@link #SKIPPED_RULE_INDEX}.
+   * Распознаются как русские ({@code Истина}/{@code Ложь}), так и английские
+   * ({@code True}/{@code False}) литералы — в зависимости от того, как они представлены
+   * в дереве разбора.
+   *
+   * @param expCtx контекст выражения для проверки
+   * @return {@link BSLParser#TRUE}, {@link BSLParser#FALSE} либо {@link #SKIPPED_RULE_INDEX}
+   */
   private static int getBooleanToken(BSLParser.ExpressionContext expCtx) {
 
     var tmpCtx = Optional.of(expCtx)

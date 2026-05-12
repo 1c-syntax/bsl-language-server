@@ -9,19 +9,19 @@ plugins {
     jacoco
     id("com.diffplug.spotless") version "7.0.4"
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.2.0"
-    id("io.freefair.javadoc-links") version "9.2.0"
-    id("io.freefair.javadoc-utf-8") version "9.2.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.2.0"
+    id("io.freefair.lombok") version "9.5.0"
+    id("io.freefair.javadoc-links") version "9.5.0"
+    id("io.freefair.javadoc-utf-8") version "9.5.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.5.0"
     // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
-    id("com.github.ben-manes.versions") version "0.53.0"
+    id("com.github.ben-manes.versions") version "0.54.0"
     id("org.springframework.boot") version "4.0.1"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.1.0"
+    id("io.sentry.jvm.gradle") version "6.6.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
-    id("org.jreleaser") version "1.21.0"
-    id("org.sonarqube") version "7.2.2.6593"
+    id("org.jreleaser") version "1.24.0"
+    id("org.sonarqube") version "7.3.0.8198"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.7"
 }
@@ -60,7 +60,7 @@ gitProperties {
     customProperty("git.build.time", buildTime())
 }
 
-val languageToolVersion = "6.7"
+val languageToolVersion = "6.8"
 
 dependencies {
 
@@ -76,15 +76,15 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
-    api("com.github.ben-manes.caffeine:caffeine:3.2.3")
-    api("org.ehcache:ehcache:3.11.1")
+    api("com.github.ben-manes.caffeine:caffeine:3.2.4")
+    api("org.ehcache:ehcache:3.12.0")
 
     // lsp4j core
-    api("org.eclipse.lsp4j:org.eclipse.lsp4j:0.24.0")
-    api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:0.24.0")
+    api("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
+    api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.31.0")
+    api("io.github.1c-syntax:bsl-parser:0.32.0")
     api("io.github.1c-syntax:utils:0.7.0")
     api("io.github.1c-syntax:mdclasses:0.18.0")
     api("io.github.1c-syntax:bsl-common-library:0.10.0")
@@ -114,14 +114,17 @@ dependencies {
     implementation("org.aspectj:aspectjrt:1.9.25.1")
 
     // commons utils
-    implementation("commons-io:commons-io:2.21.0")
+    implementation("commons-io:commons-io:2.22.0")
     implementation("commons-beanutils:commons-beanutils:1.11.0") {
         exclude("commons-logging", "commons-logging")
     }
-    implementation("commons-codec:commons-codec:1.21.0")
+    implementation("commons-codec:commons-codec:1.22.0")
     implementation("org.apache.commons:commons-lang3:3.20.0")
     implementation("org.apache.commons:commons-collections4:4.5.0")
     implementation("org.apache.commons:commons-exec:1.6.0")
+
+    // JGit
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.3.0.202506031305-r")
 
     // progress bar
     implementation("me.tongfei:progressbar:0.10.2")
@@ -132,7 +135,7 @@ dependencies {
     implementation("io.leangen.geantyref:geantyref:2.0.1")
 
     // graphs
-    implementation("org.jgrapht:jgrapht-core:1.5.2")
+    implementation("org.jgrapht:jgrapht-core:1.5.3")
 
     // SARIF serialization
     implementation("com.contrastsecurity:java-sarif:2.0")
@@ -229,6 +232,21 @@ tasks.test {
 
     // Increase heap size to prevent OOM during test execution with EhCache
     maxHeapSize = "2g"
+
+    // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
+    // Использование форков, а не потоков, обусловлено тем, что многие тесты
+    // изменяют общее состояние Spring-контекста (@DirtiesContext,
+    // @CleanupContextBeforeClassAndAfterClass) и статические кэши, поэтому
+    // потоковая параллельность внутри одной JVM небезопасна. Каждый форк —
+    // изолированная JVM со своим Spring-контекстом.
+    //
+    // Уровень параллелизма можно переопределить Gradle-свойством
+    // `maxParallelForks` (например, `-PmaxParallelForks=4`). По умолчанию
+    // используется половина доступных процессоров, ограниченная диапазоном
+    // от 1 до 4, чтобы ограничить общий расход памяти (maxHeapSize по 2g
+    // на форк).
+    maxParallelForks = (project.findProperty("maxParallelForks") as String?)?.toIntOrNull()
+        ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
