@@ -197,16 +197,15 @@ public class BSLWorkspaceService implements WorkspaceService {
     }
   }
 
-  /** Проверяет, входит ли путь по uri в excludePaths относительно корня конфигурации. */
+  /** Проверяет, входит ли путь по uri в excludePaths из конфигурации. */
   private boolean isExcludedPath(URI uri) {
-    var root = serverContext.getConfigurationRoot();
     var patterns = configuration.getExcludePaths();
-    if (root == null || patterns.isEmpty()) {
+    if (patterns.isEmpty()) {
       return false;
     }
     try {
       var path = Absolute.path(Paths.get(uri));
-      return PathExclusionUtils.isExcluded(root, path, patterns);
+      return PathExclusionUtils.isExcluded(path, patterns);
     } catch (IllegalArgumentException e) {
       LOGGER.debug("Не удалось вычислить путь для проверки исключений, путь не считается исключённым: {}", uri, e);
       return false;

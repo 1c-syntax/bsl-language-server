@@ -21,11 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,96 +32,156 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PathExclusionUtilsTest {
 
-  @Test
-  void isExcludedReturnsFalseWhenRootIsNull() {
-    Path path = Path.of(".").toAbsolutePath();
-    assertThat(PathExclusionUtils.isExcluded(null, path, List.of(".git"))).isFalse();
-  }
+  private static final String GIT = ".git";
+  private static final String NODE_MODULES = "node_modules";
+  private static final String GLOB_ALL_BSL = "**/*.bsl";
+  private static final String PROJECT = "project";
+  private static final String MODULE_BSL = "Module.bsl";
 
   @Test
   void isExcludedReturnsFalseWhenPatternsIsNull() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.resolve(".git").resolve("HEAD");
-    assertThat(PathExclusionUtils.isExcluded(root, path, null)).isFalse();
+    Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
+    assertThat(PathExclusionUtils.isExcluded(path, null)).isFalse();
   }
 
   @Test
   void isExcludedReturnsFalseWhenPatternsIsEmpty() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.resolve(".git").resolve("HEAD");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of())).isFalse();
-  }
-
-  @Test
-  void isExcludedReturnsFalseWhenPathIsOutsideRoot() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.getParent().resolve("sibling").resolve("file.bsl");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of("other"))).isFalse();
+    Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
+    assertThat(PathExclusionUtils.isExcluded(path, List.of())).isFalse();
   }
 
   @Test
   void isExcludedReturnsTrueWhenPathMatchesSimpleNamePattern() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.resolve(".git").resolve("HEAD");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of(".git"))).isTrue();
+    Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
+    assertThat(PathExclusionUtils.isExcluded(path, List.of(GIT))).isTrue();
   }
 
   @Test
   void isExcludedReturnsTrueWhenPathMatchesGlobPattern() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.resolve("repo").resolve(".git").resolve("refs").resolve("HEAD");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of("**/.git/**"))).isTrue();
+    Path path = Path.of(PROJECT).toAbsolutePath().resolve("repo").resolve(GIT).resolve("refs").resolve("HEAD");
+    assertThat(PathExclusionUtils.isExcluded(path, List.of("**/.git/**"))).isTrue();
   }
 
   @Test
   void isExcludedReturnsFalseWhenPathDoesNotMatchAnyPattern() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.resolve("CommonModules").resolve("Module").resolve("Ext").resolve("Module.bsl");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of(".git", "node_modules"))).isFalse();
+    Path path = Path.of(PROJECT).toAbsolutePath()
+      .resolve("CommonModules").resolve("Module").resolve("Ext").resolve(MODULE_BSL);
+    assertThat(PathExclusionUtils.isExcluded(path, List.of(GIT, NODE_MODULES))).isFalse();
   }
 
   @Test
   void isExcludedSkipsNullAndBlankPatterns() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.resolve(".git").resolve("HEAD");
+    Path path = Path.of(PROJECT).toAbsolutePath().resolve(GIT).resolve("HEAD");
     var patternsWithNullAndBlank = new ArrayList<String>();
     patternsWithNullAndBlank.add(null);
     patternsWithNullAndBlank.add("  ");
-    patternsWithNullAndBlank.add(".git");
-    assertThat(PathExclusionUtils.isExcluded(root, path, patternsWithNullAndBlank)).isTrue();
+    patternsWithNullAndBlank.add(GIT);
+    assertThat(PathExclusionUtils.isExcluded(path, patternsWithNullAndBlank)).isTrue();
   }
 
   @Test
   void isExcludedMatchesDirectorySegmentWithSimpleName() {
-    Path root = Path.of("workspace").toAbsolutePath();
-    Path path = root.resolve("node_modules").resolve("pkg").resolve("index.bsl");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of("node_modules"))).isTrue();
-  }
-
-  @Test
-  void isExcludedWhenPathEqualsRootReturnsFalse() {
-    Path root = Path.of("project").toAbsolutePath();
-    assertThat(PathExclusionUtils.isExcluded(root, root, List.of(".git"))).isFalse();
-  }
-
-  @Test
-  @EnabledOnOs(OS.WINDOWS)
-  void isExcludedWhenPathOnDifferentDriveReturnsFalse() {
-    Path root = FileSystems.getDefault().getPath("C:/project");
-    Path path = FileSystems.getDefault().getPath("D:/other/file.bsl");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of("**/*.bsl"))).isFalse();
-  }
-
-  @Test
-  void isExcludedWhenRelativePathIsEmptyReturnsFalse() {
-    Path root = Path.of("project").toAbsolutePath();
-    assertThat(PathExclusionUtils.isExcluded(root, root, List.of("**/*.bsl"))).isFalse();
+    Path path = Path.of("workspace").toAbsolutePath().resolve(NODE_MODULES).resolve("pkg").resolve("index.bsl");
+    assertThat(PathExclusionUtils.isExcluded(path, List.of(NODE_MODULES))).isTrue();
   }
 
   @Test
   void isExcludedReturnsFalseWhenGlobPatternIsInvalid() {
-    Path root = Path.of("project").toAbsolutePath();
-    Path path = root.resolve("src").resolve("Module.bsl");
-    assertThat(PathExclusionUtils.isExcluded(root, path, List.of("**[invalid"))).isFalse();
+    Path path = Path.of(PROJECT).toAbsolutePath().resolve("src").resolve(MODULE_BSL);
+    assertThat(PathExclusionUtils.isExcluded(path, List.of("**[invalid"))).isFalse();
+  }
+
+  @Test
+  void isExcludedAutoAddsRecursivePrefixForBareGlob() {
+    Path path = Path.of(PROJECT).toAbsolutePath().resolve("sub").resolve("temp.tmp");
+    assertThat(PathExclusionUtils.isExcluded(path, List.of("*.tmp"))).isTrue();
+  }
+
+  @Test
+  void filtersReturnsNoneWhenPatternsAreNullOrBlank() {
+    assertThat(PathExclusionUtils.filters(null)).isSameAs(PathExclusionUtils.ExclusionFilters.NONE);
+    assertThat(PathExclusionUtils.filters(List.of())).isSameAs(PathExclusionUtils.ExclusionFilters.NONE);
+
+    var blankOnly = new ArrayList<String>();
+    blankOnly.add(null);
+    blankOnly.add("   ");
+    assertThat(PathExclusionUtils.filters(blankOnly)).isSameAs(PathExclusionUtils.ExclusionFilters.NONE);
+  }
+
+  @Test
+  void filtersNoneExposesTrueFileFilter() {
+    var filters = PathExclusionUtils.filters(null);
+    assertThat(filters.directoryFilter()).isSameAs(TrueFileFilter.INSTANCE);
+    assertThat(filters.fileFilter()).isSameAs(TrueFileFilter.INSTANCE);
+  }
+
+  @Test
+  void filtersSimpleNameAppliesToBothDirectoriesAndFiles() {
+    Path root = Path.of(PROJECT).toAbsolutePath();
+    var filters = PathExclusionUtils.filters(List.of(GIT));
+
+    Path gitDir = root.resolve(GIT);
+    Path gitFile = gitDir.resolve("HEAD");
+    Path otherDir = root.resolve("CommonModules");
+    Path otherFile = otherDir.resolve(MODULE_BSL);
+
+    assertThat(filters.directoryFilter().accept(gitDir.toFile())).isFalse();
+    assertThat(filters.fileFilter().accept(gitFile.toFile())).isFalse();
+    assertThat(filters.directoryFilter().accept(otherDir.toFile())).isTrue();
+    assertThat(filters.fileFilter().accept(otherFile.toFile())).isTrue();
+  }
+
+  @Test
+  void filtersWithDoubleStarSuffixPrunesMatchingDirectory() {
+    Path root = Path.of(PROJECT).toAbsolutePath();
+    var filters = PathExclusionUtils.filters(List.of("**/.git/**"));
+
+    Path gitDir = root.resolve("repo").resolve(GIT);
+    Path gitFile = gitDir.resolve("refs").resolve("HEAD");
+    Path keepDir = root.resolve("repo").resolve("src");
+    Path keepFile = keepDir.resolve(MODULE_BSL);
+
+    assertThat(filters.directoryFilter().accept(gitDir.toFile())).isFalse();
+    assertThat(filters.fileFilter().accept(gitFile.toFile())).isFalse();
+    assertThat(filters.directoryFilter().accept(keepDir.toFile())).isTrue();
+    assertThat(filters.fileFilter().accept(keepFile.toFile())).isTrue();
+  }
+
+  @Test
+  void filtersWithTrailingSlashIsDirectoryOnly() {
+    Path root = Path.of(PROJECT).toAbsolutePath();
+    var filters = PathExclusionUtils.filters(List.of("build/"));
+
+    Path buildDir = root.resolve("build");
+    Path buildFile = buildDir.resolve("output.bsl");
+
+    assertThat(filters.directoryFilter().accept(buildDir.toFile())).isFalse();
+    assertThat(filters.fileFilter().accept(buildFile.toFile())).isTrue();
+  }
+
+  @Test
+  void filtersIgnoreInvalidGlobPattern() {
+    var filters = PathExclusionUtils.filters(List.of("**[invalid"));
+    assertThat(filters).isSameAs(PathExclusionUtils.ExclusionFilters.NONE);
+  }
+
+  @Test
+  void filtersAutoPrefixBareGlobMatchesAtAnyDepth() {
+    Path root = Path.of(PROJECT).toAbsolutePath();
+    var filters = PathExclusionUtils.filters(List.of("*.tmp"));
+
+    Path tempFile = root.resolve("sub").resolve("foo.tmp");
+    Path bslFile = root.resolve("sub").resolve("foo.bsl");
+
+    assertThat(filters.fileFilter().accept(tempFile.toFile())).isFalse();
+    assertThat(filters.fileFilter().accept(bslFile.toFile())).isTrue();
+  }
+
+  @Test
+  void filtersDoubleStarPatternKeepsRootItself() {
+    Path root = Path.of(PROJECT).toAbsolutePath();
+    var filters = PathExclusionUtils.filters(List.of(GLOB_ALL_BSL));
+
+    assertThat(filters.directoryFilter().accept(root.toFile())).isTrue();
   }
 }

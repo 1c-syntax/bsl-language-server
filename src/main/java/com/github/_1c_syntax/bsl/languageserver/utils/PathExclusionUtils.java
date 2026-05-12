@@ -21,93 +21,176 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.utils.Absolute;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.NotFileFilter;
+import org.apache.commons.io.filefilter.OrFileFilter;
+import org.apache.commons.io.filefilter.PathMatcherFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.jspecify.annotations.Nullable;
 
+import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Утилита проверки исключения путей по списку паттернов.
+ * Исключение путей по списку паттернов.
  * <p>
- * Поддерживаются простые имена каталогов (например, ".git", "node_modules")
- * и glob-паттерны. Простые имена трактуются как сегмент пути (каталог).
+ * Поддерживаются простые имена сегментов (например, {@code .git}, {@code node_modules})
+ * и glob-паттерны ({@code **\/.git/**}, {@code build/}, {@code *.tmp}).
+ * Glob без префикса {@code **\/} или {@code /} автоматически дополняется до
+ * {@code **\/<pattern>} — чтобы матчить на любой глубине абсолютного пути.
  */
 @Slf4j
 @UtilityClass
 public class PathExclusionUtils {
 
-  /**
-   * Проверяет, исключён ли путь из индексации по списку паттернов.
-   * <p>
-   * Путь приводится к относительному от {@code root}. Если путь не является подпутём root,
-   * возвращается false. Для простых имён (без «/» и «*») проверяется вхождение сегмента;
-   * для glob-паттернов используется PathMatcher.
-   *
-   * @param root     корень, относительно которого проверяется путь; может быть null
-   * @param path     абсолютный путь к файлу или каталогу
-   * @param patterns список паттернов (имена каталогов или glob); может быть null
-   * @return true, если путь совпадает с одним из паттернов
-   */
-  public static boolean isExcluded(@Nullable Path root, Path path, @Nullable List<String> patterns) {
-    if (root == null || patterns == null || patterns.isEmpty()) {
-      return false;
-    }
-
-    var normalizedRoot = Absolute.path(root);
-    var normalizedPath = Absolute.path(path);
-    if (!normalizedPath.startsWith(normalizedRoot)) {
-      return false;
-    }
-
-    var relativePath = normalizedRoot.relativize(normalizedPath);
-    for (var pattern : patterns) {
-      if (pattern == null || pattern.isBlank()) {
-        continue;
-      }
-      if (matchesPattern(relativePath, pattern.trim())) {
-        return true;
-      }
-    }
-    return false;
+  /** Пара фильтров для {@code FileUtils.listFiles}: {@code true} — путь оставить. */
+  public record ExclusionFilters(IOFileFilter directoryFilter, IOFileFilter fileFilter) {
+    /** Никого не исключать. */
+    public static final ExclusionFilters NONE =
+      new ExclusionFilters(TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
   }
 
   /**
-   * Сопоставляет относительный путь с паттерном: для простых имён — по сегментам,
-   * для glob — через PathMatcher (путь нормализуется к «/»).
-   * Паттерн нормализуется: обратный слэш заменяется на «/» для кроссплатформенности.
+   * Разовая проверка, попадает ли путь под исключения.
+   * Для массового обхода каталога используйте {@link #filters(List)}.
    */
-  private static boolean matchesPattern(Path relativePath, String pattern) {
-    var normalized = pattern.replace('\\', '/');
-    if (!normalized.contains("/") && !normalized.contains("*")) {
-      for (var i = 0; i < relativePath.getNameCount(); i++) {
-        if (relativePath.getName(i).toString().equals(normalized)) {
+  public static boolean isExcluded(Path path, @Nullable List<String> patterns) {
+    var exclusions = filters(patterns);
+    if (exclusions == ExclusionFilters.NONE) {
+      return false;
+    }
+    var file = path.toFile();
+    return !exclusions.directoryFilter().accept(file)
+      || !exclusions.fileFilter().accept(file);
+  }
+
+  /**
+   * Строит фильтры для каталогов и для файлов, разделяя их так,
+   * чтобы directory-only паттерны обрезали обход целыми поддеревьями.
+   * Пустые/blank паттерны и невалидные glob игнорируются (с предупреждением в лог).
+   */
+  public static ExclusionFilters filters(@Nullable List<String> patterns) {
+    if (patterns == null || patterns.isEmpty()) {
+      return ExclusionFilters.NONE;
+    }
+
+    var dirExcluders = new ArrayList<IOFileFilter>();
+    var fileExcluders = new ArrayList<IOFileFilter>();
+
+    for (var raw : patterns) {
+      if (raw == null || raw.isBlank()) {
+        continue;
+      }
+      addExcluders(raw.trim().replace('\\', '/'), dirExcluders, fileExcluders);
+    }
+
+    if (dirExcluders.isEmpty() && fileExcluders.isEmpty()) {
+      return ExclusionFilters.NONE;
+    }
+
+    return new ExclusionFilters(notExcludedFilter(dirExcluders), notExcludedFilter(fileExcluders));
+  }
+
+  private static void addExcluders(
+    String pattern,
+    List<IOFileFilter> dirExcluders,
+    List<IOFileFilter> fileExcluders
+  ) {
+    // Простое имя сегмента — применяем и к каталогам, и к файлам.
+    if (!pattern.contains("/") && !pattern.contains("*")) {
+      var simpleName = new SegmentFileFilter(pattern);
+      dirExcluders.add(simpleName);
+      fileExcluders.add(simpleName);
+      return;
+    }
+
+    // "build/" — только каталог.
+    if (pattern.endsWith("/")) {
+      tryGlobFilter(pattern.substring(0, pattern.length() - 1)).ifPresent(dirExcluders::add);
+      return;
+    }
+
+    // "**/.git/**" — каталог обрезаем по короткой форме (".git"),
+    // файлы — оригинальным паттерном на случай, если directory-фильтр уже пропустил.
+    if (pattern.endsWith("/**")) {
+      tryGlobFilter(pattern.substring(0, pattern.length() - 3)).ifPresent(dirExcluders::add);
+      tryGlobFilter(pattern).ifPresent(fileExcluders::add);
+      return;
+    }
+
+    tryGlobFilter(pattern).ifPresent(filter -> {
+      dirExcluders.add(filter);
+      fileExcluders.add(filter);
+    });
+  }
+
+  private static Optional<IOFileFilter> tryGlobFilter(String glob) {
+    var fullGlob = glob.startsWith("**/") || glob.startsWith("/") ? glob : "**/" + glob;
+    try {
+      var matcher = FileSystems.getDefault().getPathMatcher("glob:" + fullGlob);
+      return Optional.of(new PathMatcherFileFilter(forwardSlashAware(matcher)));
+    } catch (IllegalArgumentException e) {
+      LOGGER.warn("Некорректный glob-паттерн исключения, пропуск: {}", glob, e);
+      return Optional.empty();
+    }
+  }
+
+  /** На системах с {@code \\}-разделителем приводит путь к {@code /} перед матчингом. */
+  private static PathMatcher forwardSlashAware(PathMatcher delegate) {
+    if ("/".equals(FileSystems.getDefault().getSeparator())) {
+      return delegate;
+    }
+    return path -> delegate.matches(toForwardSlashPath(path));
+  }
+
+  private static Path toForwardSlashPath(Path path) {
+    if (path.getNameCount() == 0) {
+      return path;
+    }
+    var names = new String[path.getNameCount()];
+    for (var i = 0; i < names.length; i++) {
+      names[i] = path.getName(i).toString();
+    }
+    return path.getFileSystem().getPath(String.join("/", names));
+  }
+
+  private static IOFileFilter notExcludedFilter(List<IOFileFilter> excluders) {
+    if (excluders.isEmpty()) {
+      return TrueFileFilter.INSTANCE;
+    }
+    var excluded = excluders.size() == 1 ? excluders.get(0) : new OrFileFilter(excluders);
+    return new NotFileFilter(excluded);
+  }
+
+  /** Матчит путь, если хотя бы один его сегмент равен {@code name}. */
+  private static final class SegmentFileFilter extends AbstractFileFilter {
+
+    private final String name;
+
+    private SegmentFileFilter(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public boolean accept(File file) {
+      if (file == null) {
+        return false;
+      }
+      var path = file.toPath();
+      for (var i = 0; i < path.getNameCount(); i++) {
+        if (path.getName(i).toString().equals(name)) {
           return true;
         }
       }
       return false;
     }
-    try {
-      var matcher = FileSystems.getDefault().getPathMatcher("glob:" + normalized);
-      return matcher.matches(pathForGlobMatching(relativePath));
-    } catch (IllegalArgumentException e) {
-      LOGGER.warn("Некорректный glob-паттерн исключения, пропуск: {}", pattern, e);
-      return false;
-    }
-  }
-
-  /** Собирает путь из сегментов с разделителем «/» для кроссплатформенного glob. */
-  private static Path pathForGlobMatching(Path path) {
-    if (path.getNameCount() == 0) {
-      return path;
-    }
-    var names = new String[path.getNameCount()];
-    for (var i = 0; i < path.getNameCount(); i++) {
-      names[i] = path.getName(i).toString();
-    }
-    return path.getFileSystem().getPath(String.join("/", names));
   }
 }

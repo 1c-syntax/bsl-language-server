@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.utils.Absolute;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.jspecify.annotations.Nullable;
 
 import java.io.File;
@@ -34,11 +34,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Поиск BSL/OS файлов внутри каталога с учётом списка путей-исключений.
- * <p>
- * Фильтрация применяется ещё на этапе обхода — каталоги, попадающие
- * под {@code excludePaths}, не разворачиваются. Это даёт заметный выигрыш
- * на больших проектах по сравнению с пост-фильтрацией уже собранного списка.
+ * Поиск BSL/OS файлов внутри каталога с учётом исключений.
+ * Каталоги под {@code excludePaths} не разворачиваются — обход обрезается
+ * на уровне directory-фильтра.
  */
 @UtilityClass
 public class BSLFiles {
@@ -47,46 +45,14 @@ public class BSLFiles {
   private static final IOFileFilter BSL_FILE_FILTER = new SuffixFileFilter(BSL_EXTENSIONS);
 
   /**
-   * Возвращает список BSL/OS файлов внутри {@code srcDir} с учётом исключений.
-   *
    * @param srcDir       каталог поиска
-   * @param excludeRoot  корень, относительно которого вычисляются пути для сопоставления с шаблонами;
-   *                     если {@code null}, фильтрация исключений не применяется
-   * @param excludePaths паттерны исключения; если {@code null} или пуст — фильтрация не применяется
-   * @return найденные файлы
+   * @param excludePaths паттерны исключения; {@code null}/пусто — без фильтрации
    */
-  public static List<File> listBslFiles(
-    Path srcDir,
-    @Nullable Path excludeRoot,
-    @Nullable List<String> excludePaths
-  ) {
-    var hasExclusions = excludeRoot != null && excludePaths != null && !excludePaths.isEmpty();
-    IOFileFilter fileFilter;
-    IOFileFilter directoryFilter;
-    if (hasExclusions) {
-      var notExcluded = notExcludedFilter(excludeRoot, excludePaths);
-      fileFilter = BSL_FILE_FILTER.and(notExcluded);
-      directoryFilter = notExcluded;
-    } else {
-      fileFilter = BSL_FILE_FILTER;
-      directoryFilter = TrueFileFilter.INSTANCE;
-    }
+  public static Collection<File> listBslFiles(Path srcDir, @Nullable List<String> excludePaths) {
+    var normalizedSrcDir = Absolute.path(srcDir);
+    var exclusions = PathExclusionUtils.filters(excludePaths);
+    var fileFilter = BSL_FILE_FILTER.and(exclusions.fileFilter());
 
-    Collection<File> found = FileUtils.listFiles(srcDir.toFile(), fileFilter, directoryFilter);
-    return List.copyOf(found);
-  }
-
-  private static IOFileFilter notExcludedFilter(Path excludeRoot, List<String> excludePaths) {
-    return new IOFileFilter() {
-      @Override
-      public boolean accept(File file) {
-        return !PathExclusionUtils.isExcluded(excludeRoot, file.toPath(), excludePaths);
-      }
-
-      @Override
-      public boolean accept(File dir, String name) {
-        return accept(new File(dir, name));
-      }
-    };
+    return FileUtils.listFiles(normalizedSrcDir.toFile(), fileFilter, exclusions.directoryFilter());
   }
 }

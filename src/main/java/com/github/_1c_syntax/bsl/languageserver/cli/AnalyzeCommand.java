@@ -159,8 +159,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);
 
-    var excludeRoot = configurationPath != null ? configurationPath : srcDir;
-    var files = BSLFiles.listBslFiles(srcDir, excludeRoot, configuration.getExcludePaths());
+    var files = BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths());
 
     context.populateContext(files);
 

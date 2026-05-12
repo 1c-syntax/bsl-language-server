@@ -43,9 +43,9 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -105,14 +105,13 @@ public class ServerContext {
     LOGGER.debug("Finding files to populate context...");
     var files = BSLFiles.listBslFiles(
       configurationRoot,
-      configurationRoot,
       languageServerConfiguration.getExcludePaths()
     );
     workDoneProgressReporter.endProgress("");
     populateContext(files);
   }
 
-  public void populateContext(List<File> files) {
+  public void populateContext(Collection<File> files) {
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(
       files.size(),
       getMessage("populateFilesPostfix")

@@ -138,9 +138,7 @@ public class FormatCommand implements Callable<Integer> {
       }
 
       if (srcDir.toFile().isDirectory()) {
-        var configurationRoot = serverContext.getConfigurationRoot();
-        var excludeRoot = configurationRoot != null ? configurationRoot : srcDir;
-        files.addAll(BSLFiles.listBslFiles(srcDir, excludeRoot, excludePaths));
+        files.addAll(BSLFiles.listBslFiles(srcDir, excludePaths));
       } else {
         files.add(srcDir.toFile());
       }
