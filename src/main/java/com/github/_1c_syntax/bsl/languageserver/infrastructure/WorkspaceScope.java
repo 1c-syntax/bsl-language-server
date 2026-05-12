@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Custom Spring Scope для per-workspace бинов.
@@ -100,19 +99,20 @@ public class WorkspaceScope implements Scope {
    * @param type the expected type
    * @return collection of all instances
    */
-  @SuppressWarnings("unchecked")
   public <T> Collection<T> getAllInstances(String beanName, Class<T> type) {
     return store.values().stream()
       .map(beans -> beans.get(beanName))
       .filter(Objects::nonNull)
       .map(type::cast)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private static URI resolveKey() {
     var key = WorkspaceContextHolder.get();
     if (key == null) {
-      throw new IllegalStateException("Workspace context is not set. Use WorkspaceContextHolder.forUri() before accessing workspace-scoped beans.");
+      throw new IllegalStateException(
+        "Workspace context is not set. Use WorkspaceContextHolder.forUri() before accessing workspace-scoped beans."
+      );
     }
     return key;
   }

@@ -95,12 +95,11 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
-    var parsedStrTemplateMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
 
     List<SemanticTokenEntry> entries = new ArrayList<>();
 
     // Собираем информацию о контекстах строк
-    var specialStringContexts = collectSpecialStringContexts(documentContext, parsedStrTemplateMethods);
+    var specialStringContexts = collectSpecialStringContexts(documentContext);
     var queryStringContexts = collectQueryStringContexts(documentContext);
     var lambdaStringContexts = new LambdaStringTokenizer(serverContext, legend, allSuppliers)
       .collect(documentContext, specialStringContexts);
@@ -302,8 +301,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   private Map<Token, StringContext> collectSpecialStringContexts(
-    DocumentContext documentContext,
-    ParsedStrTemplateMethods parsedStrTemplateMethods
+    DocumentContext documentContext
   ) {
     Map<Token, StringContext> contexts = new HashMap<>();
     var parsedMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();

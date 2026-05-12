@@ -49,7 +49,7 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var diagnosticInfos = getDiagnosticInfosByCode(analysisInfo);
+    var diagnosticInfos = getDiagnosticInfosByCode();
 
     GenericIssueReport report = new GenericIssueReport(analysisInfo, diagnosticInfos);
 

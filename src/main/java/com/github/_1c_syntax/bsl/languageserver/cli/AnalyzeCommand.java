@@ -188,7 +188,7 @@ public class AnalyzeCommand implements Callable<Integer> {
         fileInfos = cliExecutor.submit(() ->
           files.parallelStream()
             .map((File file) -> getFileInfoFromFile(workspaceDir, file))
-            .collect(Collectors.toList())
+            .toList()
         ).get();
       } else {
         try (ProgressBar pb = new ProgressBarBuilder()
@@ -202,7 +202,7 @@ public class AnalyzeCommand implements Callable<Integer> {
                 pb.step();
                 return getFileInfoFromFile(workspaceDir, file);
               })
-              .collect(Collectors.toList())
+              .toList()
           ).get();
         }
       }
@@ -212,10 +212,10 @@ public class AnalyzeCommand implements Callable<Integer> {
       aggregator.report(analysisInfo, outputDir);
       return 0;
     } catch (ExecutionException e) {
-      throw new RuntimeException("Error analyzing files", e);
+      throw new IllegalStateException("Error analyzing files", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException("Interrupted while analyzing files", e);
+      throw new IllegalStateException("Interrupted while analyzing files", e);
     }
   }
 

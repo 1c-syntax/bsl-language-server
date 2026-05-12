@@ -56,7 +56,7 @@ public class CodeQualityReporter extends AbstractDiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var diagnosticInfosByCode = getDiagnosticInfosByCode(analysisInfo);
+    var diagnosticInfosByCode = getDiagnosticInfosByCode();
 
     List<CodeQualityReportEntry> report = new ArrayList<>();
     for (FileInfo fileInfo : analysisInfo.fileinfos()) {

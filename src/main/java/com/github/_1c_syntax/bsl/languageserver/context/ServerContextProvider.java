@@ -53,7 +53,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ServerContextProvider {
 
-  private final ObjectProvider<ServerContext> serverContextProvider;
+  private final ObjectProvider<ServerContext> serverContextObjectProvider;
   private final LanguageServerConfiguration languageServerConfiguration;
   private final WorkspaceScope workspaceScope;
 
@@ -62,11 +62,11 @@ public class ServerContextProvider {
   private final Map<URI, ServerContext> documentIndex = new ConcurrentHashMap<>();
 
   public ServerContextProvider(
-    ObjectProvider<ServerContext> serverContextProvider,
+    ObjectProvider<ServerContext> serverContextObjectProvider,
     LanguageServerConfiguration languageServerConfiguration,
     WorkspaceScope workspaceScope
   ) {
-    this.serverContextProvider = serverContextProvider;
+    this.serverContextObjectProvider = serverContextObjectProvider;
     this.languageServerConfiguration = languageServerConfiguration;
     this.workspaceScope = workspaceScope;
   }
@@ -106,7 +106,7 @@ public class ServerContextProvider {
       return contexts.get(workspaceUri);
     }
 
-    Path rootPath = Absolute.path(workspaceUri);
+    var rootPath = Absolute.path(workspaceUri);
 
     var name = workspaceName != null ? workspaceName : extractWorkspaceName(workspaceUri);
     WorkspaceContextHolder.registerWorkspace(workspaceUri, name);
@@ -114,7 +114,7 @@ public class ServerContextProvider {
     // Set workspace context for scoped bean resolution
     try (var ctx = WorkspaceContextHolder.forUri(workspaceUri)) {
       // Get new ServerContext instance from Spring (prototype scope)
-      var serverContext = serverContextProvider.getObject();
+      var serverContext = serverContextObjectProvider.getObject();
 
       serverContext.setWorkspaceUri(workspaceUri);
 

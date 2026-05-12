@@ -103,7 +103,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
 
           var passedValue = callParam.getText();
 
-          if (!showParametersWithTheSameName(reference) && Strings.CI.contains(passedValue, parameter.getName())) {
+          if (!showParametersWithTheSameName() && Strings.CI.contains(passedValue, parameter.getName())) {
             continue;
           }
 
@@ -136,7 +136,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     var labelBuilder = new StringBuilder();
     labelBuilder.append(parameter.getName());
 
-    if (showDefaultValues(reference)
+    if (showDefaultValues()
       && passedValue.isBlank()
       && !defaultValue.equals(ParameterDefinition.DefaultValue.EMPTY)
     ) {
@@ -163,7 +163,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   }
 
 
-  private boolean showParametersWithTheSameName(Reference reference) {
+  private boolean showParametersWithTheSameName() {
     var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME;
@@ -175,7 +175,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     }
   }
 
-  private boolean showDefaultValues(Reference reference) {
+  private boolean showDefaultValues() {
     var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
       return DEFAULT_DEFAULT_VALUES;

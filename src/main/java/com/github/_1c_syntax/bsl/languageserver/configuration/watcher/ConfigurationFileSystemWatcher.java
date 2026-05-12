@@ -177,7 +177,7 @@ public class ConfigurationFileSystemWatcher {
   private void watchGlobalConfig() {
     long lastModified = 0L;
     for (WatchEvent<?> watchEvent : globalWatchKey.pollEvents()) {
-      Path context = (Path) watchEvent.context();
+      var context = (Path) watchEvent.context();
       if (context == null) {
         continue;
       }
@@ -305,7 +305,7 @@ public class ConfigurationFileSystemWatcher {
     return absolutePathname.equals(absoluteConfigurationFile);
   }
 
-  private boolean isWorkspaceConfigurationFile(File pathname, LanguageServerConfiguration configuration) {
+  private static boolean isWorkspaceConfigurationFile(File pathname, LanguageServerConfiguration configuration) {
     var configFile = configuration.getConfigurationFile();
     if (configFile != null) {
       var absolutePathname = Absolute.path(pathname);

@@ -83,6 +83,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -190,7 +191,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     // Populate all workspace contexts
     var allContexts = serverContextProvider.getAllContexts();
     var tasks = allContexts.entrySet().stream()
-      .map(entry -> {
+      .map((Map.Entry<URI, ServerContext> entry) -> {
         try (var ctx = WorkspaceContextHolder.forUri(entry.getKey())) {
           return CompletableFuture.runAsync(
             entry.getValue()::populateContext,
@@ -264,7 +265,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   /**
    * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
    */
-  private TextDocumentSyncKind getConfiguredSyncKind() {
+  private static TextDocumentSyncKind getConfiguredSyncKind() {
     return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
   }
 

@@ -52,7 +52,7 @@ public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
   /**
    * Получить DiagnosticInfo по коду для workspace из AnalysisInfo.
    */
-  protected Map<String, DiagnosticInfo> getDiagnosticInfosByCode(AnalysisInfo analysisInfo) {
+  protected Map<String, DiagnosticInfo> getDiagnosticInfosByCode() {
     return diagnosticInfos.getByCode();
   }
 }

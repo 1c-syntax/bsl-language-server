@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -53,7 +52,6 @@ public class AnalyzeProjectOnStart {
   @EventListener
   @Async
   public void handleEvent(ServerContextPopulatedEvent event) {
-    var serverContext = event.getSource();
 
     if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
       return;
@@ -62,6 +60,8 @@ public class AnalyzeProjectOnStart {
     if (!languageClientHolder.isConnected()) {
       return;
     }
+
+    var serverContext = event.getSource();
 
     var documentContexts = serverContext.getDocuments().values();
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
@@ -81,15 +81,15 @@ public class AnalyzeProjectOnStart {
 
       progress.endProgress(getMessage("projectAnalyzed"));
     } catch (ExecutionException e) {
-      throw new RuntimeException("Can't analyze project on start", e);
+      throw new IllegalStateException("Can't analyze project on start", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException("Interrupted while analyzing project on start", e);
+      throw new IllegalStateException("Interrupted while analyzing project on start", e);
     }
   }
 
   private String getMessage(String key) {
-    Language language = configuration.getLanguage();
+    var language = configuration.getLanguage();
     return Resources.getResourceString(language, getClass(), key);
   }
 

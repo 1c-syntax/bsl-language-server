@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.context.annotation.Configuration;
 

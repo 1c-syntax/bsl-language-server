@@ -116,7 +116,7 @@ public class FormatCommand implements Callable<Integer> {
     }
 
     // Create workspace based on first file path
-    Path srcDir = Absolute.path(filePaths[0]);
+    var srcDir = Absolute.path(filePaths[0]);
     if (!srcDir.toFile().isDirectory()) {
       srcDir = srcDir.getParent();
     }
@@ -146,10 +146,10 @@ public class FormatCommand implements Callable<Integer> {
 
       return 0;
     } catch (ExecutionException e) {
-      throw new RuntimeException("Error formatting files", e);
+      throw new IllegalStateException("Error formatting files", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException("Interrupted while formatting files", e);
+      throw new IllegalStateException("Interrupted while formatting files", e);
     }
   }
 

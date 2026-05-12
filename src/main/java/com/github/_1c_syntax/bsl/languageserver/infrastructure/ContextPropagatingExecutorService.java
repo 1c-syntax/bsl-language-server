@@ -69,27 +69,27 @@ public class ContextPropagatingExecutorService implements ExecutorService {
 
   @Override
   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-    return delegate.invokeAll(tasks.stream().map(this::wrap).toList());
+    return delegate.invokeAll(tasks.stream().map(t -> wrap(t)).toList());
   }
 
   @Override
   public <T> List<Future<T>> invokeAll(
     Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit
   ) throws InterruptedException {
-    return delegate.invokeAll(tasks.stream().map(this::wrap).toList(), timeout, unit);
+    return delegate.invokeAll(tasks.stream().map(t -> wrap(t)).toList(), timeout, unit);
   }
 
   @Override
   public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
     throws InterruptedException, ExecutionException {
-    return delegate.invokeAny(tasks.stream().map(this::wrap).toList());
+    return delegate.invokeAny(tasks.stream().map(t -> wrap(t)).toList());
   }
 
   @Override
   public <T> T invokeAny(
     Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit
   ) throws InterruptedException, ExecutionException, TimeoutException {
-    return delegate.invokeAny(tasks.stream().map(this::wrap).toList(), timeout, unit);
+    return delegate.invokeAny(tasks.stream().map(t -> wrap(t)).toList(), timeout, unit);
   }
 
   @Override
@@ -117,7 +117,7 @@ public class ContextPropagatingExecutorService implements ExecutorService {
     return delegate.awaitTermination(timeout, unit);
   }
 
-  private Runnable wrap(Runnable runnable) {
+  private static Runnable wrap(Runnable runnable) {
     var snapshot = SNAPSHOT_FACTORY.captureAll();
     return () -> {
       try (var scope = snapshot.setThreadLocals()) {
@@ -126,7 +126,7 @@ public class ContextPropagatingExecutorService implements ExecutorService {
     };
   }
 
-  private <T> Callable<T> wrap(Callable<T> callable) {
+  private static <T> Callable<T> wrap(Callable<T> callable) {
     var snapshot = SNAPSHOT_FACTORY.captureAll();
     return () -> {
       try (var scope = snapshot.setThreadLocals()) {

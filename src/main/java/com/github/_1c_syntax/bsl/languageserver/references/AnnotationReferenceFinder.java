@@ -107,9 +107,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       .flatMap(AnnotationReferenceFinder::getAnnotationName)
       .flatMap(annotationName -> methodSymbolAnnotationPair.map(Pair::getLeft)
         .map(methodSymbol -> AnnotationSymbol.from(annotationName, methodSymbol)))
-      .ifPresent((AnnotationSymbol annotationSymbol) -> {
-        annotationRepository.register(annotationSymbol);
-      });
+      .ifPresent(annotationRepository::register);
   }
 
   private Optional<AnnotationSymbol> getAnnotationSymbol(BSLParser.AnnotationNameContext annotationNode) {

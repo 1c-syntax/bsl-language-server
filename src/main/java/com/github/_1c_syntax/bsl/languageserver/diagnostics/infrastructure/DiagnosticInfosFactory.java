@@ -65,8 +65,8 @@ public class DiagnosticInfosFactory {
       .map(applicationContext::getType)
       .filter(Objects::nonNull)
       .filter(BSLDiagnostic.class::isAssignableFrom)
-      .map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
-      .collect(Collectors.toList());
+      .<Class<? extends BSLDiagnostic>>map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
+      .toList();
   }
 
   /**

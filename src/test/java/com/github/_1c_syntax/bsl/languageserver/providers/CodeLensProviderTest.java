@@ -87,8 +87,6 @@ class CodeLensProviderTest {
 
     prepareCodeLensRefreshSupport(true);
 
-    var documentContext = TestUtils.getDocumentContext("");
-
     // when
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
 
@@ -104,8 +102,6 @@ class CodeLensProviderTest {
 
     prepareCodeLensRefreshSupport(false);
 
-    var documentContext = TestUtils.getDocumentContext("");
-
     // when
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
 
@@ -118,7 +114,6 @@ class CodeLensProviderTest {
   void testCodeLensRefreshes_ifLanguageClientIsNotConnected() {
     // given
     // no connected language client
-    var documentContext = TestUtils.getDocumentContext("");
 
     // when
     var event = new LanguageServerConfigurationChangedEvent(configuration);

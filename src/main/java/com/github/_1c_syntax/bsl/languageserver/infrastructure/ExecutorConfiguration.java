@@ -66,7 +66,7 @@ public class ExecutorConfiguration {
   @Bean
   public TaskDecorator compositeTaskDecorator(
     SentryTaskDecorator sentryDecorator,
-    ContextPropagatingTaskDecorator contextPropagatingDecorator) {
+    TaskDecorator contextPropagatingDecorator) {
     return runnable -> sentryDecorator.decorate(contextPropagatingDecorator.decorate(runnable));
   }
 
@@ -127,7 +127,7 @@ public class ExecutorConfiguration {
     return createWorkspaceForkJoinPool("cli-");
   }
 
-  private ThreadPoolTaskExecutor createThreadPoolExecutor(
+  private static ThreadPoolTaskExecutor createThreadPoolExecutor(
     TaskDecorator taskDecorator, String threadNamePrefix) {
     var executor = new ThreadPoolTaskExecutor();
     executor.setQueueCapacity(0);
@@ -137,7 +137,7 @@ public class ExecutorConfiguration {
     return executor;
   }
 
-  private ExecutorService createWorkspaceForkJoinPool(String prefix) {
+  private static ExecutorService createWorkspaceForkJoinPool(String prefix) {
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
       throw new IllegalStateException("Workspace context is not set when creating ForkJoinPool");
@@ -149,7 +149,7 @@ public class ExecutorConfiguration {
     return new ContextPropagatingExecutorService(pool);
   }
 
-  private ExecutorService createSharedForkJoinExecutorService(String threadNamePrefix) {
+  private static ExecutorService createSharedForkJoinExecutorService(String threadNamePrefix) {
     var factory = new NamedForkJoinWorkerThreadFactory(threadNamePrefix);
     var pool = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
     return new ContextPropagatingExecutorService(pool);

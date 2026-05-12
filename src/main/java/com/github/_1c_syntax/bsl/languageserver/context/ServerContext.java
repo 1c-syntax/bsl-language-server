@@ -161,10 +161,10 @@ public class ServerContext {
         })
       ).get();
     } catch (ExecutionException e) {
-      throw new RuntimeException("Error populating context", e);
+      throw new IllegalStateException("Error populating context", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException("Interrupted while populating context", e);
+      throw new IllegalStateException("Interrupted while populating context", e);
     }
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));

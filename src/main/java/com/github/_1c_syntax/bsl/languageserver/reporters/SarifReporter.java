@@ -152,7 +152,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
       .withResults(results);
   }
 
-  private Invocation createInvocation(LanguageServerConfiguration configuration) {
+  private static Invocation createInvocation(LanguageServerConfiguration configuration) {
     Set<ConfigurationOverride> ruleConfigurationOverrides = new HashSet<>();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
     diagnosticsOptions.getParameters().forEach((String key, Either<Boolean, Map<String, Object>> option) -> {
