@@ -139,6 +139,10 @@ public class ConfigurationFileSystemWatcher {
 
   /**
    * Обработчик добавления нового workspace.
+   * <p>
+   * Workspace-контекст уже установлен в {@link com.github._1c_syntax.bsl.languageserver.aop.EventPublisherAspect}
+   * перед публикацией {@link WorkspaceAddedEvent}, поэтому прямое обращение к workspace-scoped прокси
+   * через {@code event.getServerContext().getLanguageServerConfiguration()} корректно.
    *
    * @param event Событие добавления workspace
    */
@@ -146,18 +150,9 @@ public class ConfigurationFileSystemWatcher {
   @Synchronized
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
     var workspaceUri = event.getWorkspaceUri();
-    // WorkspaceAddedEvent публикуется аспектом через @AfterReturning на addWorkspace().
-    // К этому моменту try-with-resources внутри addWorkspace() уже закрыт,
-    // и ThreadLocal (WorkspaceContextHolder) восстановлен в предыдущее значение.
-    // event.getServerContext().getLanguageServerConfiguration() возвращает workspace-scoped прокси,
-    // который резолвит конкретный бин через WorkspaceContextHolder.get() в момент вызова метода.
-    // Без явной установки контекста прокси обратится к чужому (или отсутствующему) workspace.
-    // Поэтому явно оборачиваем обработку в нужный контекст перед обращением к прокси.
-    WorkspaceContextHolder.run(workspaceUri, () -> {
-      var configuration = event.getServerContext().getLanguageServerConfiguration();
-      LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
-      registerWorkspaceWatchService(workspaceUri, configuration);
-    });
+    var configuration = event.getServerContext().getLanguageServerConfiguration();
+    LOGGER.debug("Workspace added, registering config watcher: {}", workspaceUri);
+    registerWorkspaceWatchService(workspaceUri, configuration);
   }
 
   /**

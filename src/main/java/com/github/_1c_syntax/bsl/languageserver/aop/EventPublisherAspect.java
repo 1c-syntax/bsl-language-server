@@ -37,7 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopu
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
-import jakarta.annotation.PreDestroy;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -48,38 +48,80 @@ import org.aspectj.lang.annotation.Before;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 
 import java.io.File;
 import java.net.URI;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Аспект подсистемы событий.
  * <p>
  * Каждый advice перехватывает какой-либо метод из недр продукта и генерирует соответствующее событие
  * с помощью Spring Events.
+ * <p>
+ * Аспект является синглтоном AspectJ CTW — один экземпляр на всю JVM, независимо от количества
+ * Spring-контекстов. Регистрация publisher-ов выполняется через {@link EventPublisherAspectRegistration},
+ * по одному на каждый Spring-контекст. При закрытии контекста происходит отмена регистрации,
+ * и аспект автоматически переключается на publisher следующего зарегистрированного контекста.
  */
 @Aspect
 @Slf4j
 @NoArgsConstructor
-public class EventPublisherAspect implements ApplicationEventPublisherAware {
+public class EventPublisherAspect {
+
+  /**
+   * Упорядоченное множество зарегистрированных Spring-контекстов (порядок вставки = порядок регистрации).
+   * <p>
+   * При отмене регистрации одного контекста аспект переключается на первый оставшийся
+   * (т.е. на дефолтный кешируемый контекст, зарегистрированный первым).
+   * <p>
+   * {@code LinkedHashSet} обеспечивает детерминированный fallback через {@code iterator().next()}.
+   * Синхронизация выполняется явно методами {@code register}/{@code unregister}.
+   */
+  private final Set<ApplicationContext> registeredContexts = new LinkedHashSet<>();
 
   private boolean active;
   @SuppressWarnings("NullAway.Init")
   private ApplicationEventPublisher applicationEventPublisher;
 
-  @PreDestroy
-  public void destroy() {
-    active = false;
-    applicationEventPublisher = null;
+  /**
+   * Регистрирует Spring-контекст как источник событий.
+   * Вызывается из {@link EventPublisherAspectRegistration} при инициализации каждого контекста.
+   *
+   * @param ctx регистрируемый контекст
+   */
+  synchronized void register(ApplicationContext ctx) {
+    registeredContexts.add(ctx);
+    applicationEventPublisher = ctx;
+    active = true;
   }
 
-  public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
-    active = true;
-    this.applicationEventPublisher = applicationEventPublisher;
+  /**
+   * Отменяет регистрацию Spring-контекста.
+   * Вызывается из {@link EventPublisherAspectRegistration} при уничтожении каждого контекста.
+   * <p>
+   * Если после удаления остались другие контексты — аспект переключается на первый из них
+   * (дефолтный кешируемый). Если контекстов не осталось — аспект переходит в неактивное состояние.
+   *
+   * @param ctx контекст, регистрацию которого необходимо отменить
+   */
+  synchronized void unregister(ApplicationContext ctx) {
+    registeredContexts.remove(ctx);
+    if (registeredContexts.isEmpty()) {
+      active = false;
+      applicationEventPublisher = null;
+    } else {
+      // Fallback на первый зарегистрированный оставшийся контекст.
+      // В рамках одного JVM-форка тесты выполняются последовательно, поэтому одновременно
+      // существуют не более двух контекстов: дефолтный (A) и @DirtiesContext (B).
+      // При закрытии B первым в множестве всегда остаётся A — результат детерминирован.
+      applicationEventPublisher = registeredContexts.iterator().next();
+    }
   }
 
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
@@ -133,11 +175,17 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
     returning = "serverContext"
   )
   public void workspaceAdded(JoinPoint joinPoint, URI workspaceUri, ServerContext serverContext) {
-    publishEvent(new WorkspaceAddedEvent(
-      (ServerContextProvider) joinPoint.getThis(),
-      workspaceUri,
-      serverContext
-    ));
+    // Устанавливаем workspace-контекст перед публикацией события, чтобы все слушатели
+    // WorkspaceAddedEvent автоматически получили корректный WorkspaceContextHolder.
+    // К моменту вызова этого advice try-with-resources внутри addWorkspace() уже закрыт
+    // и ThreadLocal сброшен — поэтому явно оборачиваем здесь, а не полагаемся на вызывающий код.
+    WorkspaceContextHolder.run(workspaceUri, () ->
+      publishEvent(new WorkspaceAddedEvent(
+        (ServerContextProvider) joinPoint.getThis(),
+        workspaceUri,
+        serverContext
+      ))
+    );
   }
 
   @Before("Pointcuts.isServerContextProvider() && Pointcuts.isRemoveWorkspaceCall() && args(workspaceFolder)")
