@@ -34,7 +34,7 @@ import java.nio.file.Path;
 @SpringBootTest
 public abstract class AbstractServerContextAwareTest {
 
-  private static final URI EMPTY_WORKSPACE_URI = URI.create("file:///empty-workspace");
+  private static final URI EMPTY_WORKSPACE_URI = Absolute.path("src/test/resources/empty-workspace").toUri();
 
   @Autowired
   protected ServerContextProvider serverContextProvider;
