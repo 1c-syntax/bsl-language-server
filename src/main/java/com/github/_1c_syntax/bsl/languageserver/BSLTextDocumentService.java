@@ -42,6 +42,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.CompletionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
@@ -88,6 +89,9 @@ import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHint;
@@ -157,6 +161,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final FoldingRangeProvider foldingRangeProvider;
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
+  private final CompletionProvider completionProvider;
   private final ReferencesProvider referencesProvider;
   private final DefinitionProvider definitionProvider;
   private final CallHierarchyProvider callHierarchyProvider;
@@ -195,6 +200,20 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContextNullable(
       documentContext,
       () -> hoverProvider.getHover(documentContext, params).orElse(null)
+    );
+  }
+
+  @Override
+  public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> Either.forLeft(completionProvider.getCompletion(documentContext, params))
     );
   }
 
