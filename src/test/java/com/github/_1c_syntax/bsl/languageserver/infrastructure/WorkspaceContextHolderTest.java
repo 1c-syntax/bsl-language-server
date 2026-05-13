@@ -223,4 +223,5 @@ class WorkspaceContextHolderTest {
       .isInstanceOf(IllegalStateException.class)
       .hasMessageContaining("Workspace not registered");
   }
+
 }

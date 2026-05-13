@@ -48,6 +48,11 @@ public class WorkspaceThreadLocalAccessor implements ThreadLocalAccessor<URI> {
   }
 
   @Override
+  public void restore(URI previousValue) {
+    WorkspaceContextHolder.set(previousValue);
+  }
+
+  @Override
   public void setValue() {
     WorkspaceContextHolder.clear();
   }

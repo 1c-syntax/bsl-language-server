@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -245,7 +246,10 @@ public final class DocumentChangeExecutor {
     lock.writeLock().lock();
 
     try {
-      changeListener.onChange(documentContext, pendingContent, pendingVersion);
+      var workspaceUri = documentContext.getServerContext().getWorkspaceUri();
+      try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
+        changeListener.onChange(documentContext, pendingContent, pendingVersion);
+      }
       latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
       completeWaitersUpTo(latestAppliedVersion.get());
     } catch (Exception e) {

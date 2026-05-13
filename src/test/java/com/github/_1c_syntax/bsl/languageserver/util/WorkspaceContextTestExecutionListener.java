@@ -36,8 +36,8 @@ import java.net.URI;
 @NoArgsConstructor
 public class WorkspaceContextTestExecutionListener extends AbstractTestExecutionListener {
 
-  private static final URI DEFAULT_TEST_WORKSPACE = URI.create("file:///test-workspace");
-  private static final String DEFAULT_TEST_WORKSPACE_NAME = "test-workspace";
+  public static final URI DEFAULT_TEST_WORKSPACE = URI.create("file:///test-workspace");
+  public static final String DEFAULT_TEST_WORKSPACE_NAME = "test-workspace";
 
   @Override
   public int getOrder() {

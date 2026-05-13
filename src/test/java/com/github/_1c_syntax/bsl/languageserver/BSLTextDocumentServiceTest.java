@@ -22,8 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
@@ -78,17 +80,20 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -105,6 +110,8 @@ class BSLTextDocumentServiceTest {
   private DiagnosticProvider diagnosticProvider;
   @MockitoSpyBean
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
+  @MockitoSpyBean
+  private HoverProvider hoverProvider;
 
   @BeforeEach
   void setUp() {
@@ -533,6 +540,47 @@ class BSLTextDocumentServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.isRight()).isTrue();
     assertThat(result.getRight()).isEmpty();
+  }
+
+  /**
+   * Регрессионный тест: {@code withFreshDocumentContextInternal} должен устанавливать
+   * workspace context на рабочем потоке {@code text-document-service-X},
+   * чтобы workspace-scoped бины были доступны из supplier'а LSP-методов.
+   * <p>
+   * Проверяется сценарий без {@code DocumentChangeExecutor} (документ закрыт):
+   * в этом случае {@code thenCompose} выполняется на LSP4J-потоке, у которого
+   * нет workspace context — без фикса контекст не устанавливается.
+   */
+  @Test
+  void hover_setsWorkspaceContextOnWorkerThread() throws Exception {
+    // open then close — removes DocumentChangeExecutor from map
+    // so thenCompose runs on the calling (LSP4J) thread with no workspace context
+    doOpen();
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(getTextDocumentIdentifier());
+    textDocumentService.didClose(closeParams);
+
+    // Simulate LSP4J handler thread: no workspace context on calling thread
+    var savedContext = WorkspaceContextHolder.get();
+    WorkspaceContextHolder.clear();
+    try {
+      var capturedUri = new AtomicReference<URI>();
+      doAnswer(invocation -> {
+        capturedUri.set(WorkspaceContextHolder.get());
+        return invocation.callRealMethod();
+      }).when(hoverProvider).getHover(any(), any());
+
+      var params = new HoverParams(getTextDocumentIdentifier(), new Position(0, 0));
+      textDocumentService.hover(params).get();
+
+      assertThat(capturedUri.get())
+        .as("WorkspaceContextHolder must be set on text-document-service worker thread")
+        .isNotNull();
+    } finally {
+      if (savedContext != null) {
+        WorkspaceContextHolder.set(savedContext);
+      }
+    }
   }
 
   // Tests for unknown file handling (dryRun - no didOpen before call)

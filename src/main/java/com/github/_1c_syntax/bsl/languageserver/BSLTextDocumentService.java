@@ -48,6 +48,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PreDestroy;
@@ -918,7 +919,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           }
           var lock = serverContext.getDocumentLock(documentContext.getUri());
           lock.readLock().lock();
-          try {
+          try (var workspaceContext = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
             return supplier.get();
           } finally {
             lock.readLock().unlock();
