@@ -26,9 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
-import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -54,7 +52,6 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Locale;
@@ -88,7 +85,6 @@ public class ExpressionTypeInferencer {
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
   private final ReferenceResolver referenceResolver;
-  private final ReferenceIndex referenceIndex;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -363,41 +359,24 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Тип переменной = union по позиции её декларации + всем DEFINITION-обращениям
-   * из {@code ReferenceIndex}. Декларация нужна, т.к. {@code ReferenceIndexFiller}
-   * фильтрует first-assignment (initialization) — она содержится в самом
-   * {@link VariableSymbol#getSelectionRange()}.
+   * Тип переменной = union RHS-выражений всех присваиваний этой переменной
+   * в пределах AST модуля-владельца.
+   * <p>
+   * Раньше использовался {@link ReferenceIndex#getReferencesTo(SourceDefinedSymbol)},
+   * но в условиях шаринга singleton-индекса между несколькими Spring-контекстами
+   * (в тестах) индекс может оказаться не наполнен. Прямой обход AST устраняет
+   * эту зависимость и работает детерминированно.
    */
   private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
     Set<TypeRef> result = new LinkedHashSet<>();
-    Set<Position> visitedPositions = new HashSet<>();
-
-    var declarationStart = variable.getSelectionRange().getStart();
-    if (visitedPositions.add(declarationStart)) {
-      inferFromDefinitionPosition(owner, declarationStart, ctx, result);
-    }
-    for (var occurrence : referenceIndex.getReferencesTo(variable)) {
-      if (occurrence.occurrenceType() != OccurrenceType.DEFINITION) {
-        continue;
-      }
-      var start = occurrence.selectionRange().getStart();
-      if (visitedPositions.add(start)) {
-        inferFromDefinitionPosition(owner, start, ctx, result);
-      }
+    var rhsList = ExpressionAtPosition.findAssignmentRhsForVariable(owner, variable.getName());
+    for (var rhs : rhsList) {
+      var expr = com.github._1c_syntax.bsl.languageserver.utils.expressiontree
+        .ExpressionTreeBuildingVisitor.buildExpressionTree(rhs);
+      result.addAll(inferInternal(expr, ctx).refs());
     }
     return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
-  }
-
-  private void inferFromDefinitionPosition(
-    DocumentContext owner,
-    Position position,
-    InferenceContext ctx,
-    Collection<TypeRef> sink
-  ) {
-    ExpressionAtPosition.findAssignmentRhs(owner, position)
-      .map(com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor::buildExpressionTree)
-      .ifPresent(expr -> sink.addAll(inferInternal(expr, ctx).refs()));
   }
 
   // ---------------------------------------------------------------------------

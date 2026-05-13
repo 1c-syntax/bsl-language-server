@@ -95,8 +95,48 @@ public class ExpressionAtPosition {
   }
 
   /**
-   * Удобный shortcut: построить {@link BslExpression} для выражения по позиции.
+   * Найти RHS-выражения всех присваиваний переменной с заданным именем в
+   * пределах AST документа (LHS — простой идентификатор, без чейна).
+   * <p>
+   * Используется как замена обходу {@link com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex}
+   * при выводе типов переменной — индекс может быть не наполнен (например,
+   * до первого rebuild'а документа), а нам нужны все позиции присваивания
+   * для union'а типов.
    */
+  public static java.util.List<BSLParser.ExpressionContext> findAssignmentRhsForVariable(
+    DocumentContext documentContext,
+    String variableName
+  ) {
+    var ast = safeGetAst(documentContext);
+    if (ast == null) {
+      return java.util.List.of();
+    }
+    var result = new java.util.ArrayList<BSLParser.ExpressionContext>();
+    collectAssignments(ast, variableName, result);
+    return result;
+  }
+
+  private static void collectAssignments(
+    org.antlr.v4.runtime.tree.ParseTree node,
+    String variableName,
+    java.util.List<BSLParser.ExpressionContext> sink
+  ) {
+    if (node instanceof BSLParser.AssignmentContext assignment) {
+      var lhs = assignment.lValue();
+      if (lhs != null && lhs.acceptor() == null && lhs.IDENTIFIER() != null
+        && lhs.IDENTIFIER().getText().equalsIgnoreCase(variableName)) {
+        var rhs = assignment.expression();
+        if (rhs != null) {
+          sink.add(rhs);
+        }
+      }
+    }
+    for (int i = 0; i < node.getChildCount(); i++) {
+      collectAssignments(node.getChild(i), variableName, sink);
+    }
+  }
+
+
   public static Optional<BslExpression> findExpressionTree(
     DocumentContext documentContext,
     Position position
