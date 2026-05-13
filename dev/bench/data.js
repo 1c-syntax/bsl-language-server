@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778672006805,
+  "lastUpdate": 1778678050035,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35216,6 +35216,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8637656177351085",
             "extra": "mean: 67.68345228830974 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "28dc4f9c1321000429c3f769186a3f550c0ecc25",
+          "message": "Merge pull request #3905 from 1c-syntax/copilot/fix-nullpointerexception-webcolor\n\nFix NPE in WebColorInformationSupplier when color name is unknown",
+          "timestamp": "2026-05-13T15:00:08+02:00",
+          "tree_id": "b35e920cb6746d811aa6744fcbc8ea3380dd8e96",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/28dc4f9c1321000429c3f769186a3f550c0ecc25"
+        },
+        "date": 1778678040913,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.84580930074056,
+            "unit": "sec",
+            "range": "stddev: 1.4541382852006262",
+            "extra": "mean: 68.84580930074056 sec\nrounds: 3"
           }
         ]
       }
