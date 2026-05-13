@@ -167,6 +167,14 @@ public class TypeRegistry {
   }
 
   /**
+   * Зарегистрировать дополнительный алиас (английский вариант, синоним) для
+   * уже зарегистрированного конфигурационного типа.
+   */
+  public void registerConfigurationTypeAlias(String alias, TypeRef ref) {
+    addAlias(alias, ref);
+  }
+
+  /**
    * Удалить пользовательский тип по qualifiedName (например, при закрытии
    * соответствующего документа).
    */
