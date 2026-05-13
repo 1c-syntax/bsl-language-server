@@ -95,6 +95,11 @@ public class ContextPropagatingExecutorService implements ExecutorService {
   @Override
   public void shutdown() {
     delegate.shutdown();
+    try {
+      delegate.awaitTermination(30, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   @Override
