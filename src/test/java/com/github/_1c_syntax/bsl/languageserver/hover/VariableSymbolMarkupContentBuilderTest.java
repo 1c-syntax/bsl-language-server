@@ -225,4 +225,21 @@ class VariableSymbolMarkupContentBuilderTest {
     assertThat(blocks.get(2)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ObjectModule.bsl#\\d+\\)\n\n");
   }
 
+  @Test
+  void testInferredTypeShownInHover() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем СтрокаПеременная;
+      СтрокаПеременная = "значение";
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = symbolTree.getVariableSymbol("СтрокаПеременная", symbolTree.getModule()).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    // then
+    assertThat(content).contains("Тип: Строка");
+  }
+
 }

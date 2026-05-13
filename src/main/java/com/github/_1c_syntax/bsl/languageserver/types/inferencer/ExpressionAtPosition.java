@@ -53,7 +53,7 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = documentContext.getAst();
+    var ast = safeGetAst(documentContext);
     if (ast == null) {
       return Optional.empty();
     }
@@ -72,7 +72,7 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = documentContext.getAst();
+    var ast = safeGetAst(documentContext);
     if (ast == null) {
       return Optional.empty();
     }
@@ -82,6 +82,16 @@ public class ExpressionAtPosition {
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast)
       .map(BSLParser.AssignmentContext::expression);
+  }
+
+  private static BSLParser.FileContext safeGetAst(DocumentContext documentContext) {
+    try {
+      return documentContext.getAst();
+    } catch (NullPointerException e) {
+      // tokenizer ещё не инициализирован (документ не открыт/не прочитан) —
+      // вывод типов корректно ничего не возвращает.
+      return null;
+    }
   }
 
   /**
