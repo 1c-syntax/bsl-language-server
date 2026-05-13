@@ -38,7 +38,7 @@ import java.nio.file.Path;
 
 public class TestUtils {
 
-  public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake-uri.bsl");
+  public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake/workspace/fake-uri.bsl");
   public static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String TEST_WORKSPACE_NAME = "test-metadata-workspace";
 
