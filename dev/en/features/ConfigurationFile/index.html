@@ -1445,6 +1445,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#Global-and-Local-Configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global and Local Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Settings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1531,9 +1542,32 @@
 
 
 <h1 id="BSL-Language-Server-Configuration">BSL Language Server Configuration<a class="headerlink" href="#BSL-Language-Server-Configuration" title="Permanent link">&para;</a></h1>
-<p>BSL Language Server provides the ability to change the settings using a configuration file in json format.<br />
-The created file must be specified using the key <code>--configuration</code> <em>(or <code>-c</code>)</em> when running BSL Language Server as a console application. If you use the editor / IDE with the BSL Language Server client plugin, place it in accordance with the documentation <em>(this is usually the root of a project or workspace)</em>.</p>
-<p>If there is no configuration file, an attempt will be made to find the ".bsl-language-server.json" file in "%HOMEPATH%"</p>
+<p>BSL Language Server provides the ability to change settings using a configuration file in JSON format.</p>
+<h2 id="Global-and-Local-Configuration">Global and Local Configuration<a class="headerlink" href="#Global-and-Local-Configuration" title="Permanent link">&para;</a></h2>
+<p>BSL Language Server uses a two-level configuration system:</p>
+<ul>
+<li><strong>Global configuration</strong> — common settings applied to all workspaces. Contains parameters <code>language</code>, <code>sendErrors</code>, and <code>traceLog</code>.</li>
+<li><strong>Local (per-workspace) configuration</strong> — individual settings for each workspace, including diagnostics, codeLens, inlayHint, and other parameters. Each workspace can have its own configuration file.</li>
+</ul>
+<h3 id="Configuration-File-Search-Strategy">Configuration File Search Strategy<a class="headerlink" href="#Configuration-File-Search-Strategy" title="Permanent link">&para;</a></h3>
+<h4 id="Global-Configuration">Global Configuration<a class="headerlink" href="#Global-Configuration" title="Permanent link">&para;</a></h4>
+<p>On startup, BSL Language Server searches for a global configuration file in the following order:</p>
+<ol>
+<li>File specified via the <code>-c</code> (<code>--configuration</code>) flag, if provided at launch.</li>
+<li>File <code>.bsl-language-server.json</code> in the current working directory (CWD).</li>
+<li>File <code>.bsl-language-server.json</code> in the user's home directory (<code>%HOMEPATH%</code> / <code>$HOME</code>).</li>
+</ol>
+<p>The first found file is used. If no file is found, default settings are applied.</p>
+<h4 id="Local-Configuration-Per-Workspace">Local Configuration (Per-Workspace)<a class="headerlink" href="#Local-Configuration-Per-Workspace" title="Permanent link">&para;</a></h4>
+<p>For each workspace, BSL Language Server searches for a <code>.bsl-language-server.json</code> file in the workspace root directory. If found, its settings are applied to that workspace; otherwise, default settings are used (supplemented by the global configuration).</p>
+<h3 id="Change-Tracking">Change Tracking<a class="headerlink" href="#Change-Tracking" title="Permanent link">&para;</a></h3>
+<p>BSL Language Server automatically tracks configuration file changes:</p>
+<ul>
+<li>Changing the global file updates global parameters (<code>language</code>, <code>sendErrors</code>, <code>traceLog</code>).</li>
+<li>Changing a workspace file updates settings only for that workspace, including diagnostics recalculation.</li>
+<li>When a workspace is added, a file watcher is automatically registered for its configuration file.</li>
+<li>When a workspace is removed, the file watcher is unregistered.</li>
+</ul>
 <h2 id="Settings">Settings<a class="headerlink" href="#Settings" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1623,6 +1657,11 @@ The created file must be specified using the key <code>--configuration</code> <e
 <td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>analyzeOnStart</code></td>
 <td style="text-align: center;"><code>Boolean</code></td>
 <td style="text-align: left;">Starting the analysis of the entire project at server startup. If enabled, after the context is built on the client, information about diagnostics in all project files will be sent.</td>
+</tr>
+<tr>
+<td style="text-align: left;">⤷&nbsp;&nbsp;&nbsp;<code>ignoredAuthors</code></td>
+<td style="text-align: center;"><code>Array</code> <code>String</code></td>
+<td style="text-align: left;">List of author email addresses whose lines of code are excluded from analysis based on <code>git blame</code> data. If the list is empty (default), filtering by authorship is not performed.</td>
 </tr>
 <tr>
 <td style="text-align: left;">&nbsp;&nbsp;&nbsp;⤷&nbsp;&nbsp;&nbsp;<code>include</code></td>

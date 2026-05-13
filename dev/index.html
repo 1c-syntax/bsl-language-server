@@ -1638,11 +1638,15 @@
 <li>Иерархия вызовов методов</li>
 <li>Расширение текущего выделения (expand selection)</li>
 <li>Отображение представления цвета и конвертация между <code>Цвет</code> и <code>WebЦвета</code></li>
+<li>Семантическая подсветка синтаксиса</li>
+<li>Линзы кода (когнитивная/цикломатическая сложность)</li>
+<li>Встроенные подсказки (параметры вызовов методов)</li>
 <li>Диагностики</li>
 <li>"Быстрые исправления" (quick fixes) для ряда диагностик и "быстрые действия" (code actions)</li>
 <li>Запуск движка диагностик из командной строки</li>
 <li>Запуск форматирования файлов в каталоге из командной строки</li>
 <li>Переименование символов</li>
+<li>Поддержка работы с несколькими рабочими областями (multi-workspace)</li>
 </ul>
 <h2 id="Поддерживаемые-операции-протокола">Поддерживаемые операции протокола<a class="headerlink" href="#Поддерживаемые-операции-протокола" title="Permanent link">&para;</a></h2>
 <details class="workspace">
@@ -1658,8 +1662,8 @@
 <tbody>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>Динамическое добавление и удаление рабочих областей</td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a></td>
@@ -2016,6 +2020,7 @@ Commands:
 <span class="w">  </span>websocket,<span class="w"> </span>-w,<span class="w"> </span>--websocket<span class="w">  </span>Websocket<span class="w"> </span>server<span class="w"> </span>mode
 </code></pre></div>
 <p>При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. Для взаимодействия используются stdin и stdout.</p>
+<p>Ключ <code>-c</code> (<code>--configuration</code>) задаёт путь к конфигурационному файлу. Если ключ не указан, BSL Language Server автоматически ищет файл <code>.bsl-language-server.json</code> сначала в текущем каталоге, а затем в домашнем каталоге пользователя. Подробнее — на странице <a href="features/ConfigurationFile/">Конфигурационный файл</a>.</p>
 <p>По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр <code>language</code> в конфигурационном файле или вызвав событие <code>workspace/didChangeConfiguration</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span>

@@ -1638,11 +1638,15 @@
 <li>Method call hierarchy</li>
 <li>Expand selection</li>
 <li>Display color representation and convert between <code>Color</code> and <code>WebColors</code></li>
+<li>Semantic syntax highlighting</li>
+<li>Code lenses (cognitive/cyclomatic complexity)</li>
+<li>Inlay hints (method call parameters)</li>
 <li>Diagnostics</li>
 <li>Quick fixes and code actions for several diagnostics</li>
 <li>Run diagnostics engine from command line</li>
 <li>Run formatter engine from command line</li>
 <li>Renaming Symbols</li>
+<li>Multi-workspace support</li>
 </ul>
 <h2 id="Supported-protocol-operations">Supported protocol operations<a class="headerlink" href="#Supported-protocol-operations" title="Permanent link">&para;</a></h2>
 <details class="workspace">
@@ -1658,8 +1662,8 @@
 <tbody>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>Dynamic add/remove of workspace folders</td>
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a></td>
@@ -2016,6 +2020,7 @@ Commands:
 <span class="w">  </span>websocket,<span class="w"> </span>-w,<span class="w"> </span>--websocket<span class="w">  </span>Websocket<span class="w"> </span>server<span class="w"> </span>mode
 </code></pre></div>
 <p>Starting BSL Language Server in standard mode will run the Language Server communicating via <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. stdin and stdout are used for communication.</p>
+<p>The <code>-c</code> (<code>--configuration</code>) flag specifies the path to a configuration file. If not provided, BSL Language Server automatically searches for <code>.bsl-language-server.json</code> first in the current working directory, then in the user's home directory. See <a href="features/ConfigurationFile/">Configuration file</a> for details.</p>
 <p>By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter <code>language</code> in configuration file or raise an event <code>workspace/didChangeConfiguration</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span>

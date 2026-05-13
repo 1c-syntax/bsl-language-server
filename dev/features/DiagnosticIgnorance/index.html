@@ -1471,6 +1471,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#Фильтрация-по-авторству-строк-git-blame" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Фильтрация по авторству строк (git blame)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Описание" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1531,6 +1542,20 @@
 <h1 id="Экранирование-кода-от-диагностик">Экранирование кода от диагностик<a class="headerlink" href="#Экранирование-кода-от-диагностик" title="Permanent link">&para;</a></h1>
 <p>Статический анализатор обнаруживает проблемы, ошибки и недочеты в коде в соответствии с заложенными в него правилами (диагностиками). Как и везде, в коде решения могут возникать ситуации, когда необходимо отойти от правил. Данные ситуации могут возникать по разным причинам: как в связи с архитектурными особенностями решения, так и в следствии невозможности (по разным причинам) изменить код для соответствия требованиям.</p>
 <p>Для того, чтобы не приходилось каждый раз вручную отмечать замечание как неактуальное, BSL LS предоставляет функциональность, посредством которой можно скрыть или заэкранировать отдельные участки кода от срабатывания той или иной диагностики.</p>
+<h2 id="Фильтрация-по-авторству-строк-git-blame">Фильтрация по авторству строк (git blame)<a class="headerlink" href="#Фильтрация-по-авторству-строк-git-blame" title="Permanent link">&para;</a></h2>
+<p>BSL LS поддерживает фильтрацию диагностик на основе данных <code>git blame</code>. Если задан список email-адресов авторов, диагностики не будут срабатывать на строках кода, автором которых (по данным git) является один из указанных авторов.</p>
+<p>Для настройки укажите список email-адресов в поле <code>ignoredAuthors</code> секции <code>diagnostics</code> конфигурационного файла <code>.bsl-language-server.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;ignoredAuthors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;developer@example.com&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;legacy-author@company.com&quot;</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Если список пуст (по умолчанию), фильтрация по git blame не выполняется.</p>
+<p><strong>Требования:</strong> файл должен находиться в git-репозитории и быть зафиксирован (committed). Для строк с незафиксированными изменениями фильтрация не применяется.</p>
 <h2 id="Описание">Описание<a class="headerlink" href="#Описание" title="Permanent link">&para;</a></h2>
 <p>Для того, чтобы скрыть часть кода от анализатора BSL LS, необходимо добавить в код специальный комментарий.<br />
 Комментарий экранирования в общем случае формируется следующим образом: <code>[Префикс][:КлючДиагностики]-[ФлагАктивации]</code>. Теперь по-подробнее.</p>
