@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -62,17 +63,20 @@ public class WebColorInformationSupplier implements ColorInformationSupplier {
       .filter(complexIdentifier -> complexIdentifier.modifier().size() == 1)
       .filter(complexIdentifier -> complexIdentifier.modifier(0).accessProperty() != null)
       .filter(complexIdentifier -> WEB_COLOR_PATTERN.matcher(complexIdentifier.IDENTIFIER().getText()).matches())
-      .filter(complexIdentifier -> {
-        var identifier = complexIdentifier.modifier(0).accessProperty().IDENTIFIER();
-        return identifier != null && WEB_COLORS.containsKey(identifier.getText());
-      })
-      .map(WebColorInformationSupplier::toColorInformation)
+      .flatMap(ctx -> toColorInformation(ctx).stream())
       .collect(Collectors.toList());
   }
 
-  private static ColorInformation toColorInformation(BSLParser.ComplexIdentifierContext ctx) {
-    var colorName = ctx.modifier(0).accessProperty().IDENTIFIER().getText();
-    var webColor = WEB_COLORS.get(colorName);
+  private static Optional<ColorInformation> toColorInformation(BSLParser.ComplexIdentifierContext ctx) {
+    var identifierToken = ctx.modifier(0).accessProperty().IDENTIFIER();
+    if (identifierToken == null) {
+      return Optional.empty();
+    }
+
+    var webColor = WEB_COLORS.get(identifierToken.getText());
+    if (webColor == null) {
+      return Optional.empty();
+    }
 
     double red = (double) webColor.getRed() / MAX_COLOR_COMPONENT_VALUE;
     double green = (double) webColor.getGreen() / MAX_COLOR_COMPONENT_VALUE;
@@ -81,7 +85,7 @@ public class WebColorInformationSupplier implements ColorInformationSupplier {
     var range = Ranges.create(ctx);
     var color = new Color(red, green, blue, DEFAULT_ALPHA_CHANNEL);
 
-    return new ColorInformation(range, color);
+    return Optional.of(new ColorInformation(range, color));
   }
 
   private static Map<String, WebColor> createWebColors() {
