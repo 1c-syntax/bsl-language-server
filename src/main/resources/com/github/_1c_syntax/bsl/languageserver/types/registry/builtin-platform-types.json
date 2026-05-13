@@ -1,0 +1,115 @@
+[
+  {
+    "kind": "PRIMITIVE",
+    "name": "Строка",
+    "aliases": ["String"],
+    "members": [
+      {"name": "Длина", "kind": "METHOD", "returnType": "Число"},
+      {"name": "ВРег", "kind": "METHOD", "returnType": "Строка"},
+      {"name": "НРег", "kind": "METHOD", "returnType": "Строка"}
+    ]
+  },
+  {
+    "kind": "PRIMITIVE",
+    "name": "Число",
+    "aliases": ["Number"]
+  },
+  {
+    "kind": "PRIMITIVE",
+    "name": "Дата",
+    "aliases": ["Date"]
+  },
+  {
+    "kind": "PRIMITIVE",
+    "name": "Булево",
+    "aliases": ["Boolean"]
+  },
+  {
+    "kind": "PRIMITIVE",
+    "name": "Неопределено",
+    "aliases": ["Undefined"]
+  },
+  {
+    "kind": "PRIMITIVE",
+    "name": "Null",
+    "aliases": ["null"]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "Массив",
+    "aliases": ["Array"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Добавить", "kind": "METHOD"},
+      {"name": "Вставить", "kind": "METHOD"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "Получить", "kind": "METHOD"},
+      {"name": "Установить", "kind": "METHOD"},
+      {"name": "Найти", "kind": "METHOD"},
+      {"name": "Очистить", "kind": "METHOD"},
+      {"name": "ВГраница", "kind": "METHOD", "returnType": "Число"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "Структура",
+    "aliases": ["Structure"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Вставить", "kind": "METHOD"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "Свойство", "kind": "METHOD", "returnType": "Булево"},
+      {"name": "Очистить", "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "Соответствие",
+    "aliases": ["Map"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Вставить", "kind": "METHOD"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "Получить", "kind": "METHOD"},
+      {"name": "Очистить", "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СписокЗначений",
+    "aliases": ["ValueList"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Добавить", "kind": "METHOD"},
+      {"name": "Вставить", "kind": "METHOD"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "НайтиПоЗначению", "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ТаблицаЗначений",
+    "aliases": ["ValueTable"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Колонки", "kind": "PROPERTY"},
+      {"name": "Добавить", "kind": "METHOD"},
+      {"name": "Вставить", "kind": "METHOD"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "Найти", "kind": "METHOD"},
+      {"name": "НайтиСтроки", "kind": "METHOD"},
+      {"name": "Очистить", "kind": "METHOD"},
+      {"name": "Сортировать", "kind": "METHOD"},
+      {"name": "Скопировать", "kind": "METHOD", "returnType": "ТаблицаЗначений"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ДеревоЗначений",
+    "aliases": ["ValueTree"],
+    "members": [
+      {"name": "Строки", "kind": "PROPERTY"},
+      {"name": "Колонки", "kind": "PROPERTY"}
+    ]
+  }
+]
