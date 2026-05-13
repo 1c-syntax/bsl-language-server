@@ -230,8 +230,11 @@ tasks.test {
         html.required.set(true)
     }
 
-    // Increase heap size to prevent OOM during test execution with EhCache
-    maxHeapSize = "2g"
+    // Increase heap size to prevent OOM during test execution.
+    // With CleanupContextBeforeClassAndAfterClass tests causing frequent Spring context reloads,
+    // multiple contexts can be in memory simultaneously (old being GC'd while new is created).
+    // 3g gives enough headroom on GitHub Actions ubuntu-latest runners (7GB RAM, 1 fork).
+    maxHeapSize = "3g"
 
     // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
     // Использование форков, а не потоков, обусловлено тем, что многие тесты
