@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778525530938,
+  "lastUpdate": 1778672006805,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35185,6 +35185,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8504780310141403",
             "extra": "mean: 67.24628925323486 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "34e49b18521f21603522701201fadc9ddd9f40fd",
+          "message": "Merge pull request #3662 from 1c-syntax/copilot/support-multiple-workspaces\n\nfeat: multi-workspace LSP support with per-workspace LanguageServerConfiguration",
+          "timestamp": "2026-05-13T13:25:36+02:00",
+          "tree_id": "21dfc579e1d2cd32d8cc45a2e94319704c1469bd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/34e49b18521f21603522701201fadc9ddd9f40fd"
+        },
+        "date": 1778672003355,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 67.68345228830974,
+            "unit": "sec",
+            "range": "stddev: 0.8637656177351085",
+            "extra": "mean: 67.68345228830974 sec\nrounds: 3"
           }
         ]
       }
