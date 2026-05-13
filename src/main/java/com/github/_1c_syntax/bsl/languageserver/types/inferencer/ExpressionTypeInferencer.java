@@ -359,28 +359,17 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Тип переменной = union по позиции её декларации + всем DEFINITION-обращениям
-   * из {@code ReferenceIndex}. Декларация нужна, т.к. {@code ReferenceIndexFiller}
-   * фильтрует first-assignment (initialization) — она содержится в самом
-   * {@link VariableSymbol#getSelectionRange()}.
+   * Тип переменной = union по всем DEFINITION-обращениям из {@code ReferenceIndex}
+   * (т.е. по всем присваиваниям и инициализациям).
    */
   private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
     Set<TypeRef> result = new LinkedHashSet<>();
-    Set<Position> visitedPositions = new HashSet<>();
-
-    var declarationStart = variable.getSelectionRange().getStart();
-    if (visitedPositions.add(declarationStart)) {
-      inferFromDefinitionPosition(owner, declarationStart, ctx, result);
-    }
     for (var occurrence : referenceIndex.getReferencesTo(variable)) {
       if (occurrence.occurrenceType() != OccurrenceType.DEFINITION) {
         continue;
       }
-      var start = occurrence.selectionRange().getStart();
-      if (visitedPositions.add(start)) {
-        inferFromDefinitionPosition(owner, start, ctx, result);
-      }
+      inferFromDefinitionPosition(owner, occurrence.selectionRange().getStart(), ctx, result);
     }
     return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
   }
