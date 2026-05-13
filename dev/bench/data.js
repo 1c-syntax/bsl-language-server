@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778678050035,
+  "lastUpdate": 1778687055938,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35247,6 +35247,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4541382852006262",
             "extra": "mean: 68.84580930074056 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "5905263da3d1fdc86645bd3be325eec8b707c12a",
+          "message": "feat(types): TypeService facade + migration tests from feature/typeResolver\n\n- TypeService: единая точка входа для hover/completion/signature help.\n  findTypes(uri, position), findTypes(Reference|SourceDefinedSymbol),\n  inferAtPosition, getParameterTypes, getMembers.\n- Inferencer теперь учитывает первую (фильтруемую ReferenceIndexFiller'ом\n  как initialization) точку присваивания через variable.getSelectionRange(),\n  union с DEFINITION-occurrences. Дедуп по позиции.\n- Перенесены тестовые кейсы из старого TypeResolverTest:\n  simpleType, twoTypesOnReassignment, twoTypesOnPlaceOfUsage,\n  twoTypesFromSymbol, twoAssignmentsSameType, newArray, globalMethodCall.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-05-13T17:31:20+02:00",
+          "tree_id": "b47cd4f7d38453da150aeb5f578b4e756750f051",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5905263da3d1fdc86645bd3be325eec8b707c12a"
+        },
+        "date": 1778687048472,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.81748374303181,
+            "unit": "sec",
+            "range": "stddev: 1.2242291593979038",
+            "extra": "mean: 68.81748374303181 sec\nrounds: 3"
           }
         ]
       }
