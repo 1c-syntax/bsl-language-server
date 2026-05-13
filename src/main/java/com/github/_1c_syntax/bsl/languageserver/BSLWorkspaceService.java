@@ -88,11 +88,23 @@ public class BSLWorkspaceService implements WorkspaceService {
         for (var fileEvent : params.getChanges()) {
           var uri = Absolute.uri(fileEvent.getUri());
 
-          switch (fileEvent.getType()) {
-            case Deleted -> handleDeletedFileEvent(uri);
-            case Created -> handleCreatedFileEvent(uri);
-            case Changed -> handleChangedFileEvent(uri);
-          }
+          serverContextProvider.getServerContext(uri).ifPresentOrElse(
+            context -> {
+              var workspaceUri = context.getWorkspaceUri();
+              if (workspaceUri == null) {
+                LOGGER.warn("No workspace URI for context, skipping file event: {}", uri);
+                return;
+              }
+              WorkspaceContextHolder.run(workspaceUri, () -> {
+                switch (fileEvent.getType()) {
+                  case Deleted -> handleDeletedFileEvent(uri);
+                  case Created -> handleCreatedFileEvent(uri);
+                  case Changed -> handleChangedFileEvent(uri);
+                }
+              });
+            },
+            () -> LOGGER.debug("No workspace found for file event, skipping: {}", uri)
+          );
         }
       },
       executor

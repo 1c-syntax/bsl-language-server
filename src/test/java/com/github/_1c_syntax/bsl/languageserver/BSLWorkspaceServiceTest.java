@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
@@ -38,6 +40,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.SmartApplicationListener;
+import org.springframework.core.Ordered;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +53,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -68,6 +78,9 @@ class BSLWorkspaceServiceTest {
 
   @Autowired
   private ServerContextProvider serverContextProvider;
+
+  @Autowired
+  private ConfigurableApplicationContext applicationContext;
 
   @TempDir
   Path tempDir;
@@ -387,6 +400,60 @@ class BSLWorkspaceServiceTest {
 
     // cleanup
     serverContextProvider.removeWorkspace(workspaceFolderToAdd);
+  }
+
+  /**
+   * Воспроизводит ScopeNotActiveException из Sentry:
+   * при обработке файловых событий через didChangeWatchedFiles workspace-контекст
+   * должен быть установлен на треде, иначе workspace-scoped proxy beans не резолвятся
+   * в @EventListener методах (например, AnnotationReferenceFinder).
+   */
+  @Test
+  void didChangeWatchedFiles_Created_setsWorkspaceContextForEventListeners() throws IOException, InterruptedException {
+    // given
+    var capturedWorkspaceUri = new AtomicReference<URI>();
+    var eventFired = new CountDownLatch(1);
+
+    // Регистрируем высокоприоритетный слушатель, чтобы получить контекст до AnnotationReferenceFinder
+    var listener = new SmartApplicationListener() {
+      @Override
+      public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+        return DocumentContextContentChangedEvent.class.isAssignableFrom(eventType);
+      }
+
+      @Override
+      public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
+      }
+
+      @Override
+      public void onApplicationEvent(ApplicationEvent event) {
+        capturedWorkspaceUri.set(WorkspaceContextHolder.get());
+        eventFired.countDown();
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+
+    var testFile = createTestFile("test_scope_bug.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+    var fileEvent = new FileEvent(uri.toString(), FileChangeType.Created);
+
+    try {
+      // when
+      workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(fileEvent)));
+
+      // then - ждём что событие сработало и проверяем контекст
+      assertThat(eventFired.await(5, TimeUnit.SECONDS))
+        .as("DocumentContextContentChangedEvent should be fired within 5 seconds")
+        .isTrue();
+      assertThat(capturedWorkspaceUri.get())
+        .as("Workspace context must be set on the thread when DocumentContextContentChangedEvent fires "
+          + "(otherwise workspace-scoped beans like AnnotationRepository cannot be resolved)")
+        .isNotNull()
+        .isEqualTo(Absolute.uri(tempDir.toUri()));
+    } finally {
+      applicationContext.removeApplicationListener(listener);
+    }
   }
 
   /**
