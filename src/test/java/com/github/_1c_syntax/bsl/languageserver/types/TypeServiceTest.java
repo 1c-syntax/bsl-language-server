@@ -118,4 +118,22 @@ class TypeServiceTest {
       OccurrenceType.DEFINITION
     );
   }
+
+  @Test
+  void membersOfArrayResolved() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var variableSymbol = documentContext.getSymbolTree()
+      .getVariableSymbol("ДругоеИмяМассива", documentContext.getSymbolTree().getModule()).orElseThrow();
+    var reference = referenceOf(documentContext, variableSymbol);
+
+    // when
+    var types = typeService.findTypes(reference);
+    var arrayRef = types.refs().iterator().next();
+    var members = typeService.getMembers(arrayRef);
+
+    // then
+    assertThat(members).extracting(com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor::name)
+      .contains("Добавить", "Количество", "Получить");
+  }
 }
