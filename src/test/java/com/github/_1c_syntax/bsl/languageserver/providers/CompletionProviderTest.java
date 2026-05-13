@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -66,5 +68,57 @@ class CompletionProviderTest {
 
     var items = completionProvider.getCompletion(documentContext, params);
     assertThat(items).isEmpty();
+  }
+
+  @Test
+  void testDotCompletionReturnsPropertiesAsProperties() {
+    // ТЗ = Новый ТаблицаЗначений;
+    // ТЗ.Колонки.Добавить("Имя");
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-properties.os");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // позиция сразу после "ТЗ." на строке 2 (line 1)
+    params.setPosition(new Position(1, 3));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    // и поля (PROPERTY → CompletionItemKind.Property), и методы доступны
+    assertThat(items).isNotEmpty();
+    var byName = items.stream().collect(java.util.stream.Collectors.toMap(
+      CompletionItem::getLabel, item -> item, (a, b) -> a));
+
+    assertThat(byName).containsKey("Колонки");
+    assertThat(byName.get("Колонки").getKind()).isEqualTo(CompletionItemKind.Property);
+
+    assertThat(byName).containsKey("Количество");
+    assertThat(byName.get("Количество").getKind()).isEqualTo(CompletionItemKind.Method);
+  }
+
+  @Test
+  void testDotCompletionMembersHaveCorrectKinds() {
+    // sanity: проверяем, что и Method, и Property kinds реально мапятся
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-properties.os");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 3));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .extracting(CompletionItem::getKind)
+      .contains(CompletionItemKind.Property, CompletionItemKind.Method);
+
+    // и Method, и Property — оба представлены в выдаче, как и в реестре
+    var anyProperty = items.stream().anyMatch(it -> it.getKind() == CompletionItemKind.Property);
+    var anyMethod = items.stream().anyMatch(it -> it.getKind() == CompletionItemKind.Method);
+    assertThat(anyProperty).isTrue();
+    assertThat(anyMethod).isTrue();
+
+    // и MemberKind enum, через который мапим, действительно покрывает оба
+    assertThat(MemberKind.values()).contains(MemberKind.METHOD, MemberKind.PROPERTY);
   }
 }
