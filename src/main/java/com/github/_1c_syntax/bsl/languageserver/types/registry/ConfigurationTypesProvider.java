@@ -23,11 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -47,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * выполняется отдельным провайдером — {@code ConfigurationModuleMembersProvider}.
  */
 @Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 @Slf4j
 public class ConfigurationTypesProvider {
@@ -91,20 +96,24 @@ public class ConfigurationTypesProvider {
     if (registered.get()) {
       return;
     }
-    var contexts = serverContextProvider.getAllContexts().values();
-    for (var serverContext : contexts) {
-      var configuration = serverContext.getConfiguration();
-      if (configuration == null || configuration.isEmpty()) {
-        continue;
-      }
-      if (!registered.compareAndSet(false, true)) {
-        return;
-      }
-      var children = configuration.getChildrenByMdoRef().values();
-      LOGGER.debug("ConfigurationTypesProvider: registering {} MD objects", children.size());
-      register(children);
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
       return;
     }
+    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+    if (serverContext == null) {
+      return;
+    }
+    var configuration = serverContext.getConfiguration();
+    if (configuration == null || configuration.isEmpty()) {
+      return;
+    }
+    if (!registered.compareAndSet(false, true)) {
+      return;
+    }
+    var children = configuration.getChildrenByMdoRef().values();
+    LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects", workspaceUri, children.size());
+    register(children);
   }
 
   private void register(Iterable<MD> children) {

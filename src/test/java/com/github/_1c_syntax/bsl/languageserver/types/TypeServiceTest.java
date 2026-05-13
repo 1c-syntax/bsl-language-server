@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -28,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,12 +42,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code TypeResolver}.
  */
 @SpringBootTest
-class TypeServiceTest {
+class TypeServiceTest extends AbstractServerContextAwareTest {
 
   private static final String PATH_TO_FILE = "./src/test/resources/types/TypeResolver.os";
 
   @Autowired
   private TypeService typeService;
+
+  @BeforeEach
+  void setUpWorkspaceContext() {
+    initServerContext();
+  }
 
   @Test
   void simpleType() {

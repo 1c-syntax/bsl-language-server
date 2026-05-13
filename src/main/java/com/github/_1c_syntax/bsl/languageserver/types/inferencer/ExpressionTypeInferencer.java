@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -48,6 +49,8 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -69,6 +72,7 @@ import java.util.Set;
  * накапливает finder'ы из всего проекта (variable, method, module и т.д.).
  */
 @Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class ExpressionTypeInferencer {
 

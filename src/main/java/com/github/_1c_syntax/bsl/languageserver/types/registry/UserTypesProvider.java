@@ -23,8 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -44,6 +47,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * платформенного, см. {@code ConfigurationModuleMembersProvider} — будущая работа).
  */
 @Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class UserTypesProvider {
 

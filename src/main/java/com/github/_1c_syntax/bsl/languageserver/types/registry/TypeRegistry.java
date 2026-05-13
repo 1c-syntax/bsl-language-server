@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AnyType;
 import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -35,6 +36,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -57,6 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * несколькими источниками членов ({@link MemberSource}).
  */
 @Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class TypeRegistry {
 

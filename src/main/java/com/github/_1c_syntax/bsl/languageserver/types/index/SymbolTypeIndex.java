@@ -25,12 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -55,6 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * {@code ExpressionTypeInferencer}'ом по выражению инициализации.
  */
 @Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class SymbolTypeIndex {
 

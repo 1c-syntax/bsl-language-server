@@ -21,11 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -50,6 +53,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
 
   private static final String RESOURCE_PATH =
