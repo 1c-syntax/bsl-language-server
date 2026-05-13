@@ -75,6 +75,13 @@ public final class WorkspaceContextHolder {
   }
 
   /**
+   * Проверить, зарегистрирован ли workspace.
+   */
+  public static boolean isRegistered(URI workspaceUri) {
+    return workspaceUri != null && WORKSPACE_NAMES.containsKey(workspaceUri);
+  }
+
+  /**
    * Создать AutoCloseable-контекст workspace с URI и именем.
    * При закрытии восстанавливает предыдущее значение ThreadLocal.
    */

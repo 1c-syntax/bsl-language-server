@@ -22,12 +22,22 @@
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import io.micrometer.context.ThreadLocalAccessor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 
 /**
  * Micrometer SPI для автоматической пропагации workspace URI через executors.
+ * <p>
+ * При восстановлении snapshot на новом потоке (метод {@link #setValue(URI)}) workspace
+ * может оказаться уже снятым с регистрации — например, когда {@code @Scheduled}-задача
+ * запускается после того, как тест или пользователь удалил workspace. В этом случае
+ * метод логирует предупреждение и очищает контекст, не бросая исключение.
+ * Само по себе это не ошибка: задача, не нуждающаяся в workspace-контексте
+ * (например, {@code ConfigurationFileSystemWatcher.watch()}), самостоятельно
+ * устанавливает нужный контекст через {@link WorkspaceContextHolder#run}.
  */
+@Slf4j
 public class WorkspaceThreadLocalAccessor implements ThreadLocalAccessor<URI> {
 
   private static final String KEY = "workspaceUri";
@@ -44,11 +54,21 @@ public class WorkspaceThreadLocalAccessor implements ThreadLocalAccessor<URI> {
 
   @Override
   public void setValue(URI value) {
+    if (!WorkspaceContextHolder.isRegistered(value)) {
+      LOGGER.warn("Workspace context propagation skipped: workspace no longer registered: {}. "
+        + "Clearing workspace context for current thread.", value);
+      WorkspaceContextHolder.clear();
+      return;
+    }
     WorkspaceContextHolder.set(value);
   }
 
   @Override
   public void restore(URI previousValue) {
+    if (!WorkspaceContextHolder.isRegistered(previousValue)) {
+      WorkspaceContextHolder.clear();
+      return;
+    }
     WorkspaceContextHolder.set(previousValue);
   }
 

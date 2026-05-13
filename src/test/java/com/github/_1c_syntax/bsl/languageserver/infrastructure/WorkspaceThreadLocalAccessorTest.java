@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Тесты для {@link WorkspaceThreadLocalAccessor} — Micrometer SPI,
@@ -89,6 +88,24 @@ class WorkspaceThreadLocalAccessorTest {
   }
 
   /**
+   * Регрессионный тест для гонки шедулера: если workspace был снят с регистрации
+   * пока Micrometer держал snapshot, setValue должен тихо очистить контекст и
+   * не бросать исключение (чтобы scheduled-задача могла завершиться корректно).
+   */
+  @Test
+  void setValue_withUnregisteredUri_clearsContextWithoutException() {
+    WorkspaceContextHolder.set(REGISTERED_URI, WORKSPACE_NAME);
+    WorkspaceContextHolder.unregisterWorkspace(REGISTERED_URI);
+
+    accessor.setValue(REGISTERED_URI);
+
+    assertThat(WorkspaceContextHolder.get()).isNull();
+
+    // restore state for tearDown
+    WorkspaceContextHolder.registerWorkspace(REGISTERED_URI, WORKSPACE_NAME);
+  }
+
+  /**
    * Регрессионный тест: restore(registeredUri) должен восстанавливать контекст.
    */
   @Test
@@ -97,12 +114,30 @@ class WorkspaceThreadLocalAccessorTest {
     assertThat(WorkspaceContextHolder.get()).isEqualTo(REGISTERED_URI);
   }
 
+  /**
+   * Регрессионный тест для гонки шедулера: если workspace был снят с регистрации
+   * до restore, метод должен очистить контекст и не бросать исключение.
+   */
   @Test
-  void restore_withUnregisteredUri_throwsIllegalStateException() {
+  void restore_withUnregisteredUri_clearsContextWithoutException() {
     WorkspaceContextHolder.registerWorkspace(UNREGISTERED_URI, "gone");
     WorkspaceContextHolder.unregisterWorkspace(UNREGISTERED_URI);
 
-    assertThatThrownBy(() -> accessor.restore(UNREGISTERED_URI))
-      .isInstanceOf(IllegalStateException.class);
+    accessor.restore(UNREGISTERED_URI);
+
+    assertThat(WorkspaceContextHolder.get()).isNull();
+  }
+
+  /**
+   * restore(null) должен очищать контекст — null означает «на потоке не было контекста
+   * до вызова setValue».
+   */
+  @Test
+  void restore_withNull_clearsContext() {
+    WorkspaceContextHolder.set(REGISTERED_URI, WORKSPACE_NAME);
+
+    accessor.restore(null);
+
+    assertThat(WorkspaceContextHolder.get()).isNull();
   }
 }
