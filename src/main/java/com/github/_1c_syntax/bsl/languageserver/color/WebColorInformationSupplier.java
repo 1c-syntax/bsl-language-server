@@ -62,8 +62,10 @@ public class WebColorInformationSupplier implements ColorInformationSupplier {
       .filter(complexIdentifier -> complexIdentifier.modifier().size() == 1)
       .filter(complexIdentifier -> complexIdentifier.modifier(0).accessProperty() != null)
       .filter(complexIdentifier -> WEB_COLOR_PATTERN.matcher(complexIdentifier.IDENTIFIER().getText()).matches())
-      .filter(complexIdentifier -> complexIdentifier.modifier(0).accessProperty().IDENTIFIER() != null)
-      .filter(complexIdentifier -> WEB_COLORS.containsKey(complexIdentifier.modifier(0).accessProperty().IDENTIFIER().getText()))
+      .filter(complexIdentifier -> {
+        var identifier = complexIdentifier.modifier(0).accessProperty().IDENTIFIER();
+        return identifier != null && WEB_COLORS.containsKey(identifier.getText());
+      })
       .map(WebColorInformationSupplier::toColorInformation)
       .collect(Collectors.toList());
   }
