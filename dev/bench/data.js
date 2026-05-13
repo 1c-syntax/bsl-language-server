@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778687055938,
+  "lastUpdate": 1778687895037,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35278,6 +35278,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2242291593979038",
             "extra": "mean: 68.81748374303181 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "a25485571bd785f472a19fef3ca3977e9449e27f",
+          "message": "Revert \"feat(types): scaffold type system v2 — model + registry + builtin platform provider\"\n\nThis reverts commit 552d244a0b1f5d8f9bb8363a9e757fd71b691e88.",
+          "timestamp": "2026-05-13T17:33:04+02:00",
+          "tree_id": "dd8eb6dddaebcad04a61a7c8b1a9f44229f82d18",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a25485571bd785f472a19fef3ca3977e9449e27f"
+        },
+        "date": 1778687888743,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.56336871782939,
+            "unit": "sec",
+            "range": "stddev: 0.8780901069166059",
+            "extra": "mean: 68.56336871782939 sec\nrounds: 3"
           }
         ]
       }
