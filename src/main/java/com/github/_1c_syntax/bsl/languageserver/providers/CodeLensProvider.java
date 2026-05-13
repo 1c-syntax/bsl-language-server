@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -63,13 +62,6 @@ public class CodeLensProvider {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final JsonMapper jsonMapper;
 
-  private List<CodeLensSupplier<CodeLensData>> enabledCodeLensSuppliers;
-
-  @PostConstruct
-  protected void init() {
-    enabledCodeLensSuppliers = enabledCodeLensSuppliersProvider.getObject();
-  }
-
   /**
    * Получение списка {@link CodeLens} в документе.
    *
@@ -77,7 +69,7 @@ public class CodeLensProvider {
    * @return Список линз.
    */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return enabledCodeLensSuppliers.stream()
+    return enabledCodeLensSuppliersProvider.getObject().stream()
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
@@ -116,8 +108,6 @@ public class CodeLensProvider {
    */
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    enabledCodeLensSuppliers = enabledCodeLensSuppliersProvider.getObject();
-
     refreshCodeLenses();
   }
 

@@ -23,15 +23,21 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+
+import java.net.URI;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -42,20 +48,36 @@ import static org.mockito.Mockito.verify;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class AnalyzeProjectOnStartTest {
 
+  private static final URI TEST_WORKSPACE_URI = URI.create("file:///test-analyze-workspace");
+
   @Autowired
   private AnalyzeProjectOnStart analyzeProjectOnStart;
 
   @Autowired
-  private LanguageServerConfiguration configuration;
-
-  @MockitoSpyBean
-  private ServerContext serverContext;
+  private ServerContextProvider serverContextProvider;
 
   @MockitoBean
   private LanguageClient languageClient;
 
   @Autowired
   private LanguageClientHolder languageClientHolder;
+
+  private ServerContext serverContext;
+  @Autowired
+  private LanguageServerConfiguration configuration;
+
+  @BeforeEach
+  void setUp() {
+    serverContextProvider.clear();
+    var realContext = serverContextProvider.addWorkspace(TEST_WORKSPACE_URI);
+    serverContext = Mockito.spy(realContext);
+    WorkspaceContextHolder.set(realContext.getWorkspaceUri());
+  }
+
+  @AfterEach
+  void tearDown() {
+    WorkspaceContextHolder.clear();
+  }
 
   @Test
   void noExecutionIfDisabled() {

@@ -46,18 +46,22 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
 * Method call hierarchy
 * Expand selection
 * Display color representation and convert between `Color` and `WebColors`
+* Semantic syntax highlighting
+* Code lenses (cognitive/cyclomatic complexity)
+* Inlay hints (method call parameters)
 * Diagnostics
 * Quick fixes and code actions for several diagnostics
 * Run diagnostics engine from command line
 * Run formatter engine from command line
 * Renaming Symbols
+* Multi-workspace support
 
 ## Supported protocol operations
 
 ??? workspace
     | Operation   | Support  | Comment  |
     | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-    | [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) |  <img src="./assets/images/cross.svg" alt="no" width="20">   |                                                              |
+    | [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | Dynamic add/remove of workspace folders                      |
     | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | with restrictions see [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
     | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) |  <img src="./assets/images/checkmark.svg" alt="yes" width="20">   |                                                              |
     | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
@@ -143,6 +147,8 @@ Commands:
 ```
 
 Starting BSL Language Server in standard mode will run the Language Server communicating via [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). stdin and stdout are used for communication.
+
+The `-c` (`--configuration`) flag specifies the path to a configuration file. If not provided, BSL Language Server automatically searches for `.bsl-language-server.json` first in the current working directory, then in the user's home directory. See [Configuration file](features/ConfigurationFile.md) for details.
 
 By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter `language` in configuration file or raise an event `workspace/didChangeConfiguration`:
 

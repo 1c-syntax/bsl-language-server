@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
@@ -48,7 +49,7 @@ class MethodSymbolComputerTest {
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
   @Autowired
-  private ServerContext serverContext;
+  private ServerContextProvider serverContextProvider;
 
   @Test
   void testMethodSymbolComputer() {
@@ -274,7 +275,12 @@ class MethodSymbolComputerTest {
   void testOwner() {
 
     var path = Absolute.path(PATH_TO_METADATA);
+
+    // Create workspace for the path
+    serverContextProvider.clear();
+    var serverContext = serverContextProvider.addWorkspace(path.toUri());
     serverContext.setConfigurationRoot(path);
+
     checkModule(serverContext, PATH_TO_MODULE_FILE, 7);
     checkModule(serverContext, PATH_TO_CATALOG_FILE, 2);
     checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, 1);

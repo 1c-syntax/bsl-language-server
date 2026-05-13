@@ -26,9 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokens;
@@ -38,6 +35,7 @@ import org.eclipse.lsp4j.SemanticTokensEdit;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -54,7 +52,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * Провайдер для предоставления семантических токенов.
@@ -73,27 +70,16 @@ public class SemanticTokensProvider {
    */
   private static final int PARALLEL_PROCESSING_THRESHOLD = 1000;
 
-  @SuppressWarnings("NullAway.Init")
-  private ExecutorService executorService;
-
   private final List<SemanticTokensSupplier> suppliers;
+
+  @Qualifier("semanticTokensExecutor")
+  private final ExecutorService executor;
 
   /**
    * Cache for storing previous token data by resultId.
    * Key: resultId, Value: token data list
    */
   private final Map<String, CachedTokenData> tokenCache = new ConcurrentHashMap<>();
-
-  @PostConstruct
-  private void init() {
-    var factory = new NamedForkJoinWorkerThreadFactory("semantic-tokens-");
-    executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-  }
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
 
   /**
    * Cached semantic token data associated with a document.
@@ -476,7 +462,7 @@ public class SemanticTokensProvider {
           .map(supplier -> supplier.getSemanticTokens(documentContext))
           .flatMap(Collection::stream)
           .toList(),
-        executorService
+        executor
       )
       .join();
   }

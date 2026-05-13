@@ -55,12 +55,12 @@ public class QueryPackageFoldingRangeSupplier implements FoldingRangeSupplier {
   private static @Nullable FoldingRange toFoldingRange(SDBLParser.QueriesContext queriesContext) {
     var start = queriesContext.getStart();
     var stop = queriesContext.getStop();
-    
+
     // Handle incomplete or malformed queries where start/stop tokens may be null
     if (start == null || stop == null) {
       return null;
     }
-    
+
     FoldingRange foldingRange = new FoldingRange(
       start.getLine() - 1,
       stop.getLine() - 1

@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
@@ -46,7 +48,10 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class CodeQualityReporterTest {
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class CodeQualityReporterTest extends AbstractServerContextAwareTest {
+
+  private static final String SOURCE_DIR = ".";
 
   private final File file = new File("./bsl-code-quality.json");
 
@@ -55,6 +60,7 @@ class CodeQualityReporterTest {
 
   @BeforeEach
   void setUp() {
+    initServerContext(SOURCE_DIR, false);
     FileUtils.deleteQuietly(file);
   }
 
@@ -77,12 +83,11 @@ class CodeQualityReporterTest {
     );
 
     var documentContext = TestUtils.getDocumentContext("");
-    String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
+    FileInfo fileInfo = new FileInfo(SOURCE_DIR, documentContext, Collections.singletonList(diagnostic));
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), SOURCE_DIR);
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    reporter.report(analysisInfo, Path.of("."));
 
     // then
     var mapper = new JsonMapper();

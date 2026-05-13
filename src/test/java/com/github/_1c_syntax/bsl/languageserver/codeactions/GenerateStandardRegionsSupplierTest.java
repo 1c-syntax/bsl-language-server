@@ -54,10 +54,9 @@ class GenerateStandardRegionsSupplierTest {
   void testGetCodeActions() {
 
     // given
-    configuration.setLanguage(Language.EN);
-
     String filePath = "./src/test/resources/suppliers/generateRegion.bsl";
     var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    configuration.setLanguage(Language.EN);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 

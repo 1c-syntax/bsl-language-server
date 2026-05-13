@@ -22,11 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import io.sentry.Sentry;
 import io.sentry.protocol.SentryId;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -35,11 +36,10 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Аспект перехвата исключений и регистрации их в Sentry.
@@ -48,24 +48,18 @@ import java.util.concurrent.Executors;
 @NoArgsConstructor
 public class SentryAspect {
 
-  private ExecutorService executorService;
+  @Setter(onMethod_ = {@Autowired, @Qualifier("sentryExecutor")})
+  private ThreadPoolTaskExecutor executor;
 
   @Setter(onMethod_ = {@Autowired})
   @Nullable
   private LanguageClientHolder languageClientHolder;
 
   @Setter(onMethod_ = {@Autowired})
-  private Resources resources;
+  private LanguageServerConfiguration configuration;
 
-  @PostConstruct
-  private void init() {
-    executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("sentry-"));
-  }
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
+  @Setter(onMethod_ = {@Autowired})
+  private GlobalLanguageServerConfiguration globalConfiguration;
 
   @AfterThrowing(value = "Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()", throwing = "ex")
   public void logThrowingBSLDiagnosticGetDiagnostics(Throwable ex) {
@@ -91,12 +85,15 @@ public class SentryAspect {
           return;
         }
         var messageType = MessageType.Info;
-        var message = resources.getResourceString(getClass(), "logMessage", sentryId);
+        var language = WorkspaceContextHolder.get() != null
+          ? configuration.getLanguage()
+          : globalConfiguration.getLanguage();
+        var message = Resources.getResourceString(language, getClass(), "logMessage", sentryId);
         var messageParams = new MessageParams(messageType, message);
 
         languageClientHolder.execIfConnected(languageClient -> languageClient.showMessage(messageParams));
       },
-      executorService);
+      executor);
   }
 
 }

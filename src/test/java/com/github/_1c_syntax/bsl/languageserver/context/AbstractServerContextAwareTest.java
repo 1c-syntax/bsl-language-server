@@ -21,30 +21,67 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import jakarta.annotation.PostConstruct;
+import java.net.URI;
 import java.nio.file.Path;
 
 @SpringBootTest
 public abstract class AbstractServerContextAwareTest {
+
+  private static final URI EMPTY_WORKSPACE_URI = Absolute.path("src/test/resources/empty-workspace").toUri();
+
   @Autowired
+  protected ServerContextProvider serverContextProvider;
+
   protected ServerContext context;
 
-  @PostConstruct
-  public void abstractServerContextAwareTestInit() {
-    context.clear();
+  @BeforeEach
+  void resetContext() {
+    context = null;
+  }
+
+  @AfterEach
+  void cleanupWorkspace() {
+    serverContextProvider.clear();
+  }
+
+  /**
+   * Initialize empty server context without metadata.
+   */
+  protected void initServerContext() {
+    serverContextProvider.clear();
+    context = serverContextProvider.addWorkspace(EMPTY_WORKSPACE_URI);
+    WorkspaceContextHolder.set(context.getWorkspaceUri());
   }
 
   protected void initServerContext(String path) {
     var configurationRoot = Absolute.path(path);
-    initServerContext(configurationRoot);
+    initServerContext(configurationRoot, true);
   }
 
   protected void initServerContext(Path configurationRoot) {
+    initServerContext(configurationRoot, true);
+  }
+
+  protected void initServerContext(String path, boolean populate) {
+    var configurationRoot = Absolute.path(path);
+    initServerContext(configurationRoot, populate);
+  }
+
+  protected void initServerContext(Path configurationRoot, boolean populate) {
+    serverContextProvider.clear();
+    var uri = configurationRoot.toUri();
+    context = serverContextProvider.addWorkspace(uri);
     context.setConfigurationRoot(configurationRoot);
-    context.populateContext();
+    WorkspaceContextHolder.set(context.getWorkspaceUri());
+    if (populate) {
+      context.populateContext();
+    }
   }
 }

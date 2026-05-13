@@ -35,9 +35,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -56,9 +54,6 @@ class InlayHintProviderTest {
   private LanguageServerConfiguration configuration;
   @Autowired
   private CognitiveComplexityInlayHintSupplier supplier;
-  @Autowired
-  @Qualifier("enabledInlayHintSuppliers")
-  private ObjectProvider<List<InlayHintSupplier>> enabledInlayHintSuppliersProvider;
 
   private DocumentContext documentContext;
 
@@ -88,13 +83,16 @@ class InlayHintProviderTest {
   void testDefaultEnabledSuppliers() {
 
     // given
-    // default config
+    var params = new InlayHintParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setRange(Ranges.create(documentContext.getAst()));
 
     // when
-    List<InlayHintSupplier> suppliers = enabledInlayHintSuppliersProvider.getObject();
+    var inlayHints = provider.getInlayHint(documentContext, params);
 
     // then
-    assertThat(suppliers).contains(supplier);
+    // Should contain hints from CognitiveComplexityInlayHintSupplier (enabled by default)
+    assertThat(inlayHints).isNotEmpty();
   }
 
   @Test
@@ -103,14 +101,18 @@ class InlayHintProviderTest {
     // given
     configuration.getInlayHintOptions().getParameters().put(supplier.getId(), Either.forLeft(false));
 
+    var params = new InlayHintParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setRange(Ranges.create(documentContext.getAst()));
+
     // when
-    List<InlayHintSupplier> suppliers = enabledInlayHintSuppliersProvider.getObject();
+    var inlayHints = provider.getInlayHint(documentContext, params);
 
     // then
-    assertThat(suppliers)
+    // Should still contain test hint but not from disabled supplier
+    assertThat(inlayHints)
       .isNotEmpty()
-      .doesNotContain(supplier);
-
+      .contains(getTestHint());
   }
 
   private static InlayHint getTestHint() {

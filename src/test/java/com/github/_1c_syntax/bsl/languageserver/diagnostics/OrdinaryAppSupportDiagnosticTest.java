@@ -67,7 +67,8 @@ class OrdinaryAppSupportDiagnosticTest extends AbstractDiagnosticTest<OrdinaryAp
 
     initServerContext(Absolute.path(PATH_TO_METADATA));
     var documentContext = spy(getDocumentContext());
-    configuration.getDiagnosticsOptions().setOrdinaryAppSupport(false);
+    // Use configuration from the new server context
+    context.getLanguageServerConfiguration().getDiagnosticsOptions().setOrdinaryAppSupport(false);
     when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 

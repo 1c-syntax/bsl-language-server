@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.springframework.boot.test.context.TestComponent;
@@ -143,7 +144,7 @@ public class SemanticTokensTestHelper {
    * @return list of decoded tokens
    */
   public List<DecodedToken> getDecodedTokensForOs(String os, SemanticTokensSupplier supplier) {
-    var uri = java.net.URI.create("file:///fake-uri.os");
+    var uri = Absolute.path("src/test/resources/empty-workspace/fake-uri.os").toUri();
     var documentContext = TestUtils.getDocumentContext(uri, os);
     return decodeFromEntries(supplier.getSemanticTokens(documentContext));
   }

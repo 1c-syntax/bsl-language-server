@@ -22,34 +22,33 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-
 /**
- * Component that listens to configuration changes and refreshes all DiagnosticInfo instances.
+ * Component that listens to configuration changes and refreshes DiagnosticInfo instances.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class DiagnosticInfoRefresher {
 
-  @Qualifier("diagnosticInfos")
-  private final Collection<DiagnosticInfo> diagnosticInfos;
+  private final DiagnosticInfos diagnosticInfos;
 
   /**
-   * Handles configuration change events by refreshing all diagnostic info instances.
+   * Handles configuration change events by refreshing diagnostic info instances
+   * for the workspace whose configuration changed.
+   * <p>
+   * The event is published synchronously from LanguageServerConfiguration.update(),
+   * so the workspace ThreadLocal is already set — the proxy resolves to the correct instance.
    *
    * @param event the configuration change event
    */
   @EventListener
   public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
     LOGGER.debug("Refreshing diagnostic info instances after configuration change");
-    diagnosticInfos.forEach(DiagnosticInfo::refresh);
+    diagnosticInfos.refresh();
   }
 }

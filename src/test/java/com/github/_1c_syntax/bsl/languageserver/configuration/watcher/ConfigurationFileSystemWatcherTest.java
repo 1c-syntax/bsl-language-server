@@ -21,10 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -32,6 +39,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,15 +53,36 @@ class ConfigurationFileSystemWatcherTest {
   private ConfigurationFileSystemWatcher watcher;
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private GlobalLanguageServerConfiguration globalConfiguration;
+
+  @Autowired
+  private ServerContextProvider serverContextProvider;
+
+  @TempDir
+  Path workspaceDir;
+
+  private ServerContext serverContext;
+
+  @BeforeEach
+  void setUp() {
+    serverContextProvider.clear();
+    serverContext = serverContextProvider.addWorkspace(Absolute.uri(workspaceDir.toUri()));
+    WorkspaceContextHolder.set(serverContext.getWorkspaceUri());
+  }
+
+  @AfterEach
+  void tearDown() {
+    WorkspaceContextHolder.clear();
+    serverContextProvider.clear();
+  }
 
   @Test
-  void test() throws IOException {
+  void testGlobalConfigFileChange() throws IOException {
     // given
     var file = File.createTempFile("bsl-config", ".json");
     var content = "{\"language\": \"ru\"}";
     FileUtils.writeStringToFile(file, content, StandardCharsets.UTF_8);
-    configuration.update(file);
+    globalConfiguration.update(file);
 
     // when
     content = "{\"language\": \"en\"}";
@@ -63,7 +92,7 @@ class ConfigurationFileSystemWatcherTest {
       // when
       watcher.watch();
       // then
-      assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
+      assertThat(globalConfiguration.getLanguage()).isEqualTo(Language.EN);
     });
 
     // when
@@ -73,8 +102,47 @@ class ConfigurationFileSystemWatcherTest {
       // when
       watcher.watch();
       // then
-      assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
+      assertThat(globalConfiguration.getLanguage()).isEqualTo(Language.RU);
     });
   }
 
+  @Test
+  void testWorkspaceConfigFileChange() throws IOException {
+    // given
+    var workspaceUri = serverContext.getWorkspaceUri();
+    var configuration = serverContext.getLanguageServerConfiguration();
+    var configFile = new File(workspaceDir.toFile(), ".bsl-language-server.json");
+    var content = "{\"diagnostics\": {\"computeTrigger\": \"onType\"}}";
+    FileUtils.writeStringToFile(configFile, content, StandardCharsets.UTF_8);
+    configuration.update(configFile);
+
+    // Initial check
+    assertThat(configuration.getDiagnosticsOptions().getComputeTrigger().name())
+      .isEqualTo("ONTYPE");
+
+    // when - change config to never
+    content = "{\"diagnostics\": {\"computeTrigger\": \"never\"}}";
+    FileUtils.writeStringToFile(configFile, content, StandardCharsets.UTF_8);
+
+    await().atMost(10, SECONDS).untilAsserted(() -> {
+      WorkspaceContextHolder.set(workspaceUri);
+      // when
+      watcher.watch();
+      // then
+      assertThat(configuration.getDiagnosticsOptions().getComputeTrigger().name())
+        .isEqualTo("NEVER");
+    });
+
+    // when - delete config
+    FileUtils.delete(configFile);
+
+    await().atMost(10, SECONDS).untilAsserted(() -> {
+      WorkspaceContextHolder.set(workspaceUri);
+      // when
+      watcher.watch();
+      // then - should return to default (ONSAVE)
+      assertThat(configuration.getDiagnosticsOptions().getComputeTrigger().name())
+        .isEqualTo("ONSAVE");
+    });
+  }
 }

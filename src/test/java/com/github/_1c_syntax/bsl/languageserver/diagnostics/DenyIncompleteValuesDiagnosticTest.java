@@ -63,8 +63,7 @@ class DenyIncompleteValuesDiagnosticTest extends AbstractDiagnosticTest<DenyInco
 
   @Test
   void testMdoWithModules() {
-    var path = Absolute.path(PATH_TO_METADATA);
-    context.setConfigurationRoot(path);
+    initServerContext(PATH_TO_METADATA);
 
     var managerDocumentContext = addDocumentContext(context, PATH_TO_MANAGER_MODULE_FILE);
     var recordSetDocumentContext = addDocumentContext(context, PATH_TO_OBJECT_MODULE_FILE);

@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -51,7 +51,7 @@ class PermissionFilterBeforeSendCallbackTest {
   private PermissionFilterBeforeSendCallback permissionFilter;
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private GlobalLanguageServerConfiguration configuration;
 
   @Autowired
   private LanguageClientHolder languageClientHolder;

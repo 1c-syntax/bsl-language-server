@@ -220,6 +220,8 @@ class AnnotationReferenceFinderTest extends AbstractServerContextAwareTest {
 
     // when - повторная инициализация контекста (эмуляция populateContext)
     initServerContext("./src/test/resources/references/annotations");
+    // Нужно заново загрузить документ в новый контекст
+    documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/AnnotationReferenceFinder.os");
 
     // then - ссылка должна продолжать работать после обновления контекста
     var referenceAfter = referenceFinder.findReference(documentContext.getUri(), new Position(0, 2));

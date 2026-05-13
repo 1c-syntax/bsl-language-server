@@ -21,19 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
@@ -43,6 +46,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Option;
@@ -136,8 +141,13 @@ public class AnalyzeCommand implements Callable<Integer> {
   private boolean silentMode;
 
   private final ReportersAggregator aggregator;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
+  private final ServerContextProvider serverContextProvider;
   private final LanguageServerConfiguration configuration;
-  private final ServerContext context;
+  @Qualifier("cliExecutor")
+  private final ExecutorService cliExecutor;
+
+  private ServerContext serverContext;
 
   public Integer call() {
 
@@ -154,49 +164,68 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     var configurationFile = new File(configurationOption);
-    configuration.update(configurationFile);
 
-    var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context.setConfigurationRoot(configurationPath);
+    // Update global configuration
+    globalConfiguration.update(configurationFile);
 
-    var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    // Create workspace for srcDir (factory will create per-workspace configuration)
+    serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
 
-    context.populateContext(files);
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
+      // In analyze mode, -c affects both global and per-workspace settings
+      // since there is always exactly one workspace
+      configuration.update(configurationFile);
 
-    List<FileInfo> fileInfos;
-    if (silentMode) {
-      fileInfos = files.parallelStream()
-        .map((File file) -> getFileInfoFromFile(workspaceDir, file))
-        .collect(Collectors.toList());
-    } else {
-      try (ProgressBar pb = new ProgressBarBuilder()
-        .setTaskName("Analyzing files...")
-        .setInitialMax(files.size())
-        .setStyle(ProgressBarStyle.ASCII)
-        .build()) {
-        fileInfos = files.parallelStream()
-          .map((File file) -> {
-            pb.step();
-            return getFileInfoFromFile(workspaceDir, file);
-          })
-          .collect(Collectors.toList());
+      var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+      serverContext.setConfigurationRoot(configurationPath);
+
+      var files = (List<File>) FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+
+      serverContext.populateContext(files);
+
+      List<FileInfo> fileInfos;
+      if (silentMode) {
+        fileInfos = cliExecutor.submit(() ->
+          files.parallelStream()
+            .map((File file) -> getFileInfoFromFile(workspaceDir, file))
+            .toList()
+        ).get();
+      } else {
+        try (ProgressBar pb = new ProgressBarBuilder()
+          .setTaskName("Analyzing files...")
+          .setInitialMax(files.size())
+          .setStyle(ProgressBarStyle.ASCII)
+          .build()) {
+          fileInfos = cliExecutor.submit(() ->
+            files.parallelStream()
+              .map((File file) -> {
+                pb.step();
+                return getFileInfoFromFile(workspaceDir, file);
+              })
+              .toList()
+          ).get();
+        }
       }
-    }
 
-    var analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
-    var outputDir = Absolute.path(outputDirOption);
-    aggregator.report(analysisInfo, outputDir);
-    return 0;
+      var analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
+      var outputDir = Absolute.path(outputDirOption);
+      aggregator.report(analysisInfo, outputDir);
+      return 0;
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Error analyzing files", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while analyzing files", e);
+    }
   }
 
   public String[] getReportersOptions() {
     return reportersOptions.clone();
   }
 
-  @SneakyThrows
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
-    var documentContext = context.addDocument(Absolute.uri(file));
-    context.rebuildDocument(documentContext);
+    var documentContext = serverContext.addDocument(Absolute.uri(file));
+    serverContext.rebuildDocument(documentContext);
 
     var filePath = srcDir.relativize(Absolute.path(file));
     var diagnostics = documentContext.getDiagnostics();
@@ -206,7 +235,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     var fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
-    context.tryClearDocument(documentContext);
+    serverContext.tryClearDocument(documentContext);
 
     return fileInfo;
   }

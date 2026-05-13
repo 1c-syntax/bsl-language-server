@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
@@ -94,6 +95,7 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
+
     List<SemanticTokenEntry> entries = new ArrayList<>();
 
     // Собираем информацию о контекстах строк
@@ -298,7 +300,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     }
   }
 
-  private Map<Token, StringContext> collectSpecialStringContexts(DocumentContext documentContext) {
+  private Map<Token, StringContext> collectSpecialStringContexts(
+    DocumentContext documentContext
+  ) {
     Map<Token, StringContext> contexts = new HashMap<>();
     var parsedMethods = configuration.getSemanticTokensOptions().getParsedStrTemplateMethods();
     var visitor = new SpecialContextVisitor(contexts, parsedMethods);

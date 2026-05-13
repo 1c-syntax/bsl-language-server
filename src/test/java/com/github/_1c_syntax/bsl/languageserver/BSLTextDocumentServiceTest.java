@@ -21,47 +21,84 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.CodeActionContext;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.ColorPresentationParams;
+import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.DocumentDiagnosticParams;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.eclipse.lsp4j.DocumentLinkParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
+import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
+import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PrepareRenameParams;
+import org.eclipse.lsp4j.ReferenceContext;
+import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SelectionRangeParams;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
+import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceFolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.SmartApplicationListener;
+import org.springframework.core.Ordered;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -72,13 +109,64 @@ class BSLTextDocumentServiceTest {
 
   @Autowired
   private BSLTextDocumentService textDocumentService;
-  @MockitoSpyBean
-  private ServerContext serverContext;
+  @Autowired
+  private ServerContextProvider serverContextProvider;
+  @Autowired
+  private ConfigurableApplicationContext applicationContext;
   @MockitoSpyBean
   private DiagnosticProvider diagnosticProvider;
   @MockitoSpyBean
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
+  @MockitoSpyBean
+  private HoverProvider hoverProvider;
 
+  @BeforeEach
+  void setUp() {
+    // Register workspace for test resources
+    var testResourcesPath = new File("./src/test/resources").getAbsoluteFile();
+    var workspaceFolder = new WorkspaceFolder(testResourcesPath.toURI().toString(), "test-workspace");
+    serverContextProvider.addWorkspace(workspaceFolder);
+  }
+
+  /**
+   * Воспроизводит ScopeNotActiveException из Sentry:
+   * didOpen вызывает openDocument → rebuildDocument синхронно на LSP-треде без workspace-контекста,
+   * из-за чего workspace-scoped proxy beans не резолвятся в @EventListener при DocumentContextContentChangedEvent.
+   */
+  @Test
+  void didOpen_setsWorkspaceContextForEventListeners() throws IOException {
+    var capturedWorkspaceUri = new AtomicReference<URI>();
+    var listener = new SmartApplicationListener() {
+      @Override
+      public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+        return DocumentContextContentChangedEvent.class.isAssignableFrom(eventType);
+      }
+
+      @Override
+      public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
+      }
+
+      @Override
+      public void onApplicationEvent(ApplicationEvent event) {
+        capturedWorkspaceUri.compareAndSet(null, WorkspaceContextHolder.get());
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+
+    try {
+      textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+
+      var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+      assertThat(capturedWorkspaceUri.get())
+        .as("Workspace context must be set when DocumentContextContentChangedEvent fires during didOpen "
+          + "(otherwise workspace-scoped beans like AnnotationRepository cannot be resolved)")
+        .isNotNull()
+        .isEqualTo(expectedWorkspaceUri);
+    } finally {
+      applicationContext.removeApplicationListener(listener);
+    }
+  }
 
   @Test
   void didOpen() throws IOException {
@@ -111,13 +199,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
 
     // when - incremental change: insert text at position
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     var range = Ranges.create(0, 0, 0, 0);
     var changeEvent = new TextDocumentContentChangeEvent(range, "// Комментарий\n");
@@ -139,13 +228,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
 
     // when - multiple incremental changes
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
     
@@ -173,13 +263,14 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
 
     // when - incremental change: delete text
     var params = new DidChangeTextDocumentParams();
-    var uri = textDocumentItem.getUri();
-    params.setTextDocument(new VersionedTextDocumentIdentifier(uri, 2));
+    var uriString = textDocumentItem.getUri();
+    params.setTextDocument(new VersionedTextDocumentIdentifier(uriString, 2));
 
     var range = Ranges.create(0, 0, 0, 5);
     var changeEvent = new TextDocumentContentChangeEvent(range, "");
@@ -208,9 +299,12 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
-    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
+    var maybeContext = serverContextProvider.getServerContextUnsafe(Absolute.uri(textDocumentItem.getUri()));
+    assertThat(maybeContext).isPresent();
+    assertThat(maybeContext.get().isDocumentOpened(documentContext)).isTrue();
 
     // when - submit multiple changes rapidly and then close immediately
     var params = new DidChangeTextDocumentParams();
@@ -232,7 +326,9 @@ class BSLTextDocumentServiceTest {
     textDocumentService.didClose(closeParams);
 
     // verify the document is closed
-    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+    var maybeContext2 = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext2).isPresent();
+    assertThat(maybeContext2.get().isDocumentOpened(documentContext)).isFalse();
   }
 
   @Test
@@ -242,9 +338,12 @@ class BSLTextDocumentServiceTest {
     var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
     textDocumentService.didOpen(didOpenParams);
 
-    var documentContext = serverContext.getDocumentUnsafe(textDocumentItem.getUri());
-    assertThat(documentContext).isNotNull();
-    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(textDocumentItem.getUri());
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
+    var maybeContext = serverContextProvider.getServerContextUnsafe(Absolute.uri(textDocumentItem.getUri()));
+    assertThat(maybeContext).isPresent();
+    assertThat(maybeContext.get().isDocumentOpened(documentContext)).isTrue();
 
     // when - submit a change
     var params = new DidChangeTextDocumentParams();
@@ -263,7 +362,9 @@ class BSLTextDocumentServiceTest {
     textDocumentService.didClose(closeParams);
 
     // verify the document is closed
-    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+    var maybeContext2 = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext2).isPresent();
+    assertThat(maybeContext2.get().isDocumentOpened(documentContext)).isFalse();
   }
 
   @Test
@@ -274,9 +375,12 @@ class BSLTextDocumentServiceTest {
     textDocumentService.didOpen(didOpenParams);
 
     var uri = textDocumentItem.getUri();
-    var documentContext = serverContext.getDocumentUnsafe(uri);
-    assertThat(documentContext).isNotNull();
-    assertThat(serverContext.isDocumentOpened(documentContext)).isTrue();
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(uri);
+    assertThat(maybeDocument).isPresent();
+    var documentContext = maybeDocument.get();
+    var maybeContext = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext).isPresent();
+    assertThat(maybeContext.get().isDocumentOpened(documentContext)).isTrue();
 
     // when - close the document (which should wait for executor to terminate)
     var closeParams = new DidCloseTextDocumentParams();
@@ -285,7 +389,9 @@ class BSLTextDocumentServiceTest {
 
     // then - verify the document is properly closed
     // The close should complete successfully even if executor needs time to terminate
-    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+    var maybeContext2 = serverContextProvider.getServerContextUnsafe(Absolute.uri(uri));
+    assertThat(maybeContext2).isPresent();
+    assertThat(maybeContext2.get().isDocumentOpened(documentContext)).isFalse();
   }
 
   @Test
@@ -345,6 +451,33 @@ class BSLTextDocumentServiceTest {
     DidSaveTextDocumentParams params = new DidSaveTextDocumentParams();
     params.setTextDocument(getTextDocumentIdentifier());
     textDocumentService.didSave(params);
+  }
+
+  /**
+   * Воспроизводит ScopeNotActiveException из Sentry:
+   * didSave обращается к workspace-scoped LanguageServerConfiguration без workspace-контекста,
+   * из-за чего proxy beans (LanguageServerConfiguration, DiagnosticComputer) не резолвятся.
+   */
+  @Test
+  void didSave_setsWorkspaceContextWhenValidating() throws IOException {
+    doOpen();
+
+    var capturedWorkspaceUri = new AtomicReference<URI>();
+    doAnswer(invocation -> {
+      capturedWorkspaceUri.compareAndSet(null, WorkspaceContextHolder.get());
+      return null;
+    }).when(diagnosticProvider).computeAndPublishDiagnostics(any());
+
+    var params = new DidSaveTextDocumentParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    textDocumentService.didSave(params);
+
+    var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+    assertThat(capturedWorkspaceUri.get())
+      .as("Workspace context must be set when DiagnosticProvider.computeAndPublishDiagnostics is called during "
+        + "didSave (otherwise workspace-scoped LanguageServerConfiguration cannot be resolved)")
+      .isNotNull()
+      .isEqualTo(expectedWorkspaceUri);
   }
 
   @Test
@@ -481,6 +614,201 @@ class BSLTextDocumentServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.isRight()).isTrue();
     assertThat(result.getRight()).isEmpty();
+  }
+
+  /**
+   * Регрессионный тест: {@code withFreshDocumentContextInternal} должен устанавливать
+   * workspace context на рабочем потоке {@code text-document-service-X},
+   * чтобы workspace-scoped бины были доступны из supplier'а LSP-методов.
+   * <p>
+   * Проверяется сценарий без {@code DocumentChangeExecutor} (документ закрыт):
+   * в этом случае {@code thenCompose} выполняется на LSP4J-потоке, у которого
+   * нет workspace context — без фикса контекст не устанавливается.
+   */
+  @Test
+  void hover_setsWorkspaceContextOnWorkerThread() throws Exception {
+    // open then close — removes DocumentChangeExecutor from map
+    // so thenCompose runs on the calling (LSP4J) thread with no workspace context
+    doOpen();
+    var closeParams = new DidCloseTextDocumentParams();
+    closeParams.setTextDocument(getTextDocumentIdentifier());
+    textDocumentService.didClose(closeParams);
+
+    // Simulate LSP4J handler thread: no workspace context on calling thread
+    var savedContext = WorkspaceContextHolder.get();
+    WorkspaceContextHolder.clear();
+    try {
+      var capturedUri = new AtomicReference<URI>();
+      doAnswer(invocation -> {
+        capturedUri.set(WorkspaceContextHolder.get());
+        return invocation.callRealMethod();
+      }).when(hoverProvider).getHover(any(), any());
+
+      var params = new HoverParams(getTextDocumentIdentifier(), new Position(0, 0));
+      textDocumentService.hover(params).get();
+
+      assertThat(capturedUri.get())
+        .as("WorkspaceContextHolder must be set on text-document-service worker thread")
+        .isNotNull();
+    } finally {
+      if (savedContext != null) {
+        WorkspaceContextHolder.set(savedContext);
+      }
+    }
+  }
+
+  // Tests for unknown file handling (dryRun - no didOpen before call)
+
+  @Test
+  void hoverUnknownFile() throws Exception {
+    var params = new HoverParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.hover(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void documentHighlightUnknownFile() throws Exception {
+    var params = new DocumentHighlightParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.documentHighlight(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void definitionUnknownFile() throws Exception {
+    var params = new DefinitionParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.definition(params).get();
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight()).isEmpty();
+  }
+
+  @Test
+  void referencesUnknownFile() throws Exception {
+    var params = new ReferenceParams(getTextDocumentIdentifier(), new Position(0, 0), new ReferenceContext(false));
+    var result = textDocumentService.references(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void documentSymbolUnknownFile() throws Exception {
+    var params = new DocumentSymbolParams(getTextDocumentIdentifier());
+    var result = textDocumentService.documentSymbol(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void codeActionUnknownFile() throws Exception {
+    var params = new CodeActionParams(getTextDocumentIdentifier(), Ranges.create(0, 0, 0, 0), new CodeActionContext(List.of()));
+    var result = textDocumentService.codeAction(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void codeLensUnknownFile() throws Exception {
+    var params = new CodeLensParams(getTextDocumentIdentifier());
+    var result = textDocumentService.codeLens(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void formattingUnknownFile() throws Exception {
+    var params = new DocumentFormattingParams(getTextDocumentIdentifier(), new FormattingOptions());
+    var result = textDocumentService.formatting(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void rangeFormattingUnknownFile() throws Exception {
+    var params = new DocumentRangeFormattingParams(getTextDocumentIdentifier(), new FormattingOptions(), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.rangeFormatting(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void foldingRangeUnknownFile() throws Exception {
+    var params = new FoldingRangeRequestParams(getTextDocumentIdentifier());
+    var result = textDocumentService.foldingRange(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void prepareCallHierarchyUnknownFile() throws Exception {
+    var params = new CallHierarchyPrepareParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.prepareCallHierarchy(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void callHierarchyIncomingCallsUnknownFile() throws Exception {
+    var item = new CallHierarchyItem();
+    item.setUri(getTextDocumentIdentifier().getUri());
+    var params = new CallHierarchyIncomingCallsParams(item);
+    var result = textDocumentService.callHierarchyIncomingCalls(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void callHierarchyOutgoingCallsUnknownFile() throws Exception {
+    var item = new CallHierarchyItem();
+    item.setUri(getTextDocumentIdentifier().getUri());
+    var params = new CallHierarchyOutgoingCallsParams(item);
+    var result = textDocumentService.callHierarchyOutgoingCalls(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void semanticTokensFullUnknownFile() throws Exception {
+    var params = new SemanticTokensParams(getTextDocumentIdentifier());
+    var result = textDocumentService.semanticTokensFull(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void semanticTokensFullDeltaUnknownFile() throws Exception {
+    var params = new SemanticTokensDeltaParams(getTextDocumentIdentifier(), "");
+    var result = textDocumentService.semanticTokensFullDelta(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void semanticTokensRangeUnknownFile() throws Exception {
+    var params = new SemanticTokensRangeParams(getTextDocumentIdentifier(), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.semanticTokensRange(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void selectionRangeUnknownFile() throws Exception {
+    var params = new SelectionRangeParams(getTextDocumentIdentifier(), List.of(new Position(0, 0)));
+    var result = textDocumentService.selectionRange(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void documentColorUnknownFile() throws Exception {
+    var params = new DocumentColorParams(getTextDocumentIdentifier());
+    var result = textDocumentService.documentColor(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void colorPresentationUnknownFile() throws Exception {
+    var params = new ColorPresentationParams(getTextDocumentIdentifier(), new org.eclipse.lsp4j.Color(0, 0, 0, 0), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.colorPresentation(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void inlayHintUnknownFile() throws Exception {
+    var params = new InlayHintParams(getTextDocumentIdentifier(), Ranges.create(0, 0, 0, 0));
+    var result = textDocumentService.inlayHint(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void documentLinkUnknownFile() throws Exception {
+    var params = new DocumentLinkParams(getTextDocumentIdentifier());
+    var result = textDocumentService.documentLink(params).get();
+    assertThat(result).isNull();
   }
 
   private File getTestFile() {

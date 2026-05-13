@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -34,6 +37,7 @@ import java.util.stream.Stream;
  * Хранилище расположений обращений к символам.
  */
 @Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class LocationRepository {
   /**
    * Список обращений к символу, сгруппированный по URI.

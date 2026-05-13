@@ -25,15 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Перехватчик события заполнения контекста сервера, запускающий анализ всех файлов контекста.
@@ -42,14 +42,17 @@ import java.util.concurrent.ForkJoinPool;
 @RequiredArgsConstructor
 public class AnalyzeProjectOnStart {
 
-  private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final LanguageClientHolder languageClientHolder;
   private final WorkDoneProgressHelper workDoneProgressHelper;
+  private final LanguageServerConfiguration configuration;
+  @Qualifier("analyzeOnStartExecutor")
+  private final ExecutorService executor;
 
   @EventListener
   @Async
   public void handleEvent(ServerContextPopulatedEvent event) {
+
     if (!configuration.getDiagnosticsOptions().isAnalyzeOnStart()) {
       return;
     }
@@ -64,11 +67,8 @@ public class AnalyzeProjectOnStart {
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
 
-    var factory = new NamedForkJoinWorkerThreadFactory("analyze-on-start-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-
     try {
-      executorService.submit(() ->
+      executor.submit(() ->
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
           progress.tick();
 
@@ -79,20 +79,18 @@ public class AnalyzeProjectOnStart {
         })
       ).get();
 
+      progress.endProgress(getMessage("projectAnalyzed"));
     } catch (ExecutionException e) {
-      throw new RuntimeException("Can't analyze project on start", e);
+      throw new IllegalStateException("Can't analyze project on start", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException("Interrupted while analyzing project on start", e);
-    } finally {
-      executorService.shutdown();
+      throw new IllegalStateException("Interrupted while analyzing project on start", e);
     }
-
-    progress.endProgress(getMessage("projectAnalyzed"));
   }
 
   private String getMessage(String key) {
-    return Resources.getResourceString(configuration.getLanguage(), getClass(), key);
+    var language = configuration.getLanguage();
+    return Resources.getResourceString(language, getClass(), key);
   }
 
 }

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -31,7 +30,6 @@ import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import lombok.RequiredArgsConstructor;
 
 import java.util.regex.Pattern;
 
@@ -53,7 +51,6 @@ import java.util.regex.Pattern;
   scope = DiagnosticScope.BSL,
   canLocateOnProject = true
 )
-@RequiredArgsConstructor
 public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic {
 
   // Запрещенные имена метаданных
@@ -124,8 +121,6 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
       "Справочники";
 
   private static final Pattern FORBIDDEN_NAMES_PATTERN = CaseInsensitivePattern.compile(FORBIDDEN_NAMES);
-
-  private final LanguageServerConfiguration serverConfiguration;
 
   @Override
   protected void checkMetadata(MD mdo) {

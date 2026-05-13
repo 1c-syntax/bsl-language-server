@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 class WebsocketCommandTest {
 
   @MockitoSpyBean
-  private LanguageServerConfiguration configuration;
+  private GlobalLanguageServerConfiguration configuration;
 
   @Autowired
   private PicocliSpringFactory factory;
@@ -55,7 +55,8 @@ class WebsocketCommandTest {
 
     // then
     assertThat(call).isEqualTo(-1);
-    verify(configuration, times(1)).update(any());
+    // update() is called twice: once on ContextRefreshedEvent, once from WebsocketCommand.call()
+    verify(configuration, times(2)).update(any());
   }
 
 }

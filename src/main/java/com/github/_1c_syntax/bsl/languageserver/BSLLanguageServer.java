@@ -21,14 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
@@ -64,12 +65,16 @@ import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.WorkspaceFoldersOptions;
+import org.eclipse.lsp4j.WorkspaceServerCapabilities;
 import org.eclipse.lsp4j.WorkspaceSymbolOptions;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -78,9 +83,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Основной класс BSL Language Server.
@@ -94,14 +100,17 @@ import java.util.concurrent.ForkJoinPool;
 @RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
-  private final LanguageServerConfiguration configuration;
+  private static final CapabilitiesOptions DEFAULT_CAPABILITIES = new CapabilitiesOptions();
+
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
-  private final ServerContext context;
+  private final ServerContextProvider serverContextProvider;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService populateContextExecutor;
 
   private boolean shutdownWasCalled;
 
@@ -134,6 +143,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
     capabilities.setDiagnosticProvider(getDiagnosticProvider());
     capabilities.setSemanticTokensProvider(getSemanticTokensProvider());
+    capabilities.setWorkspace(getWorkspaceCapabilities());
 
     var result = new InitializeResult(capabilities, serverInfo);
 
@@ -142,35 +152,59 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private void setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
+
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
-      return;
+      var rootUri = resolveRootUri(params);
+      if (rootUri == null) {
+        return;
+      }
+      workspaceFolders = List.of(new WorkspaceFolder(rootUri, "root"));
     }
 
-    var rootUri = workspaceFolders.getFirst().getUri();
-    Path rootPath;
+    // Добавляем все workspace folders
+    workspaceFolders.forEach(serverContextProvider::addWorkspace);
+  }
+
+  private @Nullable String resolveRootUri(InitializeParams params) {
+    var rootUri = params.getRootUri();
+    if (rootUri != null && !rootUri.isEmpty()) {
+      return rootUri;
+    }
+
+    var rootPath = params.getRootPath();
+    if (rootPath == null || rootPath.isEmpty()) {
+      LOGGER.debug("No workspace folders, rootUri, or rootPath provided in initialize params");
+      return null;
+    }
+
+
     try {
-      rootPath = new File(new URI(rootUri).getPath()).getCanonicalFile().toPath();
-    } catch (URISyntaxException | IOException e) {
-      LOGGER.error("Can't read root URI from initialization params.", e);
-      return;
+      return new File(rootPath).getCanonicalFile().toURI().toString();
+    } catch (IOException e) {
+      LOGGER.debug("Can't convert rootPath to URI: {}", rootPath, e);
+      return null;
     }
-
-    var configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
-      configuration,
-      rootPath);
-    context.setConfigurationRoot(configurationRoot);
   }
 
   @Override
   public void initialized(InitializedParams params) {
-    var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-    CompletableFuture
-      .runAsync(context::populateContext, executorService)
+    // Populate all workspace contexts
+    var allContexts = serverContextProvider.getAllContexts();
+    var tasks = allContexts.entrySet().stream()
+      .map((Map.Entry<URI, ServerContext> entry) -> {
+        try (var ctx = WorkspaceContextHolder.forUri(entry.getKey())) {
+          return CompletableFuture.runAsync(
+            entry.getValue()::populateContext,
+            populateContextExecutor
+          );
+        }
+      })
+      .toArray(CompletableFuture[]::new);
+
+    CompletableFuture.allOf(tasks)
       .whenComplete((Void unused, @Nullable Throwable throwable) -> {
-        executorService.shutdown();
         if (throwable != null) {
-          LOGGER.error("Error populating context", throwable);
+          LOGGER.error("Error populating workspace contexts", throwable);
         }
       });
   }
@@ -179,7 +213,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<Object> shutdown() {
     shutdownWasCalled = true;
     textDocumentService.reset();
-    context.clear();
+    serverContextProvider.clear();
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
 
@@ -231,8 +265,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   /**
    * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
    */
-  private TextDocumentSyncKind getConfiguredSyncKind() {
-    return configuration.getCapabilities().getTextDocumentSync().getChange();
+  private static TextDocumentSyncKind getConfiguredSyncKind() {
+    return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {
@@ -395,6 +429,17 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
     semanticTokensProvider.setRange(Boolean.TRUE);
     return semanticTokensProvider;
+  }
+
+  private static WorkspaceServerCapabilities getWorkspaceCapabilities() {
+    var workspaceCapabilities = new WorkspaceServerCapabilities();
+
+    var workspaceFoldersOptions = new WorkspaceFoldersOptions();
+    workspaceFoldersOptions.setSupported(Boolean.TRUE);
+    workspaceFoldersOptions.setChangeNotifications(Boolean.TRUE);
+
+    workspaceCapabilities.setWorkspaceFolders(workspaceFoldersOptions);
+    return workspaceCapabilities;
   }
 
 }

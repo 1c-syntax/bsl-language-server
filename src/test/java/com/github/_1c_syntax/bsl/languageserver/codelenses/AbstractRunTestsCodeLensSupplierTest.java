@@ -64,8 +64,8 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
   })
   void testIsApplicable(String filePath, String clientName, boolean expected) {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
     initializeServer("./src/test/resources/codelenses", clientName);
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     // when
     var result = supplier.isApplicable(documentContext);
@@ -108,6 +108,11 @@ class AbstractRunTestsCodeLensSupplierTest extends AbstractServerContextAwareTes
         @Override
         protected AbstractRunTestsCodeLensSupplier<DefaultCodeLensData> getSelf() {
           return this;
+        }
+
+        @Override
+        public CodeLens resolve(DocumentContext documentContext, CodeLens codeLens, DefaultCodeLensData data) {
+          return codeLens;
         }
       };
     }
