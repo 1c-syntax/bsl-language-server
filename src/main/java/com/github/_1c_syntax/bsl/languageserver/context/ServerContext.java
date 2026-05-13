@@ -89,7 +89,7 @@ public class ServerContext {
 
   @Getter
   @Setter
-  @Nullable
+  @SuppressWarnings("NullAway.Init")
   private URI workspaceUri;
 
   private final Map<URI, DocumentContext> documents = new ConcurrentHashMap<>();

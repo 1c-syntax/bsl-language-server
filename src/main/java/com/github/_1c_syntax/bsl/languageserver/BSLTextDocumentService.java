@@ -517,23 +517,25 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     lock.writeLock().lock();
 
     try {
-      var documentContext = serverContext.addDocument(uri);
+      WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+        var documentContext = serverContext.addDocument(uri);
 
-      // Create single-threaded executor for this document to serialize didChange operations
-      documentExecutors.computeIfAbsent(uri, key ->
-        new DocumentChangeExecutor(
-          documentContext,
-          BSLTextDocumentService::applyTextDocumentChanges,
-          this::processDocumentChange,
-          "doc-" + documentContext.getUri() + "-"
-        )
-      );
+        // Create single-threaded executor for this document to serialize didChange operations
+        documentExecutors.computeIfAbsent(uri, key ->
+          new DocumentChangeExecutor(
+            documentContext,
+            BSLTextDocumentService::applyTextDocumentChanges,
+            this::processDocumentChange,
+            "doc-" + documentContext.getUri() + "-"
+          )
+        );
 
-      serverContext.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
+        serverContext.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
-      if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
-        validate(documentContext);
-      }
+        if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
+          validate(documentContext);
+        }
+      });
     } finally {
       lock.writeLock().unlock();
     }
@@ -652,9 +654,17 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
     var documentContext = maybeDocument.get();
 
-    if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
-      validate(documentContext);
+    var serverContext = getContextForDocument(params.getTextDocument().getUri());
+    if (serverContext == null) {
+      LOGGER.warn(NO_WORKSPACE_FOUND_MESSAGE, documentContext.getUri());
+      return;
     }
+
+    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+      if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
+        validate(documentContext);
+      }
+    });
   }
 
   @Override

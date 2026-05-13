@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -76,6 +77,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.SmartApplicationListener;
+import org.springframework.core.Ordered;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
@@ -106,6 +111,8 @@ class BSLTextDocumentServiceTest {
   private BSLTextDocumentService textDocumentService;
   @Autowired
   private ServerContextProvider serverContextProvider;
+  @Autowired
+  private ConfigurableApplicationContext applicationContext;
   @MockitoSpyBean
   private DiagnosticProvider diagnosticProvider;
   @MockitoSpyBean
@@ -119,6 +126,46 @@ class BSLTextDocumentServiceTest {
     var testResourcesPath = new File("./src/test/resources").getAbsoluteFile();
     var workspaceFolder = new WorkspaceFolder(testResourcesPath.toURI().toString(), "test-workspace");
     serverContextProvider.addWorkspace(workspaceFolder);
+  }
+
+  /**
+   * Воспроизводит ScopeNotActiveException из Sentry:
+   * didOpen вызывает openDocument → rebuildDocument синхронно на LSP-треде без workspace-контекста,
+   * из-за чего workspace-scoped proxy beans не резолвятся в @EventListener при DocumentContextContentChangedEvent.
+   */
+  @Test
+  void didOpen_setsWorkspaceContextForEventListeners() throws IOException {
+    var capturedWorkspaceUri = new AtomicReference<URI>();
+    var listener = new SmartApplicationListener() {
+      @Override
+      public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+        return DocumentContextContentChangedEvent.class.isAssignableFrom(eventType);
+      }
+
+      @Override
+      public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
+      }
+
+      @Override
+      public void onApplicationEvent(ApplicationEvent event) {
+        capturedWorkspaceUri.compareAndSet(null, WorkspaceContextHolder.get());
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+
+    try {
+      textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+
+      var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+      assertThat(capturedWorkspaceUri.get())
+        .as("Workspace context must be set when DocumentContextContentChangedEvent fires during didOpen "
+          + "(otherwise workspace-scoped beans like AnnotationRepository cannot be resolved)")
+        .isNotNull()
+        .isEqualTo(expectedWorkspaceUri);
+    } finally {
+      applicationContext.removeApplicationListener(listener);
+    }
   }
 
   @Test
@@ -404,6 +451,33 @@ class BSLTextDocumentServiceTest {
     DidSaveTextDocumentParams params = new DidSaveTextDocumentParams();
     params.setTextDocument(getTextDocumentIdentifier());
     textDocumentService.didSave(params);
+  }
+
+  /**
+   * Воспроизводит ScopeNotActiveException из Sentry:
+   * didSave обращается к workspace-scoped LanguageServerConfiguration без workspace-контекста,
+   * из-за чего proxy beans (LanguageServerConfiguration, DiagnosticComputer) не резолвятся.
+   */
+  @Test
+  void didSave_setsWorkspaceContextWhenValidating() throws IOException {
+    doOpen();
+
+    var capturedWorkspaceUri = new AtomicReference<URI>();
+    doAnswer(invocation -> {
+      capturedWorkspaceUri.compareAndSet(null, WorkspaceContextHolder.get());
+      return null;
+    }).when(diagnosticProvider).computeAndPublishDiagnostics(any());
+
+    var params = new DidSaveTextDocumentParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    textDocumentService.didSave(params);
+
+    var expectedWorkspaceUri = Absolute.uri(new File("./src/test/resources").getAbsoluteFile().toURI());
+    assertThat(capturedWorkspaceUri.get())
+      .as("Workspace context must be set when DiagnosticProvider.computeAndPublishDiagnostics is called during "
+        + "didSave (otherwise workspace-scoped LanguageServerConfiguration cannot be resolved)")
+      .isNotNull()
+      .isEqualTo(expectedWorkspaceUri);
   }
 
   @Test
