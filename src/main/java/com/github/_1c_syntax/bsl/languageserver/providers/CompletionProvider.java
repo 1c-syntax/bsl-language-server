@@ -290,20 +290,26 @@ public final class CompletionProvider {
 
   private static CompletionItem toCompletionItem(MemberDescriptor member) {
     var item = new CompletionItem(member.name());
+    var symDesc = member.getSymbolDescription();
+    var detail = symDesc.getPurposeDescription();
+    if (detail.isBlank()) {
+      detail = member.description();
+    }
     if (member.kind() == MemberKind.METHOD) {
       item.setKind(CompletionItemKind.Function);
       item.setInsertText(member.name() + "(");
       if (member.signatures().size() > 1) {
         item.setDetail(member.signatures().size() + " вариантов синтаксиса");
-      } else if (!member.description().isBlank()) {
-        item.setDetail(member.description());
+      } else if (!detail.isBlank()) {
+        item.setDetail(detail);
       }
     } else {
       item.setKind(CompletionItemKind.Variable);
-      if (!member.description().isBlank()) {
-        item.setDetail(member.description());
+      if (!detail.isBlank()) {
+        item.setDetail(detail);
       }
     }
+    applyDocumentation(item, symDesc);
     return item;
   }
 
@@ -311,22 +317,51 @@ public final class CompletionProvider {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
       var item = new CompletionItem(member.name());
+      var symDesc = member.getSymbolDescription();
+      var detail = symDesc.getPurposeDescription();
+      if (detail.isBlank()) {
+        detail = member.description();
+      }
       if (member.kind() == MemberKind.METHOD) {
         item.setKind(CompletionItemKind.Method);
         item.setInsertText(member.name() + "(");
         if (member.signatures().size() > 1) {
           item.setDetail(member.signatures().size() + " вариантов синтаксиса");
-        } else if (!member.description().isBlank()) {
-          item.setDetail(member.description());
+        } else if (!detail.isBlank()) {
+          item.setDetail(detail);
         }
       } else {
         item.setKind(CompletionItemKind.Property);
-        if (!member.description().isBlank()) {
-          item.setDetail(member.description());
+        if (!detail.isBlank()) {
+          item.setDetail(detail);
         }
       }
+      applyDocumentation(item, symDesc);
       items.add(item);
     }
     return items;
+  }
+
+  private static void applyDocumentation(
+    CompletionItem item,
+    com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolDescription symDesc
+  ) {
+    if (symDesc.isEmpty()) {
+      return;
+    }
+    var sb = new StringBuilder();
+    if (symDesc.isDeprecated()) {
+      sb.append("**Устарело.**");
+      if (!symDesc.getDeprecationInfo().isBlank()) {
+        sb.append(' ').append(symDesc.getDeprecationInfo());
+      }
+      sb.append("\n\n");
+    }
+    if (!symDesc.getPurposeDescription().isBlank()) {
+      sb.append(symDesc.getPurposeDescription());
+    }
+    if (sb.length() > 0) {
+      item.setDocumentation(sb.toString());
+    }
   }
 }

@@ -116,7 +116,16 @@ public final class HoverProvider {
       sb.append("\n```\n");
     }
     sb.append("\n_member of_ `").append(owner.qualifiedName()).append('`');
-    if (descriptor.description() != null && !descriptor.description().isBlank()) {
+    var symDesc = descriptor.getSymbolDescription();
+    if (symDesc.isDeprecated()) {
+      sb.append("\n\n**Устарело.**");
+      if (!symDesc.getDeprecationInfo().isBlank()) {
+        sb.append(' ').append(symDesc.getDeprecationInfo());
+      }
+    }
+    if (!symDesc.getPurposeDescription().isBlank()) {
+      sb.append("\n\n").append(symDesc.getPurposeDescription());
+    } else if (descriptor.description() != null && !descriptor.description().isBlank()) {
       sb.append("\n\n").append(descriptor.description());
     }
     if (descriptor.kind() == MemberKind.METHOD && descriptor.signatures().size() > 1) {

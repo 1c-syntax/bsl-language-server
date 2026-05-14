@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import lombok.EqualsAndHashCode;
@@ -85,5 +86,15 @@ public final class SyntheticSymbol implements Symbol {
 
   public Optional<Symbol> getOwnerSymbol() {
     return Optional.ofNullable(owner);
+  }
+
+  /**
+   * Унифицированное описание для hover/completion/signature-help.
+   * Платформенные synthetic-символы поставляют только текст; пометка об
+   * устаревании сейчас не поддерживается схемой JSON, но интерфейс к этому
+   * готов.
+   */
+  public SymbolDescription getSymbolDescription() {
+    return SymbolDescription.of(description);
   }
 }

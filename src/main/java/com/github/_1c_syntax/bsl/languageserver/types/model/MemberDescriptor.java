@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolDescription;
 
 import java.util.List;
 import java.util.Optional;
@@ -83,6 +85,26 @@ public record MemberDescriptor(
 
   public Optional<Symbol> getSourceSymbol() {
     return Optional.ofNullable(sourceSymbol);
+  }
+
+  /**
+   * Унифицированное описание члена.
+   * <p>
+   * Если {@link #sourceSymbol} реализует {@link Describable} — описание
+   * берётся из него (BSL-doc-comment, с поддержкой пометки об устаревании).
+   * Иначе — используется {@link #description}, переданный явно (платформенный
+   * JSON, конфигурационные метаданные и т.п.).
+   *
+   * @return унифицированное описание или {@link SymbolDescription#EMPTY}.
+   */
+  public SymbolDescription getSymbolDescription() {
+    if (sourceSymbol instanceof Describable describable) {
+      var fromSource = describable.getSymbolDescription();
+      if (!fromSource.isEmpty()) {
+        return fromSource;
+      }
+    }
+    return SymbolDescription.of(description);
   }
 
   /**
