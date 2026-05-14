@@ -1,0 +1,82 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.scope;
+
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class GlobalSymbolScopeTest {
+
+  @Test
+  void findsSymbolCaseInsensitive() {
+    var scope = new GlobalSymbolScope();
+    var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
+
+    assertThat(scope.findSymbol("справочники")).contains(sym);
+    assertThat(scope.findSymbol("СПРАВОЧНИКИ")).contains(sym);
+    assertThat(scope.findEntry("Справочники"))
+      .map(GlobalSymbolScope.Entry::role).contains(GlobalSymbolScope.Role.VALUE);
+  }
+
+  @Test
+  void supportsRuEnAliases() {
+    var scope = new GlobalSymbolScope();
+    var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE);
+
+    assertThat(scope.findSymbol("catalogs")).contains(sym);
+    assertThat(scope.findSymbol("справочники")).contains(sym);
+  }
+
+  @Test
+  void unregisterRemovesAllAliases() {
+    var scope = new GlobalSymbolScope();
+    var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE);
+
+    scope.unregister(sym);
+
+    assertThat(scope.findSymbol("справочники")).isEmpty();
+    assertThat(scope.findSymbol("catalogs")).isEmpty();
+  }
+
+  @Test
+  void clearByRoleRemovesOnlyMatching() {
+    var scope = new GlobalSymbolScope();
+    var valueSym = new SyntheticSymbol("ФС", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    var typeSym = new SyntheticSymbol("СессияПользователя", SyntheticKind.CONFIGURATION_OBJECT, "");
+    scope.register("ФС", valueSym, GlobalSymbolScope.Role.VALUE);
+    scope.register("СессияПользователя", typeSym, GlobalSymbolScope.Role.TYPE_NAME);
+
+    scope.clear(GlobalSymbolScope.Role.VALUE);
+
+    assertThat(scope.findSymbol("ФС")).isEmpty();
+    assertThat(scope.findSymbol("СессияПользователя")).isPresent();
+  }
+}
