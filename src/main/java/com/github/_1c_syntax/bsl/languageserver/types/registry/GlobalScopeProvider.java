@@ -244,7 +244,7 @@ public class GlobalScopeProvider {
     libraryModules.put(key, ref);
     libraryNamesDisplay.putIfAbsent(key, name);
     if (globalSymbolScope != null) {
-      var symbol = new SyntheticSymbol(name, SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", ref);
+      var symbol = new SyntheticSymbol(name, SyntheticKind.LIBRARY_MODULE, "", ref);
       globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
     }
   }

@@ -186,6 +186,9 @@ public class TypeService {
     // Случай глобального свойства или library-модуля (например, КодировкаТекста, ФС).
     var bareName = terminal.getText();
     if (!isAccessorIdentifier(terminal)) {
+      // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
+      // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
+      typeRegistry.resolve(bareName);
       var fromScope = globalScopeProvider.findGlobal(bareName)
         .filter(SyntheticSymbol.class::isInstance)
         .map(s -> ((SyntheticSymbol) s).getValueType())

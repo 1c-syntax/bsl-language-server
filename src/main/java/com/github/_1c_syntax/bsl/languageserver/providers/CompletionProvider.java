@@ -299,7 +299,7 @@ public final class CompletionProvider {
       item.setKind(CompletionItemKind.Function);
       item.setInsertText(member.name() + "(");
       if (member.signatures().size() > 1) {
-        item.setDetail(member.signatures().size() + " вариантов синтаксиса");
+        item.setDetail(formatSignaturesCount(member.signatures().size()));
       } else if (!detail.isBlank()) {
         item.setDetail(detail);
       }
@@ -326,7 +326,7 @@ public final class CompletionProvider {
         item.setKind(CompletionItemKind.Method);
         item.setInsertText(member.name() + "(");
         if (member.signatures().size() > 1) {
-          item.setDetail(member.signatures().size() + " вариантов синтаксиса");
+          item.setDetail(formatSignaturesCount(member.signatures().size()));
         } else if (!detail.isBlank()) {
           item.setDetail(detail);
         }
@@ -340,6 +340,22 @@ public final class CompletionProvider {
       items.add(item);
     }
     return items;
+  }
+
+  private static String formatSignaturesCount(int count) {
+    var mod10 = count % 10;
+    var mod100 = count % 100;
+    String word;
+    if (mod100 >= 11 && mod100 <= 14) {
+      word = "вариантов";
+    } else if (mod10 == 1) {
+      word = "вариант";
+    } else if (mod10 >= 2 && mod10 <= 4) {
+      word = "варианта";
+    } else {
+      word = "вариантов";
+    }
+    return count + " " + word + " синтаксиса";
   }
 
   private static void applyDocumentation(

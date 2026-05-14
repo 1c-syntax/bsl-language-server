@@ -43,5 +43,12 @@ public enum SyntheticKind {
    * Элемент коллекции конфигурации, имеющий собственное имя
    * (например, {@code Справочники.МойСправочник}).
    */
-  CONFIGURATION_OBJECT
+  CONFIGURATION_OBJECT,
+  /**
+   * Глобальный модуль OneScript-библиотеки (запись {@code <module>} из {@code lib.config}
+   * или convention-based discovery). Имя становится ресивером dot-выражения
+   * (например, {@code ФС.КаталогПустой()}), но это не платформенное «глобальное свойство»
+   * — отдельный kind нужен, чтобы completion/hover различали Module и Enum/Property.
+   */
+  LIBRARY_MODULE
 }
