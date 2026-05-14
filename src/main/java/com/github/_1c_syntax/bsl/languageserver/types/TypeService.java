@@ -31,12 +31,26 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -133,6 +147,134 @@ public class TypeService {
    */
   public Collection<String> getNamespaceNames() {
     return typeRegistry.getNamespaceNames();
+  }
+
+  /**
+   * Найти член типа в позиции курсора (для hover/go-to-member по
+   * выражениям без source-defined символа: цепочки accessor'ов,
+   * платформенные типы, library namespaces).
+   *
+   * @return описание найденного члена + тип-владелец и диапазон под курсором.
+   */
+  public Optional<TypedMember> findMemberAt(DocumentContext documentContext, Position position) {
+    BSLParser.FileContext ast;
+    try {
+      ast = documentContext.getAst();
+    } catch (NullPointerException e) {
+      return Optional.empty();
+    }
+    if (ast == null) {
+      return Optional.empty();
+    }
+    var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, position);
+    if (terminalOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    var terminal = terminalOpt.get();
+    if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
+      return Optional.empty();
+    }
+
+    // Случай namespace-имя (например, КодировкаТекста под курсором).
+    var bareName = terminal.getText();
+    var nsRef = typeRegistry.resolveNamespace(bareName);
+    if (nsRef.isPresent() && !isAccessorIdentifier(terminal)) {
+      return Optional.of(new TypedMember(nsRef.get(), namespaceSelfDescriptor(nsRef.get()), Ranges.create(terminal)));
+    }
+
+    var expressionCtx = ExpressionAtPosition.findExpressionContext(documentContext, position);
+    if (expressionCtx.isEmpty()) {
+      return Optional.empty();
+    }
+    var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(expressionCtx.get());
+    var dereference = findDereferenceForTerminal(expression, terminal);
+    if (dereference == null) {
+      return Optional.empty();
+    }
+
+    var right = dereference.getRight();
+    MemberKind expectedKind;
+    if (right instanceof MethodCallNode) {
+      expectedKind = MemberKind.METHOD;
+    } else {
+      expectedKind = MemberKind.PROPERTY;
+    }
+    var memberName = terminal.getText();
+    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
+    if (leftTypes.isEmpty()) {
+      return Optional.empty();
+    }
+    for (var owner : leftTypes.refs()) {
+      for (var member : typeRegistry.getMembers(owner)) {
+        if (member.kind() == expectedKind && member.name().equalsIgnoreCase(memberName)) {
+          return Optional.of(new TypedMember(owner, member, Ranges.create(terminal)));
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static boolean isAccessorIdentifier(TerminalNode terminal) {
+    var parent = terminal.getParent();
+    if (parent instanceof BSLParser.AccessPropertyContext) {
+      return true;
+    }
+    if (parent instanceof BSLParser.MethodNameContext
+      && parent.getParent() instanceof BSLParser.MethodCallContext mc
+      && mc.getParent() instanceof BSLParser.AccessCallContext) {
+      return true;
+    }
+    return false;
+  }
+
+  private static MemberDescriptor namespaceSelfDescriptor(TypeRef ref) {
+    return MemberDescriptor.property(ref.qualifiedName(), ref);
+  }
+
+  private static BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {
+    if (root instanceof BinaryOperationNode binary
+      && binary.getOperator() == BslOperator.DEREFERENCE
+      && rightMatchesTerminal(binary.getRight(), terminal)) {
+      return binary;
+    }
+    if (root instanceof BinaryOperationNode binary) {
+      var leftHit = findDereferenceForTerminal(binary.getLeft(), terminal);
+      if (leftHit != null) {
+        return leftHit;
+      }
+      return findDereferenceForTerminal(binary.getRight(), terminal);
+    }
+    if (root instanceof MethodCallNode call) {
+      for (var arg : call.arguments()) {
+        var hit = findDereferenceForTerminal(arg, terminal);
+        if (hit != null) {
+          return hit;
+        }
+      }
+    }
+    return null;
+  }
+
+  private static boolean rightMatchesTerminal(BslExpression right, TerminalNode terminal) {
+    if (right instanceof TerminalSymbolNode terminalNode
+      && terminalNode.getNodeType() == ExpressionNodeType.IDENTIFIER) {
+      var ast = terminalNode.getRepresentingAst();
+      return ast == terminal;
+    }
+    if (right instanceof MethodCallNode call) {
+      return call.getName() == terminal;
+    }
+    return false;
+  }
+
+  /**
+   * Найденный член типа в позиции курсора.
+   *
+   * @param owner       тип, которому принадлежит член
+   * @param descriptor  описание члена
+   * @param range       диапазон идентификатора-члена под курсором
+   */
+  public record TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range) {
   }
 
 }
