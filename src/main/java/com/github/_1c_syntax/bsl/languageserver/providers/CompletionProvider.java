@@ -79,6 +79,16 @@ public final class CompletionProvider {
       typeSet = typeService.inferAtPosition(documentContext, beforeDot);
     }
     if (typeSet.isEmpty()) {
+      // Fallback: голое имя OneScript library-модуля ("ИмяМодуля." без локального символа)
+      var libModuleName = identifierBeforeDot(documentContext, position);
+      if (libModuleName != null) {
+        var libRef = globalScopeProvider.findLibraryModule(libModuleName);
+        if (libRef.isPresent()) {
+          typeSet = TypeSet.of(libRef.get());
+        }
+      }
+    }
+    if (typeSet.isEmpty()) {
       return List.of();
     }
 
@@ -90,6 +100,39 @@ public final class CompletionProvider {
     }
 
     return toCompletionItems(members.values());
+  }
+
+  private static String identifierBeforeDot(DocumentContext documentContext, Position position) {
+    try {
+      var content = documentContext.getContent();
+      if (content == null) {
+        return null;
+      }
+      var lines = content.split("\\R", -1);
+      if (position.getLine() >= lines.length) {
+        return null;
+      }
+      var line = lines[position.getLine()];
+      var col = Math.min(position.getCharacter(), line.length());
+      var i = col;
+      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
+        i--;
+      }
+      if (i == 0 || line.charAt(i - 1) != '.') {
+        return null;
+      }
+      var dotIndex = i - 1;
+      var start = dotIndex;
+      while (start > 0 && isIdentChar(line.charAt(start - 1))) {
+        start--;
+      }
+      if (start == dotIndex) {
+        return null;
+      }
+      return line.substring(start, dotIndex);
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {
@@ -110,7 +153,23 @@ public final class CompletionProvider {
           items.add(item);
         }
       }
+      for (var libClassName : globalScopeProvider.getLibraryClasses()) {
+        if (matches(libClassName, prefix)) {
+          var item = new CompletionItem(libClassName);
+          item.setKind(CompletionItemKind.Class);
+          items.add(item);
+        }
+      }
       return items;
+    }
+
+    // OneScript library namespaces (записи <module> из lib.config)
+    for (var libModuleName : globalScopeProvider.getLibraryModules()) {
+      if (matches(libModuleName, prefix)) {
+        var item = new CompletionItem(libModuleName);
+        item.setKind(CompletionItemKind.Module);
+        items.add(item);
+      }
     }
 
     // Global functions
