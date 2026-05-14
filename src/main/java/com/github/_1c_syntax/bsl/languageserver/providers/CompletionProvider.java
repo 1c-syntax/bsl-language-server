@@ -105,11 +105,20 @@ public final class CompletionProvider {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
       var item = new CompletionItem(member.name());
-      item.setKind(member.kind() == MemberKind.METHOD
-        ? CompletionItemKind.Method
-        : CompletionItemKind.Property);
-      if (!member.description().isBlank()) {
-        item.setDetail(member.description());
+      if (member.kind() == MemberKind.METHOD) {
+        item.setKind(CompletionItemKind.Method);
+        // insertText с открывающей скобкой — клиент сам поставит сигнатур-помощник
+        item.setInsertText(member.name() + "(");
+        if (member.signatures().size() > 1) {
+          item.setDetail(member.signatures().size() + " вариантов синтаксиса");
+        } else if (!member.description().isBlank()) {
+          item.setDetail(member.description());
+        }
+      } else {
+        item.setKind(CompletionItemKind.Property);
+        if (!member.description().isBlank()) {
+          item.setDetail(member.description());
+        }
       }
       items.add(item);
     }

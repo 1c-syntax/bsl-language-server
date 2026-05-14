@@ -39,15 +39,32 @@
     "name": "Массив",
     "aliases": ["Array"],
     "members": [
-      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
-      {"name": "Добавить", "kind": "METHOD"},
-      {"name": "Вставить", "kind": "METHOD"},
-      {"name": "Удалить", "kind": "METHOD"},
-      {"name": "Получить", "kind": "METHOD"},
-      {"name": "Установить", "kind": "METHOD"},
-      {"name": "Найти", "kind": "METHOD"},
-      {"name": "Очистить", "kind": "METHOD"},
-      {"name": "ВГраница", "kind": "METHOD", "returnType": "Число"}
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число",
+        "signatures": [{"parameters": [], "returnType": "Число"}]},
+      {"name": "Добавить", "kind": "METHOD",
+        "signatures": [
+          {"parameters": [{"name": "Значение"}], "description": "Добавляет значение в конец массива."}
+        ]},
+      {"name": "Вставить", "kind": "METHOD",
+        "signatures": [
+          {"parameters": [{"name": "Индекс"}, {"name": "Значение", "optional": true}],
+            "description": "Вставляет значение в массив по указанному индексу."}
+        ]},
+      {"name": "Удалить", "kind": "METHOD",
+        "signatures": [{"parameters": [{"name": "Индекс"}]}]},
+      {"name": "Получить", "kind": "METHOD",
+        "signatures": [{"parameters": [{"name": "Индекс"}]}]},
+      {"name": "Установить", "kind": "METHOD",
+        "signatures": [{"parameters": [{"name": "Индекс"}, {"name": "Значение"}]}]},
+      {"name": "Найти", "kind": "METHOD",
+        "signatures": [
+          {"parameters": [{"name": "Значение"}],
+            "description": "Ищет значение в массиве. Возвращает индекс или Неопределено."}
+        ]},
+      {"name": "Очистить", "kind": "METHOD",
+        "signatures": [{"parameters": []}]},
+      {"name": "ВГраница", "kind": "METHOD", "returnType": "Число",
+        "signatures": [{"parameters": [], "returnType": "Число"}]}
     ]
   },
   {
