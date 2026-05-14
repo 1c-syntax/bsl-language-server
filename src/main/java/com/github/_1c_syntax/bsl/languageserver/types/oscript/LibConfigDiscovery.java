@@ -85,6 +85,26 @@ public class LibConfigDiscovery {
    * Найти все {@code lib.config} для указанного корня workspace.
    */
   public List<Path> discover(Path workspaceRoot) {
+    var result = new LinkedHashSet<Path>();
+    for (var root : getRoots(workspaceRoot)) {
+      scan(root, result);
+    }
+    return new ArrayList<>(result);
+  }
+
+  /**
+   * Корни для поиска OneScript-библиотек (workspace + {@code libRoots} +
+   * опционально {@code OSCRIPT_LIB_LOCATION}). Используется не только для
+   * поиска {@code lib.config}, но и для convention-based discovery.
+   */
+  public List<Path> getRoots(ServerContext serverContext) {
+    return getRoots(serverContext == null ? null : serverContext.getConfigurationRoot());
+  }
+
+  /**
+   * См. {@link #getRoots(ServerContext)}.
+   */
+  public List<Path> getRoots(Path workspaceRoot) {
     Set<Path> roots = new LinkedHashSet<>();
     if (workspaceRoot != null) {
       roots.add(workspaceRoot.toAbsolutePath().normalize());
@@ -108,12 +128,7 @@ public class LibConfigDiscovery {
         }
       }
     }
-
-    var result = new LinkedHashSet<Path>();
-    for (var root : roots) {
-      scan(root, result);
-    }
-    return new ArrayList<>(result);
+    return new ArrayList<>(roots);
   }
 
   private static void scan(Path root, Set<Path> sink) {

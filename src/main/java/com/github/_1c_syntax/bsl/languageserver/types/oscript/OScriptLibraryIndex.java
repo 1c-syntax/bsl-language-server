@@ -69,6 +69,7 @@ public class OScriptLibraryIndex {
   private final LibConfigDiscovery libConfigDiscovery;
   private final LibConfigParser libConfigParser;
   private final OScriptLibraryFileParser libraryFileParser;
+  private final ConventionalLibraryDiscovery conventionalLibraryDiscovery;
   private final TypeRegistry typeRegistry;
   private final GlobalScopeProvider globalScopeProvider;
 
@@ -96,14 +97,32 @@ public class OScriptLibraryIndex {
     globalScopeProvider.clearLibraryEntries();
 
     var configs = libConfigDiscovery.discover(serverContext);
-    if (configs.isEmpty()) {
-      LOGGER.debug("No OneScript libraries discovered for workspace");
-      return;
+    if (!configs.isEmpty()) {
+      LOGGER.debug("Indexing {} OneScript library manifest(s)", configs.size());
+      for (var libConfigPath : configs) {
+        indexLibrary(libConfigPath, serverContext);
+      }
     }
-    LOGGER.debug("Indexing {} OneScript library manifest(s)", configs.size());
 
-    for (var libConfigPath : configs) {
-      indexLibrary(libConfigPath, serverContext);
+    var conventional = conventionalLibraryDiscovery.discover(serverContext, configs);
+    if (!conventional.isEmpty()) {
+      LOGGER.debug("Indexing {} convention-based OneScript librar(y/ies)", conventional.size());
+      for (var lib : conventional) {
+        indexConventional(lib, serverContext);
+      }
+    }
+
+    if (configs.isEmpty() && conventional.isEmpty()) {
+      LOGGER.debug("No OneScript libraries discovered for workspace");
+    }
+  }
+
+  private void indexConventional(ConventionalLibraryDiscovery.ConventionalLibrary lib, ServerContext serverContext) {
+    for (var classFile : lib.classFiles()) {
+      registerClassFromFile(ConventionalLibraryDiscovery.entryName(classFile), classFile, serverContext);
+    }
+    for (var moduleFile : lib.moduleFiles()) {
+      registerModuleFromFile(ConventionalLibraryDiscovery.entryName(moduleFile), moduleFile, serverContext);
     }
   }
 
@@ -124,24 +143,30 @@ public class OScriptLibraryIndex {
 
   private void registerModule(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext) {
     var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
+    registerModuleFromFile(entry.name(), osFile, serverContext);
+  }
+
+  private void registerClass(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext) {
+    var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
+    registerClassFromFile(entry.name(), osFile, serverContext);
+  }
+
+  private void registerModuleFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
     var parsed = libraryFileParser.parse(osFile, serverContext);
     if (parsed.isEmpty()) {
       return;
     }
-    var qualifiedName = entry.name();
     var ref = typeRegistry.registerUserType(qualifiedName, null);
     var members = collectMembers(parsed.get());
     typeRegistry.registerMemberSource(ref, () -> members);
     globalScopeProvider.registerLibraryModule(qualifiedName, ref);
   }
 
-  private void registerClass(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext) {
-    var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
+  private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
     var parsed = libraryFileParser.parse(osFile, serverContext);
     if (parsed.isEmpty()) {
       return;
     }
-    var qualifiedName = entry.name();
     var ref = typeRegistry.registerUserType(qualifiedName, null);
     var members = collectMembers(parsed.get());
     typeRegistry.registerMemberSource(ref, () -> members);
