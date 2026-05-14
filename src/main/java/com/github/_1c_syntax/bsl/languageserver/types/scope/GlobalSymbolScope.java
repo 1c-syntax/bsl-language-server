@@ -142,6 +142,13 @@ public class GlobalSymbolScope {
   }
 
   /**
+   * @return все уникальные символы scope'а (без дубликатов алиасов).
+   */
+  public java.util.stream.Stream<Symbol> streamSymbols() {
+    return getEntries().stream().map(Entry::symbol);
+  }
+
+  /**
    * Удалить все имена, зарегистрированные за символом (по идентичности символа).
    */
   public void unregister(Symbol symbol) {

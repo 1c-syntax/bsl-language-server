@@ -34,9 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
-import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
-import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,13 +67,12 @@ public class TypeRegistry {
 
   private final List<PlatformTypesProvider> platformProviders;
   /**
-   * Параллельный Symbol-фронт для имён, доступных без квалификации. Заполняется
-   * вместе с namespace-индексом и в перспективе полностью его заменит
-   * (см. plan-symbol-front.md). Опционален, чтобы существующие unit-тесты,
-   * собирающие TypeRegistry вручную без Spring, продолжали работать.
+   * Параллельный Symbol-фронт: namespace-резолюция и глобальные символы.
+   * Опционален, чтобы существующие unit-тесты, собирающие TypeRegistry вручную
+   * без Spring, продолжали работать.
    */
   @Autowired(required = false)
-  private GlobalSymbolScope globalSymbolScope;
+  private GlobalScopeProvider globalScopeProvider;
 
   /** Интернированные TypeRef по канонической форме (kind + lowercased name). */
   private final Map<TypeRef, TypeRef> internedRefs = new ConcurrentHashMap<>();
@@ -86,8 +82,6 @@ public class TypeRegistry {
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /** Тип ↔ список источников членов (один тип может расширяться многими источниками). */
   private final Map<TypeRef, List<MemberSource>> memberSources = new ConcurrentHashMap<>();
-  /** Имена-неймспейсы (lowercased) — типы, чьё имя само используется как namespace-ресивер (например, {@code КодировкаТекста.UTF8}). */
-  private final Map<String, TypeRef> namespaceIndex = new ConcurrentHashMap<>();
 
   @PostConstruct
   void bootstrap() {
@@ -195,40 +189,21 @@ public class TypeRegistry {
   /**
    * Пометить тип как namespace-приёмник (его имя может выступать ресивером
    * dot-выражения: {@code Документы.Контрагенты}, {@code КодировкаТекста.UTF8}).
-   * Имя и все его алиасы попадают в namespace-индекс.
+   * Регистрация идёт в {@link GlobalScopeProvider} — единая точка входа для
+   * имён глобальной области.
    */
   public void registerNamespace(TypeRef ref) {
-    var canonical = ref.qualifiedName();
-    namespaceIndex.put(canonical.toLowerCase(Locale.ROOT), ref);
-    aliasIndex.forEach((alias, target) -> {
-      if (target.equals(ref)) {
-        namespaceIndex.put(alias, ref);
-      }
-    });
-    registerNamespaceInScope(canonical, ref);
-  }
-
-  /**
-   * Зарегистрировать имя namespace-типа в {@link GlobalSymbolScope} как
-   * synthetic-свойство глобальной области. Имя резолвится в одно и то же
-   * synthetic-значение по всем алиасам (Ru/En и любые сохранённые ранее).
-   */
-  private void registerNamespaceInScope(String displayName, TypeRef ref) {
-    if (globalSymbolScope == null) {
+    if (globalScopeProvider == null) {
       return;
     }
-    var symbol = new SyntheticSymbol(
-      displayName,
-      SyntheticKind.PLATFORM_GLOBAL_PROPERTY,
-      "",
-      ref
-    );
-    globalSymbolScope.register(displayName, symbol, GlobalSymbolScope.Role.VALUE);
+    var names = new java.util.LinkedHashSet<String>();
+    names.add(ref.qualifiedName());
     aliasIndex.forEach((alias, target) -> {
-      if (target.equals(ref) && !alias.equalsIgnoreCase(displayName)) {
-        globalSymbolScope.register(alias, symbol, GlobalSymbolScope.Role.VALUE);
+      if (target.equals(ref)) {
+        names.add(alias);
       }
     });
+    globalScopeProvider.registerNamespace(ref, names);
   }
 
   /**
@@ -253,34 +228,8 @@ public class TypeRegistry {
       registerMemberSource(ref, decl::members);
     }
     if (decl.namespace()) {
-      namespaceIndex.put(decl.qualifiedName().toLowerCase(Locale.ROOT), ref);
-      for (var alias : decl.aliases()) {
-        namespaceIndex.put(alias.toLowerCase(Locale.ROOT), ref);
-      }
-      registerNamespaceInScope(decl.qualifiedName(), ref);
+      registerNamespace(ref);
     }
-  }
-
-  /**
-   * Найти namespace-тип по имени (регистронезависимо). Namespace-типы — те,
-   * чьё имя само может выступать как ресивер dot-выражения, например
-   * {@code КодировкаТекста.UTF8}.
-   */
-  public Optional<TypeRef> resolveNamespace(String name) {
-    if (name == null || name.isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(namespaceIndex.get(name.toLowerCase(Locale.ROOT)));
-  }
-
-  /**
-   * @return имена зарегистрированных namespace-типов в каноническом написании.
-   */
-  public Collection<String> getNamespaceNames() {
-    return namespaceIndex.values().stream()
-      .map(TypeRef::qualifiedName)
-      .distinct()
-      .toList();
   }
 
   private void addAlias(String name, TypeRef ref) {

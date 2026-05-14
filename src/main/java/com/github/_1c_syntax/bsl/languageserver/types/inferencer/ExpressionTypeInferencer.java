@@ -214,13 +214,7 @@ public class ExpressionTypeInferencer {
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
       .map(TypeSet::of)
       .orElse(TypeSet.EMPTY);
-    if (!fromScope.isEmpty()) {
-      return fromScope;
-    }
-    // Fallback на namespace-индекс (будет удалён в Phase 6).
-    return typeRegistry.resolveNamespace(text)
-      .map(TypeSet::of)
-      .orElse(TypeSet.EMPTY);
+    return fromScope;
   }
 
   // ---------------------------------------------------------------------------

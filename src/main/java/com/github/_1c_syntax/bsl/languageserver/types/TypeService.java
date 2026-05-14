@@ -109,6 +109,7 @@ public class TypeService {
    * не привязанного к именованному символу.
    */
   public TypeSet inferAtPosition(DocumentContext documentContext, Position position) {
+    typeRegistry.resolve("");
     return ExpressionAtPosition.findExpressionContext(documentContext, position)
       .map(ExpressionTreeBuildingVisitor::buildExpressionTree)
       .map(expr -> inferencer.infer(expr, documentContext))
@@ -142,14 +143,18 @@ public class TypeService {
    * Найти namespace-тип (например, system enum {@code КодировкаТекста}) по имени.
    */
   public Optional<TypeRef> resolveNamespace(String name) {
-    return typeRegistry.resolveNamespace(name);
+    // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы system enum'ы
+    // и прочие namespace-типы из платформенных провайдеров были зарегистрированы.
+    typeRegistry.resolve(name);
+    return globalScopeProvider.resolveNamespace(name);
   }
 
   /**
    * @return имена зарегистрированных namespace-типов (для completion).
    */
   public Collection<String> getNamespaceNames() {
-    return typeRegistry.getNamespaceNames();
+    typeRegistry.resolve("");
+    return globalScopeProvider.getNamespaceNames();
   }
 
   /**
@@ -187,10 +192,6 @@ public class TypeService {
         .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
       if (fromScope.isPresent()) {
         return Optional.of(new TypedMember(fromScope.get(), namespaceSelfDescriptor(fromScope.get()), Ranges.create(terminal)));
-      }
-      var nsRef = typeRegistry.resolveNamespace(bareName);
-      if (nsRef.isPresent()) {
-        return Optional.of(new TypedMember(nsRef.get(), namespaceSelfDescriptor(nsRef.get()), Ranges.create(terminal)));
       }
     }
 

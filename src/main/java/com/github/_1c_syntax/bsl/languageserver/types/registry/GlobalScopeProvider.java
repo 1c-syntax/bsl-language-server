@@ -164,6 +164,57 @@ public class GlobalScopeProvider {
   }
 
   /**
+   * Зарегистрировать namespace-тип (имя, через которое разрешается dot-выражение:
+   * {@code Документы.Контрагенты}, {@code КодировкаТекста.UTF8},
+   * {@code ОбщегоНазначения.МойМетод()}). Заводит {@link SyntheticSymbol}
+   * по каждому из переданных имён (canonical + aliases).
+   */
+  public void registerNamespace(TypeRef ref, Collection<String> names) {
+    if (ref == null || names == null || names.isEmpty()) {
+      return;
+    }
+    ensureGlobalsPublished();
+    var canonical = ref.qualifiedName();
+    var symbol = new SyntheticSymbol(canonical, SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", ref);
+    if (globalSymbolScope == null) {
+      return;
+    }
+    for (var name : names) {
+      if (name == null || name.isBlank()) {
+        continue;
+      }
+      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
+    }
+  }
+
+  /**
+   * Имена всех зарегистрированных namespace-типов (canonical-форма, без алиасов).
+   */
+  public Collection<String> getNamespaceNames() {
+    if (globalSymbolScope == null) {
+      return List.of();
+    }
+    return globalSymbolScope.streamSymbols()
+      .filter(SyntheticSymbol.class::isInstance)
+      .map(SyntheticSymbol.class::cast)
+      .filter(s -> s.getSyntheticKind() == SyntheticKind.PLATFORM_GLOBAL_PROPERTY
+        || s.getSyntheticKind() == SyntheticKind.CONFIGURATION_OBJECT)
+      .map(SyntheticSymbol::getName)
+      .distinct()
+      .toList();
+  }
+
+  /**
+   * Найти namespace-тип по имени (canonical или alias).
+   */
+  public Optional<TypeRef> resolveNamespace(String name) {
+    return findGlobal(name)
+      .filter(SyntheticSymbol.class::isInstance)
+      .map(s -> ((SyntheticSymbol) s).getValueType())
+      .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
+  }
+
+  /**
    * @return имена платформенных классов, доступных в выражении {@code Новый}.
    */
   public List<String> getClasses() {

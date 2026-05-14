@@ -87,7 +87,7 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_A, "mw-a");
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isEmpty();
-    var nsRefA = typeRegistry.resolveNamespace("Справочники").orElseThrow();
+    var nsRefA = typeService.resolveNamespace("Справочники").orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefA))
       .extracting(MemberDescriptor::name)
       .containsExactly("Контрагенты");
@@ -96,7 +96,7 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_B, "mw-b");
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isEmpty();
-    var nsRefB = typeRegistry.resolveNamespace("Справочники").orElseThrow();
+    var nsRefB = typeService.resolveNamespace("Справочники").orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefB))
       .extracting(MemberDescriptor::name)
       .containsExactly("Номенклатура");

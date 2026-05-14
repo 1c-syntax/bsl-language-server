@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeRegistry typeRegistry;
+
+  @Autowired
+  private TypeService typeService;
 
   @Test
   void registersCatalogTypesWithRuAndEnAliases() {
@@ -59,8 +63,8 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     context.getConfiguration();
     provider.tryRegister();
 
-    var nsRu = typeRegistry.resolveNamespace("Справочники");
-    var nsEn = typeRegistry.resolveNamespace("Catalogs");
+    var nsRu = typeService.resolveNamespace("Справочники");
+    var nsEn = typeService.resolveNamespace("Catalogs");
 
     assertThat(nsRu).isPresent();
     assertThat(nsEn).isPresent();
