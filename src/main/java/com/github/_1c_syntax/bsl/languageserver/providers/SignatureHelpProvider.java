@@ -245,7 +245,7 @@ public final class SignatureHelpProvider {
     if (methodName == null) {
       return Optional.empty();
     }
-    // Walk up: ищем complexIdentifier (получатель) и его выражение перед последним modifier (точкой).
+    // Walk up: ищем complexIdentifier ИЛИ callStatement (получатель)
     var receiver = findReceiverExpression(mc);
     if (receiver == null) {
       return Optional.empty();
@@ -261,6 +261,13 @@ public final class SignatureHelpProvider {
     if (typeSet.isEmpty()) {
       typeSet = typeService.inferAtPosition(documentContext, pos);
     }
+    if (typeSet.isEmpty()) {
+      // Fallback: голое имя OneScript library-модуля как ресивер (нет Symbol/инференса).
+      var libRef = findLibraryNamespaceReceiver(mc, receiver);
+      if (libRef != null) {
+        typeSet = com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.of(libRef);
+      }
+    }
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref)) {
         if (member.kind() == MemberKind.METHOD && member.name().equalsIgnoreCase(methodName)) {
@@ -272,12 +279,64 @@ public final class SignatureHelpProvider {
   }
 
   private static ParserRuleContext findReceiverExpression(BSLParser.MethodCallContext mc) {
-    // accessCall — родитель methodCall. Его родителем будет modifier; родитель modifier — complexIdentifier.
+    // accessCall — родитель methodCall. Родитель accessCall — modifier (внутри complexIdentifier)
+    // ИЛИ напрямую callStatement (для statements типа MyMod.method(...);).
     var node = (ParseTree) mc;
-    while (node != null && !(node instanceof BSLParser.ComplexIdentifierContext)) {
+    while (node != null
+      && !(node instanceof BSLParser.ComplexIdentifierContext)
+      && !(node instanceof BSLParser.CallStatementContext)) {
       node = node.getParent();
     }
     return (ParserRuleContext) node;
+  }
+
+  /**
+   * Если ресивер аксес-колла — голый идентификатор (нет промежуточных модификаторов
+   * между {@code IDENTIFIER} ресивера и текущим methodCall), то пробуем
+   * зарезолвить его как имя OneScript library-модуля.
+   */
+  private TypeRef findLibraryNamespaceReceiver(BSLParser.MethodCallContext mc, ParserRuleContext receiver) {
+    TerminalNode idNode;
+    List<? extends BSLParser.ModifierContext> modifiers;
+    BSLParser.AccessCallContext directAccessCall = null;
+    if (receiver instanceof BSLParser.ComplexIdentifierContext complex) {
+      idNode = complex.IDENTIFIER();
+      modifiers = complex.modifier();
+    } else if (receiver instanceof BSLParser.CallStatementContext callStatement) {
+      idNode = callStatement.IDENTIFIER();
+      modifiers = callStatement.modifier();
+      directAccessCall = callStatement.accessCall();
+    } else {
+      return null;
+    }
+    if (idNode == null) {
+      return null;
+    }
+    // methodCall сидит либо в первом модификаторе complexIdentifier, либо
+    // напрямую в callStatement.accessCall (без модификаторов между ними).
+    boolean firstAccess;
+    if (directAccessCall != null && (modifiers == null || modifiers.isEmpty())) {
+      firstAccess = isInside(mc, directAccessCall);
+    } else if (modifiers != null && !modifiers.isEmpty()) {
+      firstAccess = isInside(mc, modifiers.get(0));
+    } else {
+      return null;
+    }
+    if (!firstAccess) {
+      return null;
+    }
+    return globalScopeProvider.findLibraryModule(idNode.getText()).orElse(null);
+  }
+
+  private static boolean isInside(ParseTree descendant, ParseTree ancestor) {
+    ParseTree walker = descendant;
+    while (walker != null) {
+      if (walker == ancestor) {
+        return true;
+      }
+      walker = walker.getParent();
+    }
+    return false;
   }
 
   private Optional<MemberDescriptor> resolveConstructor(BSLParser.NewExpressionContext nex) {
@@ -288,15 +347,19 @@ public final class SignatureHelpProvider {
       return Optional.empty();
     }
     var ref = typeService.resolve(typeName).orElse(null);
-    if (ref == null) {
-      return Optional.empty();
-    }
-    for (var member : typeService.getMembers(ref)) {
-      if (member.kind() == MemberKind.METHOD
-        && (member.name().equalsIgnoreCase("Constructor")
-        || member.name().equalsIgnoreCase("ПриСозданииОбъекта"))) {
-        return Optional.of(member);
+    if (ref != null) {
+      for (var member : typeService.getMembers(ref)) {
+        if (member.kind() == MemberKind.METHOD
+          && (member.name().equalsIgnoreCase("Constructor")
+          || member.name().equalsIgnoreCase("ПриСозданииОбъекта"))) {
+          return Optional.of(member);
+        }
       }
+    }
+    // Fallback: OneScript library-класс — конструктор хранится отдельно в GlobalScopeProvider.
+    var libCtor = globalScopeProvider.findLibraryClassConstructor(typeName);
+    if (!libCtor.isEmpty()) {
+      return Optional.of(MemberDescriptor.method(typeName, "", libCtor));
     }
     return Optional.empty();
   }
