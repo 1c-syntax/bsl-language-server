@@ -263,7 +263,7 @@ public final class SignatureHelpProvider {
     }
     if (typeSet.isEmpty()) {
       // Fallback: голое имя OneScript library-модуля как ресивер (нет Symbol/инференса).
-      var libRef = findLibraryNamespaceReceiver(mc, receiver);
+      var libRef = findLibraryModuleReceiver(mc, receiver);
       if (libRef != null) {
         typeSet = com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.of(libRef);
       }
@@ -295,7 +295,7 @@ public final class SignatureHelpProvider {
    * между {@code IDENTIFIER} ресивера и текущим methodCall), то пробуем
    * зарезолвить его как имя OneScript library-модуля.
    */
-  private TypeRef findLibraryNamespaceReceiver(BSLParser.MethodCallContext mc, ParserRuleContext receiver) {
+  private TypeRef findLibraryModuleReceiver(BSLParser.MethodCallContext mc, ParserRuleContext receiver) {
     TerminalNode idNode;
     List<? extends BSLParser.ModifierContext> modifiers;
     BSLParser.AccessCallContext directAccessCall = null;

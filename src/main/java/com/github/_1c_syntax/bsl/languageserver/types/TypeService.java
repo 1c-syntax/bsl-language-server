@@ -140,27 +140,27 @@ public class TypeService {
   }
 
   /**
-   * Найти namespace-тип (например, system enum {@code КодировкаТекста}) по имени.
+   * Найти тип глобального свойства (например, system enum {@code КодировкаТекста}, {@code ФС}) по имени.
    */
-  public Optional<TypeRef> resolveNamespace(String name) {
+  public Optional<TypeRef> findGlobalPropertyType(String name) {
     // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы system enum'ы
-    // и прочие namespace-типы из платформенных провайдеров были зарегистрированы.
+    // и прочие глобальные свойства из платформенных провайдеров были зарегистрированы.
     typeRegistry.resolve(name);
-    return globalScopeProvider.resolveNamespace(name);
+    return globalScopeProvider.findGlobalPropertyType(name);
   }
 
   /**
-   * @return имена зарегистрированных namespace-типов (для completion).
+   * @return имена зарегистрированных глобальных свойств (для completion).
    */
-  public Collection<String> getNamespaceNames() {
+  public Collection<String> getGlobalPropertyNames() {
     typeRegistry.resolve("");
-    return globalScopeProvider.getNamespaceNames();
+    return globalScopeProvider.getGlobalPropertyNames();
   }
 
   /**
    * Найти член типа в позиции курсора (для hover/go-to-member по
    * выражениям без source-defined символа: цепочки accessor'ов,
-   * платформенные типы, library namespaces).
+   * платформенные типы, library-модули).
    *
    * @return описание найденного члена + тип-владелец и диапазон под курсором.
    */
@@ -183,7 +183,7 @@ public class TypeService {
       return Optional.empty();
     }
 
-    // Случай namespace-имя или library-модуль (например, КодировкаТекста, ФС).
+    // Случай глобального свойства или library-модуля (например, КодировкаТекста, ФС).
     var bareName = terminal.getText();
     if (!isAccessorIdentifier(terminal)) {
       var fromScope = globalScopeProvider.findGlobal(bareName)
@@ -191,7 +191,7 @@ public class TypeService {
         .map(s -> ((SyntheticSymbol) s).getValueType())
         .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
       if (fromScope.isPresent()) {
-        return Optional.of(new TypedMember(fromScope.get(), namespaceSelfDescriptor(fromScope.get()), Ranges.create(terminal)));
+        return Optional.of(new TypedMember(fromScope.get(), globalPropertySelfDescriptor(fromScope.get()), Ranges.create(terminal)));
       }
     }
 
@@ -240,7 +240,7 @@ public class TypeService {
     return false;
   }
 
-  private static MemberDescriptor namespaceSelfDescriptor(TypeRef ref) {
+  private static MemberDescriptor globalPropertySelfDescriptor(TypeRef ref) {
     return MemberDescriptor.property(ref.qualifiedName(), ref);
   }
 

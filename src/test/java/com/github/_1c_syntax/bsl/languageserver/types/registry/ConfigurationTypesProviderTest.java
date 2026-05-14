@@ -63,8 +63,8 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     context.getConfiguration();
     provider.tryRegister();
 
-    var nsRu = typeService.resolveNamespace("Справочники");
-    var nsEn = typeService.resolveNamespace("Catalogs");
+    var nsRu = typeService.findGlobalPropertyType("Справочники");
+    var nsEn = typeService.findGlobalPropertyType("Catalogs");
 
     assertThat(nsRu).isPresent();
     assertThat(nsEn).isPresent();

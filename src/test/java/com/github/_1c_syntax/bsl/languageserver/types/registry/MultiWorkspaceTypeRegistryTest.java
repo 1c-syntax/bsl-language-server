@@ -74,20 +74,20 @@ class MultiWorkspaceTypeRegistryTest {
     var refA = typeRegistry.registerConfigurationType("Справочники.Контрагенты");
     var nsA = typeRegistry.registerConfigurationType("Справочники");
     typeRegistry.registerMemberSource(nsA, () -> List.of(MemberDescriptor.property("Контрагенты", refA)));
-    typeRegistry.registerNamespace(nsA);
+    typeRegistry.registerAsGlobalProperty(nsA);
 
     // workspace B: регистрируем только Справочники.Номенклатура + свой namespace
     WorkspaceContextHolder.set(WS_B, "mw-b");
     var refB = typeRegistry.registerConfigurationType("Справочники.Номенклатура");
     var nsB = typeRegistry.registerConfigurationType("Справочники");
     typeRegistry.registerMemberSource(nsB, () -> List.of(MemberDescriptor.property("Номенклатура", refB)));
-    typeRegistry.registerNamespace(nsB);
+    typeRegistry.registerAsGlobalProperty(nsB);
 
     // A видит только свои типы
     WorkspaceContextHolder.set(WS_A, "mw-a");
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isEmpty();
-    var nsRefA = typeService.resolveNamespace("Справочники").orElseThrow();
+    var nsRefA = typeService.findGlobalPropertyType("Справочники").orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefA))
       .extracting(MemberDescriptor::name)
       .containsExactly("Контрагенты");
@@ -96,7 +96,7 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_B, "mw-b");
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isEmpty();
-    var nsRefB = typeService.resolveNamespace("Справочники").orElseThrow();
+    var nsRefB = typeService.findGlobalPropertyType("Справочники").orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefB))
       .extracting(MemberDescriptor::name)
       .containsExactly("Номенклатура");
@@ -106,18 +106,18 @@ class MultiWorkspaceTypeRegistryTest {
   void typeServiceFollowsWorkspaceContext() {
     WorkspaceContextHolder.set(WS_A, "mw-a");
     typeRegistry.registerConfigurationType("ОбщийМодульA");
-    typeRegistry.registerNamespace(typeRegistry.resolve("ОбщийМодульA").orElseThrow());
+    typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульA").orElseThrow());
 
     WorkspaceContextHolder.set(WS_B, "mw-b");
     typeRegistry.registerConfigurationType("ОбщийМодульB");
-    typeRegistry.registerNamespace(typeRegistry.resolve("ОбщийМодульB").orElseThrow());
+    typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульB").orElseThrow());
 
     WorkspaceContextHolder.set(WS_A, "mw-a");
-    assertThat(typeService.resolveNamespace("ОбщийМодульA")).isPresent();
-    assertThat(typeService.resolveNamespace("ОбщийМодульB")).isEmpty();
+    assertThat(typeService.findGlobalPropertyType("ОбщийМодульA")).isPresent();
+    assertThat(typeService.findGlobalPropertyType("ОбщийМодульB")).isEmpty();
 
     WorkspaceContextHolder.set(WS_B, "mw-b");
-    assertThat(typeService.resolveNamespace("ОбщийМодульB")).isPresent();
-    assertThat(typeService.resolveNamespace("ОбщийМодульA")).isEmpty();
+    assertThat(typeService.findGlobalPropertyType("ОбщийМодульB")).isPresent();
+    assertThat(typeService.findGlobalPropertyType("ОбщийМодульA")).isEmpty();
   }
 }

@@ -133,7 +133,7 @@
     "kind": "PLATFORM",
     "name": "КодировкаТекста",
     "aliases": ["TextEncoding"],
-    "namespace": true,
+    "exposedAsGlobal": true,
     "members": [
       {"name": "ANSI", "kind": "PROPERTY", "returnType": "КодировкаТекста"},
       {"name": "OEM", "kind": "PROPERTY", "returnType": "КодировкаТекста"},
@@ -146,7 +146,7 @@
     "kind": "PLATFORM",
     "name": "НаправлениеСортировки",
     "aliases": ["SortDirection"],
-    "namespace": true,
+    "exposedAsGlobal": true,
     "members": [
       {"name": "Возр", "kind": "PROPERTY", "returnType": "НаправлениеСортировки"},
       {"name": "Убыв", "kind": "PROPERTY", "returnType": "НаправлениеСортировки"}
@@ -156,7 +156,7 @@
     "kind": "PLATFORM",
     "name": "ВидСравнения",
     "aliases": ["ComparisonType"],
-    "namespace": true,
+    "exposedAsGlobal": true,
     "members": [
       {"name": "Равно", "kind": "PROPERTY", "returnType": "ВидСравнения"},
       {"name": "НеРавно", "kind": "PROPERTY", "returnType": "ВидСравнения"},

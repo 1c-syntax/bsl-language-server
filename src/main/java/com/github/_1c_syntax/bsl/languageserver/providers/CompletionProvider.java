@@ -163,7 +163,7 @@ public final class CompletionProvider {
       return items;
     }
 
-    // OneScript library namespaces (записи <module> из lib.config)
+    // OneScript library modules (записи <module> из lib.config)
     for (var libModuleName : globalScopeProvider.getLibraryModules()) {
       if (matches(libModuleName, prefix)) {
         var item = new CompletionItem(libModuleName);
@@ -172,10 +172,10 @@ public final class CompletionProvider {
       }
     }
 
-    // Platform namespace types (system enums: КодировкаТекста, НаправлениеСортировки и т.п.)
-    for (var nsName : typeService.getNamespaceNames()) {
-      if (matches(nsName, prefix)) {
-        var item = new CompletionItem(nsName);
+    // Global property types (system enums: КодировкаТекста, НаправлениеСортировки и т.п.)
+    for (var gpName : typeService.getGlobalPropertyNames()) {
+      if (matches(gpName, prefix)) {
+        var item = new CompletionItem(gpName);
         item.setKind(CompletionItemKind.Enum);
         items.add(item);
       }

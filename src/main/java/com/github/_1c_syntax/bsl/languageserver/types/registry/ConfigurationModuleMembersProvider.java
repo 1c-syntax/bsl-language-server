@@ -146,8 +146,8 @@ public class ConfigurationModuleMembersProvider {
     }
 
     typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext));
-    typeRegistry.registerNamespace(ref);
-    LOGGER.debug("Registered common module namespace {} -> {}", documentContext.getUri(), name);
+    typeRegistry.registerAsGlobalProperty(ref);
+    LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }
 
   private List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {

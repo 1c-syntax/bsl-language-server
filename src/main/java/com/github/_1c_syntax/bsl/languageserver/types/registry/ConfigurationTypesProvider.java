@@ -123,7 +123,7 @@ public class ConfigurationTypesProvider {
 
   private void register(Iterable<MD> children) {
     int count = 0;
-    Map<MDOType, List<MemberDescriptor>> namespaceMembersByType = new HashMap<>();
+    Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
     for (var md : children) {
       var mdoType = md.getMdoType();
       if (!MANAGER_TYPES.contains(mdoType)) {
@@ -141,14 +141,14 @@ public class ConfigurationTypesProvider {
       if (!groupEn.equals(groupRu)) {
         typeRegistry.registerConfigurationTypeAlias(groupEn + "." + name, ref);
       }
-      namespaceMembersByType
+      collectionMembersByType
         .computeIfAbsent(mdoType, k -> new ArrayList<>())
         .add(MemberDescriptor.property(name, ref));
       count++;
     }
 
-    int namespaces = 0;
-    for (var entry : namespaceMembersByType.entrySet()) {
+    int collections = 0;
+    for (var entry : collectionMembersByType.entrySet()) {
       var mdoType = entry.getKey();
       var members = entry.getValue();
       var groupRu = mdoType.fullGroupName().getRu();
@@ -160,10 +160,10 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
       }
       typeRegistry.registerMemberSource(ref, () -> members);
-      typeRegistry.registerNamespace(ref);
-      namespaces++;
+      typeRegistry.registerAsGlobalProperty(ref);
+      collections++;
     }
 
-    LOGGER.debug("Configuration types registered: {}, collection namespaces: {}", count, namespaces);
+    LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
   }
 }

@@ -67,7 +67,7 @@ public class TypeRegistry {
 
   private final List<PlatformTypesProvider> platformProviders;
   /**
-   * Параллельный Symbol-фронт: namespace-резолюция и глобальные символы.
+   * Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы.
    * Опционален, чтобы существующие unit-тесты, собирающие TypeRegistry вручную
    * без Spring, продолжали работать.
    */
@@ -187,12 +187,13 @@ public class TypeRegistry {
   }
 
   /**
-   * Пометить тип как namespace-приёмник (его имя может выступать ресивером
-   * dot-выражения: {@code Документы.Контрагенты}, {@code КодировкаТекста.UTF8}).
-   * Регистрация идёт в {@link GlobalScopeProvider} — единая точка входа для
-   * имён глобальной области.
+   * Зарегистрировать тип как глобальное свойство (его имя становится
+   * ресивером dot-выражения: {@code Документы.Контрагенты},
+   * {@code КодировкаТекста.UTF8}, {@code ОбщегоНазначения.Метод()}).
+   * Регистрация идёт в {@link GlobalScopeProvider} — единая точка входа
+   * для глобальных имён.
    */
-  public void registerNamespace(TypeRef ref) {
+  public void registerAsGlobalProperty(TypeRef ref) {
     if (globalScopeProvider == null) {
       return;
     }
@@ -203,7 +204,7 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerNamespace(ref, names);
+    globalScopeProvider.registerGlobalProperty(ref, names);
   }
 
   /**
@@ -227,8 +228,8 @@ public class TypeRegistry {
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members);
     }
-    if (decl.namespace()) {
-      registerNamespace(ref);
+    if (decl.exposedAsGlobal()) {
+      registerAsGlobalProperty(ref);
     }
   }
 

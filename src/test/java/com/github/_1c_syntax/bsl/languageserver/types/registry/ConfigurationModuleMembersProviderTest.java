@@ -75,7 +75,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
       + "ПервыйОбщийМодуль/Ext/Module.bsl");
 
-    var ns = typeService.resolveNamespace("ПервыйОбщийМодуль");
+    var ns = typeService.findGlobalPropertyType("ПервыйОбщийМодуль");
     assertThat(ns).isPresent();
 
     var members = typeRegistry.getMembers(ns.get());
@@ -97,7 +97,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     TestUtils.getDocumentContextFromFile(
       "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
 
-    var ns = typeService.resolveNamespace("ОбщегоНазначения").orElseThrow();
+    var ns = typeService.findGlobalPropertyType("ОбщегоНазначения").orElseThrow();
     var members = typeRegistry.getMembers(ns);
 
     var method = members.stream()

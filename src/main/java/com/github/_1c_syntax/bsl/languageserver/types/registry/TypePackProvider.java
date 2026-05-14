@@ -42,13 +42,18 @@ public interface TypePackProvider {
   /**
    * Тип, который данный provider предоставляет (для регистрации и
    * последующей деинициализации). Используется как ключ группировки в реестре.
+   *
+   * @param exposedAsGlobal если {@code true} — имя типа также регистрируется
+   *                        как глобальное свойство (его можно использовать как
+   *                        ресивер dot-выражения: {@code КодировкаТекста.UTF8},
+   *                        {@code Документы.Контрагенты}).
    */
   record TypeDecl(
     TypeKind kind,
     String qualifiedName,
     List<String> aliases,
     Collection<MemberDescriptor> members,
-    boolean namespace
+    boolean exposedAsGlobal
   ) {
 
     public TypeRef toRef() {

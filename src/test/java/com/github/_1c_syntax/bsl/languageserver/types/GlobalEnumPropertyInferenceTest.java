@@ -32,10 +32,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Тесты на разрешение namespace-типов (system enums) — {@code КодировкаТекста.UTF8}.
+ * Тесты на разрешение глобальных свойств (system enums) — {@code КодировкаТекста.UTF8}.
  */
 @SpringBootTest
-class NamespaceEnumInferenceTest extends AbstractServerContextAwareTest {
+class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeService typeService;
@@ -46,21 +46,21 @@ class NamespaceEnumInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void resolveNamespaceByName() {
-    var encoding = typeService.resolveNamespace("КодировкаТекста");
+  void findGlobalPropertyTypeByName() {
+    var encoding = typeService.findGlobalPropertyType("КодировкаТекста");
     assertThat(encoding).isPresent();
     assertThat(encoding.get().qualifiedName()).isEqualTo("КодировкаТекста");
   }
 
   @Test
   void englishAliasIsRegistered() {
-    var encoding = typeService.resolveNamespace("TextEncoding");
+    var encoding = typeService.findGlobalPropertyType("TextEncoding");
     assertThat(encoding).isPresent();
   }
 
   @Test
-  void namespaceNamesIncludeBuiltinEnums() {
-    assertThat(typeService.getNamespaceNames())
+  void globalPropertyNamesIncludeBuiltinEnums() {
+    assertThat(typeService.getGlobalPropertyNames())
       .contains("КодировкаТекста", "НаправлениеСортировки", "ВидСравнения");
   }
 

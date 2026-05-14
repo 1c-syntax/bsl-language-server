@@ -164,12 +164,13 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Зарегистрировать namespace-тип (имя, через которое разрешается dot-выражение:
-   * {@code Документы.Контрагенты}, {@code КодировкаТекста.UTF8},
-   * {@code ОбщегоНазначения.МойМетод()}). Заводит {@link SyntheticSymbol}
-   * по каждому из переданных имён (canonical + aliases).
+   * Зарегистрировать тип как глобальное свойство — его имя (и алиасы) становятся
+   * ресивером dot-выражения: {@code Документы.Контрагенты},
+   * {@code КодировкаТекста.UTF8}, {@code ОбщегоНазначения.МойМетод()},
+   * {@code ФС.КаталогПустой()}. Каждое имя получает {@link SyntheticSymbol}
+   * с типом-значением {@code ref}.
    */
-  public void registerNamespace(TypeRef ref, Collection<String> names) {
+  public void registerGlobalProperty(TypeRef ref, Collection<String> names) {
     if (ref == null || names == null || names.isEmpty()) {
       return;
     }
@@ -188,9 +189,9 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Имена всех зарегистрированных namespace-типов (canonical-форма, без алиасов).
+   * Имена всех зарегистрированных глобальных свойств (canonical-форма, без алиасов).
    */
-  public Collection<String> getNamespaceNames() {
+  public Collection<String> getGlobalPropertyNames() {
     if (globalSymbolScope == null) {
       return List.of();
     }
@@ -205,9 +206,9 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Найти namespace-тип по имени (canonical или alias).
+   * Найти тип глобального свойства по имени (canonical или alias).
    */
-  public Optional<TypeRef> resolveNamespace(String name) {
+  public Optional<TypeRef> findGlobalPropertyType(String name) {
     return findGlobal(name)
       .filter(SyntheticSymbol.class::isInstance)
       .map(s -> ((SyntheticSymbol) s).getValueType())
