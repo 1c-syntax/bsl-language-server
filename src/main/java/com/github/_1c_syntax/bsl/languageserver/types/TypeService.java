@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Единая точка для consumer'ов (hover, completion, signature help) для
@@ -111,6 +112,13 @@ public class TypeService {
    */
   public Collection<MemberDescriptor> getMembers(TypeRef typeRef) {
     return typeRegistry.getMembers(typeRef);
+  }
+
+  /**
+   * Резолв типа по имени (включая Ru/En алиасы и qualifiedName).
+   */
+  public Optional<TypeRef> resolve(String name) {
+    return typeRegistry.resolve(name);
   }
 
 }

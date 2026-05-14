@@ -21,25 +21,64 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import java.util.List;
+
 /**
  * Член типа (метод или свойство).
  * <p>
- * Минимальный набор метаданных, необходимый для отображения в hover/completion.
- * Расширение (параметры метода, тип возвращаемого значения, документация)
- * планируется по мере подключения внешних provider'ов синтакс-помощника.
+ * Минимальный набор метаданных, необходимый для отображения в hover/completion
+ * и сигнатур-помощнике (signature help).
+ * <ul>
+ *   <li>Для свойств {@code signatures} всегда пуст.</li>
+ *   <li>Для методов {@code signatures} может содержать одну или несколько сигнатур;
+ *       при пустом списке поведение совместимо с прежним API: метод считается
+ *       без параметров с типом возврата {@link #returnType}.</li>
+ * </ul>
  *
  * @param name        имя члена в каноническом написании (как пишется в коде)
  * @param kind        метод или свойство
  * @param description краткое описание (может быть пустым)
  * @param returnType  тип возвращаемого значения / тип свойства; {@link TypeRef#UNKNOWN} если неизвестен
+ * @param signatures  список сигнатур для метода (пустой для свойства)
  */
-public record MemberDescriptor(String name, MemberKind kind, String description, TypeRef returnType) {
+public record MemberDescriptor(
+  String name,
+  MemberKind kind,
+  String description,
+  TypeRef returnType,
+  List<SignatureDescriptor> signatures
+) {
+
+  public MemberDescriptor {
+    signatures = List.copyOf(signatures);
+  }
+
+  /**
+   * Конструктор для обратной совместимости (без сигнатур).
+   */
+  public MemberDescriptor(String name, MemberKind kind, String description, TypeRef returnType) {
+    this(name, kind, description, returnType, List.of());
+  }
 
   public static MemberDescriptor method(String name) {
-    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeRef.UNKNOWN);
+    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeRef.UNKNOWN, List.of());
+  }
+
+  public static MemberDescriptor method(String name, List<SignatureDescriptor> signatures) {
+    var ret = signatures.isEmpty() ? TypeRef.UNKNOWN : signatures.get(0).returnType();
+    return new MemberDescriptor(name, MemberKind.METHOD, "", ret, signatures);
+  }
+
+  public static MemberDescriptor method(String name, String description, List<SignatureDescriptor> signatures) {
+    var ret = signatures.isEmpty() ? TypeRef.UNKNOWN : signatures.get(0).returnType();
+    return new MemberDescriptor(name, MemberKind.METHOD, description, ret, signatures);
   }
 
   public static MemberDescriptor property(String name) {
-    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeRef.UNKNOWN);
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeRef.UNKNOWN, List.of());
+  }
+
+  public static MemberDescriptor property(String name, TypeRef returnType) {
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", returnType, List.of());
   }
 }

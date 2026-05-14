@@ -49,6 +49,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.SignatureHelpProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
@@ -112,6 +113,8 @@ import org.eclipse.lsp4j.SemanticTokensDelta;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
@@ -171,6 +174,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final InlayHintProvider inlayHintProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final SemanticTokensProvider semanticTokensProvider;
+  private final SignatureHelpProvider signatureHelpProvider;
   private final DocumentHighlightProvider documentHighlightProvider;
   private final LanguageServerConfiguration configuration;
 
@@ -214,6 +218,22 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContext(
       documentContext,
       () -> Either.forLeft(completionProvider.getCompletion(documentContext, params))
+    );
+  }
+
+  @Override
+  public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      var empty = new SignatureHelp();
+      empty.setSignatures(Collections.emptyList());
+      return CompletableFuture.completedFuture(empty);
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> signatureHelpProvider.getSignatureHelp(documentContext, params)
     );
   }
 

@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
@@ -125,7 +127,25 @@ public class ConfigurationModuleMembersProvider {
   private static List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getMethods().stream()
       .filter(com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol::isExport)
-      .map(method -> MemberDescriptor.method(method.getName()))
+      .map(ConfigurationModuleMembersProvider::toMethodMember)
       .toList();
+  }
+
+  private static MemberDescriptor toMethodMember(
+    com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol method
+  ) {
+    var params = method.getParameters().stream()
+      .map(p -> new ParameterDescriptor(
+        p.getName(),
+        com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY,
+        p.isOptional(),
+        ""
+      ))
+      .toList();
+    var description = method.getDescription()
+      .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
+      .orElse("");
+    var signature = new SignatureDescriptor(params, TypeRef.UNKNOWN, description);
+    return MemberDescriptor.method(method.getName(), description, List.of(signature));
   }
 }

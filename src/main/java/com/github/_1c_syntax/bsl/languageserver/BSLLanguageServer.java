@@ -61,6 +61,7 @@ import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensServerFull;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
+import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -134,6 +135,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setWorkspaceSymbolProvider(getWorkspaceProvider());
     capabilities.setHoverProvider(getHoverProvider());
     capabilities.setCompletionProvider(getCompletionProvider());
+    capabilities.setSignatureHelpProvider(getSignatureHelpProvider());
     capabilities.setDocumentHighlightProvider(getDocumentHighlightProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
@@ -336,6 +338,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     completionOptions.setResolveProvider(Boolean.FALSE);
     completionOptions.setTriggerCharacters(List.of("."));
     return completionOptions;
+  }
+
+  private static SignatureHelpOptions getSignatureHelpProvider() {
+    var signatureHelpOptions = new SignatureHelpOptions();
+    signatureHelpOptions.setTriggerCharacters(List.of("(", ","));
+    signatureHelpOptions.setRetriggerCharacters(List.of(","));
+    return signatureHelpOptions;
   }
 
   private static DocumentHighlightOptions getDocumentHighlightProvider() {
