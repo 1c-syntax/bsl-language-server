@@ -157,7 +157,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
 
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
-      .hasSize(3)
+      .hasSize(4)
       .allMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Запрещено использовать имя `РегистрСведений` для"))
       .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Справочник.РегистрСведений"))
       .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Документ.РегистрСведений"))

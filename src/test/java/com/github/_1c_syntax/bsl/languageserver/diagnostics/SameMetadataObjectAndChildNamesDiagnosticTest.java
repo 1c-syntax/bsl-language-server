@@ -112,6 +112,7 @@ class SameMetadataObjectAndChildNamesDiagnosticTest extends AbstractDiagnosticTe
 
       if (!(mdo instanceof ModuleOwner || mdo instanceof AttributeOwner || mdo instanceof TabularSectionOwner)
         || mdo.getName().equalsIgnoreCase("Справочник1")
+        || mdo.getName().equalsIgnoreCase("СправочникСМенеджером")
       ) {
         return;
       }
