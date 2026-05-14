@@ -150,14 +150,14 @@ public class ConfigurationModuleMembersProvider {
     LOGGER.debug("Registered common module namespace {} -> {}", documentContext.getUri(), name);
   }
 
-  private static List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {
+  private List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getMethods().stream()
       .filter(com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol::isExport)
-      .map(ConfigurationModuleMembersProvider::toMethodMember)
+      .map(this::toMethodMember)
       .toList();
   }
 
-  private static MemberDescriptor toMethodMember(
+  private MemberDescriptor toMethodMember(
     com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol method
   ) {
     var params = method.getParameters().stream()
@@ -171,7 +171,31 @@ public class ConfigurationModuleMembersProvider {
     var description = method.getDescription()
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
-    var signature = new SignatureDescriptor(params, TypeRef.UNKNOWN, description);
+    var returnType = method.getDescription()
+      .map(d -> resolveReturnType(d.getReturnedValue()))
+      .orElse(TypeRef.UNKNOWN);
+    var signature = new SignatureDescriptor(params, returnType, description);
     return MemberDescriptor.method(method.getName(), description, List.of(signature));
+  }
+
+  /**
+   * Парсит первый элемент {@code returnedValue} JavaDoc-описания BSL-метода
+   * (например, "Массив из Произвольный" → "Массив") и резолвит через
+   * {@link TypeRegistry}.
+   */
+  private TypeRef resolveReturnType(
+    List<com.github._1c_syntax.bsl.parser.description.TypeDescription> returnedValue
+  ) {
+    if (returnedValue == null || returnedValue.isEmpty()) {
+      return TypeRef.UNKNOWN;
+    }
+    var raw = returnedValue.get(0).name();
+    if (raw == null || raw.isBlank()) {
+      return TypeRef.UNKNOWN;
+    }
+    // отбрасываем пояснения после первого пробела/угловой скобки/квадратной скобки
+    // ("Массив из Произвольный", "Массив<Произвольный>" → "Массив")
+    var head = raw.trim().split("[\\s<\\[]", 2)[0];
+    return typeRegistry.resolve(head).orElse(TypeRef.UNKNOWN);
   }
 }

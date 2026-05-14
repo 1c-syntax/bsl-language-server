@@ -84,4 +84,26 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
       .extracting(m -> m.name())
       .doesNotContain("Тест", "РегистрацияИзмененийПередУдалением");
   }
+
+  @Test
+  void resolvesReturnTypeFromMethodDescription() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+
+    var ns = typeRegistry.resolveNamespace("ОбщегоНазначения").orElseThrow();
+    var members = typeRegistry.getMembers(ns);
+
+    var method = members.stream()
+      .filter(m -> "ЗначениеВМассиве".equals(m.name()))
+      .findFirst()
+      .orElseThrow();
+
+    // "Массив из Произвольный" → "Массив" → платформенный TypeRef
+    assertThat(method.returnType().qualifiedName()).isEqualTo("Массив");
+    assertThat(method.signatures()).isNotEmpty();
+    assertThat(method.signatures().get(0).returnType().qualifiedName()).isEqualTo("Массив");
+  }
 }

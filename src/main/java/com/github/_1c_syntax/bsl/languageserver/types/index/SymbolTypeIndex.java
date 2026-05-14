@@ -139,7 +139,10 @@ public class SymbolTypeIndex {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    return typeRegistry.resolve(name)
-      .or(() -> Optional.of(typeRegistry.intern(TypeKind.USER, name)));
+    // Парсер возвращает имена коллекций как "Массив<Произвольный>" / "Массив из Произвольный".
+    // Берём только головной идентификатор для резолва через TypeRegistry.
+    var head = name.trim().split("[\\s<\\[]", 2)[0];
+    return typeRegistry.resolve(head)
+      .or(() -> Optional.of(typeRegistry.intern(TypeKind.USER, head)));
   }
 }
