@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -87,5 +89,21 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
 
     assertThat(globalScopeProvider.getLibraryModules()).filteredOn(n -> n.equals("MyModule")).hasSize(1);
     assertThat(globalScopeProvider.getLibraryClasses()).filteredOn(n -> n.equals("MyClass")).hasSize(1);
+  }
+
+  @Test
+  void registersOScriptModuleTypeForLibraryFiles() {
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+
+    index.reindex(context);
+
+    var moduleUri = Absolute.uri(fixtureRoot.resolve("src/MyModule.os").toUri());
+    var classUri = Absolute.uri(fixtureRoot.resolve("src/MyClass.os").toUri());
+
+    assertThat(context.getDocument(moduleUri)).isNotNull();
+    assertThat(context.getDocument(moduleUri).getModuleType()).isEqualTo(ModuleType.OScriptModule);
+    assertThat(context.getDocument(classUri)).isNotNull();
+    assertThat(context.getDocument(classUri).getModuleType()).isEqualTo(ModuleType.OScriptClass);
   }
 }

@@ -30,6 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
@@ -72,6 +74,7 @@ public class OScriptLibraryIndex {
   private final ConventionalLibraryDiscovery conventionalLibraryDiscovery;
   private final TypeRegistry typeRegistry;
   private final GlobalScopeProvider globalScopeProvider;
+  private final OScriptModuleTypeResolver oScriptModuleTypeResolver;
 
   /**
    * Реакция на добавление workspace: разово (или повторно при ручном вызове
@@ -95,6 +98,7 @@ public class OScriptLibraryIndex {
    */
   public void reindex(ServerContext serverContext) {
     globalScopeProvider.clearLibraryEntries();
+    oScriptModuleTypeResolver.clear();
 
     var configs = libConfigDiscovery.discover(serverContext);
     if (!configs.isEmpty()) {
@@ -152,6 +156,7 @@ public class OScriptLibraryIndex {
   }
 
   private void registerModuleFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
+    oScriptModuleTypeResolver.register(Absolute.uri(osFile.toUri()), ModuleType.OScriptModule);
     var parsed = libraryFileParser.parse(osFile, serverContext);
     if (parsed.isEmpty()) {
       return;
@@ -163,6 +168,7 @@ public class OScriptLibraryIndex {
   }
 
   private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
+    oScriptModuleTypeResolver.register(Absolute.uri(osFile.toUri()), ModuleType.OScriptClass);
     var parsed = libraryFileParser.parse(osFile, serverContext);
     if (parsed.isEmpty()) {
       return;

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,9 +57,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OScriptLibraryFileParser {
 
-  private static final String CONSTRUCTOR_RU = "ПриСозданииОбъекта";
-  private static final String CONSTRUCTOR_EN = "OnObjectCreate";
-
   private final TypeRegistry typeRegistry;
 
   /**
@@ -83,19 +81,20 @@ public class OScriptLibraryFileParser {
   }
 
   private OScriptLibraryFile extract(DocumentContext dc) {
+    var symbolTree = dc.getSymbolTree();
+    var constructorSymbol = Methods.getOscriptClassConstructor(symbolTree);
+    Optional<MethodInfo> constructor = constructorSymbol.map(this::toInfo);
     var methods = new ArrayList<MethodInfo>();
-    Optional<MethodInfo> constructor = Optional.empty();
-    for (var ms : dc.getSymbolTree().getMethods()) {
-      var info = toInfo(ms);
-      if (CONSTRUCTOR_RU.equalsIgnoreCase(ms.getName())
-        || CONSTRUCTOR_EN.equalsIgnoreCase(ms.getName())) {
-        constructor = Optional.of(info);
-      } else if (ms.isExport()) {
-        methods.add(info);
+    for (var ms : symbolTree.getMethods()) {
+      if (constructorSymbol.isPresent() && ms == constructorSymbol.get()) {
+        continue;
+      }
+      if (ms.isExport()) {
+        methods.add(toInfo(ms));
       }
     }
     var exportVars = new ArrayList<String>();
-    for (VariableSymbol v : dc.getSymbolTree().getVariables()) {
+    for (VariableSymbol v : symbolTree.getVariables()) {
       if (v.isExport()) {
         exportVars.add(v.getName());
       }

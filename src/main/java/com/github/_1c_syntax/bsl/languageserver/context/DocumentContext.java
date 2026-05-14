@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptModuleTypeResolver;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
 import com.github._1c_syntax.utils.Lazy;
@@ -113,6 +114,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @SuppressWarnings("NullAway.Init")
   @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
+
+  @SuppressWarnings("NullAway.Init")
+  @Setter(onMethod_ = {@Autowired})
+  private OScriptModuleTypeResolver oScriptModuleTypeResolver;
 
   @Nullable
   private BSLTokenizer tokenizer;
@@ -400,7 +405,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
 
   private ModuleType computeModuleType() {
-    return context.getConfiguration().getModuleTypeByURI(uri);
+    var fromConfiguration = context.getConfiguration().getModuleTypeByURI(uri);
+    if (fromConfiguration != ModuleType.UNKNOWN) {
+      return fromConfiguration;
+    }
+    return oScriptModuleTypeResolver.resolve(uri).orElse(fromConfiguration);
   }
 
   private ComplexityData computeCognitiveComplexity() {
