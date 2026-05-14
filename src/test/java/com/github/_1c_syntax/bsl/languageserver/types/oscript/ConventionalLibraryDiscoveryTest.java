@@ -149,4 +149,41 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     assertThat(globalScopeProvider.getLibraryModules()).isEmpty();
     assertThat(globalScopeProvider.getLibraryClasses()).isEmpty();
   }
+
+  @Test
+  void picksUpOscriptModulesEvenWhenWorkspaceItselfIsALibrary(@TempDir Path tempDir) throws IOException {
+    // workspace сам по себе convention-based библиотека
+    var wsModules = tempDir.resolve("src").resolve("Модули");
+    Files.createDirectories(wsModules);
+    Files.writeString(wsModules.resolve("СессияПользователя.os"), """
+      Процедура Старт() Экспорт
+      КонецПроцедуры
+      """);
+
+    // локальная зависимость в oscript_modules — не должна быть «съедена» при
+    // обходе из корня workspace
+    var fsModules = tempDir.resolve("oscript_modules").resolve("fs").resolve("Модули");
+    Files.createDirectories(fsModules);
+    Files.writeString(fsModules.resolve("ФС.os"), """
+      // Проверяет существование файла или каталога.
+      //
+      // Возвращаемое значение:
+      //  Булево
+      //
+      Функция КаталогПустой(Знач Путь) Экспорт
+        Возврат Истина;
+      КонецФункции
+      """);
+
+    initServerContext(tempDir, false);
+    index.reindex(context);
+
+    assertThat(globalScopeProvider.getLibraryModules())
+      .contains("СессияПользователя", "ФС");
+
+    var fsRef = typeRegistry.resolve("ФС");
+    assertThat(fsRef).isPresent();
+    assertThat(typeRegistry.getMembers(fsRef.get()))
+      .extracting(m -> m.name()).contains("КаталогПустой");
+  }
 }

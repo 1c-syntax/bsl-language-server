@@ -61,6 +61,9 @@ public class LibConfigDiscovery {
   /** Имя файла-манифеста. */
   public static final String LIB_CONFIG_FILENAME = "lib.config";
 
+  /** Имя стандартного каталога локальных OneScript-зависимостей. */
+  public static final String OSCRIPT_MODULES_DIRNAME = "oscript_modules";
+
   /** Имя переменной окружения с дополнительными корнями. */
   public static final String ENV_LIB_LOCATION = "OSCRIPT_LIB_LOCATION";
 
@@ -107,7 +110,11 @@ public class LibConfigDiscovery {
   public List<Path> getRoots(Path workspaceRoot) {
     Set<Path> roots = new LinkedHashSet<>();
     if (workspaceRoot != null) {
-      roots.add(workspaceRoot.toAbsolutePath().normalize());
+      var wsAbs = workspaceRoot.toAbsolutePath().normalize();
+      roots.add(wsAbs);
+      // Стандартный каталог локальных oscript-зависимостей: каждый
+      // непосредственный подкаталог считается отдельным корнем библиотеки.
+      addOscriptModulesChildren(wsAbs, roots);
     }
 
     var opts = configuration.getOscriptOptions();
@@ -129,6 +136,21 @@ public class LibConfigDiscovery {
       }
     }
     return new ArrayList<>(roots);
+  }
+
+  private static void addOscriptModulesChildren(Path workspaceRoot, Set<Path> sink) {
+    var modulesDir = workspaceRoot.resolve(OSCRIPT_MODULES_DIRNAME);
+    if (!Files.isDirectory(modulesDir)) {
+      return;
+    }
+    try (var stream = Files.list(modulesDir)) {
+      stream
+        .filter(Files::isDirectory)
+        .map(p -> p.toAbsolutePath().normalize())
+        .forEach(sink::add);
+    } catch (IOException e) {
+      LOGGER.debug("Skipping unreadable oscript_modules directory: {}", modulesDir, e);
+    }
   }
 
   private static void scan(Path root, Set<Path> sink) {

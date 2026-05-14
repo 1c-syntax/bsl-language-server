@@ -66,4 +66,18 @@ class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
 
     assertThat(result).hasSize(1);
   }
+
+  @Test
+  void exposesOscriptModulesChildrenAsRoots(@TempDir Path workspace) throws IOException {
+    var fsLib = workspace.resolve("oscript_modules/fs/Модули");
+    Files.createDirectories(fsLib);
+    Files.writeString(fsLib.resolve("ФС.os"), "// pass");
+
+    var roots = discovery.getRoots(workspace);
+
+    assertThat(roots).contains(
+      workspace.toAbsolutePath().normalize(),
+      workspace.resolve("oscript_modules/fs").toAbsolutePath().normalize()
+    );
+  }
 }
