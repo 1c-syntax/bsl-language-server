@@ -287,18 +287,35 @@ public class ExpressionTypeInferencer {
 
   private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {
     var leftTypes = inferInternal(node.getLeft(), ctx);
-    var rightAst = node.getRight() == null ? null : node.getRight().getRepresentingAst();
-    var memberName = memberNameOf(rightAst);
-    if (memberName == null || memberName.isBlank() || leftTypes.isEmpty()) {
+    if (leftTypes.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var right = node.getRight();
+    String memberName;
+    com.github._1c_syntax.bsl.languageserver.types.model.MemberKind expectedKind;
+    if (right instanceof MethodCallNode methodCall) {
+      var nameNode = methodCall.getName();
+      memberName = nameNode == null ? null : nameNode.getText();
+      expectedKind = com.github._1c_syntax.bsl.languageserver.types.model.MemberKind.METHOD;
+    } else {
+      var rightAst = right == null ? null : right.getRepresentingAst();
+      memberName = memberNameOf(rightAst);
+      expectedKind = com.github._1c_syntax.bsl.languageserver.types.model.MemberKind.PROPERTY;
+    }
+    if (memberName == null || memberName.isBlank()) {
       return TypeSet.EMPTY;
     }
     Set<TypeRef> result = new LinkedHashSet<>();
     for (var leftType : leftTypes.refs()) {
       for (var member : typeRegistry.getMembers(leftType)) {
-        if (member.name().equalsIgnoreCase(memberName)) {
-          if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
-            result.add(member.returnType());
-          }
+        if (member.kind() != expectedKind) {
+          continue;
+        }
+        if (!member.name().equalsIgnoreCase(memberName)) {
+          continue;
+        }
+        if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
+          result.add(member.returnType());
         }
       }
     }
