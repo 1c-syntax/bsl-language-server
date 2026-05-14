@@ -104,6 +104,46 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
       .contains("ВывестиСообщение", "СформироватьСтроку", "СтатусМодуля");
   }
 
+  @Test
+  void noDotCompletionGatedByUseDirectivesShowsOnlyDeclaredLibs() {
+    initLib();
+
+    // Документ с #Использовать на другую (несуществующую) либу — наш MyModule
+    // не должен попасть в список.
+    var content = "#Использовать someother\nMyMod";
+    var dc = TestUtils.getDocumentContext(content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(1, "MyMod".length()));
+
+    var items = completionProvider.getCompletion(dc, params);
+
+    assertThat(items)
+      .filteredOn(it -> "MyModule".equals(it.getLabel()))
+      .isEmpty();
+  }
+
+  @Test
+  void noDotCompletionGatedByUseDirectivesShowsLibAfterImport() {
+    initLib();
+
+    var content = "#Использовать mylib\nMyMod";
+    var dc = TestUtils.getDocumentContext(content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(1, "MyMod".length()));
+
+    var items = completionProvider.getCompletion(dc, params);
+
+    assertThat(items)
+      .filteredOn(it -> "MyModule".equals(it.getLabel()))
+      .singleElement()
+      .extracting(CompletionItem::getKind)
+      .isEqualTo(CompletionItemKind.Module);
+  }
+
   private void initLib() {
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);

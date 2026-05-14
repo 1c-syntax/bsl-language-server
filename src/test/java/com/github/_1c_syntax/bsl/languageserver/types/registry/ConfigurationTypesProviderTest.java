@@ -42,6 +42,9 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   @Autowired
   private TypeService typeService;
 
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
   @Test
   void registersCatalogTypesWithRuAndEnAliases() {
     initServerContext(PATH_TO_METADATA);
@@ -89,5 +92,17 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     // Член коллекции теперь указывает на менеджер-обёртку, чтобы методы
     // ManagerModule корректно подтягивались через единый TypeRef.
     assertThat(member.returnType().qualifiedName()).isEqualTo("СправочникМенеджер.Справочник1");
+  }
+
+  @Test
+  void registersConfigurationQualifiedNamesForCompletion() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var qualified = globalScopeProvider.getConfigurationQualifiedNames();
+    assertThat(qualified)
+      .as("должны быть составные имена коллекция.Имя для no-dot completion")
+      .contains("Справочники.Справочник1", "Catalogs.Справочник1");
   }
 }

@@ -87,7 +87,7 @@ public class OScriptLibraryIndex {
 
   private enum EntryKind { MODULE, CLASS }
 
-  private record LibraryEntry(String qualifiedName, EntryKind kind, Path osFile) {
+  private record LibraryEntry(String qualifiedName, EntryKind kind, Path osFile, String libOrigin) {
   }
 
   /**
@@ -179,18 +179,19 @@ public class OScriptLibraryIndex {
   private void refreshFromDocumentContext(LibraryEntry entry, DocumentContext documentContext) {
     var parsed = libraryFileParser.parseFromDocumentContext(documentContext);
     if (entry.kind() == EntryKind.MODULE) {
-      registerModuleMembers(entry.qualifiedName(), parsed);
+      registerModuleMembers(entry.qualifiedName(), parsed, entry.libOrigin());
     } else {
-      registerClassMembers(entry.qualifiedName(), parsed);
+      registerClassMembers(entry.qualifiedName(), parsed, entry.libOrigin());
     }
   }
 
   private void indexConventional(ConventionalLibraryDiscovery.ConventionalLibrary lib, ServerContext serverContext) {
+    var libOrigin = libOriginOf(lib.root());
     for (var classFile : lib.classFiles()) {
-      registerClassFromFile(ConventionalLibraryDiscovery.entryName(classFile), classFile, serverContext);
+      registerClassFromFile(ConventionalLibraryDiscovery.entryName(classFile), classFile, serverContext, libOrigin);
     }
     for (var moduleFile : lib.moduleFiles()) {
-      registerModuleFromFile(ConventionalLibraryDiscovery.entryName(moduleFile), moduleFile, serverContext);
+      registerModuleFromFile(ConventionalLibraryDiscovery.entryName(moduleFile), moduleFile, serverContext, libOrigin);
     }
   }
 
@@ -199,57 +200,66 @@ public class OScriptLibraryIndex {
     if (libRoot == null) {
       return;
     }
+    var libOrigin = libOriginOf(libRoot);
     var manifest = libConfigParser.parse(libConfigPath);
 
     for (var module : manifest.modules()) {
-      registerModule(libRoot, module, serverContext);
+      registerModule(libRoot, module, serverContext, libOrigin);
     }
     for (var klass : manifest.classes()) {
-      registerClass(libRoot, klass, serverContext);
+      registerClass(libRoot, klass, serverContext, libOrigin);
     }
   }
 
-  private void registerModule(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext) {
-    var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
-    registerModuleFromFile(entry.name(), osFile, serverContext);
+  private static String libOriginOf(Path libRoot) {
+    if (libRoot == null) {
+      return null;
+    }
+    var fileName = libRoot.getFileName();
+    return fileName == null ? null : fileName.toString();
   }
 
-  private void registerClass(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext) {
+  private void registerModule(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext, String libOrigin) {
     var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
-    registerClassFromFile(entry.name(), osFile, serverContext);
+    registerModuleFromFile(entry.name(), osFile, serverContext, libOrigin);
   }
 
-  private void registerModuleFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
+  private void registerClass(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext, String libOrigin) {
+    var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
+    registerClassFromFile(entry.name(), osFile, serverContext, libOrigin);
+  }
+
+  private void registerModuleFromFile(String qualifiedName, Path osFile, ServerContext serverContext, String libOrigin) {
     var uri = Absolute.uri(osFile.toUri());
     oScriptModuleTypeResolver.register(uri, ModuleType.OScriptModule);
     var parsed = libraryFileParser.parse(osFile, serverContext);
     if (parsed.isEmpty()) {
       return;
     }
-    registerModuleMembers(qualifiedName, parsed.get());
-    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.MODULE, osFile));
+    registerModuleMembers(qualifiedName, parsed.get(), libOrigin);
+    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.MODULE, osFile, libOrigin));
   }
 
-  private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
+  private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext, String libOrigin) {
     var uri = Absolute.uri(osFile.toUri());
     oScriptModuleTypeResolver.register(uri, ModuleType.OScriptClass);
     var parsed = libraryFileParser.parse(osFile, serverContext);
     if (parsed.isEmpty()) {
       return;
     }
-    registerClassMembers(qualifiedName, parsed.get());
-    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.CLASS, osFile));
+    registerClassMembers(qualifiedName, parsed.get(), libOrigin);
+    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.CLASS, osFile, libOrigin));
   }
 
-  private void registerModuleMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed) {
+  private void registerModuleMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed, String libOrigin) {
     typeRegistry.unregisterUserType(qualifiedName);
     var ref = typeRegistry.registerUserType(qualifiedName, null);
     var members = collectMembers(parsed);
     typeRegistry.registerMemberSource(ref, () -> members);
-    globalScopeProvider.registerLibraryModule(qualifiedName, ref);
+    globalScopeProvider.registerLibraryModule(qualifiedName, ref, libOrigin);
   }
 
-  private void registerClassMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed) {
+  private void registerClassMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed, String libOrigin) {
     typeRegistry.unregisterUserType(qualifiedName);
     var ref = typeRegistry.registerUserType(qualifiedName, null);
     var members = collectMembers(parsed);
@@ -257,7 +267,7 @@ public class OScriptLibraryIndex {
     var ctorSignatures = parsed.constructor()
       .map(c -> withReturnType(c.signatures(), ref))
       .orElse(List.<SignatureDescriptor>of());
-    globalScopeProvider.registerLibraryClass(qualifiedName, ctorSignatures);
+    globalScopeProvider.registerLibraryClass(qualifiedName, ctorSignatures, libOrigin);
   }
 
   private static Collection<MemberDescriptor> collectMembers(OScriptLibraryFileParser.OScriptLibraryFile file) {

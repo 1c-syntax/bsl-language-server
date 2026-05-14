@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
@@ -187,6 +188,23 @@ public final class CompletionProvider {
 
     var items = new ArrayList<CompletionItem>();
 
+    // Per-document #Использовать gating. Если в документе нет ни одной
+    // директивы — поведение прежнее (показываем все библиотеки),
+    // иначе показываем только записи из объявленных библиотек.
+    var usedLibs = UseDirectiveScanner.usedLibraries(documentContext);
+    var usedLibsLower = usedLibs.isEmpty()
+      ? java.util.Set.<String>of()
+      : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    java.util.function.Predicate<String> libVisible = name -> {
+      if (usedLibsLower.isEmpty()) {
+        return true;
+      }
+      var origin = globalScopeProvider.getLibraryEntryOrigin(name);
+      // Если происхождение неизвестно (старая регистрация без libOrigin) —
+      // не блокируем, чтобы не сломать существующие сценарии.
+      return origin.map(o -> usedLibsLower.contains(o.toLowerCase(Locale.ROOT))).orElse(true);
+    };
+
     if (afterNew) {
       for (var className : globalScopeProvider.getClasses()) {
         if (matches(className, prefix)) {
@@ -196,6 +214,9 @@ public final class CompletionProvider {
         }
       }
       for (var libClassName : globalScopeProvider.getLibraryClasses()) {
+        if (!libVisible.test(libClassName)) {
+          continue;
+        }
         if (matches(libClassName, prefix)) {
           var item = new CompletionItem(libClassName);
           item.setKind(CompletionItemKind.Class);
@@ -207,6 +228,9 @@ public final class CompletionProvider {
 
     // OneScript library modules (записи <module> из lib.config)
     for (var libModuleName : globalScopeProvider.getLibraryModules()) {
+      if (!libVisible.test(libModuleName)) {
+        continue;
+      }
       if (matches(libModuleName, prefix)) {
         var item = new CompletionItem(libModuleName);
         item.setKind(CompletionItemKind.Module);
@@ -219,6 +243,17 @@ public final class CompletionProvider {
       if (matches(gpName, prefix)) {
         var item = new CompletionItem(gpName);
         item.setKind(CompletionItemKind.Enum);
+        items.add(item);
+      }
+    }
+
+    // Каноничные составные имена MD-объектов конфигурации
+    // (Документы.Документ1, Catalogs.Контрагенты и т.п.).
+    // Пользователь печатает «Докум» — подсказываются и «Документы», и «Документы.Документ1».
+    for (var qualified : globalScopeProvider.getConfigurationQualifiedNames()) {
+      if (matches(qualified, prefix)) {
+        var item = new CompletionItem(qualified);
+        item.setKind(CompletionItemKind.Module);
         items.add(item);
       }
     }

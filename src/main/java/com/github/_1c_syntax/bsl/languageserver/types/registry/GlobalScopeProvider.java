@@ -76,6 +76,20 @@ public class GlobalScopeProvider {
   private final Map<String, List<SignatureDescriptor>> libraryClasses = new java.util.concurrent.ConcurrentHashMap<>();
   /** Хранит исходные написания имён library-сущностей для отображения. */
   private final Map<String, String> libraryNamesDisplay = new java.util.concurrent.ConcurrentHashMap<>();
+  /**
+   * Имя library-сущности (lowercased) → имя библиотеки-источника (lowercased,
+   * например, имя каталога с {@code lib.config} или {@code oscript_modules/<name>}).
+   * Используется для фильтрации видимости по {@code #Использовать <libName>}.
+   */
+  private final Map<String, String> libraryEntryOrigin = new java.util.concurrent.ConcurrentHashMap<>();
+  /**
+   * Каноничные «составные» имена MD-объектов конфигурации в коллекционной
+   * форме ({@code Справочники.Контрагенты}, {@code Documents.Документ1}).
+   * Поддерживается no-dot completion: пользователь печатает {@code Докум} —
+   * подсказывается и {@code Документы}, и {@code Документы.Документ1}.
+   */
+  private final java.util.Set<String> configurationQualifiedNames =
+    java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
 
   public GlobalScopeProvider() {
     var loaded = load();
@@ -274,6 +288,15 @@ public class GlobalScopeProvider {
    * dot-completion'а.
    */
   public void registerLibraryModule(String name, TypeRef ref) {
+    registerLibraryModule(name, ref, null);
+  }
+
+  /**
+   * То же, что {@link #registerLibraryModule(String, TypeRef)}, но с явным
+   * указанием имени библиотеки-источника (для последующей фильтрации видимости
+   * по {@code #Использовать <libName>}).
+   */
+  public void registerLibraryModule(String name, TypeRef ref, String libOrigin) {
     if (name == null || name.isBlank() || ref == null) {
       return;
     }
@@ -281,6 +304,9 @@ public class GlobalScopeProvider {
     var key = name.toLowerCase(Locale.ROOT);
     libraryModules.put(key, ref);
     libraryNamesDisplay.putIfAbsent(key, name);
+    if (libOrigin != null && !libOrigin.isBlank()) {
+      libraryEntryOrigin.put(key, libOrigin.toLowerCase(Locale.ROOT));
+    }
     if (globalSymbolScope != null) {
       var symbol = new SyntheticSymbol(name, SyntheticKind.LIBRARY_MODULE, "", ref);
       globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
@@ -292,6 +318,14 @@ public class GlobalScopeProvider {
    * из {@code lib.config}) и сигнатуры его конструктора.
    */
   public void registerLibraryClass(String name, List<SignatureDescriptor> ctorSignatures) {
+    registerLibraryClass(name, ctorSignatures, null);
+  }
+
+  /**
+   * То же, что {@link #registerLibraryClass(String, List)}, но с явным
+   * указанием имени библиотеки-источника.
+   */
+  public void registerLibraryClass(String name, List<SignatureDescriptor> ctorSignatures, String libOrigin) {
     if (name == null || name.isBlank()) {
       return;
     }
@@ -299,6 +333,9 @@ public class GlobalScopeProvider {
     var key = name.toLowerCase(Locale.ROOT);
     libraryClasses.put(key, ctorSignatures == null ? List.of() : List.copyOf(ctorSignatures));
     libraryNamesDisplay.putIfAbsent(key, name);
+    if (libOrigin != null && !libOrigin.isBlank()) {
+      libraryEntryOrigin.put(key, libOrigin.toLowerCase(Locale.ROOT));
+    }
     if (globalSymbolScope != null) {
       var classRef = ctorSignatures != null && !ctorSignatures.isEmpty()
         ? ctorSignatures.get(0).returnType()
@@ -357,6 +394,7 @@ public class GlobalScopeProvider {
     libraryModules.remove(key);
     if (!libraryClasses.containsKey(key)) {
       libraryNamesDisplay.remove(key);
+      libraryEntryOrigin.remove(key);
     }
     if (globalSymbolScope != null) {
       globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
@@ -374,10 +412,42 @@ public class GlobalScopeProvider {
     libraryClasses.remove(key);
     if (!libraryModules.containsKey(key)) {
       libraryNamesDisplay.remove(key);
+      libraryEntryOrigin.remove(key);
     }
     if (globalSymbolScope != null) {
       globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
     }
+  }
+
+  /**
+   * @return имя библиотеки-источника для library-модуля или library-класса,
+   * либо пустой Optional, если запись не зарегистрирована или происхождение
+   * неизвестно.
+   */
+  public Optional<String> getLibraryEntryOrigin(String name) {
+    if (name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(libraryEntryOrigin.get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Зарегистрировать каноничное составное имя MD-объекта конфигурации
+   * (например, {@code Документы.Документ1} или {@code Documents.Документ1}).
+   * Используется в no-dot completion.
+   */
+  public void registerConfigurationQualifiedName(String qualifiedName) {
+    if (qualifiedName == null || qualifiedName.isBlank()) {
+      return;
+    }
+    configurationQualifiedNames.add(qualifiedName);
+  }
+
+  /**
+   * @return Каноничные составные имена MD-объектов в исходном написании.
+   */
+  public Collection<String> getConfigurationQualifiedNames() {
+    return java.util.List.copyOf(configurationQualifiedNames);
   }
 
   /**
@@ -388,6 +458,7 @@ public class GlobalScopeProvider {
     libraryModules.clear();
     libraryClasses.clear();
     libraryNamesDisplay.clear();
+    libraryEntryOrigin.clear();
     // GlobalSymbolScope чистит наполнение через TypeRegistry/owner-провайдеры.
     // Library-записи имеют роль VALUE/TYPE_NAME — точечно их различить здесь
     // нельзя, поэтому полную перечистку выполняет вышестоящий orchestrator

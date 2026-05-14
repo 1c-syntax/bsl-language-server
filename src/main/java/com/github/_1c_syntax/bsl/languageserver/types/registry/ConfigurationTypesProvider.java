@@ -85,6 +85,7 @@ public class ConfigurationTypesProvider {
 
   private final TypeRegistry typeRegistry;
   private final ServerContextProvider serverContextProvider;
+  private final GlobalScopeProvider globalScopeProvider;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
@@ -163,11 +164,13 @@ public class ConfigurationTypesProvider {
       if (!collectionAliasRu.equals(managerRu)) {
         typeRegistry.registerConfigurationTypeAlias(collectionAliasRu, ref);
       }
+      globalScopeProvider.registerConfigurationQualifiedName(collectionAliasRu);
       if (groupEn != null && !groupEn.equals(groupRu)) {
         var collectionAliasEn = groupEn + "." + name;
         if (!collectionAliasEn.equals(managerRu) && !collectionAliasEn.equals(managerEn)) {
           typeRegistry.registerConfigurationTypeAlias(collectionAliasEn, ref);
         }
+        globalScopeProvider.registerConfigurationQualifiedName(collectionAliasEn);
       }
 
       collectionMembersByType
