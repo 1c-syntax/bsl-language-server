@@ -65,6 +65,12 @@ public class GlobalScopeProvider {
   private final Map<String, MemberDescriptor> functions;
   private final List<String> classes;
   private final List<String> keywords;
+  /** Имена library-модулей OneScript (lowercased) → TypeRef модуля. */
+  private final Map<String, TypeRef> libraryModules = new java.util.concurrent.ConcurrentHashMap<>();
+  /** Имена library-классов OneScript (lowercased) → сигнатуры конструктора. */
+  private final Map<String, List<SignatureDescriptor>> libraryClasses = new java.util.concurrent.ConcurrentHashMap<>();
+  /** Хранит исходные написания имён library-сущностей для отображения. */
+  private final Map<String, String> libraryNamesDisplay = new java.util.concurrent.ConcurrentHashMap<>();
 
   public GlobalScopeProvider() {
     var loaded = load();
@@ -102,6 +108,82 @@ public class GlobalScopeProvider {
    */
   public List<String> getKeywords() {
     return keywords;
+  }
+
+  /**
+   * Зарегистрировать имя глобального модуля OneScript-библиотеки
+   * (записи {@code <module>} из {@code lib.config}). Имя становится доступным
+   * в no-dot completion и резолвится в указанный {@link TypeRef} для
+   * dot-completion'а.
+   */
+  public void registerLibraryModule(String name, TypeRef ref) {
+    if (name == null || name.isBlank() || ref == null) {
+      return;
+    }
+    var key = name.toLowerCase(Locale.ROOT);
+    libraryModules.put(key, ref);
+    libraryNamesDisplay.putIfAbsent(key, name);
+  }
+
+  /**
+   * Зарегистрировать имя класса OneScript-библиотеки (записи {@code <class>}
+   * из {@code lib.config}) и сигнатуры его конструктора.
+   */
+  public void registerLibraryClass(String name, List<SignatureDescriptor> ctorSignatures) {
+    if (name == null || name.isBlank()) {
+      return;
+    }
+    var key = name.toLowerCase(Locale.ROOT);
+    libraryClasses.put(key, ctorSignatures == null ? List.of() : List.copyOf(ctorSignatures));
+    libraryNamesDisplay.putIfAbsent(key, name);
+  }
+
+  /**
+   * @return имена зарегистрированных library-модулей в исходном написании.
+   */
+  public Collection<String> getLibraryModules() {
+    return libraryModules.keySet().stream()
+      .map(k -> libraryNamesDisplay.getOrDefault(k, k))
+      .toList();
+  }
+
+  /**
+   * @return имена зарегистрированных library-классов в исходном написании.
+   */
+  public Collection<String> getLibraryClasses() {
+    return libraryClasses.keySet().stream()
+      .map(k -> libraryNamesDisplay.getOrDefault(k, k))
+      .toList();
+  }
+
+  /**
+   * Найти {@link TypeRef} library-модуля по имени.
+   */
+  public Optional<TypeRef> findLibraryModule(String name) {
+    if (name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(libraryModules.get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Найти сигнатуры конструктора library-класса по имени.
+   */
+  public List<SignatureDescriptor> findLibraryClassConstructor(String name) {
+    if (name == null || name.isBlank()) {
+      return List.of();
+    }
+    return libraryClasses.getOrDefault(name.toLowerCase(Locale.ROOT), List.of());
+  }
+
+  /**
+   * Очистить все ранее зарегистрированные library-сущности (например, перед
+   * полной переиндексацией OneScript-библиотек workspace'а).
+   */
+  public void clearLibraryEntries() {
+    libraryModules.clear();
+    libraryClasses.clear();
+    libraryNamesDisplay.clear();
   }
 
   private static Loaded load() {

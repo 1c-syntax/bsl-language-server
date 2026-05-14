@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import tools.jackson.dataformat.xml.XmlMapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.io.IOException;
@@ -44,6 +46,7 @@ import java.util.List;
  * Пути в {@code file=} относительны каталогу самого {@code lib.config}.
  */
 @Slf4j
+@Component
 public final class LibConfigParser {
 
   private final XmlMapper xmlMapper = XmlMapper.builder().build();
@@ -103,8 +106,10 @@ public final class LibConfigParser {
 
   /** Внутренняя POJO для парсинга XML. */
   public static final class RawPackageDef {
+    @JacksonXmlElementWrapper(useWrapping = false)
     public List<RawEntry> module;
 
+    @JacksonXmlElementWrapper(useWrapping = false)
     @JacksonXmlProperty(localName = "class")
     public List<RawEntry> klass;
   }
