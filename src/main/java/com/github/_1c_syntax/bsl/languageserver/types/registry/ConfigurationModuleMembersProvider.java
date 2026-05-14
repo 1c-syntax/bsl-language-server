@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -124,7 +125,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext));
+    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), LanguageScope.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
   }
 
@@ -145,7 +146,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext));
+    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), LanguageScope.BSL);
     typeRegistry.registerAsGlobalProperty(ref);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }

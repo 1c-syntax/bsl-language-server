@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -253,17 +254,17 @@ public class OScriptLibraryIndex {
 
   private void registerModuleMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed, String libOrigin) {
     typeRegistry.unregisterUserType(qualifiedName);
-    var ref = typeRegistry.registerUserType(qualifiedName, null);
+    var ref = typeRegistry.registerUserType(qualifiedName, null, LanguageScope.OS);
     var members = collectMembers(parsed);
-    typeRegistry.registerMemberSource(ref, () -> members);
+    typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.OS);
     globalScopeProvider.registerLibraryModule(qualifiedName, ref, libOrigin);
   }
 
   private void registerClassMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed, String libOrigin) {
     typeRegistry.unregisterUserType(qualifiedName);
-    var ref = typeRegistry.registerUserType(qualifiedName, null);
+    var ref = typeRegistry.registerUserType(qualifiedName, null, LanguageScope.OS);
     var members = collectMembers(parsed);
-    typeRegistry.registerMemberSource(ref, () -> members);
+    typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.OS);
     var ctorSignatures = parsed.constructor()
       .map(c -> withReturnType(c.signatures(), ref))
       .orElse(List.<SignatureDescriptor>of());

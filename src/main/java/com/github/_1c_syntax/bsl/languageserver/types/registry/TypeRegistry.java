@@ -83,9 +83,13 @@ public class TypeRegistry {
   /** Тип ↔ объект Type (hydrated). */
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /** Тип ↔ список источников членов (один тип может расширяться многими источниками). */
-  private final Map<TypeRef, List<MemberSource>> memberSources = new ConcurrentHashMap<>();
+  private final Map<TypeRef, List<ScopedMemberSource>> memberSources = new ConcurrentHashMap<>();
   /** Тип ↔ языковой скоуп (BSL/OS/BOTH). Отсутствие записи трактуется как BOTH. */
   private final Map<TypeRef, LanguageScope> typeScopes = new ConcurrentHashMap<>();
+
+  /** Источник членов вместе с его языковым скоупом. */
+  private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
+  }
 
   @PostConstruct
   void bootstrap() {
@@ -168,13 +172,24 @@ public class TypeRegistry {
    * зарегистрированный источник).
    */
   public Collection<MemberDescriptor> getMembers(TypeRef ref) {
+    return getMembers(ref, null);
+  }
+
+  /**
+   * То же, что {@link #getMembers(TypeRef)}, но фильтрует источники по языковому скоупу.
+   * При {@code fileType == null} фильтрация не применяется.
+   */
+  public Collection<MemberDescriptor> getMembers(TypeRef ref, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
     var sources = memberSources.get(ref);
     if (sources == null || sources.isEmpty()) {
       return Collections.emptyList();
     }
     var byName = new LinkedHashMap<String, MemberDescriptor>();
-    for (var source : sources) {
-      for (var member : source.getMembers()) {
+    for (var scoped : sources) {
+      if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
+        continue;
+      }
+      for (var member : scoped.source().getMembers()) {
         byName.putIfAbsent(member.name().toLowerCase(Locale.ROOT), member);
       }
     }
@@ -187,7 +202,18 @@ public class TypeRegistry {
    * {@code СправочникМенеджер.X}.
    */
   public void registerMemberSource(TypeRef ref, MemberSource source) {
-    memberSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>())).add(source);
+    registerMemberSource(ref, source, LanguageScope.BOTH);
+  }
+
+  /**
+   * То же, что {@link #registerMemberSource(TypeRef, MemberSource)}, но дополнительно
+   * привязывает источник к языковому скоупу. {@code null} трактуется как
+   * {@link LanguageScope#BOTH}.
+   */
+  public void registerMemberSource(TypeRef ref, MemberSource source, LanguageScope scope) {
+    var effective = scope == null ? LanguageScope.BOTH : scope;
+    memberSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
+      .add(new ScopedMemberSource(source, effective));
   }
 
   /**
@@ -281,7 +307,7 @@ public class TypeRegistry {
       addAlias(alias, ref);
     }
     if (!decl.members().isEmpty()) {
-      registerMemberSource(ref, decl::members);
+      registerMemberSource(ref, decl::members, scope);
     }
     if (decl.exposedAsGlobal()) {
       registerAsGlobalProperty(ref, scope);

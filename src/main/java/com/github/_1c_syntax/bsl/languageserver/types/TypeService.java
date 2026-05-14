@@ -133,6 +133,14 @@ public class TypeService {
   }
 
   /**
+   * То же, что {@link #getMembers(TypeRef)}, но фильтрует члены по языковому скоупу
+   * источника. Источники, не совместимые с {@code fileType}, пропускаются.
+   */
+  public Collection<MemberDescriptor> getMembers(TypeRef typeRef, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+    return typeRegistry.getMembers(typeRef, fileType);
+  }
+
+  /**
    * Резолв типа по имени (включая Ru/En алиасы и qualifiedName).
    */
   public Optional<TypeRef> resolve(String name) {
@@ -243,7 +251,7 @@ public class TypeService {
       return Optional.empty();
     }
     for (var owner : leftTypes.refs()) {
-      for (var member : typeRegistry.getMembers(owner)) {
+      for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
         if (member.kind() == expectedKind && member.name().equalsIgnoreCase(memberName)) {
           return Optional.of(new TypedMember(owner, member, Ranges.create(terminal)));
         }

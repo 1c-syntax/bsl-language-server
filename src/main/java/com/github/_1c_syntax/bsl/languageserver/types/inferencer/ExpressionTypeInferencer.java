@@ -332,7 +332,7 @@ public class ExpressionTypeInferencer {
     }
     Set<TypeRef> result = new LinkedHashSet<>();
     for (var leftType : leftTypes.refs()) {
-      for (var member : typeRegistry.getMembers(leftType)) {
+      for (var member : typeRegistry.getMembers(leftType, ctx.documentContext.getFileType())) {
         if (member.kind() != expectedKind) {
           continue;
         }

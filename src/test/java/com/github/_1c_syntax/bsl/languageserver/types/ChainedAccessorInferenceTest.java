@@ -82,8 +82,9 @@ class ChainedAccessorInferenceTest extends AbstractServerContextAwareTest {
 
     var types = typeService.findTypes(referenceOf(documentContext, variable));
 
-    // Получить() не имеет declared return type — chain не должен ничего вернуть.
-    assertThat(types.refs()).isEmpty();
+    // Массив.Получить(0) объявлен с return type Произвольный (из oscript stdlib).
+    assertThat(types.refs()).hasSize(1);
+    assertThat(types.refs().iterator().next().qualifiedName()).isEqualToIgnoringCase("Произвольный");
   }
 
   private static VariableSymbol lookup(DocumentContext documentContext, String name) {

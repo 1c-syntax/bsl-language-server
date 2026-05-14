@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -191,7 +192,7 @@ public class ConfigurationTypesProvider {
       if (collectionEn != null && !collectionEn.equals(collectionRu)) {
         typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
       }
-      typeRegistry.registerMemberSource(ref, () -> members);
+      typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.BSL);
       typeRegistry.registerAsGlobalProperty(ref);
       collections++;
     }

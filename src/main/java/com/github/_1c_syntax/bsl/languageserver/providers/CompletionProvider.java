@@ -77,6 +77,7 @@ public final class CompletionProvider {
     if (dotInfo == null) {
       return List.of();
     }
+    var fileType = documentContext.getFileType();
     // позиция выражения — символ перед точкой
     var beforeDot = new Position(position.getLine(), Math.max(0, dotInfo.dotColumn - 1));
     var typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
@@ -88,11 +89,15 @@ public final class CompletionProvider {
       // свойства ("КодировкаТекста.", "ФС." без локального символа)
       var bareName = identifierBeforeDot(documentContext, position);
       if (bareName != null) {
-        var libRef = globalScopeProvider.findLibraryModule(bareName);
-        if (libRef.isPresent()) {
-          typeSet = TypeSet.of(libRef.get());
-        } else {
-          var gpRef = typeService.findGlobalPropertyType(bareName);
+        // Library-модули — только в .os-файлах.
+        if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
+          var libRef = globalScopeProvider.findLibraryModule(bareName);
+          if (libRef.isPresent()) {
+            typeSet = TypeSet.of(libRef.get());
+          }
+        }
+        if (typeSet.isEmpty()) {
+          var gpRef = typeService.findGlobalPropertyType(bareName, fileType);
           if (gpRef.isPresent()) {
             typeSet = TypeSet.of(gpRef.get());
           }
@@ -105,7 +110,7 @@ public final class CompletionProvider {
 
     var members = new LinkedHashMap<String, MemberDescriptor>();
     for (TypeRef ref : typeSet.refs()) {
-      for (var member : typeService.getMembers(ref)) {
+      for (var member : typeService.getMembers(ref, fileType)) {
         members.putIfAbsent(member.name(), member);
       }
     }

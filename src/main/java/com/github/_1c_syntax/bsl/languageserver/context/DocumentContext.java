@@ -347,6 +347,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       contentList.clear();
       tokenizer = null;
       queries.clear();
+      moduleType.clear();
       clearDependantData();
 
       if (!isComputedDataFrozen) {
