@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -69,6 +70,7 @@ import java.util.Optional;
 public final class SignatureHelpProvider {
 
   private final TypeService typeService;
+  private final GlobalScopeProvider globalScopeProvider;
 
   /**
    * @return signature help для указанной позиции, либо пустой {@link SignatureHelp} если контекст
@@ -222,10 +224,15 @@ public final class SignatureHelpProvider {
       return Optional.empty();
     }
     // Try local module first: find any export/non-export method by name in current document
-    return documentContext.getSymbolTree().getMethods().stream()
+    var local = documentContext.getSymbolTree().getMethods().stream()
       .filter(m -> m.getName().equalsIgnoreCase(methodName))
       .findFirst()
       .<MemberDescriptor>map(SignatureHelpProvider::methodToDescriptor);
+    if (local.isPresent()) {
+      return local;
+    }
+    // Fallback: global builtin function
+    return globalScopeProvider.findFunction(methodName);
   }
 
   private Optional<MemberDescriptor> resolveAccessCall(

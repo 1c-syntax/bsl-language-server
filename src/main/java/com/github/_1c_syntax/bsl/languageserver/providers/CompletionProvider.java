@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
@@ -38,13 +39,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Провайдер для запросов {@code textDocument/completion}.
  * <p>
- * На текущий момент поддерживает только dot-completion: на позиции после
- * точки выводится union членов всех типов выражения слева. Сами типы
- * вычисляются {@link TypeService}, члены — {@link TypeService#getMembers}.
+ * Поддерживает:
+ * <ul>
+ *   <li>dot-completion: после точки выводится union членов всех типов выражения слева;</li>
+ *   <li>no-dot completion: глобальные функции, классы (в позиции после {@code Новый}),
+ *       ключевые слова + локальные методы документа, отфильтрованные по префиксу.</li>
+ * </ul>
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_completion">Completion Request specification</a>
  */
@@ -53,16 +58,20 @@ import java.util.List;
 public final class CompletionProvider {
 
   private final TypeService typeService;
+  private final GlobalScopeProvider globalScopeProvider;
 
   /**
    * @return предложения автодополнения для указанной позиции
    */
   public List<CompletionItem> getCompletion(DocumentContext documentContext, CompletionParams params) {
     var position = params.getPosition();
-    if (!isDotCompletion(documentContext, position)) {
-      return List.of();
+    if (isDotCompletion(documentContext, position)) {
+      return dotCompletion(documentContext, position);
     }
+    return noDotCompletion(documentContext, position);
+  }
 
+  private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position) {
     // позиция выражения — символ перед точкой
     var beforeDot = new Position(position.getLine(), Math.max(0, position.getCharacter() - 2));
     var typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
@@ -83,6 +92,111 @@ public final class CompletionProvider {
     return toCompletionItems(members.values());
   }
 
+  private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {
+    var lineInfo = currentLineInfo(documentContext, position);
+    if (lineInfo == null) {
+      return List.of();
+    }
+    var prefix = lineInfo.prefix.toLowerCase(Locale.ROOT);
+    var afterNew = isAfterNew(lineInfo.line, lineInfo.cursor - lineInfo.prefix.length());
+
+    var items = new ArrayList<CompletionItem>();
+
+    if (afterNew) {
+      for (var className : globalScopeProvider.getClasses()) {
+        if (matches(className, prefix)) {
+          var item = new CompletionItem(className);
+          item.setKind(CompletionItemKind.Class);
+          items.add(item);
+        }
+      }
+      return items;
+    }
+
+    // Global functions
+    var seenFn = new java.util.HashSet<String>();
+    for (var fn : globalScopeProvider.getFunctions()) {
+      if (!seenFn.add(fn.name())) {
+        continue;
+      }
+      if (matches(fn.name(), prefix)) {
+        items.add(toCompletionItem(fn));
+      }
+    }
+
+    // Local methods of current document
+    for (var method : documentContext.getSymbolTree().getMethods()) {
+      if (matches(method.getName(), prefix)) {
+        var item = new CompletionItem(method.getName());
+        item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
+        item.setInsertText(method.getName() + "(");
+        items.add(item);
+      }
+    }
+
+    // Local variables of current document
+    for (var variable : documentContext.getSymbolTree().getVariables()) {
+      if (matches(variable.getName(), prefix)) {
+        var item = new CompletionItem(variable.getName());
+        item.setKind(CompletionItemKind.Variable);
+        items.add(item);
+      }
+    }
+
+    // Keywords
+    for (var keyword : globalScopeProvider.getKeywords()) {
+      if (matches(keyword, prefix)) {
+        var item = new CompletionItem(keyword);
+        item.setKind(CompletionItemKind.Keyword);
+        items.add(item);
+      }
+    }
+
+    return items;
+  }
+
+  private static boolean matches(String name, String lowerPrefix) {
+    if (lowerPrefix.isEmpty()) {
+      return true;
+    }
+    return name.toLowerCase(Locale.ROOT).startsWith(lowerPrefix);
+  }
+
+  private static boolean isAfterNew(String line, int prefixStart) {
+    var head = line.substring(0, Math.max(0, prefixStart)).stripTrailing().toLowerCase(Locale.ROOT);
+    return head.endsWith("новый") || head.endsWith("new");
+  }
+
+  private static LineInfo currentLineInfo(DocumentContext documentContext, Position position) {
+    try {
+      var content = documentContext.getContent();
+      if (content == null) {
+        return null;
+      }
+      var lines = content.split("\\R", -1);
+      if (position.getLine() >= lines.length) {
+        return null;
+      }
+      var line = lines[position.getLine()];
+      var col = Math.min(position.getCharacter(), line.length());
+      var start = col;
+      while (start > 0 && isIdentChar(line.charAt(start - 1))) {
+        start--;
+      }
+      var prefix = line.substring(start, col);
+      return new LineInfo(line, col, prefix);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private static boolean isIdentChar(char c) {
+    return Character.isLetterOrDigit(c) || c == '_';
+  }
+
+  private record LineInfo(String line, int cursor, String prefix) {
+  }
+
   private static boolean isDotCompletion(DocumentContext documentContext, Position position) {
     try {
       var content = documentContext.getContent();
@@ -95,10 +209,34 @@ public final class CompletionProvider {
       }
       var line = lines[position.getLine()];
       var col = Math.min(position.getCharacter(), line.length());
-      return col > 0 && line.charAt(col - 1) == '.';
+      // dot-completion also when typing prefix after dot: e.g. "x.Доб|" → walk back through ident
+      var i = col;
+      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
+        i--;
+      }
+      return i > 0 && line.charAt(i - 1) == '.';
     } catch (Exception e) {
       return false;
     }
+  }
+
+  private static CompletionItem toCompletionItem(MemberDescriptor member) {
+    var item = new CompletionItem(member.name());
+    if (member.kind() == MemberKind.METHOD) {
+      item.setKind(CompletionItemKind.Function);
+      item.setInsertText(member.name() + "(");
+      if (member.signatures().size() > 1) {
+        item.setDetail(member.signatures().size() + " вариантов синтаксиса");
+      } else if (!member.description().isBlank()) {
+        item.setDetail(member.description());
+      }
+    } else {
+      item.setKind(CompletionItemKind.Variable);
+      if (!member.description().isBlank()) {
+        item.setDetail(member.description());
+      }
+    }
+    return item;
   }
 
   private static List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members) {
@@ -107,7 +245,6 @@ public final class CompletionProvider {
       var item = new CompletionItem(member.name());
       if (member.kind() == MemberKind.METHOD) {
         item.setKind(CompletionItemKind.Method);
-        // insertText с открывающей скобкой — клиент сам поставит сигнатур-помощник
         item.setInsertText(member.name() + "(");
         if (member.signatures().size() > 1) {
           item.setDetail(member.signatures().size() + " вариантов синтаксиса");

@@ -75,4 +75,23 @@ class SignatureHelpProviderTest {
     assertThat(sig.getLabel()).contains("МояПроцедура(");
     assertThat(help.getActiveParameter()).isEqualTo(2);
   }
+
+  @Test
+  void testGlobalBuiltinFunctionSignature() {
+    var content = "Сообщить(\"привет\");\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // позиция внутри скобок Сообщить — после первой открывающей скобки
+    params.setPosition(new Position(0, 9));
+
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    assertThat(help).isNotNull();
+    assertThat(help.getSignatures()).hasSize(1);
+    var sig = help.getSignatures().get(0);
+    assertThat(sig.getLabel()).startsWith("Сообщить(");
+    assertThat(sig.getParameters()).hasSizeGreaterThanOrEqualTo(1);
+  }
 }

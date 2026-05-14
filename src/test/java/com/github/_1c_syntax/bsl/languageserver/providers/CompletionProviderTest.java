@@ -58,8 +58,8 @@ class CompletionProviderTest {
   }
 
   @Test
-  void testNoCompletionWithoutDot() {
-    var content = "А = 1;\n";
+  void testNoDotCompletionReturnsGlobals() {
+    var content = "Сооб";
     var documentContext = TestUtils.getDocumentContext(content);
 
     var params = new CompletionParams();
@@ -67,7 +67,9 @@ class CompletionProviderTest {
     params.setPosition(new Position(0, 4));
 
     var items = completionProvider.getCompletion(documentContext, params);
-    assertThat(items).isEmpty();
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .contains("Сообщить");
   }
 
   @Test
