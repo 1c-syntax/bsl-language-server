@@ -85,6 +85,10 @@ public class ConfigurationModuleMembersProvider {
 
   private void register(DocumentContext documentContext) {
     var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.CommonModule) {
+      registerCommonModule(documentContext);
+      return;
+    }
     if (!MODULE_TYPE_TO_WRAPPER_RU.containsKey(moduleType)) {
       return;
     }
@@ -122,6 +126,28 @@ public class ConfigurationModuleMembersProvider {
 
     typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext));
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
+  }
+
+  private void registerCommonModule(DocumentContext documentContext) {
+    var mdObjectOpt = documentContext.getMdObject();
+    if (mdObjectOpt.isEmpty()) {
+      return;
+    }
+    var name = mdObjectOpt.get().getName();
+    if (name == null || name.isBlank()) {
+      return;
+    }
+
+    var ref = typeRegistry.registerConfigurationType(name);
+
+    var prev = registeredByUri.put(documentContext.getUri(), ref);
+    if (prev != null && prev.equals(ref)) {
+      return;
+    }
+
+    typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext));
+    typeRegistry.registerNamespace(ref);
+    LOGGER.debug("Registered common module namespace {} -> {}", documentContext.getUri(), name);
   }
 
   private static List<MemberDescriptor> exportMethodsAsMembers(DocumentContext documentContext) {

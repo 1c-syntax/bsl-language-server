@@ -181,6 +181,21 @@ public class TypeRegistry {
   }
 
   /**
+   * Пометить тип как namespace-приёмник (его имя может выступать ресивером
+   * dot-выражения: {@code Документы.Контрагенты}, {@code КодировкаТекста.UTF8}).
+   * Имя и все его алиасы попадают в namespace-индекс.
+   */
+  public void registerNamespace(TypeRef ref) {
+    var canonical = ref.qualifiedName();
+    namespaceIndex.put(canonical.toLowerCase(Locale.ROOT), ref);
+    aliasIndex.forEach((alias, target) -> {
+      if (target.equals(ref)) {
+        namespaceIndex.put(alias, ref);
+      }
+    });
+  }
+
+  /**
    * Удалить пользовательский тип по qualifiedName (например, при закрытии
    * соответствующего документа).
    */

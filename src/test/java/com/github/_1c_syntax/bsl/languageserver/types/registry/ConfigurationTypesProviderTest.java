@@ -52,4 +52,29 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     assertThat(en).isPresent();
     assertThat(en.get()).isEqualTo(ru.get());
   }
+
+  @Test
+  void registersCollectionNamespacesWithMetadataMembers() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var nsRu = typeRegistry.resolveNamespace("Справочники");
+    var nsEn = typeRegistry.resolveNamespace("Catalogs");
+
+    assertThat(nsRu).isPresent();
+    assertThat(nsEn).isPresent();
+    assertThat(nsEn.get()).isEqualTo(nsRu.get());
+
+    var members = typeRegistry.getMembers(nsRu.get());
+    assertThat(members)
+      .extracting(m -> m.name())
+      .contains("Справочник1");
+
+    var member = members.stream()
+      .filter(m -> "Справочник1".equals(m.name()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(member.returnType().qualifiedName()).isEqualTo("Справочники.Справочник1");
+  }
 }

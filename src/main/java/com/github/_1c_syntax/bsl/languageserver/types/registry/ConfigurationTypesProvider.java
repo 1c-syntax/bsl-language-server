@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
@@ -35,6 +36,10 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -118,6 +123,7 @@ public class ConfigurationTypesProvider {
 
   private void register(Iterable<MD> children) {
     int count = 0;
+    Map<MDOType, List<MemberDescriptor>> namespaceMembersByType = new HashMap<>();
     for (var md : children) {
       var mdoType = md.getMdoType();
       if (!MANAGER_TYPES.contains(mdoType)) {
@@ -135,8 +141,29 @@ public class ConfigurationTypesProvider {
       if (!groupEn.equals(groupRu)) {
         typeRegistry.registerConfigurationTypeAlias(groupEn + "." + name, ref);
       }
+      namespaceMembersByType
+        .computeIfAbsent(mdoType, k -> new ArrayList<>())
+        .add(MemberDescriptor.property(name, ref));
       count++;
     }
-    LOGGER.debug("Configuration types registered: {}", count);
+
+    int namespaces = 0;
+    for (var entry : namespaceMembersByType.entrySet()) {
+      var mdoType = entry.getKey();
+      var members = entry.getValue();
+      var groupRu = mdoType.fullGroupName().getRu();
+      var groupEn = mdoType.fullGroupName().getEn();
+      var collectionRu = groupRu; // "Справочники", "Документы", ...
+      var collectionEn = groupEn; // "Catalogs", "Documents", ...
+      var ref = typeRegistry.registerConfigurationType(collectionRu);
+      if (collectionEn != null && !collectionEn.equals(collectionRu)) {
+        typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
+      }
+      typeRegistry.registerMemberSource(ref, () -> members);
+      typeRegistry.registerNamespace(ref);
+      namespaces++;
+    }
+
+    LOGGER.debug("Configuration types registered: {}, collection namespaces: {}", count, namespaces);
   }
 }

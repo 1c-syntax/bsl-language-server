@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -59,5 +60,23 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
 
     // members могут быть пустыми (модуль пуст), но запрос не должен падать
     assertThat(typeRegistry.getMembers(managerRu.get())).isNotNull();
+  }
+
+  @Test
+  void registersCommonModuleAsNamespace() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    // прогреваем DocumentContext общего модуля, чтобы провайдер получил событие
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
+      + "ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    var ns = typeRegistry.resolveNamespace("ПервыйОбщийМодуль");
+    assertThat(ns).isPresent();
+
+    var members = typeRegistry.getMembers(ns.get());
+    assertThat(members)
+      .extracting(m -> m.name())
+      .contains("НеУстаревшаяПроцедура", "НеУстаревшаяФункция", "УстаревшаяПроцедура", "УстаревшаяФункция");
   }
 }
