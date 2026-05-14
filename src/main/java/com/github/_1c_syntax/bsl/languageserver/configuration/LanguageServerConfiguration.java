@@ -115,6 +115,11 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
 
+  @JsonProperty("oscript")
+  @Setter(value = AccessLevel.NONE)
+  private com.github._1c_syntax.bsl.languageserver.configuration.oscript.OScriptOptions oscriptOptions =
+    new com.github._1c_syntax.bsl.languageserver.configuration.oscript.OScriptOptions();
+
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
 
