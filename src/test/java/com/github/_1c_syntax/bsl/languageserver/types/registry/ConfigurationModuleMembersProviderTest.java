@@ -78,5 +78,10 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     assertThat(members)
       .extracting(m -> m.name())
       .contains("НеУстаревшаяПроцедура", "НеУстаревшаяФункция", "УстаревшаяПроцедура", "УстаревшаяФункция");
+
+    // не-экспортные методы общего модуля наружу не выставляются
+    assertThat(members)
+      .extracting(m -> m.name())
+      .doesNotContain("Тест", "РегистрацияИзмененийПередУдалением");
   }
 }
