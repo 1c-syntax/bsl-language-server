@@ -50,7 +50,6 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.net.URI;
@@ -77,17 +76,22 @@ public class EventPublisherAspect {
   /**
    * Упорядоченное множество зарегистрированных Spring-контекстов (порядок вставки = порядок регистрации).
    * <p>
-   * При отмене регистрации одного контекста аспект переключается на первый оставшийся
-   * (т.е. на дефолтный кешируемый контекст, зарегистрированный первым).
+   * Используется для рассылки событий <em>во все</em> живые контексты — каждый контекст
+   * получает событие в своих собственных listener'ах и обновляет свои workspace-scoped бины.
+   * Контексты, в которых соответствующий workspace не зарегистрирован, просто обработают
+   * событие в своих singleton-листенерах, но workspace-scoped бины при этом не затронут
+   * чужое состояние (каждый контекст имеет собственную область видимости).
    * <p>
-   * {@code LinkedHashSet} обеспечивает детерминированный fallback через {@code iterator().next()}.
-   * Синхронизация выполняется явно методами {@code register}/{@code unregister}.
+   * Синхронизация чтения/записи — через {@code synchronized}-методы register/unregister
+   * и волатильную пере-публикацию ссылки на массив-снимок в {@link #snapshot}.
    */
   private final Set<ApplicationContext> registeredContexts = new LinkedHashSet<>();
 
-  private boolean active;
-  @SuppressWarnings("NullAway.Init")
-  private ApplicationEventPublisher applicationEventPublisher;
+  /**
+   * Иммутабельный снимок зарегистрированных контекстов для безлоковой рассылки событий.
+   * Перестраивается при каждом register/unregister.
+   */
+  private volatile ApplicationContext[] snapshot = new ApplicationContext[0];
 
   /**
    * Регистрирует Spring-контекст как источник событий.
@@ -97,31 +101,18 @@ public class EventPublisherAspect {
    */
   synchronized void register(ApplicationContext ctx) {
     registeredContexts.add(ctx);
-    applicationEventPublisher = ctx;
-    active = true;
+    snapshot = registeredContexts.toArray(new ApplicationContext[0]);
   }
 
   /**
    * Отменяет регистрацию Spring-контекста.
    * Вызывается из {@link EventPublisherAspectRegistration} при уничтожении каждого контекста.
-   * <p>
-   * Если после удаления остались другие контексты — аспект переключается на первый из них
-   * (дефолтный кешируемый). Если контекстов не осталось — аспект переходит в неактивное состояние.
    *
    * @param ctx контекст, регистрацию которого необходимо отменить
    */
   synchronized void unregister(ApplicationContext ctx) {
     registeredContexts.remove(ctx);
-    if (registeredContexts.isEmpty()) {
-      active = false;
-      applicationEventPublisher = null;
-    } else {
-      // Fallback на первый зарегистрированный оставшийся контекст.
-      // В рамках одного JVM-форка тесты выполняются последовательно, поэтому одновременно
-      // существуют не более двух контекстов: дефолтный (A) и @DirtiesContext (B).
-      // При закрытии B первым в множестве всегда остаётся A — результат детерминирован.
-      applicationEventPublisher = registeredContexts.iterator().next();
-    }
+    snapshot = registeredContexts.toArray(new ApplicationContext[0]);
   }
 
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
@@ -208,10 +199,24 @@ public class EventPublisherAspect {
   }
 
   private void publishEvent(ApplicationEvent event) {
-    if (!active || applicationEventPublisher == null) {
+    var contexts = snapshot;
+    if (contexts.length == 0) {
       LOGGER.warn("Trying to send event in not active event publisher.");
       return;
     }
-    applicationEventPublisher.publishEvent(event);
+    // Публикуем во все зарегистрированные контексты: каждый из них имеет собственный
+    // набор listener'ов и workspace-scoped бинов. Только контекст-владелец источника
+    // события (например, DocumentContext) реально обновит своё состояние; для остальных
+    // контекстов событие либо проигнорировано (workspace не зарегистрирован), либо
+    // обработано без побочных эффектов. Это устраняет проблему, когда AspectJ-синглтон
+    // имел единственный applicationEventPublisher и события могли уходить не в тот
+    // Spring-контекст, который инициировал операцию.
+    for (var ctx : contexts) {
+      try {
+        ctx.publishEvent(event);
+      } catch (RuntimeException e) {
+        LOGGER.warn("Failed to publish event {} to context {}: {}", event, ctx, e.toString());
+      }
+    }
   }
 }
