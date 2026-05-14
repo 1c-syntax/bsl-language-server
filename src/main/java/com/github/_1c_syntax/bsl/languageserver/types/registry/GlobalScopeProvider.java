@@ -29,7 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.io.ClassPathResource;
@@ -80,6 +84,69 @@ public class GlobalScopeProvider {
   }
 
   /**
+   * Параллельный Symbol-фронт. Заполняется лениво при первом обращении к
+   * глобальной области (см. {@link #ensureGlobalsPublished()}), потому что
+   * @PostConstruct на workspace-scoped bean внутри scope.get() вызывает
+   * рекурсивное создание других workspace-scoped beans (GlobalSymbolScope)
+   * и WorkspaceScope падает с "Recursive update". См. plan-symbol-front.md.
+   */
+  @Autowired(required = false)
+  private GlobalSymbolScope globalSymbolScope;
+
+  private final java.util.concurrent.atomic.AtomicBoolean globalsPublished =
+    new java.util.concurrent.atomic.AtomicBoolean(false);
+
+  /**
+   * Поиск symbol'а в глобальной области (globals + library entries).
+   */
+  public Optional<com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol> findGlobal(String name) {
+    ensureGlobalsPublished();
+    if (globalSymbolScope == null) {
+      return Optional.empty();
+    }
+    return globalSymbolScope.findSymbol(name);
+  }
+
+  private void ensureGlobalsPublished() {
+    if (globalSymbolScope == null) {
+      return;
+    }
+    if (globalsPublished.compareAndSet(false, true)) {
+      publishGlobals();
+    }
+  }
+
+  private void publishGlobals() {
+    if (globalSymbolScope == null) {
+      return;
+    }
+    // Регистрируем глобальные функции в GlobalSymbolScope как synthetic-методы.
+    var alreadyRegistered = new java.util.HashSet<MemberDescriptor>();
+    for (var entry : functions.entrySet()) {
+      var descriptor = entry.getValue();
+      if (!alreadyRegistered.add(descriptor)) {
+        continue;
+      }
+      var symbol = new SyntheticSymbol(
+        descriptor.name(),
+        SyntheticKind.PLATFORM_GLOBAL_METHOD,
+        descriptor.description(),
+        descriptor.returnType()
+      );
+      globalSymbolScope.register(descriptor.name(), symbol, GlobalSymbolScope.Role.VALUE);
+    }
+    // Алиасы (ключи функций, не совпадающие с canonical name дескриптора).
+    for (var entry : functions.entrySet()) {
+      var descriptor = entry.getValue();
+      var key = entry.getKey();
+      if (!key.equalsIgnoreCase(descriptor.name())) {
+        globalSymbolScope.findSymbol(descriptor.name()).ifPresent(symbol ->
+          globalSymbolScope.register(key, symbol, GlobalSymbolScope.Role.VALUE));
+      }
+    }
+  }
+
+  /**
    * @return неизменяемая коллекция глобальных функций
    */
   public Collection<MemberDescriptor> getFunctions() {
@@ -120,9 +187,14 @@ public class GlobalScopeProvider {
     if (name == null || name.isBlank() || ref == null) {
       return;
     }
+    ensureGlobalsPublished();
     var key = name.toLowerCase(Locale.ROOT);
     libraryModules.put(key, ref);
     libraryNamesDisplay.putIfAbsent(key, name);
+    if (globalSymbolScope != null) {
+      var symbol = new SyntheticSymbol(name, SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", ref);
+      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
+    }
   }
 
   /**
@@ -133,9 +205,17 @@ public class GlobalScopeProvider {
     if (name == null || name.isBlank()) {
       return;
     }
+    ensureGlobalsPublished();
     var key = name.toLowerCase(Locale.ROOT);
     libraryClasses.put(key, ctorSignatures == null ? List.of() : List.copyOf(ctorSignatures));
     libraryNamesDisplay.putIfAbsent(key, name);
+    if (globalSymbolScope != null) {
+      var classRef = ctorSignatures != null && !ctorSignatures.isEmpty()
+        ? ctorSignatures.get(0).returnType()
+        : TypeRef.UNKNOWN;
+      var symbol = new SyntheticSymbol(name, SyntheticKind.CONFIGURATION_OBJECT, "", classRef);
+      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME);
+    }
   }
 
   /**
@@ -188,6 +268,9 @@ public class GlobalScopeProvider {
     if (!libraryClasses.containsKey(key)) {
       libraryNamesDisplay.remove(key);
     }
+    if (globalSymbolScope != null) {
+      globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
+    }
   }
 
   /**
@@ -202,6 +285,9 @@ public class GlobalScopeProvider {
     if (!libraryModules.containsKey(key)) {
       libraryNamesDisplay.remove(key);
     }
+    if (globalSymbolScope != null) {
+      globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
+    }
   }
 
   /**
@@ -212,6 +298,10 @@ public class GlobalScopeProvider {
     libraryModules.clear();
     libraryClasses.clear();
     libraryNamesDisplay.clear();
+    // GlobalSymbolScope чистит наполнение через TypeRegistry/owner-провайдеры.
+    // Library-записи имеют роль VALUE/TYPE_NAME — точечно их различить здесь
+    // нельзя, поэтому полную перечистку выполняет вышестоящий orchestrator
+    // (например, OScriptLibraryIndex перед reindex).
   }
 
   private static Loaded load() {

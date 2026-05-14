@@ -35,7 +35,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
@@ -89,6 +91,7 @@ public class ExpressionTypeInferencer {
   private final SymbolTypeIndex symbolTypeIndex;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
+  private final GlobalScopeProvider globalScopeProvider;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -193,11 +196,28 @@ public class ExpressionTypeInferencer {
     if (!resolved.isEmpty()) {
       return resolved;
     }
-    // Fallback: namespace-тип (например, system enum типа КодировкаТекста.UTF8).
     var text = terminal.getText();
     if (text == null || text.isBlank()) {
       return TypeSet.EMPTY;
     }
+    // Глобальная область: платформенные глобалы, library-модули,
+    // common-модули — все приходят через единый GlobalSymbolScope.
+    var fromScope = globalScopeProvider.findGlobal(text)
+      .map(symbol -> {
+        if (symbol instanceof SyntheticSymbol s) {
+          return s.getValueType();
+        }
+        // Для source-defined символов тип берётся отдельно (через SymbolTypeIndex);
+        // вернёмся к этому, когда oscript-модули будут регистрироваться как ModuleSymbol.
+        return TypeRef.UNKNOWN;
+      })
+      .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
+      .map(TypeSet::of)
+      .orElse(TypeSet.EMPTY);
+    if (!fromScope.isEmpty()) {
+      return fromScope;
+    }
+    // Fallback на namespace-индекс (будет удалён в Phase 6).
     return typeRegistry.resolveNamespace(text)
       .map(TypeSet::of)
       .orElse(TypeSet.EMPTY);

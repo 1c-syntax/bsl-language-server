@@ -34,8 +34,12 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
+import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -65,6 +69,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TypeRegistry {
 
   private final List<PlatformTypesProvider> platformProviders;
+  /**
+   * Параллельный Symbol-фронт для имён, доступных без квалификации. Заполняется
+   * вместе с namespace-индексом и в перспективе полностью его заменит
+   * (см. plan-symbol-front.md). Опционален, чтобы существующие unit-тесты,
+   * собирающие TypeRegistry вручную без Spring, продолжали работать.
+   */
+  @Autowired(required = false)
+  private GlobalSymbolScope globalSymbolScope;
 
   /** Интернированные TypeRef по канонической форме (kind + lowercased name). */
   private final Map<TypeRef, TypeRef> internedRefs = new ConcurrentHashMap<>();
@@ -193,6 +205,30 @@ public class TypeRegistry {
         namespaceIndex.put(alias, ref);
       }
     });
+    registerNamespaceInScope(canonical, ref);
+  }
+
+  /**
+   * Зарегистрировать имя namespace-типа в {@link GlobalSymbolScope} как
+   * synthetic-свойство глобальной области. Имя резолвится в одно и то же
+   * synthetic-значение по всем алиасам (Ru/En и любые сохранённые ранее).
+   */
+  private void registerNamespaceInScope(String displayName, TypeRef ref) {
+    if (globalSymbolScope == null) {
+      return;
+    }
+    var symbol = new SyntheticSymbol(
+      displayName,
+      SyntheticKind.PLATFORM_GLOBAL_PROPERTY,
+      "",
+      ref
+    );
+    globalSymbolScope.register(displayName, symbol, GlobalSymbolScope.Role.VALUE);
+    aliasIndex.forEach((alias, target) -> {
+      if (target.equals(ref) && !alias.equalsIgnoreCase(displayName)) {
+        globalSymbolScope.register(alias, symbol, GlobalSymbolScope.Role.VALUE);
+      }
+    });
   }
 
   /**
@@ -221,6 +257,7 @@ public class TypeRegistry {
       for (var alias : decl.aliases()) {
         namespaceIndex.put(alias.toLowerCase(Locale.ROOT), ref);
       }
+      registerNamespaceInScope(decl.qualifiedName(), ref);
     }
   }
 

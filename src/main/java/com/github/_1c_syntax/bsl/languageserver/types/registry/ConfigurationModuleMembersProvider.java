@@ -175,7 +175,9 @@ public class ConfigurationModuleMembersProvider {
       .map(d -> resolveReturnType(d.getReturnedValue()))
       .orElse(TypeRef.UNKNOWN);
     var signature = new SignatureDescriptor(params, returnType, description);
-    return MemberDescriptor.method(method.getName(), description, List.of(signature));
+    return MemberDescriptor
+      .method(method.getName(), description, List.of(signature))
+      .withSourceSymbol(method);
   }
 
   /**

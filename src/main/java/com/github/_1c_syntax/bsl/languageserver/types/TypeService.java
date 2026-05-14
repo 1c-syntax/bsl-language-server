@@ -34,7 +34,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -74,6 +76,7 @@ public class TypeService {
   private final SymbolTypeIndex symbolTypeIndex;
   private final ExpressionTypeInferencer inferencer;
   private final ReferenceResolver referenceResolver;
+  private final GlobalScopeProvider globalScopeProvider;
 
   /**
    * Получить набор типов на позиции (точка входа для hover/completion).
@@ -175,11 +178,20 @@ public class TypeService {
       return Optional.empty();
     }
 
-    // Случай namespace-имя (например, КодировкаТекста под курсором).
+    // Случай namespace-имя или library-модуль (например, КодировкаТекста, ФС).
     var bareName = terminal.getText();
-    var nsRef = typeRegistry.resolveNamespace(bareName);
-    if (nsRef.isPresent() && !isAccessorIdentifier(terminal)) {
-      return Optional.of(new TypedMember(nsRef.get(), namespaceSelfDescriptor(nsRef.get()), Ranges.create(terminal)));
+    if (!isAccessorIdentifier(terminal)) {
+      var fromScope = globalScopeProvider.findGlobal(bareName)
+        .filter(SyntheticSymbol.class::isInstance)
+        .map(s -> ((SyntheticSymbol) s).getValueType())
+        .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
+      if (fromScope.isPresent()) {
+        return Optional.of(new TypedMember(fromScope.get(), namespaceSelfDescriptor(fromScope.get()), Ranges.create(terminal)));
+      }
+      var nsRef = typeRegistry.resolveNamespace(bareName);
+      if (nsRef.isPresent()) {
+        return Optional.of(new TypedMember(nsRef.get(), namespaceSelfDescriptor(nsRef.get()), Ranges.create(terminal)));
+      }
     }
 
     var expressionCtx = ExpressionAtPosition.findExpressionContext(documentContext, position);
