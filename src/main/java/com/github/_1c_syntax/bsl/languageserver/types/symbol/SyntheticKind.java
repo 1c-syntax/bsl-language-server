@@ -50,5 +50,11 @@ public enum SyntheticKind {
    * (например, {@code ФС.КаталогПустой()}), но это не платформенное «глобальное свойство»
    * — отдельный kind нужен, чтобы completion/hover различали Module и Enum/Property.
    */
-  LIBRARY_MODULE
+  LIBRARY_MODULE,
+  /**
+   * Платформенная глобальная переменная (например, {@code БиблиотекаКартинок},
+   * {@code ПараметрыСеанса}, {@code Метаданные}). Объявление не лежит в коде, но
+   * у имени есть тип, hover, completion (kind=Variable).
+   */
+  PLATFORM_GLOBAL_VARIABLE
 }

@@ -69,6 +69,7 @@ public class GlobalScopeProvider {
   private final Map<String, MemberDescriptor> functions;
   private final List<String> classes;
   private final List<String> keywords;
+  private final List<PlatformVariable> platformVariables;
   /** Имена library-модулей OneScript (lowercased) → TypeRef модуля. */
   private final Map<String, TypeRef> libraryModules = new java.util.concurrent.ConcurrentHashMap<>();
   /** Имена library-классов OneScript (lowercased) → сигнатуры конструктора. */
@@ -81,6 +82,7 @@ public class GlobalScopeProvider {
     this.functions = loaded.functions;
     this.classes = loaded.classes;
     this.keywords = loaded.keywords;
+    this.platformVariables = loaded.platformVariables;
   }
 
   /**
@@ -144,6 +146,42 @@ public class GlobalScopeProvider {
           globalSymbolScope.register(key, symbol, GlobalSymbolScope.Role.VALUE));
       }
     }
+    // Платформенные глобальные переменные (БиблиотекаКартинок, ПараметрыСеанса, …).
+    for (var v : platformVariables) {
+      var symbol = new SyntheticSymbol(
+        v.name(),
+        SyntheticKind.PLATFORM_GLOBAL_VARIABLE,
+        v.description(),
+        v.type()
+      );
+      globalSymbolScope.register(v.name(), symbol, GlobalSymbolScope.Role.VALUE);
+      for (var alias : v.aliases()) {
+        globalSymbolScope.register(alias, symbol, GlobalSymbolScope.Role.VALUE);
+      }
+    }
+  }
+
+  /**
+   * @return неизменяемая коллекция имён платформенных глобальных переменных
+   *         (canonical name каждой переменной, без алиасов).
+   */
+  public List<String> getPlatformVariableNames() {
+    return platformVariables.stream().map(PlatformVariable::name).toList();
+  }
+
+  /**
+   * Найти тип платформенной глобальной переменной по имени или алиасу.
+   */
+  public Optional<TypeRef> findPlatformVariableType(String name) {
+    if (name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    var lc = name.toLowerCase(Locale.ROOT);
+    return platformVariables.stream()
+      .filter(v -> v.name().equalsIgnoreCase(name)
+        || v.aliases().stream().anyMatch(a -> a.toLowerCase(Locale.ROOT).equals(lc)))
+      .findFirst()
+      .map(PlatformVariable::type);
   }
 
   /**
@@ -366,11 +404,35 @@ public class GlobalScopeProvider {
       var classes = (List<String>) root.getOrDefault("classes", Collections.emptyList());
       @SuppressWarnings("unchecked")
       var keywords = (List<String>) root.getOrDefault("keywords", Collections.emptyList());
-      return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords));
+      var variables = readVariables(root);
+      return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables);
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", RESOURCE_PATH, e);
-      return new Loaded(Collections.emptyMap(), List.of(), List.of());
+      return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of());
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<PlatformVariable> readVariables(Map<String, Object> root) {
+    var raw = (List<Map<String, Object>>) root.getOrDefault("variables", Collections.emptyList());
+    if (raw == null || raw.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<PlatformVariable>(raw.size());
+    for (var entry : raw) {
+      var name = (String) entry.get("name");
+      if (name == null || name.isBlank()) {
+        continue;
+      }
+      var description = (String) entry.getOrDefault("description", "");
+      var typeName = (String) entry.get("type");
+      var typeRef = typeName == null || typeName.isBlank()
+        ? TypeRef.UNKNOWN
+        : new TypeRef(TypeKind.PLATFORM, typeName);
+      var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+      result.add(new PlatformVariable(name, List.copyOf(aliases), description, typeRef));
+    }
+    return List.copyOf(result);
   }
 
   @SuppressWarnings("unchecked")
@@ -430,7 +492,14 @@ public class GlobalScopeProvider {
   private record Loaded(
     Map<String, MemberDescriptor> functions,
     List<String> classes,
-    List<String> keywords
+    List<String> keywords,
+    List<PlatformVariable> platformVariables
   ) {
+  }
+
+  /**
+   * Описание платформенной глобальной переменной.
+   */
+  public record PlatformVariable(String name, List<String> aliases, String description, TypeRef type) {
   }
 }

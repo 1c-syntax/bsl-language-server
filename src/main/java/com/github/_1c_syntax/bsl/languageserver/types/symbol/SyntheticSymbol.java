@@ -77,6 +77,7 @@ public final class SyntheticSymbol implements Symbol {
       case PLATFORM_GLOBAL_PROPERTY, PLATFORM_MEMBER_PROPERTY -> SymbolKind.Property;
       case CONFIGURATION_OBJECT -> SymbolKind.Class;
       case LIBRARY_MODULE -> SymbolKind.Module;
+      case PLATFORM_GLOBAL_VARIABLE -> SymbolKind.Variable;
     };
   }
 

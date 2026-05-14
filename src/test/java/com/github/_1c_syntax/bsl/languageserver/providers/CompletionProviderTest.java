@@ -143,4 +143,24 @@ class CompletionProviderTest {
       .allMatch(label -> label.toLowerCase().startsWith("ut"))
       .contains("UTF8");
   }
+
+  @Test
+  void noDotCompletionExposesPlatformGlobalVariables() {
+    var content = "Библ";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 4));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    var byName = items.stream().collect(java.util.stream.Collectors.toMap(
+      CompletionItem::getLabel, item -> item, (a, b) -> a));
+
+    assertThat(byName).containsKey("БиблиотекаКартинок");
+    assertThat(byName.get("БиблиотекаКартинок").getKind()).isEqualTo(CompletionItemKind.Variable);
+    assertThat(byName).containsKey("БиблиотекаСтилей");
+    assertThat(byName.get("БиблиотекаСтилей").getKind()).isEqualTo(CompletionItemKind.Variable);
+  }
 }

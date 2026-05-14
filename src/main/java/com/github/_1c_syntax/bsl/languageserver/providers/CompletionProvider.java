@@ -223,6 +223,15 @@ public final class CompletionProvider {
       }
     }
 
+    // Platform global variables (БиблиотекаКартинок, ПараметрыСеанса, …)
+    for (var pv : globalScopeProvider.getPlatformVariableNames()) {
+      if (matches(pv, prefix)) {
+        var item = new CompletionItem(pv);
+        item.setKind(CompletionItemKind.Variable);
+        items.add(item);
+      }
+    }
+
     // Global functions
     var seenFn = new java.util.HashSet<String>();
     for (var fn : globalScopeProvider.getFunctions()) {
