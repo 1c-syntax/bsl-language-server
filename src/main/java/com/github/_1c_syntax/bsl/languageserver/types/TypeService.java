@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -35,9 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.springframework.context.annotation.Scope;
@@ -62,42 +59,13 @@ public class TypeService {
   private final SymbolTypeIndex symbolTypeIndex;
   private final ExpressionTypeInferencer inferencer;
   private final ReferenceResolver referenceResolver;
-  private final ServerContextProvider serverContextProvider;
 
   /**
    * Получить набор типов на позиции (точка входа для hover/completion).
-   * <p>
-   * Сначала пытается через {@link ReferenceResolver}; если не получилось
-   * (например, индекс ссылок ещё не наполнен) — резолвит идентификатор по
-   * позиции напрямую через {@link DocumentContext#getSymbolTree()}.
    */
   public TypeSet findTypes(URI uri, Position position) {
-    var byReference = referenceResolver.findReference(uri, position)
+    return referenceResolver.findReference(uri, position)
       .map(this::findTypes)
-      .filter(types -> !types.refs().isEmpty());
-    if (byReference.isPresent()) {
-      return byReference.get();
-    }
-    return serverContextProvider.getDocument(uri)
-      .map(documentContext -> resolveTypesAtPosition(documentContext, position))
-      .orElse(TypeSet.EMPTY);
-  }
-
-  private TypeSet resolveTypesAtPosition(DocumentContext documentContext, Position position) {
-    var symbolTree = documentContext.getSymbolTree();
-    var ast = documentContext.getAst();
-    var identifier = Trees.findTerminalNodeContainsPosition(ast, position)
-      .filter(terminal -> terminal.getSymbol().getType() == BSLParser.IDENTIFIER)
-      .map(terminal -> terminal.getText());
-    if (identifier.isPresent()) {
-      var variable = symbolTree.getVariableSymbol(identifier.get(), symbolTree.getModule());
-      if (variable.isPresent()) {
-        return findTypes(variable.get());
-      }
-    }
-    return ExpressionAtPosition.findExpressionContext(documentContext, position)
-      .map(ExpressionTreeBuildingVisitor::buildExpressionTree)
-      .map(expr -> inferencer.infer(expr, documentContext))
       .orElse(TypeSet.EMPTY);
   }
 
