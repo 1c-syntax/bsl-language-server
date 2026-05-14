@@ -22,9 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AnyType;
 import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformType;
@@ -82,6 +84,8 @@ public class TypeRegistry {
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /** Тип ↔ список источников членов (один тип может расширяться многими источниками). */
   private final Map<TypeRef, List<MemberSource>> memberSources = new ConcurrentHashMap<>();
+  /** Тип ↔ языковой скоуп (BSL/OS/BOTH). Отсутствие записи трактуется как BOTH. */
+  private final Map<TypeRef, LanguageScope> typeScopes = new ConcurrentHashMap<>();
 
   @PostConstruct
   void bootstrap() {
@@ -89,8 +93,9 @@ public class TypeRegistry {
       return;
     }
     for (var provider : platformProviders) {
+      var scope = provider.getLanguageScope();
       for (var decl : provider.getTypes()) {
-        registerPack(decl);
+        registerPack(decl, scope);
       }
     }
   }
@@ -113,6 +118,33 @@ public class TypeRegistry {
       return Optional.empty();
     }
     return Optional.ofNullable(aliasIndex.get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Найти тип по имени с фильтрацией по типу файла. Тип будет возвращён только
+   * если его {@link LanguageScope} совместим с {@code fileType}.
+   * Если {@code fileType == null} — фильтрация не применяется.
+   */
+  public Optional<TypeRef> resolve(String name, FileType fileType) {
+    return resolve(name).filter(ref -> getLanguageScope(ref).matches(fileType));
+  }
+
+  /**
+   * Языковой скоуп типа. По умолчанию (неизвестный тип / без записи) — {@link LanguageScope#BOTH}.
+   */
+  public LanguageScope getLanguageScope(TypeRef ref) {
+    return typeScopes.getOrDefault(ref, LanguageScope.BOTH);
+  }
+
+  /**
+   * Установить/повысить языковой скоуп типа. При наличии существующей записи
+   * новый скоуп мержится: при различии повышается до {@link LanguageScope#BOTH}.
+   */
+  public void setLanguageScope(TypeRef ref, LanguageScope scope) {
+    if (ref == null || scope == null) {
+      return;
+    }
+    typeScopes.merge(ref, scope, LanguageScope::merge);
   }
 
   /**
@@ -162,19 +194,29 @@ public class TypeRegistry {
    * Зарегистрировать пользовательский тип (OneScript-класс, общий модуль и т.п.).
    */
   public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration) {
+    return registerUserType(qualifiedName, declaration, LanguageScope.BOTH);
+  }
+
+  /**
+   * Зарегистрировать пользовательский тип с указанием языкового скоупа.
+   */
+  public TypeRef registerUserType(String qualifiedName, SourceDefinedSymbol declaration, LanguageScope scope) {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.put(ref, new UserType(ref, declaration));
     addAlias(qualifiedName, ref);
+    setLanguageScope(ref, scope == null ? LanguageScope.BOTH : scope);
     return ref;
   }
 
   /**
    * Зарегистрировать конфигурационный тип (Справочники.X, Документы.X и т.д.).
+   * Конфигурационные типы всегда BSL-only.
    */
   public TypeRef registerConfigurationType(String qualifiedName) {
     var ref = intern(TypeKind.CONFIGURATION, qualifiedName);
     types.put(ref, new ConfigurationType(ref));
     addAlias(qualifiedName, ref);
+    setLanguageScope(ref, LanguageScope.BSL);
     return ref;
   }
 
@@ -194,6 +236,14 @@ public class TypeRegistry {
    * для глобальных имён.
    */
   public void registerAsGlobalProperty(TypeRef ref) {
+    registerAsGlobalProperty(ref, LanguageScope.BOTH);
+  }
+
+  /**
+   * То же, что {@link #registerAsGlobalProperty(TypeRef)}, но дополнительно
+   * пробрасывает скоуп в {@link GlobalScopeProvider}.
+   */
+  public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope) {
     if (globalScopeProvider == null) {
       return;
     }
@@ -204,7 +254,7 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerGlobalProperty(ref, names);
+    globalScopeProvider.registerGlobalProperty(ref, names, scope);
   }
 
   /**
@@ -215,10 +265,15 @@ public class TypeRegistry {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.remove(ref);
     memberSources.remove(ref);
+    typeScopes.remove(ref);
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
   }
 
   private void registerPack(TypePackProvider.TypeDecl decl) {
+    registerPack(decl, LanguageScope.BOTH);
+  }
+
+  private void registerPack(TypePackProvider.TypeDecl decl, LanguageScope scope) {
     var ref = intern(decl.kind(), decl.qualifiedName());
     types.put(ref, hydrate(ref));
     addAlias(decl.qualifiedName(), ref);
@@ -229,8 +284,9 @@ public class TypeRegistry {
       registerMemberSource(ref, decl::members);
     }
     if (decl.exposedAsGlobal()) {
-      registerAsGlobalProperty(ref);
+      registerAsGlobalProperty(ref, scope);
     }
+    setLanguageScope(ref, scope == null ? LanguageScope.BOTH : scope);
   }
 
   private void addAlias(String name, TypeRef ref) {

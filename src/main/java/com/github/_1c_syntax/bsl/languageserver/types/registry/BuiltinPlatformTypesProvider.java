@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -68,6 +69,11 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   @Override
   public Collection<TypeDecl> getTypes() {
     return types;
+  }
+
+  @Override
+  public LanguageScope getLanguageScope() {
+    return LanguageScope.BSL;
   }
 
   @SuppressWarnings("unchecked")

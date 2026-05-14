@@ -140,13 +140,27 @@ public class TypeService {
   }
 
   /**
+   * Резолв типа по имени с учётом языкового скоупа.
+   */
+  public Optional<TypeRef> resolve(String name, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+    return typeRegistry.resolve(name, fileType);
+  }
+
+  /**
    * Найти тип глобального свойства (например, system enum {@code КодировкаТекста}, {@code ФС}) по имени.
    */
   public Optional<TypeRef> findGlobalPropertyType(String name) {
+    return findGlobalPropertyType(name, null);
+  }
+
+  /**
+   * То же, что {@link #findGlobalPropertyType(String)}, но с фильтрацией по типу файла.
+   */
+  public Optional<TypeRef> findGlobalPropertyType(String name, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
     // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы system enum'ы
     // и прочие глобальные свойства из платформенных провайдеров были зарегистрированы.
     typeRegistry.resolve(name);
-    return globalScopeProvider.findGlobalPropertyType(name);
+    return globalScopeProvider.findGlobalPropertyType(name, fileType);
   }
 
   /**
@@ -155,6 +169,14 @@ public class TypeService {
   public Collection<String> getGlobalPropertyNames() {
     typeRegistry.resolve("");
     return globalScopeProvider.getGlobalPropertyNames();
+  }
+
+  /**
+   * То же, что {@link #getGlobalPropertyNames()}, но с фильтрацией по типу файла.
+   */
+  public Collection<String> getGlobalPropertyNames(com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+    typeRegistry.resolve("");
+    return globalScopeProvider.getGlobalPropertyNames(fileType);
   }
 
   /**
@@ -189,7 +211,7 @@ public class TypeService {
       // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
       // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
       typeRegistry.resolve(bareName);
-      var fromScope = globalScopeProvider.findGlobal(bareName)
+      var fromScope = globalScopeProvider.findGlobal(bareName, documentContext.getFileType())
         .filter(SyntheticSymbol.class::isInstance)
         .map(s -> ((SyntheticSymbol) s).getValueType())
         .filter(ref -> !ref.equals(TypeRef.UNKNOWN));

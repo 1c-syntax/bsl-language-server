@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
@@ -72,6 +74,16 @@ public class GlobalScopeProvider {
   private final List<String> classes;
   private final List<String> keywords;
   private final List<PlatformVariable> platformVariables;
+  /** lowercased имя функции (canonical + alias) → языковой скоуп. */
+  private final Map<String, LanguageScope> functionScopes;
+  /** lowercased имя класса-для-Новый → языковой скоуп. */
+  private final Map<String, LanguageScope> classScopes;
+  /** lowercased ключевое слово → языковой скоуп. */
+  private final Map<String, LanguageScope> keywordScopes;
+  /** lowercased имя платформенной переменной → языковой скоуп. */
+  private final Map<String, LanguageScope> platformVariableScopes;
+  /** lowercased имя глобального свойства (через registerGlobalProperty) → языковой скоуп. */
+  private final Map<String, LanguageScope> globalPropertyScopes = new java.util.concurrent.ConcurrentHashMap<>();
   /** Имена library-модулей OneScript (lowercased) → TypeRef модуля. */
   private final Map<String, TypeRef> libraryModules = new java.util.concurrent.ConcurrentHashMap<>();
   /** Имена library-классов OneScript (lowercased) → сигнатуры конструктора. */
@@ -99,6 +111,10 @@ public class GlobalScopeProvider {
     this.classes = loaded.classes;
     this.keywords = loaded.keywords;
     this.platformVariables = loaded.platformVariables;
+    this.functionScopes = loaded.functionScopes;
+    this.classScopes = loaded.classScopes;
+    this.keywordScopes = loaded.keywordScopes;
+    this.platformVariableScopes = loaded.platformVariableScopes;
   }
 
   /**
@@ -123,6 +139,38 @@ public class GlobalScopeProvider {
       return Optional.empty();
     }
     return globalSymbolScope.findSymbol(name);
+  }
+
+  /**
+   * То же, что {@link #findGlobal(String)}, но с фильтрацией по типу файла:
+   * library-entries скрываются в BSL-файлах; функции и глобальные свойства
+   * фильтруются по соответствующим скоупам.
+   */
+  public Optional<com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol> findGlobal(String name, FileType fileType) {
+    var sym = findGlobal(name);
+    if (sym.isEmpty() || fileType == null) {
+      return sym;
+    }
+    var lc = name == null ? "" : name.toLowerCase(Locale.ROOT);
+    // Library entries — только в OS-файлах.
+    if (libraryEntryOrigin.containsKey(lc)) {
+      return fileType == FileType.OS ? sym : Optional.empty();
+    }
+    // Функции — по скоупу функций.
+    var fnScope = functionScopes.get(lc);
+    if (fnScope != null && !fnScope.matches(fileType)) {
+      return Optional.empty();
+    }
+    // Глобальные свойства (КодировкаТекста, Документы.X, ...) — по своему скоупу.
+    var propScope = globalPropertyScopes.get(lc);
+    if (propScope != null && !propScope.matches(fileType)) {
+      return Optional.empty();
+    }
+    var varScope = platformVariableScopes.get(lc);
+    if (varScope != null && !varScope.matches(fileType)) {
+      return Optional.empty();
+    }
+    return sym;
   }
 
   private void ensureGlobalsPublished() {
@@ -186,13 +234,42 @@ public class GlobalScopeProvider {
   }
 
   /**
+   * То же, что {@link #getPlatformVariableNames()}, но с фильтрацией по типу файла.
+   */
+  public List<String> getPlatformVariableNames(FileType fileType) {
+    if (fileType == null) {
+      return getPlatformVariableNames();
+    }
+    return platformVariables.stream()
+      .filter(v -> {
+        var s = platformVariableScopes.get(v.name().toLowerCase(Locale.ROOT));
+        return s == null || s.matches(fileType);
+      })
+      .map(PlatformVariable::name)
+      .toList();
+  }
+
+  /**
    * Найти тип платформенной глобальной переменной по имени или алиасу.
    */
   public Optional<TypeRef> findPlatformVariableType(String name) {
+    return findPlatformVariableType(name, null);
+  }
+
+  /**
+   * То же, что {@link #findPlatformVariableType(String)}, но с фильтрацией по типу файла.
+   */
+  public Optional<TypeRef> findPlatformVariableType(String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
     var lc = name.toLowerCase(Locale.ROOT);
+    if (fileType != null) {
+      var s = platformVariableScopes.get(lc);
+      if (s != null && !s.matches(fileType)) {
+        return Optional.empty();
+      }
+    }
     return platformVariables.stream()
       .filter(v -> v.name().equalsIgnoreCase(name)
         || v.aliases().stream().anyMatch(a -> a.toLowerCase(Locale.ROOT).equals(lc)))
@@ -208,13 +285,44 @@ public class GlobalScopeProvider {
   }
 
   /**
+   * То же, что {@link #getFunctions()}, но с фильтрацией по типу файла.
+   */
+  public Collection<MemberDescriptor> getFunctions(FileType fileType) {
+    if (fileType == null) {
+      return getFunctions();
+    }
+    var result = new java.util.LinkedHashSet<MemberDescriptor>();
+    for (var entry : functions.entrySet()) {
+      var s = functionScopes.get(entry.getKey());
+      if (s == null || s.matches(fileType)) {
+        result.add(entry.getValue());
+      }
+    }
+    return result;
+  }
+
+  /**
    * Поиск глобальной функции по имени (регистронезависимо, с учётом ru/en алиасов).
    */
   public Optional<MemberDescriptor> findFunction(String name) {
+    return findFunction(name, null);
+  }
+
+  /**
+   * То же, что {@link #findFunction(String)}, но с фильтрацией по типу файла.
+   */
+  public Optional<MemberDescriptor> findFunction(String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    return Optional.ofNullable(functions.get(name.toLowerCase(Locale.ROOT)));
+    var lc = name.toLowerCase(Locale.ROOT);
+    if (fileType != null) {
+      var s = functionScopes.get(lc);
+      if (s != null && !s.matches(fileType)) {
+        return Optional.empty();
+      }
+    }
+    return Optional.ofNullable(functions.get(lc));
   }
 
   /**
@@ -225,6 +333,16 @@ public class GlobalScopeProvider {
    * с типом-значением {@code ref}.
    */
   public void registerGlobalProperty(TypeRef ref, Collection<String> names) {
+    registerGlobalProperty(ref, names, LanguageScope.BOTH);
+  }
+
+  /**
+   * То же, что {@link #registerGlobalProperty(TypeRef, Collection)}, но с указанием
+   * языкового скоупа. Скоуп сохраняется на каждом имени (lowercased) в
+   * {@link #globalPropertyScopes}; при повторной регистрации с другим скоупом
+   * результат повышается до {@link LanguageScope#BOTH}.
+   */
+  public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope) {
     if (ref == null || names == null || names.isEmpty()) {
       return;
     }
@@ -234,11 +352,13 @@ public class GlobalScopeProvider {
     if (globalSymbolScope == null) {
       return;
     }
+    var effectiveScope = scope == null ? LanguageScope.BOTH : scope;
     for (var name : names) {
       if (name == null || name.isBlank()) {
         continue;
       }
       globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
+      globalPropertyScopes.merge(name.toLowerCase(Locale.ROOT), effectiveScope, LanguageScope::merge);
     }
   }
 
@@ -246,6 +366,13 @@ public class GlobalScopeProvider {
    * Имена всех зарегистрированных глобальных свойств (canonical-форма, без алиасов).
    */
   public Collection<String> getGlobalPropertyNames() {
+    return getGlobalPropertyNames(null);
+  }
+
+  /**
+   * То же, что {@link #getGlobalPropertyNames()}, но с фильтрацией по типу файла.
+   */
+  public Collection<String> getGlobalPropertyNames(FileType fileType) {
     if (globalSymbolScope == null) {
       return List.of();
     }
@@ -255,6 +382,7 @@ public class GlobalScopeProvider {
       .filter(s -> s.getSyntheticKind() == SyntheticKind.PLATFORM_GLOBAL_PROPERTY
         || s.getSyntheticKind() == SyntheticKind.CONFIGURATION_OBJECT)
       .map(SyntheticSymbol::getName)
+      .filter(name -> matchesGlobalProperty(name, fileType))
       .distinct()
       .toList();
   }
@@ -263,10 +391,29 @@ public class GlobalScopeProvider {
    * Найти тип глобального свойства по имени (canonical или alias).
    */
   public Optional<TypeRef> findGlobalPropertyType(String name) {
+    return findGlobalPropertyType(name, null);
+  }
+
+  /**
+   * То же, что {@link #findGlobalPropertyType(String)}, но с фильтрацией по типу файла.
+   * Возвращает {@link Optional#empty()}, если свойство не видно в данном {@code fileType}.
+   */
+  public Optional<TypeRef> findGlobalPropertyType(String name, FileType fileType) {
+    if (!matchesGlobalProperty(name, fileType)) {
+      return Optional.empty();
+    }
     return findGlobal(name)
       .filter(SyntheticSymbol.class::isInstance)
       .map(s -> ((SyntheticSymbol) s).getValueType())
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
+  }
+
+  private boolean matchesGlobalProperty(String name, FileType fileType) {
+    if (fileType == null || name == null) {
+      return true;
+    }
+    var scope = globalPropertyScopes.get(name.toLowerCase(Locale.ROOT));
+    return scope == null || scope.matches(fileType);
   }
 
   /**
@@ -277,10 +424,40 @@ public class GlobalScopeProvider {
   }
 
   /**
+   * То же, что {@link #getClasses()}, но с фильтрацией по типу файла.
+   */
+  public List<String> getClasses(FileType fileType) {
+    if (fileType == null) {
+      return classes;
+    }
+    return classes.stream()
+      .filter(c -> {
+        var s = classScopes.get(c.toLowerCase(Locale.ROOT));
+        return s == null || s.matches(fileType);
+      })
+      .toList();
+  }
+
+  /**
    * @return ключевые слова языка для completion в no-dot контексте.
    */
   public List<String> getKeywords() {
     return keywords;
+  }
+
+  /**
+   * То же, что {@link #getKeywords()}, но с фильтрацией по типу файла.
+   */
+  public List<String> getKeywords(FileType fileType) {
+    if (fileType == null) {
+      return keywords;
+    }
+    return keywords.stream()
+      .filter(k -> {
+        var s = keywordScopes.get(k.toLowerCase(Locale.ROOT));
+        return s == null || s.matches(fileType);
+      })
+      .toList();
   }
 
   /**
@@ -468,18 +645,22 @@ public class GlobalScopeProvider {
   }
 
   private static Loaded load() {
-    var bsl = loadFromResource(RESOURCE_PATH);
-    var os = loadFromResource(OSCRIPT_RESOURCE_PATH);
+    var bsl = loadFromResource(RESOURCE_PATH, LanguageScope.BSL);
+    var os = loadFromResource(OSCRIPT_RESOURCE_PATH, LanguageScope.OS);
     return merge(bsl, os);
   }
 
   private static Loaded merge(Loaded a, Loaded b) {
     var functions = new LinkedHashMap<String, MemberDescriptor>(a.functions);
-    // Существующая запись (BSL) выигрывает при коллизии имён, как договаривались.
+    var functionScopes = new java.util.HashMap<String, LanguageScope>(a.functionScopes);
     for (var e : b.functions.entrySet()) {
       functions.putIfAbsent(e.getKey(), e.getValue());
     }
+    for (var e : b.functionScopes.entrySet()) {
+      functionScopes.merge(e.getKey(), e.getValue(), LanguageScope::merge);
+    }
     var classes = new ArrayList<String>(a.classes.size() + b.classes.size());
+    var classScopes = new java.util.HashMap<String, LanguageScope>(a.classScopes);
     var seenClass = new java.util.HashSet<String>();
     for (var c : a.classes) {
       if (seenClass.add(c.toLowerCase(Locale.ROOT))) classes.add(c);
@@ -487,7 +668,11 @@ public class GlobalScopeProvider {
     for (var c : b.classes) {
       if (seenClass.add(c.toLowerCase(Locale.ROOT))) classes.add(c);
     }
+    for (var e : b.classScopes.entrySet()) {
+      classScopes.merge(e.getKey(), e.getValue(), LanguageScope::merge);
+    }
     var keywords = new ArrayList<String>(a.keywords.size() + b.keywords.size());
+    var keywordScopes = new java.util.HashMap<String, LanguageScope>(a.keywordScopes);
     var seenKw = new java.util.HashSet<String>();
     for (var k : a.keywords) {
       if (seenKw.add(k.toLowerCase(Locale.ROOT))) keywords.add(k);
@@ -495,7 +680,11 @@ public class GlobalScopeProvider {
     for (var k : b.keywords) {
       if (seenKw.add(k.toLowerCase(Locale.ROOT))) keywords.add(k);
     }
+    for (var e : b.keywordScopes.entrySet()) {
+      keywordScopes.merge(e.getKey(), e.getValue(), LanguageScope::merge);
+    }
     var vars = new ArrayList<PlatformVariable>(a.platformVariables.size() + b.platformVariables.size());
+    var varScopes = new java.util.HashMap<String, LanguageScope>(a.platformVariableScopes);
     var seenVar = new java.util.HashSet<String>();
     for (var v : a.platformVariables) {
       if (seenVar.add(v.name().toLowerCase(Locale.ROOT))) vars.add(v);
@@ -503,15 +692,22 @@ public class GlobalScopeProvider {
     for (var v : b.platformVariables) {
       if (seenVar.add(v.name().toLowerCase(Locale.ROOT))) vars.add(v);
     }
+    for (var e : b.platformVariableScopes.entrySet()) {
+      varScopes.merge(e.getKey(), e.getValue(), LanguageScope::merge);
+    }
     return new Loaded(
       Collections.unmodifiableMap(functions),
       List.copyOf(classes),
       List.copyOf(keywords),
-      List.copyOf(vars)
+      List.copyOf(vars),
+      new java.util.concurrent.ConcurrentHashMap<>(functionScopes),
+      new java.util.concurrent.ConcurrentHashMap<>(classScopes),
+      new java.util.concurrent.ConcurrentHashMap<>(keywordScopes),
+      new java.util.concurrent.ConcurrentHashMap<>(varScopes)
     );
   }
 
-  private static Loaded loadFromResource(String resourcePath) {
+  private static Loaded loadFromResource(String resourcePath, LanguageScope scope) {
     var mapper = JsonMapper.builder().build();
     try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
       @SuppressWarnings("unchecked")
@@ -522,10 +718,23 @@ public class GlobalScopeProvider {
       @SuppressWarnings("unchecked")
       var keywords = (List<String>) root.getOrDefault("keywords", Collections.emptyList());
       var variables = readVariables(root);
-      return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables);
+      var fnScopes = new java.util.HashMap<String, LanguageScope>();
+      functions.keySet().forEach(k -> fnScopes.put(k, scope));
+      var clsScopes = new java.util.HashMap<String, LanguageScope>();
+      classes.forEach(c -> clsScopes.put(c.toLowerCase(Locale.ROOT), scope));
+      var kwScopes = new java.util.HashMap<String, LanguageScope>();
+      keywords.forEach(k -> kwScopes.put(k.toLowerCase(Locale.ROOT), scope));
+      var varScopes = new java.util.HashMap<String, LanguageScope>();
+      for (var v : variables) {
+        varScopes.put(v.name().toLowerCase(Locale.ROOT), scope);
+        v.aliases().forEach(a -> varScopes.put(a.toLowerCase(Locale.ROOT), scope));
+      }
+      return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables,
+        fnScopes, clsScopes, kwScopes, varScopes);
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
-      return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of());
+      return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of(),
+        Map.of(), Map.of(), Map.of(), Map.of());
     }
   }
 
@@ -610,7 +819,11 @@ public class GlobalScopeProvider {
     Map<String, MemberDescriptor> functions,
     List<String> classes,
     List<String> keywords,
-    List<PlatformVariable> platformVariables
+    List<PlatformVariable> platformVariables,
+    Map<String, LanguageScope> functionScopes,
+    Map<String, LanguageScope> classScopes,
+    Map<String, LanguageScope> keywordScopes,
+    Map<String, LanguageScope> platformVariableScopes
   ) {
   }
 

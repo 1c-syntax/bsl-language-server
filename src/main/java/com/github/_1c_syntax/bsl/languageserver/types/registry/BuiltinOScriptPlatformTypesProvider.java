@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -56,5 +57,10 @@ public class BuiltinOScriptPlatformTypesProvider implements PlatformTypesProvide
   @Override
   public Collection<TypeDecl> getTypes() {
     return types;
+  }
+
+  @Override
+  public LanguageScope getLanguageScope() {
+    return LanguageScope.OS;
   }
 }

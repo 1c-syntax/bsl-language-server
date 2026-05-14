@@ -51,7 +51,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     initLib();
 
     var content = "#Использовать mylib\nMyMod";
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
@@ -71,7 +71,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     initLib();
 
     var content = "#Использовать mylib\nА = Новый MyCl";
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
@@ -91,7 +91,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     initLib();
 
     var content = "MyModule.";
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
@@ -109,7 +109,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     initLib();
 
     var content = "MyMod";
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
@@ -130,7 +130,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     // Документ с #Использовать на другую (несуществующую) либу — наш MyModule
     // не должен попасть в список.
     var content = "#Использовать someother\nMyMod";
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
@@ -148,7 +148,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     initLib();
 
     var content = "#Использовать mylib\nMyMod";
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));

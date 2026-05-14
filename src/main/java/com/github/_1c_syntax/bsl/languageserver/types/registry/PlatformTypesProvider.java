@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+
 /**
  * Маркерный интерфейс провайдеров платформенных типов.
  * <p>
@@ -29,4 +31,11 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
  * для OneScript (JSON синтакс-помощника либо встроенный ресурс).
  */
 public interface PlatformTypesProvider extends TypePackProvider {
+  /**
+   * Языковой скоуп типов, поставляемых этим провайдером. По умолчанию
+   * {@link LanguageScope#BOTH} (видны и в BSL, и в OS файлах).
+   */
+  default LanguageScope getLanguageScope() {
+    return LanguageScope.BOTH;
+  }
 }

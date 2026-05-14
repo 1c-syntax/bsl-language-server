@@ -202,7 +202,7 @@ public class ExpressionTypeInferencer {
     }
     // Глобальная область: платформенные глобалы, library-модули,
     // common-модули — все приходят через единый GlobalSymbolScope.
-    var fromScope = globalScopeProvider.findGlobal(text)
+    var fromScope = globalScopeProvider.findGlobal(text, ctx.documentContext.getFileType())
       .map(symbol -> {
         if (symbol instanceof SyntheticSymbol s) {
           return s.getValueType();
@@ -223,7 +223,7 @@ public class ExpressionTypeInferencer {
 
   private TypeSet inferCall(BslExpression node, InferenceContext ctx) {
     if (node instanceof ConstructorCallNode constructor) {
-      return inferConstructor(constructor);
+      return inferConstructor(constructor, ctx);
     }
     if (node instanceof MethodCallNode methodCall) {
       return inferMethodCall(methodCall, ctx);
@@ -231,12 +231,12 @@ public class ExpressionTypeInferencer {
     return TypeSet.EMPTY;
   }
 
-  private TypeSet inferConstructor(ConstructorCallNode constructor) {
+  private TypeSet inferConstructor(ConstructorCallNode constructor, InferenceContext ctx) {
     var typeName = extractTypeName(constructor);
     if (typeName == null || typeName.isBlank()) {
       return TypeSet.EMPTY;
     }
-    return typeRegistry.resolve(typeName)
+    return typeRegistry.resolve(typeName, ctx.documentContext.getFileType())
       .map(TypeSet::of)
       .orElseGet(() -> TypeSet.of(typeRegistry.intern(TypeKind.USER, typeName)));
   }

@@ -185,28 +185,31 @@ public final class CompletionProvider {
     }
     var prefix = lineInfo.prefix.toLowerCase(Locale.ROOT);
     var afterNew = isAfterNew(lineInfo.line, lineInfo.cursor - lineInfo.prefix.length());
+    var fileType = documentContext.getFileType();
 
     var items = new ArrayList<CompletionItem>();
 
     // Per-document #Использовать gating. Строгая семантика OneScript:
     // library-сущность видна только если она объявлена в директиве
     // #Использовать <libName>. Без директив — ничего из библиотек не видно.
+    // В BSL-файлах library-сущности скрыты целиком.
     var usedLibs = UseDirectiveScanner.usedLibraries(documentContext);
     var usedLibsLower = usedLibs.isEmpty()
       ? java.util.Set.<String>of()
       : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toUnmodifiableSet());
     java.util.function.Predicate<String> libVisible = name -> {
       var origin = globalScopeProvider.getLibraryEntryOrigin(name);
-      // Если происхождение неизвестно (запись зарегистрирована без libOrigin),
-      // считаем сущность не библиотечной — пропускаем без ограничений.
       if (origin.isEmpty()) {
         return true;
+      }
+      if (fileType == com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
+        return false;
       }
       return usedLibsLower.contains(origin.get().toLowerCase(Locale.ROOT));
     };
 
     if (afterNew) {
-      for (var className : globalScopeProvider.getClasses()) {
+      for (var className : globalScopeProvider.getClasses(fileType)) {
         if (matches(className, prefix)) {
           var item = new CompletionItem(className);
           item.setKind(CompletionItemKind.Class);
@@ -239,7 +242,7 @@ public final class CompletionProvider {
     }
 
     // Global property types (system enums: КодировкаТекста, НаправлениеСортировки и т.п.)
-    for (var gpName : typeService.getGlobalPropertyNames()) {
+    for (var gpName : globalScopeProvider.getGlobalPropertyNames(fileType)) {
       if (matches(gpName, prefix)) {
         var item = new CompletionItem(gpName);
         item.setKind(CompletionItemKind.Enum);
@@ -247,19 +250,19 @@ public final class CompletionProvider {
       }
     }
 
-    // Каноничные составные имена MD-объектов конфигурации
-    // (Документы.Документ1, Catalogs.Контрагенты и т.п.).
-    // Пользователь печатает «Докум» — подсказываются и «Документы», и «Документы.Документ1».
-    for (var qualified : globalScopeProvider.getConfigurationQualifiedNames()) {
-      if (matches(qualified, prefix)) {
-        var item = new CompletionItem(qualified);
-        item.setKind(CompletionItemKind.Module);
-        items.add(item);
+    // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
+    if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.OS) {
+      for (var qualified : globalScopeProvider.getConfigurationQualifiedNames()) {
+        if (matches(qualified, prefix)) {
+          var item = new CompletionItem(qualified);
+          item.setKind(CompletionItemKind.Module);
+          items.add(item);
+        }
       }
     }
 
     // Platform global variables (БиблиотекаКартинок, ПараметрыСеанса, …)
-    for (var pv : globalScopeProvider.getPlatformVariableNames()) {
+    for (var pv : globalScopeProvider.getPlatformVariableNames(fileType)) {
       if (matches(pv, prefix)) {
         var item = new CompletionItem(pv);
         item.setKind(CompletionItemKind.Variable);
@@ -269,7 +272,7 @@ public final class CompletionProvider {
 
     // Global functions
     var seenFn = new java.util.HashSet<String>();
-    for (var fn : globalScopeProvider.getFunctions()) {
+    for (var fn : globalScopeProvider.getFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
@@ -298,7 +301,7 @@ public final class CompletionProvider {
     }
 
     // Keywords
-    for (var keyword : globalScopeProvider.getKeywords()) {
+    for (var keyword : globalScopeProvider.getKeywords(fileType)) {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);

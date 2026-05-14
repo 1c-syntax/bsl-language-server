@@ -50,7 +50,7 @@ class SignatureHelpProviderOScriptLibraryTest extends AbstractServerContextAware
 
     // курсор внутри скобок Новый MyClass(|)
     var content = "А = Новый MyClass();\n";
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new SignatureHelpParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
@@ -73,7 +73,7 @@ class SignatureHelpProviderOScriptLibraryTest extends AbstractServerContextAware
     // курсор сразу после первой запятой — активный параметр должен быть 1
     var content = "MyModule.ВывестiСообщение(\"Привет\", \"Информация\");\n"
       .replace("ВывестiСообщение", "ВывестиСообщение");
-    var dc = TestUtils.getDocumentContext(content, context);
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new SignatureHelpParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));

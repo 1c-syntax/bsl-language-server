@@ -208,7 +208,7 @@ public final class SignatureHelpProvider {
       return resolveAccessCall(documentContext, mc);
     }
     if (parent instanceof BSLParser.NewExpressionContext nex) {
-      return resolveConstructor(nex);
+      return resolveConstructor(documentContext, nex);
     }
     return Optional.empty();
   }
@@ -231,8 +231,8 @@ public final class SignatureHelpProvider {
     if (local.isPresent()) {
       return local;
     }
-    // Fallback: global builtin function
-    return globalScopeProvider.findFunction(methodName);
+    // Fallback: global builtin function — фильтруем по типу файла.
+    return globalScopeProvider.findFunction(methodName, documentContext.getFileType());
   }
 
   private Optional<MemberDescriptor> resolveAccessCall(
@@ -263,9 +263,12 @@ public final class SignatureHelpProvider {
     }
     if (typeSet.isEmpty()) {
       // Fallback: голое имя OneScript library-модуля как ресивер (нет Symbol/инференса).
-      var libRef = findLibraryModuleReceiver(mc, receiver);
-      if (libRef != null) {
-        typeSet = com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.of(libRef);
+      // В BSL-файлах library-модули недоступны.
+      if (documentContext.getFileType() != com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
+        var libRef = findLibraryModuleReceiver(mc, receiver);
+        if (libRef != null) {
+          typeSet = com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.of(libRef);
+        }
       }
     }
     for (TypeRef ref : typeSet.refs()) {
@@ -339,14 +342,15 @@ public final class SignatureHelpProvider {
     return false;
   }
 
-  private Optional<MemberDescriptor> resolveConstructor(BSLParser.NewExpressionContext nex) {
+  private Optional<MemberDescriptor> resolveConstructor(DocumentContext documentContext, BSLParser.NewExpressionContext nex) {
     var typeName = Optional.ofNullable(nex.typeName())
       .map(ParseTree::getText)
       .orElse(null);
     if (typeName == null || typeName.isBlank()) {
       return Optional.empty();
     }
-    var ref = typeService.resolve(typeName).orElse(null);
+    var fileType = documentContext.getFileType();
+    var ref = typeService.resolve(typeName, fileType).orElse(null);
     if (ref != null) {
       for (var member : typeService.getMembers(ref)) {
         if (member.kind() == MemberKind.METHOD
@@ -357,6 +361,10 @@ public final class SignatureHelpProvider {
       }
     }
     // Fallback: OneScript library-класс — конструктор хранится отдельно в GlobalScopeProvider.
+    // В BSL-файлах library-классы недоступны.
+    if (fileType == com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
+      return Optional.empty();
+    }
     var libCtor = globalScopeProvider.findLibraryClassConstructor(typeName);
     if (!libCtor.isEmpty()) {
       return Optional.of(MemberDescriptor.method(typeName, "", libCtor));
