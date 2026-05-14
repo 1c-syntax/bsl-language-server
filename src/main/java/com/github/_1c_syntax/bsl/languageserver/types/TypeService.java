@@ -121,4 +121,18 @@ public class TypeService {
     return typeRegistry.resolve(name);
   }
 
+  /**
+   * Найти namespace-тип (например, system enum {@code КодировкаТекста}) по имени.
+   */
+  public Optional<TypeRef> resolveNamespace(String name) {
+    return typeRegistry.resolveNamespace(name);
+  }
+
+  /**
+   * @return имена зарегистрированных namespace-типов (для completion).
+   */
+  public Collection<String> getNamespaceNames() {
+    return typeRegistry.getNamespaceNames();
+  }
+
 }

@@ -43,7 +43,21 @@ public interface TypePackProvider {
    * Тип, который данный provider предоставляет (для регистрации и
    * последующей деинициализации). Используется как ключ группировки в реестре.
    */
-  record TypeDecl(TypeKind kind, String qualifiedName, List<String> aliases, Collection<MemberDescriptor> members) {
+  record TypeDecl(
+    TypeKind kind,
+    String qualifiedName,
+    List<String> aliases,
+    Collection<MemberDescriptor> members,
+    boolean namespace
+  ) {
+
+    /**
+     * Backward-compatible 4-arg constructor: namespace defaults to {@code false}.
+     */
+    public TypeDecl(TypeKind kind, String qualifiedName, List<String> aliases,
+                    Collection<MemberDescriptor> members) {
+      this(kind, qualifiedName, aliases, members, false);
+    }
 
     public TypeRef toRef() {
       return new TypeRef(kind, qualifiedName);

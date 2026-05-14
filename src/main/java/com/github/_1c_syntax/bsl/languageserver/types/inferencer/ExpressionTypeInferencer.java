@@ -189,7 +189,18 @@ public class ExpressionTypeInferencer {
     }
     var token = terminal.getSymbol();
     var position = new Position(token.getLine() - 1, token.getCharPositionInLine() + 1);
-    return resolveReferenceAt(ctx, position);
+    var resolved = resolveReferenceAt(ctx, position);
+    if (!resolved.isEmpty()) {
+      return resolved;
+    }
+    // Fallback: namespace-тип (например, system enum типа КодировкаТекста.UTF8).
+    var text = terminal.getText();
+    if (text == null || text.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    return typeRegistry.resolveNamespace(text)
+      .map(TypeSet::of)
+      .orElse(TypeSet.EMPTY);
   }
 
   // ---------------------------------------------------------------------------

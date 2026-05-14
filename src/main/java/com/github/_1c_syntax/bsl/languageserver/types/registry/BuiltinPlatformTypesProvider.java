@@ -81,7 +81,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var qualifiedName = (String) entry.get("name");
         var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
-        result.add(new TypeDecl(TypeKind.valueOf(kindStr), qualifiedName, aliases, members));
+        var namespace = Boolean.TRUE.equals(entry.get("namespace"));
+        result.add(new TypeDecl(TypeKind.valueOf(kindStr), qualifiedName, aliases, members, namespace));
       }
       return result;
     } catch (IOException e) {

@@ -128,5 +128,44 @@
       {"name": "Строки", "kind": "PROPERTY"},
       {"name": "Колонки", "kind": "PROPERTY"}
     ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "КодировкаТекста",
+    "aliases": ["TextEncoding"],
+    "namespace": true,
+    "members": [
+      {"name": "ANSI", "kind": "PROPERTY", "returnType": "КодировкаТекста"},
+      {"name": "OEM", "kind": "PROPERTY", "returnType": "КодировкаТекста"},
+      {"name": "UTF8", "kind": "PROPERTY", "returnType": "КодировкаТекста"},
+      {"name": "UTF16", "kind": "PROPERTY", "returnType": "КодировкаТекста"},
+      {"name": "Системная", "kind": "PROPERTY", "returnType": "КодировкаТекста"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "НаправлениеСортировки",
+    "aliases": ["SortDirection"],
+    "namespace": true,
+    "members": [
+      {"name": "Возр", "kind": "PROPERTY", "returnType": "НаправлениеСортировки"},
+      {"name": "Убыв", "kind": "PROPERTY", "returnType": "НаправлениеСортировки"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ВидСравнения",
+    "aliases": ["ComparisonType"],
+    "namespace": true,
+    "members": [
+      {"name": "Равно", "kind": "PROPERTY", "returnType": "ВидСравнения"},
+      {"name": "НеРавно", "kind": "PROPERTY", "returnType": "ВидСравнения"},
+      {"name": "Больше", "kind": "PROPERTY", "returnType": "ВидСравнения"},
+      {"name": "БольшеИлиРавно", "kind": "PROPERTY", "returnType": "ВидСравнения"},
+      {"name": "Меньше", "kind": "PROPERTY", "returnType": "ВидСравнения"},
+      {"name": "МеньшеИлиРавно", "kind": "PROPERTY", "returnType": "ВидСравнения"},
+      {"name": "ВСписке", "kind": "PROPERTY", "returnType": "ВидСравнения"},
+      {"name": "НеВСписке", "kind": "PROPERTY", "returnType": "ВидСравнения"}
+    ]
   }
 ]

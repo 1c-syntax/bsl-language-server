@@ -74,6 +74,8 @@ public class TypeRegistry {
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /** Тип ↔ список источников членов (один тип может расширяться многими источниками). */
   private final Map<TypeRef, List<MemberSource>> memberSources = new ConcurrentHashMap<>();
+  /** Имена-неймспейсы (lowercased) — типы, чьё имя само используется как namespace-ресивер (например, {@code КодировкаТекста.UTF8}). */
+  private final Map<String, TypeRef> namespaceIndex = new ConcurrentHashMap<>();
 
   @PostConstruct
   void bootstrap() {
@@ -199,6 +201,34 @@ public class TypeRegistry {
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members);
     }
+    if (decl.namespace()) {
+      namespaceIndex.put(decl.qualifiedName().toLowerCase(Locale.ROOT), ref);
+      for (var alias : decl.aliases()) {
+        namespaceIndex.put(alias.toLowerCase(Locale.ROOT), ref);
+      }
+    }
+  }
+
+  /**
+   * Найти namespace-тип по имени (регистронезависимо). Namespace-типы — те,
+   * чьё имя само может выступать как ресивер dot-выражения, например
+   * {@code КодировкаТекста.UTF8}.
+   */
+  public Optional<TypeRef> resolveNamespace(String name) {
+    if (name == null || name.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(namespaceIndex.get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * @return имена зарегистрированных namespace-типов в каноническом написании.
+   */
+  public Collection<String> getNamespaceNames() {
+    return namespaceIndex.values().stream()
+      .map(TypeRef::qualifiedName)
+      .distinct()
+      .toList();
   }
 
   private void addAlias(String name, TypeRef ref) {

@@ -172,6 +172,15 @@ public final class CompletionProvider {
       }
     }
 
+    // Platform namespace types (system enums: КодировкаТекста, НаправлениеСортировки и т.п.)
+    for (var nsName : typeService.getNamespaceNames()) {
+      if (matches(nsName, prefix)) {
+        var item = new CompletionItem(nsName);
+        item.setKind(CompletionItemKind.Enum);
+        items.add(item);
+      }
+    }
+
     // Global functions
     var seenFn = new java.util.HashSet<String>();
     for (var fn : globalScopeProvider.getFunctions()) {
