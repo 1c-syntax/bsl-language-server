@@ -202,6 +202,7 @@
 			<EventSubscription>РегистрацияИзмененийПередУдалением</EventSubscription>
 			<CommandGroup>ГруппаКоманд1</CommandGroup>
 			<Catalog>Справочник1</Catalog>
+			<Catalog>СправочникСМенеджером</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>
 			<Document>Документ1</Document>
 			<ScheduledJob>РегламентноеЗадание1</ScheduledJob>

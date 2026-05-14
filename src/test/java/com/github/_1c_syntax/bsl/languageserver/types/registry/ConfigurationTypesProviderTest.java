@@ -51,10 +51,17 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
     var ru = typeRegistry.resolve("Справочники.Справочник1");
     var en = typeRegistry.resolve("Catalogs.Справочник1");
+    var managerRu = typeRegistry.resolve("СправочникМенеджер.Справочник1");
+    var managerEn = typeRegistry.resolve("CatalogManager.Справочник1");
 
     assertThat(ru).isPresent();
     assertThat(en).isPresent();
+    assertThat(managerRu).isPresent();
+    assertThat(managerEn).isPresent();
     assertThat(en.get()).isEqualTo(ru.get());
+    // Каноническая регистрация — менеджер; короткие формы — алиасы на тот же TypeRef.
+    assertThat(ru.get()).isEqualTo(managerRu.get());
+    assertThat(managerEn.get()).isEqualTo(managerRu.get());
   }
 
   @Test
@@ -79,6 +86,8 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
       .filter(m -> "Справочник1".equals(m.name()))
       .findFirst()
       .orElseThrow();
-    assertThat(member.returnType().qualifiedName()).isEqualTo("Справочники.Справочник1");
+    // Член коллекции теперь указывает на менеджер-обёртку, чтобы методы
+    // ManagerModule корректно подтягивались через единый TypeRef.
+    assertThat(member.returnType().qualifiedName()).isEqualTo("СправочникМенеджер.Справочник1");
   }
 }

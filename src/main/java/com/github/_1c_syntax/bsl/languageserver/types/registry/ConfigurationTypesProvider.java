@@ -136,11 +136,40 @@ public class ConfigurationTypesProvider {
         continue;
       }
 
-      var qualifiedRu = groupRu + "." + name;
-      var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-      if (!groupEn.equals(groupRu)) {
-        typeRegistry.registerConfigurationTypeAlias(groupEn + "." + name, ref);
+      // Каноническая регистрация — менеджер-обёртка (например, СправочникМенеджер.Контрагенты).
+      // На неё же навешивает методы ConfigurationModuleMembersProvider при разборе ManagerModule.bsl,
+      // т.е. чейн `Справочники.Контрагенты.МетодМенеджера` резолвится через единый TypeRef.
+      // Если у MDOType нет «коротко-именованной» формы (fullName), то используем групповую форму как основу.
+      var fullName = mdoType.fullName();
+      String managerRu;
+      String managerEn;
+      if (fullName != null && fullName.getRu() != null && !fullName.getRu().isBlank()) {
+        managerRu = fullName.getRu() + "Менеджер." + name;
+        var fullEn = fullName.getEn();
+        managerEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Manager." + name;
+      } else {
+        managerRu = groupRu + "." + name;
+        managerEn = groupEn == null || groupEn.equals(groupRu) ? null : groupEn + "." + name;
       }
+
+      var ref = typeRegistry.registerConfigurationType(managerRu);
+      if (managerEn != null && !managerEn.equals(managerRu)) {
+        typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
+      }
+
+      // Дополнительные алиасы «коллекция.Имя» для совместимости и для случаев,
+      // когда пользователь обращается напрямую (например, Hover на `Справочники.Контрагенты`).
+      var collectionAliasRu = groupRu + "." + name;
+      if (!collectionAliasRu.equals(managerRu)) {
+        typeRegistry.registerConfigurationTypeAlias(collectionAliasRu, ref);
+      }
+      if (groupEn != null && !groupEn.equals(groupRu)) {
+        var collectionAliasEn = groupEn + "." + name;
+        if (!collectionAliasEn.equals(managerRu) && !collectionAliasEn.equals(managerEn)) {
+          typeRegistry.registerConfigurationTypeAlias(collectionAliasEn, ref);
+        }
+      }
+
       collectionMembersByType
         .computeIfAbsent(mdoType, k -> new ArrayList<>())
         .add(MemberDescriptor.property(name, ref));
