@@ -72,19 +72,29 @@ public final class CompletionProvider {
   }
 
   private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position) {
+    var dotInfo = dotCompletionInfo(documentContext, position);
+    if (dotInfo == null) {
+      return List.of();
+    }
     // позиция выражения — символ перед точкой
-    var beforeDot = new Position(position.getLine(), Math.max(0, position.getCharacter() - 2));
+    var beforeDot = new Position(position.getLine(), Math.max(0, dotInfo.dotColumn - 1));
     var typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
     if (typeSet.isEmpty()) {
       typeSet = typeService.inferAtPosition(documentContext, beforeDot);
     }
     if (typeSet.isEmpty()) {
-      // Fallback: голое имя OneScript library-модуля ("ИмяМодуля." без локального символа)
-      var libModuleName = identifierBeforeDot(documentContext, position);
-      if (libModuleName != null) {
-        var libRef = globalScopeProvider.findLibraryModule(libModuleName);
+      // Fallback: голое имя OneScript library-модуля или платформенного глобального
+      // свойства ("КодировкаТекста.", "ФС." без локального символа)
+      var bareName = identifierBeforeDot(documentContext, position);
+      if (bareName != null) {
+        var libRef = globalScopeProvider.findLibraryModule(bareName);
         if (libRef.isPresent()) {
           typeSet = TypeSet.of(libRef.get());
+        } else {
+          var gpRef = typeService.findGlobalPropertyType(bareName);
+          if (gpRef.isPresent()) {
+            typeSet = TypeSet.of(gpRef.get());
+          }
         }
       }
     }
@@ -99,7 +109,39 @@ public final class CompletionProvider {
       }
     }
 
-    return toCompletionItems(members.values());
+    var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
+    var filtered = members.values().stream()
+      .filter(m -> matches(m.name(), prefix))
+      .toList();
+    return toCompletionItems(filtered);
+  }
+
+  private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {
+    try {
+      var content = documentContext.getContent();
+      if (content == null) {
+        return null;
+      }
+      var lines = content.split("\\R", -1);
+      if (position.getLine() >= lines.length) {
+        return null;
+      }
+      var line = lines[position.getLine()];
+      var col = Math.min(position.getCharacter(), line.length());
+      var i = col;
+      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
+        i--;
+      }
+      if (i == 0 || line.charAt(i - 1) != '.') {
+        return null;
+      }
+      return new DotCompletionInfo(i - 1, line.substring(i, col));
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private record DotCompletionInfo(int dotColumn, String prefix) {
   }
 
   private static String identifierBeforeDot(DocumentContext documentContext, Position position) {

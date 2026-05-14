@@ -123,4 +123,24 @@ class CompletionProviderTest {
     // и MemberKind enum, через который мапим, действительно покрывает оба
     assertThat(MemberKind.values()).contains(MemberKind.METHOD, MemberKind.PROPERTY);
   }
+
+  @Test
+  void dotCompletionFiltersByPrefix() {
+    // Кодировка = КодировкаТекста.UTF8;  →  при курсоре после "UT" даёт только "UTF8"
+    var content = "Кодировка = КодировкаТекста.UT;";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // курсор сразу после "UT" — между "T" и ";"
+    params.setPosition(new Position(0, 29));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .allMatch(label -> label.toLowerCase().startsWith("ut"))
+      .contains("UTF8");
+  }
 }
