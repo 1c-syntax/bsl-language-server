@@ -1,0 +1,3447 @@
+{
+  "functions": [
+    {
+      "name": "ПолучитьМакет",
+      "aliases": [
+        "GetTemplate"
+      ],
+      "description": "Получает ранее зарегистрированный макет.\n\nВозвращаемое значение: Строка или ДвоичныеДанные, в зависимости от типа макета.",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "templateName",
+              "type": "Строка",
+              "description": "Имя макета"
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "ПеременныеСреды",
+      "aliases": [
+        "EnvironmentVariables"
+      ],
+      "description": "Возвращает соответствие переменных среды. Ключом является имя переменной, а значением - значение переменной\n\nВозвращаемое значение: Соответствие",
+      "returnType": "Соответствие",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "target",
+              "optional": true,
+              "type": "РасположениеПеременнойСреды",
+              "description": "Расположение переменной среды"
+            }
+          ],
+          "returnType": "Соответствие"
+        }
+      ]
+    },
+    {
+      "name": "УстановитьПеременнуюСреды",
+      "aliases": [
+        "SetEnvironmentVariable"
+      ],
+      "description": "Позволяет установить переменную среды.  По умолчанию переменная устанавливается в области видимости процесса и очищается после его завершения.",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "varName",
+              "type": "Строка",
+              "description": "Имя переменной"
+            },
+            {
+              "name": "value",
+              "type": "Строка",
+              "description": "Значение переменной"
+            },
+            {
+              "name": "target",
+              "optional": true,
+              "type": "РасположениеПеременнойСреды",
+              "description": "Расположение переменной среды"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьПеременнуюСреды",
+      "aliases": [
+        "GetEnvironmentVariable"
+      ],
+      "description": "Получить значение переменной среды.\n\nВозвращаемое значение: Строка. Значение переменной",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "varName",
+              "type": "Строка",
+              "description": "Имя переменной"
+            },
+            {
+              "name": "target",
+              "optional": true,
+              "type": "РасположениеПеременнойСреды",
+              "description": "Расположение переменной среды"
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "КопироватьФайл",
+      "aliases": [
+        "CopyFile"
+      ],
+      "description": "Копирует файл из одного расположения в другое. Перезаписывает приемник, если он существует.",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "source",
+              "type": "Строка",
+              "description": "Имя файла-источника"
+            },
+            {
+              "name": "destination",
+              "type": "Строка",
+              "description": "Имя файла приемника"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ПереместитьФайл",
+      "aliases": [
+        "MoveFile"
+      ],
+      "description": "Перемещает файл из одного расположения в другое.",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "source",
+              "type": "Строка",
+              "description": "Имя файла-источника"
+            },
+            {
+              "name": "destination",
+              "type": "Строка",
+              "description": "Имя файла приемника"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "КаталогВременныхФайлов",
+      "aliases": [
+        "TempFilesDir"
+      ],
+      "description": "Возвращает каталог временных файлов ОС\n\nВозвращаемое значение: Строка. Путь к каталогу временных файлов",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьИмяВременногоФайла",
+      "aliases": [
+        "GetTempFileName"
+      ],
+      "description": "Получает имя файла во временом каталоге.\n\nВозвращаемое значение: Строка. Полный путь ко временному файлу.",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "ext",
+              "optional": true,
+              "type": "Строка",
+              "description": "Расширение будущего файла. Если не указано, то по умолчанию расширение равно \".tmp\""
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "НайтиФайлы",
+      "aliases": [
+        "FindFiles"
+      ],
+      "description": "Выполняет поиск файлов по маске\n\nВозвращаемое значение: Массив объектов Файл, которые были найдены.",
+      "returnType": "Массив",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "dir",
+              "type": "Строка",
+              "description": "Каталог, в котором выполняется поиск"
+            },
+            {
+              "name": "mask",
+              "optional": true,
+              "type": "Строка",
+              "description": "Маска имени файла (включая символы * и ?)"
+            },
+            {
+              "name": "recursive",
+              "optional": true,
+              "type": "Булево",
+              "description": "Флаг рекурсивного поиска в поддиректориях"
+            }
+          ],
+          "returnType": "Массив"
+        }
+      ]
+    },
+    {
+      "name": "УдалитьФайлы",
+      "aliases": [
+        "DeleteFiles"
+      ],
+      "description": "Удаление файлов",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "path",
+              "type": "Строка",
+              "description": "Каталог из которого удаляются файлы, или сам файл."
+            },
+            {
+              "name": "mask",
+              "optional": true,
+              "type": "Строка",
+              "description": "Маска файлов. Необязательный параметр. Если указан, то первый параметр трактуется, как каталог."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "СоздатьКаталог",
+      "aliases": [
+        "CreateDirectory"
+      ],
+      "description": "Создать каталог",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "path",
+              "type": "Строка",
+              "description": "Имя нового каталога"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ТекущийКаталог",
+      "aliases": [
+        "CurrentDirectory"
+      ],
+      "description": "Получить текущий каталог",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "УстановитьТекущийКаталог",
+      "aliases": [
+        "SetCurrentDirectory"
+      ],
+      "description": "Установить каталог текущим",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "path",
+              "type": "Строка",
+              "description": "Имя нового текущего каталога"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьРазделительПути",
+      "aliases": [
+        "GetPathSeparator"
+      ],
+      "description": "Получает разделитель пути в соответствии с текущей операционной системой",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьМаскуВсеФайлы",
+      "aliases": [
+        "GetAllFilesMask"
+      ],
+      "description": "Получает маску \"все файлы\" для текущей операционной системы. В Windows маска принимает значение \"*.*\", в nix - \"*\".",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ОбъединитьПути",
+      "aliases": [
+        "CombinePath"
+      ],
+      "description": "Объединяет компоненты файлового пути, с учетом разделителей, принятых в данной ОС. При этом корректно, без дублирования, обрабатываются уже существующие разделители пути.\n\nВозвращаемое значение: Объединенный путь.",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "path1",
+              "type": "Строка",
+              "description": "Первая часть пути"
+            },
+            {
+              "name": "path2",
+              "type": "Строка",
+              "description": "Вторая часть пути"
+            },
+            {
+              "name": "path3",
+              "optional": true,
+              "type": "Строка",
+              "description": "Третья часть пути (необязательно)"
+            },
+            {
+              "name": "path4",
+              "optional": true,
+              "type": "Строка",
+              "description": "Четвертая часть пути (необязательно)"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СоединитьДвоичныеДанные",
+      "aliases": [
+        "ConcatenateBinaryData"
+      ],
+      "description": "Объединяет несколько объектов типа ДвоичныеДанные в один.\n\nВозвращаемое значение: Тип: ДвоичныеДанные.",
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "array",
+              "type": "Массив",
+              "description": "Массив объектов типа ДвоичныеДанные."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ]
+    },
+    {
+      "name": "РазделитьДвоичныеДанные",
+      "aliases": [
+        "SplitBinaryData"
+      ],
+      "description": "Разделяет двоичные данные на части заданного размера. Размер задается в байтах.\n\nВозвращаемое значение: Массив объектов типа ДвоичныеДанные.",
+      "returnType": "Массив",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "ДвоичныеДанные",
+              "description": "Объект типа ДвоичныеДанные."
+            },
+            {
+              "name": "size",
+              "type": "Число",
+              "description": "Размер одной части данных."
+            }
+          ],
+          "returnType": "Массив"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьДвоичныеДанныеИзСтроки",
+      "aliases": [
+        "GetBinaryDataFromString"
+      ],
+      "description": "Преобразует строку в значение типа ДвоичныеДанные с учетом кодировки текста.\n\nВозвращаемое значение: Тип: ДвоичныеДанные.",
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "str",
+              "type": "Строка",
+              "description": "Строка, которую требуется преобразовать в ДвоичныеДанные."
+            },
+            {
+              "name": "encoding",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Кодировка текста"
+            },
+            {
+              "name": "addBOM",
+              "optional": true,
+              "type": "Булево",
+              "description": "Определяет, будет ли добавлена метка порядка байт (BOM) кодировки текста в начало данных."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьСтрокуИзДвоичныхДанных",
+      "aliases": [
+        "GetStringFromBinaryData"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "ДвоичныеДанные"
+            },
+            {
+              "name": "encoding",
+              "optional": true,
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьДвоичныеДанныеИзBase64Строки",
+      "aliases": [
+        "GetBinaryDataFromBase64String"
+      ],
+      "description": "Преобразует строку формата Base64 в двоичные данные.\n\nВозвращаемое значение: Тип: ДвоичныеДанные.",
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "str",
+              "type": "Строка",
+              "description": "Строка в формате Base64."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьBase64СтрокуИзДвоичныхДанных",
+      "aliases": [
+        "GetBase64StringFromBinaryData"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "ДвоичныеДанные"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьДвоичныеДанныеИзHexСтроки",
+      "aliases": [
+        "GetBinaryDataFromHexString"
+      ],
+      "description": "Преобразует строку формата Base 16 (Hex) в двоичные данные.\n\nВозвращаемое значение: Тип: ДвоичныеДанные.",
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "hex",
+              "type": "Строка",
+              "description": "Строка в формате Base 16 (Hex)."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьБуферДвоичныхДанныхИзHexСтроки",
+      "aliases": [
+        "GetBinaryDataBufferFromHexString"
+      ],
+      "description": "Преобразует строку в формате Base 16 (Hex) в буфер двоичных данных.\n\nВозвращаемое значение: Тип: БуферДвоичныхДанных.",
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "hex",
+              "type": "Строка",
+              "description": "Строка в формате Base 16 (Hex)."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьHexСтрокуИзДвоичныхДанных",
+      "aliases": [
+        "GetHexStringFromBinaryData"
+      ],
+      "description": "Преобразует двоичные данные в строку формата Base 16 (Hex).\n\nВозвращаемое значение: Тип: Строка.",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "ДвоичныеДанные",
+              "description": "Двоичные данные."
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьHexСтрокуИзБуфераДвоичныхДанных",
+      "aliases": [
+        "GetHexStringFromBinaryDataBuffer"
+      ],
+      "description": "Преобразует буфер двоичных данных в строку формата Base 16 (Hex).\n\nВозвращаемое значение: Тип: Строка.",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "БуферДвоичныхДанных",
+              "description": "Буфер двоичных данных."
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьБуферДвоичныхДанныхИзДвоичныхДанных",
+      "aliases": [
+        "GetBinaryDataBufferFromBinaryData"
+      ],
+      "description": "Преобразует двоичные данные в буфер двоичных данных.\n\nВозвращаемое значение: Тип: БуферДвоичныхДанных.",
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "ДвоичныеДанные",
+              "description": "Двоичные данные."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьДвоичныеДанныеИзБуфераДвоичныхДанных",
+      "aliases": [
+        "GetBinaryDataFromBinaryDataBuffer"
+      ],
+      "description": "Преобразует буфер двоичных данных в значение типа ДвоичныеДанные.\n\nВозвращаемое значение: Тип: ДвоичныеДанные.",
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "БуферДвоичныхДанных",
+              "description": "Буфер двоичных данных."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ]
+    },
+    {
+      "name": "ПобитовоеИ",
+      "aliases": [
+        "BitwiseAnd"
+      ],
+      "description": "Выполняет побитовое И для заданных чисел.\n\nВозвращаемое значение: Число. Результат побитового И",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "number1",
+              "type": "Число",
+              "description": "Число 1"
+            },
+            {
+              "name": "number2",
+              "type": "Число",
+              "description": "Число 2"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПобитовоеИли",
+      "aliases": [
+        "BitwiseOr"
+      ],
+      "description": "Выполняет побитовое Или для заданных чисел.\n\nВозвращаемое значение: Число. Результат побитового Или",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "number1",
+              "type": "Число",
+              "description": "Число 1"
+            },
+            {
+              "name": "number2",
+              "type": "Число",
+              "description": "Число 2"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПобитовоеНе",
+      "aliases": [
+        "BitwiseNot"
+      ],
+      "description": "Инвертирует биты числе.\n\nВозвращаемое значение: Число",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "number1",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПобитовоеИНе",
+      "aliases": [
+        "BitwiseAndNot"
+      ],
+      "description": "Выполняет преобразование, эквивалентное<code>ПобитовоеИ(Число1, ПобитовоеНе(Число2))</code>\n\nВозвращаемое значение: Число. Результат преобразования",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "number1",
+              "type": "Число",
+              "description": "Число 1"
+            },
+            {
+              "name": "number2",
+              "type": "Число",
+              "description": "Число 2"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПобитовоеИсключительноеИли",
+      "aliases": [
+        "BitwiseXor"
+      ],
+      "description": "Выполняет побитовое Исключительное Или для заданных чисел.\n\nВозвращаемое значение: Число. Результат побитового Исключительного Или",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "number1",
+              "type": "Число",
+              "description": "Число 1"
+            },
+            {
+              "name": "number2",
+              "type": "Число",
+              "description": "Число 2"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПроверитьБит",
+      "aliases": [
+        "CheckBit"
+      ],
+      "description": "Получает значение заданного бита.\n\nВозвращаемое значение: Булево. Истина - бит установлен в 1, Ложь - бит установлен в 0",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "value",
+              "type": "Число",
+              "description": "Число"
+            },
+            {
+              "name": "bitNumber",
+              "type": "Число",
+              "description": "Номер бита"
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "УстановитьБит",
+      "aliases": [
+        "SetBit"
+      ],
+      "description": "Устанавливает нужный бит числа в указанное значение\n\nВозвращаемое значение: Число. Число с установленным в нужное значение битом",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "value",
+              "type": "Число",
+              "description": "Число"
+            },
+            {
+              "name": "bitNumber",
+              "type": "Число",
+              "description": "Номер бита"
+            },
+            {
+              "name": "bitValue",
+              "type": "Число",
+              "description": "Значение бита"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПроверитьПоБитовойМаске",
+      "aliases": [
+        "CheckByBitMask"
+      ],
+      "description": "Проверяет соответствие числа битовой маске.\n\nВозвращаемое значение: Булево. Истина, когда в числе установлены в 1 все биты маски. Ложь - в остальных случаях",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "value",
+              "type": "Число",
+              "description": "Число"
+            },
+            {
+              "name": "mask",
+              "type": "Число",
+              "description": "Маска"
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "ПобитовыйСдвигВлево",
+      "aliases": [
+        "BitwiseShiftLeft"
+      ],
+      "description": "Выполняет побитовый сдвиг числа влево на заданное смещение",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "value",
+              "type": "Число",
+              "description": "Число"
+            },
+            {
+              "name": "offset",
+              "type": "Число",
+              "description": "Смещение"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПобитовыйСдвигВправо",
+      "aliases": [
+        "BitwiseShiftRight"
+      ],
+      "description": "Выполняет побитовый сдвиг числа вправо на заданное смещение",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "value",
+              "type": "Число",
+              "description": "Число"
+            },
+            {
+              "name": "offset",
+              "type": "Число",
+              "description": "Смещение"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Base64Строка",
+      "aliases": [
+        "Base64String"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "ДвоичныеДанные"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Base64Значение",
+      "aliases": [
+        "Base64Value"
+      ],
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ]
+    },
+    {
+      "name": "КодироватьСтроку",
+      "aliases": [
+        "EncodeString"
+      ],
+      "description": "Кодирует строку для передачи в URL (urlencode)",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "sourceString",
+              "type": "Строка"
+            },
+            {
+              "name": "codeType",
+              "type": "СпособКодированияСтроки"
+            },
+            {
+              "name": "encoding",
+              "optional": true,
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "РаскодироватьСтроку",
+      "aliases": [
+        "DecodeString"
+      ],
+      "description": "Раскодирует строку из URL формата.",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "encodedString",
+              "type": "Строка"
+            },
+            {
+              "name": "codeType",
+              "type": "СпособКодированияСтроки"
+            },
+            {
+              "name": "encoding",
+              "optional": true,
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "НСтр",
+      "aliases": [
+        "NStr"
+      ],
+      "description": "Получает строку на языке, заданном во втором параметре (коды языков в соответствии с  ISO 639-1) или на текущем языке системы.",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "src",
+              "type": "Строка",
+              "description": "Строка на нескольких языках"
+            },
+            {
+              "name": "lang",
+              "optional": true,
+              "type": "Строка",
+              "description": "Код языка (если не указан, возвращает вариант для текущего языка системы,  если вариант не найден, то возвращает вариант для английского языка, если не задан вариант для английского языка, то возвращает первый вариант из списка)"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СтрНачинаетсяС",
+      "aliases": [
+        "StrStartsWith"
+      ],
+      "description": "Определяет, что строка начинается с указанной подстроки.",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "inputString",
+              "type": "Строка",
+              "description": "Строка, начало которой проверяется на совпадение с подстрокой поиска."
+            },
+            {
+              "name": "searchString",
+              "type": "Строка",
+              "description": "Строка, содержащая предполагаемое начало строки. В случае если переданное значение является пустой строкой генерируется исключительная ситуация."
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "СтрЗаканчиваетсяНа",
+      "aliases": [
+        "StrEndsWith"
+      ],
+      "description": "Определяет, заканчивается ли строка указанной подстрокой.",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "inputString",
+              "type": "Строка",
+              "description": "Строка, окончание которой проверяется на совпадение с подстрокой поиска."
+            },
+            {
+              "name": "searchString",
+              "type": "Строка",
+              "description": "Строка, содержащая предполагаемое окончание строки. В случае если переданное значение является пустой строкой генерируется исключительная ситуация."
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "СтрРазделить",
+      "aliases": [
+        "StrSplit"
+      ],
+      "description": "Разделяет строку на части по указанным символам-разделителям.",
+      "returnType": "Массив",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "inputString",
+              "type": "Строка",
+              "description": "Разделяемая строка."
+            },
+            {
+              "name": "stringDelimiter",
+              "type": "Строка",
+              "description": "Строка символов, каждый из которых является индивидуальным разделителем."
+            },
+            {
+              "name": "includeEmpty",
+              "optional": true,
+              "type": "Булево",
+              "description": "Указывает необходимость включать в результат пустые строки, которые могут образоваться в результате разделения исходной строки. Значение по умолчанию: Истина."
+            }
+          ],
+          "returnType": "Массив"
+        }
+      ]
+    },
+    {
+      "name": "СтрСоединить",
+      "aliases": [
+        "StrConcat"
+      ],
+      "description": "Соединяет массив переданных строк в одну строку с указанным разделителем",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "input",
+              "type": "Массив",
+              "description": "Массив - соединяемые строки"
+            },
+            {
+              "name": "delimiter",
+              "optional": true,
+              "type": "Строка",
+              "description": "Разделитель. Если не указан, строки объединяются слитно"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СтрСравнить",
+      "aliases": [
+        "StrCompare"
+      ],
+      "description": "Сравнивает строки без учета регистра.\n\nВозвращаемое значение: -1 первая строка больше, 1 - вторая строка больше. 0 - строки равны",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "first",
+              "type": "Строка"
+            },
+            {
+              "name": "second",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "СтрНайти",
+      "aliases": [
+        "StrFind"
+      ],
+      "description": "Находит вхождение искомой строки как подстроки в исходной строке\n\nВозвращаемое значение: Позицию искомой строки в исходной строке. Возвращает 0, если подстрока не найдена.",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "haystack",
+              "type": "Строка",
+              "description": "Строка, в которой ищем"
+            },
+            {
+              "name": "needle",
+              "type": "Строка",
+              "description": "Строка, которую надо найти"
+            },
+            {
+              "name": "direction",
+              "optional": true,
+              "type": "НаправлениеПоиска",
+              "description": "значение перечисления НаправлениеПоиска (с конца/с начала)"
+            },
+            {
+              "name": "startPos",
+              "optional": true,
+              "type": "Число",
+              "description": "Начальная позиция, с которой начинать поиск"
+            },
+            {
+              "name": "occurance",
+              "optional": true,
+              "type": "Число",
+              "description": "Указывает номер вхождения искомой подстроки в исходной строке"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ОбновитьНастройкиСистемы",
+      "aliases": [
+        "RefreshSystemConfig"
+      ],
+      "description": "Метод обновляет текущие настройки значениями из файла oscript.cfg",
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьЗначениеСистемнойНастройки",
+      "aliases": [
+        "GetSystemOptionValue"
+      ],
+      "description": "Метод возвращает значение из файла oscript.cfg по имени настойки\n\nВозвращаемое значение: Строка. Значение системной настройки.",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "optionKey",
+              "type": "Строка",
+              "description": "Имя настройки из файла oscript.cfg"
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "Сообщить",
+      "aliases": [
+        "Message"
+      ],
+      "description": "Выдает сообщение в консоль.",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "message",
+              "type": "Строка",
+              "description": "Выдаваемое сообщение."
+            },
+            {
+              "name": "status",
+              "optional": true,
+              "type": "СтатусСообщения",
+              "description": "Статус сообщения. В зависимости от статуса изменяется цвет вывода сообщения."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ПодключитьСценарий",
+      "aliases": [
+        "AttachScript"
+      ],
+      "description": "Подключает сторонний файл сценария к текущей системе типов. Подключенный сценарий выступает, как самостоятельный класс, создаваемый оператором Новый",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "path",
+              "type": "Строка",
+              "description": "Путь к подключаемому сценарию"
+            },
+            {
+              "name": "typeName",
+              "type": "Строка",
+              "description": "Имя типа, которое будет иметь новый класс. Экземпляры класса создаются оператором Новый."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ЗагрузитьСценарийИзСтроки",
+      "aliases": [
+        "LoadScriptFromString"
+      ],
+      "description": "Создает экземпляр объекта на основании стороннего файла сценария. Загруженный сценарий возвращается, как самостоятельный объект.  Экспортные свойства и методы скрипта доступны для вызова.",
+      "returnType": "ИнформацияОСценарии",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "code",
+              "type": "Строка",
+              "description": "Текст сценария"
+            },
+            {
+              "name": "externalContext",
+              "optional": true,
+              "type": "Структура",
+              "description": "Структура. Глобальные свойства, которые будут инжектированы в область видимости загружаемого скрипта. (Необязательный)"
+            }
+          ],
+          "returnType": "ИнформацияОСценарии"
+        }
+      ]
+    },
+    {
+      "name": "ЗагрузитьСценарий",
+      "aliases": [
+        "LoadScript"
+      ],
+      "description": "Создает экземпляр объекта на основании стороннего файла сценария. Загруженный сценарий возвращается, как самостоятельный объект.  Экспортные свойства и методы скрипта доступны для вызова.",
+      "returnType": "ИнформацияОСценарии",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "path",
+              "type": "Строка",
+              "description": "Путь к подключаемому сценарию"
+            },
+            {
+              "name": "externalContext",
+              "optional": true,
+              "type": "Структура",
+              "description": "Структура. Глобальные свойства, которые будут инжектированы в область видимости загружаемого скрипта. (Необязательный)"
+            }
+          ],
+          "returnType": "ИнформацияОСценарии"
+        }
+      ]
+    },
+    {
+      "name": "ПодключитьВнешнююКомпоненту",
+      "aliases": [
+        "AttachAddIn"
+      ],
+      "description": "Подключает внешнюю сборку среды .NET (*.dll) и регистрирует классы 1Script, объявленные в этой сборке. Публичные классы, отмеченные в dll атрибутом ContextClass, будут импортированы аналогично встроенным классам 1Script. Загружаемая сборка должна ссылаться на сборку ScriptEngine.dll  Также подключает вншение компонеты, разработанные по технологии Native API, поставляемые в виде отдельных DLL или упакованные в ZIP-архив.",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "dllPath",
+              "type": "Строка",
+              "description": "Путь к внешней компоненте"
+            },
+            {
+              "name": "name",
+              "optional": true,
+              "type": "Строка",
+              "description": "Символическое имя подключаемой внешней компоненты (только для Native API)"
+            },
+            {
+              "name": "type",
+              "optional": true,
+              "type": "ТипВнешнейКомпоненты",
+              "description": "Тип подключаемой внешней компоненты (для совместимости, необязательно)"
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "СтартовыйСценарий",
+      "aliases": [
+        "EntryScript"
+      ],
+      "description": "Возвращает информацию о сценарии, который был точкой входа в программу. Можно выделить два вида сценариев: те, которые были подключены, как классы и те, которые запущены непосредственно. Метод СтартовыйСценарий возвращает информацию о сценарии, запущенном непосредственно. Для получения информации о текущем выполняемом сценарии см. метод ТекущийСценарий()\n\nВозвращаемое значение: Объект ИнформацияОСценарии",
+      "returnType": "ИнформацияОСценарии",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "ИнформацияОСценарии"
+        }
+      ]
+    },
+    {
+      "name": "Приостановить",
+      "aliases": [
+        "Sleep"
+      ],
+      "description": "Приостанавливает выполнение скрипта.",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "delay",
+              "type": "Число",
+              "description": "Время приостановки в миллисекундах"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ЗавершитьРаботу",
+      "aliases": [
+        "Exit"
+      ],
+      "description": "Прерывает выполнение текущего скрипта.",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "exitCode",
+              "type": "Число",
+              "description": "Код возврата (ошибки), возвращаемый операционной системе."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ВвестиСтроку",
+      "aliases": [
+        "InputString"
+      ],
+      "description": "Ввод строки пользователем. Позволяет запросить у пользователя информацию.\n\nВозвращаемое значение: Булево. Истина, если пользователь ввел данные, Ложь, если отказался.",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "resut",
+              "type": "Произвольный",
+              "description": "Выходной параметр. Введенные данные в виде строки."
+            },
+            {
+              "name": "prompt",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Строка, выводимая в качестве подсказки. Необязательный, по умолчанию - пустая строка."
+            },
+            {
+              "name": "len",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Максимальная длина вводимой строки. Необязательный, по умолчанию - 0 (неограниченная длина). Указание неограниченной длины может не поддерживаться хост-приложением."
+            },
+            {
+              "name": "multiline",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Булево, определяет режим ввода многострочного текста. Необязательный, по умолчанию - Ложь."
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "ОсвободитьОбъект",
+      "aliases": [
+        "FreeObject"
+      ],
+      "description": "Явное освобождение ресурса через интерфейс IDisposable среды CLR.  OneScript не выполняет подсчет ссылок на объекты, а полагается на сборщик мусора CLR. Это значит, что объекты автоматически не освобождаются при выходе из области видимости.   Метод ОсвободитьОбъект можно использовать для детерминированного освобождения ресурсов. Если объект поддерживает интерфейс IDisposable, то данный метод вызовет Dispose у данного объекта.  Как правило, интерфейс IDisposable реализуется различными ресурсами (файлами, соединениями с ИБ и т.п.)",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "obj",
+              "type": "ИнформацияОСценарии",
+              "description": "Объект, ресурсы которого требуется освободить."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ВыполнитьСборкуМусора",
+      "aliases": [
+        "RunGarbageCollection"
+      ],
+      "description": "OneScript не выполняет подсчет ссылок на объекты, а полагается на сборщик мусора CLR. Это значит, что объекты автоматически не освобождаются при выходе из области видимости.  С помощью данного метода можно запустить принудительную сборку мусора среды CLR. Данные метод следует использовать обдуманно, поскольку вызов данного метода не гарантирует освобождение всех объектов. Локальные переменные, например, до завершения текущего метода очищены не будут, поскольку до завершения текущего метода CLR будет видеть, что они используются движком 1Script.",
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
+    },
+    {
+      "name": "ЗапуститьПриложение",
+      "aliases": [
+        "RunApp"
+      ],
+      "description": "Запуск приложения в операционной системе",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "cmdLine",
+              "type": "Строка",
+              "description": "Командная строка запуска"
+            },
+            {
+              "name": "currentDir",
+              "optional": true,
+              "type": "Строка",
+              "description": "Текущая директория запускаемого процесса (необязательно)"
+            },
+            {
+              "name": "wait",
+              "optional": true,
+              "type": "Булево",
+              "description": "Ожидать завершения (необязательно) по умолчанию Ложь"
+            },
+            {
+              "name": "retCode",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Выходной параметр. Код возврата процесса. Имеет смысл только если указан параметр wait=true"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "СоздатьПроцесс",
+      "aliases": [
+        "CreateProcess"
+      ],
+      "description": "Создает процесс, которым можно манипулировать из скрипта",
+      "returnType": "Процесс",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "cmdLine",
+              "type": "Строка",
+              "description": "Командная строка запуска"
+            },
+            {
+              "name": "currentDir",
+              "optional": true,
+              "type": "Строка",
+              "description": "Текущая директория запускаемого процесса (необязательно)"
+            },
+            {
+              "name": "redirectOutput",
+              "optional": true,
+              "type": "Булево",
+              "description": "Перехватывать стандартные потоки stdout и stderr"
+            },
+            {
+              "name": "redirectInput",
+              "optional": true,
+              "type": "Булево",
+              "description": "Перехватывать стандартный поток stdin"
+            },
+            {
+              "name": "encoding",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Кодировка стандартных потоков вывода и ошибок"
+            },
+            {
+              "name": "env",
+              "optional": true,
+              "type": "Соответствие",
+              "description": "Соответствие, где установлены значения переменных среды"
+            }
+          ],
+          "returnType": "Процесс"
+        }
+      ]
+    },
+    {
+      "name": "НайтиПроцессПоИдентификатору",
+      "aliases": [
+        "FindProcessById"
+      ],
+      "description": "Выполняет поиск процесса по PID среди запущенных в операционной системе\n\nВозвращаемое значение: Процесс. Если не найден - Неопределено",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "PID",
+              "type": "Число",
+              "description": "Идентификатор процесса"
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "НайтиПроцессыПоИмени",
+      "aliases": [
+        "FindProcessesByName"
+      ],
+      "description": "Выполняет поиск процессов с определенным именем\n\nВозвращаемое значение: Массив объектов Процесс.",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "name",
+              "type": "Строка",
+              "description": "Имя процесса"
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "КаталогПрограммы",
+      "aliases": [
+        "ProgramDirectory"
+      ],
+      "description": "Каталог исполняемых файлов OneScript",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "КраткоеПредставлениеОшибки",
+      "aliases": [
+        "BriefErrorDescription"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "errInfo",
+              "type": "ИнформацияОбОшибке"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПодробноеПредставлениеОшибки",
+      "aliases": [
+        "DetailErrorDescription"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "errInfo",
+              "type": "ИнформацияОбОшибке"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ТекущаяУниверсальнаяДата",
+      "aliases": [
+        "CurrentUniversalDate"
+      ],
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "ТекущаяУниверсальнаяДатаВМиллисекундах",
+      "aliases": [
+        "CurrentUniversalDateInMilliseconds"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ЗначениеЗаполнено",
+      "aliases": [
+        "ValueIsFilled"
+      ],
+      "description": "Проверяет заполненность значения по принципу, заложенному в 1С:Предприятии",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "inValue",
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "ЗаполнитьЗначенияСвойств",
+      "aliases": [
+        "FillPropertyValues"
+      ],
+      "description": "Заполняет одноименные значения свойств одного объекта из другого",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "acceptor",
+              "type": "ИнформацияОСценарии",
+              "description": "Объект-приемник"
+            },
+            {
+              "name": "source",
+              "type": "ИнформацияОСценарии",
+              "description": "Объект-источник"
+            },
+            {
+              "name": "filledProperties",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Заполняемые свойства (строка, через запятую)"
+            },
+            {
+              "name": "ignoredProperties",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Игнорируемые свойства (строка, через запятую)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьCOMОбъект",
+      "aliases": [
+        "GetCOMObject"
+      ],
+      "description": "Получает объект класса COM по его имени или пути. Подробнее см. синтакс-помощник от 1С.\n\nВозвращаемое значение: COMОбъект",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "pathName",
+              "optional": true,
+              "type": "Строка",
+              "description": "Путь к библиотеке"
+            },
+            {
+              "name": "className",
+              "optional": true,
+              "type": "Строка",
+              "description": "Имя класса"
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "XMLСтрока",
+      "aliases": [
+        "XMLString"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "value",
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "XMLЗначение",
+      "aliases": [
+        "XMLValue"
+      ],
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "givenType",
+              "type": "Произвольный"
+            },
+            {
+              "name": "presentation",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "ЧасовойПояс",
+      "aliases": [
+        "TimeZone"
+      ],
+      "description": "Получает идентификатор часового пояса компьютера.\n\nВозвращаемое значение: Строка - Идентификатор часового пояса компьютера",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ПолучитьДопустимыеЧасовыеПояса",
+      "aliases": [
+        "GetAvailableTimeZones"
+      ],
+      "description": "Получает массив строк допустимых идентификаторов часовых поясов.\n\nВозвращаемое значение: Массив - Доступные идентификаторы часовых поясов",
+      "returnType": "Массив",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Массив"
+        }
+      ]
+    },
+    {
+      "name": "ПредставлениеЧасовогоПояса",
+      "aliases": [
+        "TimeZonePresentation"
+      ],
+      "description": "Возвращает локализованное наименование часового пояса с заданным идентификатором.\n\nВозвращаемое значение: Строка",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "id",
+              "type": "Строка",
+              "description": "Идентификатор часового пояса"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "МестноеВремя",
+      "aliases": [
+        "ToLocalTime"
+      ],
+      "description": "Преобразует универсальное время в местное время заданного часового пояса.\n\nВозвращаемое значение: Дата",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "universalTime",
+              "type": "Произвольный",
+              "description": "Универсальное время."
+            },
+            {
+              "name": "timeZone",
+              "optional": true,
+              "type": "Строка",
+              "description": "Часовой пояс. Подробнее см. синтакс-помощник от 1С."
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "УниверсальноеВремя",
+      "aliases": [
+        "ToUniversalTime"
+      ],
+      "description": "Преобразует местное время в заданном часовом поясе в универсальное время.\n\nВозвращаемое значение: Дата",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "localTime",
+              "type": "Произвольный",
+              "description": "Локальное время."
+            },
+            {
+              "name": "timeZone",
+              "optional": true,
+              "type": "Строка",
+              "description": "Часовой пояс. Подробнее см. синтакс-помощник от 1С."
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "СмещениеСтандартногоВремени",
+      "aliases": [
+        "StandardTimeOffset"
+      ],
+      "description": "Получает смещение в секундах стандартного времени заданного часового пояса  относительно универсального времени без учета летнего времени для заданного универсального времени\n\nВозвращаемое значение: Число",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "timeZone",
+              "optional": true,
+              "type": "Строка",
+              "description": "Часовой пояс. Подробнее см. синтакс-помощник от 1С."
+            },
+            {
+              "name": "universalTime",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Универсальное время (UTC), для которого нужно определить смещение"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПрочитатьJSON",
+      "aliases": [
+        "ReadJSON"
+      ],
+      "description": "Считывает значение из JSON-текста или файла. JSON-текст должен быть корректным.",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Reader",
+              "type": "ЧтениеJSON",
+              "description": "Объект чтения JSON."
+            },
+            {
+              "name": "ReadToMap",
+              "optional": true,
+              "type": "Булево",
+              "description": "Если установлено Истина, чтение объекта JSON будет выполнено в Соответствие. Если установлено Ложь, объекты будут считываться в объект типа Структура. Значение по умолчанию: Ложь."
+            },
+            {
+              "name": "PropertiesWithDateValuesNames",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Значение не обрабатывается в текущей версии. Значение по умолчанию: Неопределено."
+            },
+            {
+              "name": "ExpectedDateFormat",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Значение не обрабатывается в текущей версии. Значение по умолчанию: ISO."
+            },
+            {
+              "name": "ReviverFunctionName",
+              "optional": true,
+              "type": "Строка",
+              "description": "Значение не обрабатывается в текущей версии. Значение по умолчанию: Неопределено."
+            },
+            {
+              "name": "ReviverFunctionModule",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Значение не обрабатывается в текущей версии. Значение по умолчанию: Неопределено."
+            },
+            {
+              "name": "ReviverFunctionAdditionalParameters",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Значение не обрабатывается в текущей версии. Значение по умолчанию: Неопределено."
+            },
+            {
+              "name": "RetriverPropertiesNames",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Значение не обрабатывается в текущей версии. Значение по умолчанию: Неопределено."
+            },
+            {
+              "name": "MaximumNesting",
+              "optional": true,
+              "type": "Число",
+              "description": "Значение не обрабатывается в текущей версии."
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "ПрочитатьДатуJSON",
+      "aliases": [
+        "ReadJSONDate"
+      ],
+      "description": "Выполняет преобразование строки, прочитанной в JSON-формате, в значение типа Дата.\n\nВозвращаемое значение: Значения данного типа содержит дату григорианского календаря (с 01 января 0001 года) и время с точностью до секунды.",
+      "returnType": "Произвольный",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "String",
+              "type": "Строка",
+              "description": "Строка, которую требуется преобразовать в дату."
+            },
+            {
+              "name": "Format",
+              "type": "Произвольный",
+              "description": "Формат, в котором представлена дата в строке, подлежащей преобразованию."
+            }
+          ],
+          "returnType": "Произвольный"
+        }
+      ]
+    },
+    {
+      "name": "ЗаписатьJSON",
+      "aliases": [
+        "WriteJSON"
+      ],
+      "description": "Выполняет сериализацию Значение в формат JSON. Результат помещает в объект ЗаписьJSON. Если методу требуется передать значение недопустимого типа, то можно использовать функцию преобразования значения (параметры ИмяФункцииПреобразования и МодульФункцииПреобразования).",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Writer",
+              "type": "ЗаписьJSON",
+              "description": "Объект, через который осуществляется запись JSON. Поток JSON должен быть подготовлен для записи значения."
+            },
+            {
+              "name": "Value",
+              "type": "Произвольный",
+              "description": "Объект записи JSON. Меняет состояние потока записи."
+            },
+            {
+              "name": "SerializationSettings",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "В текущий версии не обрабатывается. Настройки сериализации в JSON."
+            },
+            {
+              "name": "ConversionFunctionName",
+              "optional": true,
+              "type": "Строка",
+              "description": "В текущий версии не обрабатывается. Значение по умолчанию: Неопределено."
+            },
+            {
+              "name": "ConversionFunctionModule",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "Указывает контекст, в котором реализована функция преобразования значения в значение формата JSON. В текущий версии не обрабатывается.  Значение по умолчанию: Неопределено."
+            },
+            {
+              "name": "ConversionFunctionAdditionalParameters",
+              "optional": true,
+              "type": "Произвольный",
+              "description": "В текущий версии не обрабатывается. Значение по умолчанию: Неопределено."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "СтрДлина",
+      "aliases": [
+        "StrLen"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "СокрЛ",
+      "aliases": [
+        "TrimL"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СокрП",
+      "aliases": [
+        "TrimR"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СокрЛП",
+      "aliases": [
+        "TrimAll"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Лев",
+      "aliases": [
+        "Left"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "ЧислоСимволов",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Прав",
+      "aliases": [
+        "Right"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "ЧислоСимволов",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Сред",
+      "aliases": [
+        "Mid"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "НачальныйНомер",
+              "type": "Число"
+            },
+            {
+              "name": "ЧислоСимволов",
+              "optional": true,
+              "type": "Число"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Найти",
+      "aliases": [
+        "Find"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "ПодстрокаПоиска",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ВРег",
+      "aliases": [
+        "Upper"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "НРег",
+      "aliases": [
+        "Lower"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ТРег",
+      "aliases": [
+        "Title"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Символ",
+      "aliases": [
+        "Char"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "КодСимвола",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "КодСимвола",
+      "aliases": [
+        "CharCode"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "НомерСимвола",
+              "optional": true,
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ПустаяСтрока",
+      "aliases": [
+        "IsBlankString"
+      ],
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "СтрЗаменить",
+      "aliases": [
+        "StrReplace"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "ПодстрокаПоиска",
+              "type": "Строка"
+            },
+            {
+              "name": "ПодстрокаЗамены",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СтрПолучитьСтроку",
+      "aliases": [
+        "StrGetLine"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "НомерСтроки",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СтрЧислоСтрок",
+      "aliases": [
+        "StrLineCount"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "СтрЧислоВхождений",
+      "aliases": [
+        "StrOccurrenceCount"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Строка",
+              "type": "Строка"
+            },
+            {
+              "name": "ПодстрокаПоиска",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Год",
+      "aliases": [
+        "Year"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Месяц",
+      "aliases": [
+        "Month"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "День",
+      "aliases": [
+        "Day"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Час",
+      "aliases": [
+        "Hour"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Минута",
+      "aliases": [
+        "Minute"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Секунда",
+      "aliases": [
+        "Second"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "НачалоГода",
+      "aliases": [
+        "BegOfYear"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "НачалоМесяца",
+      "aliases": [
+        "BegOfMonth"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "НачалоДня",
+      "aliases": [
+        "BegOfDay"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "НачалоЧаса",
+      "aliases": [
+        "BegOfHour"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "НачалоМинуты",
+      "aliases": [
+        "BegOfMinute"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "НачалоКвартала",
+      "aliases": [
+        "BegOfQuarter"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецГода",
+      "aliases": [
+        "EndOfYear"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецМесяца",
+      "aliases": [
+        "EndOfMonth"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецДня",
+      "aliases": [
+        "EndOfDay"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецЧаса",
+      "aliases": [
+        "EndOfHour"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецМинуты",
+      "aliases": [
+        "EndOfMinute"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецКвартала",
+      "aliases": [
+        "EndOfQuarter"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "НеделяГода",
+      "aliases": [
+        "WeekOfYear"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ДеньГода",
+      "aliases": [
+        "DayOfYear"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ДеньНедели",
+      "aliases": [
+        "WeekDay"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ДобавитьМесяц",
+      "aliases": [
+        "AddMonth"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            },
+            {
+              "name": "ЧислоМесяцев",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "Цел",
+      "aliases": [
+        "Int"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Окр",
+      "aliases": [
+        "Round"
+      ],
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            },
+            {
+              "name": "Разрядность",
+              "optional": true,
+              "type": "Число"
+            },
+            {
+              "name": "РежимОкругления",
+              "optional": true,
+              "type": "РежимОкругления"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Log",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Log10",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Sin",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Угол",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Cos",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Угол",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Tan",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Угол",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ASin",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ACos",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "ATan",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Exp",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Pow",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Основание",
+              "type": "Число"
+            },
+            {
+              "name": "Показатель",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Sqrt",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Число",
+              "type": "Число"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Мин",
+      "aliases": [
+        "Min"
+      ],
+      "returnType": "Число|Строка|Дата|Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение1",
+              "type": "Число|Строка|Дата|Булево"
+            },
+            {
+              "name": "..."
+            },
+            {
+              "name": "ЗначениеN",
+              "type": "Число|Строка|Дата|Булево"
+            }
+          ],
+          "returnType": "Число|Строка|Дата|Булево"
+        }
+      ]
+    },
+    {
+      "name": "Макс",
+      "aliases": [
+        "Max"
+      ],
+      "returnType": "Число|Строка|Дата|Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение1",
+              "type": "Число|Строка|Дата|Булево"
+            },
+            {
+              "name": "..."
+            },
+            {
+              "name": "ЗначениеN",
+              "type": "Число|Строка|Дата|Булево"
+            }
+          ],
+          "returnType": "Число|Строка|Дата|Булево"
+        }
+      ]
+    },
+    {
+      "name": "Формат",
+      "aliases": [
+        "Format"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "Число|Дата|Булево"
+            },
+            {
+              "name": "ФорматнаяСтрока",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ИнформацияОбОшибке",
+      "aliases": [
+        "ErrorInfo"
+      ],
+      "returnType": "ИнформацияОбОшибке",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "ИнформацияОбОшибке"
+        }
+      ]
+    },
+    {
+      "name": "ОписаниеОшибки",
+      "aliases": [
+        "ErrorDescription"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ТекущийСценарий",
+      "aliases": [
+        "CurrentScript"
+      ],
+      "description": "Возвращает информацию о выполняемом сценарии.\n\nВозвращаемое значение: ИнформацияОСценарии",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "СтрШаблон",
+      "aliases": [
+        "StrTemplate"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Шаблон",
+              "type": "Строка"
+            },
+            {
+              "name": "Значение1_Значение10",
+              "optional": true,
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Булево",
+      "aliases": [
+        "Boolean"
+      ],
+      "description": "Возвращаемое значение: Булево",
+      "returnType": "Булево",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Булево"
+        }
+      ]
+    },
+    {
+      "name": "Число",
+      "aliases": [
+        "Number"
+      ],
+      "description": "Возвращаемое значение: Число",
+      "returnType": "Число",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Число"
+        }
+      ]
+    },
+    {
+      "name": "Строка",
+      "aliases": [
+        "String"
+      ],
+      "description": "Возвращаемое значение: Строка",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "Дата",
+      "aliases": [
+        "Date"
+      ],
+      "description": "Возвращаемое значение: Дата",
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "Тип",
+      "aliases": [
+        "Type"
+      ],
+      "description": "Возвращаемое значение: Тип",
+      "returnType": "Тип",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "Строка"
+            }
+          ],
+          "returnType": "Тип"
+        }
+      ]
+    },
+    {
+      "name": "ТипЗнч",
+      "aliases": [
+        "Type"
+      ],
+      "description": "Возвращаемое значение: Тип",
+      "returnType": "Тип",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Значение",
+              "type": "Произвольный"
+            }
+          ],
+          "returnType": "Тип"
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "ФайловыеПотоки",
+      "aliases": [
+        "FileStreams"
+      ],
+      "description": "Менеджер файловых потоков."
+    },
+    {
+      "name": "АргументыКоманднойСтроки",
+      "aliases": [
+        "CommandLineArguments"
+      ],
+      "description": "Доступ к аргументам командной строки. Объект АргументыКоманднойСтроки представляет собой массив в режиме \"только чтение\"."
+    },
+    {
+      "name": "Символы",
+      "aliases": [
+        "Chars"
+      ],
+      "description": "Содержит набор системных символов."
+    }
+  ],
+  "classes": [
+    "Action",
+    "Array",
+    "BinaryData",
+    "BinaryDataBuffer",
+    "BinaryDataQualifiers",
+    "COMObject",
+    "COMОбъект",
+    "Console",
+    "DataHashing",
+    "DataReader",
+    "DataWriter",
+    "DateQualifiers",
+    "DriveInfo",
+    "ErrorInfo",
+    "File",
+    "FileStream",
+    "FixedArray",
+    "FixedMap",
+    "FixedStructure",
+    "HTTPConnection",
+    "HTTPRequest",
+    "HTTPЗапрос",
+    "HTTPСоединение",
+    "InternetProxy",
+    "JSONReader",
+    "JSONWriter",
+    "JSONWriterSettings",
+    "Map",
+    "MemoryStream",
+    "NumberQualifiers",
+    "PostRequestData",
+    "RandomNumberGenerator",
+    "Reflector",
+    "Regex",
+    "ResourceLock",
+    "StringQualifiers",
+    "Structure",
+    "SystemInfo",
+    "TCPConnection",
+    "TCPServer",
+    "TCPСервер",
+    "TCPСоединение",
+    "TextDocument",
+    "TextReader",
+    "TextWriter",
+    "TypeDescription",
+    "UUID",
+    "ValueList",
+    "ValueTable",
+    "ValueTree",
+    "XDTOSerializer",
+    "XMLExpandedName",
+    "XMLReader",
+    "XMLSchema",
+    "XMLSchemaSet",
+    "XMLWriter",
+    "XMLWriterSettings",
+    "XSAnnotation",
+    "XSAppInfo",
+    "XSAttributeDeclaration",
+    "XSAttributeGroupDefinition",
+    "XSAttributeUse",
+    "XSComplexTypeDefinition",
+    "XSDocumentation",
+    "XSElementDeclaration",
+    "XSEnumerationFacet",
+    "XSFractionDigitsFacet",
+    "XSIdentityConstraintDefinition",
+    "XSImport",
+    "XSInclude",
+    "XSLengthFacet",
+    "XSMaxExclusiveFacet",
+    "XSMaxInclusiveFacet",
+    "XSMaxLengthFacet",
+    "XSMinExclusiveFacet",
+    "XSMinInclusiveFacet",
+    "XSMinLengthFacet",
+    "XSModelGroup",
+    "XSModelGroupDefinition",
+    "XSNotationDeclaration",
+    "XSParticle",
+    "XSPatternFacet",
+    "XSRedefine",
+    "XSSimpleTypeDefinition",
+    "XSTotalDigitsFacet",
+    "XSWhitespaceFacet",
+    "XSWildcard",
+    "XSXPathDefinition",
+    "ZipFileReader",
+    "ZipFileWriter",
+    "АннотацияXS",
+    "БлокировкаРесурса",
+    "БуферДвоичныхДанных",
+    "ВключениеXS",
+    "ГенераторСлучайныхЧисел",
+    "ГруппаМоделиXS",
+    "ДанныеPOSTЗапроса",
+    "ДвоичныеДанные",
+    "Действие",
+    "ДеревоЗначений",
+    "ДокументацияXS",
+    "ЗаписьJSON",
+    "ЗаписьXML",
+    "ЗаписьZipФайла",
+    "ЗаписьДанных",
+    "ЗаписьТекста",
+    "ИмпортXS",
+    "ИнтернетПрокси",
+    "ИнформацияДляПриложенияXS",
+    "ИнформацияОДиске",
+    "ИнформацияОбОшибке",
+    "ИспользованиеАтрибутаXS",
+    "КвалификаторыДаты",
+    "КвалификаторыДвоичныхДанных",
+    "КвалификаторыСтроки",
+    "КвалификаторыЧисла",
+    "Консоль",
+    "МаскаXS",
+    "Массив",
+    "НаборСхемXML",
+    "ОбъявлениеАтрибутаXS",
+    "ОбъявлениеНотацииXS",
+    "ОбъявлениеЭлементаXS",
+    "ОписаниеТипов",
+    "ОпределениеГруппыАтрибутовXS",
+    "ОпределениеГруппыМоделиXS",
+    "ОпределениеОграниченияИдентичностиXS",
+    "ОпределениеПростогоТипаXS",
+    "ОпределениеСоставногоТипаXS",
+    "ОпределенияXPathXS",
+    "ПараметрыЗаписиJSON",
+    "ПараметрыЗаписиXML",
+    "ПереопределениеXS",
+    "ПотокВПамяти",
+    "РасширенноеИмяXML",
+    "РегулярноеВыражение",
+    "Рефлектор",
+    "СериализаторXDTO",
+    "СистемнаяИнформация",
+    "Соответствие",
+    "СписокЗначений",
+    "Структура",
+    "СхемаXML",
+    "ТаблицаЗначений",
+    "ТекстовыйДокумент",
+    "УникальныйИдентификатор",
+    "Файл",
+    "ФайловыйПоток",
+    "ФасетДлиныXS",
+    "ФасетКоличестваРазрядовДробнойЧастиXS",
+    "ФасетМаксимальногоВключающегоЗначенияXS",
+    "ФасетМаксимальногоИсключающегоЗначенияXS",
+    "ФасетМаксимальнойДлиныXS",
+    "ФасетМинимальногоВключающегоЗначенияXS",
+    "ФасетМинимальногоИсключающегоЗначенияXS",
+    "ФасетМинимальнойДлиныXS",
+    "ФасетОбразцаXS",
+    "ФасетОбщегоКоличестваРазрядовXS",
+    "ФасетПеречисленияXS",
+    "ФасетПробельныхСимволовXS",
+    "ФиксированнаяСтруктура",
+    "ФиксированноеСоответствие",
+    "ФиксированныйМассив",
+    "ФрагментXS",
+    "ХешированиеДанных",
+    "ЧтениеJSON",
+    "ЧтениеXML",
+    "ЧтениеZipФайла",
+    "ЧтениеДанных",
+    "ЧтениеТекста"
+  ],
+  "keywords": []
+}

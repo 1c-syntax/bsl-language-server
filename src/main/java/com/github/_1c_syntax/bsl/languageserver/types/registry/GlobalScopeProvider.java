@@ -65,6 +65,8 @@ public class GlobalScopeProvider {
 
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
+  private static final String OSCRIPT_RESOURCE_PATH =
+    "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-globals.json";
 
   private final Map<String, MemberDescriptor> functions;
   private final List<String> classes;
@@ -466,8 +468,52 @@ public class GlobalScopeProvider {
   }
 
   private static Loaded load() {
+    var bsl = loadFromResource(RESOURCE_PATH);
+    var os = loadFromResource(OSCRIPT_RESOURCE_PATH);
+    return merge(bsl, os);
+  }
+
+  private static Loaded merge(Loaded a, Loaded b) {
+    var functions = new LinkedHashMap<String, MemberDescriptor>(a.functions);
+    // Существующая запись (BSL) выигрывает при коллизии имён, как договаривались.
+    for (var e : b.functions.entrySet()) {
+      functions.putIfAbsent(e.getKey(), e.getValue());
+    }
+    var classes = new ArrayList<String>(a.classes.size() + b.classes.size());
+    var seenClass = new java.util.HashSet<String>();
+    for (var c : a.classes) {
+      if (seenClass.add(c.toLowerCase(Locale.ROOT))) classes.add(c);
+    }
+    for (var c : b.classes) {
+      if (seenClass.add(c.toLowerCase(Locale.ROOT))) classes.add(c);
+    }
+    var keywords = new ArrayList<String>(a.keywords.size() + b.keywords.size());
+    var seenKw = new java.util.HashSet<String>();
+    for (var k : a.keywords) {
+      if (seenKw.add(k.toLowerCase(Locale.ROOT))) keywords.add(k);
+    }
+    for (var k : b.keywords) {
+      if (seenKw.add(k.toLowerCase(Locale.ROOT))) keywords.add(k);
+    }
+    var vars = new ArrayList<PlatformVariable>(a.platformVariables.size() + b.platformVariables.size());
+    var seenVar = new java.util.HashSet<String>();
+    for (var v : a.platformVariables) {
+      if (seenVar.add(v.name().toLowerCase(Locale.ROOT))) vars.add(v);
+    }
+    for (var v : b.platformVariables) {
+      if (seenVar.add(v.name().toLowerCase(Locale.ROOT))) vars.add(v);
+    }
+    return new Loaded(
+      Collections.unmodifiableMap(functions),
+      List.copyOf(classes),
+      List.copyOf(keywords),
+      List.copyOf(vars)
+    );
+  }
+
+  private static Loaded loadFromResource(String resourcePath) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(RESOURCE_PATH).getInputStream()) {
+    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
       @SuppressWarnings("unchecked")
       Map<String, Object> root = mapper.readValue(stream, Map.class);
       var functions = readFunctions(root);
@@ -478,7 +524,7 @@ public class GlobalScopeProvider {
       var variables = readVariables(root);
       return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables);
     } catch (IOException e) {
-      LOGGER.error("Failed to load builtin globals resource: {}", RESOURCE_PATH, e);
+      LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
       return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of());
     }
   }

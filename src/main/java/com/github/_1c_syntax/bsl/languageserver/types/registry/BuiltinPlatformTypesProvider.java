@@ -62,7 +62,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   private final List<TypeDecl> types;
 
   public BuiltinPlatformTypesProvider() {
-    this.types = loadFromResource();
+    this.types = loadFromResource(RESOURCE_PATH);
   }
 
   @Override
@@ -71,9 +71,9 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   @SuppressWarnings("unchecked")
-  private static List<TypeDecl> loadFromResource() {
+  static List<TypeDecl> loadFromResource(String resourcePath) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(RESOURCE_PATH).getInputStream()) {
+    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
       List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
       var result = new ArrayList<TypeDecl>(raw.size());
       for (var entry : raw) {
@@ -86,7 +86,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       }
       return result;
     } catch (IOException e) {
-      LOGGER.error("Failed to load builtin platform types resource: {}", RESOURCE_PATH, e);
+      LOGGER.error("Failed to load builtin platform types resource: {}", resourcePath, e);
       return Collections.emptyList();
     }
   }
