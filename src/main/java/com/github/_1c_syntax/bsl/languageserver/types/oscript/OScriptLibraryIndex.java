@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -39,10 +42,13 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Координатор индексации OneScript-библиотек workspace'а.
@@ -76,6 +82,14 @@ public class OScriptLibraryIndex {
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptModuleTypeResolver oScriptModuleTypeResolver;
 
+  /** URI .os-файла → запись о его регистрации (имя + вид). Используется для re-index/cleanup. */
+  private final Map<URI, LibraryEntry> entriesByUri = new ConcurrentHashMap<>();
+
+  private enum EntryKind { MODULE, CLASS }
+
+  private record LibraryEntry(String qualifiedName, EntryKind kind, Path osFile) {
+  }
+
   /**
    * Реакция на добавление workspace: разово (или повторно при ручном вызове
    * {@link #reindex(ServerContext)}) проиндексировать все его OneScript-библиотеки.
@@ -99,6 +113,7 @@ public class OScriptLibraryIndex {
   public void reindex(ServerContext serverContext) {
     globalScopeProvider.clearLibraryEntries();
     oScriptModuleTypeResolver.clear();
+    entriesByUri.clear();
 
     var configs = libConfigDiscovery.discover(serverContext);
     if (!configs.isEmpty()) {
@@ -118,6 +133,55 @@ public class OScriptLibraryIndex {
 
     if (configs.isEmpty() && conventional.isEmpty()) {
       LOGGER.debug("No OneScript libraries discovered for workspace");
+    }
+  }
+
+  /**
+   * Реакция на изменение содержимого документа: если документ — .os-файл
+   * проиндексированной OneScript-библиотеки, перечитываем его метаданные
+   * и обновляем members / конструктор в реестрах.
+   */
+  @EventListener
+  public void handleDocumentChanged(DocumentContextContentChangedEvent event) {
+    var documentContext = event.getSource();
+    var uri = documentContext.getUri();
+    var entry = entriesByUri.get(uri);
+    if (entry == null) {
+      return;
+    }
+    try {
+      refreshFromDocumentContext(entry, documentContext);
+    } catch (RuntimeException e) {
+      LOGGER.warn("Failed to re-index OneScript library file {}", uri, e);
+    }
+  }
+
+  /**
+   * Реакция на удаление документа: если удалён .os-файл библиотеки —
+   * убираем его записи из всех реестров.
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    var uri = event.getUri();
+    var entry = entriesByUri.remove(uri);
+    if (entry == null) {
+      return;
+    }
+    oScriptModuleTypeResolver.unregister(uri);
+    typeRegistry.unregisterUserType(entry.qualifiedName());
+    if (entry.kind() == EntryKind.MODULE) {
+      globalScopeProvider.unregisterLibraryModule(entry.qualifiedName());
+    } else {
+      globalScopeProvider.unregisterLibraryClass(entry.qualifiedName());
+    }
+  }
+
+  private void refreshFromDocumentContext(LibraryEntry entry, DocumentContext documentContext) {
+    var parsed = libraryFileParser.parseFromDocumentContext(documentContext);
+    if (entry.kind() == EntryKind.MODULE) {
+      registerModuleMembers(entry.qualifiedName(), parsed);
+    } else {
+      registerClassMembers(entry.qualifiedName(), parsed);
     }
   }
 
@@ -156,28 +220,41 @@ public class OScriptLibraryIndex {
   }
 
   private void registerModuleFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
-    oScriptModuleTypeResolver.register(Absolute.uri(osFile.toUri()), ModuleType.OScriptModule);
+    var uri = Absolute.uri(osFile.toUri());
+    oScriptModuleTypeResolver.register(uri, ModuleType.OScriptModule);
     var parsed = libraryFileParser.parse(osFile, serverContext);
     if (parsed.isEmpty()) {
       return;
     }
+    registerModuleMembers(qualifiedName, parsed.get());
+    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.MODULE, osFile));
+  }
+
+  private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
+    var uri = Absolute.uri(osFile.toUri());
+    oScriptModuleTypeResolver.register(uri, ModuleType.OScriptClass);
+    var parsed = libraryFileParser.parse(osFile, serverContext);
+    if (parsed.isEmpty()) {
+      return;
+    }
+    registerClassMembers(qualifiedName, parsed.get());
+    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.CLASS, osFile));
+  }
+
+  private void registerModuleMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed) {
+    typeRegistry.unregisterUserType(qualifiedName);
     var ref = typeRegistry.registerUserType(qualifiedName, null);
-    var members = collectMembers(parsed.get());
+    var members = collectMembers(parsed);
     typeRegistry.registerMemberSource(ref, () -> members);
     globalScopeProvider.registerLibraryModule(qualifiedName, ref);
   }
 
-  private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext) {
-    oScriptModuleTypeResolver.register(Absolute.uri(osFile.toUri()), ModuleType.OScriptClass);
-    var parsed = libraryFileParser.parse(osFile, serverContext);
-    if (parsed.isEmpty()) {
-      return;
-    }
+  private void registerClassMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed) {
+    typeRegistry.unregisterUserType(qualifiedName);
     var ref = typeRegistry.registerUserType(qualifiedName, null);
-    var members = collectMembers(parsed.get());
+    var members = collectMembers(parsed);
     typeRegistry.registerMemberSource(ref, () -> members);
-
-    var ctorSignatures = parsed.get().constructor()
+    var ctorSignatures = parsed.constructor()
       .map(c -> withReturnType(c.signatures(), ref))
       .orElse(List.<SignatureDescriptor>of());
     globalScopeProvider.registerLibraryClass(qualifiedName, ctorSignatures);

@@ -80,6 +80,17 @@ public class OScriptLibraryFileParser {
     return Optional.of(extract(dc));
   }
 
+  /**
+   * Извлечь метаданные библиотеки из уже разобранного {@link DocumentContext}.
+   * <p>
+   * Используется для повторной индексации при изменении содержимого файла,
+   * чтобы не вызывать {@code rebuildDocument} ещё раз (он уже выполнен и сам
+   * породил событие изменения).
+   */
+  public OScriptLibraryFile parseFromDocumentContext(DocumentContext documentContext) {
+    return extract(documentContext);
+  }
+
   private OScriptLibraryFile extract(DocumentContext dc) {
     var symbolTree = dc.getSymbolTree();
     var constructorSymbol = Methods.getOscriptClassConstructor(symbolTree);

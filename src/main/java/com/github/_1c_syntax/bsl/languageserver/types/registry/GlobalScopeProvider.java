@@ -177,6 +177,34 @@ public class GlobalScopeProvider {
   }
 
   /**
+   * Удалить ранее зарегистрированный library-модуль по имени.
+   */
+  public void unregisterLibraryModule(String name) {
+    if (name == null || name.isBlank()) {
+      return;
+    }
+    var key = name.toLowerCase(Locale.ROOT);
+    libraryModules.remove(key);
+    if (!libraryClasses.containsKey(key)) {
+      libraryNamesDisplay.remove(key);
+    }
+  }
+
+  /**
+   * Удалить ранее зарегистрированный library-класс по имени.
+   */
+  public void unregisterLibraryClass(String name) {
+    if (name == null || name.isBlank()) {
+      return;
+    }
+    var key = name.toLowerCase(Locale.ROOT);
+    libraryClasses.remove(key);
+    if (!libraryModules.containsKey(key)) {
+      libraryNamesDisplay.remove(key);
+    }
+  }
+
+  /**
    * Очистить все ранее зарегистрированные library-сущности (например, перед
    * полной переиндексацией OneScript-библиотек workspace'а).
    */

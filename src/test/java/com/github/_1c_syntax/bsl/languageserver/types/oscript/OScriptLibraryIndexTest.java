@@ -106,4 +106,45 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     assertThat(context.getDocument(classUri)).isNotNull();
     assertThat(context.getDocument(classUri).getModuleType()).isEqualTo(ModuleType.OScriptClass);
   }
+
+  @Test
+  void refreshesMembersOnDocumentContentChange() {
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+
+    index.reindex(context);
+
+    var moduleRef = globalScopeProvider.findLibraryModule("MyModule").orElseThrow();
+    assertThat(typeRegistry.getMembers(moduleRef)).extracting(m -> m.name())
+      .contains("ВывестиСообщение");
+
+    var moduleUri = Absolute.uri(fixtureRoot.resolve("src/MyModule.os").toUri());
+    var dc = context.getDocument(moduleUri);
+    assertThat(dc).isNotNull();
+
+    var newContent = ""
+      + "Процедура НоваяПроцедура() Экспорт\n"
+      + "КонецПроцедуры\n";
+    context.rebuildDocument(dc, newContent, dc.getVersion() + 1);
+
+    assertThat(typeRegistry.getMembers(moduleRef)).extracting(m -> m.name())
+      .contains("НоваяПроцедура")
+      .doesNotContain("ВывестиСообщение");
+  }
+
+  @Test
+  void removesEntriesOnDocumentRemoved() {
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+
+    index.reindex(context);
+
+    var moduleUri = Absolute.uri(fixtureRoot.resolve("src/MyModule.os").toUri());
+    assertThat(globalScopeProvider.getLibraryModules()).contains("MyModule");
+
+    context.removeDocument(moduleUri);
+
+    assertThat(globalScopeProvider.findLibraryModule("MyModule")).isEmpty();
+    assertThat(typeRegistry.resolve("MyModule")).isEmpty();
+  }
 }
