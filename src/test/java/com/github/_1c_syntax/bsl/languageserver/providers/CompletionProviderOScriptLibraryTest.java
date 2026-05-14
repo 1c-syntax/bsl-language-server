@@ -50,12 +50,12 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
   void noDotCompletionSurfacesLibraryModuleAsModule() {
     initLib();
 
-    var content = "MyMod";
+    var content = "#Использовать mylib\nMyMod";
     var dc = TestUtils.getDocumentContext(content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
-    params.setPosition(new Position(0, content.length()));
+    params.setPosition(new Position(1, "MyMod".length()));
 
     var items = completionProvider.getCompletion(dc, params);
 
@@ -70,12 +70,12 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
   void noDotCompletionAfterNovyiSurfacesLibraryClassAsClass() {
     initLib();
 
-    var content = "А = Новый MyCl";
+    var content = "#Использовать mylib\nА = Новый MyCl";
     var dc = TestUtils.getDocumentContext(content, context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
-    params.setPosition(new Position(0, content.length()));
+    params.setPosition(new Position(1, "А = Новый MyCl".length()));
 
     var items = completionProvider.getCompletion(dc, params);
 
@@ -102,6 +102,25 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     assertThat(items)
       .extracting(CompletionItem::getLabel)
       .contains("ВывестиСообщение", "СформироватьСтроку", "СтатусМодуля");
+  }
+
+  @Test
+  void noDotCompletionWithoutUseDirectivesHidesLibraryEntries() {
+    initLib();
+
+    var content = "MyMod";
+    var dc = TestUtils.getDocumentContext(content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    var items = completionProvider.getCompletion(dc, params);
+
+    assertThat(items)
+      .as("без #Использовать library-сущности должны быть скрыты")
+      .filteredOn(it -> "MyModule".equals(it.getLabel()))
+      .isEmpty();
   }
 
   @Test

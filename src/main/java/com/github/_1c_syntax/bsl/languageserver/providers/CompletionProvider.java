@@ -188,21 +188,21 @@ public final class CompletionProvider {
 
     var items = new ArrayList<CompletionItem>();
 
-    // Per-document #Использовать gating. Если в документе нет ни одной
-    // директивы — поведение прежнее (показываем все библиотеки),
-    // иначе показываем только записи из объявленных библиотек.
+    // Per-document #Использовать gating. Строгая семантика OneScript:
+    // library-сущность видна только если она объявлена в директиве
+    // #Использовать <libName>. Без директив — ничего из библиотек не видно.
     var usedLibs = UseDirectiveScanner.usedLibraries(documentContext);
     var usedLibsLower = usedLibs.isEmpty()
       ? java.util.Set.<String>of()
       : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toUnmodifiableSet());
     java.util.function.Predicate<String> libVisible = name -> {
-      if (usedLibsLower.isEmpty()) {
+      var origin = globalScopeProvider.getLibraryEntryOrigin(name);
+      // Если происхождение неизвестно (запись зарегистрирована без libOrigin),
+      // считаем сущность не библиотечной — пропускаем без ограничений.
+      if (origin.isEmpty()) {
         return true;
       }
-      var origin = globalScopeProvider.getLibraryEntryOrigin(name);
-      // Если происхождение неизвестно (старая регистрация без libOrigin) —
-      // не блокируем, чтобы не сломать существующие сценарии.
-      return origin.map(o -> usedLibsLower.contains(o.toLowerCase(Locale.ROOT))).orElse(true);
+      return usedLibsLower.contains(origin.get().toLowerCase(Locale.ROOT));
     };
 
     if (afterNew) {
