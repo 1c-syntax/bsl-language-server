@@ -250,8 +250,22 @@ public final class SignatureHelpProvider {
     if (receiver == null) {
       return Optional.empty();
     }
-    // Используем findTypes(uri, position) на токене получателя — он указывает в его конец.
-    var receiverEnd = receiver.getStop();
+    // Позиция конца ресивера = непосредственно перед DOT текущего accessCall.
+    // Родитель methodCall — это accessCall, чей первый токен — DOT.
+    // receiver.getStop() даёт конец всего внешнего узла (вплоть до закрывающей ')'),
+    // что неверно для цепочек вида `a.b.Method(` или `Var.Method(`.
+    var accessCall = (mc.getParent() instanceof BSLParser.AccessCallContext ac) ? ac : null;
+    Token receiverEnd;
+    if (accessCall != null && accessCall.getStart() != null) {
+      // Берём токен непосредственно перед DOT accessCall'a.
+      var dotToken = accessCall.getStart();
+      receiverEnd = findTokenBefore(receiver, dotToken);
+      if (receiverEnd == null) {
+        receiverEnd = receiver.getStop();
+      }
+    } else {
+      receiverEnd = receiver.getStop();
+    }
     if (receiverEnd == null) {
       return Optional.empty();
     }
@@ -279,6 +293,32 @@ public final class SignatureHelpProvider {
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * Находит последний токен внутри {@code receiver}, чей tokenIndex меньше tokenIndex {@code before}.
+   * Используется чтобы получить позицию конца «приёмника» перед DOT текущего accessCall.
+   */
+  private static Token findTokenBefore(ParserRuleContext receiver, Token before) {
+    if (receiver.getStart() == null || before == null) {
+      return null;
+    }
+    return findTokenBeforeRec(receiver, before.getTokenIndex());
+  }
+
+  private static Token findTokenBeforeRec(ParseTree node, int limit) {
+    if (node instanceof TerminalNode tn) {
+      var token = tn.getSymbol();
+      return (token.getTokenIndex() < limit) ? token : null;
+    }
+    Token best = null;
+    for (int i = 0; i < node.getChildCount(); i++) {
+      var child = findTokenBeforeRec(node.getChild(i), limit);
+      if (child != null && (best == null || child.getTokenIndex() > best.getTokenIndex())) {
+        best = child;
+      }
+    }
+    return best;
   }
 
   private static ParserRuleContext findReceiverExpression(BSLParser.MethodCallContext mc) {

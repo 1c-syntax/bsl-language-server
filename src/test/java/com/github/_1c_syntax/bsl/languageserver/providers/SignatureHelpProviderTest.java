@@ -77,6 +77,28 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void testAccessMethodCallSignatureViaVariable() {
+    // Массив = Новый Массив; Массив.Добавить(1);  — на позиции после '(' должна быть сигнатура Добавить
+    var content =
+      "Массив = Новый Массив;\n"
+        + "Массив.Добавить(1);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // курсор сразу после '(' в "Добавить("
+    var line = 1;
+    var col = content.split("\n")[1].indexOf("Добавить(") + "Добавить(".length();
+    params.setPosition(new Position(line, col));
+
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    assertThat(help).isNotNull();
+    assertThat(help.getSignatures()).isNotEmpty();
+    assertThat(help.getSignatures().get(0).getLabel()).startsWith("Добавить(");
+  }
+
+  @Test
   void testGlobalBuiltinFunctionSignature() {
     var content = "Сообщить(\"привет\");\n";
     var documentContext = TestUtils.getDocumentContext(content);
