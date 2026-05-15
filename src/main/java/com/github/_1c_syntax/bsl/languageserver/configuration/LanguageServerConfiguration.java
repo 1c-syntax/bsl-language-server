@@ -32,6 +32,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.Docum
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.oscript.OScriptOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -117,8 +119,11 @@ public class LanguageServerConfiguration {
 
   @JsonProperty("oscript")
   @Setter(value = AccessLevel.NONE)
-  private com.github._1c_syntax.bsl.languageserver.configuration.oscript.OScriptOptions oscriptOptions =
-    new com.github._1c_syntax.bsl.languageserver.configuration.oscript.OScriptOptions();
+  private OScriptOptions oscriptOptions = new OScriptOptions();
+
+  @JsonProperty("platform")
+  @Setter(value = AccessLevel.NONE)
+  private V8PlatformOptions platformOptions = new V8PlatformOptions();
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
