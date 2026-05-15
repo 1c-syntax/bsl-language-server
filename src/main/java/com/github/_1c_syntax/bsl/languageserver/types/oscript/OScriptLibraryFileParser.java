@@ -113,6 +113,27 @@ public class OScriptLibraryFileParser {
     return new OScriptLibraryFile(methods, exportVars, constructor);
   }
 
+  private static String buildParameterDescription(com.github._1c_syntax.bsl.parser.description.ParameterDescription pd) {
+    // pd.element() — это просто маркер (range/type) без текста, его toString() выглядит мусором.
+    // Полезные тексты описания лежат в TypeDescription.description() каждого варианта типа.
+    var typeDescriptions = pd.types();
+    if (typeDescriptions == null || typeDescriptions.isEmpty()) {
+      return "";
+    }
+    var sb = new StringBuilder();
+    for (var td : typeDescriptions) {
+      var text = td.description();
+      if (text == null || text.isBlank()) {
+        continue;
+      }
+      if (sb.length() > 0) {
+        sb.append('\n');
+      }
+      sb.append(text.trim());
+    }
+    return sb.toString();
+  }
+
   private MethodInfo toInfo(MethodSymbol ms) {
     var params = new ArrayList<ParameterDescriptor>();
     var paramDescs = ms.getDescription()
@@ -126,7 +147,7 @@ public class OScriptLibraryFileParser {
       if (i < paramDescs.size()) {
         var pd = paramDescs.get(i);
         types = resolveTypes(pd.types());
-        description = pd.element() != null ? pd.element().toString() : "";
+        description = buildParameterDescription(pd);
       }
       params.add(new ParameterDescriptor(def.getName(), types, def.isOptional(), description));
     }
