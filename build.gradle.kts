@@ -27,11 +27,14 @@ plugins {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven(url = "https://projectlombok.org/edge-releases")
     maven("https://central.sonatype.com/repository/maven-snapshots")
+    // bsl-context (1С platform syntax-helper parser) поставляется через jitpack
+    // до выпуска первого релизного тэга. После — заменить на mavenCentral.
+    maven(url = "https://jitpack.io")
 }
+
 
 group = "io.github.1c-syntax"
 gitVersioning.apply {
@@ -89,6 +92,9 @@ dependencies {
     api("io.github.1c-syntax:mdclasses:0.18.0")
     api("io.github.1c-syntax:bsl-common-library:0.10.0")
     api("io.github.1c-syntax:supportconf:0.16.0")
+    // Парсер синтакс-помощника платформы (.hbk). Подключён по SHA коммита
+    // master до выпуска первого релизного тэга — после замены на тэг.
+    api("io.github.1c-syntax:bsl-context:76cbe38")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.0")

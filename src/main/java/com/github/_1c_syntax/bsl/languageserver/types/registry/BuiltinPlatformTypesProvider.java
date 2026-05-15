@@ -42,15 +42,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Bootstrap-провайдер платформенных типов на основе JSON-ресурса,
- * упакованного вместе с bsl-language-server.
- * <p>
- * Содержит минимальный набор примитивов и ключевых коллекций — этого
- * достаточно для базового вывода типов из литералов и {@code Новый X()}.
- * Полный набор членов платформенных типов в дальнейшем будет приходить
- * из внешнего {@code platform-context} либо JSON синтакс-помощника
- * установленной платформы. Точка расширения — реализация
- * {@link PlatformTypesProvider} как отдельный Spring {@code @Component}.
+ * Fallback-провайдер платформенных типов из JSON-ресурса, упакованного
+ * вместе с bsl-language-server. Используется, когда полноценный источник
+ * через {@link BslContextPlatformTypesProvider} (синтакс-помощник
+ * установленной платформы) недоступен — например, на CI или у пользователя
+ * без 1С. Содержит минимальный набор примитивов и ключевых коллекций для
+ * базового вывода типов из литералов и {@code Новый X()}.
  */
 @Slf4j
 @Component
@@ -61,13 +58,26 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json";
 
   private final List<TypeDecl> types;
+  private final BslContextHolder bslContextHolder;
 
-  public BuiltinPlatformTypesProvider() {
+  public BuiltinPlatformTypesProvider(BslContextHolder bslContextHolder) {
+    this.bslContextHolder = bslContextHolder;
     this.types = loadFromResource(RESOURCE_PATH);
   }
 
+  /**
+   * Возвращает встроенный JSON-fallback только тогда, когда полноценный
+   * {@code bsl-context}-источник недоступен (платформа 1С не установлена
+   * либо парсинг HBK не удался). Если bsl-context дал данные —
+   * {@link BslContextPlatformTypesProvider} полностью покрывает то же
+   * множество типов, поэтому здесь возвращаем пустой список, чтобы
+   * избежать дублей и устаревшей JSON-разметки.
+   */
   @Override
   public Collection<TypeDecl> getTypes() {
+    if (bslContextHolder.get().isPresent()) {
+      return List.of();
+    }
     return types;
   }
 
