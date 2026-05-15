@@ -121,10 +121,9 @@ public class ServerContext {
     workDoneProgressReporter.beginProgress(getMessage("populateFindFiles"));
 
     LOGGER.debug("Finding files to populate context...");
-    var files = BSLFiles.listBslFiles(
-      configurationRoot,
-      languageServerConfiguration.getExcludePaths()
-    );
+    var excludePaths =
+      languageServerConfiguration != null ? languageServerConfiguration.getExcludePaths() : null;
+    var files = BSLFiles.listBslFiles(configurationRoot, excludePaths);
     workDoneProgressReporter.endProgress("");
     populateContext(files);
   }
