@@ -240,7 +240,7 @@ tasks.test {
     // With CleanupContextBeforeClassAndAfterClass tests causing frequent Spring context reloads,
     // multiple contexts can be in memory simultaneously (old being GC'd while new is created).
     // 3g gives enough headroom on GitHub Actions ubuntu-latest runners (7GB RAM, 1 fork).
-    maxHeapSize = "3g"
+    maxHeapSize = "2g"
 
     // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
     // Использование форков, а не потоков, обусловлено тем, что многие тесты
