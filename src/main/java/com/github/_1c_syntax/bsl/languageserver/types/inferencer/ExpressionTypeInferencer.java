@@ -202,13 +202,16 @@ public class ExpressionTypeInferencer {
     }
     // Глобальная область: платформенные глобалы, library-модули,
     // common-модули — все приходят через единый GlobalSymbolScope.
-    var fromScope = globalScopeProvider.findGlobal(text, ctx.documentContext.getFileType())
-      .map(symbol -> {
+    // ВАЖНО: имена классов (роль TYPE_NAME — например, голое `Структура`)
+    // здесь пропускаются: имя класса само по себе не является инстансом
+    // класса, и `Структура.` не должен показывать методы класса.
+    var fromScope = globalScopeProvider.findGlobalEntry(text, ctx.documentContext.getFileType())
+      .filter(entry -> entry.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
+      .map(entry -> {
+        var symbol = entry.symbol();
         if (symbol instanceof SyntheticSymbol s) {
           return s.getValueType();
         }
-        // Для source-defined символов тип берётся отдельно (через SymbolTypeIndex);
-        // вернёмся к этому, когда oscript-модули будут регистрироваться как ModuleSymbol.
         return TypeRef.UNKNOWN;
       })
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN))

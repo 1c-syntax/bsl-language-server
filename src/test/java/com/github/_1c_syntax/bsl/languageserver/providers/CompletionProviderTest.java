@@ -166,4 +166,23 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     assertThat(byName).containsKey("БиблиотекаСтилей");
     assertThat(byName.get("БиблиотекаСтилей").getKind()).isEqualTo(CompletionItemKind.Variable);
   }
+
+  @Test
+  void testDotCompletionOnBareClassNameDoesNotReturnClassMembers() {
+    // Bare class identifier (no variable declaration) must not yield its instance members.
+    // E.g. `Структура.` at module top — `Структура` is a class name, not a value.
+    var content = "Структура.";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 10));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .as("bare class name should not produce instance-member completion")
+      .extracting(CompletionItem::getLabel)
+      .doesNotContain("Вставить", "Insert", "Удалить", "Delete");
+  }
 }

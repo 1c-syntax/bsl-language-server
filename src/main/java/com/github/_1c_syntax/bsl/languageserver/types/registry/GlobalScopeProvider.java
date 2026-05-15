@@ -215,6 +215,23 @@ public class GlobalScopeProvider {
     return sym;
   }
 
+  /**
+   * То же, что {@link #findGlobal(String, FileType)}, но возвращает запись с её
+   * семантической ролью ({@link GlobalSymbolScope.Role#VALUE} или
+   * {@link GlobalSymbolScope.Role#TYPE_NAME}). Нужно потребителям, которым важно
+   * отличить голое имя класса ({@code Структура}) от глобал-значения
+   * ({@code Справочники}, {@code ФС}, library-модули).
+   */
+  public Optional<GlobalSymbolScope.Entry> findGlobalEntry(String name, FileType fileType) {
+    if (findGlobal(name, fileType).isEmpty()) {
+      return Optional.empty();
+    }
+    if (globalSymbolScope == null) {
+      return Optional.empty();
+    }
+    return globalSymbolScope.findEntry(name);
+  }
+
   private void ensureGlobalsPublished() {
     if (globalSymbolScope == null) {
       return;
@@ -482,7 +499,12 @@ public class GlobalScopeProvider {
     if (!matchesGlobalProperty(name, fileType)) {
       return Optional.empty();
     }
-    return findGlobal(name)
+    // Имена с ролью TYPE_NAME (платформенные классы, library-классы) — это не
+    // глобальные свойства, а имена классов. `Структура` сама по себе не есть
+    // значение типа Структура, и `Структура.` не должна показывать члены класса.
+    return findGlobalEntry(name, fileType)
+      .filter(entry -> entry.role() == GlobalSymbolScope.Role.VALUE)
+      .map(GlobalSymbolScope.Entry::symbol)
       .filter(SyntheticSymbol.class::isInstance)
       .map(s -> ((SyntheticSymbol) s).getValueType())
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
