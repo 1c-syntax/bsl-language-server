@@ -45,6 +45,49 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
   private OScriptLibraryIndex index;
 
   @Test
+  void definitionOfLibraryClassInNewExpressionPointsToClassFile() {
+    initLib();
+
+    var content = "#Использовать mylib\nX = Новый MyClass(\"имя\");\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new DefinitionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    int lineStart = content.indexOf('\n') + 1;
+    int col = content.indexOf("MyClass") - lineStart;
+    params.setPosition(new Position(1, col + 2));
+
+    var definitions = definitionProvider.getDefinition(dc, params);
+
+    assertThat(definitions)
+      .as("go-to-definition на классе MyClass в выражении Новый должен вести в .os-файл")
+      .isNotEmpty();
+    assertThat(definitions.get(0).getTargetUri()).contains("MyClass.os");
+  }
+
+  @Test
+  void definitionOfMethodOnLibraryClassInstancePointsToClassFile() {
+    initLib();
+
+    var content = "#Использовать mylib\nX = Новый MyClass(\"имя\");\nX.ПолучитьСтроку(\"п\");\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new DefinitionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    int line2Start = content.indexOf("X.ПолучитьСтроку");
+    // Курсор на ПолучитьСтроку (3-я строка, индекс 2)
+    int col = "X.".length();
+    params.setPosition(new Position(2, col + 2));
+
+    var definitions = definitionProvider.getDefinition(dc, params);
+
+    assertThat(definitions)
+      .as("go-to-definition на методе экземпляра library-класса должен вести в .os-файл")
+      .isNotEmpty();
+    assertThat(definitions.get(0).getTargetUri()).contains("MyClass.os");
+  }
+
+  @Test
   void definitionOfLibraryModuleMethodPointsToLibraryFile() {
     initLib();
 
