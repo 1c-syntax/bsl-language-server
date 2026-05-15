@@ -39,6 +39,9 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   @Autowired
   private CompletionProvider completionProvider;
 
+  @Autowired
+  private com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration languageServerConfiguration;
+
   @Test
   void testDotCompletionOnArray() {
     initServerContext("./src/test/resources/types", false);
@@ -184,5 +187,49 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .as("bare class name should not produce instance-member completion")
       .extracting(CompletionItem::getLabel)
       .doesNotContain("Вставить", "Insert", "Удалить", "Delete");
+  }
+
+  @Test
+  void testDotCompletionFiltersMembersByConfiguredLanguageRu() {
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/TypeResolver.os", context);
+
+    languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.RU);
+    try {
+      var params = new CompletionParams();
+      params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+      params.setPosition(new Position(18, 17));
+
+      var items = completionProvider.getCompletion(documentContext, params);
+
+      assertThat(items).extracting(CompletionItem::getLabel)
+        .contains("Добавить", "Вставить", "Удалить", "Найти")
+        .doesNotContain("Add", "Insert", "Delete", "Find");
+    } finally {
+      languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE);
+    }
+  }
+
+  @Test
+  void testDotCompletionFiltersMembersByConfiguredLanguageEn() {
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/TypeResolver.os", context);
+
+    languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.EN);
+    try {
+      var params = new CompletionParams();
+      params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+      params.setPosition(new Position(18, 17));
+
+      var items = completionProvider.getCompletion(documentContext, params);
+
+      assertThat(items).extracting(CompletionItem::getLabel)
+        .contains("Add", "Insert", "Delete", "Find")
+        .doesNotContain("Добавить", "Вставить", "Удалить", "Найти");
+    } finally {
+      languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE);
+    }
   }
 }

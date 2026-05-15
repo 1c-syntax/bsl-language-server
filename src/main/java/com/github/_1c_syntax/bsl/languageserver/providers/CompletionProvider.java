@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -60,6 +62,130 @@ public final class CompletionProvider {
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
+  private final LanguageServerConfiguration configuration;
+
+  /**
+   * Из коллекции членов оставить только те, чьё имя соответствует
+   * настроенному {@link Language}. Алиас-пары (Ru/En) определяются по
+   * одинаковому fingerprint (kind + параметры + returnType): они есть в
+   * платформенных JSON-ах OneScript. Для членов без пары имя оставляем
+   * как есть (например, значения перечислений вида {@code UTF8}).
+   */
+  private Collection<MemberDescriptor> filterMembersByLanguage(Collection<MemberDescriptor> members) {
+    if (members.isEmpty()) {
+      return members;
+    }
+    // Свойства (включая значения перечислений) не группируем — у них нет сигнатуры,
+    // по которой можно надёжно определить алиас. Например, UTF8/ANSI у КодировкаТекста
+    // имеют одинаковый fingerprint, но семантически независимы.
+    // Методы группируем по сигнатуре: алиас-пары Ru↔En имеют идентичную сигнатуру.
+    var byFingerprint = new LinkedHashMap<String, List<MemberDescriptor>>();
+    var passthrough = new ArrayList<MemberDescriptor>();
+    for (var m : members) {
+      if (m.kind() != MemberKind.METHOD || m.signatures().isEmpty()) {
+        passthrough.add(m);
+        continue;
+      }
+      byFingerprint.computeIfAbsent(memberFingerprint(m), k -> new ArrayList<>()).add(m);
+    }
+    var result = new ArrayList<MemberDescriptor>(members.size());
+    result.addAll(passthrough);
+    for (var group : byFingerprint.values()) {
+      if (group.size() == 1) {
+        result.add(group.get(0));
+        continue;
+      }
+      MemberDescriptor pick = null;
+      for (var m : group) {
+        if (isInConfiguredLanguage(m.name())) {
+          pick = m;
+          break;
+        }
+      }
+      result.add(pick != null ? pick : group.get(0));
+    }
+    return result;
+  }
+
+  private static String memberFingerprint(MemberDescriptor m) {
+    var sb = new StringBuilder();
+    sb.append(m.kind()).append('|');
+    sb.append(m.returnType() == null ? "" : m.returnType().qualifiedName()).append('|');
+    sb.append(m.signatures().size());
+    for (var sig : m.signatures()) {
+      sb.append('#').append(sig.parameters().size());
+      for (var p : sig.parameters()) {
+        sb.append(';').append(p.optional()).append(',');
+        sb.append(p.types() == null ? "" : p.types().refs());
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Фильтр для plain-имён ({@code List<String>}) — классы, ключевые слова,
+   * глобальные свойства и т.п. Алиас-пары определяются по тому, что разные
+   * имена резолвятся к одному global symbol.
+   */
+  private List<String> filterNamesByLanguage(Collection<String> names, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+    if (names.isEmpty()) {
+      return List.of();
+    }
+    var byTarget = new LinkedHashMap<Object, List<String>>();
+    var bareKey = new Object();
+    for (var name : names) {
+      var symbol = globalScopeProvider.findGlobal(name, fileType);
+      Object key = symbol.isPresent() ? symbol.get() : bareKey;
+      byTarget.computeIfAbsent(key, k -> new ArrayList<>()).add(name);
+    }
+    var result = new ArrayList<String>(names.size());
+    for (var entry : byTarget.entrySet()) {
+      var group = entry.getValue();
+      if (entry.getKey() == bareKey || group.size() == 1) {
+        result.addAll(group);
+        continue;
+      }
+      String pick = null;
+      for (var name : group) {
+        if (isInConfiguredLanguage(name)) {
+          pick = name;
+          break;
+        }
+      }
+      result.add(pick != null ? pick : group.get(0));
+    }
+    return result;
+  }
+
+  /**
+   * Имя считается совместимым с настроенным {@link Language}, если оно
+   * не содержит «чужих» букв. Эвристика: кириллица → RU, латиница → EN.
+   * Имена, состоящие только из не-букв (служебные/составные), не фильтруются.
+   * Локальные пользовательские символы фильтру не подлежат — у пользователя свой язык.
+   */
+  private boolean isInConfiguredLanguage(String name) {
+    if (name == null || name.isEmpty()) {
+      return true;
+    }
+    var lang = configuration.getLanguage();
+    boolean hasCyrillic = false;
+    boolean hasLatin = false;
+    for (int i = 0; i < name.length(); i++) {
+      var ch = name.charAt(i);
+      if (Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC) {
+        hasCyrillic = true;
+      } else if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
+        hasLatin = true;
+      }
+    }
+    if (!hasCyrillic && !hasLatin) {
+      return true;
+    }
+    if (lang == Language.RU) {
+      return hasCyrillic || !hasLatin;
+    }
+    return hasLatin || !hasCyrillic;
+  }
 
   /**
    * @return предложения автодополнения для указанной позиции
@@ -116,7 +242,7 @@ public final class CompletionProvider {
     }
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
-    var filtered = members.values().stream()
+    var filtered = filterMembersByLanguage(members.values()).stream()
       .filter(m -> matches(m.name(), prefix))
       .toList();
     return toCompletionItems(filtered);
@@ -214,7 +340,7 @@ public final class CompletionProvider {
     };
 
     if (afterNew) {
-      for (var className : globalScopeProvider.getClasses(fileType)) {
+      for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType)) {
         if (matches(className, prefix)) {
           var item = new CompletionItem(className);
           item.setKind(CompletionItemKind.Class);
@@ -261,7 +387,7 @@ public final class CompletionProvider {
     }
 
     // Global property types (system enums: КодировкаТекста, НаправлениеСортировки и т.п.)
-    for (var gpName : globalScopeProvider.getGlobalPropertyNames(fileType)) {
+    for (var gpName : filterNamesByLanguage(globalScopeProvider.getGlobalPropertyNames(fileType), fileType)) {
       if (matches(gpName, prefix)) {
         var item = new CompletionItem(gpName);
         item.setKind(CompletionItemKind.Enum);
@@ -271,7 +397,7 @@ public final class CompletionProvider {
 
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.OS) {
-      for (var qualified : globalScopeProvider.getConfigurationQualifiedNames()) {
+      for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType)) {
         if (matches(qualified, prefix)) {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
@@ -281,7 +407,7 @@ public final class CompletionProvider {
     }
 
     // Platform global variables (БиблиотекаКартинок, ПараметрыСеанса, …)
-    for (var pv : globalScopeProvider.getPlatformVariableNames(fileType)) {
+    for (var pv : filterNamesByLanguage(globalScopeProvider.getPlatformVariableNames(fileType), fileType)) {
       if (matches(pv, prefix)) {
         var item = new CompletionItem(pv);
         item.setKind(CompletionItemKind.Variable);
@@ -291,7 +417,7 @@ public final class CompletionProvider {
 
     // Global functions
     var seenFn = new java.util.HashSet<String>();
-    for (var fn : globalScopeProvider.getFunctions(fileType)) {
+    for (var fn : filterMembersByLanguage(globalScopeProvider.getFunctions(fileType))) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
@@ -320,7 +446,7 @@ public final class CompletionProvider {
     }
 
     // Keywords
-    for (var keyword : globalScopeProvider.getKeywords(fileType)) {
+    for (var keyword : filterNamesByLanguage(globalScopeProvider.getKeywords(fileType), fileType)) {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
