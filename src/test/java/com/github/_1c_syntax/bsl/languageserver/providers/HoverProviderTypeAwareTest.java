@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,8 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Тесты type-aware fallback'а в {@link HoverProvider}: член платформенного
  * типа / namespace без соответствующего source-defined символа.
  */
-@SpringBootTest
-class HoverProviderTypeAwareTest {
+class HoverProviderTypeAwareTest extends AbstractServerContextAwareTest {
 
   private static final String PATH_TO_FILE = "./src/test/resources/types/EnumAccess.bsl";
 
@@ -44,7 +43,8 @@ class HoverProviderTypeAwareTest {
 
   @Test
   void hoverOnNamespaceIdentifier() {
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     // Кодировка = КодировкаТекста.UTF8;  // строка 0
     var content = documentContext.getContent();
     var params = new HoverParams();
@@ -59,7 +59,8 @@ class HoverProviderTypeAwareTest {
 
   @Test
   void hoverOnEnumMember() {
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var content = documentContext.getContent();
     var params = new HoverParams();
     params.setPosition(new Position(0, content.indexOf("UTF8") + 1));
@@ -74,8 +75,9 @@ class HoverProviderTypeAwareTest {
 
   @Test
   void hoverOnChainedMethodCall() {
+    initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/types/ChainedAccessors.os");
+      "./src/test/resources/types/ChainedAccessors.os", context);
     var content = documentContext.getContent();
     // курсор внутри "Количество" в строке "Количество = СоздатьМассив().Количество();"
     var idx = content.indexOf(".Количество()");

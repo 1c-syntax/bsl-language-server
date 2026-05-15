@@ -373,6 +373,34 @@ public class GlobalScopeProvider {
   }
 
   /**
+   * Зарегистрировать платформенный класс (имеет блок {@code constructors} в
+   * JSON-пакете). Создаёт {@link SyntheticSymbol} с ролью
+   * {@link GlobalSymbolScope.Role#TYPE_NAME} для каждого имени/алиаса,
+   * чтобы hover/findGlobal на имени класса в {@code Новый <Класс>(...)} нашёл
+   * символ с описанием класса. Сами сигнатуры конструкторов хранятся в
+   * {@link TypeRegistry#getConstructors(TypeRef)}.
+   */
+  public void registerPlatformClass(TypeRef ref, Collection<String> names, LanguageScope scope, String description) {
+    if (ref == null || names == null || names.isEmpty()) {
+      return;
+    }
+    ensureGlobalsPublished();
+    var symbol = new SyntheticSymbol(ref.qualifiedName(), SyntheticKind.CONFIGURATION_OBJECT,
+      description == null ? "" : description, ref);
+    if (globalSymbolScope == null) {
+      return;
+    }
+    var effectiveScope = scope == null ? LanguageScope.BOTH : scope;
+    for (var name : names) {
+      if (name == null || name.isBlank()) {
+        continue;
+      }
+      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME);
+      classScopes.merge(name.toLowerCase(Locale.ROOT), effectiveScope, LanguageScope::merge);
+    }
+  }
+
+  /**
    * Имена всех зарегистрированных глобальных свойств (canonical-форма, без алиасов).
    */
   public Collection<String> getGlobalPropertyNames() {

@@ -31,12 +31,17 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
@@ -82,10 +87,184 @@ public final class HoverProvider {
       return symbolBased;
     }
 
+    // Hover для имени класса в `Новый ИмяКласса(...)`.
+    var ctorHover = newExpressionHover(documentContext, position);
+    if (ctorHover.isPresent()) {
+      return ctorHover;
+    }
+
     // Fallback: type-driven hover для цепочек accessor'ов / platform members /
     // namespace-имен, у которых нет соответствующего SourceDefinedSymbol.
     return typeService.findMemberAt(documentContext, position)
       .map(member -> new Hover(renderMember(member.owner(), member.descriptor()), member.range()));
+  }
+
+  private Optional<Hover> newExpressionHover(DocumentContext documentContext, Position position) {
+    BSLParser.FileContext ast;
+    try {
+      ast = documentContext.getAst();
+    } catch (NullPointerException e) {
+      return Optional.empty();
+    }
+    if (ast == null) {
+      return Optional.empty();
+    }
+    var nex = findInnermostNewExpression(ast, position);
+    if (nex.isEmpty()) {
+      return Optional.empty();
+    }
+    var typeNameCtx = nex.get().typeName();
+    if (typeNameCtx == null) {
+      return Optional.empty();
+    }
+    // Hover актуален только когда позиция на имени класса (не внутри скобок аргументов).
+    if (!encloses(typeNameCtx, position)) {
+      return Optional.empty();
+    }
+    var typeName = typeNameCtx.getText();
+    var fileType = documentContext.getFileType();
+    var ref = typeService.resolve(typeName, fileType).orElse(null);
+    if (ref == null) {
+      return Optional.empty();
+    }
+    var ctors = typeService.getConstructors(ref);
+    if (ctors.isEmpty()) {
+      return Optional.empty();
+    }
+    int argCount = countNewExpressionArgs(nex.get());
+    boolean disclaim = false;
+    SignatureDescriptor chosen = pickByArity(ctors, argCount);
+    if (chosen == null) {
+      chosen = ctors.get(0);
+      disclaim = true;
+    }
+    var range = tokenRange(typeNameCtx);
+    return Optional.of(new Hover(renderConstructor(typeName, ref, chosen, ctors, disclaim), range));
+  }
+
+  private static SignatureDescriptor pickByArity(java.util.List<SignatureDescriptor> ctors, int argCount) {
+    SignatureDescriptor match = null;
+    for (var sig : ctors) {
+      int required = (int) sig.parameters().stream().filter(p -> !p.optional()).count();
+      int total = sig.parameters().size();
+      if (argCount >= required && argCount <= total) {
+        return sig;
+      }
+      if (match == null && total == argCount) {
+        match = sig;
+      }
+    }
+    return match;
+  }
+
+  private static int countNewExpressionArgs(BSLParser.NewExpressionContext nex) {
+    var doCall = nex.doCall();
+    if (doCall == null) {
+      return 0;
+    }
+    var list = doCall.callParamList();
+    if (list == null) {
+      return 0;
+    }
+    var ps = list.callParam();
+    if (ps == null || ps.isEmpty()) {
+      return 0;
+    }
+    // Учитываем trailing empty (`Foo(a, )` — 2 параметра по AST, но фактически 1 значимый).
+    int n = ps.size();
+    var last = ps.get(n - 1);
+    if (last.getChildCount() == 0) {
+      n--;
+    }
+    return n;
+  }
+
+  private static Optional<BSLParser.NewExpressionContext> findInnermostNewExpression(
+    ParseTree node, Position position
+  ) {
+    BSLParser.NewExpressionContext best = null;
+    if (node instanceof BSLParser.NewExpressionContext nex && encloses(nex, position)) {
+      best = nex;
+    }
+    for (int i = 0; i < node.getChildCount(); i++) {
+      var child = node.getChild(i);
+      if (child instanceof ParserRuleContext prc && !encloses(prc, position)) {
+        continue;
+      }
+      var inner = findInnermostNewExpression(child, position);
+      if (inner.isPresent()) {
+        best = inner.get();
+      }
+    }
+    return Optional.ofNullable(best);
+  }
+
+  private static boolean encloses(ParserRuleContext ctx, Position position) {
+    var start = ctx.getStart();
+    var stop = ctx.getStop();
+    if (start == null || stop == null) {
+      return false;
+    }
+    var range = Ranges.create(start.getLine() - 1, start.getCharPositionInLine(),
+      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length());
+    return Ranges.containsPosition(range, position);
+  }
+
+  private static Range tokenRange(ParserRuleContext ctx) {
+    var start = ctx.getStart();
+    var stop = ctx.getStop();
+    return Ranges.create(start.getLine() - 1, start.getCharPositionInLine(),
+      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length());
+  }
+
+  private MarkupContent renderConstructor(
+    String typeName,
+    TypeRef ref,
+    SignatureDescriptor chosen,
+    java.util.List<SignatureDescriptor> ctors,
+    boolean disclaim
+  ) {
+    var sb = new StringBuilder();
+    sb.append("```bsl\nНовый ").append(typeName).append('(');
+    sb.append(chosen.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")));
+    sb.append(')').append("\n```\n");
+    sb.append("\n_конструктор типа_ `").append(ref.qualifiedName()).append('`');
+    var classDesc = typeService.getDescription(ref);
+    if (!classDesc.isBlank()) {
+      sb.append("\n\n").append(classDesc);
+    }
+    if (chosen.description() != null && !chosen.description().isBlank()) {
+      sb.append("\n\n").append(chosen.description());
+    }
+    if (!chosen.parameters().isEmpty()) {
+      sb.append("\n\n**Параметры:**\n");
+      for (var p : chosen.parameters()) {
+        sb.append("- `").append(p.name()).append('`');
+        if (p.optional()) {
+          sb.append(" _(необязательный)_");
+        }
+        if (p.description() != null && !p.description().isBlank()) {
+          sb.append(" — ").append(p.description());
+        }
+        sb.append('\n');
+      }
+    }
+    if (disclaim) {
+      sb.append("\n\n_Не найдено описание, подходящее под текущий вызов конструктора._");
+    }
+    if (ctors.size() > 1) {
+      sb.append("\n\n**Все варианты конструктора:**\n");
+      for (var sig : ctors) {
+        sb.append("- `Новый ").append(typeName).append('(')
+          .append(sig.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")))
+          .append(")`");
+        if (sig.description() != null && !sig.description().isBlank()) {
+          sb.append(" — ").append(sig.description());
+        }
+        sb.append('\n');
+      }
+    }
+    return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
   }
 
   private static MarkupContent renderMember(TypeRef owner, MemberDescriptor descriptor) {

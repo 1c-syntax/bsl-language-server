@@ -359,6 +359,10 @@ public final class SignatureHelpProvider {
           return Optional.of(member);
         }
       }
+      var platformCtors = typeService.getConstructors(ref);
+      if (!platformCtors.isEmpty()) {
+        return Optional.of(MemberDescriptor.method(typeName, typeService.getDescription(ref), platformCtors));
+      }
     }
     // Fallback: OneScript library-класс — конструктор хранится отдельно в GlobalScopeProvider.
     // В BSL-файлах library-классы недоступны.

@@ -141,6 +141,21 @@ public class TypeService {
   }
 
   /**
+   * Описание типа (текст для hover); пустая строка, если описание отсутствует.
+   */
+  public String getDescription(TypeRef typeRef) {
+    return typeRegistry.getDescription(typeRef);
+  }
+
+  /**
+   * Сигнатуры конструкторов типа (для платформенных классов из JSON-пакета).
+   * Пустой список, если конструкторов нет.
+   */
+  public java.util.List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(TypeRef typeRef) {
+    return typeRegistry.getConstructors(typeRef);
+  }
+
+  /**
    * Резолв типа по имени (включая Ru/En алиасы и qualifiedName).
    */
   public Optional<TypeRef> resolve(String name) {

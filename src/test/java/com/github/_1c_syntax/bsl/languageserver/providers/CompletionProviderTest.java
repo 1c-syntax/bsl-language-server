@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CompletionItem;
@@ -30,19 +31,19 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-class CompletionProviderTest {
+class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private CompletionProvider completionProvider;
 
   @Test
   void testDotCompletionOnArray() {
-    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/types/TypeResolver.os");
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/TypeResolver.os", context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -76,8 +77,9 @@ class CompletionProviderTest {
   void testDotCompletionReturnsPropertiesAsProperties() {
     // ТЗ = Новый ТаблицаЗначений;
     // ТЗ.Колонки.Добавить("Имя");
+    initServerContext("./src/test/resources/providers", false);
     var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/providers/completion-properties.os");
+      "./src/test/resources/providers/completion-properties.os", context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -101,8 +103,9 @@ class CompletionProviderTest {
   @Test
   void testDotCompletionMembersHaveCorrectKinds() {
     // sanity: проверяем, что и Method, и Property kinds реально мапятся
+    initServerContext("./src/test/resources/providers", false);
     var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/providers/completion-properties.os");
+      "./src/test/resources/providers/completion-properties.os", context);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));

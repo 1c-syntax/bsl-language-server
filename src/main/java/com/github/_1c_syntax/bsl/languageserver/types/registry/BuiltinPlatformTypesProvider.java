@@ -89,7 +89,12 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
         var exposedAsGlobal = Boolean.TRUE.equals(entry.get("exposedAsGlobal"));
         var description = (String) entry.getOrDefault("description", "");
-        result.add(new TypeDecl(TypeKind.valueOf(kindStr), qualifiedName, aliases, members, exposedAsGlobal, description));
+        var classRef = new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
+          TypeKind.valueOf(kindStr), qualifiedName);
+        var rawCtors = (List<Map<String, Object>>) entry.get("constructors");
+        var constructors = readSignatures(rawCtors, classRef);
+        result.add(new TypeDecl(TypeKind.valueOf(kindStr), qualifiedName, aliases, members,
+          exposedAsGlobal, description, constructors));
       }
       return result;
     } catch (IOException e) {

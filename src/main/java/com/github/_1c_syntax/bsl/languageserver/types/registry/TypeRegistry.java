@@ -88,6 +88,9 @@ public class TypeRegistry {
   private final Map<TypeRef, LanguageScope> typeScopes = new ConcurrentHashMap<>();
   /** Тип ↔ описание (из JSON-пакета или динамической регистрации). Пусто если описания нет. */
   private final Map<TypeRef, String> descriptions = new ConcurrentHashMap<>();
+  /** Тип ↔ список конструкторов (для платформенных классов из JSON-пакета). */
+  private final Map<TypeRef, List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> constructors
+    = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
@@ -297,6 +300,40 @@ public class TypeRegistry {
   }
 
   /**
+   * Список конструкторов типа (для платформенных классов из JSON-пакета).
+   * Возвращает пустой список, если конструкторов нет (например, для типов
+   * без блока {@code constructors} в JSON или для system enums).
+   */
+  public List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(TypeRef ref) {
+    if (ref == null) {
+      return List.of();
+    }
+    return constructors.getOrDefault(ref, List.of());
+  }
+
+  /**
+   * Зарегистрировать тип как платформенный класс с конструктором. Имя
+   * становится доступным для completion после {@code Новый} (через
+   * {@link GlobalScopeProvider#getClasses}) и резолвится в {@link SyntheticSymbol}
+   * с ролью {@code TYPE_NAME} для hover/findGlobal. Вызывается автоматически
+   * из {@link #registerPack} при непустых {@code constructors}.
+   */
+  private void registerAsPlatformClass(TypeRef ref, LanguageScope scope) {
+    if (globalScopeProvider == null) {
+      return;
+    }
+    var names = new java.util.LinkedHashSet<String>();
+    names.add(ref.qualifiedName());
+    aliasIndex.forEach((alias, target) -> {
+      if (target.equals(ref)) {
+        names.add(alias);
+      }
+    });
+    globalScopeProvider.registerPlatformClass(ref, names, scope,
+      descriptions.getOrDefault(ref, ""));
+  }
+
+  /**
    * Удалить пользовательский тип по qualifiedName (например, при закрытии
    * соответствующего документа).
    */
@@ -321,6 +358,10 @@ public class TypeRegistry {
     }
     if (decl.description() != null && !decl.description().isBlank()) {
       descriptions.put(ref, decl.description());
+    }
+    if (decl.constructors() != null && !decl.constructors().isEmpty()) {
+      constructors.put(ref, List.copyOf(decl.constructors()));
+      registerAsPlatformClass(ref, scope);
     }
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members, scope);

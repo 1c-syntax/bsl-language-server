@@ -218,6 +218,20 @@ public final class CompletionProvider {
         if (matches(className, prefix)) {
           var item = new CompletionItem(className);
           item.setKind(CompletionItemKind.Class);
+          typeService.resolve(className, fileType).ifPresent(ref -> {
+            var ctors = typeService.getConstructors(ref);
+            if (!ctors.isEmpty()) {
+              var first = ctors.get(0);
+              var paramList = first.parameters().stream()
+                .map(p -> p.name())
+                .collect(java.util.stream.Collectors.joining(", "));
+              item.setDetail("(" + paramList + ")");
+            }
+            var desc = typeService.getDescription(ref);
+            if (!desc.isEmpty()) {
+              item.setDocumentation(desc);
+            }
+          });
           items.add(item);
         }
       }

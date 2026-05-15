@@ -54,7 +54,8 @@ public interface TypePackProvider {
     List<String> aliases,
     Collection<MemberDescriptor> members,
     boolean exposedAsGlobal,
-    String description
+    String description,
+    List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> constructors
   ) {
 
     public TypeDecl(
@@ -64,7 +65,18 @@ public interface TypePackProvider {
       Collection<MemberDescriptor> members,
       boolean exposedAsGlobal
     ) {
-      this(kind, qualifiedName, aliases, members, exposedAsGlobal, "");
+      this(kind, qualifiedName, aliases, members, exposedAsGlobal, "", List.of());
+    }
+
+    public TypeDecl(
+      TypeKind kind,
+      String qualifiedName,
+      List<String> aliases,
+      Collection<MemberDescriptor> members,
+      boolean exposedAsGlobal,
+      String description
+    ) {
+      this(kind, qualifiedName, aliases, members, exposedAsGlobal, description, List.of());
     }
 
     public TypeRef toRef() {

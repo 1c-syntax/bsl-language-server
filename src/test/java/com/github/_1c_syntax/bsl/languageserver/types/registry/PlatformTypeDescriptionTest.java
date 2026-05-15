@@ -53,4 +53,14 @@ class PlatformTypeDescriptionTest extends AbstractServerContextAwareTest {
     var ref = typeRegistry.resolve("КодировкаТекста").orElseThrow();
     assertThat(typeRegistry.getDescription(ref)).isNotBlank();
   }
+
+  @Test
+  void exposesConstructorsForArray() {
+    initServerContext();
+    var ref = typeRegistry.resolve("Массив").orElseThrow();
+    var ctors = typeRegistry.getConstructors(ref);
+    assertThat(ctors).isNotEmpty();
+    // 3 варианта: По умолчанию (0 параметров), По количеству элементов (1), На основании фиксированного (1).
+    assertThat(ctors).hasSizeGreaterThanOrEqualTo(2);
+  }
 }
