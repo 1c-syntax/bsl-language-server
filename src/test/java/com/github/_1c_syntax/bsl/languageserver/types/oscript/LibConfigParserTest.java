@@ -52,7 +52,9 @@ class LibConfigParserTest extends AbstractServerContextAwareTest {
       .containsExactly(org.assertj.core.groups.Tuple.tuple("MyModule", "src/MyModule.os"));
     assertThat(result.classes())
       .extracting(LibConfigParser.LibEntry::name, LibConfigParser.LibEntry::file)
-      .containsExactly(org.assertj.core.groups.Tuple.tuple("MyClass", "src/MyClass.os"));
+      .containsExactlyInAnyOrder(
+        org.assertj.core.groups.Tuple.tuple("MyClass", "src/MyClass.os"),
+        org.assertj.core.groups.Tuple.tuple("RenamedClass", "src/mainclass.os"));
   }
 
   @Test

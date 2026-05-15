@@ -21,19 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +36,6 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -54,22 +44,24 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Координатор индексации OneScript-библиотек workspace'а.
+ * Discovery-слой OneScript-библиотек workspace.
  * <p>
- * Связывает {@link LibConfigDiscovery} → {@link LibConfigParser} →
- * {@link OScriptLibraryFileParser} с {@link TypeRegistry} и
- * {@link GlobalScopeProvider}:
+ * Никакой собственной системы типов или членов: .os-файлы библиотек
+ * добавляются в {@link ServerContext} как обычные документы и обрабатываются
+ * стандартными пайплайнами (SymbolTree, ReferenceIndex,
+ * {@code OScriptModuleMembersProvider}).
+ * <p>
+ * Эта компонента отвечает только за:
  * <ul>
- *   <li>записи {@code <module>} регистрируются как user-типы и
- *       объявляются как глобальные имена-namespace'ы (через
- *       {@link GlobalScopeProvider#registerLibraryModule(String, TypeRef)});</li>
- *   <li>записи {@code <class>} регистрируются как user-типы (доступны в
- *       {@code Новый MyClass(...)}) и публикуют сигнатуры конструктора
- *       в {@link GlobalScopeProvider#registerLibraryClass(String, List)}.</li>
+ *   <li>обход {@code lib.config} и convention-based библиотек,</li>
+ *   <li>добавление найденных .os-файлов в {@link ServerContext},</li>
+ *   <li>сопоставление {@code URI .os-файла → ModuleType} в
+ *       {@link OScriptModuleTypeResolver} (нужно потому что Configuration
+ *       ничего не знает про библиотечные файлы),</li>
+ *   <li>хранение каталога библиотечных записей: qualifiedName, EntryKind
+ *       (CLASS/MODULE), libOrigin — чтобы провайдеры completion могли
+ *       применять gating по {@code #Использовать}.</li>
  * </ul>
- * Запускается на {@link WorkspaceAddedEvent}; повторный {@link #reindex(ServerContext)}
- * допустим — все ранее зарегистрированные library-сущности предварительно
- * очищаются.
  */
 @Slf4j
 @Component
@@ -79,28 +71,33 @@ public class OScriptLibraryIndex {
 
   private final LibConfigDiscovery libConfigDiscovery;
   private final LibConfigParser libConfigParser;
-  private final OScriptLibraryFileParser libraryFileParser;
   private final ConventionalLibraryDiscovery conventionalLibraryDiscovery;
-  private final TypeRegistry typeRegistry;
-  private final GlobalScopeProvider globalScopeProvider;
   private final OScriptModuleTypeResolver oScriptModuleTypeResolver;
+  // Материализуем members-provider в том же workspace-scope: иначе его
+  // @EventListener'ы не подпишутся до того, как мы начнём rebuildDocument().
+  private final OScriptModuleMembersProvider oScriptModuleMembersProvider;
 
-  /** URI .os-файла → запись о его регистрации (имя + вид). Используется для re-index/cleanup. */
+  /** URI .os-файла → запись о его регистрации. Источник истины для всех остальных индексов. */
   private final Map<URI, LibraryEntry> entriesByUri = new ConcurrentHashMap<>();
+  /** qualifiedName (lowercase) → URI .os-файла. Для go-to-definition и резолва. */
+  private final Map<String, URI> uriByQualifiedName = new ConcurrentHashMap<>();
 
-  /** quailifiedName (lowercase) → URI .os-файла. Обратный индекс для резолва имён в ссылки. */
-  private final Map<String, URI> moduleUriByName = new ConcurrentHashMap<>();
-  private final Map<String, URI> classUriByName = new ConcurrentHashMap<>();
-
-  private enum EntryKind { MODULE, CLASS }
-
-  private record LibraryEntry(String qualifiedName, EntryKind kind, Path osFile, String libOrigin) {
-  }
+  /** Тип записи: класс ({@code <class>}) или модуль ({@code <module>}). */
+  public enum EntryKind { MODULE, CLASS }
 
   /**
-   * Реакция на добавление workspace: разово (или повторно при ручном вызове
-   * {@link #reindex(ServerContext)}) проиндексировать все его OneScript-библиотеки.
+   * Описание зарегистрированной библиотечной записи.
+   *
+   * @param uri           URI .os-файла (абсолютный, нормализованный)
+   * @param qualifiedName объявленное в {@code lib.config} имя
+   *                      (или basename файла для convention-based)
+   * @param kind          класс или модуль
+   * @param libOrigin     имя библиотеки (имя каталога с {@code lib.config}),
+   *                      используется gating'ом {@code #Использовать}
    */
+  public record LibraryEntry(URI uri, String qualifiedName, EntryKind kind, String libOrigin) {
+  }
+
   @EventListener
   public void handleWorkspaceAdded(WorkspaceAddedEvent event) {
     var serverContext = event.getServerContext();
@@ -114,15 +111,11 @@ public class OScriptLibraryIndex {
     }
   }
 
-  /**
-   * Полная переиндексация OneScript-библиотек указанного workspace.
-   */
+  /** Полная переиндексация OneScript-библиотек workspace. */
   public void reindex(ServerContext serverContext) {
-    globalScopeProvider.clearLibraryEntries();
     oScriptModuleTypeResolver.clear();
     entriesByUri.clear();
-    moduleUriByName.clear();
-    classUriByName.clear();
+    uriByQualifiedName.clear();
 
     var configs = libConfigDiscovery.discover(serverContext);
     if (!configs.isEmpty()) {
@@ -145,30 +138,6 @@ public class OScriptLibraryIndex {
     }
   }
 
-  /**
-   * Реакция на изменение содержимого документа: если документ — .os-файл
-   * проиндексированной OneScript-библиотеки, перечитываем его метаданные
-   * и обновляем members / конструктор в реестрах.
-   */
-  @EventListener
-  public void handleDocumentChanged(DocumentContextContentChangedEvent event) {
-    var documentContext = event.getSource();
-    var uri = documentContext.getUri();
-    var entry = entriesByUri.get(uri);
-    if (entry == null) {
-      return;
-    }
-    try {
-      refreshFromDocumentContext(entry, documentContext);
-    } catch (RuntimeException e) {
-      LOGGER.warn("Failed to re-index OneScript library file {}", uri, e);
-    }
-  }
-
-  /**
-   * Реакция на удаление документа: если удалён .os-файл библиотеки —
-   * убираем его записи из всех реестров.
-   */
   @EventListener
   public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     var uri = event.getUri();
@@ -177,33 +146,65 @@ public class OScriptLibraryIndex {
       return;
     }
     oScriptModuleTypeResolver.unregister(uri);
-    typeRegistry.unregisterUserType(entry.qualifiedName());
-    var nameKey = entry.qualifiedName().toLowerCase(Locale.ROOT);
-    if (entry.kind() == EntryKind.MODULE) {
-      moduleUriByName.remove(nameKey);
-      globalScopeProvider.unregisterLibraryModule(entry.qualifiedName());
-    } else {
-      classUriByName.remove(nameKey);
-      globalScopeProvider.unregisterLibraryClass(entry.qualifiedName());
-    }
+    uriByQualifiedName.remove(entry.qualifiedName().toLowerCase(Locale.ROOT));
+    oScriptModuleMembersProvider.unregister(uri);
   }
 
-  private void refreshFromDocumentContext(LibraryEntry entry, DocumentContext documentContext) {
-    var parsed = libraryFileParser.parseFromDocumentContext(documentContext);
-    if (entry.kind() == EntryKind.MODULE) {
-      registerModuleMembers(entry.qualifiedName(), parsed, entry.libOrigin());
-    } else {
-      registerClassMembers(entry.qualifiedName(), parsed, entry.libOrigin());
+  /** @return запись о .os-файле, если он зарегистрирован как библиотечный. */
+  public Optional<LibraryEntry> findByUri(URI uri) {
+    return Optional.ofNullable(entriesByUri.get(uri));
+  }
+
+  /** @return запись о библиотечной сущности по её qualifiedName (регистронезависимо). */
+  public Optional<LibraryEntry> findByName(String qualifiedName) {
+    if (qualifiedName == null || qualifiedName.isBlank()) {
+      return Optional.empty();
     }
+    var uri = uriByQualifiedName.get(qualifiedName.toLowerCase(Locale.ROOT));
+    return uri == null ? Optional.empty() : Optional.ofNullable(entriesByUri.get(uri));
+  }
+
+  /** @return URI .os-файла зарегистрированного library-класса/модуля. */
+  public Optional<URI> findUri(String qualifiedName) {
+    return findByName(qualifiedName).map(LibraryEntry::uri);
+  }
+
+  /** @return URI .os-файла зарегистрированного library-класса. */
+  public Optional<URI> findClassUri(String qualifiedName) {
+    return findByName(qualifiedName)
+      .filter(e -> e.kind() == EntryKind.CLASS)
+      .map(LibraryEntry::uri);
+  }
+
+  /** @return URI .os-файла зарегистрированного library-модуля. */
+  public Optional<URI> findModuleUri(String qualifiedName) {
+    return findByName(qualifiedName)
+      .filter(e -> e.kind() == EntryKind.MODULE)
+      .map(LibraryEntry::uri);
+  }
+
+  /**
+   * @param kind фильтр по типу записи (CLASS/MODULE)
+   * @return все зарегистрированные записи указанного типа
+   */
+  public Collection<LibraryEntry> findEntries(EntryKind kind) {
+    return entriesByUri.values().stream()
+      .filter(e -> e.kind() == kind)
+      .toList();
+  }
+
+  /** @return все зарегистрированные записи (классы и модули вперемешку). */
+  public Collection<LibraryEntry> allEntries() {
+    return List.copyOf(entriesByUri.values());
   }
 
   private void indexConventional(ConventionalLibraryDiscovery.ConventionalLibrary lib, ServerContext serverContext) {
     var libOrigin = libOriginOf(lib.root());
     for (var classFile : lib.classFiles()) {
-      registerClassFromFile(ConventionalLibraryDiscovery.entryName(classFile), classFile, serverContext, libOrigin);
+      registerEntry(ConventionalLibraryDiscovery.entryName(classFile), classFile, EntryKind.CLASS, serverContext, libOrigin);
     }
     for (var moduleFile : lib.moduleFiles()) {
-      registerModuleFromFile(ConventionalLibraryDiscovery.entryName(moduleFile), moduleFile, serverContext, libOrigin);
+      registerEntry(ConventionalLibraryDiscovery.entryName(moduleFile), moduleFile, EntryKind.MODULE, serverContext, libOrigin);
     }
   }
 
@@ -214,36 +215,41 @@ public class OScriptLibraryIndex {
     }
     var libOrigin = libOriginOf(libRoot);
     var manifest = libConfigParser.parse(libConfigPath);
-
     for (var module : manifest.modules()) {
-      registerModule(libRoot, module, serverContext, libOrigin);
+      var osFile = libRoot.resolve(module.file()).toAbsolutePath().normalize();
+      registerEntry(module.name(), osFile, EntryKind.MODULE, serverContext, libOrigin);
     }
     for (var klass : manifest.classes()) {
-      registerClass(libRoot, klass, serverContext, libOrigin);
+      var osFile = libRoot.resolve(klass.file()).toAbsolutePath().normalize();
+      registerEntry(klass.name(), osFile, EntryKind.CLASS, serverContext, libOrigin);
     }
   }
 
-  /**
-   * @return URI .os-файла зарегистрированного library-модуля по его qualifiedName
-   *         (регистронезависимо). Используется внешними индексами/finder'ами для
-   *         резолва вызовов вида {@code MyModule.MyMethod()} в исходный файл.
-   */
-  public Optional<URI> findModuleUri(String qualifiedName) {
-    if (qualifiedName == null || qualifiedName.isBlank()) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(moduleUriByName.get(qualifiedName.toLowerCase(Locale.ROOT)));
-  }
+  private void registerEntry(String qualifiedName, Path osFile, EntryKind kind, ServerContext serverContext, String libOrigin) {
+    var uri = Absolute.uri(osFile.toUri());
+    var moduleType = kind == EntryKind.CLASS ? ModuleType.OScriptClass : ModuleType.OScriptModule;
+    // Сначала сообщаем резолверу тип модуля — это нужно, чтобы при первом
+    // событии DocumentContextContentChangedEvent документ уже знал свой
+    // ModuleType (через DocumentContext.computeModuleType фолбэк).
+    oScriptModuleTypeResolver.register(uri, moduleType);
 
-  /**
-   * @return URI .os-файла зарегистрированного library-класса по его qualifiedName
-   *         (регистронезависимо).
-   */
-  public Optional<URI> findClassUri(String qualifiedName) {
-    if (qualifiedName == null || qualifiedName.isBlank()) {
-      return Optional.empty();
+    var entry = new LibraryEntry(uri, qualifiedName, kind, libOrigin);
+    entriesByUri.put(uri, entry);
+    uriByQualifiedName.put(qualifiedName.toLowerCase(Locale.ROOT), uri);
+
+    // Добавляем .os-файл в ServerContext как обычный документ. SymbolTreeComputer,
+    // ReferenceIndexFiller, OScriptModuleMembersProvider и прочие подхватят его
+    // через события.
+    try {
+      var dc = serverContext.addDocument(uri);
+      serverContext.rebuildDocument(dc);
+      // Явный вызов: гарантирует регистрацию USER-типа в актуальном
+      // workspace-scope (event-listener тоже сработает, но он не
+      // обязан выполняться в том же scope/потоке, что и reindex).
+      oScriptModuleMembersProvider.register(dc);
+    } catch (RuntimeException e) {
+      LOGGER.warn("Failed to load oscript library file: {}", osFile, e);
     }
-    return Optional.ofNullable(classUriByName.get(qualifiedName.toLowerCase(Locale.ROOT)));
   }
 
   private static String libOriginOf(Path libRoot) {
@@ -252,89 +258,5 @@ public class OScriptLibraryIndex {
     }
     var fileName = libRoot.getFileName();
     return fileName == null ? null : fileName.toString();
-  }
-
-  private void registerModule(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext, String libOrigin) {
-    var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
-    registerModuleFromFile(entry.name(), osFile, serverContext, libOrigin);
-  }
-
-  private void registerClass(Path libRoot, LibConfigParser.LibEntry entry, ServerContext serverContext, String libOrigin) {
-    var osFile = libRoot.resolve(entry.file()).toAbsolutePath().normalize();
-    registerClassFromFile(entry.name(), osFile, serverContext, libOrigin);
-  }
-
-  private void registerModuleFromFile(String qualifiedName, Path osFile, ServerContext serverContext, String libOrigin) {
-    var uri = Absolute.uri(osFile.toUri());
-    oScriptModuleTypeResolver.register(uri, ModuleType.OScriptModule);
-    var parsed = libraryFileParser.parse(osFile, serverContext);
-    if (parsed.isEmpty()) {
-      return;
-    }
-    registerModuleMembers(qualifiedName, parsed.get(), libOrigin);
-    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.MODULE, osFile, libOrigin));
-    moduleUriByName.put(qualifiedName.toLowerCase(Locale.ROOT), uri);
-  }
-
-  private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext, String libOrigin) {
-    var uri = Absolute.uri(osFile.toUri());
-    oScriptModuleTypeResolver.register(uri, ModuleType.OScriptClass);
-    var parsed = libraryFileParser.parse(osFile, serverContext);
-    if (parsed.isEmpty()) {
-      return;
-    }
-    registerClassMembers(qualifiedName, parsed.get(), libOrigin);
-    entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.CLASS, osFile, libOrigin));
-    classUriByName.put(qualifiedName.toLowerCase(Locale.ROOT), uri);
-  }
-
-  private void registerModuleMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed, String libOrigin) {
-    typeRegistry.unregisterUserType(qualifiedName);
-    var ref = typeRegistry.registerUserType(qualifiedName, null, LanguageScope.OS);
-    var members = collectMembers(parsed);
-    typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.OS);
-    globalScopeProvider.registerLibraryModule(qualifiedName, ref, libOrigin);
-  }
-
-  private void registerClassMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed, String libOrigin) {
-    typeRegistry.unregisterUserType(qualifiedName);
-    var ref = typeRegistry.registerUserType(qualifiedName, null, LanguageScope.OS);
-    var members = collectMembers(parsed);
-    typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.OS);
-    var ctorSignatures = parsed.constructor()
-      .map(c -> withReturnType(c.signatures(), ref))
-      .orElse(List.<SignatureDescriptor>of());
-    globalScopeProvider.registerLibraryClass(qualifiedName, ctorSignatures, libOrigin);
-  }
-
-  private static Collection<MemberDescriptor> collectMembers(OScriptLibraryFileParser.OScriptLibraryFile file) {
-    var members = new ArrayList<MemberDescriptor>();
-    for (var method : file.exportMethods()) {
-      var ret = method.signatures().isEmpty()
-        ? TypeRef.UNKNOWN
-        : method.signatures().get(0).returnType();
-      members.add(new MemberDescriptor(
-        method.name(), MemberKind.METHOD, "", ret, method.signatures()
-      ));
-    }
-    for (var v : file.exportVars()) {
-      members.add(MemberDescriptor.property(v));
-    }
-    return members;
-  }
-
-  /**
-   * Для конструктора возвращаемый тип — это сам класс; в распарсенной сигнатуре
-   * метода {@code ПриСозданииОбъекта} он {@link TypeRef#UNKNOWN}.
-   */
-  private static List<SignatureDescriptor> withReturnType(List<SignatureDescriptor> raw, TypeRef classRef) {
-    if (raw == null || raw.isEmpty()) {
-      return List.of(new SignatureDescriptor(List.of(), classRef, ""));
-    }
-    var result = new ArrayList<SignatureDescriptor>(raw.size());
-    for (var sig : raw) {
-      result.add(new SignatureDescriptor(sig.parameters(), classRef, sig.description()));
-    }
-    return result;
   }
 }

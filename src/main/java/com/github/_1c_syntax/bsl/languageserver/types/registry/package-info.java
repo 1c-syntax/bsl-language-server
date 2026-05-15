@@ -11,7 +11,7 @@
  * Реестр типов и провайдеры. {@link com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry}
  * — центральная точка; {@link com.github._1c_syntax.bsl.languageserver.types.registry.PlatformTypesProvider}
  * — расширяемый источник платформенных типов (1С / OneScript / встроенный
- * bootstrap); {@link com.github._1c_syntax.bsl.languageserver.types.registry.UserTypesProvider}
- * — событийная регистрация пользовательских типов.
+ * bootstrap). Пользовательские типы из .os-файлов регистрируются
+ * {@code OScriptModuleMembersProvider} (см. пакет {@code types.oscript}).
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;

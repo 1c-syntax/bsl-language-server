@@ -91,6 +91,9 @@ public class TypeRegistry {
   /** Тип ↔ список конструкторов (для платформенных классов из JSON-пакета). */
   private final Map<TypeRef, List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> constructors
     = new ConcurrentHashMap<>();
+  /** Тип ↔ динамические источники конструкторов (например, OScript-класс из SymbolTree). */
+  private final Map<TypeRef, List<java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>>>> constructorSources
+    = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
@@ -308,7 +311,35 @@ public class TypeRegistry {
     if (ref == null) {
       return List.of();
     }
-    return constructors.getOrDefault(ref, List.of());
+    var fromPack = constructors.getOrDefault(ref, List.<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>of());
+    var sources = constructorSources.get(ref);
+    if (sources == null || sources.isEmpty()) {
+      return fromPack;
+    }
+    var result = new ArrayList<>(fromPack);
+    for (var supplier : sources) {
+      var sigs = supplier.get();
+      if (sigs != null) {
+        result.addAll(sigs);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Зарегистрировать динамический источник конструкторов для типа (например,
+   * {@code ПриСозданииОбъекта} OneScript-класса из SymbolTree).
+   * Источник вызывается каждый раз при запросе {@link #getConstructors(TypeRef)},
+   * что обеспечивает hot-reload без ручной инвалидации.
+   */
+  public void registerConstructorSource(
+    TypeRef ref,
+    java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> source
+  ) {
+    if (ref == null || source == null) {
+      return;
+    }
+    constructorSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>())).add(source);
   }
 
   /**
