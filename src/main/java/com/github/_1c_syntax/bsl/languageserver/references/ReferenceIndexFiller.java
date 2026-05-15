@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
@@ -80,6 +81,7 @@ public class ReferenceIndexFiller {
 
   private final ReferenceIndex index;
   private final LanguageServerConfiguration configuration;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -137,6 +139,7 @@ public class ReferenceIndexFiller {
 
       var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
+        tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
         return super.visitCallStatement(ctx);
       }
 
@@ -152,6 +155,7 @@ public class ReferenceIndexFiller {
     public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
       var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
+        tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
         return super.visitComplexIdentifier(ctx);
       }
 
@@ -230,6 +234,27 @@ public class ReferenceIndexFiller {
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
       }
+    }
+
+    /**
+     * Если идентификатор соответствует имени зарегистрированного OneScript
+     * library-модуля, регистрирует вызов метода как ссылку на соответствующий
+     * .os-файл (через {@link ModuleType#OScriptModule}). Это обеспечивает
+     * корректную работу go-to-definition / find-references на вызовах вида
+     * {@code MyLibModule.МойМетод()}.
+     */
+    private void tryRegisterLibraryModuleCall(@Nullable TerminalNode identifier, Optional<Token> methodName) {
+      if (identifier == null || methodName.isEmpty()) {
+        return;
+      }
+      var libUri = oScriptLibraryIndex.findModuleUri(identifier.getText());
+      if (libUri.isEmpty()) {
+        return;
+      }
+      var libMdoRef = libUri.get().toString();
+      var methodNameToken = methodName.get();
+      addMethodCall(libMdoRef, ModuleType.OScriptModule, Strings.trimQuotes(methodNameToken.getText()),
+        Ranges.create(methodNameToken));
     }
 
     /**

@@ -163,6 +163,25 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
       .isEqualTo(CompletionItemKind.Module);
   }
 
+  @Test
+  void dotCompletionOnInstanceOfLibraryClassReturnsItsMembers() {
+    initLib();
+
+    var content = "#Использовать mylib\nX = Новый MyClass;\nX.ПолучитьСтроку();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(2, 2));
+
+    var items = completionProvider.getCompletion(dc, params);
+
+    assertThat(items)
+      .as("после `X = Новый MyClass; X.` должны быть видны члены MyClass")
+      .extracting(CompletionItem::getLabel)
+      .contains("ПолучитьСтроку", "СтатусМодуля");
+  }
+
   private void initLib() {
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);

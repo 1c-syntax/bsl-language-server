@@ -48,7 +48,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -86,6 +88,10 @@ public class OScriptLibraryIndex {
   /** URI .os-файла → запись о его регистрации (имя + вид). Используется для re-index/cleanup. */
   private final Map<URI, LibraryEntry> entriesByUri = new ConcurrentHashMap<>();
 
+  /** quailifiedName (lowercase) → URI .os-файла. Обратный индекс для резолва имён в ссылки. */
+  private final Map<String, URI> moduleUriByName = new ConcurrentHashMap<>();
+  private final Map<String, URI> classUriByName = new ConcurrentHashMap<>();
+
   private enum EntryKind { MODULE, CLASS }
 
   private record LibraryEntry(String qualifiedName, EntryKind kind, Path osFile, String libOrigin) {
@@ -115,6 +121,8 @@ public class OScriptLibraryIndex {
     globalScopeProvider.clearLibraryEntries();
     oScriptModuleTypeResolver.clear();
     entriesByUri.clear();
+    moduleUriByName.clear();
+    classUriByName.clear();
 
     var configs = libConfigDiscovery.discover(serverContext);
     if (!configs.isEmpty()) {
@@ -170,9 +178,12 @@ public class OScriptLibraryIndex {
     }
     oScriptModuleTypeResolver.unregister(uri);
     typeRegistry.unregisterUserType(entry.qualifiedName());
+    var nameKey = entry.qualifiedName().toLowerCase(Locale.ROOT);
     if (entry.kind() == EntryKind.MODULE) {
+      moduleUriByName.remove(nameKey);
       globalScopeProvider.unregisterLibraryModule(entry.qualifiedName());
     } else {
+      classUriByName.remove(nameKey);
       globalScopeProvider.unregisterLibraryClass(entry.qualifiedName());
     }
   }
@@ -212,6 +223,29 @@ public class OScriptLibraryIndex {
     }
   }
 
+  /**
+   * @return URI .os-файла зарегистрированного library-модуля по его qualifiedName
+   *         (регистронезависимо). Используется внешними индексами/finder'ами для
+   *         резолва вызовов вида {@code MyModule.MyMethod()} в исходный файл.
+   */
+  public Optional<URI> findModuleUri(String qualifiedName) {
+    if (qualifiedName == null || qualifiedName.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(moduleUriByName.get(qualifiedName.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * @return URI .os-файла зарегистрированного library-класса по его qualifiedName
+   *         (регистронезависимо).
+   */
+  public Optional<URI> findClassUri(String qualifiedName) {
+    if (qualifiedName == null || qualifiedName.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(classUriByName.get(qualifiedName.toLowerCase(Locale.ROOT)));
+  }
+
   private static String libOriginOf(Path libRoot) {
     if (libRoot == null) {
       return null;
@@ -239,6 +273,7 @@ public class OScriptLibraryIndex {
     }
     registerModuleMembers(qualifiedName, parsed.get(), libOrigin);
     entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.MODULE, osFile, libOrigin));
+    moduleUriByName.put(qualifiedName.toLowerCase(Locale.ROOT), uri);
   }
 
   private void registerClassFromFile(String qualifiedName, Path osFile, ServerContext serverContext, String libOrigin) {
@@ -250,6 +285,7 @@ public class OScriptLibraryIndex {
     }
     registerClassMembers(qualifiedName, parsed.get(), libOrigin);
     entriesByUri.put(uri, new LibraryEntry(qualifiedName, EntryKind.CLASS, osFile, libOrigin));
+    classUriByName.put(qualifiedName.toLowerCase(Locale.ROOT), uri);
   }
 
   private void registerModuleMembers(String qualifiedName, OScriptLibraryFileParser.OScriptLibraryFile parsed, String libOrigin) {
