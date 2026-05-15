@@ -116,4 +116,29 @@ class SignatureHelpProviderTest {
     assertThat(sig.getLabel()).startsWith("Сообщить(");
     assertThat(sig.getParameters()).hasSizeGreaterThanOrEqualTo(1);
   }
+
+  @Test
+  void testActiveSignaturePicksOverloadByArgumentIndex() {
+    // ЧтениеДанных.Разделить имеет 2 варианта: [separator] и [separator, encoding].
+    // Курсор на 2-м параметре (после первой запятой) — должна стать активной 2-я сигнатура.
+    var content =
+      "ЧД = Новый ЧтениеДанных(\"path\");\n"
+        + "ЧД.Разделить(\"|\", \"UTF-8\");\n";
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // позиция сразу после запятой во втором аргументе Разделить(
+    var line = 1;
+    var col = content.split("\n")[1].indexOf("\"UTF-8\"");
+    params.setPosition(new Position(line, col));
+
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    assertThat(help).isNotNull();
+    assertThat(help.getSignatures()).hasSize(2);
+    assertThat(help.getActiveParameter()).isEqualTo(1);
+    assertThat(help.getActiveSignature()).isEqualTo(1);
+    assertThat(help.getSignatures().get(1).getParameters()).hasSize(2);
+  }
 }

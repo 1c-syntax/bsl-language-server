@@ -98,4 +98,47 @@ class HoverProviderTypeAwareTest extends AbstractServerContextAwareTest {
     assertThat(value).contains("Количество");
     assertThat(value).contains("Массив");
   }
+
+  @Test
+  void hoverOnMethodWithOverload_picksMatchingSignatureByArity() {
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/MethodOverloads.os", context);
+    var content = documentContext.getContent();
+
+    // Hover на 1-арг варианте: Чтение.Разделить("|");
+    var idxOne = content.indexOf(".Разделить(\"|\");");
+    assertThat(idxOne).isGreaterThan(0);
+    var prefixOne = content.substring(0, idxOne);
+    var lineOne = (int) prefixOne.chars().filter(c -> c == '\n').count();
+    var lineStartOne = prefixOne.lastIndexOf('\n') + 1;
+    var colOne = idxOne - lineStartOne + 2; // на 'Р'
+
+    var paramsOne = new HoverParams();
+    paramsOne.setPosition(new Position(lineOne, colOne));
+    var hoverOne = hoverProvider.getHover(documentContext, paramsOne);
+    assertThat(hoverOne).isPresent();
+    var textOne = hoverOne.get().getContents().getRight().getValue();
+    assertThat(textOne).contains("Разделить(separator)");
+    assertThat(textOne).contains("Все варианты вызова");
+    // 1-парам вариант должен быть выделен **bold** как выбранный
+    assertThat(textOne).contains("**`Разделить(separator)`");
+    assertThat(textOne).doesNotContain("Не найдено описание");
+
+    // Hover на 2-арг варианте: Чтение.Разделить("|", "UTF-8");
+    var idxTwo = content.indexOf(".Разделить(\"|\", \"UTF-8\")");
+    assertThat(idxTwo).isGreaterThan(0);
+    var prefixTwo = content.substring(0, idxTwo);
+    var lineTwo = (int) prefixTwo.chars().filter(c -> c == '\n').count();
+    var lineStartTwo = prefixTwo.lastIndexOf('\n') + 1;
+    var colTwo = idxTwo - lineStartTwo + 2; // на 'Р'
+
+    var paramsTwo = new HoverParams();
+    paramsTwo.setPosition(new Position(lineTwo, colTwo));
+    var hoverTwo = hoverProvider.getHover(documentContext, paramsTwo);
+    assertThat(hoverTwo).isPresent();
+    var textTwo = hoverTwo.get().getContents().getRight().getValue();
+    assertThat(textTwo).contains("Разделить(separator, encoding)");
+    assertThat(textTwo).doesNotContain("Не найдено описание");
+  }
 }

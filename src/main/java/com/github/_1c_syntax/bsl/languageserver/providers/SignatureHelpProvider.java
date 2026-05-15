@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -101,7 +102,7 @@ public final class SignatureHelpProvider {
 
     var help = new SignatureHelp();
     help.setSignatures(signatures);
-    help.setActiveSignature(0);
+    help.setActiveSignature(SignatureSelection.pickIndexByActiveParameter(descriptor.signatures(), activeParameter));
     help.setActiveParameter(activeParameter);
     return help;
   }

@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
@@ -96,7 +97,8 @@ public final class HoverProvider {
     // Fallback: type-driven hover для цепочек accessor'ов / platform members /
     // namespace-имен, у которых нет соответствующего SourceDefinedSymbol.
     return typeService.findMemberAt(documentContext, position)
-      .map(member -> new Hover(renderMember(member.owner(), member.descriptor()), member.range()));
+      .map(member -> new Hover(
+        renderMember(member.owner(), member.descriptor(), member.callArgCount()), member.range()));
   }
 
   private Optional<Hover> newExpressionHover(DocumentContext documentContext, Position position) {
@@ -133,28 +135,16 @@ public final class HoverProvider {
     }
     int argCount = countNewExpressionArgs(nex.get());
     boolean disclaim = false;
-    SignatureDescriptor chosen = pickByArity(ctors, argCount);
-    if (chosen == null) {
+    int chosenIndex = SignatureSelection.pickIndexByArity(ctors, argCount);
+    SignatureDescriptor chosen;
+    if (chosenIndex < 0) {
       chosen = ctors.get(0);
       disclaim = true;
+    } else {
+      chosen = ctors.get(chosenIndex);
     }
     var range = tokenRange(typeNameCtx);
     return Optional.of(new Hover(renderConstructor(typeName, ref, chosen, ctors, disclaim), range));
-  }
-
-  private static SignatureDescriptor pickByArity(java.util.List<SignatureDescriptor> ctors, int argCount) {
-    SignatureDescriptor match = null;
-    for (var sig : ctors) {
-      int required = (int) sig.parameters().stream().filter(p -> !p.optional()).count();
-      int total = sig.parameters().size();
-      if (argCount >= required && argCount <= total) {
-        return sig;
-      }
-      if (match == null && total == argCount) {
-        match = sig;
-      }
-    }
-    return match;
   }
 
   private static int countNewExpressionArgs(BSLParser.NewExpressionContext nex) {
@@ -267,19 +257,39 @@ public final class HoverProvider {
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
   }
 
-  private static MarkupContent renderMember(TypeRef owner, MemberDescriptor descriptor) {
+  private static MarkupContent renderMember(TypeRef owner, MemberDescriptor descriptor, int callArgCount) {
     var sb = new StringBuilder();
+    SignatureDescriptor chosen = null;
+    boolean disclaim = false;
+    int chosenIndex = -1;
+    if (descriptor.kind() == MemberKind.METHOD && !descriptor.signatures().isEmpty()) {
+      if (descriptor.signatures().size() > 1 && callArgCount >= 0) {
+        chosenIndex = SignatureSelection.pickIndexByArity(descriptor.signatures(), callArgCount);
+        if (chosenIndex < 0) {
+          chosen = descriptor.signatures().get(0);
+          chosenIndex = 0;
+          disclaim = true;
+        } else {
+          chosen = descriptor.signatures().get(chosenIndex);
+        }
+      } else {
+        chosen = descriptor.signatures().get(0);
+        chosenIndex = 0;
+      }
+    }
     if (descriptor.kind() == MemberKind.METHOD) {
       sb.append("```bsl\n");
       sb.append(descriptor.name()).append('(');
-      if (!descriptor.signatures().isEmpty()) {
-        var first = descriptor.signatures().get(0);
-        sb.append(first.parameters().stream()
+      if (chosen != null) {
+        sb.append(chosen.parameters().stream()
           .map(p -> p.name())
           .collect(Collectors.joining(", ")));
       }
       sb.append(')');
-      var ret = effectiveReturnType(descriptor);
+      TypeRef ret = (chosen != null && chosen.returnType() != null
+        && !chosen.returnType().qualifiedName().isEmpty())
+        ? chosen.returnType()
+        : effectiveReturnType(descriptor);
       if (ret != null) {
         sb.append(": ").append(ret.qualifiedName());
       }
@@ -307,14 +317,41 @@ public final class HoverProvider {
     } else if (descriptor.description() != null && !descriptor.description().isBlank()) {
       sb.append("\n\n").append(descriptor.description());
     }
+    if (chosen != null && chosen.description() != null && !chosen.description().isBlank()) {
+      sb.append("\n\n").append(chosen.description());
+    }
+    if (chosen != null && !chosen.parameters().isEmpty()) {
+      sb.append("\n\n**Параметры:**\n");
+      for (var p : chosen.parameters()) {
+        sb.append("- `").append(p.name()).append('`');
+        if (p.optional()) {
+          sb.append(" _(необязательный)_");
+        }
+        if (p.description() != null && !p.description().isBlank()) {
+          sb.append(" — ").append(p.description());
+        }
+        sb.append('\n');
+      }
+    }
+    if (disclaim) {
+      sb.append("\n\n_Не найдено описание, подходящее под текущий вызов метода._");
+    }
     if (descriptor.kind() == MemberKind.METHOD && descriptor.signatures().size() > 1) {
-      sb.append("\n\n**Перегрузки:**\n");
-      for (var sig : descriptor.signatures()) {
-        sb.append("- `").append(descriptor.name()).append('(')
+      sb.append("\n\n**Все варианты вызова:**\n");
+      for (int i = 0; i < descriptor.signatures().size(); i++) {
+        var sig = descriptor.signatures().get(i);
+        sb.append("- ");
+        if (i == chosenIndex && !disclaim) {
+          sb.append("**");
+        }
+        sb.append('`').append(descriptor.name()).append('(')
           .append(sig.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")))
           .append(")`");
-        if (sig.returnType() != null) {
+        if (sig.returnType() != null && !sig.returnType().qualifiedName().isEmpty()) {
           sb.append(": ").append(sig.returnType().qualifiedName());
+        }
+        if (i == chosenIndex && !disclaim) {
+          sb.append("**");
         }
         sb.append('\n');
       }

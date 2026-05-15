@@ -45,6 +45,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
@@ -276,11 +277,22 @@ public class TypeService {
     for (var owner : leftTypes.refs()) {
       for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
         if (member.kind() == expectedKind && member.name().equalsIgnoreCase(memberName)) {
-          return Optional.of(new TypedMember(owner, member, Ranges.create(terminal)));
+          int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
+          return Optional.of(new TypedMember(owner, member, Ranges.create(terminal), argCount));
         }
       }
     }
     return Optional.empty();
+  }
+
+  private static int countMeaningfulArgs(MethodCallNode call) {
+    var args = call.arguments();
+    int n = args.size();
+    // Trim trailing skipped argument (e.g. `Foo(a, )` — 2 ноды, но «значимый» только 1).
+    while (n > 0 && args.get(n - 1) instanceof SkippedCallArgumentNode) {
+      n--;
+    }
+    return n;
   }
 
   private static boolean isAccessorIdentifier(TerminalNode terminal) {
@@ -339,7 +351,10 @@ public class TypeService {
    * @param descriptor  описание члена
    * @param range       диапазон идентификатора-члена под курсором
    */
-  public record TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range) {
+  public record TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
+    public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range) {
+      this(owner, descriptor, range, -1);
+    }
   }
 
 }
