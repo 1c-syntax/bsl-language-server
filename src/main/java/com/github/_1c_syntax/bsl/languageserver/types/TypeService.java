@@ -221,10 +221,18 @@ public class TypeService {
       typeRegistry.resolve(bareName);
       var fromScope = globalScopeProvider.findGlobal(bareName, documentContext.getFileType())
         .filter(SyntheticSymbol.class::isInstance)
-        .map(s -> ((SyntheticSymbol) s).getValueType())
-        .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
+        .map(SyntheticSymbol.class::cast)
+        .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN));
       if (fromScope.isPresent()) {
-        return Optional.of(new TypedMember(fromScope.get(), globalPropertySelfDescriptor(fromScope.get()), Ranges.create(terminal)));
+        var sym = fromScope.get();
+        var ref = sym.getValueType();
+        var desc = sym.getDescription();
+        if (desc == null || desc.isBlank()) {
+          desc = typeRegistry.getDescription(ref);
+        }
+        return Optional.of(new TypedMember(ref,
+          MemberDescriptor.property(ref.qualifiedName(), ref, desc),
+          Ranges.create(terminal)));
       }
     }
 
@@ -271,10 +279,6 @@ public class TypeService {
       return true;
     }
     return false;
-  }
-
-  private static MemberDescriptor globalPropertySelfDescriptor(TypeRef ref) {
-    return MemberDescriptor.property(ref.qualifiedName(), ref);
   }
 
   private static BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {

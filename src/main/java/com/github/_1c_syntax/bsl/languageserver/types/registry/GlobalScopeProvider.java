@@ -343,12 +343,22 @@ public class GlobalScopeProvider {
    * результат повышается до {@link LanguageScope#BOTH}.
    */
   public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope) {
+    registerGlobalProperty(ref, names, scope, "");
+  }
+
+  /**
+   * То же, что {@link #registerGlobalProperty(TypeRef, Collection, LanguageScope)},
+   * но с описанием, которое будет прикреплено к {@link SyntheticSymbol} для
+   * последующего отображения в hover/completion.
+   */
+  public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope, String description) {
     if (ref == null || names == null || names.isEmpty()) {
       return;
     }
     ensureGlobalsPublished();
     var canonical = ref.qualifiedName();
-    var symbol = new SyntheticSymbol(canonical, SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", ref);
+    var symbol = new SyntheticSymbol(canonical, SyntheticKind.PLATFORM_GLOBAL_PROPERTY,
+      description == null ? "" : description, ref);
     if (globalSymbolScope == null) {
       return;
     }

@@ -135,4 +135,9 @@ public record MemberDescriptor(
   public static MemberDescriptor property(String name, TypeRef returnType) {
     return new MemberDescriptor(name, MemberKind.PROPERTY, "", returnType, List.of(), null);
   }
+
+  public static MemberDescriptor property(String name, TypeRef returnType, String description) {
+    return new MemberDescriptor(name, MemberKind.PROPERTY,
+      description == null ? "" : description, returnType, List.of(), null);
+  }
 }

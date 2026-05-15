@@ -53,8 +53,19 @@ public interface TypePackProvider {
     String qualifiedName,
     List<String> aliases,
     Collection<MemberDescriptor> members,
-    boolean exposedAsGlobal
+    boolean exposedAsGlobal,
+    String description
   ) {
+
+    public TypeDecl(
+      TypeKind kind,
+      String qualifiedName,
+      List<String> aliases,
+      Collection<MemberDescriptor> members,
+      boolean exposedAsGlobal
+    ) {
+      this(kind, qualifiedName, aliases, members, exposedAsGlobal, "");
+    }
 
     public TypeRef toRef() {
       return new TypeRef(kind, qualifiedName);

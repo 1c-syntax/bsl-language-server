@@ -86,6 +86,8 @@ public class TypeRegistry {
   private final Map<TypeRef, List<ScopedMemberSource>> memberSources = new ConcurrentHashMap<>();
   /** Тип ↔ языковой скоуп (BSL/OS/BOTH). Отсутствие записи трактуется как BOTH. */
   private final Map<TypeRef, LanguageScope> typeScopes = new ConcurrentHashMap<>();
+  /** Тип ↔ описание (из JSON-пакета или динамической регистрации). Пусто если описания нет. */
+  private final Map<TypeRef, String> descriptions = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
@@ -280,7 +282,18 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerGlobalProperty(ref, names, scope);
+    globalScopeProvider.registerGlobalProperty(ref, names, scope, descriptions.getOrDefault(ref, ""));
+  }
+
+  /**
+   * Описание типа из источника (JSON-пакета или динамической регистрации).
+   * Возвращает пустую строку, если описание отсутствует.
+   */
+  public String getDescription(TypeRef ref) {
+    if (ref == null) {
+      return "";
+    }
+    return descriptions.getOrDefault(ref, "");
   }
 
   /**
@@ -305,6 +318,9 @@ public class TypeRegistry {
     addAlias(decl.qualifiedName(), ref);
     for (var alias : decl.aliases()) {
       addAlias(alias, ref);
+    }
+    if (decl.description() != null && !decl.description().isBlank()) {
+      descriptions.put(ref, decl.description());
     }
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members, scope);
