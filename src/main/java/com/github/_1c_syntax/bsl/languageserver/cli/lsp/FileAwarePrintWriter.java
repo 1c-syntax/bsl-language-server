@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -112,12 +112,12 @@ public class FileAwarePrintWriter extends PrintWriter {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * Обработчик события {@link GlobalLanguageServerConfigurationChangedEvent}.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+  public void handleEvent(GlobalLanguageServerConfigurationChangedEvent event) {
     setFile(event.getSource().getTraceLog());
   }
 

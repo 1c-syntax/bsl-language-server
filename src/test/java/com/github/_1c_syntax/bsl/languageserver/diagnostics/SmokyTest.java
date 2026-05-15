@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -41,7 +43,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,16 +54,17 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 @SpringBootTest
 @Slf4j
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class SmokyTest {
+class SmokyTest extends AbstractServerContextAwareTest {
 
   @Autowired
+  private DiagnosticInfos diagnosticInfosBean;
+
   private LanguageServerConfiguration configuration;
-
-  @Autowired
-  private Collection<DiagnosticInfo> diagnosticInfos;
 
   @BeforeEach
   void setUpStreams() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
     new MockUp<System>() {
       @Mock
       public void exit(int value) {
@@ -118,6 +120,7 @@ class SmokyTest {
     var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
+    var diagnosticInfos = diagnosticInfosBean.getByCode().values();
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
       .map(DiagnosticInfo::getCode)
       .collect(Collectors.toMap(
@@ -133,7 +136,7 @@ class SmokyTest {
     Map<File, Exception> diagnosticErrors = new HashMap<>();
     fixtures.forEach(filePath -> {
       try {
-        var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());
+        var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString(), context);
         documentContext.getDiagnostics();
       } catch (Exception e) {
         diagnosticErrors.put(filePath, e);
@@ -146,6 +149,7 @@ class SmokyTest {
   @Test
   void testExtraMinForComplexity() {
     // нельзя ставить отрицательное значение
+    var diagnosticInfos = diagnosticInfosBean.getByCode().values();
     diagnosticInfos.forEach(diagnosticInfo ->
       assertThat(diagnosticInfo.getExtraMinForComplexity())
         .as(diagnosticInfo.getCode().getStringValue())

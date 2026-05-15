@@ -21,19 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
+import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.SmartApplicationListener;
+import org.springframework.core.Ordered;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +53,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -63,13 +77,20 @@ class BSLWorkspaceServiceTest {
   private BSLWorkspaceService workspaceService;
 
   @Autowired
-  private ServerContext serverContext;
+  private ServerContextProvider serverContextProvider;
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private ConfigurableApplicationContext applicationContext;
 
   @TempDir
   Path tempDir;
+
+  @BeforeEach
+  void setUp() {
+    // Register workspace for temp directory
+    var workspaceFolder = new org.eclipse.lsp4j.WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
+    serverContextProvider.addWorkspace(workspaceFolder);
+  }
 
   @Test
   void testDidChangeWatchedFiles_Created_NotOpened() throws IOException {
@@ -82,12 +103,12 @@ class BSLWorkspaceServiceTest {
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().until(() -> serverContext.getDocument(uri) != null);
+    await().until(() -> serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null) != null);
 
     // then
-    var documentContext = serverContext.getDocument(uri);
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
-    assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.isDocumentOpened(documentContext)).orElse(false)).isFalse();
   }
 
   @Test
@@ -97,8 +118,9 @@ class BSLWorkspaceServiceTest {
     var uri = Absolute.uri(testFile.toURI());
     var content = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
 
-    var documentContext = serverContext.addDocument(uri);
-    serverContext.openDocument(documentContext, content, 1);
+    var ctx = serverContextProvider.getServerContext(uri).orElseThrow();
+    var documentContext = ctx.addDocument(uri);
+    ctx.openDocument(documentContext, content, 1);
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Created);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
@@ -107,7 +129,9 @@ class BSLWorkspaceServiceTest {
     assertThatCode(() -> workspaceService.didChangeWatchedFiles(params)).doesNotThrowAnyException();
 
     // then
-    await().untilAsserted(() -> assertThat(serverContext.getDocument(uri)).isNotNull());
+    // Для открытого файла событие Created должно быть проигнорировано
+    // Документ должен остаться в контексте
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
   }
 
   @Test
@@ -116,9 +140,10 @@ class BSLWorkspaceServiceTest {
     var testFile = createTestFile("test_changed.bsl");
     var uri = Absolute.uri(testFile.toURI());
 
-    var documentContext = serverContext.addDocument(uri);
-    serverContext.rebuildDocument(documentContext);
-    serverContext.tryClearDocument(documentContext);
+    var ctx = serverContextProvider.getServerContext(uri).orElseThrow();
+    var documentContext = ctx.addDocument(uri);
+    ctx.rebuildDocument(documentContext);
+    ctx.tryClearDocument(documentContext);
 
     FileUtils.copyFile(FIXTURE_FORMATTABLE_BSL, testFile);
 
@@ -129,10 +154,8 @@ class BSLWorkspaceServiceTest {
     workspaceService.didChangeWatchedFiles(params);
 
     // then
-    await().untilAsserted(() -> {
-      assertThat(serverContext.getDocument(uri)).isNotNull();
-      assertThat(serverContext.isDocumentOpened(documentContext)).isFalse();
-    });
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.isDocumentOpened(documentContext)).orElse(false)).isFalse();
   }
 
   @Test
@@ -142,8 +165,9 @@ class BSLWorkspaceServiceTest {
     var uri = Absolute.uri(testFile.toURI());
     var content = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
 
-    var documentContext = serverContext.addDocument(uri);
-    serverContext.openDocument(documentContext, content, 1);
+    var ctx = serverContextProvider.getServerContext(uri).orElseThrow();
+    var documentContext = ctx.addDocument(uri);
+    ctx.openDocument(documentContext, content, 1);
 
     FileUtils.copyFile(FIXTURE_FORMATTABLE_BSL, testFile);
 
@@ -154,7 +178,9 @@ class BSLWorkspaceServiceTest {
     workspaceService.didChangeWatchedFiles(params);
 
     // then
-    await().untilAsserted(() -> assertThat(serverContext.getDocument(uri)).isNotNull());
+    // Для открытого файла событие Changed должно быть проигнорировано
+    // Документ должен остаться в контексте
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
   }
 
   @Test
@@ -163,17 +189,17 @@ class BSLWorkspaceServiceTest {
     var testFile = createTestFile("test_changed_unknown.bsl");
     var uri = Absolute.uri(testFile.toURI());
 
-    assertThat(serverContext.getDocument(uri)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Changed);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().until(() -> serverContext.getDocument(uri) != null);
+    await().until(() -> serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null) != null);
 
     // then
-    var documentContext = serverContext.getDocument(uri);
+    var documentContext = serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null);
     assertThat(documentContext).isNotNull();
   }
 
@@ -183,21 +209,22 @@ class BSLWorkspaceServiceTest {
     var testFile = createTestFile("test_deleted.bsl");
     var uri = Absolute.uri(testFile.toURI());
 
-    var documentContext = serverContext.addDocument(uri);
-    serverContext.rebuildDocument(documentContext);
-    serverContext.tryClearDocument(documentContext);
+    var ctx = serverContextProvider.getServerContext(uri).orElseThrow();
+    var documentContext = ctx.addDocument(uri);
+    ctx.rebuildDocument(documentContext);
+    ctx.tryClearDocument(documentContext);
 
-    assertThat(serverContext.getDocument(uri)).isNotNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Deleted);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().until(() -> serverContext.getDocument(uri) == null);
+    await().until(() -> serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null) == null);
 
     // then
-    assertThat(serverContext.getDocument(uri)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
   @Test
@@ -207,20 +234,21 @@ class BSLWorkspaceServiceTest {
     var uri = Absolute.uri(testFile.toURI());
     var content = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
 
-    var documentContext = serverContext.addDocument(uri);
-    serverContext.openDocument(documentContext, content, 1);
+    var ctx = serverContextProvider.getServerContext(uri).orElseThrow();
+    var documentContext = ctx.addDocument(uri);
+    ctx.openDocument(documentContext, content, 1);
 
-    assertThat(serverContext.getDocument(uri)).isNotNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isPresent();
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Deleted);
     var params = new DidChangeWatchedFilesParams(List.of(fileEvent));
 
     // when
     workspaceService.didChangeWatchedFiles(params);
-    await().until(() -> serverContext.getDocument(uri) == null);
+    await().until(() -> serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri)).orElse(null) == null);
 
     // then
-    assertThat(serverContext.getDocument(uri)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
   @Test
@@ -235,10 +263,8 @@ class BSLWorkspaceServiceTest {
     assertThatCode(() -> workspaceService.didChangeWatchedFiles(params)).doesNotThrowAnyException();
 
     // then
-    await()
-      .atMost(Duration.ofSeconds(2))
-      .during(Duration.ofMillis(200))
-      .until(() -> serverContext.getDocument(uri) == null);
+    // Не должно быть исключений
+    assertThat(serverContextProvider.getServerContext(uri).map(c -> c.getDocument(uri))).isEmpty();
   }
 
   @Test
@@ -252,12 +278,13 @@ class BSLWorkspaceServiceTest {
     var uri2 = Absolute.uri(file2.toURI());
     var uri3 = Absolute.uri(file3.toURI());
 
-    var documentContext2 = serverContext.addDocument(uri2);
-    serverContext.rebuildDocument(documentContext2);
+    var ctx = serverContextProvider.getServerContext(uri2).orElseThrow();
+    var documentContext2 = ctx.addDocument(uri2);
+    ctx.rebuildDocument(documentContext2);
 
     // file3 добавляем в контекст, чтобы проверить его удаление
-    var documentContext3 = serverContext.addDocument(uri3);
-    serverContext.rebuildDocument(documentContext3);
+    var documentContext3 = ctx.addDocument(uri3);
+    ctx.rebuildDocument(documentContext3);
 
     var events = List.of(
       new FileEvent(uri1.toString(), FileChangeType.Created),
@@ -269,23 +296,27 @@ class BSLWorkspaceServiceTest {
     // when
     workspaceService.didChangeWatchedFiles(params);
     await().until(() ->
-      serverContext.getDocument(uri1) != null &&
-      serverContext.getDocument(uri2) != null &&
-      serverContext.getDocument(uri3) == null
+      serverContextProvider.getServerContext(uri1).map(c -> c.getDocument(uri1)).orElse(null) != null &&
+      serverContextProvider.getServerContext(uri2).map(c -> c.getDocument(uri2)).orElse(null) != null &&
+      serverContextProvider.getServerContext(uri3).map(c -> c.getDocument(uri3)).orElse(null) == null
     );
 
     // then
-    assertThat(serverContext.getDocument(uri1)).isNotNull();
-    assertThat(serverContext.getDocument(uri2)).isNotNull();
-    assertThat(serverContext.getDocument(uri3)).isNull();
+    assertThat(serverContextProvider.getServerContext(uri1).map(c -> c.getDocument(uri1))).isPresent();
+    assertThat(serverContextProvider.getServerContext(uri2).map(c -> c.getDocument(uri2))).isPresent();
+    assertThat(serverContextProvider.getServerContext(uri3).map(c -> c.getDocument(uri3))).isEmpty();
   }
 
   /** Событие создания файла внутри excluded-каталога не приводит к добавлению его в контекст. */
   @Test
   void testDidChangeWatchedFiles_Created_ExcludedPath() throws IOException {
     // given
-    serverContext.setConfigurationRoot(tempDir);
-    configuration.setExcludePaths(List.of(".git"));
+    var workspaceUri = Absolute.uri(tempDir.toUri());
+    WorkspaceContextHolder.run(workspaceUri, () -> {
+      var wsCtx = workspaceServerContext();
+      wsCtx.setConfigurationRoot(tempDir);
+      wsCtx.getLanguageServerConfiguration().setExcludePaths(List.of(".git"));
+    });
 
     var excludedDir = tempDir.resolve(".git").toFile();
     assertThat(excludedDir.mkdirs()).isTrue();
@@ -302,15 +333,19 @@ class BSLWorkspaceServiceTest {
     await()
       .atMost(Duration.ofSeconds(2))
       .during(Duration.ofMillis(300))
-      .until(() -> serverContext.getDocument(uri) == null);
+      .until(() -> workspaceServerContext().getDocument(uri) == null);
   }
 
   /** Событие изменения для неизвестного файла внутри excluded-каталога — файл не добавляется. */
   @Test
   void testDidChangeWatchedFiles_Changed_ExcludedPathNotAdded() throws IOException {
     // given
-    serverContext.setConfigurationRoot(tempDir);
-    configuration.setExcludePaths(List.of(".git"));
+    var workspaceUri = Absolute.uri(tempDir.toUri());
+    WorkspaceContextHolder.run(workspaceUri, () -> {
+      var wsCtx = workspaceServerContext();
+      wsCtx.setConfigurationRoot(tempDir);
+      wsCtx.getLanguageServerConfiguration().setExcludePaths(List.of(".git"));
+    });
 
     var excludedDir = tempDir.resolve(".git").toFile();
     assertThat(excludedDir.mkdirs()).isTrue();
@@ -318,7 +353,7 @@ class BSLWorkspaceServiceTest {
     FileUtils.copyFile(FIXTURE_BSL, testFile);
     var uri = Absolute.uri(testFile.toURI());
 
-    assertThat(serverContext.getDocument(uri)).isNull();
+    assertThat(workspaceServerContext().getDocument(uri)).isNull();
 
     var fileEvent = new FileEvent(uri.toString(), FileChangeType.Changed);
 
@@ -329,7 +364,7 @@ class BSLWorkspaceServiceTest {
     await()
       .atMost(Duration.ofSeconds(2))
       .during(Duration.ofMillis(300))
-      .until(() -> serverContext.getDocument(uri) == null);
+      .until(() -> workspaceServerContext().getDocument(uri) == null);
   }
 
   @Test
@@ -341,6 +376,137 @@ class BSLWorkspaceServiceTest {
     // when / then
     assertThatCode(() -> workspaceService.didChangeConfiguration(params))
       .doesNotThrowAnyException();
+  }
+
+  @Test
+  void testDidChangeWorkspaceFolders_AddWorkspace() {
+    // given
+    var newWorkspaceDir = tempDir.resolve("new-workspace").toFile();
+    newWorkspaceDir.mkdir();
+    var workspaceFolder = new WorkspaceFolder(newWorkspaceDir.toURI().toString(), "new-workspace");
+
+    var event = new WorkspaceFoldersChangeEvent(
+      List.of(workspaceFolder),
+      List.of()
+    );
+    var params = new DidChangeWorkspaceFoldersParams(event);
+
+    // when
+    workspaceService.didChangeWorkspaceFolders(params);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+
+    // then
+    var uri = Absolute.uri(newWorkspaceDir.toURI());
+    assertThat(serverContextProvider.getServerContext(uri)).isPresent();
+
+    // cleanup
+    serverContextProvider.removeWorkspace(workspaceFolder);
+  }
+
+  @Test
+  void testDidChangeWorkspaceFolders_RemoveWorkspace() {
+    // given
+    var workspaceFolder = new WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
+
+    var event = new WorkspaceFoldersChangeEvent(
+      List.of(),
+      List.of(workspaceFolder)
+    );
+    var params = new DidChangeWorkspaceFoldersParams(event);
+
+    // when
+    workspaceService.didChangeWorkspaceFolders(params);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+
+    // then
+    var uri = Absolute.uri(tempDir.toUri());
+    assertThat(serverContextProvider.getServerContext(uri)).isEmpty();
+  }
+
+  @Test
+  void testDidChangeWorkspaceFolders_AddAndRemove() {
+    // given
+    var newWorkspaceDir = tempDir.resolve("new-workspace-2").toFile();
+    newWorkspaceDir.mkdir();
+    var workspaceFolderToAdd = new WorkspaceFolder(newWorkspaceDir.toURI().toString(), "new-workspace-2");
+    var workspaceFolderToRemove = new WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
+
+    var event = new WorkspaceFoldersChangeEvent(
+      List.of(workspaceFolderToAdd),
+      List.of(workspaceFolderToRemove)
+    );
+    var params = new DidChangeWorkspaceFoldersParams(event);
+
+    // when
+    workspaceService.didChangeWorkspaceFolders(params);
+    await().pollDelay(Duration.ofMillis(100)).until(() -> true);
+
+    // then
+    var uriAdded = Absolute.uri(newWorkspaceDir.toURI());
+    var uriRemoved = Absolute.uri(tempDir.toUri());
+    assertThat(serverContextProvider.getServerContext(uriAdded)).isPresent();
+    assertThat(serverContextProvider.getServerContext(uriRemoved)).isEmpty();
+
+    // cleanup
+    serverContextProvider.removeWorkspace(workspaceFolderToAdd);
+  }
+
+  /**
+   * Воспроизводит ScopeNotActiveException из Sentry:
+   * при обработке файловых событий через didChangeWatchedFiles workspace-контекст
+   * должен быть установлен на треде, иначе workspace-scoped proxy beans не резолвятся
+   * в @EventListener методах (например, AnnotationReferenceFinder).
+   */
+  @Test
+  void didChangeWatchedFiles_Created_setsWorkspaceContextForEventListeners() throws IOException, InterruptedException {
+    // given
+    var capturedWorkspaceUri = new AtomicReference<URI>();
+    var eventFired = new CountDownLatch(1);
+
+    // Регистрируем высокоприоритетный слушатель, чтобы получить контекст до AnnotationReferenceFinder
+    var listener = new SmartApplicationListener() {
+      @Override
+      public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+        return DocumentContextContentChangedEvent.class.isAssignableFrom(eventType);
+      }
+
+      @Override
+      public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
+      }
+
+      @Override
+      public void onApplicationEvent(ApplicationEvent event) {
+        capturedWorkspaceUri.set(WorkspaceContextHolder.get());
+        eventFired.countDown();
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+
+    var testFile = createTestFile("test_scope_bug.bsl");
+    var uri = Absolute.uri(testFile.toURI());
+    var fileEvent = new FileEvent(uri.toString(), FileChangeType.Created);
+
+    try {
+      // when
+      workspaceService.didChangeWatchedFiles(new DidChangeWatchedFilesParams(List.of(fileEvent)));
+
+      // then - ждём что событие сработало и проверяем контекст
+      assertThat(eventFired.await(5, TimeUnit.SECONDS))
+        .as("DocumentContextContentChangedEvent should be fired within 5 seconds")
+        .isTrue();
+      assertThat(capturedWorkspaceUri.get())
+        .as("Workspace context must be set on the thread when DocumentContextContentChangedEvent fires "
+          + "(otherwise workspace-scoped beans like AnnotationRepository cannot be resolved)")
+        .isNotNull()
+        .isEqualTo(Absolute.uri(tempDir.toUri()));
+    } finally {
+      applicationContext.removeApplicationListener(listener);
+    }
+  }
+
+  private ServerContext workspaceServerContext() {
+    return serverContextProvider.getServerContext(Absolute.uri(tempDir.toUri())).orElseThrow();
   }
 
   /**

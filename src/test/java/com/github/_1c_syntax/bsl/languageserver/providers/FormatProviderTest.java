@@ -52,7 +52,7 @@ class FormatProviderTest {
   @Autowired
   private FormatProvider formatProvider;
   @Autowired
-  private LanguageServerConfiguration languageServerConfiguration;
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testRangeFormat() throws IOException {
@@ -150,7 +150,7 @@ class FormatProviderTest {
   void testFormatRuKeywordsWithoutUpperCase() throws IOException {
     var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
     var formattedFile = new File("./src/test/resources/providers/format_formattedWithoutUpperCaseKeywordsRu.bsl");
-    languageServerConfiguration.update(new File("./src/test/resources/.bsl-language-server-not-uppercase-format.json"));
+
     // given
     DocumentFormattingParams params = new DocumentFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
@@ -163,6 +163,9 @@ class FormatProviderTest {
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
+
+    // Configure for this workspace
+    configuration.update(new File("./src/test/resources/.bsl-language-server-not-uppercase-format.json"));
 
     // when
     List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
@@ -177,7 +180,7 @@ class FormatProviderTest {
   @Test
   void testDisabledKeywordsFormatting() throws IOException {
     var originalFile = new File("./src/test/resources/providers/formatKeywordsRu.bsl");
-    languageServerConfiguration.update(new File("./src/test/resources/.bsl-language-server-format-keywords-off.json"));
+
     // given
     DocumentFormattingParams params = new DocumentFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
@@ -189,6 +192,9 @@ class FormatProviderTest {
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
+
+    // Configure for this workspace
+    configuration.update(new File("./src/test/resources/.bsl-language-server-format-keywords-off.json"));
 
     // when
     List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
@@ -216,9 +222,8 @@ class FormatProviderTest {
       fileContent
     );
 
-    var configuration = new LanguageServerConfiguration();
+    // Set language in per-workspace configuration
     configuration.setLanguage(Language.EN);
-    documentContext.setConfiguration(configuration);
 
     // when
     List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);

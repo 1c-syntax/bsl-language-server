@@ -71,6 +71,8 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("org.springframework.boot:spring-boot-starter-cache")
 
+    api("io.micrometer:context-propagation")
+
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
@@ -122,7 +124,7 @@ dependencies {
     implementation("org.apache.commons:commons-exec:1.6.0")
 
     // JGit
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.3.0.202506031305-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r")
 
     // progress bar
     implementation("me.tongfei:progressbar:0.10.2")
@@ -228,8 +230,11 @@ tasks.test {
         html.required.set(true)
     }
 
-    // Increase heap size to prevent OOM during test execution with EhCache
-    maxHeapSize = "2g"
+    // Increase heap size to prevent OOM during test execution.
+    // With CleanupContextBeforeClassAndAfterClass tests causing frequent Spring context reloads,
+    // multiple contexts can be in memory simultaneously (old being GC'd while new is created).
+    // 3g gives enough headroom on GitHub Actions ubuntu-latest runners (7GB RAM, 1 fork).
+    maxHeapSize = "3g"
 
     // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
     // Использование форков, а не потоков, обусловлено тем, что многие тесты

@@ -79,7 +79,7 @@ public class ReferenceIndexFiller {
   );
 
   private final ReferenceIndex index;
-  private final LanguageServerConfiguration languageServerConfiguration;
+  private final LanguageServerConfiguration configuration;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -221,8 +221,8 @@ public class ReferenceIndexFiller {
 
     private void checkCall(String mdoRef, Token methodName) {
       var methodNameText = Strings.trimQuotes(methodName.getText());
-      final var configuration = documentContext.getServerContext().getConfiguration();
-      var modules = configuration.mdoModuleTypes(mdoRef);
+      final var mdoConfiguration = documentContext.getServerContext().getConfiguration();
+      var modules = mdoConfiguration.mdoModuleTypes(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
           || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
@@ -298,12 +298,12 @@ public class ReferenceIndexFiller {
       if (paramList == null) {
         return Collections.emptySet();
       }
-      final var configuration = documentContext.getServerContext().getConfiguration();
+      final var mdoConfiguration = documentContext.getServerContext().getConfiguration();
       return paramList.param().stream()
         .map(BSLParser.ParamContext::IDENTIFIER)
         .filter(Objects::nonNull)
         .map(ParseTree::getText)
-        .map(configuration::findCommonModule)
+        .map(mdoConfiguration::findCommonModule)
         .filter(Optional::isPresent)
         .flatMap(Optional::stream)
         .map(MD::getMdoRef)
@@ -322,7 +322,7 @@ public class ReferenceIndexFiller {
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext) {
       this.documentContext = documentContext;
       this.parsedAccessors = ModuleReference.parseAccessors(
-        languageServerConfiguration.getReferencesOptions().getCommonModuleAccessors()
+        configuration.getReferencesOptions().getCommonModuleAccessors()
       );
     }
 

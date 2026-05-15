@@ -66,6 +66,8 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
 
   @Test
   void testSingleFile() {
+    // Initialize empty context without metadata
+    initServerContext();
 
     List<Diagnostic> diagnostics = getDiagnostics();
 

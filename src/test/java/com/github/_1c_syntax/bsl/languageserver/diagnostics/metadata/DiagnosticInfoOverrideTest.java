@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.StringInterner;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,16 +38,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class DiagnosticInfoOverrideTest {
+class DiagnosticInfoOverrideTest extends AbstractServerContextAwareTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = 
     "./src/test/resources/.bsl-language-server-diagnostic-overrides.json";
 
-  @Autowired
   private LanguageServerConfiguration configuration;
   
   @Autowired
   private StringInterner stringInterner;
+
+  @BeforeEach
+  void setUp() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+  }
 
   @Test
   void testOverrideMinimumLSPDiagnosticLevel() {

@@ -21,40 +21,34 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import jakarta.annotation.PostConstruct;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class DefinitionProviderTest {
+class DefinitionProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private DefinitionProvider definitionProvider;
 
-  @Autowired
-  private ServerContext serverContext;
-
   private static final String PATH_TO_FILE = "./src/test/resources/providers/definition.bsl";
   private static final String PATH_TO_COMMON_MODULE_FILE = "./src/test/resources/providers/definitionCommonModule.bsl";
 
-  @PostConstruct
+  @BeforeEach
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
-    serverContext.populateContext();
+    initServerContext(PATH_TO_METADATA);
   }
 
   @Test
@@ -96,7 +90,7 @@ class DefinitionProviderTest {
   @Test
   void testDefinitionOfManagerModuleMethod() {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var managerModule = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
+    var managerModule = context.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
     var methodSymbol = managerModule.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
 
     var params = new DefinitionParams();
@@ -121,7 +115,7 @@ class DefinitionProviderTest {
     // Тест: клик на "ПервыйОбщийМодуль" в "ПервыйОбщийМодуль.НеУстаревшаяПроцедура()"
     // должен вести к модулю ПервыйОбщийМодуль
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_COMMON_MODULE_FILE);
-    var commonModule = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModule = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var moduleSymbol = commonModule.getSymbolTree().getModule();
 
     var params = new DefinitionParams();

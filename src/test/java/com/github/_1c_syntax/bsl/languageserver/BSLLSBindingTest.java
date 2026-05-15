@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,20 +43,32 @@ class BSLLSBindingTest {
 
   @Test
   void testGetDiagnosticInfos() {
+    // given
+    var configuration = new LanguageServerConfiguration();
+
     // when
-    var diagnosticInfos = BSLLSBinding.getDiagnosticInfos();
+    var diagnosticInfos = BSLLSBinding.getDiagnosticInfos(configuration);
 
     // then
-    assertThat(diagnosticInfos).isNotNull();
+    assertThat(diagnosticInfos).isNotNull().isNotEmpty();
   }
 
   @Test
-  void testGetLanguageServerConfiguration() {
+  void testGetLanguageServerConfigurationFactory() {
     // when
-    var languageServerConfiguration = BSLLSBinding.getLanguageServerConfiguration();
+    var factory = BSLLSBinding.getLanguageServerConfigurationFactory();
 
     // then
-    assertThat(languageServerConfiguration).isNotNull();
+    assertThat(factory).isNotNull();
+  }
+
+  @Test
+  void testGetDiagnosticInfosFactory() {
+    // when
+    var factory = BSLLSBinding.getDiagnosticInfosFactory();
+
+    // then
+    assertThat(factory).isNotNull();
   }
 
   @Test

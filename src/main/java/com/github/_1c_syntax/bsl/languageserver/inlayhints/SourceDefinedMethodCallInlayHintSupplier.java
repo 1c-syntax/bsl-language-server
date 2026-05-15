@@ -110,7 +110,7 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
           var inlayHint = new InlayHint();
           inlayHint.setKind(InlayHintKind.Parameter);
 
-          setLabelAndPadding(inlayHint, parameter, passedValue);
+          setLabelAndPadding(inlayHint, parameter, passedValue, reference);
           setPosition(inlayHint, callParam);
           setTooltip(inlayHint, parameter);
 
@@ -127,7 +127,8 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
   private void setLabelAndPadding(
     InlayHint inlayHint,
     ParameterDefinition parameter,
-    String passedValue
+    String passedValue,
+    Reference reference
   ) {
 
     var defaultValue = parameter.getDefaultValue();

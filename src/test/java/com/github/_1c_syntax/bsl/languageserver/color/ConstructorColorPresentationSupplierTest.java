@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.color;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Color;
@@ -42,7 +42,7 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatColorPresentations;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterClass
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class ConstructorColorPresentationSupplierTest {
 
   @Autowired

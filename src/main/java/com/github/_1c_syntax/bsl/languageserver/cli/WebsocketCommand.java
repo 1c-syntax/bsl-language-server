@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -83,11 +83,11 @@ public class WebsocketCommand implements Callable<Integer> {
     defaultValue = "/lsp")
   private String endpointPath;
 
-  private final LanguageServerConfiguration configuration;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
 
   public Integer call() {
     var configurationFile = new File(configurationOption);
-    configuration.update(configurationFile);
+    globalConfiguration.update(configurationFile);
 
     return -1;
   }

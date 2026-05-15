@@ -24,16 +24,15 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,12 +50,9 @@ import static org.mockito.Mockito.spy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class DiagnosticsTest {
+class DiagnosticsTest extends AbstractServerContextAwareTest {
 
-  @Autowired
-  private LanguageServerConfiguration configuration;
-  @Autowired
-  protected ServerContext context;
+  protected LanguageServerConfiguration configuration;
   @Autowired
   protected DiagnosticsConfiguration diagnosticsConfiguration;
 
@@ -64,13 +60,17 @@ class DiagnosticsTest {
 
   @BeforeEach
   void createDocumentContext() {
-    documentContext = TestUtils.getDocumentContext("");
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    documentContext = TestUtils.getDocumentContext("", context);
   }
 
   @Test
   void testCompatibilityMode() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    initServerContext("src/test/resources/metadata/designer", false);
+    configuration = context.getLanguageServerConfiguration();
+    documentContext = spy(TestUtils.getDocumentContext("", context));
     var serverContext = spy(context);
     var bslConfiguration = spy(serverContext.getConfiguration());
 
@@ -96,7 +96,7 @@ class DiagnosticsTest {
   @Test
   void testModuleType() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy(TestUtils.getDocumentContext("", context));
 
     // when-then pairs
     doReturn(ModuleType.CommandModule).when(documentContext).getModuleType();
@@ -119,7 +119,7 @@ class DiagnosticsTest {
   @Test
   void testAllScope() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy(TestUtils.getDocumentContext("", context));
 
     // when-then pairs
     doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
@@ -142,7 +142,7 @@ class DiagnosticsTest {
   void testSkipSupport() {
 
     // given
-    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+    documentContext = spy(TestUtils.getDocumentContext("А = 0", context));
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
@@ -282,11 +282,10 @@ class DiagnosticsTest {
   @Test
   void testDiagnosticSubsystemsIncludeCheck() {
     var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
-    context.clear();
-    context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
-    context.populateContext();
+    initServerContext(PATH_TO_METADATA);
+    configuration = context.getLanguageServerConfiguration();
 
-    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+    documentContext = spy(TestUtils.getDocumentContext("А = 0", context));
 
     var form = context.getConfiguration().getPlainChildren().stream()
       .filter(mdo -> mdo.getName().equalsIgnoreCase("ФормаЭлемента"))
@@ -337,11 +336,10 @@ class DiagnosticsTest {
   @Test
   void testDiagnosticSubsystemsExcludeCheck() {
     var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
-    context.clear();
-    context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
-    context.populateContext();
+    initServerContext(PATH_TO_METADATA);
+    configuration = context.getLanguageServerConfiguration();
 
-    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+    documentContext = spy(TestUtils.getDocumentContext("А = 0", context));
 
     var mdObject = context.getConfiguration().getChildren().stream()
       .filter(mdo -> mdo.getName().equalsIgnoreCase("ОбщийМодуль1"))
@@ -365,11 +363,10 @@ class DiagnosticsTest {
   @Test
   void testDiagnosticSubsystemsIncludeExcludeCheck() {
     var PATH_TO_METADATA = "src/test/resources/metadata/subSystemFilter";
-    context.clear();
-    context.setConfigurationRoot(Absolute.path(PATH_TO_METADATA));
-    context.populateContext();
+    initServerContext(PATH_TO_METADATA);
+    configuration = context.getLanguageServerConfiguration();
 
-    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+    documentContext = spy(TestUtils.getDocumentContext("А = 0", context));
 
     var mdObject = context.getConfiguration().getChildren().stream()
       .filter(mdo -> mdo.getName().equalsIgnoreCase("ОбщийМодуль1"))

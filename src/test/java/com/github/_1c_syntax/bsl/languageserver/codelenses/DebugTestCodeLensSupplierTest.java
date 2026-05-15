@@ -23,8 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.codelens.TestRunnerAdapterOptions;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -59,10 +57,10 @@ class DebugTestCodeLensSupplierTest {
   @MockitoSpyBean
   private TestRunnerAdapter testRunnerAdapter;
 
-  @MockitoSpyBean
-  private LanguageServerConfiguration languageServerConfiguration;
-
   private DocumentContext documentContext;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @BeforeEach
   void init() {
@@ -90,17 +88,8 @@ class DebugTestCodeLensSupplierTest {
     when(testRunnerAdapter.getTestIds(documentContext))
       .thenReturn(List.of("testName"));
 
-    var testRunnerAdapterOptions = mock(TestRunnerAdapterOptions.class);
-
-    when(testRunnerAdapterOptions.getDebugTestArguments())
-      .thenReturn("some");
-
-    var codeLensOptions = mock(CodeLensOptions.class);
-    when(codeLensOptions.getTestRunnerAdapterOptions())
-      .thenReturn(testRunnerAdapterOptions);
-
-    when(languageServerConfiguration.getCodeLensOptions())
-      .thenReturn(codeLensOptions);
+    // Configure workspace configuration to enable debug test code lens
+    configuration.getCodeLensOptions().getTestRunnerAdapterOptions().setDebugTestArguments("some");
 
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -30,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -42,7 +42,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class QuickFixSupplier {
 
-  private final Map<String, DiagnosticInfo> diagnosticInfos;
+  private final DiagnosticInfos diagnosticInfos;
   private final DiagnosticObjectProvider diagnosticObjectProvider;
 
   // TODO: Рефакторинг апи квик-фиксов.
@@ -60,8 +60,9 @@ public class QuickFixSupplier {
   public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
     T diagnosticCode
   ) {
+    var diagnosticInfosByCode = diagnosticInfos.getByCode();
     return Optional.ofNullable(
-      diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
+      diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnosticCode))
     )
       .map(DiagnosticInfo::getDiagnosticClass)
       .filter(QuickFixProvider.class::isAssignableFrom)

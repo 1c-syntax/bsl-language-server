@@ -21,34 +21,34 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.PathExclusionUtils;
 import com.github._1c_syntax.utils.Absolute;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Сервис обработки запросов, связанных с рабочей областью.
@@ -62,37 +62,25 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public class BSLWorkspaceService implements WorkspaceService {
 
-  private final LanguageServerConfiguration configuration;
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
-  private final ServerContext serverContext;
-
-  private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("workspace-service-"));
-
-  @PreDestroy
-  private void onDestroy() {
-    executorService.shutdown();
-  }
+  private final ServerContextProvider serverContextProvider;
+  @Qualifier("workspaceServiceExecutor")
+  private final ThreadPoolTaskExecutor executor;
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService populateContextExecutor;
 
   @Override
   public CompletableFuture<Either<List<? extends SymbolInformation>,List<? extends WorkspaceSymbol>>> symbol(WorkspaceSymbolParams params) {
     return CompletableFuture.supplyAsync(
       () -> Either.forRight(symbolProvider.getSymbols(params)),
-      executorService
+      executor
     );
   }
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
-    var settings = params.getSettings();
-    if (settings == null) {
-      return;
-    }
-    try {
-      PropertyUtils.copyProperties(configuration, settings);
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new RuntimeException(e);
-    }
+    // no-op: configuration is managed through .bsl-language-server.json files
   }
 
   @Override
@@ -102,14 +90,26 @@ public class BSLWorkspaceService implements WorkspaceService {
         for (var fileEvent : params.getChanges()) {
           var uri = Absolute.uri(fileEvent.getUri());
 
-          switch (fileEvent.getType()) {
-            case Deleted -> handleDeletedFileEvent(uri);
-            case Created -> handleCreatedFileEvent(uri);
-            case Changed -> handleChangedFileEvent(uri);
-          }
+          serverContextProvider.getServerContext(uri).ifPresentOrElse(
+            context -> {
+              var workspaceUri = context.getWorkspaceUri();
+              if (workspaceUri == null) {
+                LOGGER.warn("No workspace URI for context, skipping file event: {}", uri);
+                return;
+              }
+              WorkspaceContextHolder.run(workspaceUri, () -> {
+                switch (fileEvent.getType()) {
+                  case Deleted -> handleDeletedFileEvent(uri);
+                  case Created -> handleCreatedFileEvent(uri);
+                  case Changed -> handleChangedFileEvent(uri);
+                }
+              });
+            },
+            () -> LOGGER.debug("No workspace found for file event, skipping: {}", uri)
+          );
         }
       },
-      executorService
+      executor
     );
   }
 
@@ -119,7 +119,31 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     return CompletableFuture.supplyAsync(
       () -> commandProvider.executeCommand(arguments),
-      executorService
+      executor
+    );
+  }
+
+  @Override
+  public void didChangeWorkspaceFolders(DidChangeWorkspaceFoldersParams params) {
+    CompletableFuture.runAsync(
+      () -> {
+        var event = params.getEvent();
+
+        // Remove old workspace folders
+        event.getRemoved().forEach(serverContextProvider::removeWorkspace);
+
+        // Add new workspace folders
+        event.getAdded().forEach((WorkspaceFolder folder) -> {
+          var uri = Absolute.uri(folder.getUri());
+          var serverContext = serverContextProvider.addWorkspace(folder);
+          WorkspaceContextHolder.run(uri,
+            () -> CompletableFuture.runAsync(serverContext::populateContext, populateContextExecutor));
+        });
+
+        LOGGER.info("Workspace folders changed. Added: {}, Removed: {}",
+          event.getAdded().size(), event.getRemoved().size());
+      },
+      executor
     );
   }
 
@@ -132,16 +156,17 @@ public class BSLWorkspaceService implements WorkspaceService {
    * @param uri URI удаленного файла
    */
   private void handleDeletedFileEvent(URI uri) {
-    var documentContext = serverContext.getDocument(uri);
+    var context = getContextForDocument(uri);
+    var documentContext = context.getDocument(uri);
     if (documentContext == null) {
       return;
     }
 
-    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (isDocumentOpened) {
-      serverContext.closeDocument(documentContext);
+      context.closeDocument(documentContext);
     }
-    serverContext.removeDocument(uri);
+    context.removeDocument(uri);
   }
 
   /**
@@ -156,15 +181,16 @@ public class BSLWorkspaceService implements WorkspaceService {
    * @param uri URI созданного файла
    */
   private void handleCreatedFileEvent(URI uri) {
-    if (isExcludedPath(uri)) {
+    var context = getContextForDocument(uri);
+    if (isExcludedPath(context, uri)) {
       return;
     }
-    var documentContext = serverContext.addDocument(uri);
+    var documentContext = context.addDocument(uri);
 
-    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      serverContext.rebuildDocument(documentContext);
-      serverContext.tryClearDocument(documentContext);
+      context.rebuildDocument(documentContext);
+      context.tryClearDocument(documentContext);
     }
   }
 
@@ -182,25 +208,41 @@ public class BSLWorkspaceService implements WorkspaceService {
    * @param uri URI измененного файла
    */
   private void handleChangedFileEvent(URI uri) {
-    var documentContext = serverContext.getDocument(uri);
+    var context = getContextForDocument(uri);
+    var documentContext = context.getDocument(uri);
     if (documentContext == null) {
-      if (isExcludedPath(uri)) {
+      if (isExcludedPath(context, uri)) {
         return;
       }
-      documentContext = serverContext.addDocument(uri);
+      documentContext = context.addDocument(uri);
     }
 
-    var isDocumentOpened = serverContext.isDocumentOpened(documentContext);
+    var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      serverContext.rebuildDocument(documentContext);
-      serverContext.tryClearDocument(documentContext);
+      context.rebuildDocument(documentContext);
+      context.tryClearDocument(documentContext);
     }
   }
 
-  /** Проверяет, входит ли путь по uri в excludePaths из конфигурации. */
-  private boolean isExcludedPath(URI uri) {
-    var patterns = configuration.getExcludePaths();
-    if (patterns.isEmpty()) {
+  /**
+   * Получить контекст сервера для документа.
+   *
+   * @param uri URI документа
+   * @return контекст сервера
+   */
+  private ServerContext getContextForDocument(URI uri) {
+    return serverContextProvider.getServerContext(uri)
+      .orElseThrow(() -> new IllegalStateException("No workspace found for document: " + uri));
+  }
+
+  /** Проверяет, входит ли путь по uri в excludePaths конфигурации workspace {@code context}. */
+  private boolean isExcludedPath(ServerContext context, URI uri) {
+    var cfg = context.getLanguageServerConfiguration();
+    if (cfg == null) {
+      return false;
+    }
+    var patterns = cfg.getExcludePaths();
+    if (patterns == null || patterns.isEmpty()) {
       return false;
     }
     try {

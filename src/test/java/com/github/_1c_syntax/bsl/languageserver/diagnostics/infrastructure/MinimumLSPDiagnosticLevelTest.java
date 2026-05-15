@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,16 +39,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class MinimumLSPDiagnosticLevelTest {
+class MinimumLSPDiagnosticLevelTest extends AbstractServerContextAwareTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE =
     "./src/test/resources/.bsl-language-server-minimum-lsp-diagnostic-level.json";
 
-  @Autowired
   private LanguageServerConfiguration configuration;
 
   @Autowired
   private DiagnosticsConfiguration diagnosticsConfiguration;
+
+  @BeforeEach
+  void setUp() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+  }
 
   @Test
   void testMinimumLSPDiagnosticLevelFiltering() {
@@ -59,7 +66,7 @@ class MinimumLSPDiagnosticLevelTest {
       .isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
 
     // when - get diagnostics for a document
-    var documentContext = TestUtils.getDocumentContext("");
+    var documentContext = TestUtils.getDocumentContext("", context);
 
     List<BSLDiagnostic> diagnostics = diagnosticsConfiguration.diagnostics(documentContext);
 
@@ -86,7 +93,7 @@ class MinimumLSPDiagnosticLevelTest {
       .isNull();
 
     // when - get diagnostics for a document
-    var documentContext = TestUtils.getDocumentContext("");
+    var documentContext = TestUtils.getDocumentContext("", context);
 
     List<BSLDiagnostic> diagnostics = diagnosticsConfiguration.diagnostics(documentContext);
 
@@ -116,7 +123,7 @@ class MinimumLSPDiagnosticLevelTest {
     diagnosticsOptions.setMinimumLSPDiagnosticLevel(org.eclipse.lsp4j.DiagnosticSeverity.Error);
 
     // when - get diagnostics for a document
-    var documentContext = TestUtils.getDocumentContext("");
+    var documentContext = TestUtils.getDocumentContext("", context);
 
     List<BSLDiagnostic> diagnostics = diagnosticsConfiguration.diagnostics(documentContext);
 

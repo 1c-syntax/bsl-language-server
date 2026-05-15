@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -46,6 +48,9 @@ class CognitiveComplexityInlayHintSupplierTest {
 
   @Autowired
   private CognitiveComplexityInlayHintSupplier supplier;
+
+  @Autowired
+  private ServerContextProvider serverContextProvider;
 
   @Test
   void testGetInlayHints() {
@@ -79,6 +84,27 @@ class CognitiveComplexityInlayHintSupplierTest {
         assertThat(inlayHint.getPaddingRight()).isTrue();
         assertThat(inlayHint.getPaddingLeft()).isNull();
       });
+  }
+
+  @Test
+  void testCleanupOnDocumentClosed() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+    var methodName = documentContext.getSymbolTree().getMethods().get(0).getName();
+    var params = new InlayHintParams(
+      TestUtils.getTextDocumentIdentifier(documentContext.getUri()),
+      Ranges.create()
+    );
+
+    supplier.toggleHints(documentContext.getUri(), methodName);
+    assertThat(supplier.getInlayHints(documentContext, params)).isNotEmpty();
+
+    // when — document closed
+    var serverContext = serverContextProvider.getServerContext(documentContext.getUri()).orElseThrow();
+    supplier.handleDocumentClosed(new ServerContextDocumentClosedEvent(serverContext, documentContext));
+
+    // then — hints cleared
+    assertThat(supplier.getInlayHints(documentContext, params)).isEmpty();
   }
 
 }

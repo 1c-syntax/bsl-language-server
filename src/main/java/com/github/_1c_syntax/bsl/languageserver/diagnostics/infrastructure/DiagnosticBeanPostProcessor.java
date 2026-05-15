@@ -23,20 +23,27 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-@RequiredArgsConstructor
 @Component
 public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final LanguageServerConfiguration configuration;
-  private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
+  private final DiagnosticInfos diagnosticInfos;
+
+  @Lazy
+  public DiagnosticBeanPostProcessor(
+    LanguageServerConfiguration configuration,
+    DiagnosticInfos diagnosticInfos
+  ) {
+    this.configuration = configuration;
+    this.diagnosticInfos = diagnosticInfos;
+  }
 
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -46,7 +53,7 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
     var diagnostic = (BSLDiagnostic) bean;
 
-    var info = diagnosticInfos.get(diagnostic.getClass());
+    var info = diagnosticInfos.getByClass().get(diagnostic.getClass());
     diagnostic.setInfo(info);
 
     return diagnostic;

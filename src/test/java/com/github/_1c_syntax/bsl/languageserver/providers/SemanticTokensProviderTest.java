@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -67,7 +67,7 @@ class SemanticTokensProviderTest {
   private ReferenceIndexFiller referenceIndexFiller;
 
   @Autowired
-  private ServerContext serverContext;
+  private ServerContextProvider serverContextProvider;
 
   // region Helper types and methods
 
@@ -389,7 +389,7 @@ class SemanticTokensProviderTest {
   void methodDescriptionComments() {
     String bsl = """
       // просто коммент
-      
+
       // Описание процедуры
       // Параметры:
       //  Парам - Число - описание
@@ -1315,7 +1315,7 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     assertThat(delta.getEdits()).isNotEmpty();
     var edit = delta.getEdits().getFirst();
-    // For insertion in middle: 
+    // For insertion in middle:
     // - prefix matches up to insertion point
     // - suffix matches tokens after insertion (they have same relative deltaLine)
     // - The edit should be smaller than the full data
@@ -1373,11 +1373,11 @@ class SemanticTokensProviderTest {
     var delta = result.getRight();
     assertThat(delta.getEdits()).isNotEmpty();
     assertThat(delta.getEdits()).hasSize(1);
-    
+
     // Verify the delta edit details
     // Original: [Перем, А, ;] - 3 tokens = 15 integers
     // Modified: [Перем, Новая, ,, А, ;] - 5 tokens = 25 integers
-    // 
+    //
     // With lineOffset=0 inline edit handling:
     // - Prefix match: "Перем" (1 token = 5 integers)
     // - Suffix match: ";" (1 token = 5 integers)
@@ -1395,7 +1395,7 @@ class SemanticTokensProviderTest {
       .as("Edit should insert Новая, comma, and А tokens (3 tokens = 15 integers)")
       .isNotNull()
       .hasSize(15);
-    
+
     // Verify the edit is optimal (smaller than sending all new tokens)
     int editSize = edit.getDeleteCount() + edit.getData().size();
     assertThat(editSize).isLessThan(tokens2.getData().size());
@@ -1470,8 +1470,8 @@ class SemanticTokensProviderTest {
     String bsl2 = """
       Процедура Тест()
         А = 1;
-      
-      
+
+
       КонецПроцедуры
       """;
 
@@ -1761,6 +1761,10 @@ class SemanticTokensProviderTest {
     // The variable itself should NOT be highlighted as namespace
     // Pattern: Модуль = ОбщегоНазначения.ОбщийМодуль("..."); Модуль.Метод();
     var path = Absolute.path("src/test/resources/metadata/designer");
+
+    // Create workspace for this path
+    serverContextProvider.clear();
+    var serverContext = serverContextProvider.addWorkspace(path.toUri());
     serverContext.setConfigurationRoot(path);
 
     // Load the common module

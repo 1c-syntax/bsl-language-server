@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedAttributes8312Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.ForbiddenMetadataNameDiagnostic;
@@ -33,6 +34,7 @@ import com.github._1c_syntax.utils.StringInterner;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.DiagnosticTag;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,12 +43,17 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class DiagnosticInfoTest {
+class DiagnosticInfoTest extends AbstractServerContextAwareTest {
 
-  @Autowired
   private LanguageServerConfiguration configuration;
   @Autowired
   private StringInterner stringInterner;
+
+  @BeforeEach
+  void setUp() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+  }
 
   @Test
   void testParameter() {

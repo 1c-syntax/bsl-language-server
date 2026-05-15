@@ -25,15 +25,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import tools.jackson.databind.json.JsonMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
@@ -47,12 +48,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Role;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -61,20 +64,25 @@ import java.util.List;
 import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 /**
- * Корневой класс конфигурации BSL Language Server.
+ * Per-workspace конфигурация BSL Language Server.
  * <p>
- * В обычном режиме работы провайдеры и прочие классы могут расчитывать на единственность объекта конфигурации
- * и безопасно сохранять ссылку на конфигурацию или ее части.
+ * Содержит настройки, специфичные для конкретного workspace.
+ * Создаётся lazy при первом обращении к workspace-scoped proxy.
+ * <p>
+ * Глобальные настройки (language, sendErrors, traceLog) находятся в {@link GlobalLanguageServerConfiguration}.
  */
 @Data
-@Component
-@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Component
+@Scope(value = "workspace", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class LanguageServerConfiguration {
 
+  /**
+   * Язык интерфейса для сообщений и документации в этом workspace.
+   */
   private Language language = Language.DEFAULT_LANGUAGE;
 
   @JsonProperty("diagnostics")
@@ -112,11 +120,6 @@ public class LanguageServerConfiguration {
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
 
-  private SendErrorsMode sendErrors = SendErrorsMode.DEFAULT;
-
-  @Nullable
-  private File traceLog;
-
   @Nullable
   private Path configurationRoot;
 
@@ -128,40 +131,81 @@ public class LanguageServerConfiguration {
 
   @JsonIgnore
   @Setter(value = AccessLevel.NONE)
+  @Nullable
   private File configurationFile;
 
+  @JsonIgnore
   @Value("${app.configuration.path:.bsl-language-server.json}")
-  @Getter(value = AccessLevel.NONE)
+  @Getter(AccessLevel.NONE)
   @Setter(value = AccessLevel.NONE)
-  @JsonIgnore
-  private String configurationFilePath;
+  private String defaultConfigFileName = ".bsl-language-server.json";
 
-  @Value(("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}"))
-  @Getter(value = AccessLevel.NONE)
+  @JsonIgnore
+  @Value("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}")
+  @Getter(AccessLevel.NONE)
   @Setter(value = AccessLevel.NONE)
-  @JsonIgnore
-  private String globalConfigPath;
+  private String globalConfigPath = System.getProperty("user.home") + "/.bsl-language-server.json";
 
+  /**
+   * Инициализация конфигурации при создании workspace-scoped бина.
+   * Ищет конфиг-файл в workspace root, затем глобальный.
+   */
   @PostConstruct
-  private void init() {
-    configurationFile = new File(configurationFilePath);
-    if (configurationFile.exists()) {
-      loadConfigurationFile(configurationFile);
+  void init() {
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
       return;
     }
-    var configuration = new File(globalConfigPath);
-    if (configuration.exists()) {
-      loadConfigurationFile(configuration);
+
+    Path workspaceRoot;
+    try {
+      workspaceRoot = Absolute.path(workspaceUri);
+    } catch (RuntimeException e) {
+      LOGGER.debug("Cannot resolve workspace path from URI: {}", workspaceUri, e);
+      return;
+    }
+
+    // During @PostConstruct, use loadConfigurationFile() directly instead of update()
+    // to avoid firing LanguageServerConfigurationChangedEvent via AOP.
+    // This prevents circular dependency: LSC -> event -> DiagnosticInfos -> LSC (in creation).
+
+    // 1. Прямой путь к конфигурации (из application.properties)
+    var configFile = new File(defaultConfigFileName);
+    if (configFile.isFile()) {
+      loadConfigurationFile(configFile);
+      this.configurationFile = configFile;
+      return;
+    }
+
+    // 2. Конфиг в workspace
+    var workspaceConfig = workspaceRoot.resolve(defaultConfigFileName).toFile();
+    if (workspaceConfig.isFile()) {
+      loadConfigurationFile(workspaceConfig);
+      this.configurationFile = workspaceConfig;
+      return;
+    }
+
+    // 3. Глобальная конфигурация
+    var globalConfig = new File(globalConfigPath);
+    if (globalConfig.isFile()) {
+      loadConfigurationFile(globalConfig);
+      this.configurationFile = globalConfig;
     }
   }
 
   /**
    * Обновить конфигурацию из файла.
+   * <p>
+   * Публикует {@link LanguageServerConfigurationChangedEvent} через AOP аспект.
    *
    * @param configurationFile Файл с конфигурацией
    */
-  public void update(File configurationFile) {
-    loadConfigurationFile(configurationFile);
+  public void update(@Nullable File configurationFile) {
+    if (configurationFile != null && configurationFile.exists() && !configurationFile.isDirectory()) {
+      loadConfigurationFile(configurationFile);
+      this.configurationFile = configurationFile;
+    }
+    // Событие публикуется через EventPublisherAspect
   }
 
   /**
@@ -169,6 +213,7 @@ public class LanguageServerConfiguration {
    */
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
+    // Событие публикуется через EventPublisherAspect
   }
 
   /**
@@ -198,16 +243,11 @@ public class LanguageServerConfiguration {
   }
 
   private void loadConfigurationFile(File configurationFile) {
-    if (!configurationFile.exists() || configurationFile.isDirectory()) {
-      return;
-    }
-
-    LanguageServerConfiguration configuration;
-
     var mapper = JsonMapper.builder()
       .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
       .build();
 
+    LanguageServerConfiguration configuration;
     try (var inputStream = Files.newInputStream(configurationFile.toPath())) {
       configuration = mapper.readValue(inputStream, LanguageServerConfiguration.class);
     } catch (IOException e) {
@@ -215,7 +255,6 @@ public class LanguageServerConfiguration {
       return;
     }
 
-    this.configurationFile = configurationFile;
     copyPropertiesFrom(configuration);
   }
 

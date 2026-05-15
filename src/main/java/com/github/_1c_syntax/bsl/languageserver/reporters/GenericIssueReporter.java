@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,14 +32,14 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Map;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class GenericIssueReporter implements DiagnosticReporter {
+public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
-  private final Map<String, DiagnosticInfo> diagnosticInfos;
+  public GenericIssueReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos) {
+    super(serverContextProvider, diagnosticInfos);
+  }
 
   @Override
   public String key() {
@@ -49,6 +49,8 @@ public class GenericIssueReporter implements DiagnosticReporter {
   @Override
   @SneakyThrows
   public void report(AnalysisInfo analysisInfo, Path outputDir) {
+    var diagnosticInfos = getDiagnosticInfosByCode();
+
     GenericIssueReport report = new GenericIssueReport(analysisInfo, diagnosticInfos);
 
     JsonMapper mapper = JsonMapper.builder()

@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -34,6 +36,7 @@ import java.util.ResourceBundle;
  * Вспомогательный класс для оптимизированного чтения ресурсов прикладных классов с учетом {@link Language}.
  */
 @Component
+@Scope(value = "workspace", proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class Resources {
 

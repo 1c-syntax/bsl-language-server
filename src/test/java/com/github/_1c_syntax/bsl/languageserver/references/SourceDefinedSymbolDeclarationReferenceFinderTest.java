@@ -21,19 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-class SourceDefinedSymbolDeclarationReferenceFinderTest {
+class SourceDefinedSymbolDeclarationReferenceFinderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private SourceDefinedSymbolDeclarationReferenceFinder referenceFinder;
+
+  @BeforeEach
+  void setUp() {
+    initServerContext();
+  }
 
   @Test
   void testFindReferenceOnMethodDeclaration() {

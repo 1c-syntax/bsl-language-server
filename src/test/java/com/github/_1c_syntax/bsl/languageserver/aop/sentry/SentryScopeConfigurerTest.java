@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.SendErrorsMode;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -54,7 +54,7 @@ class SentryScopeConfigurerTest {
   private ApplicationEventPublisher eventPublisher;
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private GlobalLanguageServerConfiguration configuration;
 
   private final AtomicReference<SentryEvent> capturedEvent = new AtomicReference<>();
 

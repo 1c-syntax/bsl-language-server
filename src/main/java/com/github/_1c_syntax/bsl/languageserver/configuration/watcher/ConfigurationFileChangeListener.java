@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,33 +35,57 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 /**
- * Обработчик событий изменения файла конфигурации.
+ * Обработчик событий изменения файлов конфигурации.
  * <p>
- * Выполняет обновление/сброс инстанса
- * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+ * Выполняет обновление инстансов глобальной и per-workspace конфигураций.
  */
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class ConfigurationFileChangeListener {
 
-  private final LanguageServerConfiguration configuration;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
 
   /**
-   * Обработчик изменения файла конфигурации. Актуализирует текущий активный инстанс конфигурации
-   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * Обработчик изменения глобального файла конфигурации.
    *
-   * @param configurationFile Изменившийся файл конфигурации, содержащий
-   *                          {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * @param configurationFile Изменившийся файл конфигурации
    * @param eventKind         Тип события, произошедшего с файлом.
    */
-  public void onChange(File configurationFile, WatchEvent.Kind<?> eventKind) {
+  public void onGlobalChange(File configurationFile, WatchEvent.Kind<?> eventKind) {
+    if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {
+      globalConfiguration.update(configurationFile);
+      LOGGER.info("BSL Language Server global configuration has been reloaded");
+    } else if (ENTRY_DELETE.equals(eventKind)) {
+      // Global configuration deleted - reset to defaults
+      globalConfiguration.reset();
+      LOGGER.info("BSL Language Server global configuration file deleted, using defaults");
+    } else {
+      LOGGER.error("Unknown watch event kind {}", eventKind);
+    }
+  }
+
+  /**
+   * Обработчик изменения файла конфигурации воркспейса.
+   *
+   * @param configurationFile Изменившийся файл конфигурации
+   * @param eventKind         Тип события, произошедшего с файлом.
+   * @param configuration     Конфигурация воркспейса
+   * @param workspaceUri      URI воркспейса
+   */
+  public void onWorkspaceChange(
+    File configurationFile,
+    WatchEvent.Kind<?> eventKind,
+    LanguageServerConfiguration configuration,
+    java.net.URI workspaceUri
+  ) {
     if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {
       configuration.update(configurationFile);
-      LOGGER.info("BSL Language Server configuration has been reloaded");
+      LOGGER.info("BSL Language Server configuration for workspace {} has been reloaded", workspaceUri);
     } else if (ENTRY_DELETE.equals(eventKind)) {
+      // Workspace configuration deleted - reset to defaults
       configuration.reset();
-      LOGGER.info("BSL Language Server configuration has been reset to default");
+      LOGGER.info("BSL Language Server configuration file deleted for workspace {}, using defaults", workspaceUri);
     } else {
       LOGGER.error("Unknown watch event kind {}", eventKind);
     }

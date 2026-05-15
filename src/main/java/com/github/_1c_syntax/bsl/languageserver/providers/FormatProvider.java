@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.MultiName;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -58,6 +59,7 @@ import java.util.stream.Collectors;
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">Document Range Formatting Request specification</a>
  */
 @Component
+@RequiredArgsConstructor
 public final class FormatProvider {
 
   private static final Set<Integer> keywordTypes = keywordsTokenTypes();
@@ -98,14 +100,7 @@ public final class FormatProvider {
     BSLLexer.STRING
   ));
 
-  private final Map<Integer, MultiName> keywordCanonText;
-
-  private final LanguageServerConfiguration languageServerConfiguration;
-
-  public FormatProvider(LanguageServerConfiguration languageServerConfiguration) {
-    this.languageServerConfiguration = languageServerConfiguration;
-    keywordCanonText = getKeywordsCanonicalText();
-  }
+  private final LanguageServerConfiguration configuration;
 
   public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     List<Token> tokens = documentContext.getTokens();
@@ -149,7 +144,7 @@ public final class FormatProvider {
 
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    putLogicalNotOrKeywords(keywordCanonText);
+    // No-op: per-workspace архитектура — конфигурация получается при каждом вызове
   }
 
   private static boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
@@ -337,9 +332,11 @@ public final class FormatProvider {
   }
 
   private String checkAndFormatKeyword(Token token, Locale languageLocale) {
-    var needFormatKeyword = languageServerConfiguration.getFormattingOptions().isUseKeywordsFormatting();
+    var needFormatKeyword = configuration.getFormattingOptions().isUseKeywordsFormatting();
     if (needFormatKeyword) {
-      return keywordCanonText.getOrDefault(token.getType(), MultiName.EMPTY).get(languageLocale.getLanguage());
+      var useUpperCase = configuration.getFormattingOptions().isUseUpperCaseForOrNotAndKeywords();
+      var canonText = getKeywordsCanonicalText(useUpperCase);
+      return canonText.getOrDefault(token.getType(), MultiName.EMPTY).get(languageLocale.getLanguage());
     }
 
     return token.getText();
@@ -459,9 +456,10 @@ public final class FormatProvider {
   }
 
   /**
+   * @param useUpperCase использовать заглавные буквы для OR/NOT/AND
    * @return мэппинг типа токена к паре, где слева английский текст, справа русский
    */
-  private Map<Integer, MultiName> getKeywordsCanonicalText() {
+  private static Map<Integer, MultiName> getKeywordsCanonicalText(boolean useUpperCase) {
     Map<Integer, MultiName> canonWords = new HashMap<>();
 
     canonWords.put(BSLLexer.IF_KEYWORD, Keywords.IF);
@@ -499,21 +497,17 @@ public final class FormatProvider {
     canonWords.put(BSLLexer.EXECUTE_KEYWORD, Keywords.EXECUTE);
     canonWords.put(BSLLexer.EXPORT_KEYWORD, Keywords.EXPORT);
 
-    putLogicalNotOrKeywords(canonWords);
+    putLogicalNotOrKeywords(canonWords, useUpperCase);
 
     return canonWords;
   }
 
-  private void putLogicalNotOrKeywords(Map<Integer, MultiName> canonWords) {
-    var useUppercaseForLogicalOrNotAndKeywords = languageServerConfiguration
-      .getFormattingOptions()
-      .isUseUpperCaseForOrNotAndKeywords();
-
+  private static void putLogicalNotOrKeywords(Map<Integer, MultiName> canonWords, boolean useUpperCase) {
     MultiName orKeywordCanonText;
     MultiName notKeywordCanonText;
     MultiName andKeywordCanonText;
 
-    if (useUppercaseForLogicalOrNotAndKeywords) {
+    if (useUpperCase) {
       orKeywordCanonText = Keywords.OR_UP;
       notKeywordCanonText = Keywords.NOT_UP;
       andKeywordCanonText = Keywords.AND_UP;

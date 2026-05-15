@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
-import com.github._1c_syntax.bsl.languageserver.utils.NamedForkJoinWorkerThreadFactory;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
@@ -38,6 +38,9 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -51,7 +54,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -63,6 +66,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 @Slf4j
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class ServerContext {
   private static final MDCReadSettings SOLUTION_READ_SETTINGS = MDCReadSettings.builder()
@@ -72,7 +76,21 @@ public class ServerContext {
 
   private final ObjectProvider<DocumentContext> documentContextProvider;
   private final WorkDoneProgressHelper workDoneProgressHelper;
-  private final LanguageServerConfiguration languageServerConfiguration;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
+  @Qualifier("computeConfigurationExecutor")
+  private final ExecutorService computeConfigurationExecutor;
+  @Qualifier("populateContextExecutor")
+  private final ExecutorService populateContextExecutor;
+
+  @Getter
+  @Setter
+  @SuppressWarnings("NullAway.Init")
+  private LanguageServerConfiguration languageServerConfiguration;
+
+  @Getter
+  @Setter
+  @SuppressWarnings("NullAway.Init")
+  private URI workspaceUri;
 
   private final Map<URI, DocumentContext> documents = new ConcurrentHashMap<>();
   private final Lazy<CF> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
@@ -120,25 +138,33 @@ public class ServerContext {
 
     LOGGER.debug("Populating context...");
 
-    files.parallelStream().forEach((File file) -> {
+    try {
+      populateContextExecutor.submit(() ->
+        files.parallelStream().forEach((File file) -> {
+          workDoneProgressReporter.tick();
 
-      workDoneProgressReporter.tick();
-
-      var uri = Absolute.uri(file.toURI());
-      var lock = getDocumentLock(uri);
-      lock.writeLock().lock();
-      try {
-        var documentContext = documents.get(uri);
-        if (documentContext == null) {
-          documentContext = createDocumentContext(uri);
-          rebuildDocument(documentContext);
-          documentContext.freezeComputedData();
-          tryClearDocument(documentContext);
-        }
-      } finally {
-        lock.writeLock().unlock();
-      }
-    });
+          var uri = Absolute.uri(file.toURI());
+          var lock = getDocumentLock(uri);
+          lock.writeLock().lock();
+          try {
+            var documentContext = documents.get(uri);
+            if (documentContext == null) {
+              documentContext = createDocumentContext(uri);
+              rebuildDocument(documentContext);
+              documentContext.freezeComputedData();
+              tryClearDocument(documentContext);
+            }
+          } finally {
+            lock.writeLock().unlock();
+          }
+        })
+      ).get();
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Error populating context", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while populating context", e);
+    }
 
     workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.debug("Context populated.");
@@ -386,7 +412,7 @@ public class ServerContext {
   }
 
   private DocumentContext createDocumentContext(URI uri) {
-    var documentContext = documentContextProvider.getObject(uri);
+    var documentContext = documentContextProvider.getObject(uri, this);
 
     documents.put(uri, documentContext);
     addMdoRefByUri(uri, documentContext);
@@ -402,12 +428,9 @@ public class ServerContext {
     var progress = workDoneProgressHelper.createProgress(0, "");
     progress.beginProgress(getMessage("computeConfigurationMetadata"));
 
-    var factory = new NamedForkJoinWorkerThreadFactory("compute-configuration-");
-    var executorService = new ForkJoinPool(ForkJoinPool.getCommonPoolParallelism(), factory, null, true);
-
     CF configuration;
     try {
-      configuration = (CF) executorService.submit(
+      configuration = (CF) computeConfigurationExecutor.submit(
         () -> MDClasses.createSolution(configurationRoot, SOLUTION_READ_SETTINGS)).get();
     } catch (ExecutionException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception: {}", e.getMessage(), e);
@@ -416,8 +439,6 @@ public class ServerContext {
       LOGGER.error("Can't parse configuration metadata. Interrupted exception: {}", e.getMessage(), e);
       configuration = (CF) MDClasses.createConfiguration();
       Thread.currentThread().interrupt();
-    } finally {
-      executorService.shutdown();
     }
 
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
@@ -456,7 +477,7 @@ public class ServerContext {
   }
 
   private String getMessage(String key) {
-    return Resources.getResourceString(languageServerConfiguration.getLanguage(), getClass(), key);
+    return Resources.getResourceString(globalConfiguration.getLanguage(), getClass(), key);
   }
 
   /**
