@@ -269,11 +269,10 @@ public class TypeService {
       }
     }
 
-    var expressionCtx = ExpressionAtPosition.findExpressionContext(documentContext, position);
-    if (expressionCtx.isEmpty()) {
+    var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
+    if (expression == null) {
       return Optional.empty();
     }
-    var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(expressionCtx.get());
     var dereference = findDereferenceForTerminal(expression, terminal);
     if (dereference == null) {
       return Optional.empty();

@@ -76,6 +76,31 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   }
 
   /**
+   * Хелпер построения дерева выражения на основе AST «сложного идентификатора»
+   * вне контекста выражения (например, в составе callStatement —
+   * {@code Объект.Метод();} или {@code Идентификатор.Свойство = …}, левая часть).
+   *
+   * @param ctx AST complexIdentifier
+   * @return дерево вычисления выражения
+   */
+  public static @Nullable BslExpression buildExpressionTree(BSLParser.@Nullable ComplexIdentifierContext ctx) {
+    if (ctx == null) {
+      return null;
+    }
+    var instance = new ExpressionTreeBuildingVisitor();
+    instance.recursionLevel = 0;
+    instance.visitComplexIdentifier(ctx);
+    if (!instance.operands.isEmpty()) {
+      var operand = instance.operands.pop();
+      if (operand.getRepresentingAst() == null) {
+        operand.setRepresentingAst(ctx);
+      }
+      instance.resultExpression = operand;
+    }
+    return instance.getExpressionTree();
+  }
+
+  /**
    * @return результирующее выражение в виде дерева вычисления операций
    */
   public @Nullable BslExpression getExpressionTree() {
