@@ -123,9 +123,30 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
       return "";
     }
     String joined = types.refs().stream()
-      .map(TypeRef::qualifiedName)
+      .map(ref -> renderRef(types, ref))
       .collect(Collectors.joining(" | "));
     return "%s: %s".formatted(getResourceString(TYPE_KEY), joined);
+  }
+
+  private static String renderRef(TypeSet owner, TypeRef ref) {
+    var name = ref.qualifiedName();
+    var elementTypes = owner.getElementTypes(ref);
+    if (!elementTypes.isEmpty()) {
+      var elemJoined = elementTypes.refs().stream()
+        .map(r -> renderRef(elementTypes, r))
+        .collect(Collectors.joining(", "));
+      name = name + " из " + elemJoined;
+    }
+    var fields = owner.getLocalFields(ref);
+    if (!fields.isEmpty()) {
+      var fieldsJoined = fields.entrySet().stream()
+        .map(e -> e.getKey() + ": " + e.getValue().refs().stream()
+          .map(r -> renderRef(e.getValue(), r))
+          .collect(Collectors.joining(" | ")))
+        .collect(Collectors.joining(", "));
+      name = name + " { " + fieldsJoined + " }";
+    }
+    return name;
   }
 
 }
