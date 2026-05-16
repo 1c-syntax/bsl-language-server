@@ -256,20 +256,21 @@ public class ReferenceIndexFiller {
       index.addModuleReference(
         documentContext.getUri(),
         libUri.get().toString(),
-        ModuleType.OScriptClass,
+        actualLibraryModuleType(libUri.get(), ModuleType.OScriptClass),
         Ranges.create(typeName.IDENTIFIER())
       );
     }
 
     /**
      * Если идентификатор соответствует имени зарегистрированного OneScript
-     * library-модуля, регистрирует вызов метода как ссылку на соответствующий
-     * .os-файл (через {@link ModuleType#OScriptModule}). Это обеспечивает
-     * корректную работу go-to-definition / find-references на вызовах вида
-     * {@code MyLibModule.МойМетод()}.
+     * library-модуля, регистрирует:
+     * <ul>
+     *   <li>ссылку на сам идентификатор модуля (go-to-definition на имени модуля),</li>
+     *   <li>если в выражении присутствует вызов метода — ссылку на метод по его позиции.</li>
+     * </ul>
      */
     private void tryRegisterLibraryModuleCall(@Nullable TerminalNode identifier, Optional<Token> methodName) {
-      if (identifier == null || methodName.isEmpty()) {
+      if (identifier == null) {
         return;
       }
       var libUri = oScriptLibraryIndex.findModuleUri(identifier.getText());
@@ -277,9 +278,34 @@ public class ReferenceIndexFiller {
         return;
       }
       var libMdoRef = libUri.get().toString();
-      var methodNameToken = methodName.get();
-      addMethodCall(libMdoRef, ModuleType.OScriptModule, Strings.trimQuotes(methodNameToken.getText()),
-        Ranges.create(methodNameToken));
+      var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptModule);
+
+      // Ссылка на сам identifier модуля — нужна для go-to-definition без точки.
+      index.addModuleReference(
+        documentContext.getUri(),
+        libMdoRef,
+        moduleType,
+        Ranges.create(identifier)
+      );
+
+      if (methodName.isPresent()) {
+        var methodNameToken = methodName.get();
+        addMethodCall(libMdoRef, moduleType, Strings.trimQuotes(methodNameToken.getText()),
+          Ranges.create(methodNameToken));
+      }
+    }
+
+    /**
+     * Возвращает фактический {@link ModuleType} документа библиотечного .os-файла.
+     * Один .os может быть зарегистрирован одновременно и как класс, и как модуль
+     * (см. {@link OScriptLibraryIndex}); чтобы ссылка корректно резолвилась через
+     * {@code ServerContext.getDocument(mdoRef, moduleType)}, используем тип
+     * фактически загруженного {@link DocumentContext}, а не «теоретический»
+     * тип из роли регистрации.
+     */
+    private ModuleType actualLibraryModuleType(java.net.URI libUri, ModuleType fallback) {
+      var dc = documentContext.getServerContext().getDocument(libUri);
+      return dc != null ? dc.getModuleType() : fallback;
     }
 
     /**

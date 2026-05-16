@@ -80,8 +80,9 @@ public class OScriptModuleMembersProvider {
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
 
-  /** URI документа → qualifiedName зарегистрированного типа (для re-register при переименовании). */
-  private final Map<URI, String> registeredByUri = new ConcurrentHashMap<>();
+  /** URI документа → множество qualifiedNames зарегистрированных типов
+   *  (один .os может одновременно быть и модулем, и классом). */
+  private final Map<URI, java.util.Set<String>> registeredByUri = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -100,60 +101,63 @@ public class OScriptModuleMembersProvider {
    */
   public void register(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var qualifiedName = resolveQualifiedName(documentContext);
+    var libraryEntries = oScriptLibraryIndex.findEntriesByUri(uri);
+    if (libraryEntries.isEmpty()) {
+      // не библиотечный .os — регистрируем по basename как USER-тип.
+      registerOne(documentContext, FilenameUtils.getBaseName(uri.getPath()), null);
+      return;
+    }
+    // Для библиотечного файла регистрируем каждую роль (модуль и/или класс)
+    // под её qualifiedName из lib.config.
+    for (var entry : libraryEntries) {
+      registerOne(documentContext, entry.qualifiedName(), entry);
+    }
+  }
+
+  private void registerOne(DocumentContext documentContext, String qualifiedName,
+                           OScriptLibraryIndex.LibraryEntry libraryEntry) {
     if (qualifiedName == null || qualifiedName.isBlank()) {
       return;
     }
-
-    var previous = registeredByUri.put(uri, qualifiedName);
-    if (previous != null && !previous.equals(qualifiedName)) {
-      typeRegistry.unregisterUserType(previous);
-    }
+    var uri = documentContext.getUri();
+    var names = registeredByUri.computeIfAbsent(uri, k -> java.util.concurrent.ConcurrentHashMap.newKeySet());
+    var firstTimeForName = names.add(qualifiedName);
 
     var module = documentContext.getSymbolTree().getModule();
     var ref = typeRegistry.registerUserType(qualifiedName, module, LanguageScope.OS);
 
-    if (previous == null || !previous.equals(qualifiedName)) {
+    if (firstTimeForName) {
       typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), LanguageScope.OS);
-      var moduleType = documentContext.getModuleType();
-      var libraryEntry = oScriptLibraryIndex.findByUri(uri).orElse(null);
-      if (moduleType == ModuleType.OScriptClass) {
+      if (libraryEntry != null) {
+        if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
+          typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref));
+          globalScopeProvider.registerLibraryClass(qualifiedName, ref);
+        } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
+          globalScopeProvider.registerLibraryModule(qualifiedName, ref);
+        }
+      } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref));
       }
-      if (libraryEntry != null) {
-        // Регистрация synthetic-symbol'а в глобальной области, чтобы
-        // findGlobal/typeService.findMember видели имя как «глобальное».
-        // Реальные данные (TypeRef, libOrigin, конструкторы) живут в
-        // OScriptLibraryIndex/TypeRegistry.
-        if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
-          globalScopeProvider.registerLibraryModule(qualifiedName, ref);
-        } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
-          globalScopeProvider.registerLibraryClass(qualifiedName, ref);
-        }
-      }
-      LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName, documentContext.getModuleType());
+      LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName,
+        libraryEntry != null ? libraryEntry.kind() : documentContext.getModuleType());
     }
   }
 
   /**
-   * Удалить ранее зарегистрированный тип/namespace по URI документа.
+   * Удалить ранее зарегистрированные типы/namespace по URI документа.
    * Вызывается из {@link OScriptLibraryIndex#handleDocumentRemoved} и при
    * удалении любого {@code .os}-документа из {@code ServerContext}.
    */
   public void unregister(URI uri) {
-    var qualifiedName = registeredByUri.remove(uri);
-    if (qualifiedName == null) {
+    var names = registeredByUri.remove(uri);
+    if (names == null) {
       return;
     }
-    typeRegistry.unregisterUserType(qualifiedName);
-    globalScopeProvider.unregisterLibraryModule(qualifiedName);
-    globalScopeProvider.unregisterLibraryClass(qualifiedName);
-  }
-
-  private String resolveQualifiedName(DocumentContext documentContext) {
-    return oScriptLibraryIndex.findByUri(documentContext.getUri())
-      .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
-      .orElseGet(() -> FilenameUtils.getBaseName(documentContext.getUri().getPath()));
+    for (var name : names) {
+      typeRegistry.unregisterUserType(name);
+      globalScopeProvider.unregisterLibraryModule(name);
+      globalScopeProvider.unregisterLibraryClass(name);
+    }
   }
 
   private Collection<MemberDescriptor> collectMembers(DocumentContext documentContext) {

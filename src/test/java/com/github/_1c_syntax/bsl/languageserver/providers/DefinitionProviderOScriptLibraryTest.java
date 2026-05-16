@@ -113,6 +113,70 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     assertThat(definitions.get(0).getTargetUri()).contains("MyModule.os");
   }
 
+  @Test
+  void definitionOfLibraryModuleNameItselfPointsToLibraryFile() {
+    initLib();
+
+    // Курсор на самом identifier модуля (внутри обычного вызова Модуль.Метод()).
+    var content = "#Использовать mylib\nMyModule.ВывестиСообщение(\"Текст\");\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new DefinitionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(1, 2));
+
+    var definitions = definitionProvider.getDefinition(dc, params);
+
+    assertThat(definitions)
+      .as("go-to-definition на имени модуля библиотеки должен вести в файл модуля")
+      .isNotEmpty();
+    assertThat(definitions.get(0).getTargetUri()).contains("MyModule.os");
+  }
+
+  @Test
+  void definitionOfLibraryModuleMethodWhenSameFileExportsClass() {
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/dualmod").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    var content = "#Использовать dualmod\nВременныеФайлы.НовоеИмяФайла();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new DefinitionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    int colMethod = content.indexOf("НовоеИмяФайла") - content.indexOf('\n') - 1;
+    params.setPosition(new Position(1, colMethod + 2));
+
+    var definitions = definitionProvider.getDefinition(dc, params);
+
+    assertThat(definitions)
+      .as("go-to-def на методе модуля (когда тот же файл регистрирует и класс) должен вести в .os-файл")
+      .isNotEmpty();
+    assertThat(definitions.get(0).getTargetUri()).contains("%D0%92%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%D0%A4%D0%B0%D0%B9%D0%BB%D1%8B.os");
+  }
+
+  @Test
+  void definitionOfLibraryModuleNameWhenSameFileExportsClass() {
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/dualmod").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    // Курсор на самом identifier модуля (внутри вызова Модуль.Метод()).
+    var content = "#Использовать dualmod\nВременныеФайлы.НовоеИмяФайла();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new DefinitionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(1, 2));
+
+    var definitions = definitionProvider.getDefinition(dc, params);
+
+    assertThat(definitions)
+      .as("go-to-def на имени модуля библиотеки (модуль+класс с одного файла) должен вести в .os-файл")
+      .isNotEmpty();
+    assertThat(definitions.get(0).getTargetUri()).contains("%D0%92%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%D0%A4%D0%B0%D0%B9%D0%BB%D1%8B.os");
+  }
+
   private void initLib() {
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);

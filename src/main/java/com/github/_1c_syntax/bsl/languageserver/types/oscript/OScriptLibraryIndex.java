@@ -77,10 +77,12 @@ public class OScriptLibraryIndex {
   // @EventListener'ы не подпишутся до того, как мы начнём rebuildDocument().
   private final OScriptModuleMembersProvider oScriptModuleMembersProvider;
 
-  /** URI .os-файла → запись о его регистрации. Источник истины для всех остальных индексов. */
-  private final Map<URI, LibraryEntry> entriesByUri = new ConcurrentHashMap<>();
-  /** qualifiedName (lowercase) → URI .os-файла. Для go-to-definition и резолва. */
-  private final Map<String, URI> uriByQualifiedName = new ConcurrentHashMap<>();
+  /** URI .os-файла → список записей о его регистрации. У одного .os-файла может быть
+   * одновременно несколько ролей: например, в {@code lib.config} тот же файл может
+   * экспортироваться и как {@code <module>}, и как {@code <class>}. */
+  private final Map<URI, List<LibraryEntry>> entriesByUri = new ConcurrentHashMap<>();
+  /** qualifiedName (lowercase) → запись о библиотечной сущности. */
+  private final Map<String, LibraryEntry> entriesByName = new ConcurrentHashMap<>();
 
   /** Тип записи: класс ({@code <class>}) или модуль ({@code <module>}). */
   public enum EntryKind { MODULE, CLASS }
@@ -115,7 +117,7 @@ public class OScriptLibraryIndex {
   public void reindex(ServerContext serverContext) {
     oScriptModuleTypeResolver.clear();
     entriesByUri.clear();
-    uriByQualifiedName.clear();
+    entriesByName.clear();
 
     var configs = libConfigDiscovery.discover(serverContext);
     if (!configs.isEmpty()) {
@@ -141,18 +143,31 @@ public class OScriptLibraryIndex {
   @EventListener
   public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     var uri = event.getUri();
-    var entry = entriesByUri.remove(uri);
-    if (entry == null) {
+    var entries = entriesByUri.remove(uri);
+    if (entries == null) {
       return;
     }
     oScriptModuleTypeResolver.unregister(uri);
-    uriByQualifiedName.remove(entry.qualifiedName().toLowerCase(Locale.ROOT));
+    for (var entry : entries) {
+      entriesByName.remove(entry.qualifiedName().toLowerCase(Locale.ROOT));
+    }
     oScriptModuleMembersProvider.unregister(uri);
   }
 
-  /** @return запись о .os-файле, если он зарегистрирован как библиотечный. */
+  /** @return первая запись о .os-файле, если он зарегистрирован как библиотечный.
+   *  Для случаев, когда нужны все записи (один файл = и модуль, и класс), используйте {@link #findEntriesByUri(URI)}. */
   public Optional<LibraryEntry> findByUri(URI uri) {
-    return Optional.ofNullable(entriesByUri.get(uri));
+    var entries = entriesByUri.get(uri);
+    if (entries == null || entries.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(entries.get(0));
+  }
+
+  /** @return все записи о библиотечной регистрации .os-файла. */
+  public Collection<LibraryEntry> findEntriesByUri(URI uri) {
+    var entries = entriesByUri.get(uri);
+    return entries == null ? List.of() : List.copyOf(entries);
   }
 
   /** @return запись о библиотечной сущности по её qualifiedName (регистронезависимо). */
@@ -160,8 +175,7 @@ public class OScriptLibraryIndex {
     if (qualifiedName == null || qualifiedName.isBlank()) {
       return Optional.empty();
     }
-    var uri = uriByQualifiedName.get(qualifiedName.toLowerCase(Locale.ROOT));
-    return uri == null ? Optional.empty() : Optional.ofNullable(entriesByUri.get(uri));
+    return Optional.ofNullable(entriesByName.get(qualifiedName.toLowerCase(Locale.ROOT)));
   }
 
   /** @return URI .os-файла зарегистрированного library-класса/модуля. */
@@ -188,14 +202,14 @@ public class OScriptLibraryIndex {
    * @return все зарегистрированные записи указанного типа
    */
   public Collection<LibraryEntry> findEntries(EntryKind kind) {
-    return entriesByUri.values().stream()
+    return entriesByName.values().stream()
       .filter(e -> e.kind() == kind)
       .toList();
   }
 
   /** @return все зарегистрированные записи (классы и модули вперемешку). */
   public Collection<LibraryEntry> allEntries() {
-    return List.copyOf(entriesByUri.values());
+    return List.copyOf(entriesByName.values());
   }
 
   private void indexConventional(ConventionalLibraryDiscovery.ConventionalLibrary lib, ServerContext serverContext) {
@@ -231,11 +245,15 @@ public class OScriptLibraryIndex {
     // Сначала сообщаем резолверу тип модуля — это нужно, чтобы при первом
     // событии DocumentContextContentChangedEvent документ уже знал свой
     // ModuleType (через DocumentContext.computeModuleType фолбэк).
+    // Если одна и та же URI регистрируется и как модуль, и как класс,
+    // OScriptModuleTypeResolver сохранит ПЕРВЫЙ зарегистрированный тип
+    // (см. register(...)) — это намеренно: иначе документ переменно бы
+    // менял свою идентичность в ServerContext.
     oScriptModuleTypeResolver.register(uri, moduleType);
 
     var entry = new LibraryEntry(uri, qualifiedName, kind, libOrigin);
-    entriesByUri.put(uri, entry);
-    uriByQualifiedName.put(qualifiedName.toLowerCase(Locale.ROOT), uri);
+    entriesByUri.computeIfAbsent(uri, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(entry);
+    entriesByName.put(qualifiedName.toLowerCase(Locale.ROOT), entry);
 
     // Добавляем .os-файл в ServerContext как обычный документ. SymbolTreeComputer,
     // ReferenceIndexFiller, OScriptModuleMembersProvider и прочие подхватят его
