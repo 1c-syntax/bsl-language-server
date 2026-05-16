@@ -168,6 +168,59 @@ class HoverProviderTypeAwareTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void hoverOnConstructorTypeNameShadowedByVariable() {
+    // Регресс: `Структура = Новый Структура();` — наведение на второе
+    // `Структура` должно показывать ховер от конструктора, а не от
+    // одноимённой локальной переменной.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ShadowedConstructor.bsl", context);
+    var content = documentContext.getContent();
+
+    var idx = content.indexOf("Новый Структура") + "Новый ".length();
+    assertThat(idx).isGreaterThan(0);
+    var prefix = content.substring(0, idx);
+    var line = (int) prefix.chars().filter(c -> c == '\n').count();
+    var lineStart = prefix.lastIndexOf('\n') + 1;
+    var col = idx - lineStart + 1;
+
+    var params = new HoverParams();
+    params.setPosition(new Position(line, col));
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    assertThat(hover).isPresent();
+    var text = hover.get().getContents().getRight().getValue();
+    assertThat(text).contains("_конструктор типа_");
+    assertThat(text).contains("Структура");
+    assertThat(text).doesNotContain("_member of_");
+  }
+
+  @Test
+  void hoverOnVariableInShadowingAssignmentLhsStillShowsVariable() {
+    // На LHS присваивания (первое `Структура`) ховер должен оставаться
+    // на VariableSymbol, а не подменяться конструктором.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ShadowedConstructor.bsl", context);
+    var content = documentContext.getContent();
+
+    var idx = content.indexOf("Структура = Новый");
+    assertThat(idx).isGreaterThan(0);
+    var prefix = content.substring(0, idx);
+    var line = (int) prefix.chars().filter(c -> c == '\n').count();
+    var lineStart = prefix.lastIndexOf('\n') + 1;
+    var col = idx - lineStart + 1;
+
+    var params = new HoverParams();
+    params.setPosition(new Position(line, col));
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    assertThat(hover).isPresent();
+    var text = hover.get().getContents().getRight().getValue();
+    assertThat(text).doesNotContain("_конструктор типа_");
+  }
+
+  @Test
   void hoverOnCurrentDateShowsGlobalFunction() {
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContextFromFile(
