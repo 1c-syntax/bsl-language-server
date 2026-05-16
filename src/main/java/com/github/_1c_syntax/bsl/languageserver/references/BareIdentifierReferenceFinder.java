@@ -33,8 +33,11 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvid
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
@@ -87,6 +90,17 @@ public class BareIdentifierReferenceFinder implements ReferenceFinder {
     var resolved = resolveInScope(symbolTree, scope, module, name);
     if (resolved.isEmpty()) {
       resolved = globalScopeProvider.findGlobal(name, document.getFileType());
+    }
+
+    // Идентификатор в позиции имени конструктора (`Новый Имя(...)`) затеняет
+    // одноимённую локальную переменную — пусть NewExpressionReferenceFinder
+    // отдаст ConstructorCallSymbol. Если же resolved указывает на не-переменную
+    // (модуль library-класса, метод, synthetic-тип), оставляем эту ссылку —
+    // на ней работает go-to-definition.
+    if (resolved.isPresent()
+      && resolved.get() instanceof VariableSymbol
+      && isNewExpressionTypeName(document, position)) {
+      return Optional.empty();
     }
 
     return resolved.map(symbol -> enrichForHover(symbol, document.getFileType()))
@@ -144,6 +158,29 @@ public class BareIdentifierReferenceFinder implements ReferenceFinder {
       return method.map(Symbol.class::cast);
     }
     return Optional.empty();
+  }
+
+  /**
+   * Проверяет, попадает ли позиция в имя типа конструкторного выражения
+   * {@code Новый Имя(...)}. В этом случае идентификатор — не ссылка на
+   * локальную переменную, даже если такая есть (классическое затенение в
+   * самоприсваивании: {@code A = Новый A();}).
+   */
+  private static boolean isNewExpressionTypeName(DocumentContext document, Position position) {
+    BSLParser.FileContext ast;
+    try {
+      ast = document.getAst();
+    } catch (NullPointerException e) {
+      return false;
+    }
+    if (ast == null) {
+      return false;
+    }
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .map(terminal -> terminal.getParent() instanceof BSLParser.TypeNameContext tn
+        ? tn.getParent() instanceof BSLParser.NewExpressionContext
+        : false)
+      .orElse(false);
   }
 
   private static Token findIdentifierTokenAt(DocumentContext document, Position position) {
