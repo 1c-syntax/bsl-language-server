@@ -188,10 +188,12 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
       .contains("ПолучитьСтроку", "СтатусМодуля");
   }
 
-  @org.junit.jupiter.api.Disabled("OneScript top-level statements aren't recognized by BSLParser without a procedure wrapper "
-    + "or 'Перем' declaration — variable `MyClass` never appears in the SymbolTree, so reference-based variable inference "
-    + "is impossible. Previously this test passed because the bare identifier `MyClass` fell through to the class symbol "
-    + "(TYPE_NAME) and returned class members; that was a bug fixed in 356ebbc80e. Tracked as a parser-layer gap.")
+  @org.junit.jupiter.api.Disabled("Воспроизводит реальный баг (todo: dangling-dot-completion-os): "
+    + "при висячей точке `MyClass.\\n` без последующего идентификатора completion "
+    + "возвращает пустой список. Не зависит от top-level vs procedure-body (см. "
+    + "dotCompletionOnDanglingDotInsideProcedureReturnsClassMembers — внутри Процедуры "
+    + "ведёт себя так же). Это реальный пользовательский LSP-сценарий — фиксить в "
+    + "CompletionProvider/парсере.")
   @Test
   void dotCompletionOnVariableNamedAsLibraryClassReturnsItsMembers() {
     // Воспроизведение: УправлениеКонфигуратором = Новый УправлениеКонфигуратором();
@@ -207,9 +209,6 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setPosition(new Position(2, "MyClass.".length()));
 
     var items = completionProvider.getCompletion(dc, params);
-    System.out.println("[DBG2] symbolTree variables=" + dc.getSymbolTree().getVariables().stream().map(v -> v.getName() + "@" + v.getRange()).toList());
-    System.out.println("[DBG2] symbolTree children=" + dc.getSymbolTree().getChildren().size());
-    System.out.println("[DBG2] fileType=" + dc.getFileType() + " moduleType=" + dc.getModuleType());
 
     assertThat(items)
       .as("после `MyClass = Новый MyClass(); MyClass.` должны быть видны члены MyClass")
@@ -217,10 +216,38 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
       .contains("ПолучитьСтроку", "СтатусМодуля");
   }
 
-  @org.junit.jupiter.api.Disabled("OneScript top-level statements aren't recognized by BSLParser without a procedure wrapper "
-    + "or 'Перем' declaration — variable `Экземпляр` never appears in the SymbolTree, so reference-based variable inference "
-    + "is impossible. The working sibling test passes only because the variable name coincides with a globally-visible class. "
-    + "Tracked as a parser-layer gap; library-side refactor in this PR is complete.")
+  @org.junit.jupiter.api.Disabled("Тот же реальный баг (todo: dangling-dot-completion-os): "
+    + "висячая точка `MyClass.\\n` ломает парсер даже внутри Процедуры — обёртка в "
+    + "процедуру НЕ решает проблему. Воспроизводит, что баг dangling-dot не связан с "
+    + "top-level контекстом, а сидит в самом парсере / completion pipeline.")
+  @Test
+  void dotCompletionOnDanglingDotInsideProcedureReturnsClassMembers() {
+    // Тот же сценарий висячей точки, что и dotCompletionOnVariableNamedAsLibraryClassReturnsItsMembers,
+    // но переменная объявлена внутри Процедура ... КонецПроцедуры. Цель — проверить,
+    // починила бы обёртка в процедуру баг dangling-dot (т.е. имеет ли значение
+    // top-level vs procedure-body для error-recovery парсера).
+    initLib();
+
+    var content = ""
+      + "#Использовать mylib\n"
+      + "Процедура Тест()\n"
+      + "  MyClass = Новый MyClass();\n"
+      + "  MyClass.\n"
+      + "КонецПроцедуры\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(3, "  MyClass.".length()));
+
+    var items = completionProvider.getCompletion(dc, params);
+
+    assertThat(items)
+      .as("после `MyClass = Новый MyClass(); MyClass.` внутри Процедуры — должны быть видны члены MyClass")
+      .extracting(CompletionItem::getLabel)
+      .contains("ПолучитьСтроку", "СтатусМодуля");
+  }
+
   @Test
   void dotCompletionOnInstanceOfLibraryClassWithRenamedFile() {
     // Воспроизведение проблемы из winow/v8runner:
@@ -229,7 +256,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     // что ломает резолв членов после `Перем = Новый <Класс>(); Перем.`.
     initLib();
 
-    var content = "#Использовать mylib\nЭкземпляр = Новый RenamedClass();\nЭкземпляр.\n";
+    var content = "#Использовать mylib\nЭкземпляр = Новый RenamedClass();\nЭкземпляр.ПолучитьСтроку();\n";
     var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();
