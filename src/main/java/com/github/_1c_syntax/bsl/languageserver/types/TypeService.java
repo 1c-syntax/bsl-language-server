@@ -92,9 +92,17 @@ public class TypeService {
    * Получить набор типов для конкретной {@link Reference}.
    */
   public TypeSet findTypes(Reference reference) {
-    return reference.getSourceDefinedSymbol()
-      .map(this::findTypes)
-      .orElse(TypeSet.EMPTY);
+    var sourceDefined = reference.getSourceDefinedSymbol();
+    if (sourceDefined.isPresent()) {
+      return findTypes(sourceDefined.get());
+    }
+    if (reference.symbol() instanceof SyntheticSymbol synthetic) {
+      var valueType = synthetic.getValueType();
+      if (valueType != null && valueType != TypeRef.UNKNOWN) {
+        return TypeSet.of(valueType);
+      }
+    }
+    return TypeSet.EMPTY;
   }
 
   /**

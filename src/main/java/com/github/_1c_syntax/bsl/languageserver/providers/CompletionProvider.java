@@ -220,28 +220,6 @@ public final class CompletionProvider {
       typeSet = typeService.inferAtPosition(documentContext, beforeDot);
     }
     if (typeSet.isEmpty()) {
-      // Fallback: голое имя OneScript library-модуля или платформенного глобального
-      // свойства ("КодировкаТекста.", "ФС." без локального символа)
-      var bareName = identifierBeforeDot(documentContext, position);
-      if (bareName != null) {
-        // Library-модули — только в .os-файлах.
-        if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
-          var libRef = oScriptLibraryIndex.findByName(bareName)
-            .filter(e -> e.kind() == OScriptLibraryIndex.EntryKind.MODULE)
-            .flatMap(e -> typeService.resolve(e.qualifiedName(), fileType));
-          if (libRef.isPresent()) {
-            typeSet = TypeSet.of(libRef.get());
-          }
-        }
-        if (typeSet.isEmpty()) {
-          var gpRef = typeService.findGlobalPropertyType(bareName, fileType);
-          if (gpRef.isPresent()) {
-            typeSet = TypeSet.of(gpRef.get());
-          }
-        }
-      }
-    }
-    if (typeSet.isEmpty()) {
       return List.of();
     }
 
@@ -285,39 +263,6 @@ public final class CompletionProvider {
   }
 
   private record DotCompletionInfo(int dotColumn, String prefix) {
-  }
-
-  private static String identifierBeforeDot(DocumentContext documentContext, Position position) {
-    try {
-      var content = documentContext.getContent();
-      if (content == null) {
-        return null;
-      }
-      var lines = content.split("\\R", -1);
-      if (position.getLine() >= lines.length) {
-        return null;
-      }
-      var line = lines[position.getLine()];
-      var col = Math.min(position.getCharacter(), line.length());
-      var i = col;
-      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
-        i--;
-      }
-      if (i == 0 || line.charAt(i - 1) != '.') {
-        return null;
-      }
-      var dotIndex = i - 1;
-      var start = dotIndex;
-      while (start > 0 && isIdentChar(line.charAt(start - 1))) {
-        start--;
-      }
-      if (start == dotIndex) {
-        return null;
-      }
-      return line.substring(start, dotIndex);
-    } catch (Exception e) {
-      return null;
-    }
   }
 
   private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {

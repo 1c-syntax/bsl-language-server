@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,11 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
   @Override
   public SymbolKind getSymbolKind() {
     return SymbolKind.Module;
+  }
+
+  @Override
+  public Class<? extends Symbol> getSymbolClass() {
+    return ModuleSymbol.class;
   }
 
   private String getModuleInfo(ModuleSymbol symbol) {

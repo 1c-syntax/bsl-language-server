@@ -23,24 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.hover.ConstructorHoverBuilder;
 import com.github._1c_syntax.bsl.languageserver.hover.MarkupContentBuilder;
-import com.github._1c_syntax.bsl.languageserver.hover.PlatformMemberHoverBuilder;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -48,8 +35,13 @@ import java.util.Optional;
 
 /**
  * Провайдер для отображения всплывающих подсказок при наведении курсора.
- * <p>
- * Обрабатывает запросы {@code textDocument/hover}.
+ *
+ * <p>Тонкий слой поверх {@link ReferenceResolver}: резолвит ссылку под курсором
+ * и выбирает {@link MarkupContentBuilder} по классу разрешённого символа.
+ * Никакой собственной логики поиска символов или типов: всё, что относится к
+ * подбору ссылки, живёт в реализациях {@link com.github._1c_syntax.bsl.languageserver.references.ReferenceFinder};
+ * всё, что относится к формированию текста подсказки — в соответствующем
+ * {@code MarkupContentBuilder}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover">Hover Request specification</a>
  */
@@ -58,152 +50,23 @@ import java.util.Optional;
 public final class HoverProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final TypeService typeService;
-  private final Map<SymbolKind, MarkupContentBuilder<Symbol>> markupContentBuilders;
-  private final ConstructorHoverBuilder constructorHoverBuilder;
-  private final PlatformMemberHoverBuilder platformMemberHoverBuilder;
+  private final Map<Class<? extends Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
 
-  /**
-   * Получить информацию для отображения при наведении курсора на символ.
-   *
-   * @param documentContext Контекст документа
-   * @param params Параметры запроса hover
-   * @return Информация для отображения во всплывающей подсказке
-   */
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
-    Position position = params.getPosition();
-
-    var symbolBased = referenceResolver.findReference(documentContext.getUri(), position)
-      .flatMap((Reference reference) -> {
-        var symbol = reference.symbol();
-        var range = reference.selectionRange();
-
-        return Optional.ofNullable(markupContentBuilders.get(symbol.getSymbolKind()))
-          .map(markupContentBuilder -> markupContentBuilder.getContent(symbol))
-          .map(content -> new Hover(content, range));
-      });
-    if (symbolBased.isPresent()) {
-      return symbolBased;
-    }
-
-    // Hover для имени класса в `Новый ИмяКласса(...)`.
-    var ctorHover = newExpressionHover(documentContext, position);
-    if (ctorHover.isPresent()) {
-      return ctorHover;
-    }
-
-    // Fallback: type-driven hover для цепочек accessor'ов / platform members /
-    // namespace-имен, у которых нет соответствующего SourceDefinedSymbol.
-    return typeService.findMemberAt(documentContext, position)
-      .map(member -> new Hover(
-        platformMemberHoverBuilder.build(member.owner(), member.descriptor(), member.callArgCount()),
-        member.range()));
+    return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
+      .flatMap(reference -> findBuilder(reference.symbol())
+        .map(builder -> builder.getContent(reference.symbol()))
+        .map(content -> new Hover(content, reference.selectionRange())));
   }
 
-  private Optional<Hover> newExpressionHover(DocumentContext documentContext, Position position) {
-    BSLParser.FileContext ast;
-    try {
-      ast = documentContext.getAst();
-    } catch (NullPointerException e) {
-      return Optional.empty();
+  private Optional<MarkupContentBuilder<Symbol>> findBuilder(Symbol symbol) {
+    var direct = markupContentBuilders.get(symbol.getClass());
+    if (direct != null) {
+      return Optional.of(direct);
     }
-    if (ast == null) {
-      return Optional.empty();
-    }
-    var nex = findInnermostNewExpression(ast, position);
-    if (nex.isEmpty()) {
-      return Optional.empty();
-    }
-    var typeNameCtx = nex.get().typeName();
-    if (typeNameCtx == null) {
-      return Optional.empty();
-    }
-    // Hover актуален только когда позиция на имени класса (не внутри скобок аргументов).
-    if (!encloses(typeNameCtx, position)) {
-      return Optional.empty();
-    }
-    var typeName = typeNameCtx.getText();
-    var fileType = documentContext.getFileType();
-    var ref = typeService.resolve(typeName, fileType).orElse(null);
-    if (ref == null) {
-      return Optional.empty();
-    }
-    var ctors = typeService.getConstructors(ref);
-    if (ctors.isEmpty()) {
-      return Optional.empty();
-    }
-    int argCount = countNewExpressionArgs(nex.get());
-    boolean disclaim = false;
-    int chosenIndex = SignatureSelection.pickIndexByArity(ctors, argCount);
-    SignatureDescriptor chosen;
-    if (chosenIndex < 0) {
-      chosen = ctors.get(0);
-      disclaim = true;
-    } else {
-      chosen = ctors.get(chosenIndex);
-    }
-    var range = tokenRange(typeNameCtx);
-    return Optional.of(new Hover(
-      constructorHoverBuilder.build(typeName, ref, chosen, ctors, disclaim), range));
-  }
-
-  private static int countNewExpressionArgs(BSLParser.NewExpressionContext nex) {
-    var doCall = nex.doCall();
-    if (doCall == null) {
-      return 0;
-    }
-    var list = doCall.callParamList();
-    if (list == null) {
-      return 0;
-    }
-    var ps = list.callParam();
-    if (ps == null || ps.isEmpty()) {
-      return 0;
-    }
-    // Учитываем trailing empty (`Foo(a, )` — 2 параметра по AST, но фактически 1 значимый).
-    int n = ps.size();
-    var last = ps.get(n - 1);
-    if (last.getChildCount() == 0) {
-      n--;
-    }
-    return n;
-  }
-
-  private static Optional<BSLParser.NewExpressionContext> findInnermostNewExpression(
-    ParseTree node, Position position
-  ) {
-    BSLParser.NewExpressionContext best = null;
-    if (node instanceof BSLParser.NewExpressionContext nex && encloses(nex, position)) {
-      best = nex;
-    }
-    for (int i = 0; i < node.getChildCount(); i++) {
-      var child = node.getChild(i);
-      if (child instanceof ParserRuleContext prc && !encloses(prc, position)) {
-        continue;
-      }
-      var inner = findInnermostNewExpression(child, position);
-      if (inner.isPresent()) {
-        best = inner.get();
-      }
-    }
-    return Optional.ofNullable(best);
-  }
-
-  private static boolean encloses(ParserRuleContext ctx, Position position) {
-    var start = ctx.getStart();
-    var stop = ctx.getStop();
-    if (start == null || stop == null) {
-      return false;
-    }
-    var range = Ranges.create(start.getLine() - 1, start.getCharPositionInLine(),
-      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length());
-    return Ranges.containsPosition(range, position);
-  }
-
-  private static Range tokenRange(ParserRuleContext ctx) {
-    var start = ctx.getStart();
-    var stop = ctx.getStop();
-    return Ranges.create(start.getLine() - 1, start.getCharPositionInLine(),
-      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length());
+    return markupContentBuilders.entrySet().stream()
+      .filter(entry -> entry.getKey().isInstance(symbol))
+      .map(Map.Entry::getValue)
+      .findFirst();
   }
 }

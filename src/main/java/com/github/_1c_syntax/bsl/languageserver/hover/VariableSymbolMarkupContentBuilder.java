@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -93,6 +94,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   @Override
   public SymbolKind getSymbolKind() {
     return SymbolKind.Variable;
+  }
+
+  @Override
+  public Class<? extends Symbol> getSymbolClass() {
+    return VariableSymbol.class;
   }
 
   private String getVariableInfo(VariableSymbol symbol) {
