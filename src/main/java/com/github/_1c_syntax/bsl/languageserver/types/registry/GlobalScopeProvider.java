@@ -104,18 +104,6 @@ public class GlobalScopeProvider {
   private final Map<String, LanguageKeywordSnippet> keywordSnippets;
   /** lowercased имя глобального свойства (через registerGlobalProperty) → языковой скоуп. */
   private final Map<String, LanguageScope> globalPropertyScopes = new ConcurrentHashMap<>();
-  /** Имена library-модулей OneScript (lowercased) → TypeRef модуля. */
-  private final Map<String, TypeRef> libraryModules = new ConcurrentHashMap<>();
-  /** Имена library-классов OneScript (lowercased) → сигнатуры конструктора. */
-  private final Map<String, List<SignatureDescriptor>> libraryClasses = new ConcurrentHashMap<>();
-  /** Хранит исходные написания имён library-сущностей для отображения. */
-  private final Map<String, String> libraryNamesDisplay = new ConcurrentHashMap<>();
-  /**
-   * Имя library-сущности (lowercased) → имя библиотеки-источника (lowercased,
-   * например, имя каталога с {@code lib.config} или {@code oscript_modules/<name>}).
-   * Используется для фильтрации видимости по {@code #Использовать <libName>}.
-   */
-  private final Map<String, String> libraryEntryOrigin = new ConcurrentHashMap<>();
   /**
    * Каноничные «составные» имена MD-объектов конфигурации в коллекционной
    * форме ({@code Справочники.Контрагенты}, {@code Documents.Документ1}).
@@ -170,6 +158,14 @@ public class GlobalScopeProvider {
   @Autowired(required = false)
   private GlobalSymbolScope globalSymbolScope;
 
+  /**
+   * Источник данных о библиотеках OneScript (lib.config + oscript_modules).
+   * Используется для фильтрации видимости symbol'ов из библиотек в BSL-файлах
+   * и для согласования с {@code #Использовать &lt;libName&gt;}.
+   */
+  @Autowired(required = false)
+  private com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex oScriptLibraryIndex;
+
   private final AtomicBoolean globalsPublished = new AtomicBoolean(false);
 
   /**
@@ -195,7 +191,7 @@ public class GlobalScopeProvider {
     }
     var lc = name == null ? "" : name.toLowerCase(Locale.ROOT);
     // Library entries — только в OS-файлах.
-    if (libraryEntryOrigin.containsKey(lc)) {
+    if (oScriptLibraryIndex != null && oScriptLibraryIndex.findByName(lc).isPresent()) {
       return fileType == FileType.OS ? sym : Optional.empty();
     }
     // Функции — по скоупу функций.
@@ -563,154 +559,58 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Зарегистрировать имя глобального модуля OneScript-библиотеки
-   * (записи {@code <module>} из {@code lib.config}). Имя становится доступным
-   * в no-dot completion и резолвится в указанный {@link TypeRef} для
-   * dot-completion'а.
+   * Зарегистрировать synthetic-symbol для библиотечного модуля OneScript
+   * (записи {@code <module>} из {@code lib.config}). Symbol становится
+   * видимым через {@link #findGlobal(String)} с фильтрацией по {@link FileType}
+   * (через {@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex}).
+   * Источник {@link TypeRef} и {@code libOrigin} — {@code OScriptLibraryIndex}.
    */
   public void registerLibraryModule(String name, TypeRef ref) {
-    registerLibraryModule(name, ref, null);
-  }
-
-  /**
-   * То же, что {@link #registerLibraryModule(String, TypeRef)}, но с явным
-   * указанием имени библиотеки-источника (для последующей фильтрации видимости
-   * по {@code #Использовать <libName>}).
-   */
-  public void registerLibraryModule(String name, TypeRef ref, String libOrigin) {
-    if (name == null || name.isBlank() || ref == null) {
+    if (name == null || name.isBlank() || ref == null || globalSymbolScope == null) {
       return;
     }
     ensureGlobalsPublished();
-    var key = name.toLowerCase(Locale.ROOT);
-    libraryModules.put(key, ref);
-    libraryNamesDisplay.putIfAbsent(key, name);
-    if (libOrigin != null && !libOrigin.isBlank()) {
-      libraryEntryOrigin.put(key, libOrigin.toLowerCase(Locale.ROOT));
-    }
-    if (globalSymbolScope != null) {
-      var symbol = new SyntheticSymbol(name, SyntheticKind.LIBRARY_MODULE, "", ref);
-      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
-    }
+    var symbol = new SyntheticSymbol(name, SyntheticKind.LIBRARY_MODULE, "", ref);
+    globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
   }
 
   /**
-   * Зарегистрировать имя класса OneScript-библиотеки (записи {@code <class>}
-   * из {@code lib.config}) и сигнатуры его конструктора.
+   * Зарегистрировать synthetic-symbol для библиотечного класса OneScript
+   * (записи {@code <class>} из {@code lib.config}). Конструкторы хранятся в
+   * {@link TypeRegistry} через {@code registerConstructorSource} (см.
+   * {@code OScriptModuleMembersProvider}).
    */
-  public void registerLibraryClass(String name, List<SignatureDescriptor> ctorSignatures) {
-    registerLibraryClass(name, ctorSignatures, null);
-  }
-
-  /**
-   * То же, что {@link #registerLibraryClass(String, List)}, но с явным
-   * указанием имени библиотеки-источника.
-   */
-  public void registerLibraryClass(String name, List<SignatureDescriptor> ctorSignatures, String libOrigin) {
-    if (name == null || name.isBlank()) {
+  public void registerLibraryClass(String name, TypeRef classRef) {
+    if (name == null || name.isBlank() || globalSymbolScope == null) {
       return;
     }
     ensureGlobalsPublished();
-    var key = name.toLowerCase(Locale.ROOT);
-    libraryClasses.put(key, ctorSignatures == null ? List.of() : List.copyOf(ctorSignatures));
-    libraryNamesDisplay.putIfAbsent(key, name);
-    if (libOrigin != null && !libOrigin.isBlank()) {
-      libraryEntryOrigin.put(key, libOrigin.toLowerCase(Locale.ROOT));
-    }
-    if (globalSymbolScope != null) {
-      var classRef = ctorSignatures != null && !ctorSignatures.isEmpty()
-        ? ctorSignatures.get(0).returnType()
-        : TypeRef.UNKNOWN;
-      var symbol = new SyntheticSymbol(name, SyntheticKind.CONFIGURATION_OBJECT, "", classRef);
-      globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME);
-    }
+    var ref = classRef != null ? classRef : TypeRef.UNKNOWN;
+    var symbol = new SyntheticSymbol(name, SyntheticKind.CONFIGURATION_OBJECT, "", ref);
+    globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME);
   }
 
   /**
-   * @return имена зарегистрированных library-модулей в исходном написании.
-   */
-  public Collection<String> getLibraryModules() {
-    return libraryModules.keySet().stream()
-      .map(k -> libraryNamesDisplay.getOrDefault(k, k))
-      .toList();
-  }
-
-  /**
-   * @return имена зарегистрированных library-классов в исходном написании.
-   */
-  public Collection<String> getLibraryClasses() {
-    return libraryClasses.keySet().stream()
-      .map(k -> libraryNamesDisplay.getOrDefault(k, k))
-      .toList();
-  }
-
-  /**
-   * Найти {@link TypeRef} library-модуля по имени.
-   */
-  public Optional<TypeRef> findLibraryModule(String name) {
-    if (name == null || name.isBlank()) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(libraryModules.get(name.toLowerCase(Locale.ROOT)));
-  }
-
-  /**
-   * Найти сигнатуры конструктора library-класса по имени.
-   */
-  public List<SignatureDescriptor> findLibraryClassConstructor(String name) {
-    if (name == null || name.isBlank()) {
-      return List.of();
-    }
-    return libraryClasses.getOrDefault(name.toLowerCase(Locale.ROOT), List.of());
-  }
-
-  /**
-   * Удалить ранее зарегистрированный library-модуль по имени.
+   * Удалить synthetic-symbol library-модуля по имени.
    */
   public void unregisterLibraryModule(String name) {
-    if (name == null || name.isBlank()) {
-      return;
-    }
-    var key = name.toLowerCase(Locale.ROOT);
-    libraryModules.remove(key);
-    if (!libraryClasses.containsKey(key)) {
-      libraryNamesDisplay.remove(key);
-      libraryEntryOrigin.remove(key);
-    }
-    if (globalSymbolScope != null) {
-      globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
-    }
+    unregisterLibrarySymbol(name);
   }
 
   /**
-   * Удалить ранее зарегистрированный library-класс по имени.
+   * Удалить synthetic-symbol library-класса по имени.
    */
   public void unregisterLibraryClass(String name) {
-    if (name == null || name.isBlank()) {
-      return;
-    }
-    var key = name.toLowerCase(Locale.ROOT);
-    libraryClasses.remove(key);
-    if (!libraryModules.containsKey(key)) {
-      libraryNamesDisplay.remove(key);
-      libraryEntryOrigin.remove(key);
-    }
-    if (globalSymbolScope != null) {
-      globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
-    }
+    unregisterLibrarySymbol(name);
   }
 
-  /**
-   * @return имя библиотеки-источника для library-модуля или library-класса,
-   * либо пустой Optional, если запись не зарегистрирована или происхождение
-   * неизвестно.
-   */
-  public Optional<String> getLibraryEntryOrigin(String name) {
-    if (name == null || name.isBlank()) {
-      return Optional.empty();
+  private void unregisterLibrarySymbol(String name) {
+    if (name == null || name.isBlank() || globalSymbolScope == null) {
+      return;
     }
-    return Optional.ofNullable(libraryEntryOrigin.get(name.toLowerCase(Locale.ROOT)));
+    globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
   }
+
 
   /**
    * Зарегистрировать каноничное составное имя MD-объекта конфигурации
@@ -731,20 +631,6 @@ public class GlobalScopeProvider {
     return List.copyOf(configurationQualifiedNames);
   }
 
-  /**
-   * Очистить все ранее зарегистрированные library-сущности (например, перед
-   * полной переиндексацией OneScript-библиотек workspace'а).
-   */
-  public void clearLibraryEntries() {
-    libraryModules.clear();
-    libraryClasses.clear();
-    libraryNamesDisplay.clear();
-    libraryEntryOrigin.clear();
-    // GlobalSymbolScope чистит наполнение через TypeRegistry/owner-провайдеры.
-    // Library-записи имеют роль VALUE/TYPE_NAME — точечно их различить здесь
-    // нельзя, поэтому полную перечистку выполняет вышестоящий orchestrator
-    // (например, OScriptLibraryIndex перед reindex).
-  }
 
   /**
    * Загружает наполнение глобальной области:

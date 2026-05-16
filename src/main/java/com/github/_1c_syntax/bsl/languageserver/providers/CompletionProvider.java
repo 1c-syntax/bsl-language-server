@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,7 @@ public final class CompletionProvider {
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
 
   /**
@@ -187,6 +189,13 @@ public final class CompletionProvider {
     return hasLatin || !hasCyrillic;
   }
 
+  private List<String> libraryEntryNames(OScriptLibraryIndex.EntryKind kind) {
+    return oScriptLibraryIndex.findEntries(kind).stream()
+      .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
+      .distinct()
+      .toList();
+  }
+
   /**
    * @return предложения автодополнения для указанной позиции
    */
@@ -217,7 +226,9 @@ public final class CompletionProvider {
       if (bareName != null) {
         // Library-модули — только в .os-файлах.
         if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
-          var libRef = globalScopeProvider.findLibraryModule(bareName);
+          var libRef = oScriptLibraryIndex.findByName(bareName)
+            .filter(e -> e.kind() == OScriptLibraryIndex.EntryKind.MODULE)
+            .flatMap(e -> typeService.resolve(e.qualifiedName(), fileType));
           if (libRef.isPresent()) {
             typeSet = TypeSet.of(libRef.get());
           }
@@ -329,7 +340,7 @@ public final class CompletionProvider {
       ? java.util.Set.<String>of()
       : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toUnmodifiableSet());
     java.util.function.Predicate<String> libVisible = name -> {
-      var origin = globalScopeProvider.getLibraryEntryOrigin(name);
+      var origin = oScriptLibraryIndex.findByName(name).map(OScriptLibraryIndex.LibraryEntry::libOrigin);
       if (origin.isEmpty()) {
         return true;
       }
@@ -361,7 +372,7 @@ public final class CompletionProvider {
           items.add(item);
         }
       }
-      for (var libClassName : globalScopeProvider.getLibraryClasses()) {
+      for (var libClassName : libraryEntryNames(OScriptLibraryIndex.EntryKind.CLASS)) {
         if (!libVisible.test(libClassName)) {
           continue;
         }
@@ -375,7 +386,7 @@ public final class CompletionProvider {
     }
 
     // OneScript library modules (записи <module> из lib.config)
-    for (var libModuleName : globalScopeProvider.getLibraryModules()) {
+    for (var libModuleName : libraryEntryNames(OScriptLibraryIndex.EntryKind.MODULE)) {
       if (!libVisible.test(libModuleName)) {
         continue;
       }

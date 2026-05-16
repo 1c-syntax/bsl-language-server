@@ -24,7 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -45,8 +46,9 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
   @Autowired
   private TypeRegistry typeRegistry;
 
-  @Autowired
-  private GlobalScopeProvider globalScopeProvider;
+  private static java.util.List<String> entryNames(OScriptLibraryIndex index, EntryKind kind) {
+    return index.findEntries(kind).stream().map(LibraryEntry::qualifiedName).toList();
+  }
 
   @Test
   void indexesModulesAndClassesFromFixture() {
@@ -55,22 +57,22 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
 
     index.reindex(context);
 
-    // Module name registered as library namespace, resolves to user type
-    assertThat(globalScopeProvider.getLibraryModules()).contains("MyModule");
-    var moduleRef = globalScopeProvider.findLibraryModule("MyModule");
+    // Module name registered as library entry, resolves to user type
+    assertThat(entryNames(index, EntryKind.MODULE)).contains("MyModule");
+    var moduleRef = typeRegistry.resolve("MyModule");
     assertThat(moduleRef).isPresent();
     assertThat(moduleRef.get().kind()).isEqualTo(TypeKind.USER);
     var moduleMembers = typeRegistry.getMembers(moduleRef.get());
     assertThat(moduleMembers).extracting(m -> m.name())
       .contains("ВывестиСообщение", "СформироватьСтроку", "СтатусМодуля");
 
-    // Class name registered with constructor signature
-    assertThat(globalScopeProvider.getLibraryClasses()).contains("MyClass");
-    var ctor = globalScopeProvider.findLibraryClassConstructor("MyClass");
-    assertThat(ctor).hasSize(1);
-    assertThat(ctor.get(0).parameters()).extracting(p -> p.name()).containsExactly("Имя");
+    // Class name registered with constructor signature (через TypeRegistry)
+    assertThat(entryNames(index, EntryKind.CLASS)).contains("MyClass");
     var classRef = typeRegistry.resolve("MyClass");
     assertThat(classRef).isPresent();
+    var ctor = typeRegistry.getConstructors(classRef.get());
+    assertThat(ctor).hasSize(1);
+    assertThat(ctor.get(0).parameters()).extracting(p -> p.name()).containsExactly("Имя");
     assertThat(ctor.get(0).returnType()).isEqualTo(classRef.get());
 
     var classMembers = typeRegistry.getMembers(classRef.get());
@@ -87,8 +89,8 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     index.reindex(context);
     index.reindex(context);
 
-    assertThat(globalScopeProvider.getLibraryModules()).filteredOn(n -> n.equals("MyModule")).hasSize(1);
-    assertThat(globalScopeProvider.getLibraryClasses()).filteredOn(n -> n.equals("MyClass")).hasSize(1);
+    assertThat(entryNames(index, EntryKind.MODULE)).filteredOn(n -> n.equals("MyModule")).hasSize(1);
+    assertThat(entryNames(index, EntryKind.CLASS)).filteredOn(n -> n.equals("MyClass")).hasSize(1);
   }
 
   @Test
@@ -114,7 +116,7 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
 
     index.reindex(context);
 
-    var moduleRef = globalScopeProvider.findLibraryModule("MyModule").orElseThrow();
+    var moduleRef = typeRegistry.resolve("MyModule").orElseThrow();
     assertThat(typeRegistry.getMembers(moduleRef)).extracting(m -> m.name())
       .contains("ВывестиСообщение");
 
@@ -140,11 +142,11 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     index.reindex(context);
 
     var moduleUri = Absolute.uri(fixtureRoot.resolve("src/MyModule.os").toUri());
-    assertThat(globalScopeProvider.getLibraryModules()).contains("MyModule");
+    assertThat(entryNames(index, EntryKind.MODULE)).contains("MyModule");
 
     context.removeDocument(moduleUri);
 
-    assertThat(globalScopeProvider.findLibraryModule("MyModule")).isEmpty();
+    assertThat(index.findByName("MyModule")).isEmpty();
     assertThat(typeRegistry.resolve("MyModule")).isEmpty();
   }
 }

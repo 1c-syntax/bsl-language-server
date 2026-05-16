@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -72,6 +73,7 @@ public final class SignatureHelpProvider {
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
 
   /**
    * @return signature help для указанной позиции, либо пустой {@link SignatureHelp} если контекст
@@ -369,7 +371,10 @@ public final class SignatureHelpProvider {
     if (!firstAccess) {
       return null;
     }
-    return globalScopeProvider.findLibraryModule(idNode.getText()).orElse(null);
+    return oScriptLibraryIndex.findByName(idNode.getText())
+      .filter(e -> e.kind() == OScriptLibraryIndex.EntryKind.MODULE)
+      .flatMap(e -> typeService.resolve(e.qualifiedName(), com.github._1c_syntax.bsl.languageserver.context.FileType.OS))
+      .orElse(null);
   }
 
   private static boolean isInside(ParseTree descendant, ParseTree ancestor) {
@@ -405,15 +410,8 @@ public final class SignatureHelpProvider {
         return Optional.of(MemberDescriptor.method(typeName, typeService.getDescription(ref), platformCtors));
       }
     }
-    // Fallback: OneScript library-класс — конструктор хранится отдельно в GlobalScopeProvider.
-    // В BSL-файлах library-классы недоступны.
-    if (fileType == com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
-      return Optional.empty();
-    }
-    var libCtor = globalScopeProvider.findLibraryClassConstructor(typeName);
-    if (!libCtor.isEmpty()) {
-      return Optional.of(MemberDescriptor.method(typeName, "", libCtor));
-    }
+    // Library-классы регистрируются как user-types через OScriptModuleMembersProvider —
+    // их конструкторы доступны через typeService.getConstructors выше.
     return Optional.empty();
   }
 

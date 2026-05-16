@@ -22,7 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.junit.jupiter.api.Test;
@@ -48,8 +49,9 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
   @Autowired
   private TypeRegistry typeRegistry;
 
-  @Autowired
-  private GlobalScopeProvider globalScopeProvider;
+  private static java.util.List<String> entryNames(OScriptLibraryIndex index, EntryKind kind) {
+    return index.findEntries(kind).stream().map(LibraryEntry::qualifiedName).toList();
+  }
 
   @Test
   void registersClassesAndModulesFromConventionDirs(@TempDir Path tempDir) throws IOException {
@@ -76,15 +78,15 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     initServerContext(tempDir, false);
     index.reindex(context);
 
-    assertThat(globalScopeProvider.getLibraryClasses()).contains("MyClass");
-    assertThat(globalScopeProvider.getLibraryModules()).contains("MyModule");
+    assertThat(entryNames(index, EntryKind.CLASS)).contains("MyClass");
+    assertThat(entryNames(index, EntryKind.MODULE)).contains("MyModule");
 
     var classRef = typeRegistry.resolve("MyClass");
     assertThat(classRef).isPresent();
     assertThat(typeRegistry.getMembers(classRef.get()))
       .extracting(m -> m.name()).contains("ПолучитьСтроку", "СтатусМодуля");
 
-    var ctor = globalScopeProvider.findLibraryClassConstructor("MyClass");
+    var ctor = typeRegistry.getConstructors(classRef.get());
     assertThat(ctor).hasSize(1);
     assertThat(ctor.get(0).parameters()).extracting(p -> p.name()).containsExactly("Имя");
   }
@@ -112,8 +114,8 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     initServerContext(tempDir, false);
     index.reindex(context);
 
-    assertThat(globalScopeProvider.getLibraryClasses()).contains("Foo");
-    assertThat(globalScopeProvider.getLibraryModules()).contains("Util");
+    assertThat(entryNames(index, EntryKind.CLASS)).contains("Foo");
+    assertThat(entryNames(index, EntryKind.MODULE)).contains("Util");
   }
 
   @Test
@@ -133,8 +135,8 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     initServerContext(tempDir, false);
     index.reindex(context);
 
-    assertThat(globalScopeProvider.getLibraryModules()).contains("Helper", "Tool");
-    assertThat(globalScopeProvider.getLibraryClasses()).doesNotContain("Helper", "Tool");
+    assertThat(entryNames(index, EntryKind.MODULE)).contains("Helper", "Tool");
+    assertThat(entryNames(index, EntryKind.CLASS)).doesNotContain("Helper", "Tool");
   }
 
   @Test
@@ -146,8 +148,8 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     initServerContext(tempDir, false);
     index.reindex(context);
 
-    assertThat(globalScopeProvider.getLibraryModules()).isEmpty();
-    assertThat(globalScopeProvider.getLibraryClasses()).isEmpty();
+    assertThat(entryNames(index, EntryKind.MODULE)).isEmpty();
+    assertThat(entryNames(index, EntryKind.CLASS)).isEmpty();
   }
 
   @Test
@@ -178,7 +180,7 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
     initServerContext(tempDir, false);
     index.reindex(context);
 
-    assertThat(globalScopeProvider.getLibraryModules())
+    assertThat(entryNames(index, EntryKind.MODULE))
       .contains("СессияПользователя", "ФС");
 
     var fsRef = typeRegistry.resolve("ФС");

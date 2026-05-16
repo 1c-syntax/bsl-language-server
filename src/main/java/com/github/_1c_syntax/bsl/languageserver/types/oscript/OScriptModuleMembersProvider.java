@@ -121,13 +121,14 @@ public class OScriptModuleMembersProvider {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref));
       }
       if (libraryEntry != null) {
-        // Совместимость с GlobalScopeProvider library-API (используется
-        // CompletionProvider/SignatureHelpProvider для no-dot completion
-        // и #Использовать-gating).
+        // Регистрация synthetic-symbol'а в глобальной области, чтобы
+        // findGlobal/typeService.findMember видели имя как «глобальное».
+        // Реальные данные (TypeRef, libOrigin, конструкторы) живут в
+        // OScriptLibraryIndex/TypeRegistry.
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
-          globalScopeProvider.registerLibraryModule(qualifiedName, ref, libraryEntry.libOrigin());
+          globalScopeProvider.registerLibraryModule(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
-          globalScopeProvider.registerLibraryClass(qualifiedName, collectConstructors(documentContext, ref), libraryEntry.libOrigin());
+          globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         }
       }
       LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName, documentContext.getModuleType());
