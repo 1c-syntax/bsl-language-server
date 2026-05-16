@@ -235,9 +235,18 @@ public class TypeService {
       // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
       // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
       typeRegistry.resolve(bareName);
-      var fromScope = globalScopeProvider.findGlobal(bareName, documentContext.getFileType())
+
+      // Глобальная функция: возвращаем реальный MemberDescriptor с владельцем=null.
+      var fileType = documentContext.getFileType();
+      var globalFn = globalScopeProvider.findFunction(bareName, fileType);
+      if (globalFn.isPresent()) {
+        return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
+      }
+
+      var fromScope = globalScopeProvider.findGlobal(bareName, fileType)
         .filter(SyntheticSymbol.class::isInstance)
         .map(SyntheticSymbol.class::cast)
+        .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
         .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN));
       if (fromScope.isPresent()) {
         var sym = fromScope.get();
@@ -347,11 +356,11 @@ public class TypeService {
   /**
    * Найденный член типа в позиции курсора.
    *
-   * @param owner       тип, которому принадлежит член
+   * @param owner       тип-владелец члена; {@code null} для глобальных функций/свойств
    * @param descriptor  описание члена
    * @param range       диапазон идентификатора-члена под курсором
    */
-  public record TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
+  public record TypedMember(@jakarta.annotation.Nullable TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
     public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range) {
       this(owner, descriptor, range, -1);
     }
