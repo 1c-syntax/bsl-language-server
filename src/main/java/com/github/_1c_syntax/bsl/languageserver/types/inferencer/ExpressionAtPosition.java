@@ -85,6 +85,26 @@ public class ExpressionAtPosition {
   }
 
   /**
+   * Найти callStatement-предка terminal'а под курсором — для случая
+   * standalone-вызова {@code Объект.Метод();}: в BSL grammar callStatement
+   * не оборачивается в complexIdentifier.
+   */
+  public static Optional<BSLParser.CallStatementContext> findCallStatementContext(
+    DocumentContext documentContext,
+    Position position
+  ) {
+    var ast = safeGetAst(documentContext);
+    if (ast == null) {
+      return Optional.empty();
+    }
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .map(terminal -> terminal.getParent() instanceof org.antlr.v4.runtime.ParserRuleContext prc ? prc : null)
+      .map(rule -> Trees.getRootParent(rule, BSLParser.RULE_callStatement))
+      .filter(BSLParser.CallStatementContext.class::isInstance)
+      .map(BSLParser.CallStatementContext.class::cast);
+  }
+
+  /**
    * Найти RHS присваивания, накрывающего позицию (для случая, когда символ —
    * переменная, и нас интересует выражение, которому её приравняли).
    */
@@ -125,7 +145,11 @@ public class ExpressionAtPosition {
     if (exprCtx.isPresent()) {
       return exprCtx.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
     }
-    return findComplexIdentifierContext(documentContext, position)
+    var complexIdent = findComplexIdentifierContext(documentContext, position);
+    if (complexIdent.isPresent()) {
+      return complexIdent.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
+    }
+    return findCallStatementContext(documentContext, position)
       .map(ExpressionTreeBuildingVisitor::buildExpressionTree);
   }
 }

@@ -101,6 +101,45 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   }
 
   /**
+   * Хелпер построения дерева выражения для callStatement —
+   * {@code Объект.Метод();} как отдельное утверждение. В BSL grammar
+   * callStatement не оборачивается в {@code complexIdentifier},
+   * а имеет собственную продукцию
+   * {@code (IDENTIFIER | globalMethodCall) modifier* accessCall}.
+   *
+   * @param ctx AST callStatement
+   * @return дерево вычисления выражения (как правило — DEREFERENCE)
+   */
+  public static @Nullable BslExpression buildExpressionTree(BSLParser.@Nullable CallStatementContext ctx) {
+    if (ctx == null) {
+      return null;
+    }
+    var instance = new ExpressionTreeBuildingVisitor();
+    instance.recursionLevel = 0;
+    if (ctx.IDENTIFIER() != null) {
+      instance.operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
+    } else if (ctx.globalMethodCall() != null) {
+      instance.visitGlobalMethodCall(ctx.globalMethodCall());
+    } else {
+      return null;
+    }
+    for (var modifier : ctx.modifier()) {
+      modifier.accept(instance);
+    }
+    if (ctx.accessCall() != null) {
+      instance.visitAccessCall(ctx.accessCall());
+    }
+    if (!instance.operands.isEmpty()) {
+      var operand = instance.operands.pop();
+      if (operand.getRepresentingAst() == null) {
+        operand.setRepresentingAst(ctx);
+      }
+      instance.resultExpression = operand;
+    }
+    return instance.getExpressionTree();
+  }
+
+  /**
    * @return результирующее выражение в виде дерева вычисления операций
    */
   public @Nullable BslExpression getExpressionTree() {

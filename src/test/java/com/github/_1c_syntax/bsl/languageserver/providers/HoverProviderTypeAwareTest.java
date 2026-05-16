@@ -221,6 +221,33 @@ class HoverProviderTypeAwareTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void hoverOnMethodInStandaloneCallStatement() {
+    // Регресс: `М.Добавить(1);` — стенд-элон call statement (нет
+    // присваивания), курсор на имени метода должен показать hover
+    // от MemberDescriptor (через PlatformMemberReferenceFinder), а не пусто.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/StandaloneMethodCall.bsl", context);
+    var content = documentContext.getContent();
+
+    var idx = content.indexOf(".Количество") + 1;
+    assertThat(idx).isGreaterThan(0);
+    var prefix = content.substring(0, idx);
+    var line = (int) prefix.chars().filter(c -> c == '\n').count();
+    var lineStart = prefix.lastIndexOf('\n') + 1;
+    var col = idx - lineStart + 1;
+
+    var params = new HoverParams();
+    params.setPosition(new Position(line, col));
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    assertThat(hover).isPresent();
+    var text = hover.get().getContents().getRight().getValue();
+    assertThat(text).contains("Количество");
+    assertThat(text).contains("Массив");
+  }
+
+  @Test
   void hoverOnCurrentDateShowsGlobalFunction() {
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContextFromFile(
