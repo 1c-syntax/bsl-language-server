@@ -188,12 +188,6 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
       .contains("ПолучитьСтроку", "СтатусМодуля");
   }
 
-  @org.junit.jupiter.api.Disabled("Воспроизводит реальный баг (todo: dangling-dot-completion-os): "
-    + "при висячей точке `MyClass.\\n` без последующего идентификатора completion "
-    + "возвращает пустой список. Не зависит от top-level vs procedure-body (см. "
-    + "dotCompletionOnDanglingDotInsideProcedureReturnsClassMembers — внутри Процедуры "
-    + "ведёт себя так же). Это реальный пользовательский LSP-сценарий — фиксить в "
-    + "CompletionProvider/парсере.")
   @Test
   void dotCompletionOnVariableNamedAsLibraryClassReturnsItsMembers() {
     // Воспроизведение: УправлениеКонфигуратором = Новый УправлениеКонфигуратором();
@@ -216,10 +210,6 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
       .contains("ПолучитьСтроку", "СтатусМодуля");
   }
 
-  @org.junit.jupiter.api.Disabled("Тот же реальный баг (todo: dangling-dot-completion-os): "
-    + "висячая точка `MyClass.\\n` ломает парсер даже внутри Процедуры — обёртка в "
-    + "процедуру НЕ решает проблему. Воспроизводит, что баг dangling-dot не связан с "
-    + "top-level контекстом, а сидит в самом парсере / completion pipeline.")
   @Test
   void dotCompletionOnDanglingDotInsideProcedureReturnsClassMembers() {
     // Тот же сценарий висячей точки, что и dotCompletionOnVariableNamedAsLibraryClassReturnsItsMembers,
