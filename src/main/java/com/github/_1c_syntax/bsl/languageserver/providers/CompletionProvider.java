@@ -235,6 +235,17 @@ public final class CompletionProvider {
       for (var member : typeService.getMembers(ref, fileType)) {
         members.putIfAbsent(member.name(), member);
       }
+      // Декларированные ключи «открытого» объекта данных (Структура из
+      // Новый Структура("К1, К2"), ТЗ с описанными колонками из JsDoc).
+      // Поля идут перед members такого же имени, чтобы пользовательские
+      // ключи приоритетнее дефолтных алиасов.
+      var localFields = typeSet.getLocalFields(ref);
+      for (var entry : localFields.entrySet()) {
+        var fieldName = entry.getKey();
+        var fieldTypes = entry.getValue();
+        var fieldRef = fieldTypes.refs().stream().findFirst().orElse(null);
+        members.putIfAbsent(fieldName, MemberDescriptor.property(fieldName, fieldRef, ""));
+      }
     }
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);

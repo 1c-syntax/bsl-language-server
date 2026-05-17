@@ -232,4 +232,55 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE);
     }
   }
+
+  @Test
+  void dotCompletionExposesStructureKeysFromConstructor() {
+    // Размещение = Новый Структура("Варианты, Действие, Приемник, Источник");
+    // Y = Размещение.В;  → completion после точки с prefix "В" должен включать
+    // и ключ "Варианты" из конструктора, и дефолтный метод "Вставить".
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-structure-keys.bsl", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var content = documentContext.getContent();
+    int dotOffset = content.indexOf("Размещение.В");
+    int afterPrefix = dotOffset + "Размещение.В".length();
+    int lineStart = content.lastIndexOf('\n', afterPrefix) + 1;
+    int line = content.substring(0, afterPrefix).split("\n").length - 1;
+    int character = afterPrefix - lineStart;
+    params.setPosition(new Position(line, character));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .as("по prefix 'В' должны быть и ключ из конструктора 'Варианты', и метод 'Вставить'")
+      .contains("Варианты", "Вставить");
+  }
+
+  @Test
+  void dotCompletionExposesAllStructureKeysWithoutPrefix() {
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-structure-keys.bsl", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var content = documentContext.getContent();
+    int dotOffset = content.indexOf("Размещение.В");
+    int afterDot = dotOffset + "Размещение.".length();
+    int lineStart = content.lastIndexOf('\n', afterDot) + 1;
+    int line = content.substring(0, afterDot).split("\n").length - 1;
+    int character = afterDot - lineStart;
+    params.setPosition(new Position(line, character));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .as("все ключи структуры должны быть в completion")
+      .contains("Варианты", "Действие", "Приемник", "Источник");
+  }
 }
