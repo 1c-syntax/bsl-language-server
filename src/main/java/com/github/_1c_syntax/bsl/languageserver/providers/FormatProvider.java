@@ -41,6 +41,7 @@ import org.eclipse.lsp4j.TextEdit;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -163,27 +164,40 @@ public final class FormatProvider {
 
     int antlrLine = targetLineLsp + 1;
 
-    List<Token> tokens = documentContext.getTokens().stream()
-      .filter((Token token) -> {
-        if (token.getLine() != antlrLine) {
-          return false;
-        }
-        // Конец токена должен укладываться в диапазон до позиции курсора, иначе токены,
-        // выходящие за курсор (например многострочные литералы), дублируют свой хвост в replace.
-        long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
-        return endColumn <= cutoffCharacter;
-      })
-      .toList();
-
-    boolean hasContent = tokens.stream()
-      .anyMatch(token -> token.getChannel() == Token.DEFAULT_CHANNEL
-        || token.getType() == BSLLexer.LINE_COMMENT);
-    if (!hasContent) {
-      return Collections.emptyList();
+    // На горячем пути (каждый Enter/`;`) обходить весь поток токенов дорого.
+    // Токены отсортированы по line — находим начало нужной строки бинарным поиском
+    // и обходим только её хвост до первого токена со следующей линии.
+    List<Token> allTokens = documentContext.getTokens();
+    List<Token> tokens = new ArrayList<>();
+    for (int i = firstTokenIndexOnLine(allTokens, antlrLine); i < allTokens.size(); i++) {
+      Token token = allTokens.get(i);
+      if (token.getLine() != antlrLine) {
+        break;
+      }
+      // Конец токена должен укладываться в диапазон до позиции курсора, иначе токены,
+      // выходящие за курсор (например многострочные литералы), дублируют свой хвост в replace.
+      long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
+      if (endColumn <= cutoffCharacter) {
+        tokens.add(token);
+      }
     }
 
     return getTextEdits(
       tokens, documentContext.getScriptVariantLocale(), editRange, 0, params.getOptions());
+  }
+
+  private static int firstTokenIndexOnLine(List<Token> tokens, int line) {
+    int lo = 0;
+    int hi = tokens.size();
+    while (lo < hi) {
+      int mid = (lo + hi) >>> 1;
+      if (tokens.get(mid).getLine() < line) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
+    }
+    return lo;
   }
 
   public List<TextEdit> getRangeFormatting(
