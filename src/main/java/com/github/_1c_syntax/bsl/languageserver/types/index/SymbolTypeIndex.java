@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
@@ -39,12 +40,9 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -130,37 +128,43 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     TypeSet acc = TypeSet.EMPTY;
-    TypeRef pendingCollection = null;
     for (var td : descriptions) {
-      var name = td.name();
-      if (name == null) {
-        continue;
-      }
-      // Hyperlink (`См. Метод` / `См. Справочник.X`) сам по себе тип не образует —
-      // его резолвят consumer'ы, имеющие контекст документа.
-      if (td.variant() == TypeDescription.Variant.HYPERLINK) {
-        continue;
-      }
-      // Парсер bsl-parser разбивает `Массив из Число, Строка` на два
-      // TypeDescription'а: «Массив из Число» и «Строка». Если простая запись
-      // следует за коллекцией с element-types — трактуем её как продолжение
-      // element-types этой коллекции.
-      if (pendingCollection != null && !looksLikeCollectionHead(name) && !name.contains(".")) {
-        var elementRef = resolveOne(name).orElse(null);
-        if (elementRef != null) {
-          acc = acc.withElement(pendingCollection, TypeSet.of(elementRef));
-          continue;
-        }
-      }
-      var single = applyFields(resolveTypeDescription(name), td);
-      acc = acc.union(single);
-      final var snapshot = single;
-      pendingCollection = snapshot.refs().stream()
-        .filter(ref -> !snapshot.getElementTypes(ref).isEmpty())
-        .findFirst()
-        .orElse(null);
+      acc = acc.union(applyFields(resolveTypeDescription(td), td));
     }
     return acc;
+  }
+
+  /**
+   * Разрешить одно описание типа в {@link TypeSet}.
+   * <ul>
+   *   <li>{@code HYPERLINK} ({@code См. Метод} / {@code См. Справочник.X}) сам
+   *       по себе тип не образует — его резолвят consumer'ы, имеющие контекст
+   *       документа; возвращается {@link TypeSet#EMPTY}.</li>
+   *   <li>{@code COLLECTION} ({@code Массив из X, Y}) — головной тип берётся
+   *       из {@link CollectionTypeDescription#collectionName()}, элементы
+   *       коллекции — рекурсивно из {@link CollectionTypeDescription#valueTypes()}
+   *       и навешиваются через {@link TypeSet#withElement(TypeRef, TypeSet)}.</li>
+   *   <li>{@code SIMPLE} — простое имя резолвится через {@link TypeRegistry}.</li>
+   * </ul>
+   */
+  private TypeSet resolveTypeDescription(TypeDescription td) {
+    return switch (td.variant()) {
+      case HYPERLINK -> TypeSet.EMPTY;
+      case SIMPLE -> resolveOne(td.name()).map(TypeSet::of).orElse(TypeSet.EMPTY);
+      case COLLECTION -> resolveCollection((CollectionTypeDescription) td);
+    };
+  }
+
+  private TypeSet resolveCollection(CollectionTypeDescription td) {
+    var headRef = resolveOne(td.collectionName()).orElse(null);
+    if (headRef == null) {
+      return TypeSet.EMPTY;
+    }
+    var elementTypes = resolveTypes(td.valueTypes());
+    if (elementTypes.isEmpty()) {
+      return TypeSet.of(headRef);
+    }
+    return TypeSet.of(headRef).withElement(headRef, elementTypes);
   }
 
   /**
@@ -185,113 +189,11 @@ public class SymbolTypeIndex {
     return result;
   }
 
-  private static final Set<String> COLLECTION_HEADS = Set.of(
-    "массив", "array",
-    "фиксированныймассив", "fixedarray",
-    "соответствие", "map",
-    "фиксированноесоответствие", "fixedmap",
-    "таблицазначений", "valuetable",
-    "деревозначений", "valuetree",
-    "списокзначений", "valuelist",
-    "структура", "structure",
-    "фиксированнаяструктура", "fixedstructure"
-  );
-
-  /**
-   * @return {@code true} если запись начинается с известного имени коллекции.
-   */
-  private static boolean looksLikeCollectionHead(String name) {
-    var trimmed = name.trim();
-    var headEnd = findHeadEnd(trimmed);
-    var head = trimmed.substring(0, headEnd).toLowerCase(Locale.ROOT);
-    return COLLECTION_HEADS.contains(head);
-  }
-
-  /**
-   * Разобрать запись типа из JsDoc вида
-   * {@code "Head"} / {@code "Head из Tail"} / {@code "Head<Tail>"} /
-   * {@code "Head[Tail]"} и вернуть {@link TypeSet} с заголовочным
-   * {@link TypeRef} и (если есть) типами элементов через
-   * {@link TypeSet#withElement(TypeRef, TypeSet)}.
-   */
-  private TypeSet resolveTypeDescription(String name) {
-    if (name == null || name.isBlank()) {
-      return TypeSet.EMPTY;
-    }
-    var trimmed = name.trim();
-    var headEnd = findHeadEnd(trimmed);
-    var head = trimmed.substring(0, headEnd);
-    var headRef = resolveOne(head).orElse(null);
-    if (headRef == null) {
-      return TypeSet.EMPTY;
-    }
-    var tail = extractTail(trimmed, headEnd);
-    if (tail.isEmpty()) {
-      return TypeSet.of(headRef);
-    }
-    TypeSet elementTypes = TypeSet.EMPTY;
-    for (var part : tail.split(",")) {
-      var partTrim = part.trim();
-      if (partTrim.isEmpty()) {
-        continue;
-      }
-      elementTypes = elementTypes.union(resolveTypeDescription(partTrim));
-    }
-    if (elementTypes.isEmpty()) {
-      return TypeSet.of(headRef);
-    }
-    return TypeSet.of(headRef).withElement(headRef, elementTypes);
-  }
-
-  /**
-   * Найти границу головного идентификатора: первый whitespace, '<' или '['.
-   */
-  private static int findHeadEnd(String s) {
-    for (int i = 0; i < s.length(); i++) {
-      var c = s.charAt(i);
-      if (Character.isWhitespace(c) || c == '<' || c == '[') {
-        return i;
-      }
-    }
-    return s.length();
-  }
-
-  /**
-   * Достать «хвост» — список типов элементов, ободрав ключевое слово {@code из}
-   * (или {@code of}) и закрывающие угловые/квадратные скобки.
-   */
-  private static String extractTail(String full, int headEnd) {
-    if (headEnd >= full.length()) {
-      return "";
-    }
-    var rest = full.substring(headEnd).trim();
-    if (rest.isEmpty()) {
-      return "";
-    }
-    if (rest.startsWith("<") && rest.endsWith(">")) {
-      return rest.substring(1, rest.length() - 1).trim();
-    }
-    if (rest.startsWith("[") && rest.endsWith("]")) {
-      return rest.substring(1, rest.length() - 1).trim();
-    }
-    // Russian "из" / English "of" префикс — отбрасываем.
-    var lowered = rest.toLowerCase(Locale.ROOT);
-    if (lowered.startsWith("из ")) {
-      return rest.substring(3).trim();
-    }
-    if (lowered.startsWith("of ")) {
-      return rest.substring(3).trim();
-    }
-    return "";
-  }
-
   private Optional<TypeRef> resolveOne(String name) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    // Парсер возвращает имена коллекций как "Массив<Произвольный>" / "Массив из Произвольный".
-    // Берём только головной идентификатор для резолва через TypeRegistry.
-    var head = name.trim().split("[\\s<\\[]", 2)[0];
+    var head = name.trim();
     return typeRegistry.resolve(head)
       .or(() -> Optional.of(typeRegistry.intern(TypeKind.USER, head)));
   }

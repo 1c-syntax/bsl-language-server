@@ -74,6 +74,22 @@ class ElementTypesInferenceTest extends AbstractServerContextAwareTest {
       .containsExactly("Строка");
   }
 
+  @Test
+  void arrayOfMultipleValueTypes() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ArrayElementTypes.bsl");
+
+    var types = inferAtMarker(documentContext, "СмешанныйСписок = ЧислаИлиСтроки()", "СмешанныйСписок = ".length());
+    assertThat(types.refs())
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactly("Массив");
+    var arrayRef = types.refs().iterator().next();
+    assertThat(types.getElementTypes(arrayRef).refs())
+      .as("Массив из Число, Строка → element types = {Число, Строка}")
+      .extracting(ref -> ref.qualifiedName())
+      .containsExactlyInAnyOrder("Число", "Строка");
+  }
+
   private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     int markerStart = content.indexOf(marker);
