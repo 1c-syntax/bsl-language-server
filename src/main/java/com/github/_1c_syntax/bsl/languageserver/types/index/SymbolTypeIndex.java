@@ -128,11 +128,132 @@ public class SymbolTypeIndex {
     if (descriptions == null || descriptions.isEmpty()) {
       return TypeSet.EMPTY;
     }
-    Set<TypeRef> refs = new LinkedHashSet<>();
+    TypeSet acc = TypeSet.EMPTY;
+    TypeRef pendingCollection = null;
     for (var td : descriptions) {
-      resolveOne(td.name()).ifPresent(refs::add);
+      var name = td.name();
+      if (name == null) {
+        continue;
+      }
+      // Парсер bsl-parser разбивает `Массив из Число, Строка` на два
+      // TypeDescription'а: «Массив из Число» и «Строка». Если простая запись
+      // следует за коллекцией с element-types — трактуем её как продолжение
+      // element-types этой коллекции.
+      if (pendingCollection != null && !looksLikeCollectionHead(name) && !name.contains(".")) {
+        var elementRef = resolveOne(name).orElse(null);
+        if (elementRef != null) {
+          acc = acc.withElement(pendingCollection, TypeSet.of(elementRef));
+          continue;
+        }
+      }
+      var single = resolveTypeDescription(name);
+      acc = acc.union(single);
+      pendingCollection = single.refs().stream()
+        .filter(ref -> !single.getElementTypes(ref).isEmpty())
+        .findFirst()
+        .orElse(null);
     }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+    return acc;
+  }
+
+  private static final java.util.Set<String> COLLECTION_HEADS = java.util.Set.of(
+    "массив", "array",
+    "фиксированныймассив", "fixedarray",
+    "соответствие", "map",
+    "фиксированноесоответствие", "fixedmap",
+    "таблицазначений", "valuetable",
+    "деревозначений", "valuetree",
+    "списокзначений", "valuelist",
+    "структура", "structure",
+    "фиксированнаяструктура", "fixedstructure"
+  );
+
+  /**
+   * @return {@code true} если запись начинается с известного имени коллекции.
+   */
+  private static boolean looksLikeCollectionHead(String name) {
+    var trimmed = name.trim();
+    var headEnd = findHeadEnd(trimmed);
+    var head = trimmed.substring(0, headEnd).toLowerCase(java.util.Locale.ROOT);
+    return COLLECTION_HEADS.contains(head);
+  }
+
+  /**
+   * Разобрать запись типа из JsDoc вида
+   * {@code "Head"} / {@code "Head из Tail"} / {@code "Head<Tail>"} /
+   * {@code "Head[Tail]"} и вернуть {@link TypeSet} с заголовочным
+   * {@link TypeRef} и (если есть) типами элементов через
+   * {@link TypeSet#withElement(TypeRef, TypeSet)}.
+   */
+  private TypeSet resolveTypeDescription(String name) {
+    if (name == null || name.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    var trimmed = name.trim();
+    var headEnd = findHeadEnd(trimmed);
+    var head = trimmed.substring(0, headEnd);
+    var headRef = resolveOne(head).orElse(null);
+    if (headRef == null) {
+      return TypeSet.EMPTY;
+    }
+    var tail = extractTail(trimmed, headEnd);
+    if (tail.isEmpty()) {
+      return TypeSet.of(headRef);
+    }
+    TypeSet elementTypes = TypeSet.EMPTY;
+    for (var part : tail.split(",")) {
+      var partTrim = part.trim();
+      if (partTrim.isEmpty()) {
+        continue;
+      }
+      elementTypes = elementTypes.union(resolveTypeDescription(partTrim));
+    }
+    if (elementTypes.isEmpty()) {
+      return TypeSet.of(headRef);
+    }
+    return TypeSet.of(headRef).withElement(headRef, elementTypes);
+  }
+
+  /**
+   * Найти границу головного идентификатора: первый whitespace, '<' или '['.
+   */
+  private static int findHeadEnd(String s) {
+    for (int i = 0; i < s.length(); i++) {
+      var c = s.charAt(i);
+      if (Character.isWhitespace(c) || c == '<' || c == '[') {
+        return i;
+      }
+    }
+    return s.length();
+  }
+
+  /**
+   * Достать «хвост» — список типов элементов, ободрав ключевое слово {@code из}
+   * (или {@code of}) и закрывающие угловые/квадратные скобки.
+   */
+  private static String extractTail(String full, int headEnd) {
+    if (headEnd >= full.length()) {
+      return "";
+    }
+    var rest = full.substring(headEnd).trim();
+    if (rest.isEmpty()) {
+      return "";
+    }
+    if (rest.startsWith("<") && rest.endsWith(">")) {
+      return rest.substring(1, rest.length() - 1).trim();
+    }
+    if (rest.startsWith("[") && rest.endsWith("]")) {
+      return rest.substring(1, rest.length() - 1).trim();
+    }
+    // Russian "из" / English "of" префикс — отбрасываем.
+    var lowered = rest.toLowerCase(java.util.Locale.ROOT);
+    if (lowered.startsWith("из ")) {
+      return rest.substring(3).trim();
+    }
+    if (lowered.startsWith("of ")) {
+      return rest.substring(3).trim();
+    }
+    return "";
   }
 
   private Optional<TypeRef> resolveOne(String name) {
