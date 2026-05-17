@@ -164,8 +164,15 @@ public final class FormatProvider {
     int antlrLine = targetLineLsp + 1;
 
     List<Token> tokens = documentContext.getTokens().stream()
-      .filter((Token token) -> token.getLine() == antlrLine
-        && token.getCharPositionInLine() < cutoffCharacter)
+      .filter((Token token) -> {
+        if (token.getLine() != antlrLine) {
+          return false;
+        }
+        // Конец токена должен укладываться в диапазон до позиции курсора, иначе токены,
+        // выходящие за курсор (например многострочные литералы), дублируют свой хвост в replace.
+        long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
+        return endColumn <= cutoffCharacter;
+      })
       .collect(Collectors.toList());
 
     boolean hasContent = tokens.stream()

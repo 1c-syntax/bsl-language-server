@@ -388,6 +388,26 @@ class FormatProviderTest {
   }
 
   @Test
+  void testOnTypeFormattingSemicolonExcludesTokensExtendingPastCursor() {
+    // given: пользователь набрал `;` внутри строкового литерала: было `"abc"`, стало `"a;bc"`.
+    // STRING-токен начинается на col 0, длина 6 — выходит за курсор (col 3).
+    // Такой токен не должен попадать в правку, иначе хвост литерала задублируется.
+    String fileContent = "\"a;bc\"";
+    var params = onTypeParams(";", 0, 3);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then: единственный токен строки выходит за курсор и отфильтрован, форматировать нечего
+    assertThat(textEdits).isEmpty();
+  }
+
+  @Test
   void testOnTypeFormattingUnknownTriggerReturnsNoEdits() {
     // given
     String fileContent = "х=1\n";
