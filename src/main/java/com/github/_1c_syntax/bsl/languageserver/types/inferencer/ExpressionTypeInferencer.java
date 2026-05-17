@@ -40,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
@@ -467,9 +468,38 @@ public class ExpressionTypeInferencer {
     InferenceContext ctx,
     Collection<TypeRef> sink
   ) {
-    ExpressionAtPosition.findAssignmentRhs(owner, position)
+    var assignment = ExpressionAtPosition.findAssignment(owner, position);
+    assignment.map(BSLParser.AssignmentContext::expression)
       .map(com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor::buildExpressionTree)
       .ifPresent(expr -> sink.addAll(inferInternal(expr, ctx).refs()));
+    assignment.ifPresent(ctxAssign -> addInlineCommentTypes(owner, ctxAssign, sink));
+  }
+
+  /**
+   * Подхватить типы из висячего комментария в строке присваивания:
+   * {@code X = F(); // Тип -}. Соответствует «inline-typing локальной
+   * переменной» из стандарта 1С:EDT.
+   */
+  private void addInlineCommentTypes(
+    DocumentContext owner,
+    BSLParser.AssignmentContext assignment,
+    Collection<TypeRef> sink
+  ) {
+    var stop = assignment.getStop();
+    if (stop == null) {
+      return;
+    }
+    var tokens = owner.getTokens();
+    if (tokens == null) {
+      return;
+    }
+    Trees.getTrailingComment(tokens, stop).ifPresent(commentToken -> {
+      var names = InlineTypeCommentParser.parseTypeNames(commentToken.getText());
+      for (var name : names) {
+        typeRegistry.resolve(name, owner.getFileType())
+          .ifPresent(sink::add);
+      }
+    });
   }
 
   // ---------------------------------------------------------------------------

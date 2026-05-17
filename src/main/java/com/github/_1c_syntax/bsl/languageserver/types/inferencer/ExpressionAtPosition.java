@@ -112,6 +112,17 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
+    return findAssignment(documentContext, position).map(BSLParser.AssignmentContext::expression);
+  }
+
+  /**
+   * Найти AssignmentContext, накрывающий позицию (для извлечения trailing-комментария
+   * со строки присваивания).
+   */
+  public static Optional<BSLParser.AssignmentContext> findAssignment(
+    DocumentContext documentContext,
+    Position position
+  ) {
     var ast = safeGetAst(documentContext);
     if (ast == null) {
       return Optional.empty();
@@ -120,8 +131,7 @@ public class ExpressionAtPosition {
       .map(terminal -> terminal.getParent() instanceof org.antlr.v4.runtime.ParserRuleContext prc ? prc : null)
       .map(rule -> Trees.getRootParent(rule, BSLParser.RULE_assignment))
       .filter(BSLParser.AssignmentContext.class::isInstance)
-      .map(BSLParser.AssignmentContext.class::cast)
-      .map(BSLParser.AssignmentContext::expression);
+      .map(BSLParser.AssignmentContext.class::cast);
   }
 
   private static BSLParser.FileContext safeGetAst(DocumentContext documentContext) {
