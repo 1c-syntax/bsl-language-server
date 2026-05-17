@@ -146,14 +146,37 @@ public class SymbolTypeIndex {
           continue;
         }
       }
-      var single = resolveTypeDescription(name);
+      var single = applyFields(resolveTypeDescription(name), td);
       acc = acc.union(single);
-      pendingCollection = single.refs().stream()
-        .filter(ref -> !single.getElementTypes(ref).isEmpty())
+      final var snapshot = single;
+      pendingCollection = snapshot.refs().stream()
+        .filter(ref -> !snapshot.getElementTypes(ref).isEmpty())
         .findFirst()
         .orElse(null);
     }
     return acc;
+  }
+
+  /**
+   * Если у описания типа есть {@link TypeDescription#fields() поля}
+   * (декларация структуры/ТЗ ключами через {@code * Поле - Тип}),
+   * навесить их на головной {@link TypeRef} через
+   * {@link TypeSet#withField(TypeRef, String, TypeSet)}.
+   */
+  private TypeSet applyFields(TypeSet base, TypeDescription td) {
+    var fields = td.fields();
+    if (fields == null || fields.isEmpty() || base.refs().isEmpty()) {
+      return base;
+    }
+    var headRef = base.refs().iterator().next();
+    var result = base;
+    for (var field : fields) {
+      var fieldTypes = resolveTypes(field.types());
+      if (!fieldTypes.isEmpty()) {
+        result = result.withField(headRef, field.name(), fieldTypes);
+      }
+    }
+    return result;
   }
 
   private static final java.util.Set<String> COLLECTION_HEADS = java.util.Set.of(

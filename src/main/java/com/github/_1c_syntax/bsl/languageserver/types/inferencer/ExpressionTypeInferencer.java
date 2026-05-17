@@ -336,6 +336,22 @@ public class ExpressionTypeInferencer {
     if (memberName == null || memberName.isBlank()) {
       return TypeSet.EMPTY;
     }
+    // Сначала смотрим декларированные поля «открытого» объекта данных
+    // (Структура / ТаблицаЗначений с описанными ключами).
+    TypeSet fromLocalFields = TypeSet.EMPTY;
+    if (expectedKind == com.github._1c_syntax.bsl.languageserver.types.model.MemberKind.PROPERTY) {
+      for (var leftType : leftTypes.refs()) {
+        var fields = leftTypes.getLocalFields(leftType);
+        for (var entry : fields.entrySet()) {
+          if (entry.getKey().equalsIgnoreCase(memberName)) {
+            fromLocalFields = fromLocalFields.union(entry.getValue());
+          }
+        }
+      }
+      if (!fromLocalFields.isEmpty()) {
+        return fromLocalFields;
+      }
+    }
     Set<TypeRef> result = new LinkedHashSet<>();
     for (var leftType : leftTypes.refs()) {
       for (var member : typeRegistry.getMembers(leftType, ctx.documentContext.getFileType())) {
@@ -421,18 +437,18 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
-    Set<TypeRef> result = new LinkedHashSet<>();
+    TypeSet acc = TypeSet.EMPTY;
     Set<Position> visitedPositions = new HashSet<>();
 
     if (variable.getKind() == VariableKind.PARAMETER) {
-      result.addAll(declaredParameterTypes(variable).refs());
+      acc = acc.union(declaredParameterTypes(variable));
     }
 
-    result.addAll(typesFromVariableTrailingComment(variable).refs());
+    acc = acc.union(typesFromVariableTrailingComment(variable));
 
     var declarationStart = variable.getSelectionRange().getStart();
     if (visitedPositions.add(declarationStart)) {
-      inferFromDefinitionPosition(owner, declarationStart, ctx, result);
+      acc = acc.union(inferFromDefinitionPosition(owner, declarationStart, ctx));
     }
     for (var occurrence : referenceIndex.getReferencesTo(variable)) {
       if (occurrence.occurrenceType() != OccurrenceType.DEFINITION) {
@@ -440,10 +456,10 @@ public class ExpressionTypeInferencer {
       }
       var start = occurrence.selectionRange().getStart();
       if (visitedPositions.add(start)) {
-        inferFromDefinitionPosition(owner, start, ctx, result);
+        acc = acc.union(inferFromDefinitionPosition(owner, start, ctx));
       }
     }
-    return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
+    return acc;
   }
 
   /**
@@ -490,17 +506,20 @@ public class ExpressionTypeInferencer {
     return TypeSet.EMPTY;
   }
 
-  private void inferFromDefinitionPosition(
+  private TypeSet inferFromDefinitionPosition(
     DocumentContext owner,
     Position position,
-    InferenceContext ctx,
-    Collection<TypeRef> sink
+    InferenceContext ctx
   ) {
     var assignment = ExpressionAtPosition.findAssignment(owner, position);
-    assignment.map(BSLParser.AssignmentContext::expression)
+    TypeSet result = assignment.map(BSLParser.AssignmentContext::expression)
       .map(com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor::buildExpressionTree)
-      .ifPresent(expr -> sink.addAll(inferInternal(expr, ctx).refs()));
-    assignment.ifPresent(ctxAssign -> addInlineCommentTypes(owner, ctxAssign, sink));
+      .map(expr -> inferInternal(expr, ctx))
+      .orElse(TypeSet.EMPTY);
+    if (assignment.isPresent()) {
+      result = result.union(inlineCommentTypes(owner, assignment.get()));
+    }
+    return result;
   }
 
   /**
@@ -508,26 +527,25 @@ public class ExpressionTypeInferencer {
    * {@code X = F(); // Тип -}. Соответствует «inline-typing локальной
    * переменной» из стандарта 1С:EDT.
    */
-  private void addInlineCommentTypes(
+  private TypeSet inlineCommentTypes(
     DocumentContext owner,
-    BSLParser.AssignmentContext assignment,
-    Collection<TypeRef> sink
+    BSLParser.AssignmentContext assignment
   ) {
     var stop = assignment.getStop();
     if (stop == null) {
-      return;
+      return TypeSet.EMPTY;
     }
     var tokens = owner.getTokens();
     if (tokens == null) {
-      return;
+      return TypeSet.EMPTY;
     }
-    Trees.getTrailingComment(tokens, stop).ifPresent(commentToken -> {
-      var names = InlineTypeCommentParser.parseTypeNames(commentToken.getText());
-      for (var name : names) {
-        typeRegistry.resolve(name, owner.getFileType())
-          .ifPresent(sink::add);
+    return Trees.getTrailingComment(tokens, stop).map(commentToken -> {
+      Set<TypeRef> refs = new LinkedHashSet<>();
+      for (var name : InlineTypeCommentParser.parseTypeNames(commentToken.getText())) {
+        typeRegistry.resolve(name, owner.getFileType()).ifPresent(refs::add);
       }
-    });
+      return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+    }).orElse(TypeSet.EMPTY);
   }
 
   // ---------------------------------------------------------------------------
