@@ -41,6 +41,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -179,7 +180,7 @@ public class SymbolTypeIndex {
     return result;
   }
 
-  private static final java.util.Set<String> COLLECTION_HEADS = java.util.Set.of(
+  private static final Set<String> COLLECTION_HEADS = Set.of(
     "массив", "array",
     "фиксированныймассив", "fixedarray",
     "соответствие", "map",
@@ -197,7 +198,7 @@ public class SymbolTypeIndex {
   private static boolean looksLikeCollectionHead(String name) {
     var trimmed = name.trim();
     var headEnd = findHeadEnd(trimmed);
-    var head = trimmed.substring(0, headEnd).toLowerCase(java.util.Locale.ROOT);
+    var head = trimmed.substring(0, headEnd).toLowerCase(Locale.ROOT);
     return COLLECTION_HEADS.contains(head);
   }
 
@@ -269,7 +270,7 @@ public class SymbolTypeIndex {
       return rest.substring(1, rest.length() - 1).trim();
     }
     // Russian "из" / English "of" префикс — отбрасываем.
-    var lowered = rest.toLowerCase(java.util.Locale.ROOT);
+    var lowered = rest.toLowerCase(Locale.ROOT);
     if (lowered.startsWith("из ")) {
       return rest.substring(3).trim();
     }

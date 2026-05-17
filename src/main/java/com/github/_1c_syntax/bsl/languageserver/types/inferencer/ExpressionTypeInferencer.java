@@ -34,11 +34,13 @@ import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -46,6 +48,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpressi
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
@@ -209,7 +212,7 @@ public class ExpressionTypeInferencer {
     // здесь пропускаются: имя класса само по себе не является инстансом
     // класса, и `Структура.` не должен показывать методы класса.
     var fromScope = globalScopeProvider.findGlobalEntry(text, ctx.documentContext.getFileType())
-      .filter(entry -> entry.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
+      .filter(entry -> entry.role() != GlobalSymbolScope.Role.TYPE_NAME)
       .map(entry -> {
         var symbol = entry.symbol();
         if (symbol instanceof SyntheticSymbol s) {
@@ -323,15 +326,15 @@ public class ExpressionTypeInferencer {
     }
     var right = node.getRight();
     String memberName;
-    com.github._1c_syntax.bsl.languageserver.types.model.MemberKind expectedKind;
+    MemberKind expectedKind;
     if (right instanceof MethodCallNode methodCall) {
       var nameNode = methodCall.getName();
       memberName = nameNode == null ? null : nameNode.getText();
-      expectedKind = com.github._1c_syntax.bsl.languageserver.types.model.MemberKind.METHOD;
+      expectedKind = MemberKind.METHOD;
     } else {
       var rightAst = right == null ? null : right.getRepresentingAst();
       memberName = memberNameOf(rightAst);
-      expectedKind = com.github._1c_syntax.bsl.languageserver.types.model.MemberKind.PROPERTY;
+      expectedKind = MemberKind.PROPERTY;
     }
     if (memberName == null || memberName.isBlank()) {
       return TypeSet.EMPTY;
@@ -339,7 +342,7 @@ public class ExpressionTypeInferencer {
     // Сначала смотрим декларированные поля «открытого» объекта данных
     // (Структура / ТаблицаЗначений с описанными ключами).
     TypeSet fromLocalFields = TypeSet.EMPTY;
-    if (expectedKind == com.github._1c_syntax.bsl.languageserver.types.model.MemberKind.PROPERTY) {
+    if (expectedKind == MemberKind.PROPERTY) {
       for (var leftType : leftTypes.refs()) {
         var fields = leftTypes.getLocalFields(leftType);
         for (var entry : fields.entrySet()) {
@@ -513,7 +516,7 @@ public class ExpressionTypeInferencer {
   ) {
     var assignment = ExpressionAtPosition.findAssignment(owner, position);
     TypeSet result = assignment.map(BSLParser.AssignmentContext::expression)
-      .map(com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor::buildExpressionTree)
+      .map(ExpressionTreeBuildingVisitor::buildExpressionTree)
       .map(expr -> inferInternal(expr, ctx))
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
