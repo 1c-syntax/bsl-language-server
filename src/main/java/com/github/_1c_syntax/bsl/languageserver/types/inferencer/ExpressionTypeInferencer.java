@@ -23,8 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
@@ -412,11 +414,18 @@ public class ExpressionTypeInferencer {
    * из {@code ReferenceIndex}. Декларация нужна, т.к. {@code ReferenceIndexFiller}
    * фильтрует first-assignment (initialization) — она содержится в самом
    * {@link VariableSymbol#getSelectionRange()}.
+   * <p>
+   * Для параметра метода — добавляются типы, объявленные в JsDoc
+   * (секция {@code // Параметры:}).
    */
   private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
     var owner = variable.getOwner();
     Set<TypeRef> result = new LinkedHashSet<>();
     Set<Position> visitedPositions = new HashSet<>();
+
+    if (variable.getKind() == VariableKind.PARAMETER) {
+      result.addAll(declaredParameterTypes(variable).refs());
+    }
 
     var declarationStart = variable.getSelectionRange().getStart();
     if (visitedPositions.add(declarationStart)) {
@@ -432,6 +441,24 @@ public class ExpressionTypeInferencer {
       }
     }
     return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
+  }
+
+  /**
+   * Найти {@link ParameterDefinition} в скоупе-методе по имени переменной и
+   * вернуть его декларированные типы из JsDoc.
+   */
+  private TypeSet declaredParameterTypes(VariableSymbol variable) {
+    var scope = variable.getScope();
+    if (!(scope instanceof MethodSymbol method)) {
+      return TypeSet.EMPTY;
+    }
+    var name = variable.getName();
+    for (ParameterDefinition parameter : method.getParameters()) {
+      if (parameter.getName().equalsIgnoreCase(name)) {
+        return symbolTypeIndex.getDeclaredParameterTypes(parameter);
+      }
+    }
+    return TypeSet.EMPTY;
   }
 
   private void inferFromDefinitionPosition(
