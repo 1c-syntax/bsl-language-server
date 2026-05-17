@@ -21,41 +21,33 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import jakarta.annotation.PostConstruct;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class ModuleSymbolMarkupContentBuilderTest {
+class ModuleSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ModuleSymbolMarkupContentBuilder markupContentBuilder;
 
-  @Autowired
-  private ServerContextProvider serverContextProvider;
-
-  private ServerContext serverContext;
-
-  @PostConstruct
-  void prepareServerContext() {
-    serverContext = TestUtils.preparePopulatedMetadataServerContext(serverContextProvider);
+  @BeforeEach
+  void prepareMetadataServerContext() {
+    initServerContext(TestUtils.PATH_TO_METADATA);
   }
 
   @Test
   void testContentFromCommonModule() {
     // given
-    var documentContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when
@@ -79,7 +71,7 @@ class ModuleSymbolMarkupContentBuilderTest {
   @Test
   void testContentFromManagerModule() {
     // given
-    var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
+    var documentContext = context.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when
@@ -99,7 +91,7 @@ class ModuleSymbolMarkupContentBuilderTest {
   @Test
   void testContentFromObjectModule() {
     // given
-    var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ObjectModule).orElseThrow();
+    var documentContext = context.getDocument("Catalog.Справочник1", ModuleType.ObjectModule).orElseThrow();
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when
@@ -119,7 +111,7 @@ class ModuleSymbolMarkupContentBuilderTest {
   @Test
   void testCommonModuleWithMetadataInfo() {
     // given
-    var documentContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var moduleSymbol = documentContext.getSymbolTree().getModule();
 
     // when

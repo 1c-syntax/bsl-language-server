@@ -21,37 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import jakarta.annotation.PostConstruct;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class VariableSymbolMarkupContentBuilderTest {
+class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private VariableSymbolMarkupContentBuilder markupContentBuilder;
 
-  @Autowired
-  private ServerContextProvider serverContextProvider;
-
-  private ServerContext serverContext;
-
   private static final String PATH_TO_FILE = "./src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl";
 
-  @PostConstruct
-  void prepareServerContext() {
-    serverContext = TestUtils.preparePopulatedMetadataServerContext(serverContextProvider);
+  @BeforeEach
+  void prepareMetadataServerContext() {
+    initServerContext(TestUtils.PATH_TO_METADATA);
   }
 
   @Test
@@ -199,7 +191,7 @@ class VariableSymbolMarkupContentBuilderTest {
   void testContentFromObjectModule() {
 
     // given
-    var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ObjectModule).orElseThrow();
+    var documentContext = context.getDocument("Catalog.Справочник1", ModuleType.ObjectModule).orElseThrow();
     final var symbolTree = documentContext.getSymbolTree();
     var varSymbol = symbolTree.getVariableSymbol("ВалютаУчета", symbolTree.getModule()).orElseThrow();
 

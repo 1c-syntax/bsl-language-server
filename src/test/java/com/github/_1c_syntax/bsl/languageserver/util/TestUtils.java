@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.util;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -42,26 +41,6 @@ public class TestUtils {
   public static final URI FAKE_DOCUMENT_URI = Absolute.path("src/test/resources/empty-workspace/fake-uri.bsl").toUri();
   public static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String TEST_WORKSPACE_NAME = "test-metadata-workspace";
-  private static final String HOVER_METADATA_WORKSPACE_NAME = "hover-test-metadata";
-
-  /**
-   * Регистрирует workspace для {@link #PATH_TO_METADATA}: задаёт {@code configurationRoot},
-   * включает {@link WorkspaceContextHolder} для этого URI и вызывает {@link ServerContext#populateContext()}.
-   * <p>
-   * Использовать там, где тест нуждается в полностью загруженном контексте по тестовой метадате так же,
-   * как при реальном старте (в т.ч. с workspace-scoped {@code LanguageServerConfiguration}).
-   *
-   * @param provider активный провайдер из Spring-тестового контекста
-   */
-  public static ServerContext preparePopulatedMetadataServerContext(ServerContextProvider provider) {
-    var metadataPath = Absolute.path(PATH_TO_METADATA);
-    var workspaceFolder = new WorkspaceFolder(metadataPath.toUri().toString(), HOVER_METADATA_WORKSPACE_NAME);
-    var ctx = provider.addWorkspace(workspaceFolder);
-    ctx.setConfigurationRoot(metadataPath);
-    WorkspaceContextHolder.set(ctx.getWorkspaceUri());
-    ctx.populateContext();
-    return ctx;
-  }
 
   /**
    * Получить ServerContext, зарегистрированный в ServerContextProvider.
