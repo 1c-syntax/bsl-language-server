@@ -1628,6 +1628,7 @@
 <ul>
 <li>File formatting</li>
 <li>Selected region formatting</li>
+<li>On-type formatting (on Enter and <code>;</code>)</li>
 <li>Symbol definition for current file (regions, procedures, functions, variables, defined via <code>Var</code> keyword)</li>
 <li>Folding regions definition <code>#Region</code>, <code>#If</code>, procedures and functions, code blocks, queries</li>
 <li>Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores</li>
@@ -1905,8 +1906,8 @@
 </tr>
 <tr>
 <td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting">onTypeFormatting</a></td>
-<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
-<td></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>firstTriggerCharacter = <code>\n</code><br />moreTriggerCharacter = <code>;</code></td>
 <td></td>
 </tr>
 <tr>
