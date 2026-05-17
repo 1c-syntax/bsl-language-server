@@ -189,7 +189,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   private static TypeKind mapKind(Context context) {
     return switch (context.kind()) {
       case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;
-      case TYPE, ENUM -> TypeKind.PLATFORM;
+      case TYPE, COLLECTION, ENUM -> TypeKind.PLATFORM;
       // GLOBAL_CONTEXT и LANGUAGE_KEYWORD типами не являются — обрабатываются
       // отдельно (GlobalScopeProvider).
       case GLOBAL_CONTEXT, LANGUAGE_KEYWORD -> null;
@@ -313,7 +313,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   private static TypeKind mapRefKind(Context context) {
     return switch (context.kind()) {
       case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;
-      case TYPE, ENUM -> TypeKind.PLATFORM;
+      case TYPE, COLLECTION, ENUM -> TypeKind.PLATFORM;
       case GLOBAL_CONTEXT, LANGUAGE_KEYWORD -> TypeKind.UNKNOWN;
     };
   }
