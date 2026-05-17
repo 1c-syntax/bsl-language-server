@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778687895037,
+  "lastUpdate": 1779016421216,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35309,6 +35309,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8780901069166059",
             "extra": "mean: 68.56336871782939 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "563f6bfcca5b5cfb51e754902143710c0c47a3d1",
+          "message": "Merge pull request #3908 from sfaqer/feat/on-type-formatting\n\nfeat: add textDocument/onTypeFormatting support",
+          "timestamp": "2026-05-17T13:05:02+02:00",
+          "tree_id": "3e81db35b7d4c6f13f571792cbe521b25bcb96f5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/563f6bfcca5b5cfb51e754902143710c0c47a3d1"
+        },
+        "date": 1779016413352,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.98625349998474,
+            "unit": "sec",
+            "range": "stddev: 1.8892569635688825",
+            "extra": "mean: 69.98625349998474 sec\nrounds: 3"
           }
         ]
       }
