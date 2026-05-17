@@ -567,7 +567,10 @@ public class ExpressionTypeInferencer {
 
   /**
    * Найти {@link ParameterDefinition} в скоупе-методе по имени переменной и
-   * вернуть его декларированные типы из JsDoc.
+   * вернуть его декларированные типы из JsDoc. Если у параметра нет
+   * собственного описания, но у метода есть docblock-ссылка
+   * {@code // См. ДругойМетод} — типы наследуются от одноимённого
+   * параметра целевого метода (только в пределах того же модуля).
    */
   private TypeSet declaredParameterTypes(VariableSymbol variable) {
     var scope = variable.getScope();
@@ -576,11 +579,63 @@ public class ExpressionTypeInferencer {
     }
     var name = variable.getName();
     for (ParameterDefinition parameter : method.getParameters()) {
-      if (parameter.getName().equalsIgnoreCase(name)) {
-        return symbolTypeIndex.getDeclaredParameterTypes(parameter);
+      if (!parameter.getName().equalsIgnoreCase(name)) {
+        continue;
+      }
+      var direct = symbolTypeIndex.getDeclaredParameterTypes(parameter);
+      if (!direct.isEmpty()) {
+        return direct;
+      }
+      return inheritedParameterTypes(method, name);
+    }
+    return TypeSet.EMPTY;
+  }
+
+  /**
+   * Найти типы параметра {@code name} в методе-источнике, на который
+   * ссылается текущий метод через {@code // См. Метод} в docblock'е.
+   * Сейчас работает только для ссылок на методы в том же модуле.
+   */
+  private TypeSet inheritedParameterTypes(MethodSymbol method, String paramName) {
+    var description = method.getDescription().orElse(null);
+    if (description == null) {
+      return TypeSet.EMPTY;
+    }
+    var links = description.getLinks();
+    if (links == null || links.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var owner = method.getOwner();
+    for (var link : links) {
+      var target = findLocalMethod(owner, link.link());
+      if (target == null) {
+        continue;
+      }
+      for (var targetParam : target.getParameters()) {
+        if (targetParam.getName().equalsIgnoreCase(paramName)) {
+          var types = symbolTypeIndex.getDeclaredParameterTypes(targetParam);
+          if (!types.isEmpty()) {
+            return types;
+          }
+        }
       }
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * @return метод с именем {@code methodName} из текущего модуля,
+   *         либо {@code null} если такого метода нет (или ссылка
+   *         указывает на cross-module — пока не поддерживается).
+   */
+  private static MethodSymbol findLocalMethod(DocumentContext documentContext, String methodName) {
+    if (methodName == null || methodName.contains(".")) {
+      return null;
+    }
+    return documentContext.getSymbolTree().getMethods().stream()
+      .filter(m -> m.getName().equalsIgnoreCase(methodName))
+      .findFirst()
+      .orElse(null);
   }
 
   private TypeSet inferFromDefinitionPosition(
