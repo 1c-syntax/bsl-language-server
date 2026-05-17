@@ -28,8 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextEdit;
 import org.junit.jupiter.api.Test;
@@ -282,6 +285,133 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
     assertThat(textEdits.getFirst().getNewText()).isEqualTo("Возврат -1 > -2");
 
+  }
+
+  @Test
+  void testOnTypeFormattingEnterNormalizesPreviousLine() {
+    // given: пользователь нажал Enter после `если х=1 тогда`
+    String fileContent = "если х=1 тогда\n\n";
+    var params = onTypeParams("\n", 1, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getRange()).isEqualTo(new Range(new Position(0, 0), new Position(1, 0)));
+    assertThat(edit.getNewText()).isEqualTo("Если х = 1 Тогда\n");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterPreservesIndent() {
+    // given: внутри процедуры пользователь набрал кривую строку и нажал Enter
+    String fileContent = "Процедура П()\n    возврат;\nКонецПроцедуры\n";
+    // Enter был нажат в конце второй строки (LSP-line 1), курсор перешёл на line 2
+    var params = onTypeParams("\n", 2, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getRange()).isEqualTo(new Range(new Position(1, 0), new Position(2, 0)));
+    assertThat(edit.getNewText()).isEqualTo("    Возврат;\n");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterOnEmptyPreviousLineReturnsNoEdits() {
+    // given
+    String fileContent = "\n\n";
+    var params = onTypeParams("\n", 1, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).isEmpty();
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAtFirstLineReturnsNoEdits() {
+    // given: предыдущей строки не существует
+    String fileContent = "Процедура П()\nКонецПроцедуры\n";
+    var params = onTypeParams("\n", 0, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).isEmpty();
+  }
+
+  @Test
+  void testOnTypeFormattingSemicolonFormatsCurrentLineUpToCursor() {
+    // given: пользователь набрал `х=1;` — курсор сразу после `;` (column 4)
+    String fileContent = "х=1;";
+    var params = onTypeParams(";", 0, 4);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getRange()).isEqualTo(new Range(new Position(0, 0), new Position(0, 4)));
+    assertThat(edit.getNewText()).isEqualTo("х = 1;");
+  }
+
+  @Test
+  void testOnTypeFormattingUnknownTriggerReturnsNoEdits() {
+    // given
+    String fileContent = "х=1\n";
+    var params = onTypeParams(".", 0, 3);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).isEmpty();
+  }
+
+  private DocumentOnTypeFormattingParams onTypeParams(String ch, int line, int character) {
+    var params = new DocumentOnTypeFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setOptions(new FormattingOptions(4, true));
+    params.setCh(ch);
+    params.setPosition(new Position(line, character));
+    return params;
   }
 
   private File getTestFile() {
