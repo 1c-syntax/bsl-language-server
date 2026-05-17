@@ -428,6 +428,8 @@ public class ExpressionTypeInferencer {
       result.addAll(declaredParameterTypes(variable).refs());
     }
 
+    result.addAll(typesFromVariableTrailingComment(variable).refs());
+
     var declarationStart = variable.getSelectionRange().getStart();
     if (visitedPositions.add(declarationStart)) {
       inferFromDefinitionPosition(owner, declarationStart, ctx, result);
@@ -442,6 +444,32 @@ public class ExpressionTypeInferencer {
       }
     }
     return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
+  }
+
+  /**
+   * Извлечь типы из висячего комментария декларации переменной:
+   * {@code Перем X; // Тип -}. Источник — {@code VariableDescription.trailingDescription},
+   * который парсер уже привязал к декларации.
+   */
+  private TypeSet typesFromVariableTrailingComment(VariableSymbol variable) {
+    var description = variable.getDescription().orElse(null);
+    if (description == null) {
+      return TypeSet.EMPTY;
+    }
+    var trailing = description.getTrailingDescription().orElse(null);
+    if (trailing == null) {
+      return TypeSet.EMPTY;
+    }
+    var names = InlineTypeCommentParser.parseTypeNames(trailing.getDescription());
+    if (names.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    Set<TypeRef> refs = new LinkedHashSet<>();
+    var fileType = variable.getOwner().getFileType();
+    for (var name : names) {
+      typeRegistry.resolve(name, fileType).ifPresent(refs::add);
+    }
+    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
   /**
