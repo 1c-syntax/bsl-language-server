@@ -146,7 +146,7 @@ public class PathExclusionUtils {
    * с предупреждением в лог.
    */
   private static Optional<IOFileFilter> tryGlobFilter(String glob) {
-    var fullGlob = (glob.startsWith("**/") || glob.startsWith("/")) ? glob : "**/" + glob;
+    var fullGlob = (glob.startsWith("**/") || glob.startsWith("/")) ? glob : ("**/" + glob);
     try {
       var matcher = FileSystems.getDefault().getPathMatcher("glob:" + fullGlob);
       return Optional.of(new PathMatcherFileFilter(forwardSlashAware(matcher)));
