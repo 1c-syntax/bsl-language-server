@@ -610,7 +610,16 @@ public class ExpressionTypeInferencer {
       if (typeDescription.variant() != TypeDescription.Variant.HYPERLINK) {
         continue;
       }
-      var target = findLocalMethod(owner, typeDescription.name());
+      var link = typeDescription.name();
+      // Cross-module / cross-type: разворачиваем через TypeRegistry.getMembers.
+      var fromRegistry = symbolTypeIndex.resolveHyperlink(link, owner.getFileType());
+      if (!fromRegistry.isEmpty()) {
+        acc = acc.union(fromRegistry);
+        continue;
+      }
+      // Fallback: метод в этом же модуле, который ещё не зарегистрирован как
+      // тип (standalone .bsl-файл без модульного контекста).
+      var target = findLocalMethod(owner, link);
       if (target != null) {
         acc = acc.union(symbolTypeIndex.getDeclaredReturnTypes(target));
       }

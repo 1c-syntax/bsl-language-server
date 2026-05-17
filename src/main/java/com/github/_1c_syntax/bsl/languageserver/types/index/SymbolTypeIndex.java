@@ -21,11 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -40,6 +43,7 @@ import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -93,6 +97,100 @@ public class SymbolTypeIndex {
     return parameter.getDescription()
       .map(descr -> resolveTypes(descr.types()))
       .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Развернуть hyperlink-ссылку {@code Модуль.Метод} / {@code Модуль.Метод.Параметр}
+   * через {@link TypeRegistry} и {@link TypeRegistry#getMembers}.
+   * <p>
+   * Алгоритм: от самого длинного префикса к короткому пробуем
+   * {@code TypeRegistry.resolve(prefix)}; остальные сегменты — имена членов
+   * (или параметра в случае последнего сегмента). Возвращает {@link TypeSet}
+   * c одним элементом или {@link TypeSet#EMPTY}, если ссылка не разворачивается.
+   */
+  public TypeSet resolveHyperlink(String link, FileType fileType) {
+    if (link == null || link.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    var parts = link.split("\\.");
+    if (parts.length == 0) {
+      return TypeSet.EMPTY;
+    }
+    for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
+      var head = String.join(".", Arrays.copyOfRange(parts, 0, prefixLen));
+      var headRef = typeRegistry.resolve(head, fileType).orElse(null);
+      if (headRef == null) {
+        continue;
+      }
+      var resolved = walkMembers(headRef, parts, prefixLen, fileType);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+    return TypeSet.EMPTY;
+  }
+
+  /**
+   * Пройти по оставшимся сегментам ссылки, начиная с {@code parts[startIndex]},
+   * через members типа. Последний сегмент может оказаться именем параметра
+   * метода (записи вида {@code Модуль.Метод.Параметр}) — тогда возвращаются
+   * его типы.
+   *
+   * @return TypeSet, если все сегменты успешно разрешены; {@code null} при
+   *         неудаче (вызывающий может попробовать более короткий префикс).
+   */
+  private TypeSet walkMembers(TypeRef headRef, String[] parts, int startIndex, FileType fileType) {
+    TypeRef current = headRef;
+    MemberDescriptor lastMethod = null;
+    for (int i = startIndex; i < parts.length; i++) {
+      var name = parts[i];
+      var member = findMember(current, name, fileType);
+      if (member == null) {
+        // Если предыдущий сегмент был method и текущее имя — параметр этого
+        // метода (запись вида Модуль.Метод.Параметр), вернём типы параметра.
+        if (lastMethod != null && i == parts.length - 1) {
+          var paramTypes = parameterFromMember(lastMethod, name);
+          if (paramTypes != null && !paramTypes.isEmpty()) {
+            return paramTypes;
+          }
+        }
+        return null;
+      }
+      var next = member.returnType();
+      if (next == null || next.kind() == TypeKind.UNKNOWN) {
+        return null;
+      }
+      current = next;
+      lastMethod = member.kind() == MemberKind.METHOD ? member : null;
+    }
+    return TypeSet.of(current);
+  }
+
+  private MemberDescriptor findMember(TypeRef typeRef, String name, FileType fileType) {
+    for (var member : typeRegistry.getMembers(typeRef, fileType)) {
+      if (member.name().equalsIgnoreCase(name)) {
+        return member;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Достать типы параметра по имени из сигнатур member-метода.
+   * Возвращает {@code null}, если такого параметра нет.
+   */
+  private static TypeSet parameterFromMember(MemberDescriptor member, String parameterName) {
+    if (parameterName == null) {
+      return null;
+    }
+    for (var signature : member.signatures()) {
+      for (var parameter : signature.parameters()) {
+        if (parameter.name().equalsIgnoreCase(parameterName)) {
+          return parameter.types();
+        }
+      }
+    }
+    return null;
   }
 
   /**
