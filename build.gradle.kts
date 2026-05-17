@@ -94,7 +94,7 @@ dependencies {
     api("io.github.1c-syntax:supportconf:0.16.0")
     // Парсер синтакс-помощника платформы (.hbk). Подключён по SHA коммита
     // master до выпуска первого релизного тэга — после замены на тэг.
-    api("io.github.1c-syntax:bsl-context:76cbe38")
+    api("io.github.1c-syntax:bsl-context:b8d0ce5")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.0")
