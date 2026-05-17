@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779016421216,
+  "lastUpdate": 1779046720871,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35340,6 +35340,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8892569635688825",
             "extra": "mean: 69.98625349998474 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8e99f18a442944654765ecfabe2b3d8c9f2b0462",
+          "message": "Merge pull request #3805 from johnnyshut/feature/path-exclussion\n\nfeat: Добавлена ​​функция исключения путей в BSL Language Server",
+          "timestamp": "2026-05-17T21:24:54+02:00",
+          "tree_id": "6688d791aa5e76763af7ec309b16224664975950",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8e99f18a442944654765ecfabe2b3d8c9f2b0462"
+        },
+        "date": 1779046713244,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 70.29048037528992,
+            "unit": "sec",
+            "range": "stddev: 1.12250487512381",
+            "extra": "mean: 70.29048037528992 sec\nrounds: 3"
           }
         ]
       }
