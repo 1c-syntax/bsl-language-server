@@ -51,20 +51,24 @@ class AnalyzeCommandTest {
   /** Анализ с конфигом, содержащим excludePaths, отрабатывает успешно (исключённые файлы пропускаются). */
   @Test
   void callWithExcludePathsConfigFiltersFiles() {
+    // given
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
     ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
 
+    // when
     var exitCode = analyzeCommand.call();
 
+    // then
     assertThat(exitCode).isZero();
   }
 
   /** Несуществующий workspaceDir — команда возвращает код 1 (ошибка). */
   @Test
   void callReturnsOneWhenWorkspaceDirDoesNotExist() {
+    // given
     var nonexistentWorkspace = tempDir.resolve("nonexistent_workspace").toAbsolutePath().toString();
 
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
@@ -73,14 +77,17 @@ class AnalyzeCommandTest {
     ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
 
+    // when
     var exitCode = analyzeCommand.call();
 
+    // then
     assertThat(exitCode).isOne();
   }
 
   /** Несуществующий srcDir — команда возвращает код 1 (ошибка). */
   @Test
   void callReturnsOneWhenSrcDirDoesNotExist() {
+    // given
     var nonexistentSrc = tempDir.resolve("nonexistent_src").toAbsolutePath().toString();
 
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", nonexistentSrc);
@@ -89,22 +96,27 @@ class AnalyzeCommandTest {
     ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
 
+    // when
     var exitCode = analyzeCommand.call();
 
+    // then
     assertThat(exitCode).isOne();
   }
 
   /** Без флага {@code silent} анализ выводит прогресс-бар и завершается успешно. */
   @Test
   void callWithoutSilentRunsWithProgressBar() {
+    // given
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
     ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "silentMode", false);
 
+    // when
     var exitCode = analyzeCommand.call();
 
+    // then
     assertThat(exitCode).isZero();
   }
 

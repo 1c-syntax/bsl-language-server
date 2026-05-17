@@ -62,88 +62,107 @@ class FormatCommandTest {
   /** Форматирование с настроенным {@code excludePaths} проходит успешно. */
   @Test
   void callWithExcludePathsRunsSuccessfully() throws Exception {
+    // given
     serverContext.setConfigurationRoot(tempDir);
     configuration.setExcludePaths(List.of("Catalogs"));
-
     FileUtils.copyDirectory(METADATA_FIXTURE, tempDir.toFile());
 
+    // when
     var exitCode = new CommandLine(formatCommand).execute(
       "-s", tempDir.toAbsolutePath().toString(),
       "-q"
     );
 
+    // then
     assertThat(exitCode).isZero();
   }
 
   /** Если в указанном каталоге нет BSL/OS файлов — команда возвращает код 1. */
   @Test
   void callReturnsOneWhenNoFilesFound() throws Exception {
+    // given
     serverContext.setConfigurationRoot(tempDir);
     var noBslDir = tempDir.resolve("noBsl").toFile();
     FileUtils.copyDirectory(new File(METADATA_FIXTURE, "Languages"), noBslDir);
 
+    // when
     var exitCode = new CommandLine(formatCommand).execute(
       "-s", noBslDir.getAbsolutePath(),
       "-q"
     );
 
+    // then
     assertThat(exitCode).isOne();
   }
 
   /** Несуществующий путь логируется и пропускается; при отсутствии файлов возвращается код 1. */
   @Test
   void callSkipsNonExistentPathAndReturnsOneWhenNoFiles() {
+    // given
     serverContext.setConfigurationRoot(tempDir);
+
+    // when
     var exitCode = new CommandLine(formatCommand).execute(
       "-s", tempDir.resolve("nonexistent").toAbsolutePath().toString(),
       "-q"
     );
 
+    // then
     assertThat(exitCode).isOne();
   }
 
   /** Можно передать путь к одному файлу — он будет отформатирован. */
   @Test
   void callFormatsSingleFile() throws Exception {
+    // given
     serverContext.setConfigurationRoot(tempDir);
     var fixtureFile = new File(METADATA_FIXTURE, "CommonModules/ОбщегоНазначения/Ext/Module.bsl");
     var singleFile = tempDir.resolve("Single.bsl").toFile();
     FileUtils.copyFile(fixtureFile, singleFile);
 
+    // when
     var exitCode = new CommandLine(formatCommand).execute(
       "-s", singleFile.getAbsolutePath(),
       "-q"
     );
 
+    // then
     assertThat(exitCode).isZero();
   }
 
   /** Опция {@code -s} принимает несколько путей через запятую, файлы собираются из всех. */
   @Test
   void callWithCommaSeparatedPathsFormatsFromBoth() throws Exception {
+    // given
     serverContext.setConfigurationRoot(tempDir);
     FileUtils.copyDirectory(METADATA_FIXTURE, tempDir.toFile());
 
     var commonModules = tempDir.resolve("CommonModules").toFile();
     var documents = tempDir.resolve("Documents").toFile();
+
+    // when
     var exitCode = new CommandLine(formatCommand).execute(
       "-s", commonModules.getAbsolutePath() + "," + documents.getAbsolutePath(),
       "-q"
     );
 
+    // then
     assertThat(exitCode).isZero();
   }
 
   /** Без флага {@code -q} форматирование выводит прогресс-бар и завершается успешно. */
   @Test
   void callWithoutSilentShowsProgressBar() throws Exception {
+    // given
     serverContext.setConfigurationRoot(tempDir);
     FileUtils.copyDirectory(METADATA_FIXTURE, tempDir.toFile());
 
+    // when
     var exitCode = new CommandLine(formatCommand).execute(
       "-s", tempDir.toAbsolutePath().toString()
     );
 
+    // then
     assertThat(exitCode).isZero();
   }
 }

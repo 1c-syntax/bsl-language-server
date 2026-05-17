@@ -22,17 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.nio.file.Path;
 import java.util.Arrays;
 
-import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -43,12 +43,13 @@ class ModuleSymbolMarkupContentBuilderTest {
   private ModuleSymbolMarkupContentBuilder markupContentBuilder;
 
   @Autowired
+  private ServerContextProvider serverContextProvider;
+
   private ServerContext serverContext;
 
   @PostConstruct
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Path.of(PATH_TO_METADATA));
-    serverContext.populateContext();
+    serverContext = TestUtils.preparePopulatedMetadataServerContext(serverContextProvider);
   }
 
   @Test

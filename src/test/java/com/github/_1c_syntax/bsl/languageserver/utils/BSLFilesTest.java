@@ -39,12 +39,15 @@ class BSLFilesTest {
   /** Без excludePaths возвращаются все .bsl/.os файлы внутри корня. */
   @Test
   void listBslFilesReturnsAllBslFilesWhenNoExclusions(@TempDir Path projectRoot) throws IOException {
+    // given
     Path moduleFile = createBslFile(projectRoot, SRC_MODULE_BSL);
     Path scriptFile = createBslFile(projectRoot, "src/Script.os");
     Path nestedFile = createBslFile(projectRoot, "src/sub/Nested.bsl");
 
+    // when
     var found = BSLFiles.listBslFiles(projectRoot, null);
 
+    // then
     assertThat(found).containsExactlyInAnyOrder(
       moduleFile.toFile(),
       scriptFile.toFile(),
@@ -55,34 +58,43 @@ class BSLFilesTest {
   /** Каталоги с именами из excludePaths (".git", "node_modules") не разворачиваются при обходе. */
   @Test
   void listBslFilesSkipsExcludedDirectoriesBySimpleName(@TempDir Path projectRoot) throws IOException {
+    // given
     Path keep = createBslFile(projectRoot, SRC_MODULE_BSL);
     createBslFile(projectRoot, ".git/HEAD.bsl");
     createBslFile(projectRoot, "node_modules/pkg/index.bsl");
 
+    // when
     var found = BSLFiles.listBslFiles(projectRoot, List.of(".git", "node_modules"));
 
+    // then
     assertThat(found).containsExactly(keep.toFile());
   }
 
   /** Glob "**\/.git/**" обрезает обход в самой .git-директории на любом уровне вложенности. */
   @Test
   void listBslFilesSkipsExcludedDirectoriesByDoubleStarSuffix(@TempDir Path projectRoot) throws IOException {
+    // given
     Path keep = createBslFile(projectRoot, SRC_MODULE_BSL);
     createBslFile(projectRoot, "repo/.git/refs/HEAD.bsl");
 
+    // when
     var found = BSLFiles.listBslFiles(projectRoot, List.of("**/.git/**"));
 
+    // then
     assertThat(found).containsExactly(keep.toFile());
   }
 
   /** Файлы с расширениями вне списка BSL/OS не попадают в результат (даже без excludePaths). */
   @Test
   void listBslFilesIgnoresFilesNotInBslExtensions(@TempDir Path projectRoot) throws IOException {
+    // given
     Path bsl = createBslFile(projectRoot, SRC_MODULE_BSL);
     Files.writeString(bsl.resolveSibling("notes.txt"), "ignored");
 
+    // when
     var found = BSLFiles.listBslFiles(projectRoot, null);
 
+    // then
     assertThat(found).containsExactly(bsl.toFile());
   }
 
