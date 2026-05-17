@@ -53,6 +53,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallN
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -586,9 +587,35 @@ public class ExpressionTypeInferencer {
       if (!direct.isEmpty()) {
         return direct;
       }
+      var fromHyperlink = parameterHyperlinkTypes(parameter, method.getOwner());
+      if (!fromHyperlink.isEmpty()) {
+        return fromHyperlink;
+      }
       return inheritedParameterTypes(method, name);
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Разрешить hyperlink-ссылки {@code См. Метод} в описании параметра в тип
+   * возвращаемого значения целевого метода (только в пределах текущего модуля).
+   */
+  private TypeSet parameterHyperlinkTypes(ParameterDefinition parameter, DocumentContext owner) {
+    var description = parameter.getDescription().orElse(null);
+    if (description == null) {
+      return TypeSet.EMPTY;
+    }
+    TypeSet acc = TypeSet.EMPTY;
+    for (var typeDescription : description.types()) {
+      if (typeDescription.variant() != TypeDescription.Variant.HYPERLINK) {
+        continue;
+      }
+      var target = findLocalMethod(owner, typeDescription.name());
+      if (target != null) {
+        acc = acc.union(symbolTypeIndex.getDeclaredReturnTypes(target));
+      }
+    }
+    return acc;
   }
 
   /**

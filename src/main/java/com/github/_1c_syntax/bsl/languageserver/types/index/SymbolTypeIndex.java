@@ -136,6 +136,11 @@ public class SymbolTypeIndex {
       if (name == null) {
         continue;
       }
+      // Hyperlink (`См. Метод` / `См. Справочник.X`) сам по себе тип не образует —
+      // его резолвят consumer'ы, имеющие контекст документа.
+      if (td.variant() == TypeDescription.Variant.HYPERLINK) {
+        continue;
+      }
       // Парсер bsl-parser разбивает `Массив из Число, Строка` на два
       // TypeDescription'а: «Массив из Число» и «Строка». Если простая запись
       // следует за коллекцией с element-types — трактуем её как продолжение
