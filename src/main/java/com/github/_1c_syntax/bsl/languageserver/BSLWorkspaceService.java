@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.PathExclusionUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -174,11 +176,15 @@ public class BSLWorkspaceService implements WorkspaceService {
    * выполняет его парсинг и анализ, после чего сразу очищает вторичные данные
    * для экономии памяти. Для открытых файлов обработка пропускается,
    * т.к. их содержимое управляется через события textDocument/didOpen.
+   * Пути, попадающие под {@code excludePaths} из конфигурации, пропускаются.
    *
    * @param uri URI созданного файла
    */
   private void handleCreatedFileEvent(URI uri) {
     var context = getContextForDocument(uri);
+    if (isExcludedPath(context, uri)) {
+      return;
+    }
     var documentContext = context.addDocument(uri);
 
     var isDocumentOpened = context.isDocumentOpened(documentContext);
@@ -196,7 +202,8 @@ public class BSLWorkspaceService implements WorkspaceService {
    * после чего очищает вторичные данные. Для открытых файлов обработка пропускается,
    * т.к. их актуальное содержимое управляется через события textDocument/didChange.
    * <p>
-   * Если файл отсутствует в контексте, добавляет его и обрабатывает аналогично созданному.
+   * Если файл отсутствует в контексте, добавляет его и обрабатывает аналогично созданному;
+   * при этом пути из {@code excludePaths} пропускаются.
    *
    * @param uri URI измененного файла
    */
@@ -204,6 +211,9 @@ public class BSLWorkspaceService implements WorkspaceService {
     var context = getContextForDocument(uri);
     var documentContext = context.getDocument(uri);
     if (documentContext == null) {
+      if (isExcludedPath(context, uri)) {
+        return;
+      }
       documentContext = context.addDocument(uri);
     }
 
@@ -223,5 +233,24 @@ public class BSLWorkspaceService implements WorkspaceService {
   private ServerContext getContextForDocument(URI uri) {
     return serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalStateException("No workspace found for document: " + uri));
+  }
+
+  /** Проверяет, входит ли путь по uri в excludePaths конфигурации workspace {@code context}. */
+  private boolean isExcludedPath(ServerContext context, URI uri) {
+    var cfg = context.getLanguageServerConfiguration();
+    if (cfg == null) {
+      return false;
+    }
+    var patterns = cfg.getExcludePaths();
+    if (patterns == null || patterns.isEmpty()) {
+      return false;
+    }
+    try {
+      var path = Absolute.path(Paths.get(uri));
+      return PathExclusionUtils.isExcluded(path, patterns);
+    } catch (IllegalArgumentException e) {
+      LOGGER.debug("Не удалось вычислить путь для проверки исключений, путь не считается исключённым: {}", uri, e);
+      return false;
+    }
   }
 }
