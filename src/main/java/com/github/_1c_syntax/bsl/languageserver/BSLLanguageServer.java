@@ -43,6 +43,7 @@ import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentHighlightOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
+import org.eclipse.lsp4j.DocumentOnTypeFormattingOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
 import org.eclipse.lsp4j.DocumentSymbolOptions;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
@@ -125,6 +126,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
     capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
     capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
+    capabilities.setDocumentOnTypeFormattingProvider(getDocumentOnTypeFormattingProvider());
     capabilities.setFoldingRangeProvider(getFoldingRangeProvider());
     capabilities.setDocumentSymbolProvider(getDocumentSymbolProvider());
     capabilities.setCodeActionProvider(getCodeActionProvider());
@@ -308,6 +310,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var documentRangeFormattingOptions = new DocumentRangeFormattingOptions();
     documentRangeFormattingOptions.setWorkDoneProgress(Boolean.FALSE);
     return documentRangeFormattingOptions;
+  }
+
+  private static DocumentOnTypeFormattingOptions getDocumentOnTypeFormattingProvider() {
+    var options = new DocumentOnTypeFormattingOptions();
+    options.setFirstTriggerCharacter("\n");
+    options.setMoreTriggerCharacter(List.of(";"));
+    return options;
   }
 
   private static CodeLensOptions getCodeLensProvider() {
