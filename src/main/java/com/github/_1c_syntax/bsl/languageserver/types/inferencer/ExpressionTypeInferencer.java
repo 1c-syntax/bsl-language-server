@@ -245,9 +245,83 @@ public class ExpressionTypeInferencer {
     if (typeName == null || typeName.isBlank()) {
       return TypeSet.EMPTY;
     }
-    return typeRegistry.resolve(typeName, ctx.documentContext.getFileType())
+    var base = typeRegistry.resolve(typeName, ctx.documentContext.getFileType())
       .map(TypeSet::of)
       .orElseGet(() -> TypeSet.of(typeRegistry.intern(TypeKind.USER, typeName)));
+    if (isStructureLike(typeName)) {
+      base = applyStructureConstructorKeys(base, constructor, ctx);
+    }
+    return base;
+  }
+
+  /**
+   * Для записи {@code Новый Структура("К1, К2", v1, v2)}: распарсить первый
+   * строковый аргумент в имена ключей и подвесить к каждому ключу TypeSet
+   * соответствующего value-аргумента через {@link TypeSet#withField(TypeRef, String, TypeSet)}.
+   */
+  private TypeSet applyStructureConstructorKeys(
+    TypeSet base,
+    ConstructorCallNode constructor,
+    InferenceContext ctx
+  ) {
+    var args = constructor.arguments();
+    if (args.isEmpty() || base.refs().isEmpty()) {
+      return base;
+    }
+    var keyLiteral = extractStringLiteral(args.get(0));
+    if (keyLiteral == null) {
+      return base;
+    }
+    var keys = keyLiteral.split(",");
+    var headRef = base.refs().iterator().next();
+    var result = base;
+    for (int i = 0; i < keys.length; i++) {
+      var keyName = keys[i].trim();
+      if (keyName.isEmpty()) {
+        continue;
+      }
+      int valueArgIndex = i + 1;
+      TypeSet valueTypes;
+      if (valueArgIndex < args.size()) {
+        valueTypes = inferInternal(args.get(valueArgIndex), ctx);
+      } else {
+        valueTypes = TypeSet.of(UNDEFINED);
+      }
+      if (!valueTypes.isEmpty()) {
+        result = result.withField(headRef, keyName, valueTypes);
+      }
+    }
+    return result;
+  }
+
+  private static String extractStringLiteral(BslExpression node) {
+    if (node == null) {
+      return null;
+    }
+    var ast = node.getRepresentingAst();
+    if (ast == null) {
+      return null;
+    }
+    var text = ast.getText();
+    if (text == null) {
+      return null;
+    }
+    var trimmed = text.trim();
+    if (trimmed.length() >= 2
+      && (trimmed.charAt(0) == '"' || trimmed.charAt(0) == '\'')
+      && trimmed.charAt(0) == trimmed.charAt(trimmed.length() - 1)) {
+      return trimmed.substring(1, trimmed.length() - 1);
+    }
+    return null;
+  }
+
+  private static boolean isStructureLike(String typeName) {
+    if (typeName == null) {
+      return false;
+    }
+    var lower = typeName.toLowerCase(Locale.ROOT);
+    return lower.equals("структура") || lower.equals("structure")
+      || lower.equals("фиксированнаяструктура") || lower.equals("fixedstructure");
   }
 
   private static String extractTypeName(ConstructorCallNode constructor) {
