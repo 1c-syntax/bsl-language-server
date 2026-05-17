@@ -140,7 +140,7 @@ public final class FormatProvider {
     DocumentContext documentContext
   ) {
     String ch = params.getCh();
-    Position position = params.getPosition();
+    var position = params.getPosition();
 
     int targetLineLsp;
     Range editRange;
@@ -173,7 +173,7 @@ public final class FormatProvider {
         long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
         return endColumn <= cutoffCharacter;
       })
-      .collect(Collectors.toList());
+      .toList();
 
     boolean hasContent = tokens.stream()
       .anyMatch(token -> token.getChannel() == Token.DEFAULT_CHANNEL
