@@ -25,7 +25,7 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
  * Дескриптор формального параметра метода.
  *
  * @param name        имя параметра
- * @param types       допустимые типы параметра ({@link TypeSet#empty()} если не указаны)
+ * @param types       допустимые типы параметра ({@link TypeSet#EMPTY} если не указаны)
  * @param optional    является ли параметр опциональным (имеет значение по умолчанию)
  * @param description краткое описание параметра (может быть пустым)
  */
