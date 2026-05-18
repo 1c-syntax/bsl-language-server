@@ -348,6 +348,8 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
     TextEdit edit = textEdits.getFirst();
     assertThat(edit.getRange().getEnd().getLine()).isEqualTo(0);
+    // граница диапазона — конец исходной строки "А = 1;" (6 UTF-16 единиц)
+    assertThat(edit.getRange().getEnd().getCharacter()).isEqualTo(6);
     assertThat(edit.getNewText()).doesNotEndWith("\n");
     assertThat(edit.getNewText()).doesNotEndWith("\r");
   }
