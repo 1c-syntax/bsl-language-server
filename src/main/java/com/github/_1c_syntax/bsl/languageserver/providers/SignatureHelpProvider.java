@@ -405,9 +405,9 @@ public final class SignatureHelpProvider {
           return Optional.of(member);
         }
       }
-      var platformCtors = typeService.getConstructors(ref);
+      var platformCtors = typeService.getConstructors(ref, fileType);
       if (!platformCtors.isEmpty()) {
-        return Optional.of(MemberDescriptor.method(typeName, typeService.getDescription(ref), platformCtors));
+        return Optional.of(MemberDescriptor.method(typeName, typeService.getDescription(ref, fileType), platformCtors));
       }
     }
     // Library-классы регистрируются как user-types через OScriptModuleMembersProvider —

@@ -46,6 +46,12 @@ public final class ConstructorCallSymbol implements Symbol {
   private final TypeRef typeRef;
   private final int argCount;
   private final List<SignatureDescriptor> constructors;
+  /**
+   * Описание класса, заранее отфильтрованное по {@link com.github._1c_syntax.bsl.languageserver.context.FileType}
+   * на момент построения символа. Делается так потому, что один и тот же {@link TypeRef}
+   * может иметь разные описания в BSL и OS, а сам символ не несёт {@code DocumentContext}.
+   */
+  private final String classDescription;
 
   @Override
   public String getName() {

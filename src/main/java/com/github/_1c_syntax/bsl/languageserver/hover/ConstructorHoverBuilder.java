@@ -48,14 +48,15 @@ public class ConstructorHoverBuilder {
     TypeRef ref,
     SignatureDescriptor chosen,
     List<SignatureDescriptor> ctors,
-    boolean disclaim
+    boolean disclaim,
+    String classDescription
   ) {
     var sb = new StringBuilder();
     sb.append("```bsl\nНовый ").append(typeName).append('(');
     sb.append(chosen.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")));
     sb.append(')').append("\n```\n");
     sb.append("\n_конструктор типа_ `").append(ref.qualifiedName()).append('`');
-    var classDesc = typeService.getDescription(ref);
+    var classDesc = classDescription != null ? classDescription : typeService.getDescription(ref);
     if (!classDesc.isBlank()) {
       sb.append("\n\n").append(classDesc);
     }

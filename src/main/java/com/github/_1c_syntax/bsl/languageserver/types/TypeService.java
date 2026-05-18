@@ -164,11 +164,28 @@ public class TypeService {
   }
 
   /**
+   * То же, но фильтрует описания по скоупу языка (BSL/OS). Используется,
+   * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
+   */
+  public String getDescription(TypeRef typeRef, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+    return typeRegistry.getDescription(typeRef, fileType);
+  }
+
+  /**
    * Сигнатуры конструкторов типа (для платформенных классов из JSON-пакета).
    * Пустой список, если конструкторов нет.
    */
   public java.util.List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(TypeRef typeRef) {
     return typeRegistry.getConstructors(typeRef);
+  }
+
+  /**
+   * То же, но фильтрует конструкторы по скоупу языка (BSL/OS).
+   */
+  public java.util.List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(
+    TypeRef typeRef, com.github._1c_syntax.bsl.languageserver.context.FileType fileType
+  ) {
+    return typeRegistry.getConstructors(typeRef, fileType);
   }
 
   /**

@@ -90,7 +90,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
       return Optional.empty();
     }
     var ref = refOpt.get();
-    var ctors = typeService.getConstructors(ref);
+    var ctors = typeService.getConstructors(ref, fileType);
     if (ctors.isEmpty()) {
       return Optional.empty();
     }
@@ -98,7 +98,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     var range = tokenRange(typeNameCtx);
     return Optional.of(new Reference(
       document.getSymbolTree().getModule(),
-      new ConstructorCallSymbol(typeName, ref, argCount, ctors),
+      new ConstructorCallSymbol(typeName, ref, argCount, ctors, typeService.getDescription(ref, fileType)),
       uri,
       range,
       OccurrenceType.REFERENCE

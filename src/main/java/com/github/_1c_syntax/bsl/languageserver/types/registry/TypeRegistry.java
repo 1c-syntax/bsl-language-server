@@ -86,17 +86,34 @@ public class TypeRegistry {
   private final Map<TypeRef, List<ScopedMemberSource>> memberSources = new ConcurrentHashMap<>();
   /** Тип ↔ языковой скоуп (BSL/OS/BOTH). Отсутствие записи трактуется как BOTH. */
   private final Map<TypeRef, LanguageScope> typeScopes = new ConcurrentHashMap<>();
-  /** Тип ↔ описание (из JSON-пакета или динамической регистрации). Пусто если описания нет. */
-  private final Map<TypeRef, String> descriptions = new ConcurrentHashMap<>();
-  /** Тип ↔ список конструкторов (для платформенных классов из JSON-пакета). */
-  private final Map<TypeRef, List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> constructors
-    = new ConcurrentHashMap<>();
+  /** Тип ↔ список описаний с их скоупом. В одном типе разные описания для BSL/OS допускаются. */
+  private final Map<TypeRef, List<ScopedDescription>> descriptions = new ConcurrentHashMap<>();
+  /** Тип ↔ список наборов конструкторов с их скоупом. */
+  private final Map<TypeRef, List<ScopedConstructors>> constructors = new ConcurrentHashMap<>();
   /** Тип ↔ динамические источники конструкторов (например, OScript-класс из SymbolTree). */
-  private final Map<TypeRef, List<java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>>>> constructorSources
+  private final Map<TypeRef, List<ScopedConstructorSource>> constructorSources
     = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
+  }
+
+  /** Описание типа вместе с его языковым скоупом. */
+  private record ScopedDescription(String text, LanguageScope scope) {
+  }
+
+  /** Набор конструкторов вместе с его языковым скоупом. */
+  private record ScopedConstructors(
+    List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> list,
+    LanguageScope scope
+  ) {
+  }
+
+  /** Динамический источник конструкторов вместе с его языковым скоупом. */
+  private record ScopedConstructorSource(
+    java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> supplier,
+    LanguageScope scope
+  ) {
   }
 
   @PostConstruct
@@ -288,7 +305,7 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerGlobalProperty(ref, names, scope, descriptions.getOrDefault(ref, ""));
+    globalScopeProvider.registerGlobalProperty(ref, names, scope, getDescription(ref, fileTypeOf(scope)));
   }
 
   /**
@@ -296,10 +313,41 @@ public class TypeRegistry {
    * Возвращает пустую строку, если описание отсутствует.
    */
   public String getDescription(TypeRef ref) {
+    return getDescription(ref, null);
+  }
+
+  /**
+   * Описание типа с фильтрацией по {@link FileType}. Возвращает первое описание,
+   * чей скоуп совместим с переданным {@code fileType} ({@code null} ⇒ без фильтра,
+   * возвращается первое зарегистрированное). Если ни одно описание не подходит — "".
+   */
+  public String getDescription(TypeRef ref, FileType fileType) {
     if (ref == null) {
       return "";
     }
-    return descriptions.getOrDefault(ref, "");
+    var list = descriptions.get(ref);
+    if (list == null || list.isEmpty()) {
+      return "";
+    }
+    for (var sd : list) {
+      if (fileType == null || sd.scope() == null || sd.scope().matches(fileType)) {
+        return sd.text();
+      }
+    }
+    return "";
+  }
+
+  /**
+   * Зарегистрировать описание типа со скоупом. Допускается несколько описаний
+   * на один TypeRef с разными скоупами (BSL/OS) — фильтрация при чтении.
+   */
+  public void registerDescription(TypeRef ref, String text, LanguageScope scope) {
+    if (ref == null || text == null || text.isBlank()) {
+      return;
+    }
+    var effective = scope == null ? LanguageScope.BOTH : scope;
+    descriptions.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
+      .add(new ScopedDescription(text, effective));
   }
 
   /**
@@ -308,22 +356,59 @@ public class TypeRegistry {
    * без блока {@code constructors} в JSON или для system enums).
    */
   public List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(TypeRef ref) {
+    return getConstructors(ref, null);
+  }
+
+  /**
+   * То же, что {@link #getConstructors(TypeRef)}, но фильтрует по {@link FileType}.
+   * Конкатенирует все наборы (pack + динамические источники), чьи скоупы совместимы.
+   */
+  public List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(
+    TypeRef ref, FileType fileType
+  ) {
     if (ref == null) {
       return List.of();
     }
-    var fromPack = constructors.getOrDefault(ref, List.<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>of());
-    var sources = constructorSources.get(ref);
-    if (sources == null || sources.isEmpty()) {
-      return fromPack;
+    var result = new ArrayList<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>();
+    var fromPack = constructors.get(ref);
+    if (fromPack != null) {
+      for (var scoped : fromPack) {
+        if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
+          continue;
+        }
+        result.addAll(scoped.list());
+      }
     }
-    var result = new ArrayList<>(fromPack);
-    for (var supplier : sources) {
-      var sigs = supplier.get();
-      if (sigs != null) {
-        result.addAll(sigs);
+    var sources = constructorSources.get(ref);
+    if (sources != null) {
+      for (var scoped : sources) {
+        if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
+          continue;
+        }
+        var sigs = scoped.supplier().get();
+        if (sigs != null) {
+          result.addAll(sigs);
+        }
       }
     }
     return result;
+  }
+
+  /**
+   * Зарегистрировать конструкторы типа со скоупом. Поддерживается несколько
+   * вызовов на один TypeRef с разными скоупами (BSL/OS).
+   */
+  public void registerConstructors(
+    TypeRef ref,
+    List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> ctors,
+    LanguageScope scope
+  ) {
+    if (ref == null || ctors == null || ctors.isEmpty()) {
+      return;
+    }
+    var effective = scope == null ? LanguageScope.BOTH : scope;
+    constructors.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
+      .add(new ScopedConstructors(List.copyOf(ctors), effective));
   }
 
   /**
@@ -336,10 +421,24 @@ public class TypeRegistry {
     TypeRef ref,
     java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> source
   ) {
+    registerConstructorSource(ref, source, LanguageScope.BOTH);
+  }
+
+  /**
+   * То же, что {@link #registerConstructorSource(TypeRef, java.util.function.Supplier)},
+   * но привязывает источник к языковому скоупу. {@code null} ⇒ {@link LanguageScope#BOTH}.
+   */
+  public void registerConstructorSource(
+    TypeRef ref,
+    java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> source,
+    LanguageScope scope
+  ) {
     if (ref == null || source == null) {
       return;
     }
-    constructorSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>())).add(source);
+    var effective = scope == null ? LanguageScope.BOTH : scope;
+    constructorSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
+      .add(new ScopedConstructorSource(source, effective));
   }
 
   /**
@@ -361,7 +460,14 @@ public class TypeRegistry {
       }
     });
     globalScopeProvider.registerPlatformClass(ref, names, scope,
-      descriptions.getOrDefault(ref, ""));
+      getDescription(ref, fileTypeOf(scope)));
+  }
+
+  private static FileType fileTypeOf(LanguageScope scope) {
+    if (scope == null || scope == LanguageScope.BOTH) {
+      return null;
+    }
+    return scope == LanguageScope.BSL ? FileType.BSL : FileType.OS;
   }
 
   /**
@@ -388,10 +494,10 @@ public class TypeRegistry {
       addAlias(alias, ref);
     }
     if (decl.description() != null && !decl.description().isBlank()) {
-      descriptions.put(ref, decl.description());
+      registerDescription(ref, decl.description(), scope);
     }
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
-      constructors.put(ref, List.copyOf(decl.constructors()));
+      registerConstructors(ref, decl.constructors(), scope);
       registerAsPlatformClass(ref, scope);
     }
     if (!decl.members().isEmpty()) {

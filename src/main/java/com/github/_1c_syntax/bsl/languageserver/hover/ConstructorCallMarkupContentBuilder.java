@@ -53,7 +53,7 @@ public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder
     } else {
       chosen = ctors.get(chosenIndex);
     }
-    return constructorHoverBuilder.build(symbol.getTypeName(), symbol.getTypeRef(), chosen, ctors, disclaim);
+    return constructorHoverBuilder.build(symbol.getTypeName(), symbol.getTypeRef(), chosen, ctors, disclaim, symbol.getClassDescription());
   }
 
   @Override

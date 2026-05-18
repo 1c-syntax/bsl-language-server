@@ -319,7 +319,7 @@ public final class CompletionProvider {
           var item = new CompletionItem(className);
           item.setKind(CompletionItemKind.Class);
           typeService.resolve(className, fileType).ifPresent(ref -> {
-            var ctors = typeService.getConstructors(ref);
+            var ctors = typeService.getConstructors(ref, fileType);
             if (!ctors.isEmpty()) {
               var first = ctors.get(0);
               var paramList = first.parameters().stream()
@@ -327,7 +327,7 @@ public final class CompletionProvider {
                 .collect(java.util.stream.Collectors.joining(", "));
               item.setDetail("(" + paramList + ")");
             }
-            var desc = typeService.getDescription(ref);
+            var desc = typeService.getDescription(ref, fileType);
             if (!desc.isEmpty()) {
               item.setDocumentation(desc);
             }

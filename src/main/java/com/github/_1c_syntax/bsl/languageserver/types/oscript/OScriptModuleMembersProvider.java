@@ -130,13 +130,13 @@ public class OScriptModuleMembersProvider {
       typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), LanguageScope.OS);
       if (libraryEntry != null) {
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
-          typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref));
+          typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
           globalScopeProvider.registerLibraryModule(qualifiedName, ref);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
-        typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref));
+        typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
       }
       LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName,
         libraryEntry != null ? libraryEntry.kind() : documentContext.getModuleType());
