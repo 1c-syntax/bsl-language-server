@@ -36,6 +36,7 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
 
 * File formatting
 * Selected region formatting
+* On-type formatting (on Enter and `;`)
 * Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
 * Folding regions definition `#Region`, `#If`, procedures and functions, code blocks, queries
 * Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
@@ -107,7 +108,7 @@ Perfomance measurement - [SSL 3.1](../bench/index.html)
     | [colorPresentation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
     | [formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
     | [rangeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-    | [onTypeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
+    | [onTypeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | firstTriggerCharacter = `\n`<br />moreTriggerCharacter = `;` |                  |
     | [rename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
     | [prepareRename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename) | <img src="./assets/images/checkmark.svg" alt="yes" width="20">    |                                                              |                  |
     | [foldingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |

@@ -29,7 +29,9 @@ import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,9 +45,13 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
   @Test
   void testConfigurationMetadata() {
+    // given
     initServerContext(PATH_TO_METADATA);
+
+    // when
     var configurationMetadata = context.getConfiguration();
 
+    // then
     assertThat(configurationMetadata).isNotNull();
 
     assertThat(configurationMetadata.getScriptVariant()).isEqualTo(ScriptVariant.RUSSIAN);
@@ -62,10 +68,13 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
   @Test
   void testMdoRefs() {
+    // given
     initServerContext(PATH_TO_METADATA);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
 
     var documentContext = addDocumentContext(context, PATH_TO_MODULE_FILE);
+
+    // then
     assertThat(context.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
       .isPresent()
       .get()
@@ -75,28 +84,37 @@ class ServerContextTest extends AbstractServerContextAwareTest {
       .containsKey(documentContext.getModuleType())
       .containsValue(documentContext);
 
+    // given — документы справочника; повтор добавления того же файла для проверки на дубль
     addDocumentContext(context, PATH_TO_CATALOG_MODULE_FILE);
     addDocumentContext(context, PATH_TO_CATALOG_FILE);
 
     // для проверки на дубль
     addDocumentContext(context, PATH_TO_CATALOG_FILE);
 
+    // then
     assertThat(context.getDocuments("Catalog.Справочник1"))
       .hasSize(2)
       .containsKeys(ModuleType.ManagerModule, ModuleType.ObjectModule);
 
+    // when
     context.removeDocument(Absolute.uri(new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE)));
+
+    // then
     assertThat(context.getDocument(mdoRefCommonModule, ModuleType.CommonModule))
       .isNotPresent();
   }
 
   @Test
   void testErrorConfigurationMetadata() {
+    // given
     Path path = Absolute.path(PATH_TO_METADATA + "test");
 
     initServerContext(path);
+
+    // when
     var configurationMetadata = context.getConfiguration();
 
+    // then
     assertThat(configurationMetadata).isNotNull();
     assertThat(configurationMetadata.getModulesByType()).isEmpty();
   }
@@ -112,6 +130,27 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(context.getDocuments()).hasSizeGreaterThan(0);
+  }
+
+  /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */
+  @Test
+  void testPopulateContextExcludesPathsFromConfig() {
+    // given
+    Path path = Absolute.path(PATH_TO_METADATA);
+    initServerContext(path, false);
+    context.getLanguageServerConfiguration().setExcludePaths(List.of("CommonModules"));
+
+    // when
+    context.populateContext();
+
+    // then
+    var documents = context.getDocuments();
+    assertThat(documents).isNotEmpty();
+    var commonModuleUris = documents.keySet().stream()
+      .map(URI::getPath)
+      .filter(p -> p.contains("CommonModules"))
+      .toList();
+    assertThat(commonModuleUris).isEmpty();
   }
 
   private DocumentContext addDocumentContext(ServerContext serverContext, String path) {

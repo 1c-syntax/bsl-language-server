@@ -32,6 +32,7 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
@@ -40,6 +41,7 @@ import org.eclipse.lsp4j.TextEdit;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,6 +59,7 @@ import java.util.stream.Collectors;
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting">Document Formatting Request specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">Document Range Formatting Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting">Document On Type Formatting Request specification</a>
  */
 @Component
 @RequiredArgsConstructor
@@ -116,6 +119,85 @@ public final class FormatProvider {
       locale,
       Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
     );
+  }
+
+  /**
+   * Возвращает правки форматирования при наборе указанного символа.
+   * <p>
+   * Поддерживаются триггеры:
+   * <ul>
+   *   <li>{@code "\n"} (Enter) — переформатирование предыдущей строки;</li>
+   *   <li>{@code ";"} — переформатирование завершённого оператора текущей строки до позиции курсора.</li>
+   * </ul>
+   * Диапазон правки никогда не пересекает позицию ввода, чтобы не «дёргать» курсор пользователя.
+   *
+   * @param params          параметры запроса onTypeFormatting
+   * @param documentContext контекст текущего документа
+   * @return список правок (одна-единственная замена соответствующего диапазона) или пустой список,
+   * если форматировать нечего
+   */
+  public List<TextEdit> getOnTypeFormatting(
+    DocumentOnTypeFormattingParams params,
+    DocumentContext documentContext
+  ) {
+    String ch = params.getCh();
+    var position = params.getPosition();
+
+    int targetLineLsp;
+    Range editRange;
+    int cutoffCharacter;
+
+    if ("\n".equals(ch)) {
+      if (position.getLine() == 0) {
+        return Collections.emptyList();
+      }
+      targetLineLsp = position.getLine() - 1;
+      editRange = Ranges.create(targetLineLsp, 0, position.getLine(), 0);
+      cutoffCharacter = Integer.MAX_VALUE;
+    } else if (";".equals(ch)) {
+      targetLineLsp = position.getLine();
+      editRange = Ranges.create(targetLineLsp, 0, position.getLine(), position.getCharacter());
+      cutoffCharacter = position.getCharacter();
+    } else {
+      return Collections.emptyList();
+    }
+
+    int antlrLine = targetLineLsp + 1;
+
+    // На горячем пути (каждый Enter/`;`) обходить весь поток токенов дорого.
+    // Токены отсортированы по line — находим начало нужной строки бинарным поиском
+    // и обходим только её хвост до первого токена со следующей линии.
+    List<Token> allTokens = documentContext.getTokens();
+    List<Token> tokens = new ArrayList<>();
+    for (int i = firstTokenIndexOnLine(allTokens, antlrLine); i < allTokens.size(); i++) {
+      Token token = allTokens.get(i);
+      if (token.getLine() != antlrLine) {
+        break;
+      }
+      // Конец токена должен укладываться в диапазон до позиции курсора, иначе токены,
+      // выходящие за курсор (например многострочные литералы), дублируют свой хвост в replace.
+      long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
+      if (endColumn <= cutoffCharacter) {
+        tokens.add(token);
+      }
+    }
+
+    return getTextEdits(
+      tokens, documentContext.getScriptVariantLocale(), editRange, 0, params.getOptions());
+  }
+
+  private static int firstTokenIndexOnLine(List<Token> tokens, int line) {
+    int lo = 0;
+    int hi = tokens.size();
+    while (lo < hi) {
+      int mid = (lo + hi) >>> 1;
+      if (tokens.get(mid).getLine() < line) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
+    }
+    return lo;
   }
 
   public List<TextEdit> getRangeFormatting(
