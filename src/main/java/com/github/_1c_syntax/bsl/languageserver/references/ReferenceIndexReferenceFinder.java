@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -33,6 +34,7 @@ import java.util.Optional;
  * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
  */
 @Component
+@Order(160)
 @RequiredArgsConstructor
 public class ReferenceIndexReferenceFinder implements ReferenceFinder {
 
