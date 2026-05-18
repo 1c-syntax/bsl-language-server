@@ -230,34 +230,28 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
 
   static MemberDescriptor toMemberDescriptor(ContextProperty property) {
     var returnType = singleType(property.types());
-    return new MemberDescriptor(
+    return MemberDescriptor.property(
       property.name().getName(),
-      MemberKind.PROPERTY,
-      property.description(),
       returnType,
-      List.of()
+      property.description()
     );
   }
 
   static MemberDescriptor toMemberDescriptor(ContextMethod method) {
     var returnType = singleType(method.returnValues());
     var signatures = toSignatures(method.signatures(), returnType);
-    return new MemberDescriptor(
+    return MemberDescriptor.method(
       method.name().getName(),
-      MemberKind.METHOD,
       method.description(),
-      returnType,
       signatures
     );
   }
 
   private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef enumRef) {
-    return new MemberDescriptor(
+    return MemberDescriptor.property(
       value.name().getName(),
-      MemberKind.PROPERTY,
-      value.description(),
       enumRef,
-      List.of()
+      value.description()
     );
   }
 

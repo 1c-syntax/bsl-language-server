@@ -969,7 +969,7 @@ public class GlobalScopeProvider {
       var signatures = readSignatures(
         (List<Map<String, Object>>) entry.get("signatures"), returnType
       );
-      var descriptor = new MemberDescriptor(name, MemberKind.METHOD, description, returnType, signatures);
+      var descriptor = MemberDescriptor.method(name, description, signatures);
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
       var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
       for (var alias : aliases) {

@@ -25,8 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -99,8 +102,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
         var exposedAsGlobal = Boolean.TRUE.equals(entry.get("exposedAsGlobal"));
         var description = (String) entry.getOrDefault("description", "");
-        var classRef = new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
-          TypeKind.valueOf(kindStr), qualifiedName);
+        var classRef = new TypeRef(TypeKind.valueOf(kindStr), qualifiedName);
         var rawCtors = (List<Map<String, Object>>) entry.get("constructors");
         var constructors = readSignatures(rawCtors, classRef);
         result.add(new TypeDecl(TypeKind.valueOf(kindStr), qualifiedName, aliases, members,
@@ -125,55 +127,43 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var description = (String) m.getOrDefault("description", "");
       var returnTypeName = (String) m.get("returnType");
       var returnType = returnTypeName == null
-        ? com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN
-        : new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
-            com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM, returnTypeName);
+        ? TypeRef.UNKNOWN
+        : new TypeRef(TypeKind.PLATFORM, returnTypeName);
 
       var rawSignatures = (List<Map<String, Object>>) m.get("signatures");
       var signatures = readSignatures(rawSignatures, returnType);
-      members.add(new MemberDescriptor(
-        name,
-        com.github._1c_syntax.bsl.languageserver.types.model.MemberKind.valueOf(kindStr),
-        description,
-        returnType,
-        signatures
-      ));
+      var kind = MemberKind.valueOf(kindStr);
+      members.add(kind == MemberKind.METHOD
+        ? MemberDescriptor.method(name, description, signatures)
+        : MemberDescriptor.property(name, returnType, description));
     }
     return members;
   }
 
   @SuppressWarnings("unchecked")
-  private static List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> readSignatures(
+  private static List<SignatureDescriptor> readSignatures(
     List<Map<String, Object>> raw,
-    com.github._1c_syntax.bsl.languageserver.types.model.TypeRef fallbackReturnType
+    TypeRef fallbackReturnType
   ) {
     if (raw == null || raw.isEmpty()) {
       return Collections.emptyList();
     }
-    var result = new ArrayList<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>(raw.size());
+    var result = new ArrayList<SignatureDescriptor>(raw.size());
     for (var sig : raw) {
       var description = (String) sig.getOrDefault("description", "");
       var returnTypeName = (String) sig.get("returnType");
       var returnType = returnTypeName == null
         ? fallbackReturnType
-        : new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
-            com.github._1c_syntax.bsl.languageserver.types.model.TypeKind.PLATFORM, returnTypeName);
+        : new TypeRef(TypeKind.PLATFORM, returnTypeName);
       var rawParams = (List<Map<String, Object>>) sig.getOrDefault("parameters", Collections.emptyList());
-      var params = new ArrayList<com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor>(rawParams.size());
+      var params = new ArrayList<ParameterDescriptor>(rawParams.size());
       for (var p : rawParams) {
         var pname = (String) p.get("name");
         var optional = Boolean.TRUE.equals(p.get("optional"));
         var pdesc = (String) p.getOrDefault("description", "");
-        params.add(new com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor(
-          pname,
-          com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY,
-          optional,
-          pdesc
-        ));
+        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc));
       }
-      result.add(new com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor(
-        params, returnType, description
-      ));
+      result.add(new SignatureDescriptor(params, returnType, description));
     }
     return result;
   }
