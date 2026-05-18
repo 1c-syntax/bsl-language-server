@@ -88,7 +88,7 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:feature-trailing-dot-recovery-793185a")
+    api("io.github.1c-syntax:bsl-parser:feature-trailing-dot-recovery-5513b4f")
     api("io.github.1c-syntax:utils:0.7.0")
     api("io.github.1c-syntax:mdclasses:0.18.0")
     api("io.github.1c-syntax:bsl-common-library:0.10.0")
