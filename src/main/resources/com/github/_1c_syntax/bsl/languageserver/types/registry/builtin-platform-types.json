@@ -167,5 +167,148 @@
       {"name": "ВСписке", "kind": "PROPERTY", "returnType": "ВидСравнения"},
       {"name": "НеВСписке", "kind": "PROPERTY", "returnType": "ВидСравнения"}
     ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СхемаКомпоновкиДанных",
+    "aliases": ["DataCompositionSchema"],
+    "members": [
+      {"name": "ВариантыНастроек",             "kind": "PROPERTY", "returnType": "ВариантыНастроекКомпоновкиДанных"},
+      {"name": "ВложенныеСхемыКомпоновкиДанных","kind": "PROPERTY", "returnType": "ВложенныеСхемыКомпоновкиДанных"},
+      {"name": "ВычисляемыеПоля",              "kind": "PROPERTY", "returnType": "ВычисляемыеПоляСхемыКомпоновкиДанных"},
+      {"name": "ИсточникиДанных",              "kind": "PROPERTY", "returnType": "ИсточникиДанныхСхемыКомпоновкиДанных"},
+      {"name": "Макеты",                       "kind": "PROPERTY", "returnType": "ОписанияМакетовСхемыКомпоновкиДанных"},
+      {"name": "МакетыГруппировок",            "kind": "PROPERTY", "returnType": "МакетыГруппировокСхемыКомпоновкиДанных"},
+      {"name": "МакетыЗаголовковГруппировок",  "kind": "PROPERTY", "returnType": "МакетыГруппировокСхемыКомпоновкиДанных"},
+      {"name": "МакетыПолей",                  "kind": "PROPERTY", "returnType": "МакетыПолейСхемыКомпоновкиДанных"},
+      {"name": "МакетыПолейИтога",             "kind": "PROPERTY", "returnType": "МакетыПолейИтогаСхемыКомпоновкиДанных"},
+      {"name": "НаборыДанных",                 "kind": "PROPERTY", "returnType": "НаборыДанныхСхемыКомпоновкиДанных"},
+      {"name": "НастройкиПоУмолчанию",         "kind": "PROPERTY", "returnType": "НастройкиКомпоновкиДанных"},
+      {"name": "Параметры",                    "kind": "PROPERTY", "returnType": "ПараметрыСхемыКомпоновкиДанных"},
+      {"name": "ПоляИтога",                    "kind": "PROPERTY", "returnType": "ПоляИтогаСхемыКомпоновкиДанных"},
+      {"name": "СвязиНаборовДанных",           "kind": "PROPERTY", "returnType": "СвязиНаборовДанныхСхемыКомпоновкиДанных"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ИсточникиДанныхСхемыКомпоновкиДанных",
+    "aliases": ["DataCompositionSchemaDataSources"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Добавить",   "kind": "METHOD", "returnType": "ИсточникДанныхСхемыКомпоновкиДанных"},
+      {"name": "Вставить",   "kind": "METHOD", "returnType": "ИсточникДанныхСхемыКомпоновкиДанных"},
+      {"name": "Получить",   "kind": "METHOD", "returnType": "ИсточникДанныхСхемыКомпоновкиДанных"},
+      {"name": "Найти",      "kind": "METHOD", "returnType": "ИсточникДанныхСхемыКомпоновкиДанных"},
+      {"name": "Индекс",     "kind": "METHOD", "returnType": "Число"},
+      {"name": "Сдвинуть",   "kind": "METHOD"},
+      {"name": "Удалить",    "kind": "METHOD"},
+      {"name": "Очистить",   "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ИсточникДанныхСхемыКомпоновкиДанных",
+    "aliases": ["DataCompositionSchemaDataSource"],
+    "members": [
+      {"name": "Имя",                "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "СтрокаСоединения",   "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ТипИсточникаДанных", "kind": "PROPERTY", "returnType": "Строка"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СправочникОбъект.<Имя справочника>",
+    "aliases": ["CatalogObject.<Catalog name>"],
+    "isGeneric": true,
+    "exposedAsGlobal": true,
+    "members": [
+      {"name": "<Имя реквизита>",         "kind": "PROPERTY"},
+      {"name": "<Имя общего реквизита>",  "kind": "PROPERTY"},
+      {"name": "<Имя табличной части>",   "kind": "PROPERTY"},
+      {"name": "Ссылка",                  "kind": "PROPERTY", "returnType": "СправочникСсылка.<Имя справочника>"},
+      {"name": "Родитель",                "kind": "PROPERTY", "returnType": "СправочникСсылка.<Имя справочника>"},
+      {"name": "Владелец",                "kind": "PROPERTY"},
+      {"name": "ЭтоГруппа",               "kind": "PROPERTY", "returnType": "Булево"},
+      {"name": "Код",                     "kind": "PROPERTY"},
+      {"name": "Наименование",            "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ПометкаУдаления",         "kind": "PROPERTY", "returnType": "Булево"},
+      {"name": "Предопределенный",        "kind": "PROPERTY", "returnType": "Булево"},
+      {"name": "ИмяПредопределенныхДанных","kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ВерсияДанных",            "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ОбменДанными",            "kind": "PROPERTY", "returnType": "ПараметрыОбменаДанными"},
+      {"name": "ДополнительныеСвойства",  "kind": "PROPERTY", "returnType": "Структура"},
+      {"name": "ЗаписьИсторииДанных",     "kind": "PROPERTY", "returnType": "ПараметрыЗаписиИсторииДанных"},
+      {"name": "ЭтотОбъект",              "kind": "PROPERTY", "returnType": "СправочникОбъект.<Имя справочника>"},
+      {"name": "Записать",                "kind": "METHOD"},
+      {"name": "Прочитать",               "kind": "METHOD"},
+      {"name": "Удалить",                 "kind": "METHOD"},
+      {"name": "Заполнить",               "kind": "METHOD"},
+      {"name": "Скопировать",             "kind": "METHOD", "returnType": "СправочникОбъект.<Имя справочника>"},
+      {"name": "ПолучитьСсылкуНового",    "kind": "METHOD", "returnType": "СправочникСсылка.<Имя справочника>"},
+      {"name": "УстановитьСсылкуНового",  "kind": "METHOD"},
+      {"name": "УстановитьНовыйКод",      "kind": "METHOD"},
+      {"name": "УстановитьПометкуУдаления","kind": "METHOD"},
+      {"name": "ПолучитьФорму",           "kind": "METHOD", "returnType": "ФормаКлиентскогоПриложения"},
+      {"name": "ПолучитьМакет",           "kind": "METHOD"},
+      {"name": "ПолноеНаименование",      "kind": "METHOD", "returnType": "Строка"},
+      {"name": "ПолныйКод",               "kind": "METHOD", "returnType": "Строка"},
+      {"name": "Уровень",                 "kind": "METHOD", "returnType": "Число"},
+      {"name": "Метаданные",              "kind": "METHOD"},
+      {"name": "Модифицированность",      "kind": "METHOD", "returnType": "Булево"},
+      {"name": "ПринадлежитЭлементу",     "kind": "METHOD", "returnType": "Булево"},
+      {"name": "ЭтоНовый",                "kind": "METHOD", "returnType": "Булево"},
+      {"name": "Заблокировать",           "kind": "METHOD"},
+      {"name": "Разблокировать",          "kind": "METHOD"},
+      {"name": "Заблокирован",            "kind": "METHOD", "returnType": "Булево"},
+      {"name": "ПроверитьЗаполнение",     "kind": "METHOD", "returnType": "Булево"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ТабличнаяЧасть.<Имя справочника>.<Имя табличной части>",
+    "aliases": ["TabularSection.<Catalog name>.<Tabular section name>"],
+    "isGeneric": true,
+    "exposedAsGlobal": true,
+    "description": "Табличная часть справочника. FQN-имя с плейсхолдерами — при доступе через Объект.<ИмяТЧ> резолвится по конфигурационной метадате; членов с конкретными колонками здесь нет, только базовый набор методов коллекции.",
+    "members": [
+      {"name": "<Имя реквизита>", "kind": "PROPERTY"},
+      {"name": "Количество",      "kind": "METHOD", "returnType": "Число"},
+      {"name": "Добавить",        "kind": "METHOD"},
+      {"name": "Вставить",        "kind": "METHOD"},
+      {"name": "Удалить",         "kind": "METHOD"},
+      {"name": "Получить",        "kind": "METHOD"},
+      {"name": "Найти",           "kind": "METHOD"},
+      {"name": "НайтиСтроки",     "kind": "METHOD", "returnType": "Массив"},
+      {"name": "Очистить",        "kind": "METHOD"},
+      {"name": "Скопировать",     "kind": "METHOD", "returnType": "ТаблицаЗначений"},
+      {"name": "Загрузить",       "kind": "METHOD"},
+      {"name": "Выгрузить",       "kind": "METHOD", "returnType": "ТаблицаЗначений"},
+      {"name": "ВыгрузитьКолонку","kind": "METHOD", "returnType": "Массив"},
+      {"name": "ЗагрузитьКолонку","kind": "METHOD"},
+      {"name": "Сортировать",     "kind": "METHOD"},
+      {"name": "Сдвинуть",        "kind": "METHOD"},
+      {"name": "Индекс",          "kind": "METHOD", "returnType": "Число"},
+      {"name": "Итог",            "kind": "METHOD", "returnType": "Число"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ФормаКлиентскогоПриложения",
+    "aliases": ["ClientApplicationForm"],
+    "members": [
+      {"name": "ВладелецФормы",          "kind": "PROPERTY"},
+      {"name": "ИмяФормы",               "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ИспользуемыйСерверФормы","kind": "PROPERTY", "returnType": "ИспользуемыйСервер"},
+      {"name": "РежимОткрытияОкнаФормы", "kind": "PROPERTY", "returnType": "РежимОткрытияОкнаФормы"},
+      {"name": "ЭтотОбъект",             "kind": "PROPERTY", "returnType": "ФормаКлиентскогоПриложения"},
+      {"name": "ЗаблокироватьДанныеФормыДляРедактирования","kind": "METHOD"},
+      {"name": "РазблокироватьДанныеФормыДляРедактирования","kind": "METHOD"},
+      {"name": "ЗначениеВРеквизитФормы", "kind": "METHOD"},
+      {"name": "РеквизитФормыВЗначение", "kind": "METHOD"},
+      {"name": "ОткрытьСправкуФормы",    "kind": "METHOD", "returnType": "Булево"},
+      {"name": "ПолучитьПараметрыФункциональныхОпцийФормы","kind": "METHOD", "returnType": "Структура"},
+      {"name": "ПолучитьФункциональнуюОпциюФормы","kind": "METHOD"},
+      {"name": "УстановитьПараметрыФункциональныхОпцийФормы","kind": "METHOD"}
+    ]
   }
 ]
