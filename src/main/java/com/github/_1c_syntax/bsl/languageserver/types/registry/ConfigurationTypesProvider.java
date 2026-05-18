@@ -28,8 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.mdo.Attribute;
+import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.ValueType;
+import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
@@ -159,6 +163,8 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
       }
 
+      registerObjectAndRefTypes(md, mdoType, name, fullName);
+
       // Дополнительные алиасы «коллекция.Имя» для совместимости и для случаев,
       // когда пользователь обращается напрямую (например, Hover на `Справочники.Контрагенты`).
       var collectionAliasRu = groupRu + "." + name;
@@ -198,5 +204,118 @@ public class ConfigurationTypesProvider {
     }
 
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
+  }
+
+  /** MDOType'ы, у которых есть «объектная» обёртка (СправочникОбъект.X / ДокументОбъект.X / ...). */
+  private static final Set<MDOType> OBJECT_TYPES = Set.of(
+    MDOType.CATALOG,
+    MDOType.DOCUMENT,
+    MDOType.CHART_OF_CHARACTERISTIC_TYPES,
+    MDOType.CHART_OF_ACCOUNTS,
+    MDOType.CHART_OF_CALCULATION_TYPES,
+    MDOType.BUSINESS_PROCESS,
+    MDOType.TASK,
+    MDOType.EXCHANGE_PLAN
+  );
+
+  /**
+   * Зарегистрировать «объектную» и «ссылочную» обёртки метаобъекта (например,
+   * {@code СправочникОбъект.X}, {@code СправочникСсылка.X}) и навесить на них
+   * членов из реквизитов метаданных.
+   * <p>
+   * Сейчас обрабатываются только атрибуты (как PROPERTY). Табчасти — отдельная
+   * задача (требуют регистрации СправочникТабличнаяЧастьСтрока.X.Y типа).
+   */
+  private void registerObjectAndRefTypes(MD md,
+                                         MDOType mdoType,
+                                         String name,
+                                         com.github._1c_syntax.bsl.types.MultiName fullName) {
+    if (!OBJECT_TYPES.contains(mdoType) || fullName == null) {
+      return;
+    }
+    var fullRu = fullName.getRu();
+    var fullEn = fullName.getEn();
+    if (fullRu == null || fullRu.isBlank()) {
+      return;
+    }
+
+    if (!(md instanceof AttributeOwner attributeOwner)) {
+      return;
+    }
+    var attributes = attributeOwner.getAllAttributes();
+
+    var objectRu = fullRu + "Объект." + name;
+    var objectEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Object." + name;
+    var objectRef = registerWithAlias(objectRu, objectEn);
+
+    var refRu = fullRu + "Ссылка." + name;
+    var refEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Ref." + name;
+    var refRef = registerWithAlias(refRu, refEn);
+
+    var members = buildAttributeMembers(attributes);
+    if (!members.isEmpty()) {
+      typeRegistry.registerMemberSource(objectRef, () -> members, LanguageScope.BSL);
+      typeRegistry.registerMemberSource(refRef, () -> members, LanguageScope.BSL);
+    }
+  }
+
+  private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
+    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
+    if (qualifiedEn != null && !qualifiedEn.equals(qualifiedRu)) {
+      typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
+    }
+    return ref;
+  }
+
+  private List<MemberDescriptor> buildAttributeMembers(List<? extends Attribute> attributes) {
+    if (attributes == null || attributes.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<MemberDescriptor>(attributes.size());
+    for (var attribute : attributes) {
+      var attrName = attribute.getName();
+      if (attrName == null || attrName.isBlank()) {
+        continue;
+      }
+      var returnType = resolveAttributeReturnType(attribute);
+      result.add(MemberDescriptor.property(attrName, returnType));
+    }
+    return result;
+  }
+
+  /**
+   * Получить {@link TypeRef} типа значения реквизита. Для composite (несколько
+   * типов в описании) возвращается первый разрешённый — это приближение, точная
+   * семантика union'а будет в отдельной задаче.
+   */
+  private TypeRef resolveAttributeReturnType(Attribute attribute) {
+    var valueType = attribute.getValueType();
+    if (valueType == null || valueType.isEmpty()) {
+      return TypeRef.UNKNOWN;
+    }
+    for (var vt : valueType.getTypes()) {
+      var resolved = resolveValueType(vt);
+      if (resolved != null) {
+        return resolved;
+      }
+    }
+    return TypeRef.UNKNOWN;
+  }
+
+  private TypeRef resolveValueType(ValueType vt) {
+    if (vt instanceof PrimitiveValueType primitive) {
+      var fullName = primitive.fullName();
+      if (fullName == null) {
+        return null;
+      }
+      return typeRegistry.resolve(fullName.getRu()).orElse(null);
+    }
+    // V8 / METADATA / UNKNOWN — пока не поддерживаем точно; resolve по имени даст
+    // частичное покрытие для V8-типов, имена которых совпадают с регистрационными.
+    var fullName = vt.fullName();
+    if (fullName == null) {
+      return null;
+    }
+    return typeRegistry.resolve(fullName.getRu()).orElse(null);
   }
 }
