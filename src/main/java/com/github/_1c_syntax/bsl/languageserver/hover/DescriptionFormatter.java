@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.description.HyperlinkTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
@@ -59,6 +60,7 @@ public class DescriptionFormatter {
   private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
 
   private final Resources resources;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
 
   public void addSectionIfNotEmpty(StringJoiner markupBuilder, String newContent) {
     if (!newContent.isEmpty()) {
@@ -134,7 +136,9 @@ public class DescriptionFormatter {
     String mdoRefLocal = mdObject.map(md -> documentContext.getServerContext()
       .getConfiguration()
       .getMdoRefLocal(md)
-    ).orElseGet(documentContext::getMdoRef);
+    ).orElseGet(() -> oScriptLibraryIndex.findByUri(uri)
+      .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
+      .orElseGet(documentContext::getMdoRef));
 
     return "[%s](%s)".formatted(
       mdoRefLocal,
