@@ -140,6 +140,10 @@ public final class FormatProvider {
     DocumentOnTypeFormattingParams params,
     DocumentContext documentContext
   ) {
+    if (!configuration.getFormattingOptions().isUseOnTypeFormatting()) {
+      return Collections.emptyList();
+    }
+
     String ch = params.getCh();
     var position = params.getPosition();
 

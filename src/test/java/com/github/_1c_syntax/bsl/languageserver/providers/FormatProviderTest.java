@@ -425,6 +425,26 @@ class FormatProviderTest {
     assertThat(textEdits).isEmpty();
   }
 
+  @Test
+  void testOnTypeFormattingDisabledByConfig() throws IOException {
+    // given: настройка useOnTypeFormatting = false должна полностью отключать провайдер
+    configuration.update(new File("./src/test/resources/.bsl-language-server-format-on-type-off.json"));
+
+    String fileContent = "если х=1 тогда\n\n";
+    var params = onTypeParams("\n", 1, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).isEmpty();
+  }
+
   private DocumentOnTypeFormattingParams onTypeParams(String ch, int line, int character) {
     var params = new DocumentOnTypeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());

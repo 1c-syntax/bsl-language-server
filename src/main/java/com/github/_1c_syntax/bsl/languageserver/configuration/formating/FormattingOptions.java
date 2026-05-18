@@ -46,4 +46,9 @@ public class FormattingOptions {
    * Использовать форматирование ключевых слов.
    */
   private boolean useKeywordsFormatting = true;
+  /**
+   * Включить форматирование по нажатию символа-триггера (textDocument/onTypeFormatting).
+   * Триггеры — Enter и {@code ;}.
+   */
+  private boolean useOnTypeFormatting = true;
 }
