@@ -88,7 +88,7 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:feature-trailing-dot-recovery-5513b4f")
+    api("io.github.1c-syntax:bsl-parser:feature-trailing-dot-recovery-269f87f")
     api("io.github.1c-syntax:utils:0.7.0")
     api("io.github.1c-syntax:mdclasses:0.18.0")
     api("io.github.1c-syntax:bsl-common-library:0.10.0")
@@ -228,10 +228,6 @@ tasks.build {
 
 tasks.test {
     useJUnitPlatform()
-
-    // Disable expensive 1C platform context loader in tests: no HBK parsing,
-    // no autodetect of installed 1C — keeps tests fast and silent.
-    systemProperty("bsl.platform.context.disabled", "true")
 
     testLogging {
         events("passed", "skipped", "failed", "standard_error")

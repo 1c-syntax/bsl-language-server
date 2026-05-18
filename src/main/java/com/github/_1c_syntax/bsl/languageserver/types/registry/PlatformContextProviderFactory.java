@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -54,21 +55,23 @@ public class PlatformContextProviderFactory {
   private final LanguageServerConfiguration configuration;
 
   /**
+   * Включение загрузки платформенного контекста (1С синтакс-помощник).
+   * По умолчанию включено; в тестах выключается через {@code application.properties}, чтобы
+   * избежать дорогой автодетекции и парсинга HBK при подъёме контекста.
+   */
+  @Value("${app.platform-context.enabled:true}")
+  private boolean platformContextEnabled;
+
+  /**
    * Создаёт новый {@link ContextProvider}, прочитав HBK-файлы платформы.
    *
    * @return полностью инициализированный провайдер, либо {@link Optional#empty()},
    *   если платформа не найдена / HBK не открылся
    * @throws IOException если парсинг упал на IO-ошибке (для логирования в caller'е)
    */
-  /**
-   * Системное свойство для отключения загрузки платформенного контекста (используется в тестах,
-   * чтобы избежать дорогой автодетекции и парсинга HBK при каждом подъёме контекста).
-   */
-  public static final String DISABLE_PROPERTY = "bsl.platform.context.disabled";
-
   public Optional<ContextProvider> create() throws IOException {
-    if (Boolean.getBoolean(DISABLE_PROPERTY)) {
-      LOGGER.debug("Platform context loader is disabled via system property {}", DISABLE_PROPERTY);
+    if (!platformContextEnabled) {
+      LOGGER.debug("Platform context loader is disabled via app.platform-context.enabled=false");
       return Optional.empty();
     }
     var platformOptions = configuration.getPlatformOptions();
