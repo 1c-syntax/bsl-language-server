@@ -56,7 +56,11 @@ public class OScriptModuleTypeResolver {
    * @param moduleType {@link ModuleType#OScriptClass} или {@link ModuleType#OScriptModule}
    */
   public void register(URI uri, ModuleType moduleType) {
-    typesByUri.put(uri, moduleType);
+    // Если для одного .os файла регистрируется несколько ролей (модуль и класс),
+    // оставляем ПЕРВУЮ — иначе DocumentContext поменяет moduleType "под собой"
+    // после addMdoRefByUri и ссылка перестанет резолвиться через
+    // ServerContext.getDocument(mdoRef, moduleType).
+    typesByUri.putIfAbsent(uri, moduleType);
   }
 
   /**
