@@ -42,6 +42,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvid
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -546,7 +547,130 @@ public class ExpressionTypeInferencer {
         acc = acc.union(inferFromDefinitionPosition(owner, start, ctx));
       }
     }
+    acc = accumulateStructureInsertFields(variable, acc, ctx);
     return acc;
+  }
+
+  /**
+   * Накопить поля «открытой» структуры по mutation-вызовам
+   * {@code X.Вставить("Имя", значение)} / {@code X.Insert(...)} в области видимости
+   * переменной. Соответствует EDT-стандарту code typification: значения,
+   * присваиваемые ключам, сужают тип структуры.
+   */
+  private TypeSet accumulateStructureInsertFields(
+    VariableSymbol variable,
+    TypeSet base,
+    InferenceContext ctx
+  ) {
+    if (base.refs().isEmpty()) {
+      return base;
+    }
+    TypeRef headRef = null;
+    for (var ref : base.refs()) {
+      if (isStructureLike(ref.qualifiedName())) {
+        headRef = ref;
+        break;
+      }
+    }
+    if (headRef == null) {
+      return base;
+    }
+    var owner = variable.getOwner();
+    var ast = safeGetOwnerAst(owner);
+    if (ast == null) {
+      return base;
+    }
+    var scope = variable.getScope();
+    var scopeRange = scope == null ? null : scope.getRange();
+    var variableName = variable.getName();
+
+    var result = base;
+    for (var ruleNode : Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement)) {
+      if (!(ruleNode instanceof BSLParser.CallStatementContext call)) {
+        continue;
+      }
+      var name = extractInsertReceiverName(call);
+      if (name == null || !name.equalsIgnoreCase(variableName)) {
+        continue;
+      }
+      if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
+        continue;
+      }
+      var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
+      if (methodCall == null || !isInsertMethodName(methodCall)) {
+        continue;
+      }
+      var paramList = methodCall.doCall() == null ? null : methodCall.doCall().callParamList();
+      if (paramList == null) {
+        continue;
+      }
+      var params = paramList.callParam();
+      if (params.size() < 1) {
+        continue;
+      }
+      var keyExpr = params.get(0).expression();
+      var keyName = extractStringLiteralText(keyExpr);
+      if (keyName == null || keyName.isBlank()) {
+        continue;
+      }
+      TypeSet valueTypes;
+      if (params.size() >= 2 && params.get(1).expression() != null) {
+        var valueExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(params.get(1).expression());
+        valueTypes = valueExpr == null ? TypeSet.EMPTY : inferInternal(valueExpr, ctx);
+      } else {
+        valueTypes = TypeSet.of(UNDEFINED);
+      }
+      if (!valueTypes.isEmpty()) {
+        result = result.withField(headRef, keyName.trim(), valueTypes);
+      }
+    }
+    return result;
+  }
+
+  private static String extractInsertReceiverName(BSLParser.CallStatementContext ctx) {
+    var identifier = ctx.IDENTIFIER();
+    if (identifier == null) {
+      return null;
+    }
+    // X.Вставить(...) — ровно один accessCall-модификатор и никаких других access*.
+    if (!ctx.modifier().isEmpty()) {
+      return null;
+    }
+    if (ctx.accessCall() == null) {
+      return null;
+    }
+    return identifier.getText();
+  }
+
+  private static boolean isInsertMethodName(BSLParser.MethodCallContext methodCall) {
+    var nameCtx = methodCall.methodName();
+    if (nameCtx == null) {
+      return false;
+    }
+    var text = nameCtx.getText();
+    return "Вставить".equalsIgnoreCase(text) || "Insert".equalsIgnoreCase(text);
+  }
+
+  private static String extractStringLiteralText(BSLParser.ExpressionContext expr) {
+    if (expr == null) {
+      return null;
+    }
+    var text = expr.getText();
+    if (text == null || text.length() < 2) {
+      return null;
+    }
+    if (text.charAt(0) != '"' || text.charAt(text.length() - 1) != '"') {
+      return null;
+    }
+    return text.substring(1, text.length() - 1);
+  }
+
+  private static BSLParser.FileContext safeGetOwnerAst(DocumentContext owner) {
+    try {
+      return owner.getAst();
+    } catch (NullPointerException e) {
+      return null;
+    }
   }
 
   /**

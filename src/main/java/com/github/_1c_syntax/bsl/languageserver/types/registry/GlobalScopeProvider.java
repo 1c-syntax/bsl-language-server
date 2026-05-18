@@ -194,21 +194,23 @@ public class GlobalScopeProvider {
     if (oScriptLibraryIndex != null && oScriptLibraryIndex.findByName(lc).isPresent()) {
       return fileType == FileType.OS ? sym : Optional.empty();
     }
-    // Функции — по скоупу функций.
+    // Имя может быть зарегистрировано в нескольких категориях (функция, глобальное
+    // свойство, платформенная переменная) одновременно с РАЗНЫМИ скоупами:
+    // например, `КодировкаТекста` — это и OS-only глобальное свойство (из
+    // oscript-pack), и BSL-only платформенная переменная (из bsl-context).
+    // Имя видимо в данном fileType, если ХОТЯ БЫ ОДНА категория его так разрешает.
+    // Если ни одной категории не зарегистрировано (классы, ключевые слова и т.п.) —
+    // считаем символ доступным.
     var fnScope = functionScopes.get(lc);
-    if (fnScope != null && !fnScope.matches(fileType)) {
-      return Optional.empty();
-    }
-    // Глобальные свойства (КодировкаТекста, Документы.X, ...) — по своему скоупу.
     var propScope = globalPropertyScopes.get(lc);
-    if (propScope != null && !propScope.matches(fileType)) {
-      return Optional.empty();
-    }
     var varScope = platformVariableScopes.get(lc);
-    if (varScope != null && !varScope.matches(fileType)) {
-      return Optional.empty();
+    if (fnScope == null && propScope == null && varScope == null) {
+      return sym;
     }
-    return sym;
+    boolean visible = (fnScope != null && fnScope.matches(fileType))
+      || (propScope != null && propScope.matches(fileType))
+      || (varScope != null && varScope.matches(fileType));
+    return visible ? sym : Optional.empty();
   }
 
   /**
