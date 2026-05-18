@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvid
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -87,20 +86,17 @@ public class BareIdentifierReferenceFinder implements ReferenceFinder {
     var module = symbolTree.getModule();
     var scope = symbolTree.getSymbolAtPosition(position);
 
+    // Идентификатор в позиции имени конструктора (`Новый Имя(...)`) принадлежит
+    // NewExpressionReferenceFinder: он отдаст ConstructorCallSymbol с сигнатурой
+    // конструктора и описанием класса. Даже если в скоупе/глобальной области нашёлся
+    // одноимённый символ (локальная переменная или синтетический объект конфигурации),
+    // здесь мы его игнорируем, чтобы не подменять ховер/go-to-definition конструктора.
+    if (isNewExpressionTypeName(document, position)) {
+      return Optional.empty();
+    }
     var resolved = resolveInScope(symbolTree, scope, module, name);
     if (resolved.isEmpty()) {
       resolved = globalScopeProvider.findGlobal(name, document.getFileType());
-    }
-
-    // Идентификатор в позиции имени конструктора (`Новый Имя(...)`) затеняет
-    // одноимённую локальную переменную — пусть NewExpressionReferenceFinder
-    // отдаст ConstructorCallSymbol. Если же resolved указывает на не-переменную
-    // (модуль library-класса, метод, synthetic-тип), оставляем эту ссылку —
-    // на ней работает go-to-definition.
-    if (resolved.isPresent()
-      && resolved.get() instanceof VariableSymbol
-      && isNewExpressionTypeName(document, position)) {
-      return Optional.empty();
     }
 
     return resolved.map(symbol -> enrichForHover(symbol, document.getFileType()))

@@ -44,6 +44,10 @@ public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder
   @Override
   public MarkupContent getContent(ConstructorCallSymbol symbol) {
     var ctors = symbol.getConstructors();
+    if (ctors.isEmpty()) {
+      return constructorHoverBuilder.build(
+        symbol.getTypeName(), symbol.getTypeRef(), null, ctors, false, symbol.getClassDescription());
+    }
     int chosenIndex = SignatureSelection.pickIndexByArity(ctors, symbol.getArgCount());
     boolean disclaim = false;
     SignatureDescriptor chosen;

@@ -53,17 +53,19 @@ public class ConstructorHoverBuilder {
   ) {
     var sb = new StringBuilder();
     sb.append("```bsl\nНовый ").append(typeName).append('(');
-    sb.append(chosen.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")));
+    if (chosen != null) {
+      sb.append(chosen.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")));
+    }
     sb.append(')').append("\n```\n");
     sb.append("\n_конструктор типа_ `").append(ref.qualifiedName()).append('`');
     var classDesc = classDescription != null ? classDescription : typeService.getDescription(ref);
     if (!classDesc.isBlank()) {
       sb.append("\n\n").append(classDesc);
     }
-    if (chosen.description() != null && !chosen.description().isBlank()) {
+    if (chosen != null && chosen.description() != null && !chosen.description().isBlank()) {
       sb.append("\n\n").append(chosen.description());
     }
-    if (!chosen.parameters().isEmpty()) {
+    if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**Параметры:**\n");
       for (var p : chosen.parameters()) {
         sb.append("- `").append(p.name()).append('`');

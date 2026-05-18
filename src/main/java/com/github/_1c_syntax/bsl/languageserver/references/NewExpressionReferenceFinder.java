@@ -91,9 +91,6 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     }
     var ref = refOpt.get();
     var ctors = typeService.getConstructors(ref, fileType);
-    if (ctors.isEmpty()) {
-      return Optional.empty();
-    }
     int argCount = countNewExpressionArgs(nex.get());
     var range = tokenRange(typeNameCtx);
     return Optional.of(new Reference(
