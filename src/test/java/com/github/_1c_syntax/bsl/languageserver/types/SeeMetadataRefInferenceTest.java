@@ -32,58 +32,34 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_ME
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Реквизиты справочника, описанные в XML конфигурации, должны быть доступны
- * как members у соответствующего {@code СправочникОбъект.X} типа — это даёт
- * типизацию выражения вида {@code Объект.Реквизит1}.
+ * Ссылка из JsDoc {@code См. Справочник.X.Реквизит} должна резолвиться в тип
+ * этого реквизита через TypeRegistry.getMembers.
  */
 @CleanupContextBeforeClassAndAfterClass
-class CatalogAttributeMembersTest extends AbstractServerContextAwareTest {
+class SeeMetadataRefInferenceTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeService typeService;
 
   @Test
-  void catalogCompositeAttributeAccessReturnsUnionOfTypes() {
+  void referenceToAttributeResolvesToAttributeType() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
 
     var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/types/CatalogCompositeAttributeAccess.bsl");
+      "./src/test/resources/types/SeeMetadataRef.bsl");
 
     var content = documentContext.getContent();
-    var marker = "X = Объект.СоставнойРеквизит";
+    var marker = "X = Артикул";
     int markerStart = content.indexOf(marker);
-    int targetOffset = markerStart + "X = Объект.".length();
+    int targetOffset = markerStart + "X = ".length();
     int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
 
     var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine));
     assertThat(types.refs())
-      .as("Объект.СоставнойРеквизит → {Строка, Число} (xs:string + xs:decimal)")
-      .extracting(ref -> ref.qualifiedName())
-      .containsExactlyInAnyOrder("Строка", "Число");
-  }
-
-  @Test
-  void catalogAttributeAccessResolvesToAttributeType() {
-    initServerContext(PATH_TO_METADATA);
-    context.getConfiguration();
-
-    var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/types/CatalogAttributeAccess.bsl");
-
-    var content = documentContext.getContent();
-    var marker = "X = Объект.Реквизит1";
-    int markerStart = content.indexOf(marker);
-    int targetOffset = markerStart + "X = Объект.".length();
-    int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
-    int line = content.substring(0, targetOffset).split("\n").length - 1;
-    int charInLine = targetOffset - lineStart;
-
-    var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine));
-    assertThat(types.refs())
-      .as("Объект.Реквизит1 → Строка (xs:string в метаданных)")
+      .as("См. Справочник.Справочник1.Реквизит1 → Строка (Реквизит1 — xs:string)")
       .extracting(ref -> ref.qualifiedName())
       .containsExactly("Строка");
   }

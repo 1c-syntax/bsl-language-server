@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.MD;
@@ -252,6 +253,20 @@ public class ConfigurationTypesProvider {
     var refEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Ref." + name;
     var refRef = registerWithAlias(refRu, refEn);
 
+    // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
+    // соответствует семантике стандартных описаний 1С (`См. Справочник.X.Реквизит`
+    // — тип реквизита справочника).
+    var singularRu = fullRu + "." + name;
+    if (!singularRu.equals(refRu)) {
+      typeRegistry.registerConfigurationTypeAlias(singularRu, refRef);
+    }
+    if (fullEn != null && !fullEn.isBlank()) {
+      var singularEn = fullEn + "." + name;
+      if (!singularEn.equals(refEn)) {
+        typeRegistry.registerConfigurationTypeAlias(singularEn, refRef);
+      }
+    }
+
     var members = buildAttributeMembers(attributes);
     if (!members.isEmpty()) {
       typeRegistry.registerMemberSource(objectRef, () -> members, LanguageScope.BSL);
@@ -277,29 +292,35 @@ public class ConfigurationTypesProvider {
       if (attrName == null || attrName.isBlank()) {
         continue;
       }
-      var returnType = resolveAttributeReturnType(attribute);
-      result.add(MemberDescriptor.property(attrName, returnType));
+      var returnTypes = resolveAttributeReturnTypes(attribute);
+      if (returnTypes.isEmpty()) {
+        result.add(MemberDescriptor.property(attrName));
+      } else if (returnTypes.size() == 1) {
+        result.add(MemberDescriptor.property(attrName, returnTypes.refs().iterator().next()));
+      } else {
+        result.add(MemberDescriptor.property(attrName, returnTypes, ""));
+      }
     }
     return result;
   }
 
   /**
-   * Получить {@link TypeRef} типа значения реквизита. Для composite (несколько
-   * типов в описании) возвращается первый разрешённый — это приближение, точная
-   * семантика union'а будет в отдельной задаче.
+   * Получить набор {@link TypeRef} типов значения реквизита (union для
+   * composite-типа из нескольких {@code v8:Type}).
    */
-  private TypeRef resolveAttributeReturnType(Attribute attribute) {
+  private TypeSet resolveAttributeReturnTypes(Attribute attribute) {
     var valueType = attribute.getValueType();
     if (valueType == null || valueType.isEmpty()) {
-      return TypeRef.UNKNOWN;
+      return TypeSet.EMPTY;
     }
+    var refs = new java.util.LinkedHashSet<TypeRef>();
     for (var vt : valueType.getTypes()) {
       var resolved = resolveValueType(vt);
       if (resolved != null) {
-        return resolved;
+        refs.add(resolved);
       }
     }
-    return TypeRef.UNKNOWN;
+    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
   private TypeRef resolveValueType(ValueType vt) {

@@ -439,7 +439,16 @@ public class ExpressionTypeInferencer {
         if (!member.name().equalsIgnoreCase(memberName)) {
           continue;
         }
-        if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
+        // Сначала composite-набор типов; для single-type returnType-fallback
+        // (legacy-проводка для членов, которые не используют новый API).
+        var memberTypes = member.returnTypes();
+        if (memberTypes != null && !memberTypes.isEmpty()) {
+          for (var ref : memberTypes.refs()) {
+            if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
+              result.add(ref);
+            }
+          }
+        } else if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
           result.add(member.returnType());
         }
       }

@@ -38,6 +38,10 @@ import java.util.Optional;
  *   <li>Для методов {@code signatures} может содержать одну или несколько сигнатур;
  *       при пустом списке поведение совместимо с прежним API: метод считается
  *       без параметров с типом возврата {@link #returnType}.</li>
+ *   <li>{@link #returnTypes} — union возможных типов для composite-членов
+ *       (например, атрибут справочника с типом {@code Строка | Число}). Для
+ *       single-type членов содержит {@code TypeSet.of(returnType)}; для
+ *       {@link TypeRef#UNKNOWN} — {@link TypeSet#EMPTY}.</li>
  *   <li>{@link #sourceSymbol} — опциональный «бэкинг»-символ. Если член реально
  *       объявлен в коде (например, экспортный метод общего модуля или
  *       экспортная переменная объектного модуля) — здесь находится
@@ -50,6 +54,8 @@ import java.util.Optional;
  * @param kind        метод или свойство
  * @param description краткое описание (может быть пустым)
  * @param returnType  тип возвращаемого значения / тип свойства; {@link TypeRef#UNKNOWN} если неизвестен
+ * @param returnTypes union типов возвращаемого значения / типа свойства; для single-type
+ *                    содержит один ref, для composite — несколько; для UNKNOWN — пустой
  * @param signatures  список сигнатур для метода (пустой для свойства)
  * @param sourceSymbol опциональный символ-источник члена (см. описание выше)
  */
@@ -58,29 +64,35 @@ public record MemberDescriptor(
   MemberKind kind,
   String description,
   TypeRef returnType,
+  TypeSet returnTypes,
   List<SignatureDescriptor> signatures,
   Symbol sourceSymbol
 ) {
 
   public MemberDescriptor {
     signatures = List.copyOf(signatures);
+    if (returnTypes == null) {
+      returnTypes = returnType == null || returnType.equals(TypeRef.UNKNOWN)
+        ? TypeSet.EMPTY
+        : TypeSet.of(returnType);
+    }
   }
 
   /**
-   * Конструктор для обратной совместимости (без sourceSymbol).
+   * Конструктор для обратной совместимости (без returnTypes/sourceSymbol).
    */
   public MemberDescriptor(
     String name, MemberKind kind, String description,
     TypeRef returnType, List<SignatureDescriptor> signatures
   ) {
-    this(name, kind, description, returnType, signatures, null);
+    this(name, kind, description, returnType, null, signatures, null);
   }
 
   /**
-   * Конструктор для обратной совместимости (без сигнатур и sourceSymbol).
+   * Конструктор для обратной совместимости (без сигнатур/returnTypes/sourceSymbol).
    */
   public MemberDescriptor(String name, MemberKind kind, String description, TypeRef returnType) {
-    this(name, kind, description, returnType, List.of(), null);
+    this(name, kind, description, returnType, null, List.of(), null);
   }
 
   public Optional<Symbol> getSourceSymbol() {
@@ -111,33 +123,48 @@ public record MemberDescriptor(
    * @return копия дескриптора с прикреплённым символом-источником.
    */
   public MemberDescriptor withSourceSymbol(Symbol symbol) {
-    return new MemberDescriptor(name, kind, description, returnType, signatures, symbol);
+    return new MemberDescriptor(name, kind, description, returnType, returnTypes, signatures, symbol);
   }
 
   public static MemberDescriptor method(String name) {
-    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeRef.UNKNOWN, List.of(), null);
+    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeRef.UNKNOWN, null, List.of(), null);
   }
 
   public static MemberDescriptor method(String name, List<SignatureDescriptor> signatures) {
     var ret = signatures.isEmpty() ? TypeRef.UNKNOWN : signatures.get(0).returnType();
-    return new MemberDescriptor(name, MemberKind.METHOD, "", ret, signatures, null);
+    return new MemberDescriptor(name, MemberKind.METHOD, "", ret, null, signatures, null);
   }
 
   public static MemberDescriptor method(String name, String description, List<SignatureDescriptor> signatures) {
     var ret = signatures.isEmpty() ? TypeRef.UNKNOWN : signatures.get(0).returnType();
-    return new MemberDescriptor(name, MemberKind.METHOD, description, ret, signatures, null);
+    return new MemberDescriptor(name, MemberKind.METHOD, description, ret, null, signatures, null);
   }
 
   public static MemberDescriptor property(String name) {
-    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeRef.UNKNOWN, List.of(), null);
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeRef.UNKNOWN, null, List.of(), null);
   }
 
   public static MemberDescriptor property(String name, TypeRef returnType) {
-    return new MemberDescriptor(name, MemberKind.PROPERTY, "", returnType, List.of(), null);
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", returnType, null, List.of(), null);
   }
 
   public static MemberDescriptor property(String name, TypeRef returnType, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
-      description == null ? "" : description, returnType, List.of(), null);
+      description == null ? "" : description, returnType, null, List.of(), null);
+  }
+
+  /**
+   * Свойство с composite-типом ({@code Строка | Число}).
+   *
+   * @param name        имя свойства
+   * @param returnTypes union возможных типов
+   * @param description описание
+   */
+  public static MemberDescriptor property(String name, TypeSet returnTypes, String description) {
+    var head = returnTypes == null || returnTypes.isEmpty()
+      ? TypeRef.UNKNOWN
+      : returnTypes.refs().iterator().next();
+    return new MemberDescriptor(name, MemberKind.PROPERTY,
+      description == null ? "" : description, head, returnTypes, List.of(), null);
   }
 }
