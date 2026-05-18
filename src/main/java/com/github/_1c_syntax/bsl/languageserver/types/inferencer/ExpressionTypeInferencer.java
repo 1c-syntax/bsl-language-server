@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -38,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
@@ -100,6 +102,7 @@ public class ExpressionTypeInferencer {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -127,7 +130,29 @@ public class ExpressionTypeInferencer {
       var ctx = new InferenceContext(variable.getOwner());
       return inferVariable(variable, ctx);
     }
+    if (symbol instanceof ModuleSymbol module) {
+      return inferModuleAsType(module);
+    }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Для библиотечного OneScript-модуля (запись {@code <module>} из {@code lib.config})
+   * имя модуля в выражении ссылается на тип-namespace с экспортами как членами.
+   * {@link OScriptLibraryIndex} знает qualifiedName по URI, {@link TypeRegistry#resolve}
+   * — соответствующий {@link TypeRef}.
+   */
+  private TypeSet inferModuleAsType(ModuleSymbol module) {
+    var uri = module.getOwner().getUri();
+    var entries = oScriptLibraryIndex.findEntriesByUri(uri);
+    if (entries.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var refs = new LinkedHashSet<TypeRef>();
+    for (var entry : entries) {
+      typeRegistry.resolve(entry.qualifiedName()).ifPresent(refs::add);
+    }
+    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
   // ---------------------------------------------------------------------------
