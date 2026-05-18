@@ -32,11 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionParams;
@@ -222,9 +218,6 @@ public final class CompletionProvider {
     var typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
     if (typeSet.isEmpty()) {
       typeSet = typeService.inferAtPosition(documentContext, beforeDot);
-    }
-    if (typeSet.isEmpty()) {
-      typeSet = rescueDanglingDotType(documentContext, position, dotInfo);
     }
     if (typeSet.isEmpty()) {
       return List.of();
@@ -587,123 +580,5 @@ public final class CompletionProvider {
     if (sb.length() > 0) {
       item.setDocumentation(sb.toString());
     }
-  }
-
-  /**
-   * Fallback для висячей точки ({@code MyClass.\n}): парсер уходит в error-recovery
-   * и SymbolTree не содержит присваивания, поэтому штатный inference возвращает пусто.
-   * Здесь мы:
-   *   1. вставляем placeholder-идентификатор после точки,
-   *   2. парсим патченный контент отдельным {@link BSLTokenizer},
-   *   3. ищем последнее присваивание {@code receiver = Новый TypeName(...)} до позиции
-   *      и резолвим имя типа через {@link TypeService#resolve(String, com.github._1c_syntax.bsl.languageserver.context.FileType)}.
-   * Покрывает базовый сценарий: переменная, инициализированная конструктором.
-   */
-  private TypeSet rescueDanglingDotType(DocumentContext documentContext, Position position, DotCompletionInfo dotInfo) {
-    var content = documentContext.getContent();
-    if (content == null) {
-      return TypeSet.EMPTY;
-    }
-    var lines = content.split("\\R", -1);
-    if (position.getLine() >= lines.length) {
-      return TypeSet.EMPTY;
-    }
-    var line = lines[position.getLine()];
-    int dotCol = dotInfo.dotColumn;
-    if (dotCol < 0 || dotCol >= line.length() || line.charAt(dotCol) != '.') {
-      return TypeSet.EMPTY;
-    }
-    int end = dotCol;
-    int start = dotCol;
-    while (start > 0 && isIdentChar(line.charAt(start - 1))) {
-      start--;
-    }
-    if (start == end) {
-      return TypeSet.EMPTY;
-    }
-    var receiverName = line.substring(start, end);
-
-    int offset = absoluteOffsetOf(content, position.getLine(), dotCol + 1);
-    if (offset < 0 || offset > content.length()) {
-      return TypeSet.EMPTY;
-    }
-    var placeholder = "__lsp_rescue__";
-    var patched = content.substring(0, offset) + placeholder + content.substring(offset);
-
-    BSLParser.FileContext ast;
-    try {
-      ast = new BSLTokenizer(patched).getAst();
-    } catch (RuntimeException e) {
-      return TypeSet.EMPTY;
-    }
-
-    var typeName = findConstructorTypeNameForVariable(ast, receiverName, position.getLine());
-    if (typeName == null) {
-      return TypeSet.EMPTY;
-    }
-    return typeService.resolve(typeName, documentContext.getFileType())
-      .map(TypeSet::of)
-      .orElse(TypeSet.EMPTY);
-  }
-
-  private static String findConstructorTypeNameForVariable(BSLParser.FileContext ast, String receiverName, int beforeLine) {
-    String found = null;
-    int foundLine = -1;
-    for (var node : Trees.<ParserRuleContext>findAllRuleNodes(ast, BSLParser.RULE_assignment)) {
-      if (!(node instanceof BSLParser.AssignmentContext assign)) {
-        continue;
-      }
-      int line = assign.getStart().getLine() - 1;
-      if (line > beforeLine) {
-        continue;
-      }
-      var lValue = assign.lValue();
-      if (lValue == null || lValue.IDENTIFIER() == null) {
-        continue;
-      }
-      if (!lValue.IDENTIFIER().getText().equalsIgnoreCase(receiverName)) {
-        continue;
-      }
-      var expr = assign.expression();
-      if (expr == null) {
-        continue;
-      }
-      var typeName = extractNewExpressionTypeName(expr);
-      if (typeName == null) {
-        continue;
-      }
-      if (line >= foundLine) {
-        found = typeName;
-        foundLine = line;
-      }
-    }
-    return found;
-  }
-
-  private static String extractNewExpressionTypeName(ParserRuleContext expr) {
-    for (var node : Trees.<ParserRuleContext>findAllRuleNodes(expr, BSLParser.RULE_newExpression)) {
-      if (node instanceof BSLParser.NewExpressionContext ne && ne.typeName() != null) {
-        return ne.typeName().getText();
-      }
-    }
-    return null;
-  }
-
-  private static int absoluteOffsetOf(String content, int line, int col) {
-    int currentLine = 0;
-    int offset = 0;
-    while (currentLine < line && offset < content.length()) {
-      char c = content.charAt(offset);
-      offset++;
-      if (c == '\r') {
-        currentLine++;
-        if (offset < content.length() && content.charAt(offset) == '\n') {
-          offset++;
-        }
-      } else if (c == '\n') {
-        currentLine++;
-      }
-    }
-    return offset + col;
   }
 }

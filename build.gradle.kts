@@ -27,6 +27,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven(url = "https://projectlombok.org/edge-releases")
     maven("https://central.sonatype.com/repository/maven-snapshots")
@@ -87,7 +88,7 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.33.0")
+    api("io.github.1c-syntax:bsl-parser:feature-trailing-dot-recovery-793185a")
     api("io.github.1c-syntax:utils:0.7.0")
     api("io.github.1c-syntax:mdclasses:0.18.0")
     api("io.github.1c-syntax:bsl-common-library:0.10.0")
@@ -227,6 +228,10 @@ tasks.build {
 
 tasks.test {
     useJUnitPlatform()
+
+    // Disable expensive 1C platform context loader in tests: no HBK parsing,
+    // no autodetect of installed 1C — keeps tests fast and silent.
+    systemProperty("bsl.platform.context.disabled", "true")
 
     testLogging {
         events("passed", "skipped", "failed", "standard_error")

@@ -47,4 +47,12 @@ public class V8PlatformOptions {
   @JsonProperty("binPath")
   @Nullable
   private Path binPath;
+
+  /**
+   * Разрешить загрузку платформенного контекста из синтакс-помощника установленной 1С.
+   * По умолчанию {@code true}. Можно отключить (например, в тестовом окружении), чтобы
+   * избежать дорогой автодетекции и парсинга HBK при каждом подъёме контекста.
+   */
+  @JsonProperty("enabled")
+  private boolean enabled = true;
 }

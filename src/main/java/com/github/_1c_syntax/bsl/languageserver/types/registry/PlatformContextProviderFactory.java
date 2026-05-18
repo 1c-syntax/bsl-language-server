@@ -60,8 +60,23 @@ public class PlatformContextProviderFactory {
    *   если платформа не найдена / HBK не открылся
    * @throws IOException если парсинг упал на IO-ошибке (для логирования в caller'е)
    */
+  /**
+   * Системное свойство для отключения загрузки платформенного контекста (используется в тестах,
+   * чтобы избежать дорогой автодетекции и парсинга HBK при каждом подъёме контекста).
+   */
+  public static final String DISABLE_PROPERTY = "bsl.platform.context.disabled";
+
   public Optional<ContextProvider> create() throws IOException {
-    var binPath = configuration.getPlatformOptions().getBinPath();
+    if (Boolean.getBoolean(DISABLE_PROPERTY)) {
+      LOGGER.debug("Platform context loader is disabled via system property {}", DISABLE_PROPERTY);
+      return Optional.empty();
+    }
+    var platformOptions = configuration.getPlatformOptions();
+    if (!platformOptions.isEnabled()) {
+      LOGGER.debug("Platform context loader is disabled via configuration");
+      return Optional.empty();
+    }
+    var binPath = platformOptions.getBinPath();
     var grabber = binPath != null
       ? PlatformContextGrabber.fromPlatformBin(binPath)
       : PlatformContextGrabber.autoDetect();

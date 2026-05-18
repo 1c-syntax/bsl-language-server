@@ -47,9 +47,30 @@ public class WorkspaceScope implements Scope {
   @Override
   public Object get(String name, ObjectFactory<?> objectFactory) {
     var key = resolveKey();
-    return store
-      .computeIfAbsent(key, k -> new ConcurrentHashMap<>())
-      .computeIfAbsent(name, k -> objectFactory.getObject());
+    var beans = getOrCreate(store, key);
+    var existing = beans.get(name);
+    if (existing != null) {
+      return existing;
+    }
+    // ВАЖНО: фабрика бина может рекурсивно запросить другой workspace-scoped бин
+    // (например, через CGLIB-прокси), поэтому здесь нельзя использовать
+    // computeIfAbsent — он держит bin-lock CHM и при рекурсивном входе с другим
+    // ключом, попадающим в тот же bin, приводит к дедлоку между параллельными
+    // потоками. Создаём бин ВНЕ блокировки и атомарно регистрируем через
+    // putIfAbsent; в редкой гонке другой поток вернёт уже созданный экземпляр.
+    var created = objectFactory.getObject();
+    var previous = beans.putIfAbsent(name, created);
+    return previous != null ? previous : created;
+  }
+
+  private static <K, V> Map<K, V> getOrCreate(ConcurrentHashMap<URI, Map<K, V>> outer, URI key) {
+    var inner = outer.get(key);
+    if (inner != null) {
+      return inner;
+    }
+    Map<K, V> fresh = new ConcurrentHashMap<>();
+    var previous = outer.putIfAbsent(key, fresh);
+    return previous != null ? previous : fresh;
   }
 
   @Override
@@ -63,9 +84,7 @@ public class WorkspaceScope implements Scope {
   @Override
   public void registerDestructionCallback(String name, Runnable callback) {
     var key = resolveKey();
-    destructionCallbacks
-      .computeIfAbsent(key, k -> new ConcurrentHashMap<>())
-      .put(name, callback);
+    getOrCreate(destructionCallbacks, key).put(name, callback);
   }
 
   @Override
