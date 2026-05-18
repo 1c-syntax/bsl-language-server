@@ -304,8 +304,8 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
     TextEdit edit = textEdits.getFirst();
-    assertThat(edit.getRange()).isEqualTo(new Range(new Position(0, 0), new Position(1, 0)));
-    assertThat(edit.getNewText()).isEqualTo("Если х = 1 Тогда\n");
+    assertThat(edit.getRange()).isEqualTo(new Range(new Position(0, 0), new Position(0, 14)));
+    assertThat(edit.getNewText()).isEqualTo("Если х = 1 Тогда");
   }
 
   @Test
@@ -326,8 +326,30 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
     TextEdit edit = textEdits.getFirst();
-    assertThat(edit.getRange()).isEqualTo(new Range(new Position(1, 0), new Position(2, 0)));
-    assertThat(edit.getNewText()).isEqualTo("    Возврат;\n");
+    assertThat(edit.getRange()).isEqualTo(new Range(new Position(1, 0), new Position(1, 12)));
+    assertThat(edit.getNewText()).isEqualTo("    Возврат;");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterPreservesTrailingNewline() {
+    // регрессия PR #3908: edit покрывал только что набранный перевод строки,
+    // и при отсутствии хвостового переноса в newText editor удалял новую строку.
+    String fileContent = "А = 1;\n";
+    var params = onTypeParams("\n", 1, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // диапазон правки не должен переходить на следующую строку
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getRange().getEnd().getLine()).isEqualTo(0);
+    assertThat(edit.getNewText()).doesNotEndWith("\n");
+    assertThat(edit.getNewText()).doesNotEndWith("\r");
   }
 
   @Test

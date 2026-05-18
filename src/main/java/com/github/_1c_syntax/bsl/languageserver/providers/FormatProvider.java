@@ -152,8 +152,16 @@ public final class FormatProvider {
         return Collections.emptyList();
       }
       targetLineLsp = position.getLine() - 1;
-      editRange = Ranges.create(targetLineLsp, 0, position.getLine(), 0);
-      cutoffCharacter = Integer.MAX_VALUE;
+      String[] contentList = documentContext.getContentList();
+      if (targetLineLsp >= contentList.length) {
+        return Collections.emptyList();
+      }
+      // Ограничиваем диапазон концом строки (без `\n`), чтобы только что набранный
+      // пользователем перевод строки не оказался внутри replace-range — иначе при
+      // отсутствии в newText хвостового `\n` editor удаляет только что добавленную строку.
+      int lineLength = contentList[targetLineLsp].length();
+      editRange = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
+      cutoffCharacter = lineLength;
     } else if (";".equals(ch)) {
       targetLineLsp = position.getLine();
       editRange = Ranges.create(targetLineLsp, 0, position.getLine(), position.getCharacter());
