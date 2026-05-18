@@ -230,7 +230,7 @@ public final class SignatureHelpProvider {
     var local = documentContext.getSymbolTree().getMethods().stream()
       .filter(m -> m.getName().equalsIgnoreCase(methodName))
       .findFirst()
-      .<MemberDescriptor>map(SignatureHelpProvider::methodToDescriptor);
+      .<MemberDescriptor>map(this::methodToDescriptor);
     if (local.isPresent()) {
       return local;
     }
@@ -415,21 +415,28 @@ public final class SignatureHelpProvider {
     return Optional.empty();
   }
 
-  private static MemberDescriptor methodToDescriptor(
+  private MemberDescriptor methodToDescriptor(
     com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol method
   ) {
-    var params = method.getParameters().stream()
-      .map(p -> new ParameterDescriptor(
-        p.getName(),
-        com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY,
-        p.isOptional(),
-        ""
-      ))
-      .toList();
+    var declaredParamTypes = typeService.getParameterTypes(method);
+    var parameters = method.getParameters();
+    var params = new ArrayList<ParameterDescriptor>(parameters.size());
+    for (int i = 0; i < parameters.size(); i++) {
+      var p = parameters.get(i);
+      var types = i < declaredParamTypes.size()
+        ? declaredParamTypes.get(i)
+        : com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY;
+      var paramDescription = p.getDescription()
+        .map(SignatureHelpProvider::buildParameterDescription)
+        .orElse("");
+      params.add(new ParameterDescriptor(p.getName(), types, p.isOptional(), paramDescription));
+    }
     var description = method.getDescription()
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
-    var sig = new SignatureDescriptor(params, TypeRef.UNKNOWN, description);
+    var declaredReturn = typeService.getDeclaredReturnTypes(method);
+    var returnRef = declaredReturn.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    var sig = new SignatureDescriptor(params, returnRef, description);
     return MemberDescriptor.method(method.getName(), description, List.of(sig));
   }
 
@@ -443,6 +450,10 @@ public final class SignatureHelpProvider {
       }
       int start = label.length();
       label.append(p.name());
+      var typesLabel = renderTypes(p.types());
+      if (!typesLabel.isEmpty()) {
+        label.append(": ").append(typesLabel);
+      }
       int end = label.length();
       var info = new ParameterInformation();
       info.setLabel(Either.forRight(new org.eclipse.lsp4j.jsonrpc.messages.Tuple.Two<>(start, end)));
@@ -452,6 +463,9 @@ public final class SignatureHelpProvider {
       paramInfos.add(info);
     }
     label.append(')');
+    if (sig.returnType() != null && sig.returnType() != TypeRef.UNKNOWN) {
+      label.append(": ").append(sig.returnType().qualifiedName());
+    }
     var info = new SignatureInformation();
     info.setLabel(label.toString());
     info.setParameters(paramInfos);
@@ -459,5 +473,46 @@ public final class SignatureHelpProvider {
       info.setDocumentation(sig.description());
     }
     return info;
+  }
+
+  private static String renderTypes(com.github._1c_syntax.bsl.languageserver.types.model.TypeSet types) {
+    if (types == null || types.isEmpty()) {
+      return "";
+    }
+    var sb = new StringBuilder();
+    boolean first = true;
+    for (var ref : types.refs()) {
+      if (!first) {
+        sb.append(", ");
+      }
+      sb.append(ref.qualifiedName());
+      first = false;
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Извлекает текстовое описание параметра из его {@code ParameterDescription},
+   * склеивая описания каждой типизированной строки.
+   */
+  private static String buildParameterDescription(
+    com.github._1c_syntax.bsl.parser.description.ParameterDescription pd
+  ) {
+    var typeDescriptions = pd.types();
+    if (typeDescriptions == null || typeDescriptions.isEmpty()) {
+      return "";
+    }
+    var sb = new StringBuilder();
+    for (var td : typeDescriptions) {
+      var text = td.description();
+      if (text == null || text.isBlank()) {
+        continue;
+      }
+      if (sb.length() > 0) {
+        sb.append('\n');
+      }
+      sb.append(text.trim());
+    }
+    return sb.toString();
   }
 }

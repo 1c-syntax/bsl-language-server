@@ -128,10 +128,17 @@ public class TypeService {
   /**
    * Список типов параметров метода — для signature help.
    */
-  public List<TypeSet> getParameterTypes(MethodSymbol method) {
-    return method.getParameters().stream()
-      .map(symbolTypeIndex::getDeclaredParameterTypes)
-      .toList();
+   public List<TypeSet> getParameterTypes(MethodSymbol method) {
+     return method.getParameters().stream()
+       .map(symbolTypeIndex::getDeclaredParameterTypes)
+       .toList();
+   }
+
+  /**
+   * Объявленный тип возвращаемого значения метода — для signature help/hover.
+   */
+  public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
+    return symbolTypeIndex.getDeclaredReturnTypes(method);
   }
 
   /**

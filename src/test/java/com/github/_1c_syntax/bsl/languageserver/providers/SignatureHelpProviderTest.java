@@ -141,4 +141,58 @@ class SignatureHelpProviderTest {
     assertThat(help.getActiveSignature()).isEqualTo(1);
     assertThat(help.getSignatures().get(1).getParameters()).hasSize(2);
   }
+
+  @Test
+  void testLocalMethodSignatureRendersDeclaredParameterAndReturnTypes() {
+    // Объявленные типы параметров и возвращаемого значения из JsDoc должны
+    // попадать в label сигнатуры локального метода.
+    var content =
+      "// Описание.\n"
+        + "//\n"
+        + "// Параметры:\n"
+        + "//  Док - ДокументСсылка.Заказ - первичный документ\n"
+        + "//  Имя - Строка\n"
+        + "//\n"
+        + "// Возвращаемое значение:\n"
+        + "//  Массив\n"
+        + "//\n"
+        + "Функция МояФункция(Док, Имя) Экспорт\n"
+        + "  Возврат Новый Массив;\n"
+        + "КонецФункции\n"
+        + "\n"
+        + "Рез = МояФункция(А, Б);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var lines = content.split("\n", -1);
+    int callLine = -1;
+    int col = -1;
+    for (int i = 0; i < lines.length; i++) {
+      int idx = lines[i].indexOf("Рез = МояФункция(");
+      if (idx >= 0) {
+        callLine = i;
+        col = idx + "Рез = МояФункция(".length();
+        break;
+      }
+    }
+    assertThat(callLine).isNotNegative();
+    params.setPosition(new Position(callLine, col));
+
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    assertThat(help).isNotNull();
+    assertThat(help.getSignatures()).hasSize(1);
+    var sig = help.getSignatures().get(0);
+    assertThat(sig.getLabel())
+      .startsWith("МояФункция(")
+      .contains("Док: ДокументСсылка.Заказ")
+      .contains("Имя: Строка")
+      .endsWith("): Массив");
+    assertThat(sig.getParameters()).hasSize(2);
+    // описание первого параметра доходит как трейлинг-описание типа из JsDoc
+    var paramDoc = sig.getParameters().get(0).getDocumentation();
+    assertThat(paramDoc).isNotNull();
+    assertThat(paramDoc.getLeft()).contains("первичный документ");
+  }
 }
