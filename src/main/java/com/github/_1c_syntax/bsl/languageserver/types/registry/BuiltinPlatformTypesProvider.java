@@ -60,12 +60,19 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json";
 
+  /**
+   * Кэш десериализованных деклараций. JSON-ресурс упакован в jar и неизменен,
+   * поэтому парсим его один раз на JVM (десятки workspace-контекстов в тестах
+   * иначе перепарсивают одно и то же — ощутимый оверхед памяти/CPU).
+   */
+  private static final List<TypeDecl> CACHED_TYPES = List.copyOf(loadFromResource(RESOURCE_PATH));
+
   private final List<TypeDecl> types;
   private final BslContextHolder bslContextHolder;
 
   public BuiltinPlatformTypesProvider(BslContextHolder bslContextHolder) {
     this.bslContextHolder = bslContextHolder;
-    this.types = loadFromResource(RESOURCE_PATH);
+    this.types = CACHED_TYPES;
   }
 
   /**
