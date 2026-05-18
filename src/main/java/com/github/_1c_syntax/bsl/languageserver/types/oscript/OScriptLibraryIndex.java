@@ -265,6 +265,11 @@ public class OScriptLibraryIndex {
       // workspace-scope (event-listener тоже сработает, но он не
       // обязан выполняться в том же scope/потоке, что и reindex).
       oScriptModuleMembersProvider.register(dc);
+      // Освобождаем тяжёлые secondary-данные (content, tokens, tokenizer, queries, moduleType).
+      // SymbolTree сохраняется в DocumentContext (clearSecondaryData его не трогает) и доступен
+      // последующим collectMembers/collectConstructors. Без этого на больших oscript_modules
+      // (десятки/сотни файлов на rebuild) JVM удерживает все токенизаторы и тесты падают по OOM.
+      serverContext.tryClearDocument(dc);
     } catch (RuntimeException e) {
       LOGGER.warn("Failed to load oscript library file: {}", osFile, e);
     }
