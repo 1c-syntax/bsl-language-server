@@ -34,7 +34,7 @@ import java.util.Optional;
  * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
  */
 @Component
-@Order(160)
+@Order(40)
 @RequiredArgsConstructor
 public class ReferenceIndexReferenceFinder implements ReferenceFinder {
 
