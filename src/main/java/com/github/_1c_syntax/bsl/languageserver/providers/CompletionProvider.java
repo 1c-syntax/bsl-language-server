@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
@@ -490,57 +492,94 @@ public final class CompletionProvider {
   }
 
   private static CompletionItem toCompletionItem(MemberDescriptor member) {
-    var item = new CompletionItem(member.name());
-    var symDesc = member.getSymbolDescription();
-    var detail = symDesc.getPurposeDescription();
-    if (detail.isBlank()) {
-      detail = member.description();
-    }
-    if (member.kind() == MemberKind.METHOD) {
-      item.setKind(CompletionItemKind.Function);
-      item.setInsertText(member.name() + "(");
-      if (member.signatures().size() > 1) {
-        item.setDetail(formatSignaturesCount(member.signatures().size()));
-      } else if (!detail.isBlank()) {
-        item.setDetail(detail);
-      }
-    } else {
-      item.setKind(CompletionItemKind.Variable);
-      if (!detail.isBlank()) {
-        item.setDetail(detail);
-      }
-    }
-    applyDocumentation(item, symDesc);
-    return item;
+    return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable);
   }
 
   private static List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
-      var item = new CompletionItem(member.name());
-      var symDesc = member.getSymbolDescription();
-      var detail = symDesc.getPurposeDescription();
-      if (detail.isBlank()) {
-        detail = member.description();
-      }
-      if (member.kind() == MemberKind.METHOD) {
-        item.setKind(CompletionItemKind.Method);
-        item.setInsertText(member.name() + "(");
-        if (member.signatures().size() > 1) {
-          item.setDetail(formatSignaturesCount(member.signatures().size()));
-        } else if (!detail.isBlank()) {
-          item.setDetail(detail);
-        }
-      } else {
-        item.setKind(CompletionItemKind.Property);
-        if (!detail.isBlank()) {
-          item.setDetail(detail);
-        }
-      }
-      applyDocumentation(item, symDesc);
-      items.add(item);
+      items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property));
     }
     return items;
+  }
+
+  /**
+   * Сборка completion item для метода или свойства типа.
+   * <p>
+   * Разделение полей по LSP-конвенции:
+   * <ul>
+   *   <li>{@code detail} — техническая сводка: сигнатура {@code (param1, [optional])}
+   *       и возвращаемый тип для методов; имя типа для свойств. Никогда не дублирует описание.</li>
+   *   <li>{@code documentation} — содержательное описание (с deprecation-блоком, если есть).</li>
+   * </ul>
+   * Раньше {@code purposeDescription} писалось одновременно в {@code detail} и в
+   * {@code documentation} — VS Code показывал его дважды в подсказке.
+   */
+  private static CompletionItem buildMemberItem(MemberDescriptor member,
+                                                CompletionItemKind methodKind,
+                                                CompletionItemKind propertyKind) {
+    var item = new CompletionItem(member.name());
+    if (member.kind() == MemberKind.METHOD) {
+      item.setKind(methodKind);
+      item.setInsertText(member.name() + "(");
+      var detail = methodDetail(member);
+      if (!detail.isBlank()) {
+        item.setDetail(detail);
+      }
+    } else {
+      item.setKind(propertyKind);
+      var detail = propertyDetail(member);
+      if (!detail.isBlank()) {
+        item.setDetail(detail);
+      }
+    }
+    applyDocumentation(item, member);
+    return item;
+  }
+
+  private static String methodDetail(MemberDescriptor member) {
+    var signatures = member.signatures();
+    if (signatures.size() > 1) {
+      return formatSignaturesCount(signatures.size());
+    }
+    if (signatures.isEmpty()) {
+      return "";
+    }
+    return formatSignature(signatures.get(0));
+  }
+
+  private static String formatSignature(SignatureDescriptor signature) {
+    var sb = new StringBuilder();
+    sb.append('(');
+    var params = signature.parameters();
+    for (int i = 0; i < params.size(); i++) {
+      if (i > 0) {
+        sb.append(", ");
+      }
+      var p = params.get(i);
+      if (p.optional()) {
+        sb.append('[').append(p.name()).append(']');
+      } else {
+        sb.append(p.name());
+      }
+    }
+    sb.append(')');
+    var returnTypeName = formatTypeName(signature.returnType());
+    if (!returnTypeName.isEmpty()) {
+      sb.append(": ").append(returnTypeName);
+    }
+    return sb.toString();
+  }
+
+  private static String propertyDetail(MemberDescriptor member) {
+    return formatTypeName(member.returnType());
+  }
+
+  private static String formatTypeName(TypeRef ref) {
+    if (ref == null || ref.kind() == TypeKind.UNKNOWN || ref.equals(TypeRef.UNKNOWN)) {
+      return "";
+    }
+    return ref.simpleName();
   }
 
   private static String formatSignaturesCount(int count) {
@@ -559,23 +598,25 @@ public final class CompletionProvider {
     return count + " " + word + " синтаксиса";
   }
 
-  private static void applyDocumentation(
-    CompletionItem item,
-    com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolDescription symDesc
-  ) {
-    if (symDesc.isEmpty()) {
-      return;
-    }
+  private static void applyDocumentation(CompletionItem item, MemberDescriptor member) {
+    var symDesc = member.getSymbolDescription();
+    var purpose = symDesc.getPurposeDescription();
     var sb = new StringBuilder();
     if (symDesc.isDeprecated()) {
       sb.append("**Устарело.**");
       if (!symDesc.getDeprecationInfo().isBlank()) {
         sb.append(' ').append(symDesc.getDeprecationInfo());
       }
-      sb.append("\n\n");
+      if (!purpose.isBlank()) {
+        sb.append("\n\n");
+      }
     }
-    if (!symDesc.getPurposeDescription().isBlank()) {
-      sb.append(symDesc.getPurposeDescription());
+    if (!purpose.isBlank()) {
+      sb.append(purpose);
+    } else if (sb.length() == 0 && !member.description().isBlank()) {
+      // Запасной источник: у platform/configuration членов нет source-defined doc-comment'а,
+      // основной текст лежит в самом MemberDescriptor.description().
+      sb.append(member.description());
     }
     if (sb.length() > 0) {
       item.setDocumentation(sb.toString());

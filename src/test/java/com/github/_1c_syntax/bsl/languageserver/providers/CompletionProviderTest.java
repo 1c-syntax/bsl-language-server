@@ -196,6 +196,98 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dotCompletionMethodDetailHoldsSignatureNotDescription() {
+    // Регрессия: раньше purposeDescription дублировался в detail и в documentation
+    // → VS Code показывал одну и ту же фразу дважды в подсказке. Теперь detail для
+    // метода — это сигнатура (имена параметров) или счётчик вариантов, а описание
+    // живёт только в documentation.
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-value-table-columns.bsl", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // позиция сразу после второй точки в `ТЗ1.Колонки.` — члены КоллекцияКолонокТаблицыЗначений
+    params.setPosition(new Position(2, 12));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    var dobavit = items.stream()
+      .filter(it -> "Добавить".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    var detail = dobavit.getDetail();
+    assertThat(detail).as("detail метода должен быть проставлен — сигнатура или счётчик вариантов")
+      .isNotNull().isNotBlank();
+    var detailMatchesSignature = detail.startsWith("(");
+    var detailMatchesMultiSignaturesCount = detail.endsWith("синтаксиса");
+    assertThat(detailMatchesSignature || detailMatchesMultiSignaturesCount)
+      .as("detail метода — либо `(...)`, либо `N вариантов синтаксиса`, а не текст описания. Получили: %s", detail)
+      .isTrue();
+  }
+
+  @Test
+  void dotCompletionPropertyDetailHoldsTypeNameNotDescription() {
+    // Свойство: detail должно быть именем типа (например, "КоллекцияКолонокТаблицыЗначений"),
+    // а не дублировать текст описания.
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-properties.os", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // позиция сразу после `ТЗ.`
+    params.setPosition(new Position(1, 3));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    var kolonki = items.stream()
+      .filter(it -> "Колонки".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    var detail = kolonki.getDetail();
+    if (detail != null && !detail.isBlank()) {
+      assertThat(detail.length())
+        .as("detail свойства — короткое имя типа, а не предложение из описания. Получили: %s", detail)
+        .isLessThanOrEqualTo(60);
+      assertThat(detail).doesNotContain(" ");
+    }
+  }
+
+  @Test
+  void dotCompletionMemberDetailDoesNotDuplicateDocumentation() {
+    // Сквозная проверка: ни у одного item из dot-completion detail не равен documentation
+    // (именно так выглядел баг с двойным описанием в подсказке VS Code).
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-properties.os", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 3));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items).isNotEmpty();
+    for (var it : items) {
+      var detail = it.getDetail();
+      if (detail == null || detail.isBlank()) {
+        continue;
+      }
+      var doc = it.getDocumentation();
+      if (doc == null) {
+        continue;
+      }
+      var docText = doc.isLeft() ? doc.getLeft() : doc.getRight().getValue();
+      assertThat(detail)
+        .as("detail не должен повторять documentation для %s", it.getLabel())
+        .isNotEqualTo(docText);
+    }
+  }
+
+  @Test
   void dotCompletionFiltersByPrefix() {
     // Кодировка = КодировкаТекста.UTF8;  →  при курсоре после "UT" даёт только "UTF8"
     var content = "Кодировка = КодировкаТекста.UT;";
