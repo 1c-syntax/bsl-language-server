@@ -59,6 +59,24 @@ class ValueTableColumnsFieldsInferenceTest extends AbstractServerContextAwareTes
       .isNotEmpty();
   }
 
+  @Test
+  void columnsBecomeRowFieldsViaAddRowAssignment() {
+    // Регрессия: НоваяСтрока = ТЗ.Добавить() — возвращаемая строка должна знать про
+    // колонки, добавленные через ТЗ.Колонки.Добавить("X"), так же как `Для Каждого`-строка.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/ValueTableColumnsFields.bsl");
+
+    var nameTypes = inferAtMarker(documentContext, "A = НоваяСтрока.Имя", "A = НоваяСтрока.".length() + 1);
+    assertThat(nameTypes.refs())
+      .as("НоваяСтрока.Имя — колонка должна быть видна на строке, полученной из ТЗ.Добавить()")
+      .isNotEmpty();
+
+    var sumTypes = inferAtMarker(documentContext, "B = НоваяСтрока.Сумма", "B = НоваяСтрока.".length() + 1);
+    assertThat(sumTypes.refs())
+      .as("НоваяСтрока.Сумма — колонка должна быть видна на строке, полученной из ТЗ.Добавить()")
+      .isNotEmpty();
+  }
+
   private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     int markerStart = content.indexOf(marker);

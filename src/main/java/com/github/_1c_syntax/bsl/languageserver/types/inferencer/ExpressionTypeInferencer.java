@@ -456,8 +456,13 @@ public class ExpressionTypeInferencer {
         return fromLocalFields;
       }
     }
-    Set<TypeRef> result = new LinkedHashSet<>();
+    TypeSet result = TypeSet.EMPTY;
     for (var leftType : leftTypes.refs()) {
+      // Колонки/поля, накопленные на elementTypes левого типа (например, ТЗ с
+      // Колонки.Добавить("X")) должны прокидываться на строку, возвращённую
+      // методами вида .Добавить()/.Получить()/.Вставить(), у которых return-тип
+      // совпадает с element-ref'ом коллекции.
+      var elementSet = leftTypes.getElementTypes(leftType);
       for (var member : typeRegistry.getMembers(leftType, ctx.documentContext.getFileType())) {
         if (member.kind() != expectedKind) {
           continue;
@@ -471,15 +476,32 @@ public class ExpressionTypeInferencer {
         if (memberTypes != null && !memberTypes.isEmpty()) {
           for (var ref : memberTypes.refs()) {
             if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
-              result.add(ref);
+              result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
             }
           }
         } else if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
-          result.add(member.returnType());
+          result = result.union(enrichReturnRefWithElementFields(member.returnType(), elementSet));
         }
       }
     }
-    return result.isEmpty() ? TypeSet.EMPTY : TypeSet.of(result);
+    return result;
+  }
+
+  /**
+   * Если {@code ret} совпадает с одним из element-ref'ов коллекции на левом
+   * типе — построить TypeSet с этим ref'ом и его {@code localFields} из
+   * {@code elementSet} (то есть «передать» накопленные колонки/поля строки).
+   * Иначе — обычный {@link TypeSet#of(TypeRef)}.
+   */
+  private static TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
+    if (!elementSet.refs().contains(ret)) {
+      return TypeSet.of(ret);
+    }
+    var enriched = TypeSet.of(ret);
+    for (var entry : elementSet.getLocalFields(ret).entrySet()) {
+      enriched = enriched.withField(ret, entry.getKey(), entry.getValue());
+    }
+    return enriched;
   }
 
   private static String memberNameOf(ParseTree ast) {

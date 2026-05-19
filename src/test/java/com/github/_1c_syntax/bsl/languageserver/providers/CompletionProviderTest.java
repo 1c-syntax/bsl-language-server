@@ -227,6 +227,34 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dotCompletionOnAddRowRowSeesDynamicColumns() {
+    // Регрессия: НоваяСтрока = ТЗ.Добавить() + НоваяСтрока. — в выпадашке должны
+    // быть колонки, заявленные ТЗ.Колонки.Добавить("X", ...). Раньше Добавить()
+    // отдавал «голый» СтрокаТаблицыЗначений без localFields, и колонки терялись.
+    var content = """
+      Процедура Тест()
+      \tТЗ = Новый ТаблицаЗначений;
+      \tТЗ.Колонки.Добавить("ИмяКолонки", Новый ОписаниеТипов("Число"));
+      \tНоваяСтрока = ТЗ.Добавить();
+      \tX = НоваяСтрока.
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // позиция сразу после точки в `X = НоваяСтрока.`
+    params.setPosition(new Position(4, "\tX = НоваяСтрока.".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("completion на строке, полученной из ТЗ.Добавить(), должен показывать декларированные колонки ТЗ")
+      .extracting(CompletionItem::getLabel)
+      .contains("ИмяКолонки");
+  }
+
+  @Test
   void getCompletionReturnsCompletionListMarkedComplete() {
     // Контракт: getCompletion возвращает CompletionList с isIncomplete=false —
     // клиент может фильтровать локально, повторного запроса не требуется.
