@@ -144,12 +144,19 @@ public class ServerContextProvider {
     var uri = Absolute.uri(workspaceFolder.getUri());
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
+
+    // serverContext.clear() публикует ServerContextDocumentRemovedEvent через AOP
+    // для каждого удалённого документа; подписчики (workspace-scoped — ReferenceIndexFiller,
+    // OScriptLibraryIndex, etc.) должны иметь возможность резолвиться. Поэтому событие должно
+    // отлететь ДО уничтожения scope, и в этом thread'е должен быть выставлен workspaceUri.
+    if (serverContext != null) {
+      try (var ctx = WorkspaceContextHolder.forUri(uri)) {
+        serverContext.clear();
+      }
+    }
+
     workspaceScope.removeWorkspace(uri);
     WorkspaceContextHolder.unregisterWorkspace(uri);
-
-    if (serverContext != null) {
-      serverContext.clear();
-    }
   }
 
   /**

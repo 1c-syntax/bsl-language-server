@@ -126,6 +126,14 @@ public class WorkspaceScope implements Scope {
       .toList();
   }
 
+  /**
+   * @return URI всех зарегистрированных в scope workspace'ов. Полезно для test-cleanup'а,
+   * который должен пройтись по каждому scope для сброса состояния workspace-scoped beans.
+   */
+  public Collection<URI> getRegisteredWorkspaceUris() {
+    return java.util.List.copyOf(store.keySet());
+  }
+
   private static URI resolveKey() {
     var key = WorkspaceContextHolder.get();
     if (key == null) {

@@ -49,11 +49,7 @@ import java.util.StringJoiner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-// fullRefresh=true: тесты класса делают `configuration.update(file)` / `setLanguage(...)` и
-// рассчитывают, что между методами всё откатится к Spring-init-state.
-// liteCleanup + LanguageServerConfiguration.reset() пока не покрывают весь fan-out мутаций
-// (видимо, что-то ещё кэшируется в зависимых beans), поэтому форсируем полный refresh.
-@CleanupContextBeforeClassAndAfterEachTestMethod(fullRefresh = true)
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class FormatProviderTest {
 
   @Autowired

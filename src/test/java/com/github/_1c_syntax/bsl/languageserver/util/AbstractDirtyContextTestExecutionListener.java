@@ -61,18 +61,34 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
    * на случай, если какому-то тесту понадобится «полный» сброс.
    */
   protected static void liteCleanup(TestContext testContext) {
+    ServerContextProvider provider;
+    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope workspaceScope;
+    LanguageServerConfiguration configBean;
     try {
-      var provider = testContext.getApplicationContext().getBean(ServerContextProvider.class);
-      provider.clear();
+      provider = testContext.getApplicationContext().getBean(ServerContextProvider.class);
+      workspaceScope = testContext.getApplicationContext()
+        .getBean(com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope.class);
+      configBean = testContext.getApplicationContext().getBean(LanguageServerConfiguration.class);
     } catch (Exception e) {
-      // Ignore if provider not available yet
+      return; // Spring контекст ещё не готов.
     }
-    try {
-      var configuration = testContext.getApplicationContext().getBean(LanguageServerConfiguration.class);
-      configuration.reset();
-    } catch (Exception e) {
-      // Ignore if configuration not available yet
+
+    // Workspace-scoped beans живы пока scope их держит. Сбрасываем конфигурацию КАЖДОГО
+    // workspace в scope (включая искусственный file:///test-workspace из
+    // WorkspaceContextTestExecutionListener'а), затем сносим всё через provider.clear().
+    // Перебираем uris из самого WorkspaceScope, а не из provider.getAllContexts() —
+    // часть workspace'ов (test-default) проходят мимо ServerContextProvider.
+    for (var uri : workspaceScope.getRegisteredWorkspaceUris()) {
+      // forUri требует, чтобы URI был зарегистрирован в WORKSPACE_NAMES.
+      // Test-default уже зарегистрирован, файловые workspace'ы — тоже (через addWorkspace).
+      try (var ctx = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.forUri(uri)) {
+        configBean.reset();
+      } catch (Exception e) {
+        // Workspace мог быть не зарегистрирован — пропускаем.
+      }
     }
+
+    provider.clear();
   }
 
   /**
