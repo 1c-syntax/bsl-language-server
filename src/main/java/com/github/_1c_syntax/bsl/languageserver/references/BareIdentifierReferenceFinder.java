@@ -94,6 +94,15 @@ public class BareIdentifierReferenceFinder implements ReferenceFinder {
     if (isNewExpressionTypeName(document, position)) {
       return Optional.empty();
     }
+
+    // Идентификатор в позиции accessor'а ({@code obj.IDENT}, {@code obj.METHOD(…)}) —
+    // имя члена типа, а не bare identifier. Пытаться зарезолвить его как локальную
+    // переменную/глобальный символ нельзя: это даст фантомное попадание, если в
+    // скоупе случайно есть переменная/функция с таким же именем. Резолв члена —
+    // дело PlatformMemberReferenceFinder через TypeService.findMemberAt.
+    if (isAccessorIdentifier(document, position)) {
+      return Optional.empty();
+    }
     var resolved = resolveInScope(symbolTree, scope, module, name);
     if (resolved.isEmpty()) {
       var entry = globalScopeProvider.findGlobalEntry(name, document.getFileType());
@@ -183,6 +192,36 @@ public class BareIdentifierReferenceFinder implements ReferenceFinder {
       .map(terminal -> terminal.getParent() instanceof BSLParser.TypeNameContext tn
         ? tn.getParent() instanceof BSLParser.NewExpressionContext
         : false)
+      .orElse(false);
+  }
+
+  /**
+   * Проверяет, является ли идентификатор под курсором accessor'ом — то есть именем
+   * свойства ({@code obj.IDENT}) или именем метода в цепочке вызова ({@code obj.METHOD(…)}).
+   * Это зеркало логики из {@code TypeService.isAccessorIdentifier}: грамматика BSL
+   * выделяет такие IDENTIFIER-ы в специальные продукции {@code accessProperty} и
+   * {@code accessCall/methodCall/methodName}, и резолв их по локальному скоупу неверен.
+   */
+  private static boolean isAccessorIdentifier(DocumentContext document, Position position) {
+    BSLParser.FileContext ast;
+    try {
+      ast = document.getAst();
+    } catch (NullPointerException e) {
+      return false;
+    }
+    if (ast == null) {
+      return false;
+    }
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .map(terminal -> {
+        var parent = terminal.getParent();
+        if (parent instanceof BSLParser.AccessPropertyContext) {
+          return true;
+        }
+        return parent instanceof BSLParser.MethodNameContext
+          && parent.getParent() instanceof BSLParser.MethodCallContext mc
+          && mc.getParent() instanceof BSLParser.AccessCallContext;
+      })
       .orElse(false);
   }
 

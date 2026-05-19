@@ -115,6 +115,43 @@ class HoverProviderTest {
   }
 
   @Test
+  void hoverOnDereferencedPropertyMustNotMatchSameNameLocalVariable() {
+    // Регрессия: правая часть dereference `Контейнер.Поле` — это имя свойства, а не bare-identifier.
+    // ReferenceIndex не должен ловить эту позицию как ссылку на локальную переменную с таким же именем,
+    // объявленную выше в файле. Иначе hover/goto показывают «фантом» — попадание на переменную,
+    // тогда как реальная цель — property типа.
+    var content = """
+      ИсточникДанных = "что-то";
+      НаборДанных = Новый Структура;
+      НаборДанных.ИсточникДанных = "ИсточникДанных1";
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на втором (правом) `ИсточникДанных` — в позиции accessProperty
+    var line = "НаборДанных.ИсточникДанных = \"ИсточникДанных1\";";
+    var col = line.indexOf("ИсточникДанных", line.indexOf('.')) + 3;
+    params.setPosition(new Position(2, col));
+
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+    if (optionalHover.isPresent()) {
+      // Если hover есть — он должен указывать на свойство (Property symbol), а не на переменную.
+      var range = optionalHover.get().getRange();
+      var refLine = line.substring(range.getStart().getCharacter(), range.getEnd().getCharacter());
+      assertThat(refLine)
+        .as("hover в dereference-позиции не должен резолвиться на bare variable `%s` сверху файла",
+          "ИсточникДанных")
+        .isNotNull();
+      var content2 = optionalHover.get().getContents().getRight().getValue();
+      // Признак «фантомного» попадания в переменную — наличие ссылки [file://...] на исходник,
+      // характерной для variable markup builder.
+      assertThat(content2)
+        .as("содержимое hover не должно быть variable-markup'ом (с file:// ссылкой на собственную декларацию)")
+        .doesNotContain("file:");
+    }
+  }
+
+  @Test
   void hoverOnMemberInLvalueAssignmentTarget() {
     // Регрессия: dereference в LHS присваивания (lValue) — hover должен резолвиться так же,
     // как в RHS. ExpressionAtPosition.findExpressionTree сейчас не покрывает lValue,
