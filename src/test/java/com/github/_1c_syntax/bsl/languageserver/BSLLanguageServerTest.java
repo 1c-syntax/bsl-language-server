@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -120,32 +121,6 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  void shutdown() throws ExecutionException, InterruptedException {
-    CompletableFuture<Object> shutdown = server.shutdown();
-
-    assertThat(shutdown.get()).isEqualTo(true);
-  }
-
-  @Test
-  void exitWithoutShutdown() {
-    // when-then
-    assertThatThrownBy(() -> server.exit())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessage("1");
-  }
-
-  @Test
-  void exitWithShutdown() {
-    // given
-    server.shutdown();
-
-    // when-then
-    assertThatThrownBy(() -> server.exit())
-      .isInstanceOf(RuntimeException.class)
-      .hasMessage("0");
-  }
-
-  @Test
   @SuppressWarnings("deprecation")
   void initializeWithRootUri() throws ExecutionException, InterruptedException {
     // given
@@ -207,6 +182,44 @@ class BSLLanguageServerTest {
     // Should not throw, but no workspace will be configured
     assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
       .isEqualTo(TextDocumentSyncKind.Incremental);
+  }
+
+  /**
+   * Группа тестов shutdown/exit изолирована в @Nested-классе с fullRefresh: их методы рвут
+   * singleton-state (флаг shutdownWasCalled на BSLLanguageServer, плюс ThreadPoolTaskExecutor,
+   * закрываемый textDocumentService.reset() в shutdown()), которое lite-cleanup не пересоздаёт.
+   * Полный Spring refresh между методами этой группы — единственный способ получить свежие
+   * BSLLanguageServer и executor.
+   */
+  @Nested
+  @CleanupContextBeforeClassAndAfterEachTestMethod(fullRefresh = true)
+  class ShutdownAndExitTests {
+
+    @Test
+    void shutdown() throws ExecutionException, InterruptedException {
+      CompletableFuture<Object> shutdownFuture = server.shutdown();
+
+      assertThat(shutdownFuture.get()).isEqualTo(true);
+    }
+
+    @Test
+    void exitWithoutShutdown() {
+      // when-then
+      assertThatThrownBy(() -> server.exit())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("1");
+    }
+
+    @Test
+    void exitWithShutdown() {
+      // given
+      server.shutdown();
+
+      // when-then
+      assertThatThrownBy(() -> server.exit())
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("0");
+    }
   }
 
 }

@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
@@ -104,7 +104,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterClass
+// didOpen/didChange-тесты оставляют документ в индексе провайдера; *UnknownFile-тесты
+// предполагают, что фикстура НЕ открыта. Per-method liteCleanup сбрасывает workspace-state
+// между методами, изолируя интра-классовые мутации.
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class BSLTextDocumentServiceTest {
 
   @Autowired
