@@ -149,8 +149,11 @@ public class ServerContextProvider {
     // для каждого удалённого документа; подписчики (workspace-scoped — ReferenceIndexFiller,
     // OScriptLibraryIndex, etc.) должны иметь возможность резолвиться. Поэтому событие должно
     // отлететь ДО уничтожения scope, и в этом thread'е должен быть выставлен workspaceUri.
+    // Two-arg forUri используем, чтобы не требовать наличие URI в WORKSPACE_NAMES
+    // (для async-propagated workspace'ов запись там может отсутствовать).
     if (serverContext != null) {
-      try (var ctx = WorkspaceContextHolder.forUri(uri)) {
+      var name = extractWorkspaceName(uri);
+      try (var ctx = WorkspaceContextHolder.forUri(uri, name)) {
         serverContext.clear();
       }
     }

@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import org.springframework.core.Ordered;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestContext;
@@ -62,12 +64,11 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
    */
   protected static void liteCleanup(TestContext testContext) {
     ServerContextProvider provider;
-    com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope workspaceScope;
+    WorkspaceScope workspaceScope;
     LanguageServerConfiguration configBean;
     try {
       provider = testContext.getApplicationContext().getBean(ServerContextProvider.class);
-      workspaceScope = testContext.getApplicationContext()
-        .getBean(com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope.class);
+      workspaceScope = testContext.getApplicationContext().getBean(WorkspaceScope.class);
       configBean = testContext.getApplicationContext().getBean(LanguageServerConfiguration.class);
     } catch (Exception e) {
       return; // Spring контекст ещё не готов.
@@ -79,16 +80,26 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
     // Перебираем uris из самого WorkspaceScope, а не из provider.getAllContexts() —
     // часть workspace'ов (test-default) проходят мимо ServerContextProvider.
     for (var uri : workspaceScope.getRegisteredWorkspaceUris()) {
-      // forUri требует, чтобы URI был зарегистрирован в WORKSPACE_NAMES.
-      // Test-default уже зарегистрирован, файловые workspace'ы — тоже (через addWorkspace).
-      try (var ctx = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.forUri(uri)) {
+      // two-arg forUri — чтобы не зависеть от наличия URI в WORKSPACE_NAMES
+      // (для async-propagated workspace'ов запись там может отсутствовать).
+      try (var ctx = WorkspaceContextHolder.forUri(uri, uri.toString())) {
         configBean.reset();
       } catch (Exception e) {
-        // Workspace мог быть не зарегистрирован — пропускаем.
+        // Workspace мог быть уже уничтожен — пропускаем.
       }
     }
 
     provider.clear();
+
+    // provider.clear() уничтожает workspace-scoped beans только для тех URI, что были
+    // зарегистрированы через addWorkspace (живут в provider.contexts). Виртуальные
+    // workspace'ы — например, file:///test-workspace из WorkspaceContextTestExecutionListener'а
+    // или async-propagated — обходят provider, но создают beans в WorkspaceScope.store.
+    // Без явного removeWorkspace их TypeRegistry / OScriptLibraryIndex / GlobalScopeProvider
+    // переживают cleanup и подкидывают флэйк (см. ConventionalLibraryDiscoveryTest pollution).
+    for (var uri : workspaceScope.getRegisteredWorkspaceUris()) {
+      workspaceScope.removeWorkspace(uri);
+    }
   }
 
   /**
