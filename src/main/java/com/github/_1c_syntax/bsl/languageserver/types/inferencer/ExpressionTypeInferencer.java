@@ -226,7 +226,9 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     var token = terminal.getSymbol();
-    var position = new Position(token.getLine() - 1, token.getCharPositionInLine() + 1);
+    // Стартовая колонка токена — гарантированно внутри [start, end) диапазона
+    // идентификатора (для half-open контракта ReferenceIndex.containsPosition).
+    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
     var resolved = resolveReferenceAt(ctx, position);
     if (!resolved.isEmpty()) {
       return resolved;
@@ -426,7 +428,8 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     var token = name.getSymbol();
-    var position = new Position(token.getLine() - 1, token.getCharPositionInLine() + 1);
+    // Старт токена внутри [start, end) — корректно для half-open ReferenceIndex.containsPosition.
+    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
     return referenceResolver.findReference(ctx.documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .filter(MethodSymbol.class::isInstance)
