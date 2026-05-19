@@ -30,7 +30,12 @@ import org.springframework.test.context.TestContext;
 public class DirtyContextBeforeClassAndAfterClassTestExecutionListener extends AbstractDirtyContextTestExecutionListener {
 
   @Override
-  public void prepareTestInstance(TestContext testContext) {
+  public void beforeTestClass(TestContext testContext) {
+    // dirty-флаг ставим ДО первого autowire'а — иначе первый тест-метод класса
+    // получит зависимости из старого, потенциально загрязнённого контекста
+    // (workspace-scoped TypeRegistry / OScriptLibraryIndex от другого
+    // CleanupContextBeforeClassAndAfterClass-теста), и тесты типа
+    // ConventionalLibraryDiscoveryTest начнут флакать.
     dirtyContext(testContext);
   }
 
