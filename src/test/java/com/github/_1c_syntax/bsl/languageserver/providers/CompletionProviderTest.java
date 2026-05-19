@@ -329,6 +329,89 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void twoValueTablesKeepColumnsIsolated() {
+    // Регрессия: колонки одной ТЗ не должны утекать в другую через общий TypeRef
+    // ТаблицаЗначений / СтрокаТаблицыЗначений. У каждой переменной свой TypeSet,
+    // localFields — на TypeSet, а не на TypeRef.
+    var content = """
+      Процедура Тест()
+      \tТЗ1 = Новый ТаблицаЗначений;
+      \tТЗ1.Колонки.Добавить("КолонкаА");
+      \tТЗ2 = Новый ТаблицаЗначений;
+      \tТЗ2.Колонки.Добавить("КолонкаБ");
+      \tСтрока1 = ТЗ1.Добавить();
+      \tСтрока2 = ТЗ2.Добавить();
+      \tX1 = Строка1.
+      \tX2 = Строка2.
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var paramsRow1 = new CompletionParams();
+    paramsRow1.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    paramsRow1.setPosition(new Position(7, "\tX1 = Строка1.".length()));
+    var labelsRow1 = completionProvider.getCompletion(documentContext, paramsRow1).getItems()
+      .stream().map(CompletionItem::getLabel).toList();
+
+    assertThat(labelsRow1)
+      .as("Строка1 — колонка А есть")
+      .contains("КолонкаА")
+      .as("Строка1 — колонка из ТЗ2 не должна утечь")
+      .doesNotContain("КолонкаБ");
+
+    var paramsRow2 = new CompletionParams();
+    paramsRow2.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    paramsRow2.setPosition(new Position(8, "\tX2 = Строка2.".length()));
+    var labelsRow2 = completionProvider.getCompletion(documentContext, paramsRow2).getItems()
+      .stream().map(CompletionItem::getLabel).toList();
+
+    assertThat(labelsRow2)
+      .as("Строка2 — колонка Б есть")
+      .contains("КолонкаБ")
+      .as("Строка2 — колонка из ТЗ1 не должна утечь")
+      .doesNotContain("КолонкаА");
+  }
+
+  @Test
+  void twoStructuresKeepKeysIsolated() {
+    // Аналогично для Структуры: ключи Вставить накапливаются на TypeSet
+    // конкретной переменной, через общий TypeRef Структура их не «склеить».
+    var content = """
+      Стр1 = Новый Структура;
+      Стр1.Вставить("КлючА", 1);
+      Стр2 = Новый Структура;
+      Стр2.Вставить("КлючБ", 2);
+      A = Стр1.
+      B = Стр2.
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var paramsA = new CompletionParams();
+    paramsA.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    paramsA.setPosition(new Position(4, "A = Стр1.".length()));
+    var labelsA = completionProvider.getCompletion(documentContext, paramsA).getItems()
+      .stream().map(CompletionItem::getLabel).toList();
+
+    assertThat(labelsA)
+      .as("Стр1 — ключ А есть")
+      .contains("КлючА")
+      .as("Стр1 — ключ из Стр2 не должен утечь")
+      .doesNotContain("КлючБ");
+
+    var paramsB = new CompletionParams();
+    paramsB.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    paramsB.setPosition(new Position(5, "B = Стр2.".length()));
+    var labelsB = completionProvider.getCompletion(documentContext, paramsB).getItems()
+      .stream().map(CompletionItem::getLabel).toList();
+
+    assertThat(labelsB)
+      .as("Стр2 — ключ Б есть")
+      .contains("КлючБ")
+      .as("Стр2 — ключ из Стр1 не должен утечь")
+      .doesNotContain("КлючА");
+  }
+
+  @Test
   void dotCompletionOnAddRowRowSeesDynamicColumns() {
     // Регрессия: НоваяСтрока = ТЗ.Добавить() + НоваяСтрока. — в выпадашке должны
     // быть колонки, заявленные ТЗ.Колонки.Добавить("X", ...). Раньше Добавить()
