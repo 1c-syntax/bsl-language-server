@@ -227,6 +227,108 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void forEachRowSeesDynamicColumnsAndPlatformMembers() {
+    // На итераторе Для Каждого должны быть видны и динамические колонки
+    // (Колонки.Добавить), и платформенные члены СтрокаТаблицыЗначений
+    // (например, «Владелец») — оба источника обогащают TypeSet строки.
+    var content = """
+      Процедура Тест()
+      \tТЗ = Новый ТаблицаЗначений;
+      \tТЗ.Колонки.Добавить("ИмяКолонки");
+      \tДля Каждого Строка Из ТЗ Цикл
+      \t\tX = Строка.
+      \tКонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // позиция сразу после `Строка.` на 5-й строке (line index 4)
+    params.setPosition(new Position(4, "\t\tX = Строка.".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("Для-Каждого-итератор: и динамическая колонка ИмяКолонки, и platform-член Владелец")
+      .extracting(CompletionItem::getLabel)
+      .contains("ИмяКолонки", "Владелец");
+  }
+
+  @Test
+  void forEachStructurePairSeesKeyValuePlatformMembers() {
+    // Для Каждого Пара Из Стр Цикл — Пара = КлючИЗначение из defaultElementTypes.
+    // На Пара. должны быть видны «Ключ» и «Значение» (платформенные свойства).
+    var content = """
+      Стр = Новый Структура;
+      Стр.Вставить("X", 42);
+      Для Каждого Пара Из Стр Цикл
+      \tY = Пара.
+      КонецЦикла;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "\tY = Пара.".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("итератор Структуры — КлючИЗначение, его свойства Ключ и Значение должны быть в completion")
+      .extracting(CompletionItem::getLabel)
+      .contains("Ключ", "Значение");
+  }
+
+  @Test
+  void forEachMapPairSeesKeyValuePlatformMembers() {
+    // Для Каждого Пара Из Соответствие Цикл — Пара = КлючИЗначение.
+    var content = """
+      С = Новый Соответствие;
+      С.Вставить("X", 42);
+      Для Каждого Пара Из С Цикл
+      \tY = Пара.
+      КонецЦикла;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "\tY = Пара.".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("итератор Соответствия — КлючИЗначение, Ключ/Значение должны быть в completion")
+      .extracting(CompletionItem::getLabel)
+      .contains("Ключ", "Значение");
+  }
+
+  @Test
+  void forEachValueListItemSeesPlatformMembers() {
+    // Для Каждого Эл Из СписокЗначений Цикл — Эл = ЭлементСпискаЗначений.
+    var content = """
+      СЗ = Новый СписокЗначений;
+      СЗ.Добавить("X");
+      Для Каждого Эл Из СЗ Цикл
+      \tY = Эл.
+      КонецЦикла;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "\tY = Эл.".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("итератор СпискаЗначений — ЭлементСпискаЗначений, Значение/Представление/Пометка/Картинка")
+      .extracting(CompletionItem::getLabel)
+      .contains("Значение", "Представление");
+  }
+
+  @Test
   void dotCompletionOnAddRowRowSeesDynamicColumns() {
     // Регрессия: НоваяСтрока = ТЗ.Добавить() + НоваяСтрока. — в выпадашке должны
     // быть колонки, заявленные ТЗ.Колонки.Добавить("X", ...). Раньше Добавить()

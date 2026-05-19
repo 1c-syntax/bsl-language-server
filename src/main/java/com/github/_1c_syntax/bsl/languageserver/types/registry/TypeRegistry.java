@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.PrimitiveType;
 import com.github._1c_syntax.bsl.languageserver.types.model.Type;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import jakarta.annotation.PostConstruct;
@@ -93,6 +94,19 @@ public class TypeRegistry {
   /** Тип ↔ динамические источники конструкторов (например, OScript-класс из SymbolTree). */
   private final Map<TypeRef, List<ScopedConstructorSource>> constructorSources
     = new ConcurrentHashMap<>();
+  /**
+   * Тип ↔ типы элементов «по умолчанию» для коллекции. Заполняется из
+   * {@link TypePackProvider.TypeDecl#defaultElementTypes()} при регистрации.
+   * Источник истины — bsl-context ({@code ContextCollection.collectionElementTypes()})
+   * или builtin JSON. Используется инференсером для прокидывания element-типа
+   * на TypeSet, чтобы {@code Для Каждого X Из Коллекция} давал X нужного типа
+   * без аннотаций пользователя.
+   */
+  private final Map<TypeRef, List<TypeRef>> defaultElementTypes = new ConcurrentHashMap<>();
+  /** Тип ↔ {@code supportsForEach} ({@code true} — обход {@code Для Каждого} разрешён). */
+  private final Map<TypeRef, Boolean> supportsForEach = new ConcurrentHashMap<>();
+  /** Тип ↔ {@code supportsIndexAccess} ({@code true} — индексатор {@code [...]} разрешён). */
+  private final Map<TypeRef, Boolean> supportsIndexAccess = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
@@ -506,7 +520,48 @@ public class TypeRegistry {
     if (decl.exposedAsGlobal()) {
       registerAsGlobalProperty(ref, scope);
     }
+    if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
+      defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
+    }
+    if (decl.supportsForEach()) {
+      supportsForEach.put(ref, Boolean.TRUE);
+    }
+    if (decl.supportsIndexAccess()) {
+      supportsIndexAccess.put(ref, Boolean.TRUE);
+    }
     setLanguageScope(ref, scope == null ? LanguageScope.BOTH : scope);
+  }
+
+  /**
+   * Типы элементов коллекции для указанного {@code ref}. Возвращает
+   * {@link TypeSet#EMPTY}, если тип не зарегистрирован как коллекция либо
+   * элементы гетерогенные.
+   * <p>
+   * Element-refs резолвятся через {@link #resolve(String)}, чтобы получить
+   * канонические интернированные TypeRef'ы (одинаковые с теми, что
+   * используются как ключи в индексах членов).
+   */
+  public TypeSet getDefaultElementTypes(TypeRef ref) {
+    var raw = defaultElementTypes.get(ref);
+    if (raw == null || raw.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var canonical = new ArrayList<TypeRef>(raw.size());
+    for (var element : raw) {
+      var resolved = resolve(element.qualifiedName()).orElse(element);
+      canonical.add(resolved);
+    }
+    return TypeSet.of(canonical);
+  }
+
+  /** {@code true}, если у типа разрешён обход {@code Для Каждого}. */
+  public boolean supportsForEach(TypeRef ref) {
+    return Boolean.TRUE.equals(supportsForEach.get(ref));
+  }
+
+  /** {@code true}, если у типа разрешён индексатор {@code [...]}. */
+  public boolean supportsIndexAccess(TypeRef ref) {
+    return Boolean.TRUE.equals(supportsIndexAccess.get(ref));
   }
 
   private void addAlias(String name, TypeRef ref) {

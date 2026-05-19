@@ -275,10 +275,36 @@ public class ExpressionTypeInferencer {
     var base = typeRegistry.resolve(typeName, ctx.documentContext.getFileType())
       .map(TypeSet::of)
       .orElseGet(() -> TypeSet.of(typeRegistry.intern(TypeKind.USER, typeName)));
+    base = attachDefaultElementTypes(base);
     if (isStructureLike(typeName)) {
       base = applyStructureConstructorKeys(base, constructor, ctx);
     }
     return base;
+  }
+
+  /**
+   * Прикрепить к каждому {@link TypeRef} в наборе элементы-по-умолчанию из
+   * {@link TypeRegistry#getDefaultElementTypes(TypeRef)}. Это позволяет
+   * {@code Для Каждого X Из Коллекция Цикл} увидеть тип X (например,
+   * {@code КлючИЗначение} для {@code Соответствие}) без явных JsDoc-аннотаций.
+   * <p>
+   * Если у {@code ref} уже есть {@code elementTypes} (например, через
+   * dynamic-аккумуляторы вроде {@link #accumulateValueTableColumnFields}),
+   * дефолты добавляются через {@link TypeSet#withElement(TypeRef, TypeSet)},
+   * который реализует union — пользовательские поля сохраняются.
+   */
+  private TypeSet attachDefaultElementTypes(TypeSet base) {
+    if (base.isEmpty()) {
+      return base;
+    }
+    var result = base;
+    for (var ref : base.refs()) {
+      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      if (!defaults.isEmpty()) {
+        result = result.withElement(ref, defaults);
+      }
+    }
+    return result;
   }
 
   /**
@@ -484,7 +510,7 @@ public class ExpressionTypeInferencer {
         }
       }
     }
-    return result;
+    return attachDefaultElementTypes(result);
   }
 
   /**
@@ -594,6 +620,7 @@ public class ExpressionTypeInferencer {
         acc = acc.union(inferFromDefinitionPosition(owner, start, ctx));
       }
     }
+    acc = attachDefaultElementTypes(acc);
     acc = accumulateStructureInsertFields(variable, acc, ctx);
     acc = accumulateValueTableColumnFields(variable, acc, ctx);
     return acc;
