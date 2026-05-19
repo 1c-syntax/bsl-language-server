@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.BlockKeywordMatcher;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.MultiName;
 import org.antlr.v4.runtime.Token;
@@ -38,6 +39,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -140,51 +142,137 @@ public final class FormatProvider {
     DocumentOnTypeFormattingParams params,
     DocumentContext documentContext
   ) {
-    String ch = params.getCh();
-    var position = params.getPosition();
-
-    int targetLineLsp;
-    Range editRange;
-    int cutoffCharacter;
-
-    if ("\n".equals(ch)) {
-      if (position.getLine() == 0) {
-        return Collections.emptyList();
-      }
-      targetLineLsp = position.getLine() - 1;
-      editRange = Ranges.create(targetLineLsp, 0, position.getLine(), 0);
-      cutoffCharacter = Integer.MAX_VALUE;
-    } else if (";".equals(ch)) {
-      targetLineLsp = position.getLine();
-      editRange = Ranges.create(targetLineLsp, 0, position.getLine(), position.getCharacter());
-      cutoffCharacter = position.getCharacter();
-    } else {
+    if (!configuration.getFormattingOptions().isUseOnTypeFormatting()) {
       return Collections.emptyList();
     }
 
-    int antlrLine = targetLineLsp + 1;
+    var window = resolveEditWindow(params.getCh(), params.getPosition(), documentContext);
+    if (window == null) {
+      return Collections.emptyList();
+    }
 
-    // На горячем пути (каждый Enter/`;`) обходить весь поток токенов дорого.
-    // Токены отсортированы по line — находим начало нужной строки бинарным поиском
-    // и обходим только её хвост до первого токена со следующей линии.
-    List<Token> allTokens = documentContext.getTokens();
-    List<Token> tokens = new ArrayList<>();
-    for (int i = firstTokenIndexOnLine(allTokens, antlrLine); i < allTokens.size(); i++) {
-      Token token = allTokens.get(i);
-      if (token.getLine() != antlrLine) {
-        break;
+    var allTokens = documentContext.getTokens();
+    var lineTokens = collectLineTokens(allTokens, window.antlrLine, window.cutoffCharacter);
+    if (lineTokens.firstSignificant == null) {
+      return Collections.emptyList();
+    }
+
+    var adjustedRange = Ranges.create(
+      window.editRange.getStart().getLine(),
+      0,
+      window.editRange.getEnd().getLine(),
+      window.editRange.getEnd().getCharacter()
+    );
+
+    // startCharacter = колонка первого значимого токена, чтобы getNewText считал
+    // currentIndentLevel от него. Decrement у первого токена даст 0, а ведущий
+    // отступ мы подставим сами ниже.
+    var baseEdits = getTextEdits(
+      lineTokens.tokens,
+      documentContext.getScriptVariantLocale(),
+      adjustedRange,
+      lineTokens.firstSignificant.getCharPositionInLine(),
+      params.getOptions()
+    );
+    if (baseEdits.isEmpty()) {
+      return baseEdits;
+    }
+
+    var targetIndent = resolveTargetIndent(
+      documentContext, window.targetLineLsp, allTokens, lineTokens.firstSignificantIndex);
+    var base = baseEdits.getFirst();
+    return List.of(new TextEdit(base.getRange(), targetIndent + base.getNewText()));
+  }
+
+  private record EditWindow(int targetLineLsp, int antlrLine, Range editRange, int cutoffCharacter) {
+  }
+
+  private static @Nullable EditWindow resolveEditWindow(
+    String ch, Position position, DocumentContext documentContext
+  ) {
+    if ("\n".equals(ch)) {
+      if (position.getLine() == 0) {
+        return null;
       }
-      // Конец токена должен укладываться в диапазон до позиции курсора, иначе токены,
+      var targetLineLsp = position.getLine() - 1;
+      var contentList = documentContext.getContentList();
+      if (targetLineLsp >= contentList.length) {
+        return null;
+      }
+      // Ограничиваем диапазон концом строки без переноса: только что набранный пользователем
+      // перевод строки не должен попасть внутрь replace-range, иначе editor может проглотить
+      // новую строку при отсутствии хвостового переноса в newText.
+      var lineLength = contentList[targetLineLsp].length();
+      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
+      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, lineLength);
+    }
+    if (";".equals(ch)) {
+      var targetLineLsp = position.getLine();
+      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, position.getCharacter());
+      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, position.getCharacter());
+    }
+    return null;
+  }
+
+  private record LineTokens(List<Token> tokens, @Nullable Token firstSignificant, int firstSignificantIndex) {
+  }
+
+  private static LineTokens collectLineTokens(List<Token> allTokens, int antlrLine, int cutoffCharacter) {
+    // Токены отсортированы по line — находим начало нужной строки бинарным поиском
+    // и идём пока line совпадает. Все условия выхода — в заголовке while, поэтому
+    // в теле цикла нет break/continue.
+    var tokens = new ArrayList<Token>();
+    @Nullable Token firstSignificant = null;
+    var firstSignificantIndex = -1;
+    var i = firstTokenIndexOnLine(allTokens, antlrLine);
+    while (i < allTokens.size() && allTokens.get(i).getLine() == antlrLine) {
+      var token = allTokens.get(i);
+      // Конец токена должен укладываться в диапазон до позиции курсора — иначе токены,
       // выходящие за курсор (например многострочные литералы), дублируют свой хвост в replace.
       long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
       if (endColumn <= cutoffCharacter) {
         tokens.add(token);
+        if (firstSignificant == null
+          && (token.getChannel() == Token.DEFAULT_CHANNEL || token.getType() == BSLLexer.LINE_COMMENT)) {
+          firstSignificant = token;
+          firstSignificantIndex = i;
+        }
       }
+      i++;
     }
-
-    return getTextEdits(
-      tokens, documentContext.getScriptVariantLocale(), editRange, 0, params.getOptions());
+    return new LineTokens(tokens, firstSignificant, firstSignificantIndex);
   }
+
+  private static String resolveTargetIndent(
+    DocumentContext documentContext,
+    int targetLineLsp,
+    List<Token> allTokens,
+    int firstSignificantIndex
+  ) {
+    // Если первый значимый токен — закрывающее ключевое слово, выравниваем строку
+    // по парному открывающему. Иначе сохраняем фактический leading whitespace строки:
+    // это не даёт форматтеру срезать табуляцию у строк с decrement-keyword'ом и не
+    // трогает руками проставленный отступ прочих строк.
+    var contentList = documentContext.getContentList();
+    var opener = BlockKeywordMatcher.findMatchingOpener(allTokens, firstSignificantIndex);
+    if (opener != null) {
+      return leadingWhitespace(contentList[opener.getLine() - 1]);
+    }
+    return leadingWhitespace(contentList[targetLineLsp]);
+  }
+
+  private static String leadingWhitespace(String line) {
+    var i = 0;
+    while (i < line.length()) {
+      var c = line.charAt(i);
+      if (c != ' ' && c != '\t') {
+        break;
+      }
+      i++;
+    }
+    return line.substring(0, i);
+  }
+
 
   private static int firstTokenIndexOnLine(List<Token> tokens, int line) {
     int lo = 0;
