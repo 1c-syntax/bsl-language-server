@@ -140,51 +140,6 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   }
 
   /**
-   * Построить дерево выражения для префикса lValue до указанного modifier'а
-   * включительно. Используется для inference при автокомплите внутри
-   * lValue-цепочки (например, {@code Объект.Свойство.|...} — где справа
-   * парсер мог приклеить продолжение по recovery).
-   *
-   * @param ctx              lValue-контекст
-   * @param lastModifierIdx  индекс последнего включаемого modifier'а
-   *                         (-1 — только IDENTIFIER без модификаторов)
-   * @return дерево вычисления выражения
-   */
-  public static @Nullable BslExpression buildExpressionTreeFromLValuePartial(
-    BSLParser.@Nullable LValueContext ctx,
-    int lastModifierIdx
-  ) {
-    if (ctx == null) {
-      return null;
-    }
-    var instance = new ExpressionTreeBuildingVisitor();
-    instance.recursionLevel = 0;
-    if (ctx.IDENTIFIER() != null) {
-      instance.operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
-    } else if (ctx.globalMethodCall() != null) {
-      instance.visitGlobalMethodCall(ctx.globalMethodCall());
-    } else {
-      return null;
-    }
-    var acceptor = ctx.acceptor();
-    if (acceptor != null && lastModifierIdx >= 0) {
-      var modifiers = acceptor.modifier();
-      var limit = Math.min(lastModifierIdx, modifiers.size() - 1);
-      for (var i = 0; i <= limit; i++) {
-        modifiers.get(i).accept(instance);
-      }
-    }
-    if (!instance.operands.isEmpty()) {
-      var operand = instance.operands.pop();
-      if (operand.getRepresentingAst() == null) {
-        operand.setRepresentingAst(ctx);
-      }
-      instance.resultExpression = operand;
-    }
-    return instance.getExpressionTree();
-  }
-
-  /**
    * @return результирующее выражение в виде дерева вычисления операций
    */
   public @Nullable BslExpression getExpressionTree() {

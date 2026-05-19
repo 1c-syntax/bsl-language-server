@@ -45,8 +45,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   @Test
   void dotCompletionOnValueTableColumnsPropertyInCombinedScenario() {
     // Trailing-dot после `ТЗ1.Колонки.` плюс следующий statement в той же процедуре.
-    // Парсер при recovery может склеить trailing dot с последующим statement,
-    // поэтому проверяем именно комбинированный сценарий.
+    // bsl-parser >= 0.34.1 эмитит DOT_TRAILING на висячей точке перед EOL,
+    // поэтому такой код корректно разбивается на два statement'а.
     initServerContext("./src/test/resources/providers", false);
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/providers/completion-value-table-combo.bsl", context);
