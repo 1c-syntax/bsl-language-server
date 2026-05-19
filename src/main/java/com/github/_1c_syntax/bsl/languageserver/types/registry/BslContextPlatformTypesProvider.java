@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.Context;
+import com.github._1c_syntax.bsl.context.api.ContextCollection;
 import com.github._1c_syntax.bsl.context.api.ContextConstructor;
 import com.github._1c_syntax.bsl.context.api.ContextEnum;
 import com.github._1c_syntax.bsl.context.api.ContextEnumValue;
@@ -131,11 +132,34 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     var description = descriptionOf(context);
     var classRef = new TypeRef(kind, qualifiedName);
     var constructors = constructorsOf(context, classRef);
-    // TODO(elementTypes): прокинуть ContextCollection.collectionElementTypes()/supportsForEach()/
-    // supportsIndexAccess() — следующий коммит.
+    var defaultElementTypes = collectionElementTypes(context);
+    var supportsForEach = context instanceof ContextCollection coll && coll.supportsForEach();
+    var supportsIndexAccess = context instanceof ContextCollection coll && coll.supportsIndexAccess();
     return new TypeDecl(kind, qualifiedName, aliases, members,
       isExposedAsGlobal(context), description, constructors,
-      List.of(), false, false);
+      defaultElementTypes, supportsForEach, supportsIndexAccess);
+  }
+
+  /**
+   * Извлечь типы элементов коллекции из bsl-context. Для не-коллекций возвращает
+   * пустой список — параметр {@code defaultElementTypes} тогда не несёт смысла.
+   * <p>
+   * Конкретные {@link TypeKind} элементов берутся через {@link #mapRefKind(Context)} —
+   * это устраняет риск рассинхронизации с маппингом, применяемым к самим типам.
+   */
+  private static List<TypeRef> collectionElementTypes(Context context) {
+    if (!(context instanceof ContextCollection collection)) {
+      return List.of();
+    }
+    var elements = collection.collectionElementTypes();
+    if (elements == null || elements.isEmpty()) {
+      return List.of();
+    }
+    var refs = new ArrayList<TypeRef>(elements.size());
+    for (var element : elements) {
+      refs.add(new TypeRef(mapRefKind(element), element.name().getName()));
+    }
+    return List.copyOf(refs);
   }
 
   private static String descriptionOf(Context context) {
