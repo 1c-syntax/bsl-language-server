@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.context.api.ContextSignatureParameter;
 import com.github._1c_syntax.bsl.context.api.ContextType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -48,6 +49,7 @@ import com.github._1c_syntax.utils.Lazy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -91,20 +93,37 @@ import java.util.List;
 public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
 
   private final BslContextHolder contextHolder;
-  private final Lazy<List<TypeDecl>> cached;
   /**
-   * Язык, на котором будут публиковаться имена членов/параметров/значений
-   * перечислений. Захватывается при создании провайдера (workspace-scope).
-   * Имена самих типов остаются на русском — это канонический идентификатор
-   * для TypeRegistry; альтернативное имя регистрируется через alias.
+   * Конфигурация LS. Язык, на котором публикуются имена members/parameters/enum-values,
+   * читается из неё в момент построения кэша (см. {@link #cached}). Имена самих типов
+   * остаются на русском — это канонический идентификатор для TypeRegistry; альтернативное
+   * имя регистрируется через alias.
+   * <p>
+   * Не захватываем язык в final-поле: {@code language} в воркспейс-конфигурации может
+   * меняться в рантайме через {@code workspace/didChangeConfiguration}. На событие
+   * {@link LanguageServerConfigurationChangedEvent} сбрасываем {@link #cached}, и
+   * следующий вызов {@link #getTypes()} пересоберёт TypeDecl'ы на свежем языке.
    */
-  private final Language language;
+  private final LanguageServerConfiguration configuration;
+  private final Lazy<List<TypeDecl>> cached;
 
   public BslContextPlatformTypesProvider(BslContextHolder contextHolder,
                                          LanguageServerConfiguration configuration) {
     this.contextHolder = contextHolder;
-    this.language = configuration.getLanguage();
-    this.cached = new Lazy<>(() -> build(contextHolder.get().orElse(null), language));
+    this.configuration = configuration;
+    this.cached = new Lazy<>(() -> build(contextHolder.get().orElse(null), configuration.getLanguage()));
+  }
+
+  /**
+   * Сбрасывает кэш TypeDecl'ов при смене конфигурации LS, чтобы имена members
+   * пересобрались по актуальному {@link Language}. Регистрация в TypeRegistry
+   * происходит при загрузке воркспейса; до её повторной инициализации
+   * пользователю остаются те имена, которые лежали в TypeRegistry на момент
+   * bootstrap.
+   */
+  @EventListener
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    cached.clear();
   }
 
   @Override

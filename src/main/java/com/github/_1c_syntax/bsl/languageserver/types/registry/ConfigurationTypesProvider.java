@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -281,7 +282,13 @@ public class ConfigurationTypesProvider {
 
     // Описания стандартных реквизитов (Дата/Номер/Ссылка/…) в mdclasses пустые,
     // но платформа в HBK ровно их и описывает. Подмешиваем по имени.
-    var platformDescriptions = collectPlatformMemberDescriptions(fullRu);
+    // Сборка делается лениво (внутри MemberSource), чтобы пересоздаваться при
+    // смене языка через workspace/didChangeConfiguration — `attributeNameLocalized`
+    // читает {@code configuration.getLanguage()} per-call, и при пересоздании
+    // members имена обновляются.
+    final var capturedAttributes = attributes;
+    final var capturedCommon = commonForMd;
+    final var capturedFullRu = fullRu;
 
     var objectRu = fullRu + "Объект." + name;
     var objectEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Object." + name;
@@ -305,14 +312,15 @@ public class ConfigurationTypesProvider {
       }
     }
 
-    var members = new ArrayList<MemberDescriptor>();
-    members.addAll(buildAttributeMembers(attributes, platformDescriptions));
-    members.addAll(buildCommonAttributeMembers(commonForMd));
-    if (!members.isEmpty()) {
-      var immutable = List.copyOf(members);
-      typeRegistry.registerMemberSource(objectRef, () -> immutable, LanguageScope.BSL);
-      typeRegistry.registerMemberSource(refRef, () -> immutable, LanguageScope.BSL);
-    }
+    MemberSource attributeAndCommonSource = () -> {
+      var fresh = new ArrayList<MemberDescriptor>();
+      fresh.addAll(buildAttributeMembers(capturedAttributes,
+        collectPlatformMemberDescriptions(capturedFullRu)));
+      fresh.addAll(buildCommonAttributeMembers(capturedCommon));
+      return fresh;
+    };
+    typeRegistry.registerMemberSource(objectRef, attributeAndCommonSource, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(refRef, attributeAndCommonSource, LanguageScope.BSL);
 
     // Подмешиваем members generic-платформенного семейства (СправочникСсылка.<...>,
     // ДокументОбъект.<...> и т.п.). Это даёт методы (Метаданные, ПолучитьОбъект, Записать,
@@ -367,13 +375,16 @@ public class ConfigurationTypesProvider {
         : fullEn + "TabularSection." + name + "." + tsName;
       var collRef = registerWithAlias(collRu, collEn);
 
-      var columnMembers = buildAttributeMembers(ts.getAttributes());
-      if (!columnMembers.isEmpty()) {
-        var immutable = List.copyOf(columnMembers);
-        typeRegistry.registerMemberSource(rowRef, () -> immutable, LanguageScope.BSL);
+      var tsAttributes = ts.getAttributes();
+      if (tsAttributes != null && !tsAttributes.isEmpty()) {
+        // Аналогично основным реквизитам: лямбда вызывает buildAttributeMembers
+        // на каждый getMembers, поэтому язык читается per-call и подхватывает
+        // workspace/didChangeConfiguration.
+        MemberSource columnSource = () -> buildAttributeMembers(tsAttributes);
+        typeRegistry.registerMemberSource(rowRef, columnSource, LanguageScope.BSL);
         // Для удобства dot-completion'а ТЧ-коллекция тоже показывает колонки —
         // обращение `ТЧ.Колонка` к коллекции встречается в коде (через индекс/первую строку).
-        typeRegistry.registerMemberSource(collRef, () -> immutable, LanguageScope.BSL);
+        typeRegistry.registerMemberSource(collRef, columnSource, LanguageScope.BSL);
       }
 
       tsMembers.add(MemberDescriptor.property(tsName, collRef));

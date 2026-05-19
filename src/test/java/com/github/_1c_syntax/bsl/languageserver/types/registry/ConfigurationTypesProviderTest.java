@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -44,6 +46,9 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private GlobalScopeProvider globalScopeProvider;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void registersCatalogTypesWithRuAndEnAliases() {
@@ -242,5 +247,37 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     assertThat(rowRef).isPresent();
     var names = typeRegistry.getMembers(rowRef.get()).stream().map(m -> m.name()).toList();
     assertThat(names).contains("Реквизит1", "Реквизит2");
+  }
+
+  @Test
+  void standardAttributeNamesFollowLanguageAtCallTime() {
+    // workspace/didChangeConfiguration может поменять язык в рантайме.
+    // MemberSource ConfigurationTypesProvider'а — это лямбда, которая на каждом
+    // getMembers пересобирает members через attributeNameLocalized, поэтому
+    // смена языка должна отражаться без re-register.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var refOpt = typeRegistry.resolve("ДокументСсылка.Документ1");
+    assertThat(refOpt).isPresent();
+    var ref = refOpt.get();
+
+    // По умолчанию RU — стандартные реквизиты по-русски
+    configuration.setLanguage(Language.RU);
+    var ruNames = typeRegistry.getMembers(ref).stream().map(m -> m.name()).toList();
+    assertThat(ruNames).contains("Дата", "Номер", "Ссылка");
+
+    // Переключаем на EN — те же стандартные реквизиты появляются по-английски.
+    // (Platform-inherited members из generic-типа остаются на языке кэша
+    // BslContextPlatformTypesProvider — для их пересборки нужен re-bootstrap
+    // TypeRegistry, не входит в scope этого PR.)
+    configuration.setLanguage(Language.EN);
+    try {
+      var enNames = typeRegistry.getMembers(ref).stream().map(m -> m.name()).toList();
+      assertThat(enNames).contains("Date", "Number", "Ref");
+    } finally {
+      configuration.setLanguage(Language.RU);
+    }
   }
 }
