@@ -184,7 +184,55 @@ public class ExpressionAtPosition {
     if (complexIdent.isPresent()) {
       return complexIdent.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
     }
-    return findCallStatementContext(documentContext, position)
-      .map(ExpressionTreeBuildingVisitor::buildExpressionTree);
+    var callStmt = findCallStatementContext(documentContext, position);
+    if (callStmt.isPresent()) {
+      return callStmt.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
+    }
+    return findLValuePartialTree(documentContext, position);
+  }
+
+  /**
+   * Fallback для случаев, когда terminal под курсором попал в lValue
+   * (левая часть присваивания) — например, парсер по recovery склеил
+   * trailing dot с последующим statement: {@code Объект.Свойство.}\n{@code X = ...;}
+   * парсится как {@code Объект.Свойство.X = ...}. Cтроим выражение из
+   * lValue, обрезая modifier'ы до позиции курсора включительно.
+   */
+  private static Optional<BslExpression> findLValuePartialTree(
+    DocumentContext documentContext,
+    Position position
+  ) {
+    var ast = safeGetAst(documentContext);
+    if (ast == null) {
+      return Optional.empty();
+    }
+    var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, position);
+    if (terminalOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    var terminal = terminalOpt.get();
+    var parent = terminal.getParent() instanceof org.antlr.v4.runtime.ParserRuleContext prc ? prc : null;
+    if (parent == null) {
+      return Optional.empty();
+    }
+    var lValue = Trees.getRootParent(parent, BSLParser.RULE_lValue);
+    if (!(lValue instanceof BSLParser.LValueContext lValueCtx) || lValueCtx.acceptor() == null) {
+      return Optional.empty();
+    }
+    var modifiers = lValueCtx.acceptor().modifier();
+    int idx = -1;
+    for (int i = 0; i < modifiers.size(); i++) {
+      var m = modifiers.get(i);
+      if (org.antlr.v4.runtime.tree.Trees.getDescendants(m).contains(terminal)) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx < 0) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(
+      ExpressionTreeBuildingVisitor.buildExpressionTreeFromLValuePartial(lValueCtx, idx)
+    );
   }
 }

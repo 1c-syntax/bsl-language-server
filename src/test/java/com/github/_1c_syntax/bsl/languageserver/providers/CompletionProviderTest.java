@@ -43,6 +43,29 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   private com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration languageServerConfiguration;
 
   @Test
+  void dotCompletionOnValueTableColumnsPropertyInCombinedScenario() {
+    // Trailing-dot после `ТЗ1.Колонки.` плюс следующий statement в той же процедуре.
+    // Парсер при recovery может склеить trailing dot с последующим statement,
+    // поэтому проверяем именно комбинированный сценарий.
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-value-table-combo.bsl", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // line 2 (0-based) = `\tТЗ1.Колонки.`, символ сразу после второй точки = индекс 13
+    params.setPosition(new Position(2, 13));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .as("В комбинированном сценарии `ТЗ1.Колонки.` всё равно должен давать члены КоллекцияКолонок")
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .contains("Добавить", "Количество");
+  }
+
+  @Test
   void dotCompletionOnValueTableColumnsProperty() {
     // ТЗ1 = Новый ТаблицаЗначений(); ТЗ1.Колонки. — должен дать члены КоллекцияКолонокТаблицыЗначений
     initServerContext("./src/test/resources/providers", false);
