@@ -95,4 +95,45 @@ class HoverProviderTest {
     assertThat(hover.getRange()).isEqualTo(Ranges.create(6, 10, 20));
   }
 
+  @Test
+  void hoverOnMemberInRhsDereferenceWorks() {
+    // Контрольная точка: dereference в RHS (правой части присваивания) — hover должен работать.
+    var content = """
+      ТЗ = Новый ТаблицаЗначений;
+      Х = ТЗ.Колонки;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «Колонки» в `ТЗ.Колонки`
+    params.setPosition(new Position(1, 9));
+
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+    assertThat(optionalHover)
+      .as("hover на .Колонки в RHS должен резолвиться через PlatformMemberReferenceFinder")
+      .isPresent();
+  }
+
+  @Test
+  void hoverOnMemberInLvalueAssignmentTarget() {
+    // Регрессия: dereference в LHS присваивания (lValue) — hover должен резолвиться так же,
+    // как в RHS. ExpressionAtPosition.findExpressionTree сейчас не покрывает lValue,
+    // поэтому findMemberAt возвращает пусто на `ИсточникДанных.Имя = …`.
+    var content = """
+      СхемаКомпоновкиДанных = Новый СхемаКомпоновкиДанных;
+      ИсточникДанных = СхемаКомпоновкиДанных.ИсточникиДанных.Добавить();
+      ИсточникДанных.Имя = "ИсточникДанных1";
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «Имя» в строке `ИсточникДанных.Имя = …`
+    params.setPosition(new Position(2, 17));
+
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+    assertThat(optionalHover)
+      .as("hover на .Имя в lValue должен показывать описание PROPERTY типа ИсточникДанныхСхемыКомпоновкиДанных")
+      .isPresent();
+  }
+
 }

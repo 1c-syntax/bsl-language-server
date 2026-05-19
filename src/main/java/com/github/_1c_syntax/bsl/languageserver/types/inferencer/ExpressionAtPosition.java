@@ -105,6 +105,27 @@ public class ExpressionAtPosition {
   }
 
   /**
+   * Найти lValue-предка terminal'а под курсором — для случая dereference на левой
+   * части присваивания ({@code Объект.Свойство = …}). lValue — отдельная продукция
+   * грамматики и не накрывается ни expression, ни complexIdentifier, поэтому
+   * без отдельного lookup'а hover/findMemberAt ничего не находят на lValue-цепочке.
+   */
+  public static Optional<BSLParser.LValueContext> findLValueContext(
+    DocumentContext documentContext,
+    Position position
+  ) {
+    var ast = safeGetAst(documentContext);
+    if (ast == null) {
+      return Optional.empty();
+    }
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .map(terminal -> terminal.getParent() instanceof org.antlr.v4.runtime.ParserRuleContext prc ? prc : null)
+      .map(rule -> Trees.getRootParent(rule, BSLParser.RULE_lValue))
+      .filter(BSLParser.LValueContext.class::isInstance)
+      .map(BSLParser.LValueContext.class::cast);
+  }
+
+  /**
    * Найти RHS присваивания, накрывающего позицию (для случая, когда символ —
    * переменная, и нас интересует выражение, которому её приравняли).
    */
@@ -187,6 +208,10 @@ public class ExpressionAtPosition {
     var callStmt = findCallStatementContext(documentContext, position);
     if (callStmt.isPresent()) {
       return callStmt.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
+    }
+    var lValue = findLValueContext(documentContext, position);
+    if (lValue.isPresent()) {
+      return lValue.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
     }
     return Optional.empty();
   }
