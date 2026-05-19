@@ -51,6 +51,11 @@ import java.util.Optional;
  * @param returnTypes  union типов возвращаемого значения / типа свойства
  * @param signatures   список сигнатур для метода (пустой для свойства)
  * @param sourceSymbol опциональный символ-источник члена
+ * @param generic      признак «слотового» члена generic-типа платформы (например,
+ *                     {@code <Имя реквизита>}, {@code <Имя табличной части>}).
+ *                     Используется, чтобы не публиковать эти псевдо-члены при
+ *                     наследовании от generic-типа в его специализациях
+ *                     ({@code ДокументСсылка.МойДокумент} и т.п.).
  */
 public record MemberDescriptor(
   String name,
@@ -58,7 +63,8 @@ public record MemberDescriptor(
   String description,
   TypeSet returnTypes,
   List<SignatureDescriptor> signatures,
-  Symbol sourceSymbol
+  Symbol sourceSymbol,
+  boolean generic
 ) {
 
   public MemberDescriptor {
@@ -104,34 +110,34 @@ public record MemberDescriptor(
    * @return копия дескриптора с прикреплённым символом-источником.
    */
   public MemberDescriptor withSourceSymbol(Symbol symbol) {
-    return new MemberDescriptor(name, kind, description, returnTypes, signatures, symbol);
+    return new MemberDescriptor(name, kind, description, returnTypes, signatures, symbol, generic);
   }
 
   public static MemberDescriptor method(String name) {
-    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeSet.EMPTY, List.of(), null);
+    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeSet.EMPTY, List.of(), null, false);
   }
 
   public static MemberDescriptor method(String name, List<SignatureDescriptor> signatures) {
     var ret = signatureReturnTypes(signatures);
-    return new MemberDescriptor(name, MemberKind.METHOD, "", ret, signatures, null);
+    return new MemberDescriptor(name, MemberKind.METHOD, "", ret, signatures, null, false);
   }
 
   public static MemberDescriptor method(String name, String description, List<SignatureDescriptor> signatures) {
     var ret = signatureReturnTypes(signatures);
-    return new MemberDescriptor(name, MemberKind.METHOD, description, ret, signatures, null);
+    return new MemberDescriptor(name, MemberKind.METHOD, description, ret, signatures, null, false);
   }
 
   public static MemberDescriptor property(String name) {
-    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeSet.EMPTY, List.of(), null);
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeSet.EMPTY, List.of(), null, false);
   }
 
   public static MemberDescriptor property(String name, TypeRef returnType) {
-    return new MemberDescriptor(name, MemberKind.PROPERTY, "", typesOf(returnType), List.of(), null);
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", typesOf(returnType), List.of(), null, false);
   }
 
   public static MemberDescriptor property(String name, TypeRef returnType, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
-      description == null ? "" : description, typesOf(returnType), List.of(), null);
+      description == null ? "" : description, typesOf(returnType), List.of(), null, false);
   }
 
   /**
@@ -141,7 +147,13 @@ public record MemberDescriptor(
     return new MemberDescriptor(name, MemberKind.PROPERTY,
       description == null ? "" : description,
       returnTypes == null ? TypeSet.EMPTY : returnTypes,
-      List.of(), null);
+      List.of(), null, false);
+  }
+
+  /** Generic-property платформенного типа (например, {@code <Имя реквизита>}). */
+  public static MemberDescriptor genericProperty(String name, TypeRef returnType, String description) {
+    return new MemberDescriptor(name, MemberKind.PROPERTY,
+      description == null ? "" : description, typesOf(returnType), List.of(), null, true);
   }
 
   private static TypeSet typesOf(TypeRef ref) {

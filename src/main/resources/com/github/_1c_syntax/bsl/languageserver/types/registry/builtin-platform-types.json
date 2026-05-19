@@ -438,5 +438,119 @@
       {"name": "ПолучитьФункциональнуюОпциюФормы","kind": "METHOD"},
       {"name": "УстановитьПараметрыФункциональныхОпцийФормы","kind": "METHOD"}
     ]
+  },
+
+  {
+    "kind": "PLATFORM",
+    "name": "СправочникСсылка.<Имя справочника>",
+    "members": [
+      {"name": "<Имя реквизита>",       "kind": "PROPERTY", "generic": true},
+      {"name": "<Имя общего реквизита>","kind": "PROPERTY", "generic": true},
+      {"name": "ВерсияДанных",          "kind": "PROPERTY", "returnType": "Строка", "description": "Содержит текущую версию данных объекта."},
+      {"name": "Код",                   "kind": "PROPERTY", "returnType": "Строка", "description": "Содержит код элемента справочника."},
+      {"name": "Наименование",          "kind": "PROPERTY", "returnType": "Строка", "description": "Содержит наименование элемента справочника."},
+      {"name": "ПометкаУдаления",       "kind": "PROPERTY", "returnType": "Булево", "description": "Содержит признак пометки на удаление элемента справочника."},
+      {"name": "Ссылка",                "kind": "PROPERTY", "returnType": "СправочникСсылка.<Имя справочника>", "description": "Содержит ссылку на элемент справочника."},
+      {"name": "Метаданные",            "kind": "METHOD", "description": "Предоставляет доступ к объекту описания метаданных справочника."},
+      {"name": "ПолучитьОбъект",        "kind": "METHOD", "returnType": "СправочникОбъект.<Имя справочника>", "description": "Получает по ссылке объект."},
+      {"name": "Пустая",                "kind": "METHOD", "returnType": "Булево", "description": "Определяет, является ли ссылка пустой или нет."},
+      {"name": "УникальныйИдентификатор","kind": "METHOD", "returnType": "УникальныйИдентификатор", "description": "Получает уникальный идентификатор ссылки."}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СправочникОбъект.<Имя справочника>",
+    "members": [
+      {"name": "<Имя реквизита>",       "kind": "PROPERTY", "generic": true},
+      {"name": "<Имя табличной части>", "kind": "PROPERTY", "generic": true},
+      {"name": "<Имя общего реквизита>","kind": "PROPERTY", "generic": true},
+      {"name": "ВерсияДанных",          "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "Код",                   "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "Наименование",          "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ПометкаУдаления",       "kind": "PROPERTY", "returnType": "Булево"},
+      {"name": "Ссылка",                "kind": "PROPERTY", "returnType": "СправочникСсылка.<Имя справочника>"},
+      {"name": "ЭтотОбъект",            "kind": "PROPERTY", "returnType": "СправочникОбъект.<Имя справочника>"},
+      {"name": "Записать",              "kind": "METHOD",   "description": "Записывает элемент справочника в базу данных."},
+      {"name": "Прочитать",             "kind": "METHOD",   "description": "Считывает данные элемента справочника из базы данных."},
+      {"name": "Метаданные",            "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СправочникМенеджер.<Имя справочника>",
+    "members": [
+      {"name": "НайтиПоКоду",           "kind": "METHOD", "returnType": "СправочникСсылка.<Имя справочника>", "description": "Осуществляет поиск элемента по его коду."},
+      {"name": "НайтиПоНаименованию",   "kind": "METHOD", "returnType": "СправочникСсылка.<Имя справочника>", "description": "Осуществляет поиск элемента по его наименованию."},
+      {"name": "СоздатьЭлемент",        "kind": "METHOD", "returnType": "СправочникОбъект.<Имя справочника>", "description": "Создает новый элемент справочника."},
+      {"name": "ПустаяСсылка",          "kind": "METHOD", "returnType": "СправочникСсылка.<Имя справочника>", "description": "Получает пустое значение ссылки."},
+      {"name": "Выбрать",               "kind": "METHOD",   "description": "Формирует выборку элементов справочника."}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СправочникиМенеджер",
+    "exposedAsGlobal": true,
+    "members": [
+      {"name": "<Имя справочника>",     "kind": "PROPERTY", "generic": true,
+        "returnType": "СправочникМенеджер.<Имя справочника>"},
+      {"name": "ТипВсеСсылки",          "kind": "METHOD", "returnType": "ОписаниеТипов", "description": "Получает описание типов, содержащее типы ссылок справочников."}
+    ]
+  },
+
+  {
+    "kind": "PLATFORM",
+    "name": "ДокументСсылка.<Имя документа>",
+    "members": [
+      {"name": "<Имя реквизита>",       "kind": "PROPERTY", "generic": true},
+      {"name": "<Имя общего реквизита>","kind": "PROPERTY", "generic": true},
+      {"name": "ВерсияДанных",          "kind": "PROPERTY", "returnType": "Строка", "description": "Содержит текущую версию данных объекта."},
+      {"name": "Дата",                  "kind": "PROPERTY", "returnType": "Дата",   "description": "Содержит дату и время документа."},
+      {"name": "Номер",                 "kind": "PROPERTY", "returnType": "Строка", "description": "Содержит номер документа."},
+      {"name": "ПометкаУдаления",       "kind": "PROPERTY", "returnType": "Булево", "description": "Содержит признак пометки на удаление документа."},
+      {"name": "Проведен",              "kind": "PROPERTY", "returnType": "Булево", "description": "Содержит признак проведенности документа."},
+      {"name": "Ссылка",                "kind": "PROPERTY", "returnType": "ДокументСсылка.<Имя документа>", "description": "Содержит ссылку на документ."},
+      {"name": "Метаданные",            "kind": "METHOD", "description": "Предоставляет доступ к объекту описания метаданных документа."},
+      {"name": "ПолучитьОбъект",        "kind": "METHOD", "returnType": "ДокументОбъект.<Имя документа>", "description": "Получает по ссылке объект для чтения, изменения и удаления документа."},
+      {"name": "Пустая",                "kind": "METHOD", "returnType": "Булево"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ДокументОбъект.<Имя документа>",
+    "members": [
+      {"name": "<Имя реквизита>",       "kind": "PROPERTY", "generic": true},
+      {"name": "<Имя табличной части>", "kind": "PROPERTY", "generic": true},
+      {"name": "<Имя общего реквизита>","kind": "PROPERTY", "generic": true},
+      {"name": "ВерсияДанных",          "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "Дата",                  "kind": "PROPERTY", "returnType": "Дата"},
+      {"name": "Номер",                 "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ПометкаУдаления",       "kind": "PROPERTY", "returnType": "Булево"},
+      {"name": "Проведен",              "kind": "PROPERTY", "returnType": "Булево"},
+      {"name": "Ссылка",                "kind": "PROPERTY", "returnType": "ДокументСсылка.<Имя документа>"},
+      {"name": "ЭтотОбъект",            "kind": "PROPERTY", "returnType": "ДокументОбъект.<Имя документа>"},
+      {"name": "Записать",              "kind": "METHOD"},
+      {"name": "Прочитать",             "kind": "METHOD"},
+      {"name": "Метаданные",            "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ДокументМенеджер.<Имя документа>",
+    "members": [
+      {"name": "НайтиПоНомеру",         "kind": "METHOD", "returnType": "ДокументСсылка.<Имя документа>"},
+      {"name": "СоздатьДокумент",       "kind": "METHOD", "returnType": "ДокументОбъект.<Имя документа>"},
+      {"name": "ПустаяСсылка",          "kind": "METHOD", "returnType": "ДокументСсылка.<Имя документа>"},
+      {"name": "Выбрать",               "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ДокументыМенеджер",
+    "exposedAsGlobal": true,
+    "members": [
+      {"name": "<Имя документа>",       "kind": "PROPERTY", "generic": true,
+        "returnType": "ДокументМенеджер.<Имя документа>"},
+      {"name": "ТипВсеСсылки",          "kind": "METHOD", "returnType": "ОписаниеТипов"}
+    ]
   }
 ]

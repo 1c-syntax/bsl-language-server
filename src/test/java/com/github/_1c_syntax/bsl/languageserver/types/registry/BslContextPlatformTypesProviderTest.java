@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextMethodSignature;
 import com.github._1c_syntax.bsl.context.api.ContextName;
@@ -44,6 +46,8 @@ import com.github._1c_syntax.bsl.context.platform.primitive.PrimitivePlaceholder
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +55,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit-тесты на адаптер {@link BslContextPlatformTypesProvider}: проверяем
@@ -58,6 +65,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Источник данных — синтетический {@link PlatformContextProvider} из
  * builder'ов bsl-context (без чтения реального HBK).
  */
+@ExtendWith(MockitoExtension.class)
 class BslContextPlatformTypesProviderTest {
 
   /** Имитация {@link BslContextHolder} без Spring. */
@@ -70,12 +78,27 @@ class BslContextPlatformTypesProviderTest {
     };
   }
 
+  /**
+   * Мок {@link LanguageServerConfiguration} с указанным языком. Использовать вместо
+   * {@code new LanguageServerConfiguration()} в тестах — там сложная инициализация
+   * с побочными эффектами, которая в unit-тестах не нужна.
+   */
+  private static LanguageServerConfiguration mockConfiguration(Language language) {
+    var configuration = mock(LanguageServerConfiguration.class);
+    lenient().when(configuration.getLanguage()).thenReturn(language);
+    return configuration;
+  }
+
+  private static LanguageServerConfiguration mockConfiguration() {
+    return mockConfiguration(Language.DEFAULT_LANGUAGE);
+  }
+
   // BslContextHolder теперь принимает PlatformContextProviderFactory.
   // В тестах подменяем сам holder через override get(), фабрика не используется.
 
   @Test
   void emptyHolderProducesNoTypes() {
-    var adapter = new BslContextPlatformTypesProvider(holderOf(null));
+    var adapter = new BslContextPlatformTypesProvider(holderOf(null), mockConfiguration());
     assertThat(adapter.getTypes()).isEmpty();
   }
 
@@ -84,7 +107,7 @@ class BslContextPlatformTypesProviderTest {
     var primitive = new PrimitivePlaceholderType(new ContextName("Строка", "String"), "");
     var provider = providerOf(primitive);
 
-    var types = new BslContextPlatformTypesProvider(holderOf(provider)).getTypes();
+    var types = new BslContextPlatformTypesProvider(holderOf(provider), mockConfiguration()).getTypes();
 
     assertThat(types).hasSize(1);
     var decl = types.iterator().next();
@@ -136,7 +159,7 @@ class BslContextPlatformTypesProviderTest {
 
     var provider = providerOf(arrayType, stringType, numberType);
 
-    var types = new BslContextPlatformTypesProvider(holderOf(provider)).getTypes();
+    var types = new BslContextPlatformTypesProvider(holderOf(provider), mockConfiguration()).getTypes();
     var decl = types.stream()
       .filter(t -> "Массив".equals(t.qualifiedName()))
       .findFirst().orElseThrow();
@@ -169,7 +192,7 @@ class BslContextPlatformTypesProviderTest {
       ))
       .build();
 
-    var types = new BslContextPlatformTypesProvider(holderOf(providerOf(enumeration))).getTypes();
+    var types = new BslContextPlatformTypesProvider(holderOf(providerOf(enumeration)), mockConfiguration()).getTypes();
     var decl = types.iterator().next();
 
     assertThat(decl.kind()).isEqualTo(TypeKind.PLATFORM);
@@ -201,7 +224,7 @@ class BslContextPlatformTypesProviderTest {
     var realType = primitive("Строка", "String");
 
     var types = new BslContextPlatformTypesProvider(
-      holderOf(providerOf(globalContext, keyword, realType))).getTypes();
+      holderOf(providerOf(globalContext, keyword, realType)), mockConfiguration()).getTypes();
 
     // Только примитив, без global-context и language-keyword.
     assertThat(types)
@@ -236,7 +259,7 @@ class BslContextPlatformTypesProviderTest {
       .build();
 
     var types = new BslContextPlatformTypesProvider(
-      holderOf(providerOf(catalogsManager, plainType))).getTypes();
+      holderOf(providerOf(catalogsManager, plainType)), mockConfiguration()).getTypes();
 
     var manager = types.stream().filter(t -> "СправочникиМенеджер".equals(t.qualifiedName()))
       .findFirst().orElseThrow();
@@ -258,7 +281,7 @@ class BslContextPlatformTypesProviderTest {
       .description("Универсальная коллекция значений.")
       .build();
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)), mockConfiguration())
       .getTypes().iterator().next();
 
     assertThat(decl.description()).isEqualTo("Универсальная коллекция значений.");
@@ -270,7 +293,7 @@ class BslContextPlatformTypesProviderTest {
       new ContextName("Строка", "String"),
       "Значения данного типа содержат строку в формате Unicode.");
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(primitive)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(primitive)), mockConfiguration())
       .getTypes().iterator().next();
 
     assertThat(decl.description()).contains("Unicode");
@@ -310,7 +333,7 @@ class BslContextPlatformTypesProviderTest {
       .build();
 
     var decl = new BslContextPlatformTypesProvider(
-      holderOf(providerOf(arrayType, stringType)))
+      holderOf(providerOf(arrayType, stringType)), mockConfiguration())
       .getTypes().stream()
       .filter(t -> "Массив".equals(t.qualifiedName()))
       .findFirst().orElseThrow();
@@ -381,7 +404,7 @@ class BslContextPlatformTypesProviderTest {
       .constructors(Collections.emptyList())
       .build();
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(stringType)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(stringType)), mockConfiguration())
       .getTypes().iterator().next();
 
     var member = decl.members().iterator().next();
@@ -405,7 +428,7 @@ class BslContextPlatformTypesProviderTest {
       .constructors(Collections.emptyList())
       .build();
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)), mockConfiguration())
       .getTypes().iterator().next();
 
     assertThat(decl.constructors()).isEmpty();
@@ -420,5 +443,109 @@ class BslContextPlatformTypesProviderTest {
   private static ContextProvider providerOf(Context... contexts) {
     return new PlatformContextProvider(
       new PlatformContextStorage(new ArrayList<>(List.of(contexts))));
+  }
+
+  @Test
+  void memberNamesPickedByConfiguredLanguageRu() {
+    var stringType = primitive("Строка", "String");
+    var property = PlatformContextProperty.builder()
+      .name(new ContextName("Имя", "Name"))
+      .rawTypes(List.of("Строка"))
+      .description("")
+      .availabilities(List.of())
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(new ArrayList<>(List.of(property)))
+      .methods(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var types = new BslContextPlatformTypesProvider(
+      holderOf(providerOf(type, stringType)),
+      mockConfiguration(Language.RU)
+    ).getTypes();
+
+    var member = types.stream()
+      .filter(t -> "Объект".equals(t.qualifiedName()))
+      .findFirst().orElseThrow()
+      .members().iterator().next();
+    assertThat(member.name()).isEqualTo("Имя");
+  }
+
+  @Test
+  void memberNamesPickedByConfiguredLanguageEn() {
+    var stringType = primitive("Строка", "String");
+    var property = PlatformContextProperty.builder()
+      .name(new ContextName("Имя", "Name"))
+      .rawTypes(List.of("Строка"))
+      .description("")
+      .availabilities(List.of())
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(new ArrayList<>(List.of(property)))
+      .methods(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var types = new BslContextPlatformTypesProvider(
+      holderOf(providerOf(type, stringType)),
+      mockConfiguration(Language.EN)
+    ).getTypes();
+
+    var member = types.stream()
+      .filter(t -> "Объект".equals(t.qualifiedName()))
+      .findFirst().orElseThrow()
+      .members().iterator().next();
+    assertThat(member.name()).isEqualTo("Name");
+  }
+
+  @Test
+  void cachedRebuildsOnConfigurationChangeEvent() {
+    // Имитируем смену языка в воркспейс-конфигурации в рантайме (didChangeConfiguration).
+    // Адаптер при создании читает RU, после события сбрасывает кэш и при следующем
+    // getTypes() читает свежий язык — теперь EN.
+    var stringType = primitive("Строка", "String");
+    var property = PlatformContextProperty.builder()
+      .name(new ContextName("Имя", "Name"))
+      .rawTypes(List.of("Строка"))
+      .description("")
+      .availabilities(List.of())
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(new ArrayList<>(List.of(property)))
+      .methods(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var configuration = mock(LanguageServerConfiguration.class);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    var adapter = new BslContextPlatformTypesProvider(holderOf(providerOf(type, stringType)), configuration);
+
+    var beforeName = adapter.getTypes().stream()
+      .filter(t -> "Объект".equals(t.qualifiedName()))
+      .findFirst().orElseThrow()
+      .members().iterator().next().name();
+    assertThat(beforeName).isEqualTo("Имя");
+
+    // язык поменялся: эмулируем событие конфигурации, кэш должен сброситься
+    when(configuration.getLanguage()).thenReturn(Language.EN);
+    adapter.handleEvent(
+      new com.github._1c_syntax.bsl.languageserver.configuration.events
+        .LanguageServerConfigurationChangedEvent(configuration));
+
+    var afterName = adapter.getTypes().stream()
+      .filter(t -> "Объект".equals(t.qualifiedName()))
+      .findFirst().orElseThrow()
+      .members().iterator().next().name();
+    assertThat(afterName).isEqualTo("Name");
   }
 }

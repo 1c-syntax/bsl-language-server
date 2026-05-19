@@ -201,6 +201,7 @@
 			<EventSubscription>ПриУстановкеНовогоКода</EventSubscription>
 			<EventSubscription>РегистрацияИзмененийПередУдалением</EventSubscription>
 			<CommandGroup>ГруппаКоманд1</CommandGroup>
+			<CommonAttribute>ОбщийРеквизит1</CommonAttribute>
 			<Catalog>Справочник1</Catalog>
 			<Catalog>СправочникСМенеджером</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>
