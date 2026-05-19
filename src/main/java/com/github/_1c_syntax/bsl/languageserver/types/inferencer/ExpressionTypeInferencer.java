@@ -425,6 +425,9 @@ public class ExpressionTypeInferencer {
     if (op == BslOperator.DEREFERENCE) {
       return inferDereference(node, ctx);
     }
+    if (op == BslOperator.INDEX_ACCESS) {
+      return inferIndexAccess(node, ctx);
+    }
     if (isLogical(op) || isComparison(op)) {
       return TypeSet.of(BOOLEAN);
     }
@@ -444,6 +447,33 @@ public class ExpressionTypeInferencer {
       return TypeSet.of(NUMBER);
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Индексатор {@code coll[i]}. Возвращает элементы коллекции, накопленные на
+   * левом TypeSet'е — это сразу подхватывает динамические поля строки
+   * ({@link #accumulateValueTableColumnFields}) и платформенные members
+   * через приклеенные defaultElementTypes (см.
+   * {@link TypeRegistry#getDefaultElementTypes(TypeRef)}). Так
+   * {@code Массив[i].метод()}, {@code ТЗ[0].КолонкаА},
+   * {@code СписокЗначений[i].Значение} начинают работать без JsDoc.
+   * <p>
+   * Известное ограничение: для KV-коллекций ({@code Соответствие},
+   * {@code Структура}) семантически {@code coll[key]} — это значение, а не пара
+   * {@code КлючИЗначение}. Точная модель «тип значения по конкретному ключу»
+   * требует отдельной работы — оставлено TODO; сейчас вернётся
+   * {@code КлючИЗначение} (по defaultElementTypes), что хотя бы не пусто.
+   */
+  private TypeSet inferIndexAccess(BinaryOperationNode node, InferenceContext ctx) {
+    var leftTypes = inferInternal(node.getLeft(), ctx);
+    if (leftTypes.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    TypeSet result = TypeSet.EMPTY;
+    for (var ref : leftTypes.refs()) {
+      result = result.union(leftTypes.getElementTypes(ref));
+    }
+    return result;
   }
 
   private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {

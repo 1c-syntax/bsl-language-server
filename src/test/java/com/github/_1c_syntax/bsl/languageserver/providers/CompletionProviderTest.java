@@ -411,6 +411,73 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void indexAccessOnValueTableYieldsRowMembers() {
+    // ТЗ[0].КолонкаХ — индексатор должен возвращать СтрокаТаблицыЗначений
+    // с теми же localFields, что и Для-Каждого-итератор / .Добавить()-row.
+    var content = """
+      Процедура Тест()
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("МояКолонка");
+      X = ТЗ[0].
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "X = ТЗ[0].".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("ТЗ[0].<dot> — динамическая колонка + platform-member СтрокиТЗ")
+      .extracting(CompletionItem::getLabel)
+      .contains("МояКолонка", "Владелец");
+  }
+
+  @Test
+  void indexAccessOnValueListItemHasPlatformMembers() {
+    // СписокЗначений[i].Значение — обычный элемент списка
+    var content = """
+      СЗ = Новый СписокЗначений;
+      X = СЗ[0].
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, "X = СЗ[0].".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("СЗ[i].<dot> — ЭлементСпискаЗначений с Значение/Представление")
+      .extracting(CompletionItem::getLabel)
+      .contains("Значение", "Представление");
+  }
+
+  @Test
+  void indexAccessOnColumnsCollectionYieldsColumn() {
+    // ТЗ.Колонки[0].Имя — индексатор на коллекции колонок возвращает КолонкаТаблицыЗначений
+    var content = """
+      ТЗ = Новый ТаблицаЗначений;
+      X = ТЗ.Колонки[0].
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, "X = ТЗ.Колонки[0].".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("Колонки[0].<dot> — КолонкаТаблицыЗначений: Имя, Заголовок, Ширина")
+      .extracting(CompletionItem::getLabel)
+      .contains("Имя", "Заголовок");
+  }
+
+  @Test
   void dotCompletionOnAddRowRowSeesDynamicColumns() {
     // Регрессия: НоваяСтрока = ТЗ.Добавить() + НоваяСтрока. — в выпадашке должны
     // быть колонки, заявленные ТЗ.Колонки.Добавить("X", ...). Раньше Добавить()
