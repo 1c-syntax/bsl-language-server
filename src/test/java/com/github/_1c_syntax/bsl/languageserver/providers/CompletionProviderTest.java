@@ -21,14 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,6 +48,28 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration languageServerConfiguration;
+
+  @Autowired
+  private ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  @AfterEach
+  void resetClientCapabilities() {
+    clientCapabilitiesHolder.setCapabilities(null);
+    completionProvider.handleInitializeEvent(null);
+  }
+
+  private void enableSnippetSupport(boolean enabled) {
+    var itemCaps = new CompletionItemCapabilities();
+    itemCaps.setSnippetSupport(enabled);
+    var completionCaps = new CompletionCapabilities();
+    completionCaps.setCompletionItem(itemCaps);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setCompletion(completionCaps);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    completionProvider.handleInitializeEvent(null);
+  }
 
   @Test
   void dotCompletionOnValueTableColumnsPropertyInCombinedScenario() {
@@ -196,6 +225,97 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void methodInsertTextFallsBackToOpenParenWithoutSnippetSupport() {
+    // Дефолтное поведение для клиентов без snippetSupport: один `(`, как и раньше.
+    var content = "Сооб";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 4));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+    var message = items.stream()
+      .filter(it -> "Сообщить".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(message.getInsertText()).isEqualTo("Сообщить(");
+    assertThat(message.getInsertTextFormat()).isNull();
+    assertThat(message.getCommand()).isNull();
+  }
+
+  @Test
+  void methodInsertTextIsSnippetWhenClientSupportsSnippets() {
+    // `Сообщить($0)` как сниппет + команда triggerParameterHints для всплытия signatureHelp.
+    enableSnippetSupport(true);
+
+    var content = "Сооб";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 4));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+    var message = items.stream()
+      .filter(it -> "Сообщить".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(message.getInsertText()).isEqualTo("Сообщить($0)");
+    assertThat(message.getInsertTextFormat()).isEqualTo(InsertTextFormat.Snippet);
+    assertThat(message.getCommand()).isNotNull();
+    assertThat(message.getCommand().getCommand()).isEqualTo("editor.action.triggerParameterHints");
+  }
+
+  @Test
+  void dotCompletionMethodUsesSnippetWhenClientSupportsSnippets() {
+    enableSnippetSupport(true);
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-value-table-columns.bsl", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, 12));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+    var add = items.stream()
+      .filter(it -> "Добавить".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(add.getInsertText()).isEqualTo("Добавить($0)");
+    assertThat(add.getInsertTextFormat()).isEqualTo(InsertTextFormat.Snippet);
+    assertThat(add.getCommand()).isNotNull();
+    assertThat(add.getCommand().getCommand()).isEqualTo("editor.action.triggerParameterHints");
+  }
+
+  @Test
+  void classCompletionAfterNovyiUsesSnippetWhenClientSupportsSnippets() {
+    enableSnippetSupport(true);
+
+    var content = "А = Новый Масс";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+    var array = items.stream()
+      .filter(it -> "Массив".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(array.getInsertText()).isEqualTo("Массив($0)");
+    assertThat(array.getInsertTextFormat()).isEqualTo(InsertTextFormat.Snippet);
+    assertThat(array.getCommand()).isNotNull();
+    assertThat(array.getCommand().getCommand()).isEqualTo("editor.action.triggerParameterHints");
+  }
+
+  @Test
   void dotCompletionMethodDetailHoldsSignatureNotDescription() {
     // Регрессия: раньше purposeDescription дублировался в detail и в documentation
     // → VS Code показывал одну и ту же фразу дважды в подсказке. Теперь detail для
@@ -212,12 +332,12 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
     var items = completionProvider.getCompletion(documentContext, params);
 
-    var dobavit = items.stream()
+    var add = items.stream()
       .filter(it -> "Добавить".equals(it.getLabel()))
       .findFirst()
       .orElseThrow();
 
-    var detail = dobavit.getDetail();
+    var detail = add.getDetail();
     assertThat(detail).as("detail метода должен быть проставлен — сигнатура или счётчик вариантов")
       .isNotNull().isNotBlank();
     var detailMatchesSignature = detail.startsWith("(");
@@ -242,12 +362,12 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
     var items = completionProvider.getCompletion(documentContext, params);
 
-    var kolonki = items.stream()
+    var columns = items.stream()
       .filter(it -> "Колонки".equals(it.getLabel()))
       .findFirst()
       .orElseThrow();
 
-    var detail = kolonki.getDetail();
+    var detail = columns.getDetail();
     if (detail != null && !detail.isBlank()) {
       assertThat(detail.length())
         .as("detail свойства — короткое имя типа, а не предложение из описания. Получили: %s", detail)

@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -35,10 +37,17 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -63,10 +72,27 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public final class CompletionProvider {
 
+  private static final String TRIGGER_PARAMETER_HINTS_COMMAND = "editor.action.triggerParameterHints";
+
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final LanguageServerConfiguration configuration;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+
+  // Кэшируется на initialize. snippetSupport — gate для вставки `Метод($0)` сниппета и
+  // прикрепления `editor.action.triggerParameterHints` к completion item.
+  private boolean snippetSupport;
+
+  @EventListener
+  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
+    snippetSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getCompletion)
+      .map(CompletionCapabilities::getCompletionItem)
+      .map(CompletionItemCapabilities::getSnippetSupport)
+      .orElse(Boolean.FALSE);
+  }
 
   /**
    * Из коллекции членов оставить только те, чьё имя соответствует
@@ -327,6 +353,7 @@ public final class CompletionProvider {
               item.setDocumentation(desc);
             }
           });
+          applyCallableInsertText(item, className);
           items.add(item);
         }
       }
@@ -337,6 +364,7 @@ public final class CompletionProvider {
         if (matches(libClassName, prefix)) {
           var item = new CompletionItem(libClassName);
           item.setKind(CompletionItemKind.Class);
+          applyCallableInsertText(item, libClassName);
           items.add(item);
         }
       }
@@ -400,7 +428,7 @@ public final class CompletionProvider {
       if (matches(method.getName(), prefix)) {
         var item = new CompletionItem(method.getName());
         item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
-        item.setInsertText(method.getName() + "(");
+        applyCallableInsertText(item, method.getName());
         items.add(item);
       }
     }
@@ -491,11 +519,11 @@ public final class CompletionProvider {
     }
   }
 
-  private static CompletionItem toCompletionItem(MemberDescriptor member) {
+  private CompletionItem toCompletionItem(MemberDescriptor member) {
     return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable);
   }
 
-  private static List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members) {
+  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
       items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property));
@@ -515,13 +543,13 @@ public final class CompletionProvider {
    * Раньше {@code purposeDescription} писалось одновременно в {@code detail} и в
    * {@code documentation} — VS Code показывал его дважды в подсказке.
    */
-  private static CompletionItem buildMemberItem(MemberDescriptor member,
-                                                CompletionItemKind methodKind,
-                                                CompletionItemKind propertyKind) {
+  private CompletionItem buildMemberItem(MemberDescriptor member,
+                                         CompletionItemKind methodKind,
+                                         CompletionItemKind propertyKind) {
     var item = new CompletionItem(member.name());
     if (member.kind() == MemberKind.METHOD) {
       item.setKind(methodKind);
-      item.setInsertText(member.name() + "(");
+      applyCallableInsertText(item, member.name());
       var detail = methodDetail(member);
       if (!detail.isBlank()) {
         item.setDetail(detail);
@@ -535,6 +563,28 @@ public final class CompletionProvider {
     }
     applyDocumentation(item, member);
     return item;
+  }
+
+  /**
+   * Поведение по конвенции LSP-серверов (TypeScript LS, gopls, rust-analyzer, Pyright):
+   * <ul>
+   *   <li>Если клиент поддерживает {@code completionItem.snippetSupport} —
+   *       вставляем «{@code Метод($0)}» как сниппет: курсор окажется между скобок,
+   *       и сразу даём {@code editor.action.triggerParameterHints}, чтобы клиент
+   *       поднял signatureHelp без дополнительного нажатия.</li>
+   *   <li>Без {@code snippetSupport} — фолбэк «{@code Метод(}»: символ {@code (} тоже
+   *       trigger character для signatureHelp ({@link com.github._1c_syntax.bsl.languageserver.BSLLanguageServer}),
+   *       но закрывающую скобку пользователь поставит сам.</li>
+   * </ul>
+   */
+  private void applyCallableInsertText(CompletionItem item, String name) {
+    if (snippetSupport) {
+      item.setInsertText(name + "($0)");
+      item.setInsertTextFormat(InsertTextFormat.Snippet);
+      item.setCommand(new Command("Trigger Parameter Hints", TRIGGER_PARAMETER_HINTS_COMMAND));
+    } else {
+      item.setInsertText(name + "(");
+    }
   }
 
   private static String methodDetail(MemberDescriptor member) {
