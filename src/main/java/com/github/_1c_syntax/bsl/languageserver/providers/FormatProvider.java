@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -144,113 +145,126 @@ public final class FormatProvider {
       return Collections.emptyList();
     }
 
-    String ch = params.getCh();
-    var position = params.getPosition();
-
-    int targetLineLsp;
-    Range editRange;
-    int cutoffCharacter;
-
-    if ("\n".equals(ch)) {
-      if (position.getLine() == 0) {
-        return Collections.emptyList();
-      }
-      targetLineLsp = position.getLine() - 1;
-      String[] contentList = documentContext.getContentList();
-      if (targetLineLsp >= contentList.length) {
-        return Collections.emptyList();
-      }
-      // Ограничиваем диапазон концом строки (без `\n`), чтобы только что набранный
-      // пользователем перевод строки не оказался внутри replace-range — иначе при
-      // отсутствии в newText хвостового `\n` editor удаляет только что добавленную строку.
-      int lineLength = contentList[targetLineLsp].length();
-      editRange = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
-      cutoffCharacter = lineLength;
-    } else if (";".equals(ch)) {
-      targetLineLsp = position.getLine();
-      editRange = Ranges.create(targetLineLsp, 0, position.getLine(), position.getCharacter());
-      cutoffCharacter = position.getCharacter();
-    } else {
+    var window = resolveEditWindow(params.getCh(), params.getPosition(), documentContext);
+    if (window == null) {
       return Collections.emptyList();
     }
 
-    int antlrLine = targetLineLsp + 1;
-
-    // На горячем пути (каждый Enter/`;`) обходить весь поток токенов дорого.
-    // Токены отсортированы по line — находим начало нужной строки бинарным поиском
-    // и обходим только её хвост до первого токена со следующей линии.
-    List<Token> allTokens = documentContext.getTokens();
-    List<Token> tokens = new ArrayList<>();
-    Token firstSignificant = null;
-    int firstSignificantIndex = -1;
-    for (int i = firstTokenIndexOnLine(allTokens, antlrLine); i < allTokens.size(); i++) {
-      Token token = allTokens.get(i);
-      if (token.getLine() != antlrLine) {
-        break;
-      }
-      // Конец токена должен укладываться в диапазон до позиции курсора, иначе токены,
-      // выходящие за курсор (например многострочные литералы), дублируют свой хвост в replace.
-      long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
-      if (endColumn > cutoffCharacter) {
-        continue;
-      }
-      tokens.add(token);
-      if (firstSignificant == null
-        && (token.getChannel() == Token.DEFAULT_CHANNEL || token.getType() == BSLLexer.LINE_COMMENT)) {
-        firstSignificant = token;
-        firstSignificantIndex = i;
-      }
-    }
-
-    if (firstSignificant == null) {
+    var allTokens = documentContext.getTokens();
+    var lineTokens = collectLineTokens(allTokens, window.antlrLine, window.cutoffCharacter);
+    if (lineTokens.firstSignificant == null) {
       return Collections.emptyList();
     }
 
-    // Решаем, каким должен быть отступ строки:
-    // - если первый значимый токен — закрывающее ключевое слово, выравниваем по парному
-    //   открывающему (`КонецЕсли` → `Если`, `КонецПроцедуры` → `Процедура` и т.п.);
-    // - иначе сохраняем фактический leading whitespace строки — это не даёт «съедать»
-    //   табуляции у строк, начинающихся с decrement-keyword'а, и не трогает руками
-    //   проставленный отступ для прочих строк.
-    String currentLineText = documentContext.getContentList()[targetLineLsp];
-    String targetIndent = leadingWhitespace(currentLineText);
-    Token matchingOpener = findMatchingOpener(allTokens, firstSignificantIndex);
-    if (matchingOpener != null) {
-      String openerLineText = documentContext.getContentList()[matchingOpener.getLine() - 1];
-      targetIndent = leadingWhitespace(openerLineText);
-    }
+    var targetIndent = resolveTargetIndent(
+      documentContext, window.targetLineLsp, allTokens, lineTokens.firstSignificantIndex);
 
-    // Заменяем строку от колонки 0 до cutoff'а целиком: ведущий whitespace должен быть
-    // под нашим контролем (чтобы выровнять при необходимости).
-    Range adjustedRange = Ranges.create(
-      editRange.getStart().getLine(),
+    var adjustedRange = Ranges.create(
+      window.editRange.getStart().getLine(),
       0,
-      editRange.getEnd().getLine(),
-      editRange.getEnd().getCharacter()
+      window.editRange.getEnd().getLine(),
+      window.editRange.getEnd().getCharacter()
     );
 
-    // startCharacter = колонка первого значимого токена → currentIndentLevel = 0 внутри
-    // getNewText. Возможный decrement у первого токена не уйдёт «в плюс», и при выводе
-    // первого токена индент будет пустым — мы сами добавим targetIndent ниже.
-    List<TextEdit> baseEdits = getTextEdits(
-      tokens,
+    // startCharacter = колонка первого значимого токена, чтобы getNewText считал
+    // currentIndentLevel от него. Decrement у первого токена даст 0, а ведущий
+    // отступ мы подставим сами ниже.
+    var baseEdits = getTextEdits(
+      lineTokens.tokens,
       documentContext.getScriptVariantLocale(),
       adjustedRange,
-      firstSignificant.getCharPositionInLine(),
+      lineTokens.firstSignificant.getCharPositionInLine(),
       params.getOptions()
     );
     if (baseEdits.isEmpty()) {
       return baseEdits;
     }
 
-    TextEdit base = baseEdits.getFirst();
+    var base = baseEdits.getFirst();
     return List.of(new TextEdit(base.getRange(), targetIndent + base.getNewText()));
   }
 
+  private record EditWindow(int targetLineLsp, int antlrLine, Range editRange, int cutoffCharacter) {
+  }
+
+  private static @Nullable EditWindow resolveEditWindow(
+    String ch, Position position, DocumentContext documentContext
+  ) {
+    if ("\n".equals(ch)) {
+      if (position.getLine() == 0) {
+        return null;
+      }
+      var targetLineLsp = position.getLine() - 1;
+      var contentList = documentContext.getContentList();
+      if (targetLineLsp >= contentList.length) {
+        return null;
+      }
+      // Ограничиваем диапазон концом строки без переноса: только что набранный пользователем
+      // перевод строки не должен попасть внутрь replace-range, иначе editor может проглотить
+      // новую строку при отсутствии хвостового переноса в newText.
+      var lineLength = contentList[targetLineLsp].length();
+      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, lineLength);
+      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, lineLength);
+    }
+    if (";".equals(ch)) {
+      var targetLineLsp = position.getLine();
+      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, position.getCharacter());
+      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, position.getCharacter());
+    }
+    return null;
+  }
+
+  private record LineTokens(List<Token> tokens, @Nullable Token firstSignificant, int firstSignificantIndex) {
+  }
+
+  private static LineTokens collectLineTokens(List<Token> allTokens, int antlrLine, int cutoffCharacter) {
+    // Токены отсортированы по line — находим начало нужной строки бинарным поиском
+    // и идём пока line совпадает. Все условия выхода — в заголовке while, поэтому
+    // в теле цикла нет break/continue.
+    var tokens = new ArrayList<Token>();
+    @Nullable Token firstSignificant = null;
+    var firstSignificantIndex = -1;
+    var i = firstTokenIndexOnLine(allTokens, antlrLine);
+    while (i < allTokens.size() && allTokens.get(i).getLine() == antlrLine) {
+      var token = allTokens.get(i);
+      // Конец токена должен укладываться в диапазон до позиции курсора — иначе токены,
+      // выходящие за курсор (например многострочные литералы), дублируют свой хвост в replace.
+      long endColumn = (long) token.getCharPositionInLine() + token.getText().length();
+      if (endColumn <= cutoffCharacter) {
+        tokens.add(token);
+        if (firstSignificant == null
+          && (token.getChannel() == Token.DEFAULT_CHANNEL || token.getType() == BSLLexer.LINE_COMMENT)) {
+          firstSignificant = token;
+          firstSignificantIndex = i;
+        }
+      }
+      i++;
+    }
+    return new LineTokens(tokens, firstSignificant, firstSignificantIndex);
+  }
+
+  private static String resolveTargetIndent(
+    DocumentContext documentContext,
+    int targetLineLsp,
+    List<Token> allTokens,
+    int firstSignificantIndex
+  ) {
+    // Если первый значимый токен — закрывающее ключевое слово, выравниваем строку
+    // по парному открывающему. Иначе сохраняем фактический leading whitespace строки:
+    // это не даёт форматтеру срезать табуляцию у строк с decrement-keyword'ом и не
+    // трогает руками проставленный отступ прочих строк.
+    var contentList = documentContext.getContentList();
+    var opener = findMatchingOpener(allTokens, firstSignificantIndex);
+    if (opener != null) {
+      return leadingWhitespace(contentList[opener.getLine() - 1]);
+    }
+    return leadingWhitespace(contentList[targetLineLsp]);
+  }
+
   private static String leadingWhitespace(String line) {
-    int i = 0;
+    var i = 0;
     while (i < line.length()) {
-      char c = line.charAt(i);
+      var c = line.charAt(i);
       if (c != ' ' && c != '\t') {
         break;
       }
@@ -259,65 +273,67 @@ public final class FormatProvider {
     return line.substring(0, i);
   }
 
+  private record ScopePair(Set<Integer> openers, Set<Integer> closers) {
+  }
+
+  private static final ScopePair IF_SCOPE =
+    new ScopePair(Set.of(BSLLexer.IF_KEYWORD), Set.of(BSLLexer.ENDIF_KEYWORD));
+  private static final ScopePair DO_SCOPE =
+    new ScopePair(Set.of(BSLLexer.WHILE_KEYWORD, BSLLexer.FOR_KEYWORD), Set.of(BSLLexer.ENDDO_KEYWORD));
+  private static final ScopePair TRY_SCOPE =
+    new ScopePair(Set.of(BSLLexer.TRY_KEYWORD), Set.of(BSLLexer.ENDTRY_KEYWORD));
+  private static final ScopePair PROCEDURE_SCOPE =
+    new ScopePair(Set.of(BSLLexer.PROCEDURE_KEYWORD), Set.of(BSLLexer.ENDPROCEDURE_KEYWORD));
+  private static final ScopePair FUNCTION_SCOPE =
+    new ScopePair(Set.of(BSLLexer.FUNCTION_KEYWORD), Set.of(BSLLexer.ENDFUNCTION_KEYWORD));
+
+  private static final Map<Integer, ScopePair> SCOPE_BY_CLOSER_TYPE = Map.ofEntries(
+    Map.entry(BSLLexer.ENDIF_KEYWORD, IF_SCOPE),
+    Map.entry(BSLLexer.ELSE_KEYWORD, IF_SCOPE),
+    Map.entry(BSLLexer.ELSIF_KEYWORD, IF_SCOPE),
+    Map.entry(BSLLexer.ENDDO_KEYWORD, DO_SCOPE),
+    Map.entry(BSLLexer.ENDTRY_KEYWORD, TRY_SCOPE),
+    Map.entry(BSLLexer.EXCEPT_KEYWORD, TRY_SCOPE),
+    Map.entry(BSLLexer.ENDPROCEDURE_KEYWORD, PROCEDURE_SCOPE),
+    Map.entry(BSLLexer.ENDFUNCTION_KEYWORD, FUNCTION_SCOPE)
+  );
+
   /**
-   * Ищет парный открывающий токен для закрывающего ключевого слова (`КонецЕсли`/`Иначе`/
-   * `Исключение`/`КонецЦикла`/`КонецПопытки`/`КонецПроцедуры`/`КонецФункции`).
-   * Возвращает null, если токен не закрывающий или парный открывающий не найден.
+   * Ищет парный открывающий токен для закрывающего ключевого слова.
+   *
+   * Возвращает null, если переданный токен не относится к парным закрывающим
+   * или парный открывающий не найден (несбалансированный код).
    */
-  private static Token findMatchingOpener(List<Token> allTokens, int closerIndex) {
+  private static @Nullable Token findMatchingOpener(List<Token> allTokens, int closerIndex) {
     if (closerIndex < 0 || closerIndex >= allTokens.size()) {
       return null;
     }
-    Token closer = allTokens.get(closerIndex);
-    int closerType = closer.getType();
-    Set<Integer> openers;
-    Set<Integer> closers;
-    switch (closerType) {
-      case BSLLexer.ENDIF_KEYWORD:
-      case BSLLexer.ELSE_KEYWORD:
-      case BSLLexer.ELSIF_KEYWORD:
-        openers = Set.of(BSLLexer.IF_KEYWORD);
-        closers = Set.of(BSLLexer.ENDIF_KEYWORD);
-        break;
-      case BSLLexer.ENDDO_KEYWORD:
-        openers = Set.of(BSLLexer.WHILE_KEYWORD, BSLLexer.FOR_KEYWORD);
-        closers = Set.of(BSLLexer.ENDDO_KEYWORD);
-        break;
-      case BSLLexer.ENDTRY_KEYWORD:
-      case BSLLexer.EXCEPT_KEYWORD:
-        openers = Set.of(BSLLexer.TRY_KEYWORD);
-        closers = Set.of(BSLLexer.ENDTRY_KEYWORD);
-        break;
-      case BSLLexer.ENDPROCEDURE_KEYWORD:
-        openers = Set.of(BSLLexer.PROCEDURE_KEYWORD);
-        closers = Set.of(BSLLexer.ENDPROCEDURE_KEYWORD);
-        break;
-      case BSLLexer.ENDFUNCTION_KEYWORD:
-        openers = Set.of(BSLLexer.FUNCTION_KEYWORD);
-        closers = Set.of(BSLLexer.ENDFUNCTION_KEYWORD);
-        break;
-      default:
-        return null;
+    var closer = allTokens.get(closerIndex);
+    var scope = SCOPE_BY_CLOSER_TYPE.get(closer.getType());
+    if (scope == null) {
+      return null;
     }
-    // Для «настоящих» закрывашек (КонецЕсли/КонецЦикла/…) стартуем с балансом 1
-    // и ищем opener, который сводит его в 0. Для «промежуточных» (Иначе, ИначеЕсли,
-    // Исключение) стартуем с 0 — родитель найдётся при первом IF/TRY без перекрывающего
-    // ENDIF/ENDTRY (баланс = -1).
-    int balance = closers.contains(closerType) ? 1 : 0;
-    int target = balance - 1;
-    for (int i = closerIndex - 1; i >= 0; i--) {
-      Token t = allTokens.get(i);
+    // Для настоящих закрывашек (КонецЕсли/КонецЦикла и т.п.) стартуем с балансом 1
+    // и ищем opener, сводящий его в 0. Для промежуточных (Иначе/ИначеЕсли/Исключение)
+    // стартуем с 0 — родитель найдётся при первом opener без перекрывающего closer
+    // (баланс = -1).
+    var balance = scope.closers.contains(closer.getType()) ? 1 : 0;
+    var target = balance - 1;
+    for (var i = closerIndex - 1; i >= 0; i--) {
+      var t = allTokens.get(i);
       if (t.getChannel() != Token.DEFAULT_CHANNEL) {
         continue;
       }
-      int type = t.getType();
-      if (closers.contains(type)) {
+      var type = t.getType();
+      if (scope.closers.contains(type)) {
         balance++;
-      } else if (openers.contains(type)) {
+      } else if (scope.openers.contains(type)) {
         balance--;
         if (balance == target) {
           return t;
         }
+      } else {
+        // no-op: токен вне рассматриваемой скобочной структуры.
       }
     }
     return null;

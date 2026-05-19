@@ -347,7 +347,7 @@ class FormatProviderTest {
     // диапазон правки не должен переходить на следующую строку
     assertThat(textEdits).hasSize(1);
     TextEdit edit = textEdits.getFirst();
-    assertThat(edit.getRange().getEnd().getLine()).isEqualTo(0);
+    assertThat(edit.getRange().getEnd().getLine()).isZero();
     // граница диапазона — конец исходной строки "А = 1;" (6 UTF-16 единиц)
     assertThat(edit.getRange().getEnd().getCharacter()).isEqualTo(6);
     assertThat(edit.getNewText()).doesNotEndWith("\n");
@@ -450,7 +450,7 @@ class FormatProviderTest {
   }
 
   @Test
-  void testOnTypeFormattingDisabledByConfig() throws IOException {
+  void testOnTypeFormattingDisabledByConfig() {
     // given: настройка useOnTypeFormatting = false должна полностью отключать провайдер
     configuration.update(new File("./src/test/resources/.bsl-language-server-format-on-type-off.json"));
 
