@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -285,7 +284,47 @@ public class ExpressionTypeInferencer {
     if (isStructureLike(typeName)) {
       base = applyStructureConstructorKeys(base, constructor, ctx);
     }
+    if (isTypeDescriptionType(typeName)) {
+      base = applyTypeDescriptionConstructorTypes(base, constructor, ctx);
+    }
     return base;
+  }
+
+  /**
+   * Для записи {@code Новый ОписаниеТипов("Число[,Строка,...]")}: распарсить
+   * первый строковый аргумент в имена типов, зарезолвить через
+   * {@link TypeRegistry} и подвесить набор к {@link TypeRef} «ОписаниеТипов»
+   * через {@link TypeSet#withElement}. Это позволяет потребителям
+   * (например, {@link #accumulateValueTableColumnFields}) забрать «содержимое»
+   * описания типов прямо из TypeSet без повторного парсинга AST.
+   */
+  private TypeSet applyTypeDescriptionConstructorTypes(
+    TypeSet base,
+    ConstructorCallNode constructor,
+    InferenceContext ctx
+  ) {
+    var args = constructor.arguments();
+    if (args.isEmpty() || base.refs().isEmpty()) {
+      return base;
+    }
+    var literal = extractStringLiteral(args.get(0));
+    if (literal == null) {
+      return base;
+    }
+    var fileType = ctx.documentContext.getFileType();
+    var refs = new ArrayList<TypeRef>();
+    for (var raw : literal.split(",")) {
+      var name = raw.trim();
+      if (name.isEmpty()) {
+        continue;
+      }
+      typeRegistry.resolve(name, fileType).ifPresent(refs::add);
+    }
+    if (refs.isEmpty()) {
+      return base;
+    }
+    var headRef = base.refs().iterator().next();
+    return base.withElement(headRef, TypeSet.of(refs));
   }
 
   /**
@@ -865,15 +904,14 @@ public class ExpressionTypeInferencer {
       if (keyName == null || keyName.isBlank()) {
         continue;
       }
-      // Второй аргумент — тип колонки в одной из форм:
-      //   Колонки.Добавить("X", Новый ОписаниеТипов("Число,Строка"))
-      //   Колонки.Добавить("X", Тип("Число"))
-      //   Колонки.Добавить("X", "Число,Строка") — реже, но 1С допускает
-      // Парсим в TypeSet; если не распознали или типы не резолвятся — fallback Неопределено,
-      // чтобы колонка как минимум появилась в hover/completion.
+      // Второй аргумент по сигнатуре платформы — объект ОписаниеТипов. Выводим тип выражения
+      // через инференсер; если в нём есть ОписаниеТипов-ref, забираем его elementTypes
+      // (туда {@link #applyTypeDescriptionConstructorTypes} складывает имена типов из
+      // первого аргумента конструктора). Любое другое выражение (Тип(...), строковый
+      // литерал, переменная иного типа) даст пустой набор — колонка останется Неопределено.
       TypeSet columnTypes = TypeSet.EMPTY;
       if (params.size() >= 2) {
-        columnTypes = extractColumnTypes(params.get(1).expression(), owner.getFileType());
+        columnTypes = extractColumnTypes(params.get(1).expression(), ctx);
       }
       if (columnTypes.isEmpty()) {
         columnTypes = TypeSet.of(UNDEFINED);
@@ -896,103 +934,46 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Извлечь типы из второго аргумента {@code Колонки.Добавить("X", typesArg, ...)}.
-   * Распознаёт три формы записи типа в 1С:
+   * Извлечь типы колонки из второго аргумента {@code Колонки.Добавить("X", typesArg, ...)}.
+   * <p>
+   * Подход: строим {@link BslExpression} из AST второго аргумента и просим
+   * инференсер вывести его тип. Если в результирующем {@link TypeSet} есть
+   * {@link TypeRef}, идентифицируемый как {@code ОписаниеТипов} — берём у него
+   * {@link TypeSet#getElementTypes(TypeRef) elementTypes}, куда
+   * {@link #applyTypeDescriptionConstructorTypes} складывает типы из конструктора
+   * {@code Новый ОписаниеТипов("Число,Строка")}.
+   * <p>
+   * Это даёт корректное поведение для всех альтернатив:
    * <ul>
-   *   <li>{@code Новый ОписаниеТипов("Число[,Строка,...]")} — мультитип;</li>
-   *   <li>{@code Тип("Число")} — единичный тип;</li>
-   *   <li>строковый литерал {@code "Число,Строка"} — реже, но допускается.</li>
+   *   <li>{@code Новый ОписаниеТипов("Число")} → {@code Число};</li>
+   *   <li>{@code Тип("Число")} → инференсер вернёт {@code Тип} (не ОписаниеТипов) → пусто;</li>
+   *   <li>строковый литерал → инференсер вернёт {@code Строка} → пусто;</li>
+   *   <li>переменная с типом ОписаниеТипов без литерального конструктора —
+   *       inferred-ref совпадает, но elementTypes пуст → пусто.</li>
    * </ul>
-   * Имена типов резолвятся через {@link TypeRegistry}; нерезолвящиеся — отбрасываются.
-   * Возвращает {@link TypeSet#EMPTY}, если форма не распознана или ни один тип не резолвится.
    */
-  private TypeSet extractColumnTypes(BSLParser.ExpressionContext expr, FileType fileType) {
+  private TypeSet extractColumnTypes(BSLParser.ExpressionContext expr, InferenceContext ctx) {
     if (expr == null) {
       return TypeSet.EMPTY;
     }
-    // Forma A: голый строковый литерал "Число,Строка"
-    var literal = extractExpressionStringLiteral(expr);
-    if (literal != null) {
-      return resolveTypeNames(literal, fileType);
-    }
-    var members = expr.member();
-    if (members == null || members.isEmpty()) {
+    var bslExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(expr);
+    if (bslExpr == null) {
       return TypeSet.EMPTY;
     }
-    var complexId = members.get(0).complexIdentifier();
-    if (complexId == null) {
-      return TypeSet.EMPTY;
-    }
-    // Forma B: Новый ОписаниеТипов("Число,Строка")
-    var newExpr = complexId.newExpression();
-    if (newExpr != null
-      && newExpr.typeName() != null && newExpr.typeName().IDENTIFIER() != null
-      && isTypeDescriptionTypeName(newExpr.typeName().IDENTIFIER().getText())) {
-      var firstArg = firstCallArgExpression(newExpr.doCall());
-      var s = firstArg == null ? null : extractExpressionStringLiteral(firstArg);
-      if (s != null) {
-        return resolveTypeNames(s, fileType);
-      }
-    }
-    // Forma C: Тип("Число")
-    var gmc = complexId.globalMethodCall();
-    if (gmc != null && gmc.methodName() != null
-      && isTypeFunctionName(gmc.methodName().getText())) {
-      var firstArg = firstCallArgExpression(gmc.doCall());
-      var s = firstArg == null ? null : extractExpressionStringLiteral(firstArg);
-      if (s != null) {
-        return resolveTypeNames(s, fileType);
+    var inferred = inferInternal(bslExpr, ctx);
+    for (var ref : inferred.refs()) {
+      if (isTypeDescriptionType(ref.qualifiedName())) {
+        var elementTypes = inferred.getElementTypes(ref);
+        if (!elementTypes.isEmpty()) {
+          return elementTypes;
+        }
       }
     }
     return TypeSet.EMPTY;
   }
 
-  private TypeSet resolveTypeNames(String commaSeparated, FileType fileType) {
-    var refs = new ArrayList<TypeRef>();
-    for (var raw : commaSeparated.split(",")) {
-      var name = raw.trim();
-      if (name.isEmpty()) {
-        continue;
-      }
-      typeRegistry.resolve(name, fileType).ifPresent(refs::add);
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
-  }
-
-  private static BSLParser.ExpressionContext firstCallArgExpression(BSLParser.DoCallContext doCall) {
-    if (doCall == null || doCall.callParamList() == null) {
-      return null;
-    }
-    var params = doCall.callParamList().callParam();
-    if (params.isEmpty()) {
-      return null;
-    }
-    return params.get(0).expression();
-  }
-
-  private static String extractExpressionStringLiteral(BSLParser.ExpressionContext expr) {
-    if (expr == null) {
-      return null;
-    }
-    var text = expr.getText();
-    if (text == null) {
-      return null;
-    }
-    var trimmed = text.trim();
-    if (trimmed.length() >= 2
-      && (trimmed.charAt(0) == '"' || trimmed.charAt(0) == '\'')
-      && trimmed.charAt(0) == trimmed.charAt(trimmed.length() - 1)) {
-      return trimmed.substring(1, trimmed.length() - 1);
-    }
-    return null;
-  }
-
-  private static boolean isTypeDescriptionTypeName(String name) {
+  private static boolean isTypeDescriptionType(String name) {
     return "ОписаниеТипов".equalsIgnoreCase(name) || "TypeDescription".equalsIgnoreCase(name);
-  }
-
-  private static boolean isTypeFunctionName(String name) {
-    return "Тип".equalsIgnoreCase(name) || "Type".equalsIgnoreCase(name);
   }
 
   private static boolean isAddMethodName(BSLParser.MethodCallContext methodCall) {

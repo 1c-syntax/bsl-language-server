@@ -121,12 +121,15 @@ class ValueTableColumnsFieldsInferenceTest extends AbstractServerContextAwareTes
   }
 
   @Test
-  void columnTypeExtractedFromTypeFunctionCall() {
-    // Колонки.Добавить("Имя", Тип("Число"))
+  void columnTypeExtractedThroughIntermediateVariable() {
+    // Регрессия на чисто-инференсерный подход: если ОписаниеТипов попало в переменную,
+    // тип колонки всё равно должен выводиться (TypeSet переменной несёт elementTypes
+    // от своего constructor-инициализатора).
     var content = """
       Процедура Тест()
+      ОТ = Новый ОписаниеТипов("Число");
       ТЗ = Новый ТаблицаЗначений;
-      ТЗ.Колонки.Добавить("Поле", Тип("Число"));
+      ТЗ.Колонки.Добавить("Поле", ОТ);
       Для Каждого Строка Из ТЗ Цикл
       А = Строка.Поле;
       КонецЦикла;
@@ -136,28 +139,37 @@ class ValueTableColumnsFieldsInferenceTest extends AbstractServerContextAwareTes
 
     var types = inferAtMarker(documentContext, "А = Строка.Поле", "А = Строка.".length() + 1);
     assertThat(refNames(types))
-      .as("Тип(\"Число\") как тип колонки — резолвится в Число")
+      .as("ОписаниеТипов, положенное в переменную, всё равно несёт типы — инференсер видит")
       .contains("Число");
   }
 
   @Test
-  void columnTypeFromStringLiteralArg() {
-    // Колонки.Добавить("Поле", "Число,Строка") — реже, но допустимый формат
+  void columnTypeIgnoredWhenSecondArgIsNotTypeDescription() {
+    // По сигнатуре платформы 2-й аргумент Колонки.Добавить — объект ОписаниеТипов.
+    // Если передано что-то иное (Тип(...) или строка) — типы НЕ извлекаются,
+    // колонка остаётся со значением по умолчанию (Неопределено).
     var content = """
       Процедура Тест()
       ТЗ = Новый ТаблицаЗначений;
-      ТЗ.Колонки.Добавить("Поле", "Число,Строка");
+      ТЗ.Колонки.Добавить("ПолеИзТипа", Тип("Число"));
+      ТЗ.Колонки.Добавить("ПолеИзСтроки", "Число");
       Для Каждого Строка Из ТЗ Цикл
-      А = Строка.Поле;
+      A = Строка.ПолеИзТипа;
+      B = Строка.ПолеИзСтроки;
       КонецЦикла;
       КонецПроцедуры
       """;
     var documentContext = TestUtils.getDocumentContext(content);
 
-    var types = inferAtMarker(documentContext, "А = Строка.Поле", "А = Строка.".length() + 1);
-    assertThat(refNames(types))
-      .as("прямой строковый литерал с типами тоже принимается")
-      .contains("Число", "Строка");
+    var fromType = inferAtMarker(documentContext, "A = Строка.ПолеИзТипа", "A = Строка.".length() + 1);
+    assertThat(refNames(fromType))
+      .as("Тип(\"Число\") не является ОписаниеТипов — типы колонки не выводим")
+      .containsExactly("Неопределено");
+
+    var fromString = inferAtMarker(documentContext, "B = Строка.ПолеИзСтроки", "B = Строка.".length() + 1);
+    assertThat(refNames(fromString))
+      .as("строковый литерал не является ОписаниеТипов — типы колонки не выводим")
+      .containsExactly("Неопределено");
   }
 
   @Test
