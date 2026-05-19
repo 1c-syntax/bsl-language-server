@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import org.springframework.core.Ordered;
 import org.springframework.test.annotation.DirtiesContext;
@@ -37,15 +38,50 @@ public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecu
     return Ordered.HIGHEST_PRECEDENCE;
   }
 
-  protected static void dirtyContext(TestContext testContext) {
-    // Clear ServerContextProvider to remove all registered workspaces between tests
+  /**
+   * Lite-cleanup: убираем все workspace-data, но НЕ перезагружаем Spring контекст.
+   * <p>
+   * {@link ServerContextProvider#clear()} итерирует по всем workspace'ам и для
+   * каждого:
+   * <ul>
+   *   <li>{@code removeDocument(uri)} на каждом документе — публикует
+   *       {@code ServerContextDocumentRemovedEvent} через AOP, на котором
+   *       зависят downstream-индексы ({@code ReferenceIndex},
+   *       {@code OScriptLibraryIndex}, и т.п.);</li>
+   *   <li>{@code WorkspaceScope.removeWorkspace(uri)} — уничтожает
+   *       workspace-scoped beans (TypeRegistry, GlobalScopeProvider,
+   *       BslContextHolder, ...) с их destruction callbacks. При следующем
+   *       обращении они создадутся заново.</li>
+   * </ul>
+   * <p>
+   * Полный Spring teardown ({@code markApplicationContextDirty}) не делаем —
+   * это дорого (~3–7s на цикл) и в подавляющем большинстве кейсов не нужно:
+   * singleton-beans проектно не хранят per-workspace state, поэтому переживание
+   * между тест-классами для них корректно. Старое поведение остаётся в {@link #dirtyContext}
+   * на случай, если какому-то тесту понадобится «полный» сброс.
+   */
+  protected static void liteCleanup(TestContext testContext) {
     try {
       var provider = testContext.getApplicationContext().getBean(ServerContextProvider.class);
       provider.clear();
     } catch (Exception e) {
       // Ignore if provider not available yet
     }
+    try {
+      var configuration = testContext.getApplicationContext().getBean(LanguageServerConfiguration.class);
+      configuration.reset();
+    } catch (Exception e) {
+      // Ignore if configuration not available yet
+    }
+  }
 
+  /**
+   * «Жёсткий» cleanup: помимо {@link #liteCleanup(TestContext)} помечает
+   * ApplicationContext как dirty — Spring пересоздаст его перед следующим тестом.
+   * Дорого; использовать только если lite-вариант не подходит.
+   */
+  protected static void dirtyContext(TestContext testContext) {
+    liteCleanup(testContext);
     testContext.markApplicationContextDirty(DirtiesContext.HierarchyMode.EXHAUSTIVE);
     testContext.setAttribute(DependencyInjectionTestExecutionListener.REINJECT_DEPENDENCIES_ATTRIBUTE, Boolean.TRUE);
   }

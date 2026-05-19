@@ -31,17 +31,17 @@ public class DirtyContextBeforeClassAndAfterClassTestExecutionListener extends A
 
   @Override
   public void beforeTestClass(TestContext testContext) {
-    // dirty-флаг ставим ДО первого autowire'а — иначе первый тест-метод класса
+    // Cleanup ставим ДО первого autowire'а — иначе первый тест-метод класса
     // получит зависимости из старого, потенциально загрязнённого контекста
     // (workspace-scoped TypeRegistry / OScriptLibraryIndex от другого
     // CleanupContextBeforeClassAndAfterClass-теста), и тесты типа
     // ConventionalLibraryDiscoveryTest начнут флакать.
-    dirtyContext(testContext);
+    liteCleanup(testContext);
   }
 
   @Override
   public void afterTestClass(TestContext testContext) {
-    dirtyContext(testContext);
+    liteCleanup(testContext);
   }
 
 }

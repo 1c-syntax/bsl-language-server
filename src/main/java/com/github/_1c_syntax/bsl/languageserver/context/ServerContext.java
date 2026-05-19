@@ -46,6 +46,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -294,9 +295,28 @@ public class ServerContext {
     documentLocks.remove(uri);
   }
 
+  /**
+   * Удалить все документы из контекста.
+   * <p>
+   * Каждый документ удаляется через {@link #removeDocument(URI)} — это даёт
+   * {@code ServerContextDocumentRemovedEvent} через AOP-аспект, на который
+   * подписаны downstream-индексы ({@link com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex},
+   * {@link com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex}
+   * и прочие singleton'ы со state, индексирующим документы).
+   * <p>
+   * Open-документы сначала «закрываются» сбросом {@code openedDocuments}, чтобы
+   * {@link #removeDocument(URI)} не падал на guard'е «document is opened».
+   * После — финальная очистка карт, не привязанных к конкретному URI
+   * ({@code configurationMetadata}).
+   */
   public void clear() {
-    documents.clear();
     openedDocuments.clear();
+    for (var uri : new ArrayList<>(documents.keySet())) {
+      removeDocument(uri);
+    }
+    // safety net: если какие-то карты не очистились через removeDocument'ы
+    // (например, документ был оторван от mdoRef'а), убираем что осталось.
+    documents.clear();
     states.clear();
     documentsByMDORef.clear();
     mdoRefs.clear();
