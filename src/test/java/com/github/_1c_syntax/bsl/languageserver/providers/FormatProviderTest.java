@@ -548,13 +548,14 @@ class FormatProviderTest {
   void testOnTypeFormattingEnterAlignsClosingKeywordThroughNestedBlock() {
     // На LSP-line 4 кривой `КонецЕсли` — он закрывает ВНЕШНЕЕ `Если` на line 0,
     // несмотря на вложенный `Если/КонецЕсли` на line 1-3.
-    String fileContent = ""
-      + "Если А Тогда\n"
-      + "  Если Б Тогда\n"
-      + "    Возврат;\n"
-      + "  КонецЕсли;\n"
-      + "        КонецЕсли\n"
-      + "\n";
+    String fileContent = """
+      Если А Тогда
+        Если Б Тогда
+          Возврат;
+        КонецЕсли;
+              КонецЕсли
+
+      """;
     var params = onTypeParams("\n", 5, 0);
 
     var documentContext = TestUtils.getDocumentContext(
