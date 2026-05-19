@@ -304,8 +304,8 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
     TextEdit edit = textEdits.getFirst();
-    assertThat(edit.getRange()).isEqualTo(new Range(new Position(0, 0), new Position(1, 0)));
-    assertThat(edit.getNewText()).isEqualTo("Если х = 1 Тогда\n");
+    assertThat(edit.getRange()).isEqualTo(new Range(new Position(0, 0), new Position(0, 14)));
+    assertThat(edit.getNewText()).isEqualTo("Если х = 1 Тогда");
   }
 
   @Test
@@ -326,8 +326,32 @@ class FormatProviderTest {
     // then
     assertThat(textEdits).hasSize(1);
     TextEdit edit = textEdits.getFirst();
-    assertThat(edit.getRange()).isEqualTo(new Range(new Position(1, 0), new Position(2, 0)));
-    assertThat(edit.getNewText()).isEqualTo("    Возврат;\n");
+    assertThat(edit.getRange()).isEqualTo(new Range(new Position(1, 0), new Position(1, 12)));
+    assertThat(edit.getNewText()).isEqualTo("    Возврат;");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterPreservesTrailingNewline() {
+    // регрессия PR #3908: edit покрывал только что набранный перевод строки,
+    // и при отсутствии хвостового переноса в newText editor удалял новую строку.
+    String fileContent = "А = 1;\n";
+    var params = onTypeParams("\n", 1, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // диапазон правки не должен переходить на следующую строку
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getRange().getEnd().getLine()).isZero();
+    // граница диапазона — конец исходной строки "А = 1;" (6 UTF-16 единиц)
+    assertThat(edit.getRange().getEnd().getCharacter()).isEqualTo(6);
+    assertThat(edit.getNewText()).doesNotEndWith("\n");
+    assertThat(edit.getNewText()).doesNotEndWith("\r");
   }
 
   @Test
@@ -423,6 +447,128 @@ class FormatProviderTest {
 
     // then
     assertThat(textEdits).isEmpty();
+  }
+
+  @Test
+  void testOnTypeFormattingDisabledByConfig() {
+    // given: настройка useOnTypeFormatting = false должна полностью отключать провайдер
+    configuration.update(new File("./src/test/resources/.bsl-language-server-format-on-type-off.json"));
+
+    String fileContent = "если х=1 тогда\n\n";
+    var params = onTypeParams("\n", 1, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).isEmpty();
+  }
+
+  @Test
+  void testOnTypeFormattingSemicolonPreservesLeadingTab() {
+    // регрессия: `\tконецесли` + `;` ранее съедал ведущую табуляцию, потому что
+    // первый токен — decrement-keyword и getNewText сбрасывал indentLevel в 0.
+    // Теперь ведущий whitespace вне replace-диапазона и подменяется явно.
+    String fileContent = "\tконецесли;";
+    var params = onTypeParams(";", 0, 11);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // Парного `Если` нет → fallback: сохраняем фактический отступ строки.
+    assertThat(edit.getNewText()).isEqualTo("\tКонецЕсли;");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAlignsClosingKeywordToOpener() {
+    // фича: `КонецЕсли` с криво проставленным отступом выравнивается по `Если`.
+    String fileContent = "Если Истина Тогда\n        КонецЕсли\n\n";
+    var params = onTypeParams("\n", 2, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // Если на col 0 → КонецЕсли подтягивается к col 0
+    assertThat(edit.getNewText()).isEqualTo("КонецЕсли");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAlignsEndProcedureToProcedure() {
+    String fileContent = "    Процедура П()\n  КонецПроцедуры\n\n";
+    var params = onTypeParams("\n", 2, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // ведущий отступ `Процедура` = 4 пробела → `КонецПроцедуры` тоже 4 пробела
+    assertThat(edit.getNewText()).isEqualTo("    КонецПроцедуры");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAlignsElseToIf() {
+    String fileContent = "    Если Истина Тогда\nИначе\n\n";
+    var params = onTypeParams("\n", 2, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getNewText()).isEqualTo("    Иначе");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAlignsClosingKeywordThroughNestedBlock() {
+    // На LSP-line 4 кривой `КонецЕсли` — он закрывает ВНЕШНЕЕ `Если` на line 0,
+    // несмотря на вложенный `Если/КонецЕсли` на line 1-3.
+    String fileContent = """
+      Если А Тогда
+        Если Б Тогда
+          Возврат;
+        КонецЕсли;
+              КонецЕсли
+
+      """;
+    var params = onTypeParams("\n", 5, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // внешнее `Если` на col 0 → закрывающий КонецЕсли тоже на col 0
+    assertThat(edit.getNewText()).isEqualTo("КонецЕсли");
   }
 
   private DocumentOnTypeFormattingParams onTypeParams(String ch, int line, int character) {
