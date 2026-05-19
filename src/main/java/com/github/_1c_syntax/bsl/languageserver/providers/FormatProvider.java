@@ -156,9 +156,6 @@ public final class FormatProvider {
       return Collections.emptyList();
     }
 
-    var targetIndent = resolveTargetIndent(
-      documentContext, window.targetLineLsp, allTokens, lineTokens.firstSignificantIndex);
-
     var adjustedRange = Ranges.create(
       window.editRange.getStart().getLine(),
       0,
@@ -180,6 +177,8 @@ public final class FormatProvider {
       return baseEdits;
     }
 
+    var targetIndent = resolveTargetIndent(
+      documentContext, window.targetLineLsp, allTokens, lineTokens.firstSignificantIndex);
     var base = baseEdits.getFirst();
     return List.of(new TextEdit(base.getRange(), targetIndent + base.getNewText()));
   }
@@ -254,7 +253,7 @@ public final class FormatProvider {
     // это не даёт форматтеру срезать табуляцию у строк с decrement-keyword'ом и не
     // трогает руками проставленный отступ прочих строк.
     var contentList = documentContext.getContentList();
-    var opener = findMatchingOpener(allTokens, firstSignificantIndex);
+    var opener = BlockKeywordMatcher.findMatchingOpener(allTokens, firstSignificantIndex);
     if (opener != null) {
       return leadingWhitespace(contentList[opener.getLine() - 1]);
     }
@@ -273,71 +272,6 @@ public final class FormatProvider {
     return line.substring(0, i);
   }
 
-  private record ScopePair(Set<Integer> openers, Set<Integer> closers) {
-  }
-
-  private static final ScopePair IF_SCOPE =
-    new ScopePair(Set.of(BSLLexer.IF_KEYWORD), Set.of(BSLLexer.ENDIF_KEYWORD));
-  private static final ScopePair DO_SCOPE =
-    new ScopePair(Set.of(BSLLexer.WHILE_KEYWORD, BSLLexer.FOR_KEYWORD), Set.of(BSLLexer.ENDDO_KEYWORD));
-  private static final ScopePair TRY_SCOPE =
-    new ScopePair(Set.of(BSLLexer.TRY_KEYWORD), Set.of(BSLLexer.ENDTRY_KEYWORD));
-  private static final ScopePair PROCEDURE_SCOPE =
-    new ScopePair(Set.of(BSLLexer.PROCEDURE_KEYWORD), Set.of(BSLLexer.ENDPROCEDURE_KEYWORD));
-  private static final ScopePair FUNCTION_SCOPE =
-    new ScopePair(Set.of(BSLLexer.FUNCTION_KEYWORD), Set.of(BSLLexer.ENDFUNCTION_KEYWORD));
-
-  private static final Map<Integer, ScopePair> SCOPE_BY_CLOSER_TYPE = Map.ofEntries(
-    Map.entry(BSLLexer.ENDIF_KEYWORD, IF_SCOPE),
-    Map.entry(BSLLexer.ELSE_KEYWORD, IF_SCOPE),
-    Map.entry(BSLLexer.ELSIF_KEYWORD, IF_SCOPE),
-    Map.entry(BSLLexer.ENDDO_KEYWORD, DO_SCOPE),
-    Map.entry(BSLLexer.ENDTRY_KEYWORD, TRY_SCOPE),
-    Map.entry(BSLLexer.EXCEPT_KEYWORD, TRY_SCOPE),
-    Map.entry(BSLLexer.ENDPROCEDURE_KEYWORD, PROCEDURE_SCOPE),
-    Map.entry(BSLLexer.ENDFUNCTION_KEYWORD, FUNCTION_SCOPE)
-  );
-
-  /**
-   * Ищет парный открывающий токен для закрывающего ключевого слова.
-   *
-   * Возвращает null, если переданный токен не относится к парным закрывающим
-   * или парный открывающий не найден (несбалансированный код).
-   */
-  private static @Nullable Token findMatchingOpener(List<Token> allTokens, int closerIndex) {
-    if (closerIndex < 0 || closerIndex >= allTokens.size()) {
-      return null;
-    }
-    var closer = allTokens.get(closerIndex);
-    var scope = SCOPE_BY_CLOSER_TYPE.get(closer.getType());
-    if (scope == null) {
-      return null;
-    }
-    // Для настоящих закрывашек (КонецЕсли/КонецЦикла и т.п.) стартуем с балансом 1
-    // и ищем opener, сводящий его в 0. Для промежуточных (Иначе/ИначеЕсли/Исключение)
-    // стартуем с 0 — родитель найдётся при первом opener без перекрывающего closer
-    // (баланс = -1).
-    var balance = scope.closers.contains(closer.getType()) ? 1 : 0;
-    var target = balance - 1;
-    for (var i = closerIndex - 1; i >= 0; i--) {
-      var t = allTokens.get(i);
-      if (t.getChannel() != Token.DEFAULT_CHANNEL) {
-        continue;
-      }
-      var type = t.getType();
-      if (scope.closers.contains(type)) {
-        balance++;
-      } else if (scope.openers.contains(type)) {
-        balance--;
-        if (balance == target) {
-          return t;
-        }
-      } else {
-        // no-op: токен вне рассматриваемой скобочной структуры.
-      }
-    }
-    return null;
-  }
 
   private static int firstTokenIndexOnLine(List<Token> tokens, int line) {
     int lo = 0;
