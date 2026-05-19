@@ -104,16 +104,25 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var result = new ArrayList<TypeDecl>(raw.size());
       for (var entry : raw) {
         var kindStr = (String) entry.getOrDefault("kind", "PLATFORM");
+        var kind = TypeKind.valueOf(kindStr);
         var qualifiedName = (String) entry.get("name");
         var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
         var exposedAsGlobal = Boolean.TRUE.equals(entry.get("exposedAsGlobal"));
         var description = (String) entry.getOrDefault("description", "");
-        var classRef = new TypeRef(TypeKind.valueOf(kindStr), qualifiedName);
+        var classRef = new TypeRef(kind, qualifiedName);
         var rawCtors = (List<Map<String, Object>>) entry.get("constructors");
         var constructors = readSignatures(rawCtors, classRef);
-        result.add(new TypeDecl(TypeKind.valueOf(kindStr), qualifiedName, aliases, members,
-          exposedAsGlobal, description, constructors));
+        var elementTypeNames = (List<String>) entry.getOrDefault("elementTypes", Collections.emptyList());
+        var defaultElementTypes = new ArrayList<TypeRef>(elementTypeNames.size());
+        for (var name : elementTypeNames) {
+          defaultElementTypes.add(new TypeRef(TypeKind.PLATFORM, name));
+        }
+        var supportsForEach = Boolean.TRUE.equals(entry.get("supportsForEach"));
+        var supportsIndexAccess = Boolean.TRUE.equals(entry.get("supportsIndexAccess"));
+        result.add(new TypeDecl(kind, qualifiedName, aliases, members,
+          exposedAsGlobal, description, constructors,
+          List.copyOf(defaultElementTypes), supportsForEach, supportsIndexAccess));
       }
       return result;
     } catch (IOException e) {

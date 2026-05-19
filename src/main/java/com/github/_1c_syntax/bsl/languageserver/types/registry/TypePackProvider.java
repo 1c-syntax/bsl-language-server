@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 
@@ -40,13 +41,27 @@ import java.util.List;
 public interface TypePackProvider {
 
   /**
-   * Тип, который данный provider предоставляет (для регистрации и
-   * последующей деинициализации). Используется как ключ группировки в реестре.
+   * Объявление одного типа для регистрации.
    *
-   * @param exposedAsGlobal если {@code true} — имя типа также регистрируется
-   *                        как глобальное свойство (его можно использовать как
-   *                        ресивер dot-выражения: {@code КодировкаТекста.UTF8},
-   *                        {@code Документы.Контрагенты}).
+   * @param kind                категория типа
+   * @param qualifiedName       каноническое имя
+   * @param aliases             Ru/En алиасы (без основного имени)
+   * @param members             свойства и методы типа
+   * @param exposedAsGlobal     если {@code true} — имя типа также регистрируется
+   *                            как глобальное свойство (его можно использовать как
+   *                            ресивер dot-выражения: {@code КодировкаТекста.UTF8},
+   *                            {@code Документы.Контрагенты}).
+   * @param description         описание типа (для hover'а класса)
+   * @param constructors        сигнатуры конструкторов {@code Новый Тип(...)}; пустой список — без конструкторов
+   * @param defaultElementTypes для типов-коллекций — типы элементов, доступных
+   *                            через {@code Для Каждого X Из Коллекция Цикл}.
+   *                            Пустой список — либо не коллекция, либо элементы
+   *                            гетерогенные (как у {@code Массив}). Семантика —
+   *                            пара с {@link #supportsForEach}: если форы доступен,
+   *                            но {@code defaultElementTypes} пуст, итератор не имеет
+   *                            определённого типа.
+   * @param supportsForEach     поддержка обхода {@code Для Каждого}
+   * @param supportsIndexAccess поддержка индексатора {@code coll[…]}
    */
   record TypeDecl(
     TypeKind kind,
@@ -55,29 +70,11 @@ public interface TypePackProvider {
     Collection<MemberDescriptor> members,
     boolean exposedAsGlobal,
     String description,
-    List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> constructors
+    List<SignatureDescriptor> constructors,
+    List<TypeRef> defaultElementTypes,
+    boolean supportsForEach,
+    boolean supportsIndexAccess
   ) {
-
-    public TypeDecl(
-      TypeKind kind,
-      String qualifiedName,
-      List<String> aliases,
-      Collection<MemberDescriptor> members,
-      boolean exposedAsGlobal
-    ) {
-      this(kind, qualifiedName, aliases, members, exposedAsGlobal, "", List.of());
-    }
-
-    public TypeDecl(
-      TypeKind kind,
-      String qualifiedName,
-      List<String> aliases,
-      Collection<MemberDescriptor> members,
-      boolean exposedAsGlobal,
-      String description
-    ) {
-      this(kind, qualifiedName, aliases, members, exposedAsGlobal, description, List.of());
-    }
 
     public TypeRef toRef() {
       return new TypeRef(kind, qualifiedName);

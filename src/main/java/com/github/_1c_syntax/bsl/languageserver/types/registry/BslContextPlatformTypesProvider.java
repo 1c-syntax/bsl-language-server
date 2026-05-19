@@ -131,8 +131,11 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     var description = descriptionOf(context);
     var classRef = new TypeRef(kind, qualifiedName);
     var constructors = constructorsOf(context, classRef);
+    // TODO(elementTypes): прокинуть ContextCollection.collectionElementTypes()/supportsForEach()/
+    // supportsIndexAccess() — следующий коммит.
     return new TypeDecl(kind, qualifiedName, aliases, members,
-      isExposedAsGlobal(context), description, constructors);
+      isExposedAsGlobal(context), description, constructors,
+      List.of(), false, false);
   }
 
   private static String descriptionOf(Context context) {

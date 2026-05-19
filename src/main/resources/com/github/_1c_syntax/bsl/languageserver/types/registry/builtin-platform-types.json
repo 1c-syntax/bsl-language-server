@@ -38,6 +38,8 @@
     "kind": "PLATFORM",
     "name": "Массив",
     "aliases": ["Array"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число",
         "signatures": [{"parameters": [], "returnType": "Число"}]},
@@ -71,6 +73,9 @@
     "kind": "PLATFORM",
     "name": "Структура",
     "aliases": ["Structure"],
+    "elementTypes": ["КлючИЗначение"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
       {"name": "Вставить", "kind": "METHOD"},
@@ -83,6 +88,9 @@
     "kind": "PLATFORM",
     "name": "Соответствие",
     "aliases": ["Map"],
+    "elementTypes": ["КлючИЗначение"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
       {"name": "Вставить", "kind": "METHOD"},
@@ -93,20 +101,47 @@
   },
   {
     "kind": "PLATFORM",
+    "name": "КлючИЗначение",
+    "aliases": ["KeyAndValue"],
+    "members": [
+      {"name": "Ключ", "kind": "PROPERTY"},
+      {"name": "Значение", "kind": "PROPERTY"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
     "name": "СписокЗначений",
     "aliases": ["ValueList"],
+    "elementTypes": ["ЭлементСпискаЗначений"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
-      {"name": "Добавить", "kind": "METHOD"},
-      {"name": "Вставить", "kind": "METHOD"},
+      {"name": "Добавить", "kind": "METHOD", "returnType": "ЭлементСпискаЗначений"},
+      {"name": "Вставить", "kind": "METHOD", "returnType": "ЭлементСпискаЗначений"},
       {"name": "Удалить", "kind": "METHOD"},
-      {"name": "НайтиПоЗначению", "kind": "METHOD"}
+      {"name": "НайтиПоЗначению", "kind": "METHOD", "returnType": "ЭлементСпискаЗначений"},
+      {"name": "Получить", "kind": "METHOD", "returnType": "ЭлементСпискаЗначений"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "ЭлементСпискаЗначений",
+    "aliases": ["ValueListItem"],
+    "members": [
+      {"name": "Значение", "kind": "PROPERTY"},
+      {"name": "Представление", "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "Пометка", "kind": "PROPERTY", "returnType": "Булево"},
+      {"name": "Картинка", "kind": "PROPERTY"}
     ]
   },
   {
     "kind": "PLATFORM",
     "name": "ТаблицаЗначений",
     "aliases": ["ValueTable"],
+    "elementTypes": ["СтрокаТаблицыЗначений"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
       {"name": "Колонки", "kind": "PROPERTY", "returnType": "КоллекцияКолонокТаблицыЗначений"},
@@ -124,6 +159,9 @@
     "kind": "PLATFORM",
     "name": "КоллекцияКолонокТаблицыЗначений",
     "aliases": ["ValueTableColumnCollection"],
+    "elementTypes": ["КолонкаТаблицыЗначений"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
       {"name": "Добавить", "kind": "METHOD", "returnType": "КолонкаТаблицыЗначений"},
@@ -170,6 +208,9 @@
     "kind": "PLATFORM",
     "name": "КоллекцияКолонокДереваЗначений",
     "aliases": ["ValueTreeColumnCollection"],
+    "elementTypes": ["КолонкаДереваЗначений"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
       {"name": "Добавить", "kind": "METHOD", "returnType": "КолонкаДереваЗначений"},
@@ -193,6 +234,9 @@
     "kind": "PLATFORM",
     "name": "КоллекцияСтрокДереваЗначений",
     "aliases": ["ValueTreeRowCollection"],
+    "elementTypes": ["СтрокаДереваЗначений"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
       {"name": "Добавить", "kind": "METHOD", "returnType": "СтрокаДереваЗначений"},
@@ -274,6 +318,9 @@
     "kind": "PLATFORM",
     "name": "ИсточникиДанныхСхемыКомпоновкиДанных",
     "aliases": ["DataCompositionSchemaDataSources"],
+    "elementTypes": ["ИсточникДанныхСхемыКомпоновкиДанных"],
+    "supportsForEach": true,
+    "supportsIndexAccess": true,
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
       {"name": "Добавить",   "kind": "METHOD", "returnType": "ИсточникДанныхСхемыКомпоновкиДанных"},
