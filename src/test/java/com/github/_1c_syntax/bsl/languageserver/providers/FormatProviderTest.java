@@ -544,6 +544,32 @@ class FormatProviderTest {
     assertThat(edit.getNewText()).isEqualTo("    Иначе");
   }
 
+  @Test
+  void testOnTypeFormattingEnterAlignsClosingKeywordThroughNestedBlock() {
+    // На LSP-line 4 кривой `КонецЕсли` — он закрывает ВНЕШНЕЕ `Если` на line 0,
+    // несмотря на вложенный `Если/КонецЕсли` на line 1-3.
+    String fileContent = ""
+      + "Если А Тогда\n"
+      + "  Если Б Тогда\n"
+      + "    Возврат;\n"
+      + "  КонецЕсли;\n"
+      + "        КонецЕсли\n"
+      + "\n";
+    var params = onTypeParams("\n", 5, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // внешнее `Если` на col 0 → закрывающий КонецЕсли тоже на col 0
+    assertThat(edit.getNewText()).isEqualTo("КонецЕсли");
+  }
+
   private DocumentOnTypeFormattingParams onTypeParams(String ch, int line, int character) {
     var params = new DocumentOnTypeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
