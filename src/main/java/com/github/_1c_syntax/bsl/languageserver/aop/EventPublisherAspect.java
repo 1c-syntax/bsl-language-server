@@ -48,6 +48,7 @@ import org.aspectj.lang.annotation.Before;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 
@@ -204,13 +205,32 @@ public class EventPublisherAspect {
       LOGGER.warn("Trying to send event in not active event publisher.");
       return;
     }
-    // Публикуем во все зарегистрированные контексты: каждый из них имеет собственный
-    // набор listener'ов и workspace-scoped бинов. Только контекст-владелец источника
-    // события (например, DocumentContext) реально обновит своё состояние; для остальных
-    // контекстов событие либо проигнорировано (workspace не зарегистрирован), либо
-    // обработано без побочных эффектов. Это устраняет проблему, когда AspectJ-синглтон
-    // имел единственный applicationEventPublisher и события могли уходить не в тот
-    // Spring-контекст, который инициировал операцию.
+    // Если установлен workspace-контекст, событие принадлежит конкретному
+    // workspace и должно идти только в Spring-контекст-владельца этого workspace.
+    // В тестах это критично: несколько Spring-контекстов с разными @SpringBootTest-
+    // конфигурациями висят в TestContext-кэше и зарегистрированы в JVM-singleton
+    // аспекте. Если рассылать во ВСЕ, listener'ы non-owning контекстов создают
+    // workspace-scoped beans под текущий WSCH-URI и затрагивают чужое состояние —
+    // в боевом сценарии это маловероятно (один LS = один контекст), но в тестах
+    // ломает соседние тест-классы. Когда WSCH не установлен (глобальные события
+    // вроде {@link GlobalLanguageServerConfigurationChangedEvent} или Initialize),
+    // рассылаем во все — у них нет workspace-привязки.
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri != null) {
+      var owner = findOwningContext(contexts, workspaceUri);
+      if (owner != null) {
+        try {
+          owner.publishEvent(event);
+        } catch (RuntimeException e) {
+          LOGGER.warn("Failed to publish event {} to owning context {}: {}", event, owner, e.toString());
+        }
+        return;
+      }
+      // Workspace URI задан, но ни один контекст не объявил себя владельцем —
+      // вероятно событие, эмитируемое в рамках только что добавленного workspace
+      // (например, AOP-advice сам выставил WSCH через try-with-resources). Падать
+      // нельзя — рассылаем во все как fallback.
+    }
     for (var ctx : contexts) {
       try {
         ctx.publishEvent(event);
@@ -218,5 +238,26 @@ public class EventPublisherAspect {
         LOGGER.warn("Failed to publish event {} to context {}: {}", event, ctx, e.toString());
       }
     }
+  }
+
+  /**
+   * Найти Spring-контекст, чей {@link ServerContextProvider} зарегистрировал
+   * указанный {@code workspaceUri}. Возвращает {@code null}, если ни один не
+   * объявил владение.
+   */
+  private static @Nullable ApplicationContext findOwningContext(
+    ApplicationContext[] contexts, URI workspaceUri
+  ) {
+    for (var ctx : contexts) {
+      try {
+        var provider = ctx.getBean(ServerContextProvider.class);
+        if (provider.getAllContexts().containsKey(workspaceUri)) {
+          return ctx;
+        }
+      } catch (RuntimeException ignored) {
+        // Бин может быть недоступен (контекст закрывается) — пропускаем.
+      }
+    }
+    return null;
   }
 }
