@@ -233,19 +233,18 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // (например, «Владелец») — оба источника обогащают TypeSet строки.
     var content = """
       Процедура Тест()
-      \tТЗ = Новый ТаблицаЗначений;
-      \tТЗ.Колонки.Добавить("ИмяКолонки");
-      \tДля Каждого Строка Из ТЗ Цикл
-      \t\tX = Строка.
-      \tКонецЦикла;
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("ИмяКолонки");
+      Для Каждого Строка Из ТЗ Цикл
+      X = Строка.
+      КонецЦикла;
       КонецПроцедуры
       """;
     var documentContext = TestUtils.getDocumentContext(content);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    // позиция сразу после `Строка.` на 5-й строке (line index 4)
-    params.setPosition(new Position(4, "\t\tX = Строка.".length()));
+    params.setPosition(new Position(4, "X = Строка.".length()));
 
     var items = completionProvider.getCompletion(documentContext, params).getItems();
 
@@ -263,14 +262,14 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       Стр = Новый Структура;
       Стр.Вставить("X", 42);
       Для Каждого Пара Из Стр Цикл
-      \tY = Пара.
+      Y = Пара.
       КонецЦикла;
       """;
     var documentContext = TestUtils.getDocumentContext(content);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, "\tY = Пара.".length()));
+    params.setPosition(new Position(3, "Y = Пара.".length()));
 
     var items = completionProvider.getCompletion(documentContext, params).getItems();
 
@@ -287,14 +286,14 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       С = Новый Соответствие;
       С.Вставить("X", 42);
       Для Каждого Пара Из С Цикл
-      \tY = Пара.
+      Y = Пара.
       КонецЦикла;
       """;
     var documentContext = TestUtils.getDocumentContext(content);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, "\tY = Пара.".length()));
+    params.setPosition(new Position(3, "Y = Пара.".length()));
 
     var items = completionProvider.getCompletion(documentContext, params).getItems();
 
@@ -311,14 +310,14 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       СЗ = Новый СписокЗначений;
       СЗ.Добавить("X");
       Для Каждого Эл Из СЗ Цикл
-      \tY = Эл.
+      Y = Эл.
       КонецЦикла;
       """;
     var documentContext = TestUtils.getDocumentContext(content);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    params.setPosition(new Position(3, "\tY = Эл.".length()));
+    params.setPosition(new Position(3, "Y = Эл.".length()));
 
     var items = completionProvider.getCompletion(documentContext, params).getItems();
 
@@ -335,21 +334,21 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // localFields — на TypeSet, а не на TypeRef.
     var content = """
       Процедура Тест()
-      \tТЗ1 = Новый ТаблицаЗначений;
-      \tТЗ1.Колонки.Добавить("КолонкаА");
-      \tТЗ2 = Новый ТаблицаЗначений;
-      \tТЗ2.Колонки.Добавить("КолонкаБ");
-      \tСтрока1 = ТЗ1.Добавить();
-      \tСтрока2 = ТЗ2.Добавить();
-      \tX1 = Строка1.
-      \tX2 = Строка2.
+      ТЗ1 = Новый ТаблицаЗначений;
+      ТЗ1.Колонки.Добавить("КолонкаА");
+      ТЗ2 = Новый ТаблицаЗначений;
+      ТЗ2.Колонки.Добавить("КолонкаБ");
+      Строка1 = ТЗ1.Добавить();
+      Строка2 = ТЗ2.Добавить();
+      X1 = Строка1.
+      X2 = Строка2.
       КонецПроцедуры
       """;
     var documentContext = TestUtils.getDocumentContext(content);
 
     var paramsRow1 = new CompletionParams();
     paramsRow1.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    paramsRow1.setPosition(new Position(7, "\tX1 = Строка1.".length()));
+    paramsRow1.setPosition(new Position(7, "X1 = Строка1.".length()));
     var labelsRow1 = completionProvider.getCompletion(documentContext, paramsRow1).getItems()
       .stream().map(CompletionItem::getLabel).toList();
 
@@ -361,7 +360,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
     var paramsRow2 = new CompletionParams();
     paramsRow2.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    paramsRow2.setPosition(new Position(8, "\tX2 = Строка2.".length()));
+    paramsRow2.setPosition(new Position(8, "X2 = Строка2.".length()));
     var labelsRow2 = completionProvider.getCompletion(documentContext, paramsRow2).getItems()
       .stream().map(CompletionItem::getLabel).toList();
 
@@ -418,18 +417,17 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // отдавал «голый» СтрокаТаблицыЗначений без localFields, и колонки терялись.
     var content = """
       Процедура Тест()
-      \tТЗ = Новый ТаблицаЗначений;
-      \tТЗ.Колонки.Добавить("ИмяКолонки", Новый ОписаниеТипов("Число"));
-      \tНоваяСтрока = ТЗ.Добавить();
-      \tX = НоваяСтрока.
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("ИмяКолонки", Новый ОписаниеТипов("Число"));
+      НоваяСтрока = ТЗ.Добавить();
+      X = НоваяСтрока.
       КонецПроцедуры
       """;
     var documentContext = TestUtils.getDocumentContext(content);
 
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
-    // позиция сразу после точки в `X = НоваяСтрока.`
-    params.setPosition(new Position(4, "\tX = НоваяСтрока.".length()));
+    params.setPosition(new Position(4, "X = НоваяСтрока.".length()));
 
     var items = completionProvider.getCompletion(documentContext, params).getItems();
 
