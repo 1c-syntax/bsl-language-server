@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779046720871,
+  "lastUpdate": 1779170473362,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35371,6 +35371,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.12250487512381",
             "extra": "mean: 70.29048037528992 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "46c2f7491bf50edf09bdb0e7d21730d3fe9a9491",
+          "message": "Merge pull request #3916 from sfaqer/fix/on-type-formatting-eats-newline\n\nfix(onTypeFormatting): preserve typed newline + add useOnTypeFormatting config flag",
+          "timestamp": "2026-05-19T07:53:30+02:00",
+          "tree_id": "c05ed19af376d0f136f4fe759795a9083f56fb68",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/46c2f7491bf50edf09bdb0e7d21730d3fe9a9491"
+        },
+        "date": 1779170469608,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 69.67977285385132,
+            "unit": "sec",
+            "range": "stddev: 1.261132766354216",
+            "extra": "mean: 69.67977285385132 sec\nrounds: 3"
           }
         ]
       }
