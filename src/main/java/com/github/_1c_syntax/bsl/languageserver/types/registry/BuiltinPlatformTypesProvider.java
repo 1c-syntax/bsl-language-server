@@ -140,6 +140,11 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var rawSignatures = (List<Map<String, Object>>) m.get("signatures");
       var signatures = readSignatures(rawSignatures, returnType);
       var kind = MemberKind.valueOf(kindStr);
+      if (kind == MemberKind.METHOD && signatures.isEmpty() && returnType != TypeRef.UNKNOWN) {
+        // JSON указал returnType метода без signatures — синтезируем безпараметровую сигнатуру,
+        // чтобы returnType метода был доступен инференсеру через MemberDescriptor.returnTypes.
+        signatures = List.of(new SignatureDescriptor(List.of(), returnType, ""));
+      }
       members.add(kind == MemberKind.METHOD
         ? MemberDescriptor.method(name, description, signatures)
         : MemberDescriptor.property(name, returnType, description));

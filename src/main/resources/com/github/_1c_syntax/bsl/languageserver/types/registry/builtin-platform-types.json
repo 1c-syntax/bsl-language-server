@@ -109,12 +109,12 @@
     "aliases": ["ValueTable"],
     "members": [
       {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
-      {"name": "Колонки", "kind": "PROPERTY"},
-      {"name": "Добавить", "kind": "METHOD"},
-      {"name": "Вставить", "kind": "METHOD"},
+      {"name": "Колонки", "kind": "PROPERTY", "returnType": "КоллекцияКолонокТаблицыЗначений"},
+      {"name": "Добавить", "kind": "METHOD", "returnType": "СтрокаТаблицыЗначений"},
+      {"name": "Вставить", "kind": "METHOD", "returnType": "СтрокаТаблицыЗначений"},
       {"name": "Удалить", "kind": "METHOD"},
-      {"name": "Найти", "kind": "METHOD"},
-      {"name": "НайтиСтроки", "kind": "METHOD"},
+      {"name": "Найти", "kind": "METHOD", "returnType": "СтрокаТаблицыЗначений"},
+      {"name": "НайтиСтроки", "kind": "METHOD", "returnType": "Массив"},
       {"name": "Очистить", "kind": "METHOD"},
       {"name": "Сортировать", "kind": "METHOD"},
       {"name": "Скопировать", "kind": "METHOD", "returnType": "ТаблицаЗначений"}
@@ -122,11 +122,92 @@
   },
   {
     "kind": "PLATFORM",
+    "name": "КоллекцияКолонокТаблицыЗначений",
+    "aliases": ["ValueTableColumnCollection"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Добавить", "kind": "METHOD", "returnType": "КолонкаТаблицыЗначений"},
+      {"name": "Вставить", "kind": "METHOD", "returnType": "КолонкаТаблицыЗначений"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "Найти", "kind": "METHOD", "returnType": "КолонкаТаблицыЗначений"},
+      {"name": "Очистить", "kind": "METHOD"},
+      {"name": "Сдвинуть", "kind": "METHOD"},
+      {"name": "Индекс", "kind": "METHOD", "returnType": "Число"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "КолонкаТаблицыЗначений",
+    "aliases": ["ValueTableColumn"],
+    "members": [
+      {"name": "Имя", "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "Заголовок", "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ТипЗначения", "kind": "PROPERTY", "returnType": "ОписаниеТипов"},
+      {"name": "Ширина", "kind": "PROPERTY", "returnType": "Число"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СтрокаТаблицыЗначений",
+    "aliases": ["ValueTableRow"],
+    "members": [
+      {"name": "Владелец", "kind": "METHOD", "returnType": "ТаблицаЗначений"},
+      {"name": "Получить", "kind": "METHOD"},
+      {"name": "Установить", "kind": "METHOD"},
+      {"name": "Сравнить", "kind": "METHOD", "returnType": "Булево"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
     "name": "ДеревоЗначений",
     "aliases": ["ValueTree"],
     "members": [
-      {"name": "Строки", "kind": "PROPERTY"},
-      {"name": "Колонки", "kind": "PROPERTY"}
+      {"name": "Строки", "kind": "PROPERTY", "returnType": "КоллекцияСтрокДереваЗначений"},
+      {"name": "Колонки", "kind": "PROPERTY", "returnType": "КоллекцияКолонокДереваЗначений"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "КоллекцияКолонокДереваЗначений",
+    "aliases": ["ValueTreeColumnCollection"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Добавить", "kind": "METHOD", "returnType": "КолонкаДереваЗначений"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "Найти", "kind": "METHOD", "returnType": "КолонкаДереваЗначений"},
+      {"name": "Очистить", "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "КолонкаДереваЗначений",
+    "aliases": ["ValueTreeColumn"],
+    "members": [
+      {"name": "Имя", "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "Заголовок", "kind": "PROPERTY", "returnType": "Строка"},
+      {"name": "ТипЗначения", "kind": "PROPERTY", "returnType": "ОписаниеТипов"},
+      {"name": "Ширина", "kind": "PROPERTY", "returnType": "Число"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "КоллекцияСтрокДереваЗначений",
+    "aliases": ["ValueTreeRowCollection"],
+    "members": [
+      {"name": "Количество", "kind": "METHOD", "returnType": "Число"},
+      {"name": "Добавить", "kind": "METHOD", "returnType": "СтрокаДереваЗначений"},
+      {"name": "Удалить", "kind": "METHOD"},
+      {"name": "Очистить", "kind": "METHOD"}
+    ]
+  },
+  {
+    "kind": "PLATFORM",
+    "name": "СтрокаДереваЗначений",
+    "aliases": ["ValueTreeRow"],
+    "members": [
+      {"name": "Родитель", "kind": "PROPERTY", "returnType": "СтрокаДереваЗначений"},
+      {"name": "Строки", "kind": "PROPERTY", "returnType": "КоллекцияСтрокДереваЗначений"},
+      {"name": "Владелец", "kind": "METHOD", "returnType": "ДеревоЗначений"}
     ]
   },
   {

@@ -240,6 +240,12 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   static MemberDescriptor toMemberDescriptor(ContextMethod method) {
     var returnType = singleType(method.returnValues());
     var signatures = toSignatures(method.signatures(), returnType);
+    if (signatures.isEmpty() && returnType != TypeRef.UNKNOWN) {
+      // bsl-context указал returnType метода без вариантов сигнатуры — синтезируем
+      // безпараметровую сигнатуру, чтобы returnType был доступен инференсеру
+      // через MemberDescriptor.returnTypes.
+      signatures = List.of(new SignatureDescriptor(List.of(), returnType, ""));
+    }
     return MemberDescriptor.method(
       method.name().getName(),
       method.description(),

@@ -96,7 +96,14 @@ public class BareIdentifierReferenceFinder implements ReferenceFinder {
     }
     var resolved = resolveInScope(symbolTree, scope, module, name);
     if (resolved.isEmpty()) {
-      resolved = globalScopeProvider.findGlobal(name, document.getFileType());
+      var entry = globalScopeProvider.findGlobalEntry(name, document.getFileType());
+      // Bare class identifier (Role.TYPE_NAME, e.g. `Структура`) — это не value-выражение,
+      // его нельзя резолвить как «значение типа Структура» (привело бы к instance-member
+      // автокомплиту на голом имени класса). Имя класса в позиции `Новый X(...)` уже
+      // отфильтровано выше через isNewExpressionTypeName.
+      resolved = entry
+        .filter(e -> e.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
+        .map(com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Entry::symbol);
     }
 
     return resolved.map(symbol -> enrichForHover(symbol, document.getFileType()))

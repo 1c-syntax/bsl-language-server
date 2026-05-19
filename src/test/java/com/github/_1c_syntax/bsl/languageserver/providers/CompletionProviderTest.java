@@ -43,6 +43,48 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   private com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration languageServerConfiguration;
 
   @Test
+  void dotCompletionOnValueTableColumnsProperty() {
+    // ТЗ1 = Новый ТаблицаЗначений(); ТЗ1.Колонки. — должен дать члены КоллекцияКолонокТаблицыЗначений
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-value-table-columns.bsl", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `ТЗ1.Колонки.` — позиция сразу после второй точки (line 2, char 12)
+    params.setPosition(new Position(2, 12));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .as("После ТЗ1.Колонки. должны появиться члены КоллекцияКолонокТаблицыЗначений")
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .contains("Добавить", "Количество");
+  }
+
+  @Test
+  void dotCompletionOnValueTableAddResultRow() {
+    // Строка = ТЗ1.Добавить(); Строка. — должен дать члены СтрокаТаблицыЗначений
+    initServerContext("./src/test/resources/providers", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/providers/completion-value-table-add-row.bsl", context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `Строка.` (line 4, idx 3) — позиция сразу после точки (char 7)
+    params.setPosition(new Position(3, 7));
+
+    var items = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(items)
+      .as("После Строка. должны появиться члены СтрокаТаблицыЗначений")
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .contains("Владелец");
+  }
+
+  @Test
   void testDotCompletionOnArray() {
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContextFromFile(

@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -102,6 +103,12 @@ public class TypeService {
         return TypeSet.of(valueType);
       }
     }
+    if (reference.symbol() instanceof PlatformMemberSymbol platformMember) {
+      var returnTypes = platformMember.getDescriptor().returnTypes();
+      if (returnTypes != null && !returnTypes.isEmpty()) {
+        return returnTypes;
+      }
+    }
     return TypeSet.EMPTY;
   }
 
@@ -119,9 +126,8 @@ public class TypeService {
    */
   public TypeSet inferAtPosition(DocumentContext documentContext, Position position) {
     typeRegistry.resolve("");
-    return ExpressionAtPosition.findExpressionContext(documentContext, position)
-      .map(ExpressionTreeBuildingVisitor::buildExpressionTree)
-      .map(expr -> inferencer.infer(expr, documentContext))
+    return ExpressionAtPosition.findExpressionTree(documentContext, position)
+      .map(expression -> inferencer.infer(expression, documentContext))
       .orElse(TypeSet.EMPTY);
   }
 
@@ -275,7 +281,9 @@ public class TypeService {
         return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
       }
 
-      var fromScope = globalScopeProvider.findGlobal(bareName, fileType)
+      var fromScope = globalScopeProvider.findGlobalEntry(bareName, fileType)
+        .filter(e -> e.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
+        .map(com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Entry::symbol)
         .filter(SyntheticSymbol.class::isInstance)
         .map(SyntheticSymbol.class::cast)
         .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
