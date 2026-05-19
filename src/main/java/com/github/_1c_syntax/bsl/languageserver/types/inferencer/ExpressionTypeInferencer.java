@@ -573,6 +573,7 @@ public class ExpressionTypeInferencer {
       }
     }
     acc = accumulateStructureInsertFields(variable, acc, ctx);
+    acc = accumulateValueTableColumnFields(variable, acc, ctx);
     return acc;
   }
 
@@ -650,6 +651,132 @@ public class ExpressionTypeInferencer {
       }
     }
     return result;
+  }
+
+  /**
+   * Накопить «колонки» открытой {@code ТаблицаЗначений} по mutation-вызовам
+   * {@code X.Колонки.Добавить("Имя", Тип)} / {@code X.Columns.Add(...)}
+   * в области видимости переменной. Колонки моделируются как
+   * {@code localFields} на типе строки ({@code СтрокаТаблицыЗначений}),
+   * который привязывается к ТЗ через {@link TypeSet#withElement} — поэтому
+   * после {@code Для Каждого Строка Из ТЗ} или {@code ТЗ[0]} hover и
+   * автокомплит будут видеть {@code Строка.Имя} как поле известного типа.
+   */
+  private TypeSet accumulateValueTableColumnFields(
+    VariableSymbol variable,
+    TypeSet base,
+    InferenceContext ctx
+  ) {
+    if (base.refs().isEmpty()) {
+      return base;
+    }
+    TypeRef headRef = null;
+    for (var ref : base.refs()) {
+      if (isValueTableLike(ref.qualifiedName())) {
+        headRef = ref;
+        break;
+      }
+    }
+    if (headRef == null) {
+      return base;
+    }
+    var owner = variable.getOwner();
+    var ast = safeGetOwnerAst(owner);
+    if (ast == null) {
+      return base;
+    }
+    var scope = variable.getScope();
+    var scopeRange = scope == null ? null : scope.getRange();
+    var variableName = variable.getName();
+
+    var rowRef = typeRegistry.resolve("СтрокаТаблицыЗначений", owner.getFileType())
+      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, "СтрокаТаблицыЗначений"));
+    TypeSet rowSet = TypeSet.of(rowRef);
+    boolean hasColumns = false;
+
+    for (var ruleNode : Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement)) {
+      if (!(ruleNode instanceof BSLParser.CallStatementContext call)) {
+        continue;
+      }
+      var name = extractColumnsAddReceiverName(call);
+      if (name == null || !name.equalsIgnoreCase(variableName)) {
+        continue;
+      }
+      if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
+        continue;
+      }
+      var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
+      if (methodCall == null || !isAddMethodName(methodCall)) {
+        continue;
+      }
+      var paramList = methodCall.doCall() == null ? null : methodCall.doCall().callParamList();
+      if (paramList == null) {
+        continue;
+      }
+      var params = paramList.callParam();
+      if (params.isEmpty()) {
+        continue;
+      }
+      var keyExpr = params.get(0).expression();
+      var keyName = extractStringLiteralText(keyExpr);
+      if (keyName == null || keyName.isBlank()) {
+        continue;
+      }
+      // TODO: для аргумента-Тип("X") / Новый ОписаниеТипов("X") извлекать
+      // фактический тип колонки. Сейчас всегда Неопределено, чтобы колонка
+      // как минимум появилась в hover/completion на строке ТЗ.
+      rowSet = rowSet.withField(rowRef, keyName.trim(), TypeSet.of(UNDEFINED));
+      hasColumns = true;
+    }
+    if (!hasColumns) {
+      return base;
+    }
+    return base.withElement(headRef, rowSet);
+  }
+
+  private static boolean isValueTableLike(String typeName) {
+    if (typeName == null) {
+      return false;
+    }
+    var lower = typeName.toLowerCase(Locale.ROOT);
+    return lower.equals("таблицазначений") || lower.equals("valuetable");
+  }
+
+  private static boolean isAddMethodName(BSLParser.MethodCallContext methodCall) {
+    var nameCtx = methodCall.methodName();
+    if (nameCtx == null) {
+      return false;
+    }
+    var text = nameCtx.getText();
+    return "Добавить".equalsIgnoreCase(text) || "Add".equalsIgnoreCase(text);
+  }
+
+  /**
+   * Для конструкции {@code X.Колонки.Добавить(...)}: вернуть {@code "X"},
+   * если у callStatement ровно один accessProperty-модификатор с именем
+   * {@code Колонки}/{@code Columns} и далее идёт accessCall.
+   */
+  private static String extractColumnsAddReceiverName(BSLParser.CallStatementContext ctx) {
+    var identifier = ctx.IDENTIFIER();
+    if (identifier == null) {
+      return null;
+    }
+    var modifiers = ctx.modifier();
+    if (modifiers.size() != 1) {
+      return null;
+    }
+    var prop = modifiers.get(0).accessProperty();
+    if (prop == null || prop.IDENTIFIER() == null) {
+      return null;
+    }
+    var propName = prop.IDENTIFIER().getText();
+    if (!"Колонки".equalsIgnoreCase(propName) && !"Columns".equalsIgnoreCase(propName)) {
+      return null;
+    }
+    if (ctx.accessCall() == null) {
+      return null;
+    }
+    return identifier.getText();
   }
 
   private static String extractInsertReceiverName(BSLParser.CallStatementContext ctx) {
@@ -844,6 +971,18 @@ public class ExpressionTypeInferencer {
       .orElse(TypeSet.EMPTY);
     if (assignment.isPresent()) {
       result = result.union(inlineCommentTypes(owner, assignment.get()));
+      return result;
+    }
+    // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:
+    // тип X — это объединение typeSets, объявленных как elementTypes
+    // коллекции.
+    var forEach = ExpressionAtPosition.findForEachBindingAt(owner, position);
+    if (forEach.isPresent() && forEach.get().expression() != null) {
+      var collectionExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(forEach.get().expression());
+      if (collectionExpr != null) {
+        var collectionTypes = inferInternal(collectionExpr, ctx);
+        result = result.union(collectionTypes.getElementTypes());
+      }
     }
     return result;
   }

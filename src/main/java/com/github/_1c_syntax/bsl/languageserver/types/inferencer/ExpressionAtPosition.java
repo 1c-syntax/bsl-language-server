@@ -134,6 +134,31 @@ public class ExpressionAtPosition {
       .map(BSLParser.AssignmentContext.class::cast);
   }
 
+  /**
+   * Найти ForEachStatementContext, в котором IDENTIFIER (итерационная
+   * переменная) расположен в указанной позиции. Используется, чтобы по
+   * позиции декларации переменной для-каждого получить выражение коллекции
+   * и далее её типы элементов.
+   */
+  public static Optional<BSLParser.ForEachStatementContext> findForEachBindingAt(
+    DocumentContext documentContext,
+    Position position
+  ) {
+    var ast = safeGetAst(documentContext);
+    if (ast == null) {
+      return Optional.empty();
+    }
+    var hit = Trees.findTerminalNodeContainsPosition(ast, position).orElse(null);
+    if (hit == null) {
+      return Optional.empty();
+    }
+    var parent = hit.getParent();
+    if (!(parent instanceof BSLParser.ForEachStatementContext forEach)) {
+      return Optional.empty();
+    }
+    return forEach.IDENTIFIER() == hit ? Optional.of(forEach) : Optional.empty();
+  }
+
   private static BSLParser.FileContext safeGetAst(DocumentContext documentContext) {
     try {
       return documentContext.getAst();
