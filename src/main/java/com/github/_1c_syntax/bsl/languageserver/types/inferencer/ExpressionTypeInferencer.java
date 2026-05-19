@@ -68,8 +68,10 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -377,6 +379,23 @@ public class ExpressionTypeInferencer {
       || lower.equals("фиксированнаяструктура") || lower.equals("fixedstructure");
   }
 
+  /**
+   * Платформенные KV-коллекции, у которых {@code .Вставить("Имя", значение)} /
+   * {@code .Insert(...)} даёт строковый ключ → значение. Сюда же подмешивается
+   * {@link #isStructureLike} (Структура и ФиксированнаяСтруктура).
+   */
+  private static boolean isStructureOrMapLike(String typeName) {
+    if (isStructureLike(typeName)) {
+      return true;
+    }
+    if (typeName == null) {
+      return false;
+    }
+    var lower = typeName.toLowerCase(Locale.ROOT);
+    return lower.equals("соответствие") || lower.equals("map")
+      || lower.equals("фиксированноесоответствие") || lower.equals("fixedmap");
+  }
+
   private static String extractTypeName(ConstructorCallNode constructor) {
     var typeNameNode = constructor.getTypeName();
     if (typeNameNode == null) {
@@ -450,30 +469,68 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Индексатор {@code coll[i]}. Возвращает элементы коллекции, накопленные на
-   * левом TypeSet'е — это сразу подхватывает динамические поля строки
-   * ({@link #accumulateValueTableColumnFields}) и платформенные members
-   * через приклеенные defaultElementTypes (см.
-   * {@link TypeRegistry#getDefaultElementTypes(TypeRef)}). Так
-   * {@code Массив[i].метод()}, {@code ТЗ[0].КолонкаА},
-   * {@code СписокЗначений[i].Значение} начинают работать без JsDoc.
-   * <p>
-   * Известное ограничение: для KV-коллекций ({@code Соответствие},
-   * {@code Структура}) семантически {@code coll[key]} — это значение, а не пара
-   * {@code КлючИЗначение}. Точная модель «тип значения по конкретному ключу»
-   * требует отдельной работы — оставлено TODO; сейчас вернётся
-   * {@code КлючИЗначение} (по defaultElementTypes), что хотя бы не пусто.
+   * Индексатор {@code coll[i]}. Семантика зависит от того, KV-коллекция перед нами
+   * или последовательностная:
+   * <ul>
+   *   <li>KV (Структура/Соответствие и Fixed-варианты): {@code coll[key]} — это
+   *       значение по ключу. Если индекс — строковый литерал, резолвим точно через
+   *       {@link TypeSet#getLocalFields(TypeRef)}; если индекс динамический —
+   *       union по всем известным значениям; если ключа нет — empty.</li>
+   *   <li>Sequence (Массив/ТЗ/СписокЗначений/коллекции колонок/etc.): возвращаем
+   *       элементы через {@link TypeSet#getElementTypes(TypeRef)} — это сразу
+   *       подхватывает динамические поля строки ТЗ и платформенные members
+   *       элемента.</li>
+   * </ul>
+   * KV-приоритет включается, если у левого типа есть прямые {@code localFields}
+   * (т.е. {@code .Вставить(...)} в скоупе уже наполнил карту ключей). Иначе —
+   * sequence-путь по умолчанию.
    */
   private TypeSet inferIndexAccess(BinaryOperationNode node, InferenceContext ctx) {
     var leftTypes = inferInternal(node.getLeft(), ctx);
     if (leftTypes.isEmpty()) {
       return TypeSet.EMPTY;
     }
+    var kvFields = collectKeyValueFields(leftTypes);
+    if (!kvFields.isEmpty()) {
+      var keyName = extractStringLiteral(node.getRight());
+      if (keyName != null) {
+        var trimmed = keyName.trim();
+        TypeSet exact = TypeSet.EMPTY;
+        for (var entry : kvFields.entrySet()) {
+          if (entry.getKey().equalsIgnoreCase(trimmed)) {
+            exact = exact.union(entry.getValue());
+          }
+        }
+        return exact;
+      }
+      // Динамический индекс — union по всем известным value-типам.
+      TypeSet union = TypeSet.EMPTY;
+      for (var values : kvFields.values()) {
+        union = union.union(values);
+      }
+      return union;
+    }
     TypeSet result = TypeSet.EMPTY;
     for (var ref : leftTypes.refs()) {
       result = result.union(leftTypes.getElementTypes(ref));
     }
     return result;
+  }
+
+  /**
+   * Собрать union localFields по всем ref'ам набора. Источник —
+   * {@link #accumulateStructureInsertFields} (Структура/Соответствие)
+   * и {@link #applyStructureConstructorKeys} (Структура с key-list-конструктором).
+   */
+  private static Map<String, TypeSet> collectKeyValueFields(TypeSet leftTypes) {
+    var merged = new LinkedHashMap<String, TypeSet>();
+    for (var ref : leftTypes.refs()) {
+      var fields = leftTypes.getLocalFields(ref);
+      for (var entry : fields.entrySet()) {
+        merged.merge(entry.getKey(), entry.getValue(), TypeSet::union);
+      }
+    }
+    return merged;
   }
 
   private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {
@@ -657,10 +714,12 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Накопить поля «открытой» структуры по mutation-вызовам
+   * Накопить поля «открытой» структуры/соответствия по mutation-вызовам
    * {@code X.Вставить("Имя", значение)} / {@code X.Insert(...)} в области видимости
    * переменной. Соответствует EDT-стандарту code typification: значения,
-   * присваиваемые ключам, сужают тип структуры.
+   * присваиваемые ключам, сужают тип объекта. Работает для Структуры,
+   * ФиксированнойСтруктуры, Соответствия и ФиксированногоСоответствия —
+   * у всех у них {@code .Вставить(...)} даёт строковый ключ → значение.
    */
   private TypeSet accumulateStructureInsertFields(
     VariableSymbol variable,
@@ -672,7 +731,7 @@ public class ExpressionTypeInferencer {
     }
     TypeRef headRef = null;
     for (var ref : base.refs()) {
-      if (isStructureLike(ref.qualifiedName())) {
+      if (isStructureOrMapLike(ref.qualifiedName())) {
         headRef = ref;
         break;
       }

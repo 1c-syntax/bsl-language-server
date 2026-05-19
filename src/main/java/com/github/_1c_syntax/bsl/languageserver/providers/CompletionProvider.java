@@ -246,9 +246,20 @@ public final class CompletionProvider {
     var fileType = documentContext.getFileType();
     // позиция выражения — символ перед точкой
     var beforeDot = new Position(position.getLine(), Math.max(0, dotInfo.dotColumn - 1));
-    var typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
-    if (typeSet.isEmpty()) {
+    // findTypes резолвит через reference finders; они проверяют позицию полуинклюзивно
+    // (`character <= end`) и для случаев вроде `obj[varName].` ложно матчат одноимённую
+    // переменную, лежащую в `[…]`. На закрывающих скобках сразу идём в inferAtPosition,
+    // который строит полное выражение из AST. Для простых `ident.` — findTypes остаётся
+    // быстрым кэш-путём.
+    var beforeDotChar = charAt(documentContext, beforeDot);
+    TypeSet typeSet;
+    if (beforeDotChar == ']' || beforeDotChar == ')') {
       typeSet = typeService.inferAtPosition(documentContext, beforeDot);
+    } else {
+      typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
+      if (typeSet.isEmpty()) {
+        typeSet = typeService.inferAtPosition(documentContext, beforeDot);
+      }
     }
     if (typeSet.isEmpty()) {
       return List.of();
@@ -277,6 +288,23 @@ public final class CompletionProvider {
       .filter(m -> matches(m.name(), prefix))
       .toList();
     return toCompletionItems(filtered);
+  }
+
+  private static char charAt(DocumentContext documentContext, Position position) {
+    var content = documentContext.getContent();
+    if (content == null) {
+      return '\0';
+    }
+    var lines = content.split("\\R", -1);
+    if (position.getLine() >= lines.length) {
+      return '\0';
+    }
+    var line = lines[position.getLine()];
+    int col = position.getCharacter();
+    if (col < 0 || col >= line.length()) {
+      return '\0';
+    }
+    return line.charAt(col);
   }
 
   private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {

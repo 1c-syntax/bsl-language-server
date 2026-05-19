@@ -478,6 +478,102 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void indexAccessOnStructureWithStringLiteralKeyReturnsValueMembers() {
+    // Стр["X"] — значение по ключу, у которого тип неприметивный → его dot-completion
+    // показывает реальные члены этого типа, а не КлючИЗначение.
+    var content = """
+      Стр = Новый Структура;
+      Стр.Вставить("X", Новый Массив);
+      Y = Стр["X"].
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, "Y = Стр[\"X\"].".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var labels = items.stream().map(CompletionItem::getLabel).toList();
+
+    assertThat(labels)
+      .as("Стр[\"X\"] — значение Массив, видны его методы Добавить/Количество")
+      .contains("Добавить", "Количество")
+      .as("Стр[\"X\"] — не должны лезть свойства КлючИЗначение")
+      .doesNotContain("Ключ", "Значение");
+  }
+
+  @Test
+  void indexAccessOnMapWithStringLiteralKeyReturnsValueMembers() {
+    // То же для Соответствие — accumulator теперь захватывает и .Вставить
+    // на Соответствии (раньше работал только для Структуры).
+    var content = """
+      С = Новый Соответствие;
+      С.Вставить("X", Новый ТаблицаЗначений);
+      Y = С["X"].
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, "Y = С[\"X\"].".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var labels = items.stream().map(CompletionItem::getLabel).toList();
+
+    assertThat(labels)
+      .as("С[\"X\"] — значение ТаблицаЗначений, видны её свойства/методы")
+      .contains("Колонки")
+      .as("С[\"X\"] — не должны лезть свойства КлючИЗначение")
+      .doesNotContain("Ключ", "Значение");
+  }
+
+  @Test
+  void indexAccessOnStructureWithUnknownKeyReturnsEmpty() {
+    // Стр["UnknownKey"] — ключа нет, value-тип неизвестен, completion пуст
+    // (а не отдаёт ошибочно КлючИЗначение).
+    var content = """
+      Стр = Новый Структура;
+      Стр.Вставить("X", Новый Массив);
+      Y = Стр["Other"].
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, "Y = Стр[\"Other\"].".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    assertThat(items)
+      .as("Стр[\"Other\"] — неизвестный ключ, выпадашка пуста")
+      .isEmpty();
+  }
+
+  @Test
+  void indexAccessOnStructureWithDynamicKeyUnionsValueMembers() {
+    // Стр[ключ] — индекс не литерал, value-тип = union по всем известным ключам.
+    var content = """
+      Стр = Новый Структура;
+      Стр.Вставить("X", Новый Массив);
+      Стр.Вставить("Y", Новый ТаблицаЗначений);
+      Ключ = "X";
+      Z = Стр[Ключ].
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(4, "Z = Стр[Ключ].".length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var labels = items.stream().map(CompletionItem::getLabel).toList();
+
+    assertThat(labels)
+      .as("динамический индекс — union value-типов: видны члены и Массива, и ТЗ")
+      .contains("Добавить", "Колонки");
+  }
+
+  @Test
   void dotCompletionOnAddRowRowSeesDynamicColumns() {
     // Регрессия: НоваяСтрока = ТЗ.Добавить() + НоваяСтрока. — в выпадашке должны
     // быть колонки, заявленные ТЗ.Колонки.Добавить("X", ...). Раньше Добавить()
