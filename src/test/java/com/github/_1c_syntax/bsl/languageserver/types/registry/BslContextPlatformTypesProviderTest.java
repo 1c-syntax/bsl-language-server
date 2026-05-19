@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextMethodSignature;
 import com.github._1c_syntax.bsl.context.api.ContextName;
@@ -75,7 +76,7 @@ class BslContextPlatformTypesProviderTest {
 
   @Test
   void emptyHolderProducesNoTypes() {
-    var adapter = new BslContextPlatformTypesProvider(holderOf(null));
+    var adapter = new BslContextPlatformTypesProvider(holderOf(null), new LanguageServerConfiguration());
     assertThat(adapter.getTypes()).isEmpty();
   }
 
@@ -84,7 +85,7 @@ class BslContextPlatformTypesProviderTest {
     var primitive = new PrimitivePlaceholderType(new ContextName("Строка", "String"), "");
     var provider = providerOf(primitive);
 
-    var types = new BslContextPlatformTypesProvider(holderOf(provider)).getTypes();
+    var types = new BslContextPlatformTypesProvider(holderOf(provider), new LanguageServerConfiguration()).getTypes();
 
     assertThat(types).hasSize(1);
     var decl = types.iterator().next();
@@ -136,7 +137,7 @@ class BslContextPlatformTypesProviderTest {
 
     var provider = providerOf(arrayType, stringType, numberType);
 
-    var types = new BslContextPlatformTypesProvider(holderOf(provider)).getTypes();
+    var types = new BslContextPlatformTypesProvider(holderOf(provider), new LanguageServerConfiguration()).getTypes();
     var decl = types.stream()
       .filter(t -> "Массив".equals(t.qualifiedName()))
       .findFirst().orElseThrow();
@@ -169,7 +170,7 @@ class BslContextPlatformTypesProviderTest {
       ))
       .build();
 
-    var types = new BslContextPlatformTypesProvider(holderOf(providerOf(enumeration))).getTypes();
+    var types = new BslContextPlatformTypesProvider(holderOf(providerOf(enumeration)), new LanguageServerConfiguration()).getTypes();
     var decl = types.iterator().next();
 
     assertThat(decl.kind()).isEqualTo(TypeKind.PLATFORM);
@@ -201,7 +202,7 @@ class BslContextPlatformTypesProviderTest {
     var realType = primitive("Строка", "String");
 
     var types = new BslContextPlatformTypesProvider(
-      holderOf(providerOf(globalContext, keyword, realType))).getTypes();
+      holderOf(providerOf(globalContext, keyword, realType)), new LanguageServerConfiguration()).getTypes();
 
     // Только примитив, без global-context и language-keyword.
     assertThat(types)
@@ -236,7 +237,7 @@ class BslContextPlatformTypesProviderTest {
       .build();
 
     var types = new BslContextPlatformTypesProvider(
-      holderOf(providerOf(catalogsManager, plainType))).getTypes();
+      holderOf(providerOf(catalogsManager, plainType)), new LanguageServerConfiguration()).getTypes();
 
     var manager = types.stream().filter(t -> "СправочникиМенеджер".equals(t.qualifiedName()))
       .findFirst().orElseThrow();
@@ -258,7 +259,7 @@ class BslContextPlatformTypesProviderTest {
       .description("Универсальная коллекция значений.")
       .build();
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)), new LanguageServerConfiguration())
       .getTypes().iterator().next();
 
     assertThat(decl.description()).isEqualTo("Универсальная коллекция значений.");
@@ -270,7 +271,7 @@ class BslContextPlatformTypesProviderTest {
       new ContextName("Строка", "String"),
       "Значения данного типа содержат строку в формате Unicode.");
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(primitive)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(primitive)), new LanguageServerConfiguration())
       .getTypes().iterator().next();
 
     assertThat(decl.description()).contains("Unicode");
@@ -310,7 +311,7 @@ class BslContextPlatformTypesProviderTest {
       .build();
 
     var decl = new BslContextPlatformTypesProvider(
-      holderOf(providerOf(arrayType, stringType)))
+      holderOf(providerOf(arrayType, stringType)), new LanguageServerConfiguration())
       .getTypes().stream()
       .filter(t -> "Массив".equals(t.qualifiedName()))
       .findFirst().orElseThrow();
@@ -381,7 +382,7 @@ class BslContextPlatformTypesProviderTest {
       .constructors(Collections.emptyList())
       .build();
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(stringType)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(stringType)), new LanguageServerConfiguration())
       .getTypes().iterator().next();
 
     var member = decl.members().iterator().next();
@@ -405,7 +406,7 @@ class BslContextPlatformTypesProviderTest {
       .constructors(Collections.emptyList())
       .build();
 
-    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)))
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(arrayType)), new LanguageServerConfiguration())
       .getTypes().iterator().next();
 
     assertThat(decl.constructors()).isEmpty();

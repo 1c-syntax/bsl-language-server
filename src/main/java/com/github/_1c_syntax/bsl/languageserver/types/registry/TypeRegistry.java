@@ -150,6 +150,32 @@ public class TypeRegistry {
   }
 
   /**
+   * Найти платформенный generic-тип по префиксу-семейству.
+   * <p>
+   * Платформа 1С регистрирует обобщённые типы вида
+   * {@code "ДокументСсылка.<Имя документа>"}, {@code "СправочникОбъект.<Имя справочника>"}
+   * и т.п. — конкретное имя плейсхолдера в угловых скобках различается для каждого
+   * MDOType. Этот метод выбирает первый тип, чьё qualifiedName начинается с
+   * {@code prefix + ".<"} (плейсхолдер) — обычно он один на семейство.
+   *
+   * @param prefix начальная часть qualifiedName до точки-плейсхолдера
+   *               (например, {@code "ДокументСсылка"})
+   * @return TypeRef generic-типа или {@link Optional#empty()}, если не зарегистрирован
+   */
+  public Optional<TypeRef> resolveGenericByPrefix(String prefix) {
+    if (prefix == null || prefix.isEmpty()) {
+      return Optional.empty();
+    }
+    var needle = prefix.toLowerCase(Locale.ROOT) + ".<";
+    for (var entry : aliasIndex.entrySet()) {
+      if (entry.getKey().startsWith(needle)) {
+        return Optional.of(entry.getValue());
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
    * Найти тип по имени с фильтрацией по типу файла. Тип будет возвращён только
    * если его {@link LanguageScope} совместим с {@code fileType}.
    * Если {@code fileType == null} — фильтрация не применяется.

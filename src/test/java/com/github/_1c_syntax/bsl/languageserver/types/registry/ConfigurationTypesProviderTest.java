@@ -105,4 +105,142 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
       .as("должны быть составные имена коллекция.Имя для no-dot completion")
       .contains("Справочники.Справочник1", "Catalogs.Справочник1");
   }
+
+  @Test
+  void documentRefInheritsPlatformMembers() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Конкретный тип `ДокументСсылка.Документ1` получает members обоих источников:
+    // реквизиты из метаданных + платформенные members из generic-семейства
+    // (Дата, Номер, ВерсияДанных, Метаданные(), ПолучитьОбъект()).
+    var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
+    assertThat(ref).isPresent();
+    var members = typeRegistry.getMembers(ref.get());
+    var names = members.stream().map(m -> m.name()).toList();
+    assertThat(names)
+      .as("платформенные стандартные свойства должны подмешиваться")
+      .contains("Дата", "Номер", "Ссылка", "Проведен", "ВерсияДанных");
+    assertThat(names)
+      .as("платформенные методы тоже")
+      .contains("Метаданные", "ПолучитьОбъект");
+    assertThat(names)
+      .as("реквизиты из метаданных тоже на месте")
+      .contains("Реквизит1");
+  }
+
+  @Test
+  void documentManagerInheritsPlatformMembers() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // На `ДокументМенеджер.Документ1` подмешиваются методы платформенного
+    // generic-менеджера документа (НайтиПоНомеру, СоздатьДокумент, …).
+    var ref = typeRegistry.resolve("ДокументМенеджер.Документ1");
+    assertThat(ref).isPresent();
+    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    assertThat(names).contains("НайтиПоНомеру", "СоздатьДокумент", "ПустаяСсылка", "Выбрать");
+  }
+
+  @Test
+  void documentsCollectionInheritsCollectionManagerMembers() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // На коллекции `Документы` подмешиваются методы платформенного
+    // `ДокументыМенеджер` (ТипВсеСсылки).
+    var ref = typeRegistry.resolve("Документы");
+    assertThat(ref).isPresent();
+    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    assertThat(names)
+      .as("MD-инстансы и метод коллекции-менеджера")
+      .contains("Документ1", "ТипВсеСсылки");
+  }
+
+  @Test
+  void genericSlotsFilteredOutFromInheritedMembers() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Generic-слоты <Имя реквизита>, <Имя общего реквизита> платформенного
+    // generic-типа не должны утекать в специализированный ref/object тип.
+    var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
+    assertThat(ref).isPresent();
+    var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
+    assertThat(names).noneMatch(n -> n.startsWith("<") && n.endsWith(">"));
+  }
+
+  @Test
+  void standardAttributesGetDescriptionsFromPlatform() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // У стандартного реквизита `Дата` в mdclasses описание пустое, а
+    // платформенный generic-тип в HBK содержит описание — оно должно
+    // подмешиваться при сборке member'а.
+    var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
+    assertThat(ref).isPresent();
+    var data = typeRegistry.getMembers(ref.get()).stream()
+      .filter(m -> "Дата".equalsIgnoreCase(m.name()))
+      .findFirst();
+    assertThat(data).isPresent();
+    assertThat(data.get().description())
+      .as("описание `Дата` должно прийти из платформенного generic-типа")
+      .contains("дату");
+  }
+
+  @Test
+  void documentExposesTabularSectionMember() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // На `ДокументОбъект.Документ1` есть member-property `ТабличнаяЧасть1`,
+    // тип которого — `ДокументТабличнаяЧасть.Документ1.ТабличнаяЧасть1`.
+    var objectRef = typeRegistry.resolve("ДокументОбъект.Документ1");
+    assertThat(objectRef).isPresent();
+    var ts = typeRegistry.getMembers(objectRef.get()).stream()
+      .filter(m -> "ТабличнаяЧасть1".equals(m.name()))
+      .findFirst();
+    assertThat(ts).isPresent();
+    assertThat(ts.get().returnType().qualifiedName())
+      .isEqualTo("ДокументТабличнаяЧасть.Документ1.ТабличнаяЧасть1");
+  }
+
+  @Test
+  void commonAttributeAddedToApplicableDocument() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // `ОбщийРеквизит1`: content явно включает Документ1 (Use=USE) и исключает
+    // Справочник1 (DontUse). Поэтому ref-тип документа получает реквизит как
+    // member, а ref-тип справочника — нет.
+    var docRef = typeRegistry.resolve("ДокументСсылка.Документ1");
+    assertThat(docRef).isPresent();
+    var docMembers = typeRegistry.getMembers(docRef.get()).stream().map(m -> m.name()).toList();
+    assertThat(docMembers).contains("ОбщийРеквизит1");
+
+    var catRef = typeRegistry.resolve("СправочникСсылка.Справочник1");
+    assertThat(catRef).isPresent();
+    var catMembers = typeRegistry.getMembers(catRef.get()).stream().map(m -> m.name()).toList();
+    assertThat(catMembers).doesNotContain("ОбщийРеквизит1");
+  }
+
+  @Test
+  void tabularSectionRowExposesColumns() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var rowRef = typeRegistry.resolve("ДокументТабличнаяЧастьСтрока.Документ1.ТабличнаяЧасть1");
+    assertThat(rowRef).isPresent();
+    var names = typeRegistry.getMembers(rowRef.get()).stream().map(m -> m.name()).toList();
+    assertThat(names).contains("Реквизит1", "Реквизит2");
+  }
 }

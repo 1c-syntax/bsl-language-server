@@ -257,6 +257,12 @@ public final class CompletionProvider {
     var members = new LinkedHashMap<String, MemberDescriptor>();
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, fileType)) {
+        // Платформенные generic-«слоты» (например, `<Имя документа>`,
+        // `<Имя реквизита>`) — это абстрактные плейсхолдеры HBK, в реальной
+        // dot-completion они только мешают.
+        if (member.generic()) {
+          continue;
+        }
         members.putIfAbsent(member.name(), member);
       }
       // Декларированные ключи «открытого» объекта данных (Структура из

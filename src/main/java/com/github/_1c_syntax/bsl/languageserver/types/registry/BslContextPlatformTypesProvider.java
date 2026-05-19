@@ -33,6 +33,8 @@ import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.context.api.ContextSignatureParameter;
 import com.github._1c_syntax.bsl.context.api.ContextType;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -90,10 +92,19 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
 
   private final BslContextHolder contextHolder;
   private final Lazy<List<TypeDecl>> cached;
+  /**
+   * Язык, на котором будут публиковаться имена членов/параметров/значений
+   * перечислений. Захватывается при создании провайдера (workspace-scope).
+   * Имена самих типов остаются на русском — это канонический идентификатор
+   * для TypeRegistry; альтернативное имя регистрируется через alias.
+   */
+  private final Language language;
 
-  public BslContextPlatformTypesProvider(BslContextHolder contextHolder) {
+  public BslContextPlatformTypesProvider(BslContextHolder contextHolder,
+                                         LanguageServerConfiguration configuration) {
     this.contextHolder = contextHolder;
-    this.cached = new Lazy<>(() -> build(contextHolder.get().orElse(null)));
+    this.language = configuration.getLanguage();
+    this.cached = new Lazy<>(() -> build(contextHolder.get().orElse(null), language));
   }
 
   @Override
@@ -106,14 +117,14 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return LanguageScope.BSL;
   }
 
-  private static List<TypeDecl> build(ContextProvider provider) {
+  private static List<TypeDecl> build(ContextProvider provider, Language language) {
     if (provider == null) {
       return List.of();
     }
     var contexts = provider.getContexts();
     var result = new ArrayList<TypeDecl>(contexts.size());
     for (var context : contexts) {
-      var decl = toTypeDecl(context);
+      var decl = toTypeDecl(context, language);
       if (decl != null) {
         result.add(decl);
       }
@@ -121,17 +132,17 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return List.copyOf(result);
   }
 
-  private static TypeDecl toTypeDecl(Context context) {
+  private static TypeDecl toTypeDecl(Context context, Language language) {
     var kind = mapKind(context);
     if (kind == null) {
       return null;
     }
     var qualifiedName = context.name().getName();
     var aliases = aliasesOf(context.name());
-    var members = collectMembers(context);
+    var members = collectMembers(context, language);
     var description = descriptionOf(context);
     var classRef = new TypeRef(kind, qualifiedName);
-    var constructors = constructorsOf(context, classRef);
+    var constructors = constructorsOf(context, classRef, language);
     var defaultElementTypes = collectionElementTypes(context);
     var supportsForEach = context instanceof ContextCollection coll && coll.supportsForEach();
     var supportsIndexAccess = context instanceof ContextCollection coll && coll.supportsIndexAccess();
@@ -162,6 +173,25 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return List.copyOf(refs);
   }
 
+  /**
+   * Возвращает имя ContextName в указанном языке. Падает обратно на другой
+   * язык, если выбранный пуст (HBK может содержать только одно из двух).
+   */
+  private static String pickPrimary(ContextName name, Language language) {
+    var ru = name.getName();
+    var en = name.getAlias();
+    if (language == Language.EN) {
+      if (en != null && !en.isBlank()) {
+        return en;
+      }
+      return ru == null ? "" : ru;
+    }
+    if (ru != null && !ru.isBlank()) {
+      return ru;
+    }
+    return en == null ? "" : en;
+  }
+
   private static String descriptionOf(Context context) {
     if (context instanceof ContextType type) {
       return type.description();
@@ -175,7 +205,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    * Возвращаемый тип конструктора — сам тип ({@code classRef}); параметры —
    * как у обычных методов.
    */
-  private static List<SignatureDescriptor> constructorsOf(Context context, TypeRef classRef) {
+  private static List<SignatureDescriptor> constructorsOf(Context context, TypeRef classRef,
+                                                          Language language) {
     if (!(context instanceof ContextType type)) {
       return List.of();
     }
@@ -187,7 +218,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     for (var ctor : ctors) {
       var parameters = new ArrayList<ParameterDescriptor>(ctor.parameters().size());
       for (var parameter : ctor.parameters()) {
-        parameters.add(toParameterDescriptor(parameter));
+        parameters.add(toParameterDescriptor(parameter, language));
       }
       result.add(new SignatureDescriptor(parameters, classRef, ctor.description()));
     }
@@ -231,15 +262,15 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return List.of(alias);
   }
 
-  private static List<MemberDescriptor> collectMembers(Context context) {
+  private static List<MemberDescriptor> collectMembers(Context context, Language language) {
     if (context instanceof ContextType type) {
       var members = new ArrayList<MemberDescriptor>(
         type.methods().size() + type.properties().size());
       for (var property : type.properties()) {
-        members.add(toMemberDescriptor(property));
+        members.add(toMemberDescriptor(property, language));
       }
       for (var method : type.methods()) {
-        members.add(toMemberDescriptor(method));
+        members.add(toMemberDescriptor(method, language));
       }
       return List.copyOf(members);
     }
@@ -248,25 +279,30 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       var members = new ArrayList<MemberDescriptor>(values.size());
       var enumRef = new TypeRef(TypeKind.PLATFORM, context.name().getName());
       for (var value : values) {
-        members.add(toMemberDescriptor(value, enumRef));
+        members.add(toMemberDescriptor(value, enumRef, language));
       }
       return List.copyOf(members);
     }
     return Collections.emptyList();
   }
 
-  static MemberDescriptor toMemberDescriptor(ContextProperty property) {
+  static MemberDescriptor toMemberDescriptor(ContextProperty property, Language language) {
     var returnType = singleType(property.types());
-    return MemberDescriptor.property(
-      property.name().getName(),
-      returnType,
-      property.description()
-    );
+    var name = pickPrimary(property.name(), language);
+    if (property.isGeneric()) {
+      return MemberDescriptor.genericProperty(name, returnType, property.description());
+    }
+    return MemberDescriptor.property(name, returnType, property.description());
   }
 
-  static MemberDescriptor toMemberDescriptor(ContextMethod method) {
+  /** Backward-compatible overload — использует {@link Language#DEFAULT_LANGUAGE}. */
+  static MemberDescriptor toMemberDescriptor(ContextProperty property) {
+    return toMemberDescriptor(property, Language.DEFAULT_LANGUAGE);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextMethod method, Language language) {
     var returnType = singleType(method.returnValues());
-    var signatures = toSignatures(method.signatures(), returnType);
+    var signatures = toSignatures(method.signatures(), returnType, language);
     if (signatures.isEmpty() && returnType != TypeRef.UNKNOWN) {
       // bsl-context указал returnType метода без вариантов сигнатуры — синтезируем
       // безпараметровую сигнатуру, чтобы returnType был доступен инференсеру
@@ -274,15 +310,21 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       signatures = List.of(new SignatureDescriptor(List.of(), returnType, ""));
     }
     return MemberDescriptor.method(
-      method.name().getName(),
+      pickPrimary(method.name(), language),
       method.description(),
       signatures
     );
   }
 
-  private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef enumRef) {
+  /** Backward-compatible overload — использует {@link Language#DEFAULT_LANGUAGE}. */
+  static MemberDescriptor toMemberDescriptor(ContextMethod method) {
+    return toMemberDescriptor(method, Language.DEFAULT_LANGUAGE);
+  }
+
+  private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef enumRef,
+                                                     Language language) {
     return MemberDescriptor.property(
-      value.name().getName(),
+      pickPrimary(value.name(), language),
       enumRef,
       value.description()
     );
@@ -290,7 +332,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
 
   static List<SignatureDescriptor> toSignatures(
     List<ContextMethodSignature> signatures,
-    TypeRef returnType
+    TypeRef returnType,
+    Language language
   ) {
     if (signatures == null || signatures.isEmpty()) {
       return List.of();
@@ -299,7 +342,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     for (var signature : signatures) {
       var parameters = new ArrayList<ParameterDescriptor>(signature.parameters().size());
       for (var parameter : signature.parameters()) {
-        parameters.add(toParameterDescriptor(parameter));
+        parameters.add(toParameterDescriptor(parameter, language));
       }
       // bsl-context хранит returnType один на метод (одна страница HBK —
       // один блок «Возвращаемое значение:»), поэтому он одинаков для
@@ -309,9 +352,10 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return List.copyOf(result);
   }
 
-  private static ParameterDescriptor toParameterDescriptor(ContextSignatureParameter parameter) {
+  private static ParameterDescriptor toParameterDescriptor(ContextSignatureParameter parameter,
+                                                           Language language) {
     return new ParameterDescriptor(
-      parameter.name().getName(),
+      pickPrimary(parameter.name(), language),
       typeSet(parameter.types()),
       !parameter.isRequired(),
       parameter.description()

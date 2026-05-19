@@ -154,9 +154,16 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         // чтобы returnType метода был доступен инференсеру через MemberDescriptor.returnTypes.
         signatures = List.of(new SignatureDescriptor(List.of(), returnType, ""));
       }
-      members.add(kind == MemberKind.METHOD
-        ? MemberDescriptor.method(name, description, signatures)
-        : MemberDescriptor.property(name, returnType, description));
+      var generic = Boolean.TRUE.equals(m.get("generic"));
+      MemberDescriptor descriptor;
+      if (kind == MemberKind.METHOD) {
+        descriptor = MemberDescriptor.method(name, description, signatures);
+      } else if (generic) {
+        descriptor = MemberDescriptor.genericProperty(name, returnType, description);
+      } else {
+        descriptor = MemberDescriptor.property(name, returnType, description);
+      }
+      members.add(descriptor);
     }
     return members;
   }
