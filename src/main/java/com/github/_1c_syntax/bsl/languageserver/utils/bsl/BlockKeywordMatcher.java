@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.utils.bsl;
 
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
@@ -33,7 +33,7 @@ import java.util.Set;
  * Поиск парных открывающих/закрывающих ключевых слов BSL: `Если`/`КонецЕсли`,
  * `Процедура`/`КонецПроцедуры`, `Цикл`/`КонецЦикла` и т.п.
  */
-final class BlockKeywordMatcher {
+public final class BlockKeywordMatcher {
 
   private record ScopePair(Set<Integer> openers, Set<Integer> closers) {
   }
@@ -70,7 +70,7 @@ final class BlockKeywordMatcher {
    * Возвращает null, если переданный токен не относится к парным закрывающим
    * или парный открывающий не найден (несбалансированный код).
    */
-  static @Nullable Token findMatchingOpener(List<Token> allTokens, int closerIndex) {
+  public static @Nullable Token findMatchingOpener(List<Token> allTokens, int closerIndex) {
     if (closerIndex < 0 || closerIndex >= allTokens.size()) {
       return null;
     }
