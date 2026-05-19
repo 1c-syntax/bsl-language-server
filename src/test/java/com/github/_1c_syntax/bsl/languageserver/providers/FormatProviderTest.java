@@ -469,6 +469,81 @@ class FormatProviderTest {
     assertThat(textEdits).isEmpty();
   }
 
+  @Test
+  void testOnTypeFormattingSemicolonPreservesLeadingTab() {
+    // регрессия: `\tконецесли` + `;` ранее съедал ведущую табуляцию, потому что
+    // первый токен — decrement-keyword и getNewText сбрасывал indentLevel в 0.
+    // Теперь ведущий whitespace вне replace-диапазона и подменяется явно.
+    String fileContent = "\tконецесли;";
+    var params = onTypeParams(";", 0, 11);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // Парного `Если` нет → fallback: сохраняем фактический отступ строки.
+    assertThat(edit.getNewText()).isEqualTo("\tКонецЕсли;");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAlignsClosingKeywordToOpener() {
+    // фича: `КонецЕсли` с криво проставленным отступом выравнивается по `Если`.
+    String fileContent = "Если Истина Тогда\n        КонецЕсли\n\n";
+    var params = onTypeParams("\n", 2, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // Если на col 0 → КонецЕсли подтягивается к col 0
+    assertThat(edit.getNewText()).isEqualTo("КонецЕсли");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAlignsEndProcedureToProcedure() {
+    String fileContent = "    Процедура П()\n  КонецПроцедуры\n\n";
+    var params = onTypeParams("\n", 2, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    // ведущий отступ `Процедура` = 4 пробела → `КонецПроцедуры` тоже 4 пробела
+    assertThat(edit.getNewText()).isEqualTo("    КонецПроцедуры");
+  }
+
+  @Test
+  void testOnTypeFormattingEnterAlignsElseToIf() {
+    String fileContent = "    Если Истина Тогда\nИначе\n\n";
+    var params = onTypeParams("\n", 2, 0);
+
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getNewText()).isEqualTo("    Иначе");
+  }
+
   private DocumentOnTypeFormattingParams onTypeParams(String ch, int line, int character) {
     var params = new DocumentOnTypeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
