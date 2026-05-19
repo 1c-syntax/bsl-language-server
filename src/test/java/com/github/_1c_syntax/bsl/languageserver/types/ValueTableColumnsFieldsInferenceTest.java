@@ -23,12 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -75,6 +78,110 @@ class ValueTableColumnsFieldsInferenceTest extends AbstractServerContextAwareTes
     assertThat(sumTypes.refs())
       .as("НоваяСтрока.Сумма — колонка должна быть видна на строке, полученной из ТЗ.Добавить()")
       .isNotEmpty();
+  }
+
+  @Test
+  void columnTypeExtractedFromTypeDescriptionConstructor() {
+    // Колонки.Добавить("Имя", Новый ОписаниеТипов("Число")) — колонка должна иметь тип Число.
+    var content = """
+      Процедура Тест()
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("Имя", Новый ОписаниеТипов("Число"));
+      Для Каждого Строка Из ТЗ Цикл
+      А = Строка.Имя;
+      КонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var types = inferAtMarker(documentContext, "А = Строка.Имя", "А = Строка.".length() + 1);
+    assertThat(refNames(types))
+      .as("колонка с Новый ОписаниеТипов(\"Число\") должна давать тип Число")
+      .contains("Число");
+  }
+
+  @Test
+  void columnTypeExtractedFromTypeDescriptionMultiple() {
+    // Новый ОписаниеТипов("Число,Строка") — оба типа должны попасть в union.
+    var content = """
+      Процедура Тест()
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("Поле", Новый ОписаниеТипов("Число,Строка"));
+      Для Каждого Строка Из ТЗ Цикл
+      А = Строка.Поле;
+      КонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var types = inferAtMarker(documentContext, "А = Строка.Поле", "А = Строка.".length() + 1);
+    assertThat(refNames(types))
+      .as("мультитип в ОписаниеТипов — union всех заявленных типов")
+      .contains("Число", "Строка");
+  }
+
+  @Test
+  void columnTypeExtractedFromTypeFunctionCall() {
+    // Колонки.Добавить("Имя", Тип("Число"))
+    var content = """
+      Процедура Тест()
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("Поле", Тип("Число"));
+      Для Каждого Строка Из ТЗ Цикл
+      А = Строка.Поле;
+      КонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var types = inferAtMarker(documentContext, "А = Строка.Поле", "А = Строка.".length() + 1);
+    assertThat(refNames(types))
+      .as("Тип(\"Число\") как тип колонки — резолвится в Число")
+      .contains("Число");
+  }
+
+  @Test
+  void columnTypeFromStringLiteralArg() {
+    // Колонки.Добавить("Поле", "Число,Строка") — реже, но допустимый формат
+    var content = """
+      Процедура Тест()
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("Поле", "Число,Строка");
+      Для Каждого Строка Из ТЗ Цикл
+      А = Строка.Поле;
+      КонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var types = inferAtMarker(documentContext, "А = Строка.Поле", "А = Строка.".length() + 1);
+    assertThat(refNames(types))
+      .as("прямой строковый литерал с типами тоже принимается")
+      .contains("Число", "Строка");
+  }
+
+  @Test
+  void columnWithoutTypeArgRetainsUndefined() {
+    // Колонки.Добавить("Поле") без 2-го аргумента — fallback Неопределено.
+    var content = """
+      Процедура Тест()
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("Поле");
+      Для Каждого Строка Из ТЗ Цикл
+      А = Строка.Поле;
+      КонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var types = inferAtMarker(documentContext, "А = Строка.Поле", "А = Строка.".length() + 1);
+    assertThat(refNames(types))
+      .as("без указания типа — оставляем Неопределено")
+      .contains("Неопределено");
+  }
+
+  private static List<String> refNames(TypeSet types) {
+    return types.refs().stream().map(TypeRef::qualifiedName).toList();
   }
 
   private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {

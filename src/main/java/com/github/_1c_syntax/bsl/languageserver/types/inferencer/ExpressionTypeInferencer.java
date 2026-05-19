@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -66,6 +67,7 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -863,10 +865,20 @@ public class ExpressionTypeInferencer {
       if (keyName == null || keyName.isBlank()) {
         continue;
       }
-      // TODO: для аргумента-Тип("X") / Новый ОписаниеТипов("X") извлекать
-      // фактический тип колонки. Сейчас всегда Неопределено, чтобы колонка
-      // как минимум появилась в hover/completion на строке ТЗ.
-      rowSet = rowSet.withField(rowRef, keyName.trim(), TypeSet.of(UNDEFINED));
+      // Второй аргумент — тип колонки в одной из форм:
+      //   Колонки.Добавить("X", Новый ОписаниеТипов("Число,Строка"))
+      //   Колонки.Добавить("X", Тип("Число"))
+      //   Колонки.Добавить("X", "Число,Строка") — реже, но 1С допускает
+      // Парсим в TypeSet; если не распознали или типы не резолвятся — fallback Неопределено,
+      // чтобы колонка как минимум появилась в hover/completion.
+      TypeSet columnTypes = TypeSet.EMPTY;
+      if (params.size() >= 2) {
+        columnTypes = extractColumnTypes(params.get(1).expression(), owner.getFileType());
+      }
+      if (columnTypes.isEmpty()) {
+        columnTypes = TypeSet.of(UNDEFINED);
+      }
+      rowSet = rowSet.withField(rowRef, keyName.trim(), columnTypes);
       hasColumns = true;
     }
     if (!hasColumns) {
@@ -881,6 +893,106 @@ public class ExpressionTypeInferencer {
     }
     var lower = typeName.toLowerCase(Locale.ROOT);
     return lower.equals("таблицазначений") || lower.equals("valuetable");
+  }
+
+  /**
+   * Извлечь типы из второго аргумента {@code Колонки.Добавить("X", typesArg, ...)}.
+   * Распознаёт три формы записи типа в 1С:
+   * <ul>
+   *   <li>{@code Новый ОписаниеТипов("Число[,Строка,...]")} — мультитип;</li>
+   *   <li>{@code Тип("Число")} — единичный тип;</li>
+   *   <li>строковый литерал {@code "Число,Строка"} — реже, но допускается.</li>
+   * </ul>
+   * Имена типов резолвятся через {@link TypeRegistry}; нерезолвящиеся — отбрасываются.
+   * Возвращает {@link TypeSet#EMPTY}, если форма не распознана или ни один тип не резолвится.
+   */
+  private TypeSet extractColumnTypes(BSLParser.ExpressionContext expr, FileType fileType) {
+    if (expr == null) {
+      return TypeSet.EMPTY;
+    }
+    // Forma A: голый строковый литерал "Число,Строка"
+    var literal = extractExpressionStringLiteral(expr);
+    if (literal != null) {
+      return resolveTypeNames(literal, fileType);
+    }
+    var members = expr.member();
+    if (members == null || members.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var complexId = members.get(0).complexIdentifier();
+    if (complexId == null) {
+      return TypeSet.EMPTY;
+    }
+    // Forma B: Новый ОписаниеТипов("Число,Строка")
+    var newExpr = complexId.newExpression();
+    if (newExpr != null
+      && newExpr.typeName() != null && newExpr.typeName().IDENTIFIER() != null
+      && isTypeDescriptionTypeName(newExpr.typeName().IDENTIFIER().getText())) {
+      var firstArg = firstCallArgExpression(newExpr.doCall());
+      var s = firstArg == null ? null : extractExpressionStringLiteral(firstArg);
+      if (s != null) {
+        return resolveTypeNames(s, fileType);
+      }
+    }
+    // Forma C: Тип("Число")
+    var gmc = complexId.globalMethodCall();
+    if (gmc != null && gmc.methodName() != null
+      && isTypeFunctionName(gmc.methodName().getText())) {
+      var firstArg = firstCallArgExpression(gmc.doCall());
+      var s = firstArg == null ? null : extractExpressionStringLiteral(firstArg);
+      if (s != null) {
+        return resolveTypeNames(s, fileType);
+      }
+    }
+    return TypeSet.EMPTY;
+  }
+
+  private TypeSet resolveTypeNames(String commaSeparated, FileType fileType) {
+    var refs = new ArrayList<TypeRef>();
+    for (var raw : commaSeparated.split(",")) {
+      var name = raw.trim();
+      if (name.isEmpty()) {
+        continue;
+      }
+      typeRegistry.resolve(name, fileType).ifPresent(refs::add);
+    }
+    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+  }
+
+  private static BSLParser.ExpressionContext firstCallArgExpression(BSLParser.DoCallContext doCall) {
+    if (doCall == null || doCall.callParamList() == null) {
+      return null;
+    }
+    var params = doCall.callParamList().callParam();
+    if (params.isEmpty()) {
+      return null;
+    }
+    return params.get(0).expression();
+  }
+
+  private static String extractExpressionStringLiteral(BSLParser.ExpressionContext expr) {
+    if (expr == null) {
+      return null;
+    }
+    var text = expr.getText();
+    if (text == null) {
+      return null;
+    }
+    var trimmed = text.trim();
+    if (trimmed.length() >= 2
+      && (trimmed.charAt(0) == '"' || trimmed.charAt(0) == '\'')
+      && trimmed.charAt(0) == trimmed.charAt(trimmed.length() - 1)) {
+      return trimmed.substring(1, trimmed.length() - 1);
+    }
+    return null;
+  }
+
+  private static boolean isTypeDescriptionTypeName(String name) {
+    return "ОписаниеТипов".equalsIgnoreCase(name) || "TypeDescription".equalsIgnoreCase(name);
+  }
+
+  private static boolean isTypeFunctionName(String name) {
+    return "Тип".equalsIgnoreCase(name) || "Type".equalsIgnoreCase(name);
   }
 
   private static boolean isAddMethodName(BSLParser.MethodCallContext methodCall) {
