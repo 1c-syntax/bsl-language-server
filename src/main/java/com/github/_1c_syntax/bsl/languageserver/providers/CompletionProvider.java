@@ -43,6 +43,7 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
@@ -225,14 +226,16 @@ public final class CompletionProvider {
   }
 
   /**
-   * @return предложения автодополнения для указанной позиции
+   * @return предложения автодополнения для указанной позиции, обёрнутые в {@link CompletionList}.
+   *     {@code isIncomplete = false}: список содержит все валидные кандидаты для текущего префикса
+   *     — клиент может фильтровать дальше локально, повторно к серверу обращаться не обязан.
    */
-  public List<CompletionItem> getCompletion(DocumentContext documentContext, CompletionParams params) {
+  public CompletionList getCompletion(DocumentContext documentContext, CompletionParams params) {
     var position = params.getPosition();
-    if (isDotCompletion(documentContext, position)) {
-      return dotCompletion(documentContext, position);
-    }
-    return noDotCompletion(documentContext, position);
+    var items = isDotCompletion(documentContext, position)
+      ? dotCompletion(documentContext, position)
+      : noDotCompletion(documentContext, position);
+    return new CompletionList(false, items);
   }
 
   private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position) {

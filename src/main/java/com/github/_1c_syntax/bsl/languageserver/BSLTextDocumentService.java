@@ -212,13 +212,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
     var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
     if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+      return CompletableFuture.completedFuture(Either.forRight(new CompletionList(false, Collections.emptyList())));
     }
     var documentContext = maybeDocument.get();
 
     return withFreshDocumentContext(
       documentContext,
-      () -> Either.forLeft(completionProvider.getCompletion(documentContext, params))
+      () -> Either.forRight(completionProvider.getCompletion(documentContext, params))
     );
   }
 

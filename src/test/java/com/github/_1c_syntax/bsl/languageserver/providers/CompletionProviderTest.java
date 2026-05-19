@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -47,7 +49,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   private CompletionProvider completionProvider;
 
   @Autowired
-  private com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration languageServerConfiguration;
+  private LanguageServerConfiguration languageServerConfiguration;
 
   @Autowired
   private ClientCapabilitiesHolder clientCapabilitiesHolder;
@@ -85,7 +87,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // line 2 (0-based) = `\tТЗ1.Колонки.`, символ сразу после второй точки = индекс 13
     params.setPosition(new Position(2, 13));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .as("В комбинированном сценарии `ТЗ1.Колонки.` всё равно должен давать члены КоллекцияКолонок")
@@ -106,7 +108,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // строка `ТЗ1.Колонки.` — позиция сразу после второй точки (line 2, char 12)
     params.setPosition(new Position(2, 12));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .as("После ТЗ1.Колонки. должны появиться члены КоллекцияКолонокТаблицыЗначений")
@@ -127,7 +129,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // строка `Строка.` (line 4, idx 3) — позиция сразу после точки (char 7)
     params.setPosition(new Position(3, 7));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .as("После Строка. должны появиться члены СтрокаТаблицыЗначений")
@@ -147,7 +149,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // ДругоеИмяМассива.Добавить(1); — позиция сразу после точки на строке 19 (line 18)
     params.setPosition(new Position(18, 17));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .isNotEmpty()
@@ -164,7 +166,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 4));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
     assertThat(items)
       .extracting(CompletionItem::getLabel)
       .contains("Сообщить");
@@ -183,7 +185,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // позиция сразу после "ТЗ." на строке 2 (line 1)
     params.setPosition(new Position(1, 3));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     // и поля (PROPERTY → CompletionItemKind.Property), и методы доступны
     assertThat(items).isNotEmpty();
@@ -208,7 +210,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(1, 3));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .extracting(CompletionItem::getKind)
@@ -225,6 +227,24 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void getCompletionReturnsCompletionListMarkedComplete() {
+    // Контракт: getCompletion возвращает CompletionList с isIncomplete=false —
+    // клиент может фильтровать локально, повторного запроса не требуется.
+    var content = "Сооб";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 4));
+
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    assertThat(result).isNotNull();
+    assertThat(result.isIncomplete()).isFalse();
+    assertThat(result.getItems()).isNotEmpty();
+  }
+
+  @Test
   void methodInsertTextFallsBackToOpenParenWithoutSnippetSupport() {
     // Дефолтное поведение для клиентов без snippetSupport: один `(`, как и раньше.
     var content = "Сооб";
@@ -234,7 +254,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 4));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
     var message = items.stream()
       .filter(it -> "Сообщить".equals(it.getLabel()))
       .findFirst()
@@ -257,7 +277,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 4));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
     var message = items.stream()
       .filter(it -> "Сообщить".equals(it.getLabel()))
       .findFirst()
@@ -280,7 +300,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(2, 12));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
     var add = items.stream()
       .filter(it -> "Добавить".equals(it.getLabel()))
       .findFirst()
@@ -303,7 +323,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, content.length()));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
     var array = items.stream()
       .filter(it -> "Массив".equals(it.getLabel()))
       .findFirst()
@@ -330,7 +350,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // позиция сразу после второй точки в `ТЗ1.Колонки.` — члены КоллекцияКолонокТаблицыЗначений
     params.setPosition(new Position(2, 12));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     var add = items.stream()
       .filter(it -> "Добавить".equals(it.getLabel()))
@@ -360,7 +380,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // позиция сразу после `ТЗ.`
     params.setPosition(new Position(1, 3));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     var columns = items.stream()
       .filter(it -> "Колонки".equals(it.getLabel()))
@@ -388,7 +408,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(1, 3));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items).isNotEmpty();
     for (var it : items) {
@@ -418,7 +438,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // курсор сразу после "UT" — между "T" и ";"
     params.setPosition(new Position(0, 29));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .isNotEmpty()
@@ -436,7 +456,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 4));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     var byName = items.stream().collect(java.util.stream.Collectors.toMap(
       CompletionItem::getLabel, item -> item, (a, b) -> a));
@@ -458,7 +478,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
     params.setPosition(new Position(0, 10));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .as("bare class name should not produce instance-member completion")
@@ -472,19 +492,19 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/types/TypeResolver.os", context);
 
-    languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.RU);
+    languageServerConfiguration.setLanguage(Language.RU);
     try {
       var params = new CompletionParams();
       params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
       params.setPosition(new Position(18, 17));
 
-      var items = completionProvider.getCompletion(documentContext, params);
+      var items = completionProvider.getCompletion(documentContext, params).getItems();
 
       assertThat(items).extracting(CompletionItem::getLabel)
         .contains("Добавить", "Вставить", "Удалить", "Найти")
         .doesNotContain("Add", "Insert", "Delete", "Find");
     } finally {
-      languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE);
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
   }
 
@@ -494,19 +514,19 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/types/TypeResolver.os", context);
 
-    languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.EN);
+    languageServerConfiguration.setLanguage(Language.EN);
     try {
       var params = new CompletionParams();
       params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
       params.setPosition(new Position(18, 17));
 
-      var items = completionProvider.getCompletion(documentContext, params);
+      var items = completionProvider.getCompletion(documentContext, params).getItems();
 
       assertThat(items).extracting(CompletionItem::getLabel)
         .contains("Add", "Insert", "Delete", "Find")
         .doesNotContain("Добавить", "Вставить", "Удалить", "Найти");
     } finally {
-      languageServerConfiguration.setLanguage(com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE);
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
   }
 
@@ -529,7 +549,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     int character = afterPrefix - lineStart;
     params.setPosition(new Position(line, character));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .extracting(CompletionItem::getLabel)
@@ -553,7 +573,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     int character = afterDot - lineStart;
     params.setPosition(new Position(line, character));
 
-    var items = completionProvider.getCompletion(documentContext, params);
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
 
     assertThat(items)
       .extracting(CompletionItem::getLabel)

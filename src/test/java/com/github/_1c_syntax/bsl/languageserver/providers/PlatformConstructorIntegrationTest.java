@@ -114,7 +114,7 @@ class PlatformConstructorIntegrationTest extends AbstractServerContextAwareTest 
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(0, content.length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .extracting(org.eclipse.lsp4j.CompletionItem::getLabel)

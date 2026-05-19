@@ -63,7 +63,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(1, "MyMod".length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .filteredOn(it -> "MyModule".equals(it.getLabel()))
@@ -83,7 +83,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(1, "А = Новый MyCl".length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .filteredOn(it -> "MyClass".equals(it.getLabel()))
@@ -103,7 +103,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(0, content.length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .extracting(CompletionItem::getLabel)
@@ -121,7 +121,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(0, content.length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .as("без #Использовать library-сущности должны быть скрыты")
@@ -142,7 +142,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(1, "MyMod".length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .filteredOn(it -> "MyModule".equals(it.getLabel()))
@@ -160,7 +160,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(1, "MyMod".length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .filteredOn(it -> "MyModule".equals(it.getLabel()))
@@ -180,7 +180,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(2, 2));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .as("после `X = Новый MyClass; X.` должны быть видны члены MyClass")
@@ -202,7 +202,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(2, "MyClass.".length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .as("после `MyClass = Новый MyClass(); MyClass.` должны быть видны члены MyClass")
@@ -230,7 +230,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(3, "  MyClass.".length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .as("после `MyClass = Новый MyClass(); MyClass.` внутри Процедуры — должны быть видны члены MyClass")
@@ -253,7 +253,7 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
     params.setPosition(new Position(2, "Экземпляр.".length()));
 
-    var items = completionProvider.getCompletion(dc, params);
+    var items = completionProvider.getCompletion(dc, params).getItems();
 
     assertThat(items)
       .as("после `Экземпляр = Новый RenamedClass(); Экземпляр.` должны быть видны члены класса (файл mainclass.os)")
