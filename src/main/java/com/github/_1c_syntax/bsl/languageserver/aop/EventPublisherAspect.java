@@ -215,21 +215,14 @@ public class EventPublisherAspect {
     // ломает соседние тест-классы. Когда WSCH не установлен (глобальные события
     // вроде {@link GlobalLanguageServerConfigurationChangedEvent} или Initialize),
     // рассылаем во все — у них нет workspace-привязки.
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri != null) {
-      var owner = findOwningContext(contexts, workspaceUri);
-      if (owner != null) {
-        try {
-          owner.publishEvent(event);
-        } catch (RuntimeException e) {
-          LOGGER.warn("Failed to publish event {} to owning context {}: {}", event, owner, e.toString());
-        }
-        return;
+    var owner = findOwningContext(contexts, event);
+    if (owner != null) {
+      try {
+        owner.publishEvent(event);
+      } catch (RuntimeException e) {
+        LOGGER.warn("Failed to publish event {} to owning context {}: {}", event, owner, e.toString());
       }
-      // Workspace URI задан, но ни один контекст не объявил себя владельцем —
-      // вероятно событие, эмитируемое в рамках только что добавленного workspace
-      // (например, AOP-advice сам выставил WSCH через try-with-resources). Падать
-      // нельзя — рассылаем во все как fallback.
+      return;
     }
     for (var ctx : contexts) {
       try {
@@ -241,13 +234,37 @@ public class EventPublisherAspect {
   }
 
   /**
-   * Найти Spring-контекст, чей {@link ServerContextProvider} зарегистрировал
-   * указанный {@code workspaceUri}. Возвращает {@code null}, если ни один не
-   * объявил владение.
+   * Найти Spring-контекст, чей {@link ServerContextProvider} владеет источником
+   * события. Сначала пробуем матч по identity {@link ServerContext} (источник
+   * для большинства workspace-событий) — это надёжнее, чем по URI, потому что
+   * разные Spring-контексты могут зарегистрировать workspace с одним и тем же
+   * URI. Фолбэк — по URI из WorkspaceContextHolder. Возвращает {@code null},
+   * если владелец не определяется (тогда вызывающий рассылает во все контексты).
    */
   private static @Nullable ApplicationContext findOwningContext(
-    ApplicationContext[] contexts, URI workspaceUri
+    ApplicationContext[] contexts, ApplicationEvent event
   ) {
+    var serverContext = extractServerContext(event);
+    if (serverContext != null) {
+      for (var ctx : contexts) {
+        try {
+          var provider = ctx.getBean(ServerContextProvider.class);
+          if (provider.getAllContexts().containsValue(serverContext)) {
+            return ctx;
+          }
+        } catch (RuntimeException ignored) {
+          // Бин может быть недоступен (контекст закрывается) — пропускаем.
+        }
+      }
+      // Если identity-матч не сработал (workspace уже удалён, контекст в процессе закрытия),
+      // не делаем фолбэка по URI: лучше отправить во все контексты (выше по стеку), чем
+      // случайно попасть в чужой контекст с тем же URI.
+      return null;
+    }
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      return null;
+    }
     for (var ctx : contexts) {
       try {
         var provider = ctx.getBean(ServerContextProvider.class);
@@ -255,8 +272,34 @@ public class EventPublisherAspect {
           return ctx;
         }
       } catch (RuntimeException ignored) {
-        // Бин может быть недоступен (контекст закрывается) — пропускаем.
+        // Бин может быть недоступен.
       }
+    }
+    return null;
+  }
+
+  /**
+   * Достать {@link ServerContext} из источника события, чтобы прокидывать
+   * routing по identity. {@code null} — у события нет привязки к конкретному
+   * ServerContext (глобальные события вроде Initialize, LSC).
+   */
+  private static @Nullable ServerContext extractServerContext(ApplicationEvent event) {
+    // События с source = ServerContext (DocumentAdded/Removed/Closed, Populated):
+    // ловим через instanceof ниже.
+    var src = event.getSource();
+    if (src instanceof DocumentContext documentContext) {
+      return documentContext.getServerContext();
+    }
+    if (src instanceof ServerContext serverContext) {
+      return serverContext;
+    }
+    // События workspace-жизненного цикла: source = ServerContextProvider, но они
+    // несут ServerContext в отдельном поле.
+    if (event instanceof WorkspaceAddedEvent addedWs) {
+      return addedWs.getServerContext();
+    }
+    if (event instanceof BeforeWorkspaceRemovedEvent beforeRemoved) {
+      return beforeRemoved.getServerContext();
     }
     return null;
   }

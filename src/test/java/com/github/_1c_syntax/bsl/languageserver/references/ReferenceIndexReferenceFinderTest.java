@@ -64,7 +64,7 @@ class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
   @Test
   void testLocalMethodCall() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var method = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -90,7 +90,7 @@ class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
   @Test
   void testCommonModuleMethodCall() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
     var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
@@ -111,7 +111,7 @@ class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
   @Test
   void testManagerModuleMethodCall() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
     var managerModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var calledMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
@@ -132,7 +132,7 @@ class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
   @Test
   void testCantFindNonExportMethodFromOtherModule() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
 
     var uri = documentContext.getUri();
     var position = new Position(4, 25);
@@ -147,7 +147,7 @@ class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
   @Test
   void testUnknownLocationReturnsEmptyReference() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var method = mock(MethodSymbol.class);
 
     var uri = documentContext.getUri();
