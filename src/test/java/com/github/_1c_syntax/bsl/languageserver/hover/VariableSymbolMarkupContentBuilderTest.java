@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,7 +44,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
   @BeforeEach
   void prepareMetadataServerContext() {
-    initServerContext(TestUtils.PATH_TO_METADATA);
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
   }
 
   @Test

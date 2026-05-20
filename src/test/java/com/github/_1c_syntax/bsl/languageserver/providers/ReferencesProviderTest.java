@@ -34,6 +34,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.nio.file.Path;
+
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -48,7 +50,7 @@ class ReferencesProviderTest extends AbstractServerContextAwareTest {
 
   @BeforeEach
   void prepareServerContext() {
-    initServerContext(PATH_TO_METADATA);
+    initServerContextOnce(Path.of(PATH_TO_METADATA));
   }
 
   @Test

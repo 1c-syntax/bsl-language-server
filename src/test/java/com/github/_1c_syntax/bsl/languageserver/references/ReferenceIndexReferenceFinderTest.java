@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -57,7 +58,7 @@ class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
 
   @BeforeEach
   void prepareServerContext() {
-    initServerContext(PATH_TO_METADATA);
+    initServerContextOnce(Path.of(PATH_TO_METADATA));
   }
 
   @Test
