@@ -46,21 +46,21 @@ class GlobalEnumPropertyInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void findGlobalPropertyTypeByName() {
-    var encoding = typeService.findGlobalPropertyType("КодировкаТекста");
+  void findGlobalContextByName() {
+    var encoding = typeService.findGlobalContext("КодировкаТекста");
     assertThat(encoding).isPresent();
     assertThat(encoding.get().qualifiedName()).isEqualTo("КодировкаТекста");
   }
 
   @Test
   void englishAliasIsRegistered() {
-    var encoding = typeService.findGlobalPropertyType("TextEncoding");
+    var encoding = typeService.findGlobalContext("TextEncoding");
     assertThat(encoding).isPresent();
   }
 
   @Test
   void globalPropertyNamesIncludeBuiltinEnums() {
-    assertThat(typeService.getGlobalPropertyNames())
+    assertThat(typeService.getGlobalContextNames())
       .contains("КодировкаТекста", "НаправлениеСортировки", "ВидСравнения");
   }
 

@@ -1,6 +1,6 @@
 [
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ВебЗапрос",
     "aliases": [
       "WebRequest"
@@ -90,7 +90,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОписаниеФайлаPostЗапроса",
     "aliases": [
       "PostFileDecription"
@@ -147,7 +147,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ДанныеPOSTЗапроса",
     "aliases": [
       "PostRequestData"
@@ -200,7 +200,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "COMОбъект",
     "aliases": [
       "COMObject"
@@ -218,7 +218,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "БлокировкаРесурса",
     "aliases": [
       "ResourceLock"
@@ -278,7 +278,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИнформацияОбОшибке",
     "aliases": [
       "ErrorInfo"
@@ -411,7 +411,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИнформацияОбОшибкеШаблон",
     "aliases": [
       "ExceptionInfoTemplate"
@@ -420,7 +420,7 @@
     "description": "Служебный класс, создаваемый конструктором объекта \"ИнформацияОбОшибке\". Превращается в полноценный объект ИнформацияОбОшибке в момент выброса исключения.  Данный класс предназначен для создания параметризованных исключений."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "SafeArrayWrapper",
     "aliases": [],
     "members": [
@@ -506,7 +506,7 @@
     "description": "Вспомогательный класс для работы с объектами COMSafeArray, получаемыми из COM-объектов. На данный момент класс не является полноценной заменой для COMSafeArray и его нельзя создать вручную."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИнформацияОСценарии",
     "aliases": [
       "ScriptInformation"
@@ -534,7 +534,7 @@
     "description": "Информация о выполняемом сценарии."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КоллекцияКадровСтекаВызовов",
     "aliases": [
       "CallStackFramesCollection"
@@ -543,7 +543,7 @@
     "description": "Коллекция элементов стека вызовов. Доступен обход с помощью Для Каждого...Из Содержит объекты типа КадрСтекаВызовов"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КадрСтекаВызовов",
     "aliases": [
       "CallStackFrame"
@@ -577,7 +577,7 @@
     "description": "Описание места происхождения исключения."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Массив",
     "aliases": [
       "Array"
@@ -868,7 +868,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Консоль",
     "aliases": [
       "Console"
@@ -1119,7 +1119,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Действие",
     "aliases": [
       "Action"
@@ -1142,7 +1142,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Файл",
     "aliases": [
       "File"
@@ -1462,7 +1462,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФиксированныйМассив",
     "aliases": [
       "FixedArray"
@@ -1590,7 +1590,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФиксированноеСоответствие",
     "aliases": [
       "FixedMap"
@@ -1664,7 +1664,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФиксированнаяСтруктура",
     "aliases": [
       "FixedStructure"
@@ -1754,7 +1754,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "УникальныйИдентификатор",
     "aliases": [
       "UUID"
@@ -1776,7 +1776,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КлючИЗначение",
     "aliases": [
       "KeyAndValue"
@@ -1801,7 +1801,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Соответствие",
     "aliases": [
       "Map"
@@ -1962,7 +1962,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Процесс",
     "aliases": [
       "Process"
@@ -2118,7 +2118,7 @@
     "description": "Позволяет управлять процессом операционной системы. Получать текст из стандартных потоков, проверять активность, pid, завершать процесс и т.п."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ГенераторСлучайныхЧисел",
     "aliases": [
       "RandomNumberGenerator"
@@ -2187,7 +2187,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Рефлектор",
     "aliases": [
       "Reflector"
@@ -2476,7 +2476,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ПотокВыводаТекста",
     "aliases": [
       "TextOutputStream"
@@ -2564,7 +2564,7 @@
     "description": "Стандартный поток вывода текста."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ПотокВводаТекста",
     "aliases": [
       "TextInputStream"
@@ -2648,7 +2648,7 @@
     "description": "Стандартный поток ввода текста. Используется для взаимодействия с работающими процессами. Методы работают подобно одноименным методам объекта ЗаписьТекста."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Структура",
     "aliases": [
       "Structure"
@@ -2825,7 +2825,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "Символы",
     "aliases": [
       "Chars"
@@ -2894,7 +2894,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СистемнаяИнформация",
     "aliases": [
       "SystemInfo"
@@ -3137,7 +3137,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ТекстовыйДокумент",
     "aliases": [
       "TextDocument"
@@ -3603,7 +3603,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЧтениеТекста",
     "aliases": [
       "TextReader"
@@ -3839,7 +3839,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗаписьТекста",
     "aliases": [
       "TextWriter"
@@ -4062,7 +4062,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КвалификаторыДвоичныхДанных",
     "aliases": [
       "BinaryDataQualifiers"
@@ -4103,7 +4103,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КвалификаторыДаты",
     "aliases": [
       "DateQualifiers"
@@ -4132,7 +4132,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КвалификаторыЧисла",
     "aliases": [
       "NumberQualifiers"
@@ -4187,7 +4187,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КвалификаторыСтроки",
     "aliases": [
       "StringQualifiers"
@@ -4229,7 +4229,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОписаниеТипов",
     "aliases": [
       "TypeDescription"
@@ -4399,7 +4399,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЭлементыZipФайла",
     "aliases": [
       "ZipFileEntries"
@@ -4494,7 +4494,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЭлементZipФайла",
     "aliases": [
       "ZipFileEntry"
@@ -4592,7 +4592,7 @@
     "description": "Описание элемента, находящегося в Zip архиве."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЧтениеZipФайла",
     "aliases": [
       "ZipFileReader"
@@ -4818,7 +4818,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗаписьZipФайла",
     "aliases": [
       "ZipFileWriter"
@@ -5053,7 +5053,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "РасширенноеИмяXML",
     "aliases": [
       "XMLExpandedName"
@@ -5100,7 +5100,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КонтекстПространствИменXML",
     "aliases": [
       "XMLNamespaceContext"
@@ -5265,7 +5265,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЧтениеXML",
     "aliases": [
       "XMLReader"
@@ -5965,7 +5965,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗаписьXML",
     "aliases": [
       "XMLWriter"
@@ -6607,7 +6607,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ПараметрыЗаписиXML",
     "aliases": [
       "XMLWriterSettings"
@@ -6698,7 +6698,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "НаборСхемXML",
     "aliases": [
       "XMLSchemaSet"
@@ -6844,7 +6844,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъединениеЗавершенностиСоставногоТипаXS",
     "aliases": [
       "XSComplexFinalUnion"
@@ -6899,7 +6899,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФиксированныйСписокКомпонентXS",
     "aliases": [
       "XSComponentFixedList"
@@ -6994,7 +6994,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СписокКомпонентXS",
     "aliases": [
       "XSComponentList"
@@ -7235,7 +7235,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъединениеНедопустимыхПодстановкиXS",
     "aliases": [
       "XSDisallowedSubstitutionsUnion"
@@ -7290,7 +7290,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КоллекцияИменованныхКомпонентXS",
     "aliases": [
       "XSNamedComponentMap"
@@ -7353,7 +7353,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъединениеЗапрещенныхПодстановокXS",
     "aliases": [
       "XSProhibitedSubstitutionsUnion"
@@ -7408,7 +7408,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъединениеЗавершенностиСхемыXS",
     "aliases": [
       "XSSchemaFinalUnion"
@@ -7479,7 +7479,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъединениеЗавершенностиПростогоТипаXS",
     "aliases": [
       "XSSimpleFinalUnion"
@@ -7542,7 +7542,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъединениеИсключенийГруппПодстановкиXS",
     "aliases": [
       "XSSubstitutionGroupExclusionsUnion"
@@ -7597,7 +7597,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СхемаXML",
     "aliases": [
       "XMLSchema"
@@ -7949,7 +7949,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "АннотацияXS",
     "aliases": [
       "XSAnnotation"
@@ -8103,7 +8103,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИнформацияДляПриложенияXS",
     "aliases": [
       "XSAppInfo"
@@ -8257,7 +8257,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъявлениеАтрибутаXS",
     "aliases": [
       "XSAttributeDeclaration"
@@ -8543,7 +8543,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОпределениеГруппыАтрибутовXS",
     "aliases": [
       "XSAttributeGroupDefinition"
@@ -8803,7 +8803,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИспользованиеАтрибутаXS",
     "aliases": [
       "XSAttributeUse"
@@ -8997,7 +8997,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОпределениеСоставногоТипаXS",
     "aliases": [
       "XSComplexTypeDefinition"
@@ -9331,7 +9331,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ДокументацияXS",
     "aliases": [
       "XSDocumentation"
@@ -9493,7 +9493,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъявлениеЭлементаXS",
     "aliases": [
       "XSElementDeclaration"
@@ -9799,7 +9799,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетПеречисленияXS",
     "aliases": [
       "XSEnumerationFacet"
@@ -9977,7 +9977,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетКоличестваРазрядовДробнойЧастиXS",
     "aliases": [
       "XSFractionDigitsFacet"
@@ -10155,7 +10155,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОпределениеОграниченияИдентичностиXS",
     "aliases": [
       "XSIdentityConstraintDefinition"
@@ -10357,7 +10357,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИмпортXS",
     "aliases": [
       "XSImport"
@@ -10536,7 +10536,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ВключениеXS",
     "aliases": [
       "XSInclude"
@@ -10698,7 +10698,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетДлиныXS",
     "aliases": [
       "XSLengthFacet"
@@ -10876,7 +10876,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетМаксимальногоИсключающегоЗначенияXS",
     "aliases": [
       "XSMaxExclusiveFacet"
@@ -11070,7 +11070,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетМаксимальногоВключающегоЗначенияXS",
     "aliases": [
       "XSMaxInclusiveFacet"
@@ -11264,7 +11264,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетМаксимальнойДлиныXS",
     "aliases": [
       "XSMaxLengthFacet"
@@ -11442,7 +11442,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетМинимальногоИсключающегоЗначенияXS",
     "aliases": [
       "XSMinExclusiveFacet"
@@ -11636,7 +11636,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетМинимальногоВключающегоЗначенияXS",
     "aliases": [
       "XSMinInclusiveFacet"
@@ -11830,7 +11830,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетМинимальнойДлиныXS",
     "aliases": [
       "XSMinLengthFacet"
@@ -12008,7 +12008,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ГруппаМоделиXS",
     "aliases": [
       "XSModelGroup"
@@ -12178,7 +12178,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОпределениеГруппыМоделиXS",
     "aliases": [
       "XSModelGroupDefinition"
@@ -12408,7 +12408,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОбъявлениеНотацииXS",
     "aliases": [
       "XSNotationDeclaration"
@@ -12578,7 +12578,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФрагментXS",
     "aliases": [
       "XSParticle"
@@ -12800,7 +12800,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетОбразцаXS",
     "aliases": [
       "XSPatternFacet"
@@ -12978,7 +12978,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ПереопределениеXS",
     "aliases": [
       "XSRedefine"
@@ -13148,7 +13148,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОпределениеПростогоТипаXS",
     "aliases": [
       "XSSimpleTypeDefinition"
@@ -13444,7 +13444,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетОбщегоКоличестваРазрядовXS",
     "aliases": [
       "XSTotalDigitsFacet"
@@ -13622,7 +13622,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФасетПробельныхСимволовXS",
     "aliases": [
       "XSWhitespaceFacet"
@@ -13800,7 +13800,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "МаскаXS",
     "aliases": [
       "XSWildcard"
@@ -14056,7 +14056,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ОпределенияXPathXS",
     "aliases": [
       "XSXPathDefinition"
@@ -14230,7 +14230,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СериализаторXDTO",
     "aliases": [
       "XDTOSerializer"
@@ -14422,7 +14422,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ДеревоЗначений",
     "aliases": [
       "ValueTree"
@@ -14503,7 +14503,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КолонкаДереваЗначений",
     "aliases": [
       "ValueTreeColumn"
@@ -14545,7 +14545,7 @@
     "description": "Колонка дерева значений."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КоллекцияКолонокДереваЗначений",
     "aliases": [
       "ValueTreeColumnCollection"
@@ -14935,7 +14935,7 @@
     "description": "Коллекция колонок дерева значений."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СтрокаДереваЗначений",
     "aliases": [
       "ValueTreeRow"
@@ -15087,7 +15087,7 @@
     "description": "Строка дерева значений."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КоллекцияСтрокДереваЗначений",
     "aliases": [
       "ValueTreeRowCollection"
@@ -15711,7 +15711,7 @@
     "description": "Коллекция строк дерева значений."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИндексыКоллекции",
     "aliases": [
       "CollectionIndexes"
@@ -15820,7 +15820,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ТаблицаЗначений",
     "aliases": [
       "ValueTable"
@@ -16565,7 +16565,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КолонкаТаблицыЗначений",
     "aliases": [
       "ValueTableColumn"
@@ -16615,7 +16615,7 @@
     "description": "Колонка таблицы значений."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КоллекцияКолонокТаблицыЗначений",
     "aliases": [
       "ValueTableColumnCollection"
@@ -16907,7 +16907,7 @@
     "description": "Коллекция колонок таблицы значений"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИндексКоллекции",
     "aliases": [
       "CollectionIndex"
@@ -16915,7 +16915,7 @@
     "members": []
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СтрокаТаблицыЗначений",
     "aliases": [
       "ValueTableRow"
@@ -17026,7 +17026,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СписокЗначений",
     "aliases": [
       "ValueList"
@@ -17599,7 +17599,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЭлементСпискаЗначений",
     "aliases": [
       "ValueListItem"
@@ -17641,7 +17641,7 @@
     "description": "Используется для доступа к свойствам и методам элемента списка значений"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФоновоеЗадание",
     "aliases": [
       "BackgroundTask"
@@ -17744,7 +17744,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "МенеджерФоновыхЗаданий",
     "aliases": [
       "BackgroundTasksManager"
@@ -18001,7 +18001,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КоллекцияСовпаденийРегулярногоВыражения",
     "aliases": [
       "RegExMatchCollection"
@@ -18034,7 +18034,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "КоллекцияГруппРегулярногоВыражения",
     "aliases": [
       "RegExGroupCollection"
@@ -18103,7 +18103,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "СовпадениеРегулярногоВыражения",
     "aliases": [
       "RegExMatch"
@@ -18152,7 +18152,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ГруппаРегулярногоВыражения",
     "aliases": [
       "RegExGroup"
@@ -18201,7 +18201,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "РегулярноеВыражение",
     "aliases": [
       "Regex"
@@ -18444,7 +18444,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "TCPСоединение",
     "aliases": [
       "TCPConnection"
@@ -18683,7 +18683,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "TCPСервер",
     "aliases": [
       "TCPServer"
@@ -18783,7 +18783,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЧтениеJSON",
     "aliases": [
       "JSONReader"
@@ -18982,7 +18982,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗаписьJSON",
     "aliases": [
       "JSONWriter"
@@ -19331,7 +19331,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ПараметрыЗаписиJSON",
     "aliases": [
       "JSONWriterSettings"
@@ -19495,7 +19495,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "HTTPСоединение",
     "aliases": [
       "HTTPConnection"
@@ -19921,7 +19921,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "HTTPЗапрос",
     "aliases": [
       "HTTPRequest"
@@ -20175,7 +20175,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "HTTPОтвет",
     "aliases": [
       "HTTPResponse"
@@ -20335,7 +20335,7 @@
     "description": "Ответ от HTTP-сервера"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИнтернетПрокси",
     "aliases": [
       "InternetProxy"
@@ -20580,7 +20580,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ХешированиеДанных",
     "aliases": [
       "DataHashing"
@@ -20708,7 +20708,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИнформацияОДиске",
     "aliases": [
       "DriveInfo"
@@ -20817,7 +20817,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "БуферДвоичныхДанных",
     "aliases": [
       "BinaryDataBuffer"
@@ -21762,7 +21762,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ДвоичныеДанные",
     "aliases": [
       "BinaryData"
@@ -21856,7 +21856,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЧтениеДанных",
     "aliases": [
       "DataReader"
@@ -22550,7 +22550,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗаписьДанных",
     "aliases": [
       "DataWriter"
@@ -23064,7 +23064,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФайловыйПоток",
     "aliases": [
       "FileStream"
@@ -23500,7 +23500,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "МенеджерФайловыхПотоков",
     "aliases": [
       "FileStreamsManager"
@@ -23786,7 +23786,7 @@
     "description": "Предоставляет методы для использования в типовых сценариях работы с файлами."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "Поток",
     "aliases": [
       "Stream"
@@ -24170,7 +24170,7 @@
     "description": "Представляет собой поток данных, который можно последовательно читать и/или в который можно последовательно писать.  Экземпляры объектов данного типа можно получить с помощью различных методов других объектов."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ПотокВПамяти",
     "aliases": [
       "MemoryStream"
@@ -24594,7 +24594,7 @@
     ]
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "РезультатЧтенияДанных",
     "aliases": [
       "ReadDataResult"
@@ -24706,7 +24706,7 @@
     "description": "Содержит описание результата чтения данных из потока."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ЦветКонсоли",
     "aliases": [
       "ConsoleColor"
@@ -24807,7 +24807,7 @@
     "description": "Цвет шрифта текста, выводимого в консоли."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "СпособКодированияСтроки",
     "aliases": [
       "StringEncodingMethod"
@@ -24838,7 +24838,7 @@
     "description": "Варианты кодирования строк."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "СпециальнаяПапка",
     "aliases": [
       "SpecialFolder"
@@ -24969,7 +24969,7 @@
     "description": "Системное перечисление для специальных папок."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "КодировкаТекста",
     "aliases": [
       "TextEncoding"
@@ -25015,7 +25015,7 @@
     "description": "Определяет набор допустимых кодировок текстовых файлов."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "УровеньСжатияZIP",
     "aliases": [
       "ZIPCompressionLevel"
@@ -25056,7 +25056,7 @@
     "description": "Содержит варианты степени сжатия ZIP файлов."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "МетодСжатияZIP",
     "aliases": [
       "ZIPCompressionMethod"
@@ -25087,7 +25087,7 @@
     "description": "Метод сжатия ZIP"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "МетодШифрованияZIP",
     "aliases": [
       "ZIPEncryptionMethod"
@@ -25118,7 +25118,7 @@
     "description": "Содержит варианты методов шифрования ZIP файлов."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "РежимВосстановленияПутейФайловZIP",
     "aliases": [
       "ZIPRestoreFilePathsMode"
@@ -25149,7 +25149,7 @@
     "description": "Содержит варианты восстановления путей файлов при извлечении из архива."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "РежимСохраненияПутейZIP",
     "aliases": [
       "ZIPStorePathsMode"
@@ -25190,7 +25190,7 @@
     "description": "Содержит варианты методов сохранения путей файлов при помещении их в архив."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "РежимОбработкиПодкаталоговZIP",
     "aliases": [
       "ZIPSubDirProcessingMode"
@@ -25221,7 +25221,7 @@
     "description": "Содержит варианты обработки масок файлов в именах для упаковки в ZIP архив."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ТипУзлаXML",
     "aliases": [
       "XMLNodeType"
@@ -25382,7 +25382,7 @@
     "description": "Содержит варианты узлов XML, которые могут быть получены при чтении XML с помощью объекта ЧтениеXML."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗавершенностьСоставногоТипаXS",
     "aliases": [
       "XSComplexFinal"
@@ -25391,7 +25391,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "НедопустимыеПодстановкиXS",
     "aliases": [
       "XSDisallowedSubstitutions"
@@ -25400,7 +25400,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ФормаПредставленияXS",
     "aliases": [
       "XSForm"
@@ -25409,7 +25409,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗапрещенныеПодстановкиXS",
     "aliases": [
       "EnumerationXSProhibitedSubstitutions"
@@ -25418,7 +25418,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗавершенностьСхемыXS",
     "aliases": [
       "XSSchemaFinal"
@@ -25427,7 +25427,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ЗавершенностьПростогоТипаXS",
     "aliases": [
       "XSSimpleFinal"
@@ -25436,7 +25436,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "TYPE",
     "name": "ИсключенияГруппПодстановкиXS",
     "aliases": [
       "XSSubstitutionGroupExclusions"
@@ -25445,7 +25445,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ЭкранированиеСимволовJSON",
     "aliases": [
       "JSONCharactersEscapeMode"
@@ -25486,7 +25486,7 @@
     "description": "Экранирование символов JSON"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ФорматДатыJSON",
     "aliases": [
       "JSONDateFormat"
@@ -25512,7 +25512,7 @@
     "description": "Определяет различные форматы сериализации/десериализации дат JSON-объектов."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ПереносСтрокJSON",
     "aliases": [
       "JSONLineBreak"
@@ -25553,7 +25553,7 @@
     "description": "Перенос строк JSON"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ТипЗначенияJSON",
     "aliases": [
       "JSONValueType"
@@ -25669,7 +25669,7 @@
     "description": "Тип значения JSON"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ХешФункция",
     "aliases": [
       "HashFunction"
@@ -25710,7 +25710,7 @@
     "description": "Варианты типов хеш-функции. Определяет способ вычисления хеш-суммы и тип вычисляемого значения."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ТипДиска",
     "aliases": [
       "DriveType"
@@ -25791,7 +25791,7 @@
     "description": "Типы дисков: - Диск является устройством оптических дисков, такие как компакт-ДИСК или DVD-диск. - Диск является жестким диском. - Диск является сетевым диском. - Диск не имеет корневой каталог. - Диск является диском ОЗУ. - Диск является съемное запоминающее устройство, например, дисковод гибких дисков или USB-устройство флэш-памяти. - Тип диска неизвестен."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ТипМакета",
     "aliases": [
       "TemplateKind"
@@ -25818,7 +25818,7 @@
     "description": "Тип макета в приложении. Значением макета в типе Файл является путь к файлу с данными."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ИспользованиеByteOrderMark",
     "aliases": [
       "ByteOrderMarkUsage"
@@ -25859,7 +25859,7 @@
     "description": "Содержит варианты использования метки порядка байтов ( от англ. Byte Order Mark (BOM)) при кодировании строк."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "РасположениеПеременнойСреды",
     "aliases": [
       "EnvironmentVariableTarget"
@@ -25900,7 +25900,7 @@
     "description": "Расположение переменной среды"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "СтатусСообщения",
     "aliases": [
       "MessageStatus"
@@ -25971,7 +25971,7 @@
     "description": "Определяет набор статусов сообщений, обозначаемых при выводе сообщений цветом."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "НаправлениеСортировки",
     "aliases": [
       "SortDirection"
@@ -26002,7 +26002,7 @@
     "description": "Определяет возможные способы сортировки."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "НаправлениеПоиска",
     "aliases": [
       "SearchDirection"
@@ -26033,7 +26033,7 @@
     "description": "Определяет направление поиска подстроки в строке."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ДопустимаяДлина",
     "aliases": [
       "AllowedLength"
@@ -26064,7 +26064,7 @@
     "description": "Определяет варианты ограничений длины строки. Используется для определения свойства ДопустимаяДлина и в конструкторе объекта КвалификаторыСтроки, если задается длина строки отличная от нуля."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ДопустимыйЗнак",
     "aliases": [
       "AllowedSign"
@@ -26095,7 +26095,7 @@
     "description": "Определяет набор допустимых знаков числа. Используется для определения свойства ДопустимыйЗнак."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ЧастиДаты",
     "aliases": [
       "DateFractions"
@@ -26136,7 +26136,7 @@
     "description": "Определяет набор вариантов использования значений типа Дата."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "КодировкаИменФайловВZipФайле",
     "aliases": [
       "FileNamesEncodingInZipFile"
@@ -26170,7 +26170,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XMLTypeAssignment",
     "aliases": [
       "НазначениеТипаXML"
@@ -26196,7 +26196,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSAttributeUseCategory",
     "aliases": [
       "КатегорияИспользованияАтрибутаXS"
@@ -26238,7 +26238,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSComponentType",
     "aliases": [
       "ТипКомпонентыXS"
@@ -26504,7 +26504,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSCompositor",
     "aliases": [
       "ВидГруппыМоделиXS"
@@ -26539,7 +26539,7 @@
     "description": "Вид группы модели"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSConstraint",
     "aliases": [
       "ОграничениеЗначенияXS"
@@ -26566,7 +26566,7 @@
     "description": "Описывает варианты ограничения значения"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSContentModel",
     "aliases": [
       "МодельСодержимогоXS"
@@ -26601,7 +26601,7 @@
     "description": "Определяет вид модели содержания."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSDerivationMethod",
     "aliases": [
       "МетодНаследованияXS"
@@ -26635,7 +26635,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSIdentityConstraintCategory",
     "aliases": [
       "КатегорияОграниченияИдентичностиXS"
@@ -26670,7 +26670,7 @@
     "description": "Типы ограничения идентичности."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSNamespaceConstraintCategory",
     "aliases": [
       "КатегорияОграниченияПространствИменXS"
@@ -26712,7 +26712,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSProcessContents",
     "aliases": [
       "ОбработкаСодержимогоXS"
@@ -26754,7 +26754,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSSimpleTypeVariety",
     "aliases": [
       "ВариантПростогоТипаXS"
@@ -26788,7 +26788,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSWhitespaceHandling",
     "aliases": [
       "ОбработкаПробельныхСимволовXS"
@@ -26822,7 +26822,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XSXPathVariety",
     "aliases": [
       "ВариантXPathXS"
@@ -26849,7 +26849,7 @@
     "description": "Содержит варианты использования выражения XPath."
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "XMLForm",
     "aliases": [
       "ФормаXML"
@@ -26883,7 +26883,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "СостояниеФоновогоЗадания",
     "aliases": [
       "BackgroundJobState"
@@ -26925,7 +26925,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ТипВнешнейКомпоненты",
     "aliases": [
       "AddInType"
@@ -26943,7 +26943,7 @@
     "exposedAsGlobal": true
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "РежимОткрытияФайла",
     "aliases": [
       "FileOpenMode"
@@ -27014,7 +27014,7 @@
     "description": "Режим открытия файла в потоке"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ДоступКФайлу",
     "aliases": [
       "FileAccess"
@@ -27055,7 +27055,7 @@
     "description": "Доступ к файлу в потоке"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ПозицияВПотоке",
     "aliases": [
       "StreamPosition"
@@ -27096,7 +27096,7 @@
     "description": "Позиция в потоке"
   },
   {
-    "kind": "PLATFORM",
+    "kind": "ENUM",
     "name": "ПорядокБайтов",
     "aliases": [
       "ByteOrder"

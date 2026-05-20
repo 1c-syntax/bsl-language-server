@@ -88,6 +88,12 @@ public class GlobalScopeProvider {
   private final List<String> classes;
   private final List<String> keywords;
   private final List<PlatformVariable> platformVariables;
+  /**
+   * Системные перечисления платформы — отдельный список от {@link #platformVariables}
+   * (источник — {@code ContextEnum}). Публикуется в global scope как
+   * {@link SyntheticKind#PLATFORM_GLOBAL_ENUM}.
+   */
+  private final List<PlatformVariable> platformEnums;
   /** lowercased имя функции (canonical + alias) → языковой скоуп. */
   private final Map<String, LanguageScope> functionScopes;
   /** lowercased имя класса-для-Новый → языковой скоуп. */
@@ -109,7 +115,7 @@ public class GlobalScopeProvider {
    */
   private final Map<String, String> keywordDescriptions;
   /** lowercased имя глобального свойства (через registerGlobalProperty) → языковой скоуп. */
-  private final Map<String, LanguageScope> globalPropertyScopes = new ConcurrentHashMap<>();
+  private final Map<String, LanguageScope> globalContextScopes = new ConcurrentHashMap<>();
   /**
    * Каноничные «составные» имена MD-объектов конфигурации в коллекционной
    * форме ({@code Справочники.Контрагенты}, {@code Documents.Документ1}).
@@ -133,6 +139,7 @@ public class GlobalScopeProvider {
     this.classes = loaded.classes;
     this.keywords = loaded.keywords;
     this.platformVariables = loaded.platformVariables;
+    this.platformEnums = loaded.platformEnums;
     this.functionScopes = loaded.functionScopes;
     this.classScopes = loaded.classScopes;
     this.keywordScopes = loaded.keywordScopes;
@@ -226,7 +233,7 @@ public class GlobalScopeProvider {
     // Если ни одной категории не зарегистрировано (классы, ключевые слова и т.п.) —
     // считаем символ доступным.
     var fnScope = functionScopes.get(lc);
-    var propScope = globalPropertyScopes.get(lc);
+    var propScope = globalContextScopes.get(lc);
     var varScope = platformVariableScopes.get(lc);
     if (fnScope == null && propScope == null && varScope == null) {
       return sym;
@@ -291,11 +298,18 @@ public class GlobalScopeProvider {
           globalSymbolScope.register(key, symbol, GlobalSymbolScope.Role.VALUE));
       }
     }
-    // Платформенные глобальные переменные (БиблиотекаКартинок, ПараметрыСеанса, …).
-    for (var v : platformVariables) {
+    // Платформенные глобальные переменные (БиблиотекаКартинок, ПараметрыСеанса, …)
+    // и системные перечисления (КодировкаТекста, НаправлениеСортировки, …).
+    // Источник один — bsl-context, kind разный.
+    publishPlatformGlobals(platformVariables, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
+    publishPlatformGlobals(platformEnums, SyntheticKind.PLATFORM_GLOBAL_ENUM);
+  }
+
+  private void publishPlatformGlobals(List<PlatformVariable> globals, SyntheticKind kind) {
+    for (var v : globals) {
       var symbol = new SyntheticSymbol(
         v.name(),
-        SyntheticKind.PLATFORM_GLOBAL_VARIABLE,
+        kind,
         v.description(),
         v.type()
       );
@@ -307,40 +321,67 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * @return неизменяемая коллекция имён платформенных глобальных переменных
-   *         (canonical name каждой переменной, без алиасов).
+   * Найти тип глобального свойства по имени (canonical или alias).
+   * Покрывает только bsl-context-источники с {@link SyntheticKind#PLATFORM_GLOBAL_PROPERTY}
+   * (через build-time список {@link #platformVariables}). LIBRARY_MODULE и
+   * configuration-registered записи сюда не попадают — для них используйте
+   * umbrella-метод {@link #findGlobalContext(String)}.
    */
-  public List<String> getPlatformVariableNames() {
-    return platformVariables.stream().map(PlatformVariable::name).toList();
+  public Optional<TypeRef> findGlobalProperty(String name) {
+    return findGlobalProperty(name, null);
   }
 
   /**
-   * То же, что {@link #getPlatformVariableNames()}, но с фильтрацией по типу файла.
+   * То же, что {@link #findGlobalProperty(String)}, но с фильтрацией по типу файла.
    */
-  public List<String> getPlatformVariableNames(FileType fileType) {
-    if (fileType == null) {
-      return getPlatformVariableNames();
-    }
-    return platformVariables.stream()
-      .filter(v -> {
-        var s = platformVariableScopes.get(v.name().toLowerCase(Locale.ROOT));
-        return s == null || s.matches(fileType);
-      })
-      .map(PlatformVariable::name)
-      .toList();
+  public Optional<TypeRef> findGlobalProperty(String name, FileType fileType) {
+    return findInList(platformVariables, name, fileType);
   }
 
   /**
-   * Найти тип платформенной глобальной переменной по имени или алиасу.
+   * @return имена платформенных глобальных свойств (canonical, без алиасов).
    */
-  public Optional<TypeRef> findPlatformVariableType(String name) {
-    return findPlatformVariableType(name, null);
+  public List<String> getGlobalPropertyNames() {
+    return getGlobalPropertyNames(null);
   }
 
   /**
-   * То же, что {@link #findPlatformVariableType(String)}, но с фильтрацией по типу файла.
+   * То же, что {@link #getGlobalPropertyNames()}, но с фильтрацией по типу файла.
    */
-  public Optional<TypeRef> findPlatformVariableType(String name, FileType fileType) {
+  public List<String> getGlobalPropertyNames(FileType fileType) {
+    return namesFromList(platformVariables, fileType);
+  }
+
+  /**
+   * Найти тип системного перечисления по имени (canonical или alias).
+   * Покрывает только bsl-context-источники с {@link SyntheticKind#PLATFORM_GLOBAL_ENUM}.
+   */
+  public Optional<TypeRef> findGlobalEnum(String name) {
+    return findGlobalEnum(name, null);
+  }
+
+  /**
+   * То же, что {@link #findGlobalEnum(String)}, но с фильтрацией по типу файла.
+   */
+  public Optional<TypeRef> findGlobalEnum(String name, FileType fileType) {
+    return findInList(platformEnums, name, fileType);
+  }
+
+  /**
+   * @return имена системных перечислений (canonical, без алиасов).
+   */
+  public List<String> getGlobalEnumNames() {
+    return getGlobalEnumNames(null);
+  }
+
+  /**
+   * То же, что {@link #getGlobalEnumNames()}, но с фильтрацией по типу файла.
+   */
+  public List<String> getGlobalEnumNames(FileType fileType) {
+    return namesFromList(platformEnums, fileType);
+  }
+
+  private Optional<TypeRef> findInList(List<PlatformVariable> list, String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
@@ -351,11 +392,24 @@ public class GlobalScopeProvider {
         return Optional.empty();
       }
     }
-    return platformVariables.stream()
+    return list.stream()
       .filter(v -> v.name().equalsIgnoreCase(name)
         || v.aliases().stream().anyMatch(a -> a.toLowerCase(Locale.ROOT).equals(lc)))
       .findFirst()
       .map(PlatformVariable::type);
+  }
+
+  private List<String> namesFromList(List<PlatformVariable> list, FileType fileType) {
+    if (fileType == null) {
+      return list.stream().map(PlatformVariable::name).toList();
+    }
+    return list.stream()
+      .filter(v -> {
+        var s = platformVariableScopes.get(v.name().toLowerCase(Locale.ROOT));
+        return s == null || s.matches(fileType);
+      })
+      .map(PlatformVariable::name)
+      .toList();
   }
 
   /**
@@ -420,7 +474,7 @@ public class GlobalScopeProvider {
   /**
    * То же, что {@link #registerGlobalProperty(TypeRef, Collection)}, но с указанием
    * языкового скоупа. Скоуп сохраняется на каждом имени (lowercased) в
-   * {@link #globalPropertyScopes}; при повторной регистрации с другим скоупом
+   * {@link #globalContextScopes}; при повторной регистрации с другим скоупом
    * результат повышается до {@link LanguageScope#BOTH}.
    */
   public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope) {
@@ -433,12 +487,22 @@ public class GlobalScopeProvider {
    * последующего отображения в hover/completion.
    */
   public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope, String description) {
+    registerGlobalProperty(ref, names, scope, description, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
+  }
+
+  /**
+   * Та же регистрация, но с явным {@link SyntheticKind} — используется
+   * при публикации системных перечислений ({@link SyntheticKind#PLATFORM_GLOBAL_ENUM}),
+   * чтобы отличать их в hover/completion/подсветке от обычных глобальных свойств.
+   */
+  public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope,
+                                     String description, SyntheticKind syntheticKind) {
     if (ref == null || names == null || names.isEmpty()) {
       return;
     }
     ensureGlobalsPublished();
     var canonical = ref.qualifiedName();
-    var symbol = new SyntheticSymbol(canonical, SyntheticKind.PLATFORM_GLOBAL_PROPERTY,
+    var symbol = new SyntheticSymbol(canonical, syntheticKind,
       description == null ? "" : description, ref);
     if (globalSymbolScope == null) {
       return;
@@ -449,7 +513,7 @@ public class GlobalScopeProvider {
         continue;
       }
       globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.VALUE);
-      globalPropertyScopes.merge(name.toLowerCase(Locale.ROOT), effectiveScope, LanguageScope::merge);
+      globalContextScopes.merge(name.toLowerCase(Locale.ROOT), effectiveScope, LanguageScope::merge);
     }
   }
 
@@ -466,7 +530,7 @@ public class GlobalScopeProvider {
       return;
     }
     ensureGlobalsPublished();
-    var symbol = new SyntheticSymbol(ref.qualifiedName(), SyntheticKind.CONFIGURATION_OBJECT,
+    var symbol = new SyntheticSymbol(ref.qualifiedName(), SyntheticKind.TYPE_NAME,
       description == null ? "" : description, ref);
     if (globalSymbolScope == null) {
       return;
@@ -481,49 +545,70 @@ public class GlobalScopeProvider {
     }
   }
 
-  /**
-   * Имена всех зарегистрированных глобальных свойств (canonical-форма, без алиасов).
-   */
-  public Collection<String> getGlobalPropertyNames() {
-    return getGlobalPropertyNames(null);
-  }
+  private static final Set<SyntheticKind> CONTEXT_KINDS = EnumSet.of(
+    SyntheticKind.PLATFORM_GLOBAL_PROPERTY,
+    SyntheticKind.PLATFORM_GLOBAL_ENUM,
+    SyntheticKind.LIBRARY_MODULE
+  );
 
   /**
-   * То же, что {@link #getGlobalPropertyNames()}, но с фильтрацией по типу файла.
+   * Все VALUE-символы в global scope без фильтра по типу файла
+   * (property + enum + library-module). Унифицированный вход для всего,
+   * что можно использовать как ресивер dot-выражения. Имена классов для
+   * {@code Новый} ({@link SyntheticKind#TYPE_NAME}, Role.TYPE_NAME) сюда не
+   * попадают — они выдаются через {@link #getClasses()}.
    */
-  public Collection<String> getGlobalPropertyNames(FileType fileType) {
+  public List<SyntheticSymbol> getGlobalContexts() {
     if (globalSymbolScope == null) {
       return List.of();
     }
     return globalSymbolScope.streamSymbols()
       .filter(SyntheticSymbol.class::isInstance)
       .map(SyntheticSymbol.class::cast)
-      .filter(s -> s.getSyntheticKind() == SyntheticKind.PLATFORM_GLOBAL_PROPERTY
-        || s.getSyntheticKind() == SyntheticKind.CONFIGURATION_OBJECT)
-      .map(SyntheticSymbol::getName)
-      .filter(name -> matchesGlobalProperty(name, fileType))
+      .filter(s -> CONTEXT_KINDS.contains(s.getSyntheticKind()))
       .distinct()
       .toList();
   }
 
   /**
-   * Найти тип глобального свойства по имени (canonical или alias).
+   * То же, что {@link #getGlobalContexts()}, но с фильтрацией по типу файла.
    */
-  public Optional<TypeRef> findGlobalPropertyType(String name) {
-    return findGlobalPropertyType(name, null);
+  public List<SyntheticSymbol> getGlobalContexts(FileType fileType) {
+    return getGlobalContexts().stream()
+      .filter(s -> matchesGlobalScope(s.getName(), fileType))
+      .toList();
   }
 
   /**
-   * То же, что {@link #findGlobalPropertyType(String)}, но с фильтрацией по типу файла.
-   * Возвращает {@link Optional#empty()}, если свойство не видно в данном {@code fileType}.
+   * @return canonical-имена всех VALUE-имён в global scope (property + enum + library-module).
    */
-  public Optional<TypeRef> findGlobalPropertyType(String name, FileType fileType) {
-    if (!matchesGlobalProperty(name, fileType)) {
+  public Collection<String> getGlobalContextNames() {
+    return getGlobalContexts().stream().map(SyntheticSymbol::getName).toList();
+  }
+
+  /**
+   * То же, что {@link #getGlobalContextNames()}, но с фильтрацией по типу файла.
+   */
+  public Collection<String> getGlobalContextNames(FileType fileType) {
+    return getGlobalContexts(fileType).stream().map(SyntheticSymbol::getName).toList();
+  }
+
+  /**
+   * Найти тип имени в global scope (любое VALUE-имя: property, enum, library-module).
+   * Унифицированная точка входа — для consumer'ов, которым не важно
+   * различение property/enum.
+   */
+  public Optional<TypeRef> findGlobalContext(String name) {
+    return findGlobalContext(name, null);
+  }
+
+  /**
+   * То же, что {@link #findGlobalContext(String)}, но с фильтрацией по типу файла.
+   */
+  public Optional<TypeRef> findGlobalContext(String name, FileType fileType) {
+    if (!matchesGlobalScope(name, fileType)) {
       return Optional.empty();
     }
-    // Имена с ролью TYPE_NAME (платформенные классы, library-классы) — это не
-    // глобальные свойства, а имена классов. `Структура` сама по себе не есть
-    // значение типа Структура, и `Структура.` не должна показывать члены класса.
     return findGlobalEntry(name, fileType)
       .filter(entry -> entry.role() == GlobalSymbolScope.Role.VALUE)
       .map(GlobalSymbolScope.Entry::symbol)
@@ -532,11 +617,11 @@ public class GlobalScopeProvider {
       .filter(ref -> !ref.equals(TypeRef.UNKNOWN));
   }
 
-  private boolean matchesGlobalProperty(String name, FileType fileType) {
+  private boolean matchesGlobalScope(String name, FileType fileType) {
     if (fileType == null || name == null) {
       return true;
     }
-    var scope = globalPropertyScopes.get(name.toLowerCase(Locale.ROOT));
+    var scope = globalContextScopes.get(name.toLowerCase(Locale.ROOT));
     return scope == null || scope.matches(fileType);
   }
 
@@ -612,7 +697,7 @@ public class GlobalScopeProvider {
     }
     ensureGlobalsPublished();
     var ref = classRef != null ? classRef : TypeRef.UNKNOWN;
-    var symbol = new SyntheticSymbol(name, SyntheticKind.CONFIGURATION_OBJECT, "", ref);
+    var symbol = new SyntheticSymbol(name, SyntheticKind.TYPE_NAME, "", ref);
     globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME);
   }
 
@@ -711,6 +796,7 @@ public class GlobalScopeProvider {
     var keywordSnippets = new HashMap<String, LanguageKeywordSnippet>();
     var keywordDescriptions = new HashMap<String, String>();
     var variables = new ArrayList<PlatformVariable>();
+    var enums = new ArrayList<PlatformVariable>();
     var variableScopes = new HashMap<String, LanguageScope>();
     var variableSeen = new HashSet<String>();
 
@@ -742,16 +828,15 @@ public class GlobalScopeProvider {
       if (ctx instanceof ContextType type && !type.isGeneric()) {
         addNameWithAlias(classes, classScopes, classSeen, type.name().getName(), type.name().getAlias());
       } else if (ctx instanceof ContextEnum enumeration) {
-        // Системное перечисление платформы — публикуется как глобальная
-        // переменная: «КодировкаТекста» как имя, тип — ссылка на само
-        // перечисление (для dot-completion'а с его значениями).
+        // Системное перечисление платформы — публикуется в global scope с
+        // SyntheticKind.PLATFORM_GLOBAL_ENUM (через отдельный список enums).
         var name = enumeration.name().getName();
         var alias = enumeration.name().getAlias();
         var lc = name.toLowerCase(Locale.ROOT);
         if (variableSeen.add(lc)) {
           var aliases = alias == null || alias.isBlank() ? List.<String>of() : List.of(alias);
           var typeRef = new TypeRef(TypeKind.PLATFORM, name);
-          variables.add(new PlatformVariable(name, aliases, "", typeRef));
+          enums.add(new PlatformVariable(name, aliases, "", typeRef));
           variableScopes.put(lc, LanguageScope.BSL);
           if (!aliases.isEmpty()) {
             variableScopes.put(alias.toLowerCase(Locale.ROOT), LanguageScope.BSL);
@@ -784,6 +869,7 @@ public class GlobalScopeProvider {
       List.copyOf(classes),
       List.copyOf(keywords),
       List.copyOf(variables),
+      List.copyOf(enums),
       new ConcurrentHashMap<>(functionScopes),
       new ConcurrentHashMap<>(classScopes),
       new ConcurrentHashMap<>(keywordScopes),
@@ -914,6 +1000,14 @@ public class GlobalScopeProvider {
     for (var v : b.platformVariables) {
       if (seenVar.add(v.name().toLowerCase(Locale.ROOT))) vars.add(v);
     }
+    var enums = new ArrayList<PlatformVariable>(a.platformEnums.size() + b.platformEnums.size());
+    var seenEnum = new HashSet<String>();
+    for (var v : a.platformEnums) {
+      if (seenEnum.add(v.name().toLowerCase(Locale.ROOT))) enums.add(v);
+    }
+    for (var v : b.platformEnums) {
+      if (seenEnum.add(v.name().toLowerCase(Locale.ROOT))) enums.add(v);
+    }
     for (var e : b.platformVariableScopes.entrySet()) {
       varScopes.merge(e.getKey(), e.getValue(), LanguageScope::merge);
     }
@@ -928,6 +1022,7 @@ public class GlobalScopeProvider {
       List.copyOf(classes),
       List.copyOf(keywords),
       List.copyOf(vars),
+      List.copyOf(enums),
       new ConcurrentHashMap<>(functionScopes),
       new ConcurrentHashMap<>(classScopes),
       new ConcurrentHashMap<>(keywordScopes),
@@ -960,10 +1055,12 @@ public class GlobalScopeProvider {
         v.aliases().forEach(a -> varScopes.put(a.toLowerCase(Locale.ROOT), scope));
       }
       return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables,
+        List.of(),
         fnScopes, clsScopes, kwScopes, varScopes, Map.of(), Map.of());
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
       return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of(),
+        List.of(),
         Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
     }
   }
@@ -1050,6 +1147,7 @@ public class GlobalScopeProvider {
     List<String> classes,
     List<String> keywords,
     List<PlatformVariable> platformVariables,
+    List<PlatformVariable> platformEnums,
     Map<String, LanguageScope> functionScopes,
     Map<String, LanguageScope> classScopes,
     Map<String, LanguageScope> keywordScopes,

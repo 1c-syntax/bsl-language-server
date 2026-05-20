@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Command;
@@ -380,27 +381,6 @@ public final class CompletionProvider {
       return items;
     }
 
-    // OneScript library modules (записи <module> из lib.config)
-    for (var libModuleName : libraryEntryNames(OScriptLibraryIndex.EntryKind.MODULE)) {
-      if (!libVisible.test(libModuleName)) {
-        continue;
-      }
-      if (matches(libModuleName, prefix)) {
-        var item = new CompletionItem(libModuleName);
-        item.setKind(CompletionItemKind.Module);
-        items.add(item);
-      }
-    }
-
-    // Global property types (system enums: КодировкаТекста, НаправлениеСортировки и т.п.)
-    for (var gpName : filterNamesByLanguage(globalScopeProvider.getGlobalPropertyNames(fileType), fileType)) {
-      if (matches(gpName, prefix)) {
-        var item = new CompletionItem(gpName);
-        item.setKind(CompletionItemKind.Enum);
-        items.add(item);
-      }
-    }
-
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.OS) {
       for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType)) {
@@ -412,13 +392,20 @@ public final class CompletionProvider {
       }
     }
 
-    // Platform global variables (БиблиотекаКартинок, ПараметрыСеанса, …)
-    for (var pv : filterNamesByLanguage(globalScopeProvider.getPlatformVariableNames(fileType), fileType)) {
-      if (matches(pv, prefix)) {
-        var item = new CompletionItem(pv);
-        item.setKind(CompletionItemKind.Variable);
-        items.add(item);
+    // Global contexts — все VALUE-имена в global scope (property, enum, library-module).
+    // CompletionItemKind выбирается по фактическому SyntheticKind. Для library-модулей
+    // (SyntheticKind.LIBRARY_MODULE) применяется #Использовать-gating.
+    for (var ctx : globalScopeProvider.getGlobalContexts(fileType)) {
+      var name = ctx.getName();
+      if (!matches(name, prefix)) {
+        continue;
       }
+      if (ctx.getSyntheticKind() == SyntheticKind.LIBRARY_MODULE && !libVisible.test(name)) {
+        continue;
+      }
+      var item = new CompletionItem(name);
+      item.setKind(completionKindForSynthetic(ctx.getSyntheticKind()));
+      items.add(item);
     }
 
     // Global functions
@@ -461,6 +448,18 @@ public final class CompletionProvider {
     }
 
     return items;
+  }
+
+  /**
+   * Подобрать {@link CompletionItemKind} для имени из global scope по его
+   * {@link SyntheticKind}.
+   */
+  private static CompletionItemKind completionKindForSynthetic(SyntheticKind kind) {
+    return switch (kind) {
+      case PLATFORM_GLOBAL_ENUM -> CompletionItemKind.Enum;
+      case LIBRARY_MODULE -> CompletionItemKind.Module;
+      default -> CompletionItemKind.Variable;
+    };
   }
 
   private static boolean matches(String name, String lowerPrefix) {

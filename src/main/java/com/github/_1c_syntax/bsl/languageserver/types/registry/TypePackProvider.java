@@ -75,6 +75,12 @@ public interface TypePackProvider {
    *                            платформенным провайдером из
    *                            {@code Context.typeParameters()} bsl-context'а.
    *                            Не-generic типы — пустой список.
+   * @param isEnum             {@code true}, если декларация описывает системное
+   *                            перечисление платформы (источник —
+   *                            {@code ContextEnum} из bsl-context или {@code "kind": "ENUM"}
+   *                            в JSON-паке). Используется при регистрации
+   *                            в global scope, чтобы поставить
+   *                            {@code SyntheticKind.PLATFORM_GLOBAL_ENUM}.
    */
   record TypeDecl(
     TypeKind kind,
@@ -89,7 +95,8 @@ public interface TypePackProvider {
     boolean supportsIndexAccess,
     String forEachDescription,
     String indexAccessDescription,
-    List<String> typeParameters
+    List<String> typeParameters,
+    boolean isEnum
   ) {
 
     public TypeDecl {

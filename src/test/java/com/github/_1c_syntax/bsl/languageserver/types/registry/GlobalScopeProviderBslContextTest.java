@@ -147,7 +147,7 @@ class GlobalScopeProviderBslContextTest {
   }
 
   @Test
-  void contextEnumPublishedAsPlatformVariable() {
+  void contextEnumPublishedAsPlatformEnum() {
     var encoding = PlatformContextEnum.builder()
       .name(new ContextName("КодировкаТекста", "TextEncoding"))
       .values(List.of(
@@ -158,11 +158,12 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(encoding)));
 
-    assertThat(scope.getPlatformVariableNames()).contains("КодировкаТекста");
-    var type = scope.findPlatformVariableType("КодировкаТекста").orElseThrow();
+    assertThat(scope.getGlobalEnumNames()).contains("КодировкаТекста");
+    assertThat(scope.getGlobalPropertyNames()).doesNotContain("КодировкаТекста");
+    var type = scope.findGlobalEnum("КодировкаТекста").orElseThrow();
     assertThat(type.qualifiedName()).isEqualTo("КодировкаТекста");
     // Поиск по en-алиасу тоже работает.
-    assertThat(scope.findPlatformVariableType("TextEncoding")).isPresent();
+    assertThat(scope.findGlobalEnum("TextEncoding")).isPresent();
   }
 
   @Test
@@ -187,12 +188,12 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(catalogsManager, globalContext)));
 
-    assertThat(scope.getPlatformVariableNames()).contains("Справочники");
+    assertThat(scope.getGlobalPropertyNames()).contains("Справочники");
     // Тип «Справочники» — это СправочникиМенеджер (для dot-completion'а).
-    assertThat(scope.findPlatformVariableType("Справочники").orElseThrow().qualifiedName())
+    assertThat(scope.findGlobalProperty("Справочники").orElseThrow().qualifiedName())
       .isEqualTo("СправочникиМенеджер");
     // En-алиас тоже находит.
-    assertThat(scope.findPlatformVariableType("Catalogs")).isPresent();
+    assertThat(scope.findGlobalProperty("Catalogs")).isPresent();
   }
 
   @Test
@@ -216,7 +217,7 @@ class GlobalScopeProviderBslContextTest {
       .build();
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)));
-    assertThat(scope.getPlatformVariableNames()).doesNotContain("<Имя справочника>");
+    assertThat(scope.getGlobalPropertyNames()).doesNotContain("<Имя справочника>");
   }
 
   // --- builders ---

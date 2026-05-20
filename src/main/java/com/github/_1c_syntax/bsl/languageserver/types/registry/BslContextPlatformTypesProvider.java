@@ -172,10 +172,11 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     // Имена generic-плейсхолдеров приходят структурно из bsl-context,
     // без парсинга угловых скобок на стороне LS.
     var typeParameters = context.typeParameters();
+    var isEnum = context instanceof ContextEnum;
     return new TypeDecl(kind, qualifiedName, aliases, members,
       isExposedAsGlobal(context), description, constructors,
       defaultElementTypes, supportsForEach, supportsIndexAccess,
-      forEachDescription, indexAccessDescription, typeParameters);
+      forEachDescription, indexAccessDescription, typeParameters, isEnum);
   }
 
   /**

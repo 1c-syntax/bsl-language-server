@@ -212,36 +212,36 @@ public class TypeService {
   }
 
   /**
-   * Найти тип глобального свойства (например, system enum {@code КодировкаТекста}, {@code ФС}) по имени.
+   * Найти тип имени в global scope (любое VALUE-имя: property, enum, library-module).
    */
-  public Optional<TypeRef> findGlobalPropertyType(String name) {
-    return findGlobalPropertyType(name, null);
+  public Optional<TypeRef> findGlobalContext(String name) {
+    return findGlobalContext(name, null);
   }
 
   /**
-   * То же, что {@link #findGlobalPropertyType(String)}, но с фильтрацией по типу файла.
+   * То же, что {@link #findGlobalContext(String)}, но с фильтрацией по типу файла.
    */
-  public Optional<TypeRef> findGlobalPropertyType(String name, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  public Optional<TypeRef> findGlobalContext(String name, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
     // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы system enum'ы
     // и прочие глобальные свойства из платформенных провайдеров были зарегистрированы.
     typeRegistry.resolve(name);
-    return globalScopeProvider.findGlobalPropertyType(name, fileType);
+    return globalScopeProvider.findGlobalContext(name, fileType);
   }
 
   /**
-   * @return имена зарегистрированных глобальных свойств (для completion).
+   * @return имена всех VALUE-имён в global scope (property + enum + library-module).
    */
-  public Collection<String> getGlobalPropertyNames() {
+  public Collection<String> getGlobalContextNames() {
     typeRegistry.resolve("");
-    return globalScopeProvider.getGlobalPropertyNames();
+    return globalScopeProvider.getGlobalContextNames();
   }
 
   /**
-   * То же, что {@link #getGlobalPropertyNames()}, но с фильтрацией по типу файла.
+   * То же, что {@link #getGlobalContextNames()}, но с фильтрацией по типу файла.
    */
-  public Collection<String> getGlobalPropertyNames(com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  public Collection<String> getGlobalContextNames(com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
     typeRegistry.resolve("");
-    return globalScopeProvider.getGlobalPropertyNames(fileType);
+    return globalScopeProvider.getGlobalContextNames(fileType);
   }
 
   /**

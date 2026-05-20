@@ -57,7 +57,7 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
 
     // sanity: коллекция Справочники зарегистрирована как глобальное свойство,
     // её член — менеджер-обёртка с методом МетодМенеджера.
-    var collection = typeService.findGlobalPropertyType("Справочники").orElseThrow();
+    var collection = typeService.findGlobalContext("Справочники").orElseThrow();
     var catalogsMembers = typeRegistry.getMembers(collection);
     assertThat(catalogsMembers).extracting(m -> m.name()).contains("СправочникСМенеджером");
     var memberReturn = catalogsMembers.stream()

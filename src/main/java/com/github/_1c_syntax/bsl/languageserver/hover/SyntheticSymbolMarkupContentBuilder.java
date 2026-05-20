@@ -85,11 +85,11 @@ public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder
   private static String roleDescription(SyntheticSymbol symbol) {
     return switch (symbol.getSyntheticKind()) {
       case PLATFORM_GLOBAL_PROPERTY -> "_глобальное свойство_";
+      case PLATFORM_GLOBAL_ENUM -> "_системное перечисление_";
       case PLATFORM_GLOBAL_METHOD -> "_глобальная функция_";
-      case PLATFORM_GLOBAL_VARIABLE -> "_глобальная переменная_";
       case PLATFORM_MEMBER_PROPERTY -> "_свойство_";
       case PLATFORM_MEMBER_METHOD -> "_метод_";
-      case CONFIGURATION_OBJECT -> "_объект конфигурации_";
+      case TYPE_NAME -> "_имя типа_";
       case LIBRARY_MODULE -> "_модуль библиотеки_";
     };
   }

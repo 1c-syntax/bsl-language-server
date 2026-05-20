@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -507,7 +508,7 @@ public class TypeRegistry {
    * для глобальных имён.
    */
   public void registerAsGlobalProperty(TypeRef ref) {
-    registerAsGlobalProperty(ref, LanguageScope.BOTH);
+    registerAsGlobalProperty(ref, LanguageScope.BOTH, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
   }
 
   /**
@@ -515,6 +516,15 @@ public class TypeRegistry {
    * пробрасывает скоуп в {@link GlobalScopeProvider}.
    */
   public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope) {
+    registerAsGlobalProperty(ref, scope, SyntheticKind.PLATFORM_GLOBAL_PROPERTY);
+  }
+
+  /**
+   * Та же регистрация, но с явным {@link SyntheticKind} — используется
+   * при публикации системных перечислений ({@link SyntheticKind#PLATFORM_GLOBAL_ENUM}),
+   * чтобы отличать их от обычных глобальных свойств.
+   */
+  public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope, SyntheticKind syntheticKind) {
     if (globalScopeProvider == null) {
       return;
     }
@@ -525,7 +535,7 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerGlobalProperty(ref, names, scope, getDescription(ref, fileTypeOf(scope)));
+    globalScopeProvider.registerGlobalProperty(ref, names, scope, getDescription(ref, fileTypeOf(scope)), syntheticKind);
   }
 
   /**
@@ -725,7 +735,10 @@ public class TypeRegistry {
       indexReadOnlyMembers(ref, decl.members());
     }
     if (decl.exposedAsGlobal()) {
-      registerAsGlobalProperty(ref, scope);
+      var syntheticKind = decl.isEnum()
+        ? SyntheticKind.PLATFORM_GLOBAL_ENUM
+        : SyntheticKind.PLATFORM_GLOBAL_PROPERTY;
+      registerAsGlobalProperty(ref, scope, syntheticKind);
     }
     if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
       defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));

@@ -104,6 +104,25 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     return LanguageScope.BSL;
   }
 
+  /**
+   * Маппинг {@code kind}-значений JSON-пака (терминология bsl-context'а
+   * {@code ContextKind}) в наш {@link TypeKind}:
+   * <ul>
+   *   <li>{@code "PRIMITIVE_TYPE"} → {@link TypeKind#PRIMITIVE}</li>
+   *   <li>{@code "TYPE"}, {@code "ENUM"}, {@code "COLLECTION"} → {@link TypeKind#PLATFORM}</li>
+   * </ul>
+   * Различение enum от обычного типа делается отдельным флагом
+   * {@code TypeDecl.isEnum}, потому что в {@code TypeKind} не введено
+   * собственное значение ENUM (текущая ось «откуда тип», не «структура»).
+   */
+  private static TypeKind mapJsonKind(String kindStr) {
+    return switch (kindStr) {
+      case "PRIMITIVE_TYPE" -> TypeKind.PRIMITIVE;
+      case "TYPE", "ENUM", "COLLECTION" -> TypeKind.PLATFORM;
+      default -> throw new IllegalArgumentException("Unknown JSON kind: " + kindStr);
+    };
+  }
+
   @SuppressWarnings("unchecked")
   static List<TypeDecl> loadFromResource(String resourcePath) {
     var mapper = JsonMapper.builder().build();
@@ -111,8 +130,9 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       List<Map<String, Object>> raw = mapper.readValue(stream, List.class);
       var result = new ArrayList<TypeDecl>(raw.size());
       for (var entry : raw) {
-        var kindStr = (String) entry.getOrDefault("kind", "PLATFORM");
-        var kind = TypeKind.valueOf(kindStr);
+        var kindStr = (String) entry.getOrDefault("kind", "TYPE");
+        var kind = mapJsonKind(kindStr);
+        var isEnum = "ENUM".equals(kindStr);
         var qualifiedName = (String) entry.get("name");
         var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
@@ -138,7 +158,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         result.add(new TypeDecl(kind, qualifiedName, aliases, members,
           exposedAsGlobal, description, constructors,
           List.copyOf(defaultElementTypes), supportsForEach, supportsIndexAccess,
-          forEachDescription, indexAccessDescription, typeParameters));
+          forEachDescription, indexAccessDescription, typeParameters, isEnum));
       }
       return result;
     } catch (IOException e) {

@@ -31,8 +31,18 @@ package com.github._1c_syntax.bsl.languageserver.types.symbol;
  * completion / signature help / reference resolution.
  */
 public enum SyntheticKind {
-  /** Свойство глобальной области (например, {@code Справочники}, {@code Истина}). */
+  /**
+   * Глобальное свойство платформы — имя с типом-{@code ContextType} из bsl-context
+   * (например, {@code Справочники}, {@code Метаданные}, {@code БиблиотекаКартинок},
+   * {@code ПараметрыСеанса}) или конфигурационная коллекция/общий модуль,
+   * опубликованные через {@code registerAsGlobalProperty}.
+   */
   PLATFORM_GLOBAL_PROPERTY,
+  /**
+   * Системное перечисление платформы — имя с типом-{@code ContextEnum} из bsl-context
+   * (например, {@code КодировкаТекста}, {@code НаправлениеСортировки}).
+   */
+  PLATFORM_GLOBAL_ENUM,
   /** Метод глобальной области (например, {@code Сообщить}, {@code СтрНайти}). */
   PLATFORM_GLOBAL_METHOD,
   /** Свойство платформенного типа (например, {@code Массив.Количество}). */
@@ -40,21 +50,17 @@ public enum SyntheticKind {
   /** Метод платформенного типа (например, {@code Массив.Добавить}). */
   PLATFORM_MEMBER_METHOD,
   /**
-   * Элемент коллекции конфигурации, имеющий собственное имя
-   * (например, {@code Справочники.МойСправочник}).
+   * Имя типа/класса для конструктора {@code Новый ИмяКласса(...)} —
+   * платформенный класс ({@code Структура}, {@code Массив}, {@code ТаблицаЗначений})
+   * или OScript-класс. Запись имеет
+   * {@link com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role#TYPE_NAME}
+   * и не используется как VALUE-ресивер dot-выражения.
    */
-  CONFIGURATION_OBJECT,
+  TYPE_NAME,
   /**
    * Глобальный модуль OneScript-библиотеки (запись {@code <module>} из {@code lib.config}
    * или convention-based discovery). Имя становится ресивером dot-выражения
-   * (например, {@code ФС.КаталогПустой()}), но это не платформенное «глобальное свойство»
-   * — отдельный kind нужен, чтобы completion/hover различали Module и Enum/Property.
+   * (например, {@code ФС.КаталогПустой()}).
    */
-  LIBRARY_MODULE,
-  /**
-   * Платформенная глобальная переменная (например, {@code БиблиотекаКартинок},
-   * {@code ПараметрыСеанса}, {@code Метаданные}). Объявление не лежит в коде, но
-   * у имени есть тип, hover, completion (kind=Variable).
-   */
-  PLATFORM_GLOBAL_VARIABLE
+  LIBRARY_MODULE
 }

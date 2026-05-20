@@ -75,9 +75,9 @@ public final class SyntheticSymbol implements Symbol {
     return switch (syntheticKind) {
       case PLATFORM_GLOBAL_METHOD, PLATFORM_MEMBER_METHOD -> SymbolKind.Method;
       case PLATFORM_GLOBAL_PROPERTY, PLATFORM_MEMBER_PROPERTY -> SymbolKind.Property;
-      case CONFIGURATION_OBJECT -> SymbolKind.Class;
+      case PLATFORM_GLOBAL_ENUM -> SymbolKind.Enum;
+      case TYPE_NAME -> SymbolKind.Class;
       case LIBRARY_MODULE -> SymbolKind.Module;
-      case PLATFORM_GLOBAL_VARIABLE -> SymbolKind.Variable;
     };
   }
 

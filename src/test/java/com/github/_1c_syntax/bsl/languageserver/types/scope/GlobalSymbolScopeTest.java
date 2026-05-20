@@ -70,7 +70,7 @@ class GlobalSymbolScopeTest {
   void clearByRoleRemovesOnlyMatching() {
     var scope = new GlobalSymbolScope();
     var valueSym = new SyntheticSymbol("ФС", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
-    var typeSym = new SyntheticSymbol("СессияПользователя", SyntheticKind.CONFIGURATION_OBJECT, "");
+    var typeSym = new SyntheticSymbol("СессияПользователя", SyntheticKind.TYPE_NAME, "");
     scope.register("ФС", valueSym, GlobalSymbolScope.Role.VALUE);
     scope.register("СессияПользователя", typeSym, GlobalSymbolScope.Role.TYPE_NAME);
 
