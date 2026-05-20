@@ -25,7 +25,12 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -62,6 +67,7 @@ import java.util.List;
 public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private final GlobalScopeProvider globalScopeProvider;
+  private final TypeRegistry typeRegistry;
   private final SemanticTokensHelper helper;
 
   @Override
@@ -119,29 +125,104 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     switch (kind) {
       case PLATFORM_GLOBAL_PROPERTY -> {
         if (isCommonModuleBacked(synthetic.get())) {
-          // Имя — это общий модуль конфигурации; рисуем как namespace.
           helper.addRange(entries, Ranges.create(identifier), SemanticTokenTypes.Namespace);
         } else {
           helper.addRange(entries, Ranges.create(identifier),
             SemanticTokenTypes.Class, SemanticTokenModifiers.DefaultLibrary);
         }
       }
-      case PLATFORM_GLOBAL_ENUM -> {
-        helper.addRange(entries, Ranges.create(identifier),
-          SemanticTokenTypes.Enum, SemanticTokenModifiers.DefaultLibrary);
-        // Первое значение в цепочке — это enum-value (например, КодировкаТекста.UTF8).
-        if (modifiers != null && !modifiers.isEmpty()) {
-          var firstAccess = modifiers.getFirst().accessProperty();
-          if (firstAccess != null && firstAccess.IDENTIFIER() != null) {
-            helper.addRange(entries, Ranges.create(firstAccess.IDENTIFIER()),
-              SemanticTokenTypes.EnumMember);
-          }
-        }
-      }
+      case PLATFORM_GLOBAL_ENUM -> helper.addRange(entries, Ranges.create(identifier),
+        SemanticTokenTypes.Enum, SemanticTokenModifiers.DefaultLibrary);
       case LIBRARY_MODULE -> helper.addRange(entries, Ranges.create(identifier),
         SemanticTokenTypes.Namespace);
-      default -> { /* остальные SyntheticKind'ы — не наш домен */ }
+      default -> { return; /* остальные SyntheticKind'ы — не наш домен */ }
     }
+
+    // Walk модификаторов — резолв member'ов с пошаговой проводкой по типам.
+    // Покрашиваются: значения enum'а (.UTF8 → EnumMember), mdo-ссылки внутри
+    // metadata-collection (.Контрагенты → Class), вызовы платформенных методов
+    // (.ПустаяСсылка() → Method+DefaultLibrary).
+    walkChain(entries, synthetic.get().getValueType(), modifiers, fileType);
+  }
+
+  private void walkChain(List<SemanticTokenEntry> entries, TypeRef startType,
+                         List<? extends BSLParser.ModifierContext> modifiers, FileType fileType) {
+    if (modifiers == null || modifiers.isEmpty()) {
+      return;
+    }
+    var current = startType;
+    for (var modifier : modifiers) {
+      if (current == null || current.equals(TypeRef.UNKNOWN)) {
+        return;
+      }
+      if (modifier.accessProperty() != null) {
+        current = handleProperty(entries, modifier.accessProperty(), current, fileType);
+      } else if (modifier.accessCall() != null) {
+        current = handleCall(entries, modifier.accessCall(), current, fileType);
+      } else {
+        return; // accessIndex и прочее — не отслеживаем тип элемента.
+      }
+    }
+  }
+
+  private TypeRef handleProperty(List<SemanticTokenEntry> entries,
+                                 BSLParser.AccessPropertyContext accessProperty,
+                                 TypeRef ownerType, FileType fileType) {
+    var idNode = accessProperty.IDENTIFIER();
+    if (idNode == null) {
+      return null;
+    }
+    var member = findMember(ownerType, idNode.getText(), MemberKind.PROPERTY, fileType);
+    if (member == null) {
+      return null;
+    }
+    var returnType = member.returnType();
+    if (ownerType.equals(returnType)) {
+      // self-typed property — значение enum (.UTF8).
+      helper.addRange(entries, Ranges.create(idNode), SemanticTokenTypes.EnumMember);
+    } else if (returnType.kind() == TypeKind.CONFIGURATION) {
+      // mdo-ссылка (Справочники.Контрагенты).
+      helper.addRange(entries, Ranges.create(idNode), SemanticTokenTypes.Class);
+    }
+    return returnType;
+  }
+
+  private TypeRef handleCall(List<SemanticTokenEntry> entries,
+                             BSLParser.AccessCallContext accessCall,
+                             TypeRef ownerType, FileType fileType) {
+    var methodCall = accessCall.methodCall();
+    if (methodCall == null) {
+      return null;
+    }
+    var methodName = methodCall.methodName();
+    if (methodName == null || methodName.getStart() == null) {
+      return null;
+    }
+    var member = findMember(ownerType, methodName.getStart().getText(),
+      MemberKind.METHOD, fileType);
+    if (member == null) {
+      return null;
+    }
+    // Source-defined методы (общий модуль, модуль менеджера) красит
+    // MethodCallSemanticTokensSupplier как Method+Static — не дублируем.
+    if (!(member.sourceSymbol() instanceof SourceDefinedSymbol)) {
+      helper.addRange(entries, Ranges.create(methodName),
+        SemanticTokenTypes.Method, SemanticTokenModifiers.DefaultLibrary);
+    }
+    return member.returnType();
+  }
+
+  private MemberDescriptor findMember(TypeRef ownerType, String memberName,
+                                      MemberKind expectedKind, FileType fileType) {
+    if (ownerType == null || memberName == null || memberName.isBlank()) {
+      return null;
+    }
+    for (var m : typeRegistry.getMembers(ownerType, fileType)) {
+      if (m.kind() == expectedKind && m.name().equalsIgnoreCase(memberName)) {
+        return m;
+      }
+    }
+    return null;
   }
 
   private static boolean isLocalName(SymbolTree symbolTree, String name) {

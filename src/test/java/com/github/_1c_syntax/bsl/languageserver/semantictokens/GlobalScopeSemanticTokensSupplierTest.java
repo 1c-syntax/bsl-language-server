@@ -133,8 +133,10 @@ class GlobalScopeSemanticTokensSupplierTest extends AbstractServerContextAwareTe
   // --- New cases (metadata roots, system enums) ---
 
   @Test
-  void metadataCollectionRootHighlightedAsClassWithDefaultLibrary() throws IOException {
-    // given - ManagerModule с цепочкой `Справочники.Справочник1.ТестЭкспортная()`.
+  void metadataCollectionRootAndMdoRefHighlighted() throws IOException {
+    // given - ManagerModule с цепочкой `Справочники.Справочник1.ТестЭкспортная();`
+    // на line 19 (0-idx). `Справочники` — корень коллекции метаданных,
+    // `Справочник1` — конкретный mdo-ref.
     initServerContext(TestUtils.PATH_TO_METADATA);
     var dc = TestUtils.getDocumentContextFromFile(
       TestUtils.PATH_TO_METADATA + "/Catalogs/Справочник1/Ext/ManagerModule.bsl", context);
@@ -142,10 +144,30 @@ class GlobalScopeSemanticTokensSupplierTest extends AbstractServerContextAwareTe
     // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(dc));
 
-    // then - `Справочники` (line 19, col 4, len 11) → Class + DefaultLibrary.
+    // then - корень `Справочники` (col 4, len 11) → Class+DefaultLibrary;
+    //        mdo-ref `Справочник1` (col 16, len 11) → Class без модификатора.
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(19, 4, 11, SemanticTokenTypes.Class,
-        Set.of(DefaultLibrary), "Справочники")
+        Set.of(DefaultLibrary), "Справочники"),
+      new ExpectedToken(19, 16, 11, SemanticTokenTypes.Class, "Справочник1")
     ));
+  }
+
+  @Test
+  void sourceDefinedMethodInChainNotPainted() throws IOException {
+    // given - source-defined `ТестЭкспортная` на line 19 col 28 длиной 14.
+    // Должен рисоваться MethodCallSemanticTokensSupplier'ом как Method+Static,
+    // наш сапплаер его пропускает (sourceSymbol — SourceDefinedSymbol).
+    initServerContext(TestUtils.PATH_TO_METADATA);
+    var dc = TestUtils.getDocumentContextFromFile(
+      TestUtils.PATH_TO_METADATA + "/Catalogs/Справочник1/Ext/ManagerModule.bsl", context);
+
+    // when
+    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(dc));
+
+    // then - на позиции `ТестЭкспортная` (col 28) этот сапплаер токенов не выдаёт.
+    assertThat(decoded)
+      .filteredOn(t -> t.line() == 19 && t.start() == 28)
+      .isEmpty();
   }
 }
