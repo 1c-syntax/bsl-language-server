@@ -90,7 +90,7 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
       helper.addRange(
         entries,
         Ranges.create(methodNameCtx),
-        SemanticTokenTypes.Method,
+        SemanticTokenTypes.Function,
         SemanticTokenModifiers.DefaultLibrary
       );
     }

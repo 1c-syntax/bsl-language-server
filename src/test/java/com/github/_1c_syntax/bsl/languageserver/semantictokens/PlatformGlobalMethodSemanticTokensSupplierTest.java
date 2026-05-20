@@ -58,7 +58,7 @@ class PlatformGlobalMethodSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
     var expected = List.of(
-      new ExpectedToken(1, 2, 8, SemanticTokenTypes.Method,
+      new ExpectedToken(1, 2, 8, SemanticTokenTypes.Function,
         SemanticTokenModifiers.DefaultLibrary, "Сообщить")
     );
     helper.assertTokensMatch(decoded, expected);
@@ -79,9 +79,9 @@ class PlatformGlobalMethodSemanticTokensSupplierTest {
     var decoded = helper.getDecodedTokens(bsl, supplier).stream().sorted().toList();
 
     var expected = List.of(
-      new ExpectedToken(1, 2, 8, SemanticTokenTypes.Method,
+      new ExpectedToken(1, 2, 8, SemanticTokenTypes.Function,
         SemanticTokenModifiers.DefaultLibrary, "Сообщить"),
-      new ExpectedToken(2, 10, 8, SemanticTokenTypes.Method,
+      new ExpectedToken(2, 10, 8, SemanticTokenTypes.Function,
         SemanticTokenModifiers.DefaultLibrary, "СтрДлина")
     );
     helper.assertTokensMatch(decoded, expected);
