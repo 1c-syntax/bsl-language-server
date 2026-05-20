@@ -21,29 +21,35 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
-@SpringBootTest
-@CleanupContextBeforeClassAndAfterEachTestMethod
+@CleanupContextBeforeClassAndAfterClass
 @Import(SemanticTokensTestHelper.class)
-class SymbolsSemanticTokensSupplierTest {
+class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private SymbolsSemanticTokensSupplier supplier;
 
   @Autowired
   private SemanticTokensTestHelper helper;
+
+  @Autowired
+  private OScriptLibraryIndex oScriptLibraryIndex;
 
   @Test
   void testMethodDeclaration() {
@@ -101,6 +107,40 @@ class SymbolsSemanticTokensSupplierTest {
       // Parameter usages in the body
       new ExpectedToken(1, 10, 9, SemanticTokenTypes.Parameter, "Параметр1"),
       new ExpectedToken(1, 22, 9, SemanticTokenTypes.Parameter, "Параметр2")
+    ));
+  }
+
+  @Test
+  void testStaticModifierOnCommonModuleMethodDeclaration() {
+    // CommonModule: декларации методов должны нести Method+Static.
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
+
+    var dc = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)
+      .orElseThrow();
+
+    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(dc));
+
+    // НеУстаревшаяПроцедура — line 60 (0-idx), col 10, length 21.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(60, 10, 21, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.Static), "НеУстаревшаяПроцедура")
+    ));
+  }
+
+  @Test
+  void testStaticModifierOnOScriptModuleMethodDeclaration() {
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+
+    var moduleUri = oScriptLibraryIndex.findModuleUri("MyModule").orElseThrow();
+    var dc = context.getDocument(moduleUri);
+
+    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(dc));
+
+    // Процедура ВывестиСообщение(...) — line 2, col 10, length 16.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 10, 16, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.Static), "ВывестиСообщение")
     ));
   }
 

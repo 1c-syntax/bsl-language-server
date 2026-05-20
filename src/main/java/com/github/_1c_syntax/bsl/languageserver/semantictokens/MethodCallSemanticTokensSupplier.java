@@ -22,8 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.utils.Modules;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
@@ -51,8 +54,19 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
         continue;
       }
 
-      reference.getSourceDefinedSymbol()
-        .ifPresent(symbol -> helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method));
+      reference.getSourceDefinedSymbol().ifPresent(symbol -> {
+        // Метод объявлен в «статическом» модуле (CommonModule/ManagerModule/OScript-модуль)?
+        // Тогда подсвечиваем вызов как Method + Static. instance-методы
+        // (ObjectModule, формы, OScript-классы) остаются без модификатора.
+        boolean isStatic = symbol instanceof MethodSymbol method
+          && Modules.isStaticModuleMethod(method.getOwner());
+        if (isStatic) {
+          helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method,
+            SemanticTokenModifiers.Static);
+        } else {
+          helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method);
+        }
+      });
     }
 
     return entries;

@@ -21,23 +21,26 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@CleanupContextBeforeClassAndAfterEachTestMethod
+@CleanupContextBeforeClassAndAfterClass
 @Import(SemanticTokensTestHelper.class)
-class MethodCallSemanticTokensSupplierTest {
+class MethodCallSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private MethodCallSemanticTokensSupplier supplier;
@@ -134,5 +137,24 @@ class MethodCallSemanticTokensSupplierTest {
 
     // then - Builtin methods are not in the reference index → этот supplier их не видит.
     assertThat(decoded).isEmpty();
+  }
+
+  @Test
+  void testStaticModifierOnCallToCommonModuleMethod() {
+    // Вызов метода CommonModule из другого файла → Method+Static на сайте вызова.
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
+
+    // Файл с вызовом `ПервыйОбщийМодуль.УстаревшаяПроцедура();`.
+    var callerDc = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndex.bsl", context);
+
+    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(callerDc));
+
+    // ReferenceIndex.bsl содержит вызов УстаревшаяПроцедура от ПервыйОбщийМодуль
+    // на line 2 (0-idx); метод-имя начинается со столбца 22 (после `ПервыйОбщийМодуль.`).
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 22, 19, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.Static), "УстаревшаяПроцедура")
+    ));
   }
 }

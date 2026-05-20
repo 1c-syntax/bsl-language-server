@@ -124,7 +124,6 @@ class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwa
     // given — OScript-библиотека с модулем MyModule.
     var fixtureRoot = java.nio.file.Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);
-    oScriptLibraryIndex.reindex(context);
 
     var content = "MyModule.ВывестиСообщение(\"Привет\");\n";
     var documentContext = TestUtils.getDocumentContext(
