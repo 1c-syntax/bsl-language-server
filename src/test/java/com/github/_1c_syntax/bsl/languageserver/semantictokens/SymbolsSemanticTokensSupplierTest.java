@@ -112,15 +112,15 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
   @Test
   void testStaticModifierOnCommonModuleMethodDeclaration() {
-    // CommonModule: декларации методов должны нести Method+Static.
+    // given - конфигурация с ПервыйОбщийМодуль.
     initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
-
     var dc = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)
       .orElseThrow();
 
+    // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(dc));
 
-    // НеУстаревшаяПроцедура — line 60 (0-idx), col 10, length 21.
+    // then - НеУстаревшаяПроцедура (line 60, col 10, length 21) → Method+Static.
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(60, 10, 21, SemanticTokenTypes.Method,
         Set.of(SemanticTokenModifiers.Static), "НеУстаревшаяПроцедура")
@@ -129,15 +129,16 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
   @Test
   void testStaticModifierOnOScriptModuleMethodDeclaration() {
+    // given - OScript-библиотека mylib с модулем MyModule.
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);
-
     var moduleUri = oScriptLibraryIndex.findModuleUri("MyModule").orElseThrow();
     var dc = context.getDocument(moduleUri);
 
+    // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(dc));
 
-    // Процедура ВывестиСообщение(...) — line 2, col 10, length 16.
+    // then - Процедура ВывестиСообщение (line 2, col 10, length 16) → Method+Static.
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(2, 10, 16, SemanticTokenTypes.Method,
         Set.of(SemanticTokenModifiers.Static), "ВывестиСообщение")

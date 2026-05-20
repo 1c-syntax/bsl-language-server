@@ -141,17 +141,16 @@ class MethodCallSemanticTokensSupplierTest extends AbstractServerContextAwareTes
 
   @Test
   void testStaticModifierOnCallToCommonModuleMethod() {
-    // Вызов метода CommonModule из другого файла → Method+Static на сайте вызова.
+    // given - конфигурация загружена; вызывающий файл содержит
+    // `ПервыйОбщийМодуль.УстаревшаяПроцедура();` на строке 2 (0-idx).
     initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
-
-    // Файл с вызовом `ПервыйОбщийМодуль.УстаревшаяПроцедура();`.
     var callerDc = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndex.bsl", context);
 
+    // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(callerDc));
 
-    // ReferenceIndex.bsl содержит вызов УстаревшаяПроцедура от ПервыйОбщийМодуль
-    // на line 2 (0-idx); метод-имя начинается со столбца 22 (после `ПервыйОбщийМодуль.`).
+    // then - имя метода CommonModule в сайте вызова → Method+Static.
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(2, 22, 19, SemanticTokenTypes.Method,
         Set.of(SemanticTokenModifiers.Static), "УстаревшаяПроцедура")

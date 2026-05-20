@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
-import org.jspecify.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -69,10 +68,7 @@ public class Modules {
    * CommonModule / ManagerModule / OScriptModule. ObjectModule, формы и
    * OScript-классы — instance-методы.
    */
-  public static boolean isStaticModuleMethod(@Nullable DocumentContext documentContext) {
-    if (documentContext == null) {
-      return false;
-    }
+  public static boolean isStaticModule(DocumentContext documentContext) {
     return STATIC_MODULE_TYPES.contains(documentContext.getModuleType());
   }
 

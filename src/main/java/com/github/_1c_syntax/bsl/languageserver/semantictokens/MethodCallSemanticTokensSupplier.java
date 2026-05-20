@@ -59,7 +59,7 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
         // Тогда подсвечиваем вызов как Method + Static. instance-методы
         // (ObjectModule, формы, OScript-классы) остаются без модификатора.
         boolean isStatic = symbol instanceof MethodSymbol method
-          && Modules.isStaticModuleMethod(method.getOwner());
+          && Modules.isStaticModule(method.getOwner());
         if (isStatic) {
           helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method,
             SemanticTokenModifiers.Static);

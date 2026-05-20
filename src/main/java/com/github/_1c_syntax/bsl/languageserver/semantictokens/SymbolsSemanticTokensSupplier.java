@@ -56,7 +56,7 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     var uri = documentContext.getUri();
 
     // Add method symbols (functions and procedures)
-    var isStatic = Modules.isStaticModuleMethod(documentContext);
+    var isStatic = Modules.isStaticModule(documentContext);
     for (var method : symbolTree.getMethods()) {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
       if (isStatic) {
