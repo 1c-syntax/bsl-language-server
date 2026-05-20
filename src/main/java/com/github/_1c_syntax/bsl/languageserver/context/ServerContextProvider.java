@@ -244,6 +244,34 @@ public class ServerContextProvider {
   }
 
   /**
+   * Получить документ по URI без захвата per-document RWLock.
+   * <p>
+   * Используется горячими путями инференции (reference finders, type
+   * inferencer), которые массово опрашивают документы во время
+   * {@code populateContext}. RWLock с queued writer'ом блокирует новых
+   * readers (fair-mode), что приводит к парку всех worker-потоков.
+   * <p>
+   * Безопасно для read-only-доступа: документы не пересоздаются, они
+   * обновляются in-place под write-lock'ом; чтение без лока даёт snapshot
+   * текущего AST/symbol-tree, что допустимо для type-инференции (та и без
+   * того eventually-consistent относительно правок пользователя).
+   */
+  public Optional<DocumentContext> getDocumentNoLock(URI uri) {
+    return getServerContext(uri)
+      .flatMap(ctx -> Optional.ofNullable(ctx.getDocumentNoLock(uri)));
+  }
+
+  /**
+   * То же, что {@link #getDocumentNoLock(URI)}, но с нормализацией.
+   * Аналог {@link #getDocumentUnsafe(URI)} для контекстов, где нельзя
+   * брать per-document RWLock (см. документацию к {@link #getDocumentNoLock(URI)}).
+   */
+  public Optional<DocumentContext> getDocumentUnsafeNoLock(URI uri) {
+    var normalizedUri = Absolute.uri(uri);
+    return getDocumentNoLock(normalizedUri);
+  }
+
+  /**
    * Получить все контексты серверов с их URI.
    *
    * @return неизменяемая карта URI → контекст сервера

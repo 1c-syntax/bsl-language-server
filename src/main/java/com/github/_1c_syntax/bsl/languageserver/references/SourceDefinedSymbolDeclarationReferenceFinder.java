@@ -47,7 +47,8 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(uri);
+    // Горячий путь — без захвата RWLock на ServerContext.
+    var maybeDocument = serverContextProvider.getDocumentUnsafeNoLock(uri);
     if (maybeDocument.isEmpty()) {
       return Optional.empty();
     }

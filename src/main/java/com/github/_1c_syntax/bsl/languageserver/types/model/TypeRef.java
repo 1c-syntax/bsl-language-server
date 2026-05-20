@@ -21,7 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import com.github._1c_syntax.bsl.context.api.ContextNames;
+import com.github._1c_syntax.bsl.context.api.Placeholder;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Лёгкая ссылка-ключ на тип.
@@ -39,6 +46,16 @@ public record TypeRef(TypeKind kind, String qualifiedName) {
 
   public static final TypeRef UNKNOWN = new TypeRef(TypeKind.UNKNOWN, "Unknown");
   public static final TypeRef ANY = new TypeRef(TypeKind.ANY, "Any");
+
+  /**
+   * Глобальный кэш разобранных placeholder'ов по qualifiedName. Парсинг
+   * угловых скобок выполняется один раз на каждое уникальное имя, дальше
+   * {@link #specialize(TypeRef, Map)} работает со структурным представлением.
+   * <p>
+   * Размер кэша ограничен числом уникальных qualifiedName в системе
+   * (для платформы 1С — сотни). Не освобождается — пожизненно на JVM.
+   */
+  private static final Map<String, List<Placeholder>> PLACEHOLDER_CACHE = new ConcurrentHashMap<>();
 
   /**
    * Каноническое (регистронезависимое) представление имени, используемое для
@@ -59,5 +76,95 @@ public record TypeRef(TypeKind kind, String qualifiedName) {
   public String simpleName() {
     var dot = qualifiedName.lastIndexOf('.');
     return dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
+  }
+
+  /**
+   * Структурное представление generic-плейсхолдеров в {@link #qualifiedName}.
+   * Парсится один раз и кэшируется. Для не-generic типов — пустой список.
+   * <p>
+   * Используется {@link #specialize(TypeRef, Map)} для замены placeholder'ов
+   * по позиции, без повторного парсинга угловых скобок.
+   *
+   * @return неизменяемый список placeholder'ов; пустой, если их нет
+   */
+  public List<Placeholder> placeholders() {
+    return PLACEHOLDER_CACHE.computeIfAbsent(qualifiedName, ContextNames::placeholders);
+  }
+
+  /**
+   * Применяет {@code bindings} (placeholder → имя заменителя) к {@link TypeRef}.
+   * Подмена выполняется структурно: позиции placeholder'ов берутся из
+   * {@link #placeholders()}, парсинг угловых скобок в качестве замены здесь
+   * не повторяется. Соответствие имени placeholder'а ключу {@code bindings}
+   * — регистронезависимое.
+   * <p>
+   * Если в qualifiedName нет placeholder'ов или ни один не входит в
+   * {@code bindings} — возвращает тот же объект ({@code this}-эквивалент)
+   * без аллокации. {@link #UNKNOWN} никогда не меняется.
+   *
+   * @param ref       исходный ref (может быть {@code null}/UNKNOWN)
+   * @param bindings  подстановки имя placeholder'а (без угловых скобок) →
+   *                  имя заменителя; пустой map — no-op
+   * @return специализированный {@link TypeRef} или исходный
+   */
+  public static TypeRef specialize(TypeRef ref, Map<String, String> bindings) {
+    if (ref == null || ref.equals(UNKNOWN) || bindings == null || bindings.isEmpty()) {
+      return ref;
+    }
+    var placeholders = ref.placeholders();
+    if (placeholders.isEmpty()) {
+      return ref;
+    }
+    var sb = new StringBuilder(ref.qualifiedName.length());
+    int cursor = 0;
+    boolean anyReplaced = false;
+    for (var placeholder : placeholders) {
+      var replacement = lookup(bindings, placeholder.name());
+      if (replacement == null) {
+        // placeholder без соответствия в bindings — оставляем как есть
+        // (на случай частичной специализации).
+        sb.append(ref.qualifiedName, cursor, placeholder.end());
+      } else {
+        sb.append(ref.qualifiedName, cursor, placeholder.start())
+          .append(replacement);
+        anyReplaced = true;
+      }
+      cursor = placeholder.end();
+    }
+    if (!anyReplaced) {
+      return ref;
+    }
+    sb.append(ref.qualifiedName, cursor, ref.qualifiedName.length());
+    return new TypeRef(ref.kind, sb.toString());
+  }
+
+  /**
+   * Применяет {@code bindings} к каждому {@link TypeRef} в {@link TypeSet}.
+   * Возвращает исходный TypeSet, если ни один ref не специализировался.
+   */
+  public static TypeSet specialize(TypeSet typeSet, Map<String, String> bindings) {
+    if (typeSet == null || typeSet.isEmpty() || bindings == null || bindings.isEmpty()) {
+      return typeSet;
+    }
+    var rebuilt = new ArrayList<TypeRef>(typeSet.refs().size());
+    boolean changed = false;
+    for (var ref : typeSet.refs()) {
+      var specialized = specialize(ref, bindings);
+      if (specialized != ref) {
+        changed = true;
+      }
+      rebuilt.add(specialized);
+    }
+    return changed ? TypeSet.of(rebuilt) : typeSet;
+  }
+
+  private static String lookup(Map<String, String> bindings, String placeholder) {
+    var key = placeholder.toLowerCase(Locale.ROOT);
+    for (var entry : bindings.entrySet()) {
+      if (entry.getKey().toLowerCase(Locale.ROOT).equals(key)) {
+        return entry.getValue();
+      }
+    }
+    return null;
   }
 }

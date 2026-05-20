@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.context.api.LanguageKeywordCategory;
 import com.github._1c_syntax.bsl.context.api.ContextConstructor;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextConstructor;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextEnum;
+import com.github._1c_syntax.bsl.context.platform.PlatformContextCollection;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextEnumValue;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextMethod;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextMethodSignature;
@@ -43,6 +44,8 @@ import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
 import com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword;
 import com.github._1c_syntax.bsl.context.platform.internal.PlatformContextStorage;
 import com.github._1c_syntax.bsl.context.platform.primitive.PrimitivePlaceholderType;
+import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
+import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import org.junit.jupiter.api.Test;
@@ -547,5 +550,145 @@ class BslContextPlatformTypesProviderTest {
       .findFirst().orElseThrow()
       .members().iterator().next().name();
     assertThat(afterName).isEqualTo("Name");
+  }
+
+  // --- Phase 1: platform metadata propagation ---
+
+  @Test
+  void propertyMetadataPropagatedFromContextProperty() {
+    var stringType = primitive("Строка", "String");
+    var readOnlyProp = PlatformContextProperty.builder()
+      .name(new ContextName("Ссылка", "Ref"))
+      .rawTypes(List.of("Строка"))
+      .description("Ссылка на объект.")
+      .accessMode(com.github._1c_syntax.bsl.context.api.AccessMode.READ)
+      .availabilities(List.of(
+        com.github._1c_syntax.bsl.context.api.Availability.SERVER,
+        com.github._1c_syntax.bsl.context.api.Availability.THIN_CLIENT))
+      .sinceVersion("8.3.10")
+      .deprecatedSinceVersion("8.3.27")
+      .recommendedReplacements(List.of("СсылкаНаОбъект"))
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("СправочникСсылка.X", "CatalogRef.X"))
+      .properties(new ArrayList<>(List.of(readOnlyProp)))
+      .methods(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(
+      holderOf(providerOf(type, stringType)), mockConfiguration())
+      .getTypes().stream()
+      .filter(t -> "СправочникСсылка.X".equals(t.qualifiedName()))
+      .findFirst().orElseThrow();
+
+    var member = decl.members().iterator().next();
+    var metadata = member.metadata();
+    assertThat(metadata.sinceVersion()).isEqualTo("8.3.10");
+    assertThat(metadata.deprecatedSinceVersion()).isEqualTo("8.3.27");
+    assertThat(metadata.recommendedReplacements()).containsExactly("СсылкаНаОбъект");
+    assertThat(metadata.accessMode()).isEqualTo(AccessMode.READ);
+    assertThat(metadata.availabilities())
+      .containsExactlyInAnyOrder(Availability.SERVER, Availability.THIN_CLIENT);
+  }
+
+  @Test
+  void methodMetadataPropagatedFromContextMethod() {
+    var method = PlatformContextMethod.builder()
+      .name(new ContextName("УстаревшийМетод", "ObsoleteMethod"))
+      .description("Описание.")
+      .availabilities(List.of(com.github._1c_syntax.bsl.context.api.Availability.SERVER))
+      .rawReturnValues(List.of())
+      .signatures(Collections.emptyList())
+      .build();
+    // sinceVersion/deprecatedSinceVersion/returnValueDescription/notes/examples/seeAlso —
+    // у PlatformContextMethod это final-поля с дефолтами (lombok @Builder.Default не выставлен),
+    // поэтому здесь мы проверяем дефолтные значения (пустые), а не выставленные:
+    // настоящие данные приходят из HBK.
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(Collections.emptyList())
+      .methods(new ArrayList<>(List.of(method)))
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(
+      holderOf(providerOf(type)), mockConfiguration())
+      .getTypes().stream()
+      .filter(t -> "Объект".equals(t.qualifiedName()))
+      .findFirst().orElseThrow();
+
+    var member = decl.members().iterator().next();
+    assertThat(member.metadata().availabilities()).containsExactly(Availability.SERVER);
+    // Дефолтные пустые значения не должны кидать NPE и сериализоваться корректно
+    assertThat(member.metadata().sinceVersion()).isEmpty();
+    assertThat(member.metadata().deprecatedSinceVersion()).isEmpty();
+  }
+
+  @Test
+  void parameterDefaultValuePropagated() {
+    var paramWithDefault = PlatformContextSignatureParameter.builder()
+      .name(new ContextName("Флаг", "Flag"))
+      .isRequired(false)
+      .rawTypes(List.of())
+      .description("")
+      .defaultValue("Истина")
+      .build();
+    var signature = PlatformContextMethodSignature.builder()
+      .name(new ContextName("Основной", ""))
+      .parameters(new ArrayList<>(List.of((ContextSignatureParameter) paramWithDefault)))
+      .description("")
+      .build();
+    var method = PlatformContextMethod.builder()
+      .name(new ContextName("Сделать", "Do"))
+      .description("")
+      .availabilities(List.of())
+      .rawReturnValues(List.of())
+      .signatures(new ArrayList<>(List.of((ContextMethodSignature) signature)))
+      .build();
+    var type = PlatformContextType.builder()
+      .name(new ContextName("Объект", "Object"))
+      .properties(Collections.emptyList())
+      .methods(new ArrayList<>(List.of(method)))
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(type)), mockConfiguration())
+      .getTypes().iterator().next();
+
+    var param = decl.members().iterator().next().signatures().get(0).parameters().get(0);
+    assertThat(param.optional()).isTrue();
+    assertThat(param.defaultValue()).isEqualTo("Истина");
+  }
+
+  @Test
+  void collectionForEachAndIndexAccessDescriptionPropagated() {
+    var collection = PlatformContextCollection.builder()
+      .name(new ContextName("ТаблицаЗначений", "ValueTable"))
+      .methods(Collections.emptyList())
+      .properties(Collections.emptyList())
+      .events(Collections.emptyList())
+      .constructors(Collections.emptyList())
+      .description("")
+      .rawCollectionElementTypes(List.of())
+      .supportsForEach(true)
+      .forEachDescription("Обход выбирает строки таблицы.")
+      .supportsIndexAccess(true)
+      .indexAccessDescription("Индексатор — индекс строки с 0.")
+      .build();
+
+    var decl = new BslContextPlatformTypesProvider(holderOf(providerOf(collection)), mockConfiguration())
+      .getTypes().iterator().next();
+
+    assertThat(decl.supportsForEach()).isTrue();
+    assertThat(decl.supportsIndexAccess()).isTrue();
+    assertThat(decl.forEachDescription()).isEqualTo("Обход выбирает строки таблицы.");
+    assertThat(decl.indexAccessDescription()).isEqualTo("Индексатор — индекс строки с 0.");
   }
 }

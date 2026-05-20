@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -52,7 +53,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -185,12 +188,10 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
       }
 
-      // Подмешиваем платформенные методы менеджера-семейства
-      // (СправочникМенеджер.<…>: Выбрать, НайтиПоКоду, СоздатьЭлемент и т.п.).
-      if (managerFamilyPrefix != null) {
-        registerPlatformGenericMembers(ref, managerFamilyPrefix);
-      }
-
+      // Подмешивание платформенных методов менеджера-семейства, ссылки,
+      // объекта, выборки и т.п. для конкретного MD-имени делается единым
+      // вызовом ниже через registerFamilySpecializations(fullRu, name)
+      // в registerObjectAndRefTypes.
       registerObjectAndRefTypes(md, mdoType, name, fullName, commonAttributes);
 
       // Дополнительные алиасы «коллекция.Имя» для совместимости и для случаев,
@@ -312,23 +313,39 @@ public class ConfigurationTypesProvider {
       }
     }
 
-    MemberSource attributeAndCommonSource = () -> {
+    // У platform-generic'ов Object и Ref на одних и тех же стандартных
+    // реквизитах разные accessMode (например, Дата мутабельна на Объекте,
+    // но read-only на Ссылке). Поэтому собираем метаданные раздельно по
+    // семействам и регистрируем разные MemberSource'ы — описания общие
+    // и шарятся через collectPlatformMemberDescriptions.
+    MemberSource refSource = () -> {
       var fresh = new ArrayList<MemberDescriptor>();
       fresh.addAll(buildAttributeMembers(capturedAttributes,
-        collectPlatformMemberDescriptions(capturedFullRu)));
+        collectPlatformMemberDescriptions(capturedFullRu),
+        collectPlatformMemberMetadata(capturedFullRu + "Ссылка")));
       fresh.addAll(buildCommonAttributeMembers(capturedCommon));
       return fresh;
     };
-    typeRegistry.registerMemberSource(objectRef, attributeAndCommonSource, LanguageScope.BSL);
-    typeRegistry.registerMemberSource(refRef, attributeAndCommonSource, LanguageScope.BSL);
+    MemberSource objectSource = () -> {
+      var fresh = new ArrayList<MemberDescriptor>();
+      fresh.addAll(buildAttributeMembers(capturedAttributes,
+        collectPlatformMemberDescriptions(capturedFullRu),
+        collectPlatformMemberMetadata(capturedFullRu + "Объект")));
+      fresh.addAll(buildCommonAttributeMembers(capturedCommon));
+      return fresh;
+    };
+    typeRegistry.registerMemberSource(objectRef, objectSource, LanguageScope.BSL);
+    typeRegistry.registerMemberSource(refRef, refSource, LanguageScope.BSL);
 
-    // Подмешиваем members generic-платформенного семейства (СправочникСсылка.<...>,
-    // ДокументОбъект.<...> и т.п.). Это даёт методы (Метаданные, ПолучитьОбъект, Записать,
-    // …) и стандартные свойства (ВерсияДанных, Владелец, Родитель, …), которых нет среди
-    // реквизитов метаданных. Резолв выполняется лениво на первом обращении к getMembers,
-    // чтобы не зависеть от порядка инициализации платформенных провайдеров.
-    registerPlatformGenericMembers(objectRef, fullRu + "Объект");
-    registerPlatformGenericMembers(refRef, fullRu + "Ссылка");
+    // Подмешиваем members generic-платформенного семейства для конкретного
+    // MD-имени. Покрывает все дженерики, чьё qualifiedName начинается с
+    // {fullRu}: {fullRu}Ссылка.<...>, {fullRu}Объект.<...>,
+    // {fullRu}Менеджер.<...>, {fullRu}Выборка.<...>, {fullRu}Список.<...>
+    // и т.п. Для уже зарегистрированных типов (refRef/objectRef/managerRef)
+    // добавляется только MemberSource; для новых (Выборка/Список/…) ещё и
+    // интернируется TypeRef. Резолв ленивый — не зависит от порядка
+    // инициализации платформенных провайдеров.
+    registerFamilySpecializations(fullRu, name);
 
     // Табличные части: регистрируем пару типов <prefix>ТабличнаяЧасть(Строка)?.<MD>.<TS>
     // и добавляем member <TS-name> на объектный тип.
@@ -411,30 +428,49 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Регистрирует ленивый MemberSource, который при запросе резолвит generic-тип
-   * платформенного семейства (например, {@code "ДокументСсылка.<Имя документа>"})
-   * и возвращает его members. Из выдачи исключаются псевдо-члены платформенного
-   * generic-типа со «слотовыми» именами вроде {@code <Имя общего реквизита>},
-   * {@code <Имя реквизита>}, {@code <Имя табличной части>} — в специализированном
-   * типе их роль закрывают конкретные реквизиты/ТЧ из метаданных.
-   * Если generic-тип не зарегистрирован — пусто.
+   * Регистрирует специализации ВСЕХ зарегистрированных дженериков семейства
+   * (с qualifiedName, начинающимся с {@code familyCore}) для конкретного
+   * MD-имени.
+   * <p>
+   * Имена placeholder'ов берутся структурно из
+   * {@link TypeRegistry#getTypeParameters(TypeRef)} — это пробросом из
+   * {@code Context.typeParameters()} bsl-context'а. На LS-уровне больше
+   * нет ручного парсинга угловых скобок.
+   * <p>
+   * Покрывает всё семейство одним проходом: для Catalog это
+   * {@code СправочникСсылка.<Имя>}, {@code СправочникОбъект.<Имя>},
+   * {@code СправочникМенеджер.<Имя>}, {@code СправочникВыборка.<Имя>},
+   * {@code СправочникСписок.<Имя>} и любые другие, которые HBK заведёт в
+   * будущем. ManagerRef/ObjectRef/RefRef, зарегистрированные ранее с уже
+   * навешанным кастомным MemberSource'ом (атрибуты и общие реквизиты),
+   * получают ДОПОЛНИТЕЛЬНЫЙ MemberSource для платформенных members. Два
+   * источника на типе работают штатно — getMembers объединяет.
    */
-  private void registerPlatformGenericMembers(TypeRef target, String familyPrefix) {
-    typeRegistry.registerMemberSource(target, () -> {
-      var generic = typeRegistry.resolveGenericByPrefix(familyPrefix).orElse(null);
-      if (generic == null) {
-        return List.of();
+  private void registerFamilySpecializations(String familyCore, String mdName) {
+    var generics = typeRegistry.findAllGenericsByFamilyCore(familyCore);
+    for (var generic : generics) {
+      var parameters = typeRegistry.getTypeParameters(generic);
+      if (parameters.isEmpty()) {
+        continue;
       }
-      var raw = typeRegistry.getMembers(generic);
-      var filtered = new ArrayList<MemberDescriptor>(raw.size());
-      for (var m : raw) {
-        if (m.generic()) {
-          continue;
-        }
-        filtered.add(m);
+      // Сейчас в HBK у каждого generic'а ровно один placeholder. Если
+      // когда-то появятся типы с несколькими параметрами, маппинг нужно
+      // будет расширить — но binding-API уже принимает Map<placeholder, value>.
+      var bindings = new LinkedHashMap<String, String>();
+      for (var name : parameters) {
+        bindings.put(name, mdName);
       }
-      return filtered;
-    }, LanguageScope.BSL);
+      var specializedName = TypeRef.specialize(generic, bindings).qualifiedName();
+      if (specializedName.equals(generic.qualifiedName())) {
+        continue;
+      }
+      // Использует существующий TypeRef (Object/Ref/Manager уже
+      // зарегистрированы как CONFIGURATION выше) либо интернирует новый
+      // того же kind, что и generic (PLATFORM) — это критично, иначе
+      // инференсер строит (PLATFORM, name), а в реестре висит
+      // (CONFIGURATION, name) — разные TypeRef, members не находятся.
+      typeRegistry.registerSpecialization(specializedName, generic, bindings, LanguageScope.BSL);
+    }
   }
 
   private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
@@ -446,7 +482,8 @@ public class ConfigurationTypesProvider {
   }
 
   private List<MemberDescriptor> buildAttributeMembers(List<? extends Attribute> attributes,
-                                                       Map<String, String> platformDescriptions) {
+                                                       Map<String, String> platformDescriptions,
+                                                       Map<String, PlatformMetadata> platformMetadata) {
     if (attributes == null || attributes.isEmpty()) {
       return List.of();
     }
@@ -456,24 +493,31 @@ public class ConfigurationTypesProvider {
       if (attrName == null || attrName.isBlank()) {
         continue;
       }
-      var description = platformDescriptions.getOrDefault(attrName.toLowerCase(java.util.Locale.ROOT), "");
+      var lc = attrName.toLowerCase(Locale.ROOT);
+      var description = platformDescriptions.getOrDefault(lc, "");
+      var meta = platformMetadata.getOrDefault(lc, PlatformMetadata.EMPTY);
       var returnTypes = resolveAttributeReturnTypes(attribute);
+      MemberDescriptor descriptor;
       if (returnTypes.isEmpty()) {
-        result.add(description.isEmpty()
+        descriptor = description.isEmpty()
           ? MemberDescriptor.property(attrName)
-          : MemberDescriptor.property(attrName, TypeRef.UNKNOWN, description));
+          : MemberDescriptor.property(attrName, TypeRef.UNKNOWN, description);
       } else if (returnTypes.size() == 1) {
-        result.add(MemberDescriptor.property(attrName, returnTypes.refs().iterator().next(), description));
+        descriptor = MemberDescriptor.property(attrName, returnTypes.refs().iterator().next(), description);
       } else {
-        result.add(MemberDescriptor.property(attrName, returnTypes, description));
+        descriptor = MemberDescriptor.property(attrName, returnTypes, description);
       }
+      if (!meta.isEmpty()) {
+        descriptor = descriptor.withMetadata(meta);
+      }
+      result.add(descriptor);
     }
     return result;
   }
 
-  /** Old single-arg overload — без подмеса описаний (для случаев без контекста MD). */
+  /** Overload без подмеса описаний/метаданных — для случаев без контекста MD (табчасти). */
   private List<MemberDescriptor> buildAttributeMembers(List<? extends Attribute> attributes) {
-    return buildAttributeMembers(attributes, Map.of());
+    return buildAttributeMembers(attributes, Map.of(), Map.of());
   }
 
   /**
@@ -500,8 +544,39 @@ public class ConfigurationTypesProvider {
       if (m.description() == null || m.description().isBlank()) {
         continue;
       }
-      sink.putIfAbsent(m.name().toLowerCase(java.util.Locale.ROOT), m.description());
+      sink.putIfAbsent(m.name().toLowerCase(Locale.ROOT), m.description());
     }
+  }
+
+  /**
+   * Собирает {@code name(lower) → }{@link PlatformMetadata} для конкретного
+   * generic-семейства (например, {@code "СправочникСсылка"} или
+   * {@code "ДокументОбъект"}) — это метаданные стандартных реквизитов
+   * (accessMode/sinceVersion/availabilities и т.п.), которые иначе теряются
+   * при сборке member'а из mdclasses через {@link #buildAttributeMembers}.
+   * <p>
+   * Раздельный сбор для Ссылки и Объекта принципиален: у одного и того же
+   * стандартного реквизита (например, {@code Дата} документа) разные
+   * {@code accessMode} в этих семействах (на Объекте мутабельно, на Ссылке —
+   * только чтение).
+   */
+  private Map<String, PlatformMetadata> collectPlatformMemberMetadata(String familyPrefix) {
+    var result = new HashMap<String, PlatformMetadata>();
+    var generic = typeRegistry.resolveGenericByPrefix(familyPrefix).orElse(null);
+    if (generic == null) {
+      return result;
+    }
+    for (var m : typeRegistry.getMembers(generic)) {
+      if (m.generic()) {
+        continue;
+      }
+      var meta = m.metadata();
+      if (meta == null || meta.isEmpty()) {
+        continue;
+      }
+      result.putIfAbsent(m.name().toLowerCase(Locale.ROOT), meta);
+    }
+    return result;
   }
 
   /**

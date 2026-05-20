@@ -24,18 +24,39 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 /**
  * Дескриптор формального параметра метода.
  *
- * @param name        имя параметра
- * @param types       допустимые типы параметра ({@link TypeSet#EMPTY} если не указаны)
- * @param optional    является ли параметр опциональным (имеет значение по умолчанию)
- * @param description краткое описание параметра (может быть пустым)
+ * @param name         имя параметра
+ * @param types        допустимые типы параметра ({@link TypeSet#EMPTY} если не указаны)
+ * @param optional     является ли параметр опциональным (имеет значение по умолчанию)
+ * @param description  краткое описание параметра (может быть пустым)
+ * @param defaultValue текстовое представление значения по умолчанию из синтакс-помощника
+ *                     (например, {@code "Истина"}, {@code "\"\""}, {@code "Неопределено"});
+ *                     пустая строка, если значение не указано или параметр обязательный
  */
-public record ParameterDescriptor(String name, TypeSet types, boolean optional, String description) {
+public record ParameterDescriptor(
+  String name,
+  TypeSet types,
+  boolean optional,
+  String description,
+  String defaultValue
+) {
+
+  public ParameterDescriptor {
+    description = description == null ? "" : description;
+    defaultValue = defaultValue == null ? "" : defaultValue;
+  }
+
+  /**
+   * Совместимый конструктор без {@code defaultValue} — выставляет пустую строку.
+   */
+  public ParameterDescriptor(String name, TypeSet types, boolean optional, String description) {
+    this(name, types, optional, description, "");
+  }
 
   public static ParameterDescriptor of(String name) {
-    return new ParameterDescriptor(name, TypeSet.EMPTY, false, "");
+    return new ParameterDescriptor(name, TypeSet.EMPTY, false, "", "");
   }
 
   public static ParameterDescriptor of(String name, boolean optional) {
-    return new ParameterDescriptor(name, TypeSet.EMPTY, optional, "");
+    return new ParameterDescriptor(name, TypeSet.EMPTY, optional, "", "");
   }
 }

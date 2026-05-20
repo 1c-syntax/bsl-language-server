@@ -62,6 +62,19 @@ public interface TypePackProvider {
    *                            определённого типа.
    * @param supportsForEach     поддержка обхода {@code Для Каждого}
    * @param supportsIndexAccess поддержка индексатора {@code coll[…]}
+   * @param forEachDescription  текстовое описание из синтакс-помощника, как
+   *                            устроен обход коллекции ({@code Для Каждого}).
+   *                            Пустая строка, если описания нет.
+   * @param indexAccessDescription текстовое описание из синтакс-помощника, как
+   *                            устроен индексатор ({@code coll[…]}). Пустая
+   *                            строка, если описания нет.
+   * @param typeParameters     имена generic-плейсхолдеров (без угловых
+   *                            скобок) в порядке появления в qualifiedName.
+   *                            Например, для {@code "СправочникСсылка.<Имя справочника>"}
+   *                            — {@code ["Имя справочника"]}. Заполняется
+   *                            платформенным провайдером из
+   *                            {@code Context.typeParameters()} bsl-context'а.
+   *                            Не-generic типы — пустой список.
    */
   record TypeDecl(
     TypeKind kind,
@@ -73,8 +86,17 @@ public interface TypePackProvider {
     List<SignatureDescriptor> constructors,
     List<TypeRef> defaultElementTypes,
     boolean supportsForEach,
-    boolean supportsIndexAccess
+    boolean supportsIndexAccess,
+    String forEachDescription,
+    String indexAccessDescription,
+    List<String> typeParameters
   ) {
+
+    public TypeDecl {
+      forEachDescription = forEachDescription == null ? "" : forEachDescription;
+      indexAccessDescription = indexAccessDescription == null ? "" : indexAccessDescription;
+      typeParameters = typeParameters == null ? List.of() : List.copyOf(typeParameters);
+    }
 
     public TypeRef toRef() {
       return new TypeRef(kind, qualifiedName);

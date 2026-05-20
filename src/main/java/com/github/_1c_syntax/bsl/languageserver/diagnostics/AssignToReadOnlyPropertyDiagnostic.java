@@ -1,0 +1,132 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
+
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
+import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.lsp4j.Position;
+
+/**
+ * Подсвечивает присваивание значению в свойство, у которого режим доступа —
+ * {@link AccessMode#READ}.
+ * <p>
+ * Источник информации о режиме доступа — синтакс-помощник платформы 1С
+ * (через {@code bsl-context}) или JSON-fallback. Метаданные пробрасываются
+ * платформенным провайдером в {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor#metadata()}
+ * и индексируются {@link TypeRegistry#indexReadOnlyMembers} как пары
+ * (тип-владелец, имя свойства), что позволяет быстро отфильтровать
+ * безопасные присваивания.
+ * <p>
+ * Поток:
+ * <ol>
+ *   <li>{@link TypeRegistry#hasAnyReadOnlyMember()} — глобальный гейт.
+ *       Без HBK / без accessMode-данных диагностика моментально no-op.</li>
+ *   <li>{@link TypeRegistry#isReadOnlyMemberName(String)} — pre-filter по
+ *       имени присваиваемого свойства.</li>
+ *   <li>{@link TypeService#findMemberAt(com.github._1c_syntax.bsl.languageserver.context.DocumentContext,
+ *       Position)} — точный резолв member'а с учётом инференции типа
+ *       ресивера (глобальное свойство, локальная переменная, цепочка
+ *       аксессоров).</li>
+ *   <li>Финальная проверка {@code member.metadata().accessMode() == READ}
+ *       либо {@link TypeRegistry#isReadOnlyMember(TypeRef, String)} как
+ *       страховка.</li>
+ * </ol>
+ * <p>
+ * <b>Lock contention.</b> Раньше шаг 3 (findMemberAt → ExpressionTypeInferencer
+ * → ReferenceResolver → ServerContextProvider.getDocument) брал per-document
+ * RWLock и конкурировал с {@code populateContext} (там WRITE). Сейчас
+ * reference-finder'ы переведены на {@code getDocumentNoLock} (см.
+ * {@link com.github._1c_syntax.bsl.languageserver.references}), поэтому
+ * диагностика безопасно работает в фазу populate.
+ */
+@DiagnosticMetadata(
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 5,
+  tags = {
+    DiagnosticTag.SUSPICIOUS
+  }
+)
+@RequiredArgsConstructor
+public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnostic {
+
+  private final TypeRegistry typeRegistry;
+  private final TypeService typeService;
+
+  @Override
+  public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
+    if (!typeRegistry.hasAnyReadOnlyMember()) {
+      return super.visitAssignment(ctx);
+    }
+    var lValue = ctx.lValue();
+    if (lValue == null) {
+      return super.visitAssignment(ctx);
+    }
+    var acceptor = lValue.acceptor();
+    if (acceptor == null) {
+      return super.visitAssignment(ctx);
+    }
+    var accessProperty = acceptor.accessProperty();
+    if (accessProperty == null) {
+      return super.visitAssignment(ctx);
+    }
+    var propertyId = accessProperty.IDENTIFIER();
+    if (propertyId == null) {
+      return super.visitAssignment(ctx);
+    }
+    var propertyName = propertyId.getText();
+    if (!typeRegistry.isReadOnlyMemberName(propertyName)) {
+      return super.visitAssignment(ctx);
+    }
+    var member = typeService.findMemberAt(documentContext, positionInside(propertyId))
+      .map(TypedMember::descriptor)
+      .orElse(null);
+    if (member == null || member.kind() != MemberKind.PROPERTY) {
+      return super.visitAssignment(ctx);
+    }
+    if (member.metadata().accessMode() != AccessMode.READ) {
+      return super.visitAssignment(ctx);
+    }
+    diagnosticStorage.addDiagnostic(Ranges.create(propertyId),
+      info.getMessage(propertyName));
+    return super.visitAssignment(ctx);
+  }
+
+  private static Position positionInside(TerminalNode terminal) {
+    var token = terminal.getSymbol();
+    var col = token.getCharPositionInLine();
+    var len = token.getText() == null ? 0 : token.getText().length();
+    return new Position(token.getLine() - 1, col + Math.max(0, len / 2));
+  }
+}

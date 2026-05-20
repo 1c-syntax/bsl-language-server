@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -42,6 +44,7 @@ import java.util.stream.Collectors;
 public class ConstructorHoverBuilder {
 
   private final TypeService typeService;
+  private final TypeRegistry typeRegistry;
 
   public MarkupContent build(
     String typeName,
@@ -69,8 +72,15 @@ public class ConstructorHoverBuilder {
       sb.append("\n\n**Параметры:**\n");
       for (var p : chosen.parameters()) {
         sb.append("- `").append(p.name()).append('`');
+        var typesLabel = renderTypeSet(p.types());
+        if (!typesLabel.isEmpty()) {
+          sb.append(": ").append(typesLabel);
+        }
         if (p.optional()) {
           sb.append(" _(необязательный)_");
+        }
+        if (!p.defaultValue().isBlank()) {
+          sb.append(" _= ").append(p.defaultValue()).append('_');
         }
         if (p.description() != null && !p.description().isBlank()) {
           sb.append(" — ").append(p.description());
@@ -78,6 +88,7 @@ public class ConstructorHoverBuilder {
         sb.append('\n');
       }
     }
+    CollectionHoverHints.append(sb, ref, typeRegistry);
     if (disclaim) {
       sb.append("\n\n_Не найдено описание, подходящее под текущий вызов конструктора._");
     }
@@ -94,5 +105,19 @@ public class ConstructorHoverBuilder {
       }
     }
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
+  }
+
+  /**
+   * Форматирует {@code TypeSet} как {@code "Тип1 | Тип2"}. Пустой набор —
+   * пустая строка.
+   */
+  private static String renderTypeSet(TypeSet types) {
+    if (types == null || types.isEmpty()) {
+      return "";
+    }
+    return types.refs().stream()
+      .map(TypeRef::qualifiedName)
+      .filter(name -> name != null && !name.isEmpty())
+      .collect(Collectors.joining(" | "));
   }
 }

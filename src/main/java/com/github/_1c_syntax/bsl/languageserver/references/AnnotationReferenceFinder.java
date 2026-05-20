@@ -119,7 +119,8 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    var documentContext = serverContextProvider.getDocument(uri).orElse(null);
+    // Горячий путь — без захвата RWLock на ServerContext.
+    var documentContext = serverContextProvider.getDocumentNoLock(uri).orElse(null);
     if (documentContext == null || documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }

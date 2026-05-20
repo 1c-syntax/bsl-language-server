@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Поставщик платформенных типов на основе синтакс-помощника установленной
@@ -165,9 +167,15 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     var defaultElementTypes = collectionElementTypes(context);
     var supportsForEach = context instanceof ContextCollection coll && coll.supportsForEach();
     var supportsIndexAccess = context instanceof ContextCollection coll && coll.supportsIndexAccess();
+    var forEachDescription = context instanceof ContextCollection coll ? coll.forEachDescription() : "";
+    var indexAccessDescription = context instanceof ContextCollection coll ? coll.indexAccessDescription() : "";
+    // Имена generic-плейсхолдеров приходят структурно из bsl-context,
+    // без парсинга угловых скобок на стороне LS.
+    var typeParameters = context.typeParameters();
     return new TypeDecl(kind, qualifiedName, aliases, members,
       isExposedAsGlobal(context), description, constructors,
-      defaultElementTypes, supportsForEach, supportsIndexAccess);
+      defaultElementTypes, supportsForEach, supportsIndexAccess,
+      forEachDescription, indexAccessDescription, typeParameters);
   }
 
   /**
@@ -306,12 +314,20 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   static MemberDescriptor toMemberDescriptor(ContextProperty property, Language language) {
-    var returnType = singleType(property.types());
+    var returnTypes = typeSet(property.types());
     var name = pickPrimary(property.name(), language);
+    MemberDescriptor descriptor;
     if (property.isGeneric()) {
-      return MemberDescriptor.genericProperty(name, returnType, property.description());
+      // generic-плейсхолдер: для single-варианта используем спец-фабрику
+      // (она помечает member.generic()=true).
+      var firstRef = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+      descriptor = MemberDescriptor.genericProperty(name, firstRef, property.description());
+    } else {
+      // Сохраняем полный union (например, реквизит {Строка | Число}) —
+      // без него сужение в hover/инференсере теряет варианты.
+      descriptor = MemberDescriptor.property(name, returnTypes, property.description());
     }
-    return MemberDescriptor.property(name, returnType, property.description());
+    return descriptor.withMetadata(metadataOf(property));
   }
 
   /** Backward-compatible overload — использует {@link Language#DEFAULT_LANGUAGE}. */
@@ -320,18 +336,27 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   static MemberDescriptor toMemberDescriptor(ContextMethod method, Language language) {
-    var returnType = singleType(method.returnValues());
-    var signatures = toSignatures(method.signatures(), returnType, language);
-    if (signatures.isEmpty() && returnType != TypeRef.UNKNOWN) {
+    var returnTypes = typeSet(method.returnValues());
+    var primaryReturnType = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    var signatures = toSignatures(method.signatures(), primaryReturnType, language);
+    if (signatures.isEmpty() && primaryReturnType != TypeRef.UNKNOWN) {
       // bsl-context указал returnType метода без вариантов сигнатуры — синтезируем
       // безпараметровую сигнатуру, чтобы returnType был доступен инференсеру
       // через MemberDescriptor.returnTypes.
-      signatures = List.of(new SignatureDescriptor(List.of(), returnType, ""));
+      signatures = List.of(new SignatureDescriptor(List.of(), primaryReturnType, ""));
     }
-    return MemberDescriptor.method(
+    // Используем канонический конструктор, чтобы пробросить полный TypeSet
+    // (а не сужение из signatures.get(0).returnType() которое делает factory
+    // MemberDescriptor.method(...)).
+    return new MemberDescriptor(
       pickPrimary(method.name(), language),
-      method.description(),
-      signatures
+      MemberKind.METHOD,
+      method.description() == null ? "" : method.description(),
+      returnTypes,
+      signatures,
+      null,
+      false,
+      metadataOf(method)
     );
   }
 
@@ -346,6 +371,57 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       pickPrimary(value.name(), language),
       enumRef,
       value.description()
+    ).withMetadata(metadataOf(value));
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextMethod}.
+   */
+  private static PlatformMetadata metadataOf(ContextMethod method) {
+    return new PlatformMetadata(
+      method.sinceVersion(),
+      method.deprecatedSinceVersion(),
+      method.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(method.availabilities()),
+      null,
+      method.returnValueDescription(),
+      method.notes(),
+      method.examples(),
+      method.seeAlso()
+    );
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextProperty}.
+   */
+  private static PlatformMetadata metadataOf(ContextProperty property) {
+    return new PlatformMetadata(
+      property.sinceVersion(),
+      property.deprecatedSinceVersion(),
+      property.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(property.availabilities()),
+      BslContextEnumMapping.mapAccessMode(property.accessMode()),
+      "",
+      "",
+      List.of(),
+      List.of()
+    );
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextEnumValue}.
+   */
+  private static PlatformMetadata metadataOf(ContextEnumValue value) {
+    return new PlatformMetadata(
+      value.sinceVersion(),
+      value.deprecatedSinceVersion(),
+      value.recommendedReplacements(),
+      Set.of(),
+      null,
+      "",
+      "",
+      List.of(),
+      List.of()
     );
   }
 
@@ -377,16 +453,9 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       pickPrimary(parameter.name(), language),
       typeSet(parameter.types()),
       !parameter.isRequired(),
-      parameter.description()
+      parameter.description(),
+      parameter.defaultValue()
     );
-  }
-
-  static TypeRef singleType(List<Context> contexts) {
-    if (contexts == null || contexts.isEmpty()) {
-      return TypeRef.UNKNOWN;
-    }
-    var first = contexts.get(0);
-    return new TypeRef(mapRefKind(first), first.name().getName());
   }
 
   private static TypeSet typeSet(List<Context> contexts) {

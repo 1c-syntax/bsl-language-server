@@ -21,11 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.context.api.ContextName;
+import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
+import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -41,8 +46,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Fallback-провайдер платформенных типов из JSON-ресурса, упакованного
@@ -120,9 +128,17 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         }
         var supportsForEach = Boolean.TRUE.equals(entry.get("supportsForEach"));
         var supportsIndexAccess = Boolean.TRUE.equals(entry.get("supportsIndexAccess"));
+        var forEachDescription = stringField(entry, "forEachDescription");
+        var indexAccessDescription = stringField(entry, "indexAccessDescription");
+        // Имена generic-плейсхолдеров не сохраняются в JSON отдельно —
+        // выводятся структурно из qualifiedName через ContextNames
+        // (тот же парсер, что использует bsl-context, чтобы LS и
+        // JSON-fallback видели одни и те же placeholder'ы).
+        var typeParameters = ContextNames.typeParameters(new ContextName(qualifiedName, ""));
         result.add(new TypeDecl(kind, qualifiedName, aliases, members,
           exposedAsGlobal, description, constructors,
-          List.copyOf(defaultElementTypes), supportsForEach, supportsIndexAccess));
+          List.copyOf(defaultElementTypes), supportsForEach, supportsIndexAccess,
+          forEachDescription, indexAccessDescription, typeParameters));
       }
       return result;
     } catch (IOException e) {
@@ -163,9 +179,78 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       } else {
         descriptor = MemberDescriptor.property(name, returnType, description);
       }
+      var metadata = readMetadata(m, kind);
+      if (!metadata.isEmpty()) {
+        descriptor = descriptor.withMetadata(metadata);
+      }
       members.add(descriptor);
     }
     return members;
+  }
+
+  /**
+   * Читает опциональные метаданные платформы из JSON-объекта члена.
+   * Поддерживаются поля: {@code sinceVersion}, {@code deprecatedSinceVersion},
+   * {@code recommendedReplacements} (list), {@code availabilities} (list имён
+   * enum'а {@link Availability}, регистронезависимо), {@code accessMode}
+   * (только для свойств: {@code "READ"} / {@code "READ_WRITE"}),
+   * {@code returnValueDescription}, {@code notes}, {@code examples} (list),
+   * {@code seeAlso} (list). Отсутствующие поля → {@link PlatformMetadata#EMPTY}.
+   */
+  @SuppressWarnings("unchecked")
+  private static PlatformMetadata readMetadata(Map<String, Object> raw, MemberKind kind) {
+    var sinceVersion = stringField(raw, "sinceVersion");
+    var deprecatedSinceVersion = stringField(raw, "deprecatedSinceVersion");
+    var recommended = (List<String>) raw.getOrDefault("recommendedReplacements", Collections.emptyList());
+    var availRaw = (List<String>) raw.getOrDefault("availabilities", Collections.emptyList());
+    var availabilities = readAvailabilities(availRaw);
+    AccessMode accessMode = null;
+    if (kind == MemberKind.PROPERTY) {
+      var modeStr = (String) raw.get("accessMode");
+      if (modeStr != null && !modeStr.isBlank()) {
+        try {
+          accessMode = AccessMode.valueOf(modeStr.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+          // неизвестное значение — оставляем null
+        }
+      }
+    }
+    var returnValueDescription = stringField(raw, "returnValueDescription");
+    var notes = stringField(raw, "notes");
+    var examples = (List<String>) raw.getOrDefault("examples", Collections.emptyList());
+    var seeAlso = (List<String>) raw.getOrDefault("seeAlso", Collections.emptyList());
+    return new PlatformMetadata(
+      sinceVersion, deprecatedSinceVersion,
+      recommended == null ? List.of() : recommended,
+      availabilities,
+      accessMode,
+      returnValueDescription, notes,
+      examples == null ? List.of() : examples,
+      seeAlso == null ? List.of() : seeAlso
+    );
+  }
+
+  private static Set<Availability> readAvailabilities(List<String> raw) {
+    if (raw == null || raw.isEmpty()) {
+      return Set.of();
+    }
+    var result = EnumSet.noneOf(Availability.class);
+    for (var name : raw) {
+      if (name == null || name.isBlank()) {
+        continue;
+      }
+      try {
+        result.add(Availability.valueOf(name.toUpperCase(Locale.ROOT)));
+      } catch (IllegalArgumentException ignored) {
+        // неизвестное значение — пропускаем
+      }
+    }
+    return result;
+  }
+
+  private static String stringField(Map<String, Object> raw, String key) {
+    var value = raw.get(key);
+    return value instanceof String s ? s : "";
   }
 
   @SuppressWarnings("unchecked")
@@ -189,7 +274,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var pname = (String) p.get("name");
         var optional = Boolean.TRUE.equals(p.get("optional"));
         var pdesc = (String) p.getOrDefault("description", "");
-        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc));
+        var pdefault = (String) p.getOrDefault("defaultValue", "");
+        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, pdefault));
       }
       result.add(new SignatureDescriptor(params, returnType, description));
     }

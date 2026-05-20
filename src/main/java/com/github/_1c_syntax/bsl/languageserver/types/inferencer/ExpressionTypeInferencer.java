@@ -471,11 +471,53 @@ public class ExpressionTypeInferencer {
     var token = name.getSymbol();
     // Старт токена внутри [start, end) — корректно для half-open ReferenceIndex.containsPosition.
     var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    return referenceResolver.findReference(ctx.documentContext.getUri(), position)
+    var reference = referenceResolver.findReference(ctx.documentContext.getUri(), position);
+    if (reference.isEmpty()) {
+      // Резолвер не нашёл ссылку — например, для глобальной функции без
+      // токена, который мы успели проиндексировать. Пробуем по имени
+      // через GlobalScopeProvider напрямую.
+      return globalFunctionReturnTypes(name.getText(), ctx);
+    }
+    // 1. Источник-источник в проекте — это MethodSymbol.
+    var sourceDefinedReturn = reference
       .flatMap(Reference::getSourceDefinedSymbol)
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast)
-      .map(symbolTypeIndex::getDeclaredReturnTypes)
+      .map(symbolTypeIndex::getDeclaredReturnTypes);
+    if (sourceDefinedReturn.isPresent() && !sourceDefinedReturn.get().isEmpty()) {
+      return sourceDefinedReturn.get();
+    }
+    // 2. Платформенная глобальная функция (СтрНайти, ПолучитьСообщенияПользователю
+    //    и т.п.) опубликована как SyntheticSymbol с kind=PLATFORM_GLOBAL_METHOD.
+    //    Его valueType — это returnType метода: пробрасываем как тип переменной.
+    var syntheticReturn = reference
+      .map(Reference::symbol)
+      .filter(SyntheticSymbol.class::isInstance)
+      .map(SyntheticSymbol.class::cast)
+      .map(SyntheticSymbol::getValueType)
+      .filter(ref -> ref != null && !ref.equals(TypeRef.UNKNOWN))
+      .map(TypeSet::of);
+    if (syntheticReturn.isPresent()) {
+      return syntheticReturn.get();
+    }
+    // 3. Fallback: глобальная функция через GlobalScopeProvider (полный
+    //    MemberDescriptor с TypeSet, включая union).
+    return globalFunctionReturnTypes(name.getText(), ctx);
+  }
+
+  /**
+   * Резолв возвращаемых типов глобальной функции по имени. Используется как
+   * fallback, когда {@code ReferenceResolver} не дал ссылку или дал ссылку
+   * без типа.
+   */
+  private TypeSet globalFunctionReturnTypes(String methodName, InferenceContext ctx) {
+    if (methodName == null || methodName.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    return globalScopeProvider
+      .findFunction(methodName, ctx.documentContext.getFileType())
+      .map(MemberDescriptor::returnTypes)
+      .filter(types -> !types.isEmpty())
       .orElse(TypeSet.EMPTY);
   }
 
