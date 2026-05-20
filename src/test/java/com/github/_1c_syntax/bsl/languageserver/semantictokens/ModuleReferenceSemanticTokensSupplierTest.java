@@ -50,6 +50,9 @@ class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwa
   @Autowired
   private SemanticTokensTestHelper helper;
 
+  @Autowired
+  private com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex oScriptLibraryIndex;
+
 
   @Test
   void testCommonModuleReference() throws IOException {
@@ -114,6 +117,26 @@ class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwa
       // but that's a method call pattern, not a direct module reference
       assertThat(token.line()).as("Namespace token should not be on variable usage lines").isNotIn(7, 10, 13);
     }
+  }
+
+  @Test
+  void testOScriptLibraryModuleHighlightedAsNamespace() {
+    // given — OScript-библиотека с модулем MyModule.
+    var fixtureRoot = java.nio.file.Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    oScriptLibraryIndex.reindex(context);
+
+    var content = "MyModule.ВывестиСообщение(\"Привет\");\n";
+    var documentContext = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    // when
+    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
+
+    // then — `MyModule` (длина 8) на строке 0 со старта 0 → Namespace.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 0, 8, SemanticTokenTypes.Namespace, "MyModule")
+    ));
   }
 
   @Test

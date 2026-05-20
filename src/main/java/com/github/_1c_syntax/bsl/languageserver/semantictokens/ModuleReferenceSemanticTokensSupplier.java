@@ -32,16 +32,30 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Сапплаер семантических токенов для ссылок на модули.
  * <p>
- * Предоставляет подсветку имён общих модулей как namespace.
+ * Подсвечивает как {@link SemanticTokenTypes#Namespace}:
+ * <ul>
+ *   <li>имена общих модулей конфигурации (BSL);</li>
+ *   <li>имена OneScript-библиотечных модулей и классов
+ *       (зарегистрированы через {@code ReferenceIndexFiller.tryRegisterLibraryModuleCall}
+ *       и {@code tryRegisterLibraryClassReference}).</li>
+ * </ul>
  */
 @Component
 @RequiredArgsConstructor
 public class ModuleReferenceSemanticTokensSupplier implements SemanticTokensSupplier {
+
+  private static final Set<ModuleType> NAMESPACE_MODULE_TYPES = EnumSet.of(
+    ModuleType.CommonModule,
+    ModuleType.OScriptModule,
+    ModuleType.OScriptClass
+  );
 
   private final ReferenceIndex referenceIndex;
   private final SemanticTokensHelper helper;
@@ -52,7 +66,7 @@ public class ModuleReferenceSemanticTokensSupplier implements SemanticTokensSupp
     var uri = documentContext.getUri();
 
     for (var reference : referenceIndex.getReferencesFrom(uri, SymbolKind.Module)) {
-      if (!isCommonModuleReference(reference.symbol())) {
+      if (!isNamespaceModuleReference(reference.symbol())) {
         continue;
       }
       helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Namespace);
@@ -61,10 +75,10 @@ public class ModuleReferenceSemanticTokensSupplier implements SemanticTokensSupp
     return entries;
   }
 
-  private static boolean isCommonModuleReference(Symbol symbol) {
+  private static boolean isNamespaceModuleReference(Symbol symbol) {
     if (!(symbol instanceof ModuleSymbol moduleSymbol)) {
       return false;
     }
-    return moduleSymbol.getOwner().getModuleType() == ModuleType.CommonModule;
+    return NAMESPACE_MODULE_TYPES.contains(moduleSymbol.getOwner().getModuleType());
   }
 }
