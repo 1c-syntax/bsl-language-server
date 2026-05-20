@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Символ, объявление которого лежит вне BSL/OScript кода: платформенные
@@ -47,6 +48,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public final class SyntheticSymbol implements Symbol {
 
+  private static final Supplier<Symbol> NO_SOURCE = () -> null;
+
   private final String name;
   private final SyntheticKind syntheticKind;
   private final String description;
@@ -61,13 +64,26 @@ public final class SyntheticSymbol implements Symbol {
    * для типа {@code Массив}); {@code null} для глобальных synthetic-символов.
    */
   private final Symbol owner;
+  /**
+   * Lazy-провайдер source-defined-символа, стоящего за этим synthetic-именем
+   * (например, для общего модуля конфигурации в global scope — это
+   * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol}
+   * соответствующего DocumentContext'а). Lambda re-resolves на каждый вызов,
+   * поэтому переживает rebuild SymbolTree без stale-ссылок. Default —
+   * {@code () -> null} (нет backing-источника).
+   */
+  private final Supplier<Symbol> sourceSymbol;
+
+  public SyntheticSymbol(String name, SyntheticKind kind, String description, TypeRef valueType, Symbol owner) {
+    this(name, kind, description, valueType, owner, NO_SOURCE);
+  }
 
   public SyntheticSymbol(String name, SyntheticKind kind, String description, TypeRef valueType) {
-    this(name, kind, description, valueType, null);
+    this(name, kind, description, valueType, null, NO_SOURCE);
   }
 
   public SyntheticSymbol(String name, SyntheticKind kind, String description) {
-    this(name, kind, description, TypeRef.UNKNOWN, null);
+    this(name, kind, description, TypeRef.UNKNOWN, null, NO_SOURCE);
   }
 
   @Override
@@ -88,6 +104,15 @@ public final class SyntheticSymbol implements Symbol {
 
   public Optional<Symbol> getOwnerSymbol() {
     return Optional.ofNullable(owner);
+  }
+
+  /**
+   * Backing source-defined символ, если он есть (например, ModuleSymbol для
+   * общего модуля конфигурации в global scope). Lazy-резолв, чтобы пережить
+   * rebuild SymbolTree.
+   */
+  public Optional<Symbol> getSourceSymbol() {
+    return Optional.ofNullable(sourceSymbol.get());
   }
 
   /**

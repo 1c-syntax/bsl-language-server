@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.context.api.LanguageKeywordCategory;
 import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -65,6 +66,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 /**
  * Workspace-scoped реестр глобальной области видимости:
@@ -202,7 +204,7 @@ public class GlobalScopeProvider {
   /**
    * Поиск symbol'а в глобальной области (globals + library entries).
    */
-  public Optional<com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol> findGlobal(String name) {
+  public Optional<Symbol> findGlobal(String name) {
     ensureGlobalsPublished();
     if (globalSymbolScope == null) {
       return Optional.empty();
@@ -215,7 +217,7 @@ public class GlobalScopeProvider {
    * library-entries скрываются в BSL-файлах; функции и глобальные свойства
    * фильтруются по соответствующим скоупам.
    */
-  public Optional<com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol> findGlobal(String name, FileType fileType) {
+  public Optional<Symbol> findGlobal(String name, FileType fileType) {
     var sym = findGlobal(name);
     if (sym.isEmpty() || fileType == null) {
       return sym;
@@ -497,13 +499,26 @@ public class GlobalScopeProvider {
    */
   public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope,
                                      String description, SyntheticKind syntheticKind) {
+    registerGlobalProperty(ref, names, scope, description, syntheticKind, () -> null);
+  }
+
+  /**
+   * Та же регистрация, но с lazy-провайдером source-defined-символа.
+   * Используется для общих модулей конфигурации (backing —
+   * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol}),
+   * чтобы supplier'ы (подсветка, hover) могли узнать, что синтетическое имя
+   * соответствует source-defined-сущности.
+   */
+  public void registerGlobalProperty(TypeRef ref, Collection<String> names, LanguageScope scope,
+                                     String description, SyntheticKind syntheticKind,
+                                     Supplier<Symbol> sourceSymbol) {
     if (ref == null || names == null || names.isEmpty()) {
       return;
     }
     ensureGlobalsPublished();
     var canonical = ref.qualifiedName();
     var symbol = new SyntheticSymbol(canonical, syntheticKind,
-      description == null ? "" : description, ref);
+      description == null ? "" : description, ref, null, sourceSymbol);
     if (globalSymbolScope == null) {
       return;
     }

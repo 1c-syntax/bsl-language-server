@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -41,6 +43,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * Расширяет платформенные типы менеджеров/объектов/наборов записей
@@ -147,7 +150,13 @@ public class ConfigurationModuleMembersProvider {
     }
 
     typeRegistry.registerMemberSource(ref, () -> exportMethodsAsMembers(documentContext), LanguageScope.BSL);
-    typeRegistry.registerAsGlobalProperty(ref);
+    // Source-symbol — ModuleSymbol этого DocumentContext'а. Lazy-резолв,
+    // чтобы пережить rebuild: SymbolTree пересоздаётся, но Supplier всегда
+    // возвращает актуальный getModule().
+    Supplier<Symbol> moduleSymbolSupplier =
+      () -> documentContext.getSymbolTree().getModule();
+    typeRegistry.registerAsGlobalProperty(ref, LanguageScope.BSL,
+      SyntheticKind.PLATFORM_GLOBAL_PROPERTY, moduleSymbolSupplier);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }
 

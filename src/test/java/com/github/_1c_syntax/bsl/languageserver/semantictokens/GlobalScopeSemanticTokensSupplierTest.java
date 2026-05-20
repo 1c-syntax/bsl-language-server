@@ -36,95 +36,70 @@ import org.springframework.context.annotation.Import;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.lsp4j.SemanticTokenModifiers.DefaultLibrary;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 @Import(SemanticTokensTestHelper.class)
-class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
+class GlobalScopeSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private ModuleReferenceSemanticTokensSupplier supplier;
+  private GlobalScopeSemanticTokensSupplier supplier;
 
   @Autowired
   private SemanticTokensTestHelper helper;
 
-  @Autowired
-  private com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex oScriptLibraryIndex;
-
+  // --- Cases ported from removed ModuleReferenceSemanticTokensSupplierTest ---
 
   @Test
-  void testCommonModuleReference() throws IOException {
-    // given
+  void commonModuleReferenceHighlightedAsNamespace() throws IOException {
+    // given - конфигурация с общим модулем ПервыйОбщийМодуль, документ ссылается на него.
     initServerContext("src/test/resources/metadata/designer");
-
-    // Load the common module
     var file = new File("src/test/resources/metadata/designer",
       "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
     var uri = Absolute.uri(file);
-    TestUtils.getDocumentContext(
-      uri,
-      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-      context
-    );
-
-    // Load a document that directly references the common module ПервыйОбщийМодуль
+    TestUtils.getDocumentContext(uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8), context);
     var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/references/ReferenceIndex.bsl"
-    );
+      "./src/test/resources/references/ReferenceIndex.bsl");
 
     // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // then - Common module name ПервыйОбщийМодуль should be highlighted as namespace
-    // Line 3: ПервыйОбщийМодуль.УстаревшаяПроцедура(); - position 4, length 17
+    // then - `ПервыйОбщийМодуль` на line 2 (0-idx), col 4, len 17 → Namespace без модификатора.
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(2, 4, 17, SemanticTokenTypes.Namespace, "ПервыйОбщийМодуль")
     ));
   }
 
   @Test
-  void testVariableWithCommonModuleNotHighlightedAsNamespace() throws IOException {
-    // given - code with variable that holds reference to common module via ОбщегоНазначения.ОбщийМодуль
-    // The variable itself should NOT be highlighted as namespace
+  void variableTypedAsCommonModuleNotHighlightedAsNamespace() {
+    // given - паттерн `Модуль = ОбщегоНазначения.ОбщийМодуль("X"); Модуль.Метод()`.
+    // Переменная-носитель типа-модуля не должна получать Namespace-токен:
+    // её идентификатор — это локальная переменная, перекрывает global scope.
     initServerContext("src/test/resources/metadata/designer");
-
-    // Load the common module
-    var file = new File("src/test/resources/metadata/designer",
-      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
-    var uri = Absolute.uri(file);
-    TestUtils.getDocumentContext(
-      uri,
-      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-      context
-    );
-
-    // Load a document with the pattern: Модуль = ОбщегоНазначения.ОбщийМодуль("..."); Модуль.Метод();
     var documentContext = TestUtils.getDocumentContextFromFile(
-      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
-    );
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl");
 
     // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // then - Variable names like "МодульУправлениеДоступом" should NOT appear as namespace tokens
-    // Only direct common module names should be namespace tokens
-    for (var token : decoded) {
-      // Check that the token is not on a line where variable is used (lines 7, 8, 10, 13 in the test file)
-      // Line 7 is where the variable is assigned - "МодульУправлениеДоступом" should not be namespace
-      // The only namespace token should be on line 6 for expression "ОбщегоНазначения.ОбщийМодуль(...)"
-      // but that's a method call pattern, not a direct module reference
-      assertThat(token.line()).as("Namespace token should not be on variable usage lines").isNotIn(7, 10, 13);
-    }
+    // then - переменная `МодульУправлениеДоступом` (line 7/10/13) — локальное имя,
+    // поэтому никаких глобал-токенов на этих позициях этот сапплаер не выдаёт.
+    assertThat(decoded)
+      .filteredOn(t -> t.line() == 7 || t.line() == 10 || t.line() == 13)
+      .isEmpty();
   }
 
   @Test
-  void testOScriptLibraryModuleHighlightedAsNamespace() {
-    // given — OScript-библиотека с модулем MyModule.
-    var fixtureRoot = java.nio.file.Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+  void oScriptLibraryModuleHighlightedAsNamespace() {
+    // given - OScript-библиотека `mylib` с модулем `MyModule`.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);
-
     var content = "MyModule.ВывестиСообщение(\"Привет\");\n";
     var documentContext = TestUtils.getDocumentContext(
       TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
@@ -132,15 +107,15 @@ class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwa
     // when
     var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
 
-    // then — `MyModule` (длина 8) на строке 0 со старта 0 → Namespace.
+    // then - `MyModule` (line 0, col 0, len 8) → Namespace.
     helper.assertContainsTokens(decoded, List.of(
       new ExpectedToken(0, 0, 8, SemanticTokenTypes.Namespace, "MyModule")
     ));
   }
 
   @Test
-  void testNoTokensWithoutCommonModuleReference() {
-    // given - simple code without common module reference
+  void emitsNothingForBareLocalMethodCall() {
+    // given - чистый BSL без global-scope-идентификаторов.
     String bsl = """
       Процедура Тест()
         Сообщить("Привет");
@@ -150,8 +125,27 @@ class ModuleReferenceSemanticTokensSupplierTest extends AbstractServerContextAwa
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then
+    // then - этот сапплаер ничего не выдаёт (Сообщить — глобальная функция,
+    // её рисует PlatformGlobalMethodSemanticTokensSupplier).
     assertThat(decoded).isEmpty();
   }
 
+  // --- New cases (metadata roots, system enums) ---
+
+  @Test
+  void metadataCollectionRootHighlightedAsClassWithDefaultLibrary() throws IOException {
+    // given - ManagerModule с цепочкой `Справочники.Справочник1.ТестЭкспортная()`.
+    initServerContext(TestUtils.PATH_TO_METADATA);
+    var dc = TestUtils.getDocumentContextFromFile(
+      TestUtils.PATH_TO_METADATA + "/Catalogs/Справочник1/Ext/ManagerModule.bsl", context);
+
+    // when
+    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(dc));
+
+    // then - `Справочники` (line 19, col 4, len 11) → Class + DefaultLibrary.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(19, 4, 11, SemanticTokenTypes.Class,
+        Set.of(DefaultLibrary), "Справочники")
+    ));
+  }
 }

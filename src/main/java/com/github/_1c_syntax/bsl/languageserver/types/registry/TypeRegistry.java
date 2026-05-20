@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
@@ -53,9 +54,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * Реестр известных типов.
@@ -525,6 +528,15 @@ public class TypeRegistry {
    * чтобы отличать их от обычных глобальных свойств.
    */
   public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope, SyntheticKind syntheticKind) {
+    registerAsGlobalProperty(ref, scope, syntheticKind, () -> null);
+  }
+
+  /**
+   * То же + lazy-провайдер source-defined-символа (для общих модулей).
+   * См. {@link GlobalScopeProvider#registerGlobalProperty(TypeRef, Collection, LanguageScope, String, SyntheticKind, Supplier)}.
+   */
+  public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope, SyntheticKind syntheticKind,
+                                       Supplier<Symbol> sourceSymbol) {
     if (globalScopeProvider == null) {
       return;
     }
@@ -535,7 +547,8 @@ public class TypeRegistry {
         names.add(alias);
       }
     });
-    globalScopeProvider.registerGlobalProperty(ref, names, scope, getDescription(ref, fileTypeOf(scope)), syntheticKind);
+    globalScopeProvider.registerGlobalProperty(ref, names, scope, getDescription(ref, fileTypeOf(scope)),
+      syntheticKind, sourceSymbol);
   }
 
   /**
