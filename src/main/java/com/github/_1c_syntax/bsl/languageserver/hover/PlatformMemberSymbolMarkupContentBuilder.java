@@ -41,7 +41,8 @@ public class PlatformMemberSymbolMarkupContentBuilder implements MarkupContentBu
 
   @Override
   public MarkupContent getContent(PlatformMemberSymbol symbol) {
-    return platformMemberHoverBuilder.build(symbol.getOwner(), symbol.getDescriptor(), symbol.getCallArgCount());
+    return platformMemberHoverBuilder.build(
+      symbol.getOwner(), symbol.getDescriptor(), symbol.getCallArgCount(), symbol.getArgTypes());
   }
 
   @Override

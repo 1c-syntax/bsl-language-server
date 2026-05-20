@@ -58,7 +58,11 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    return serverContextProvider.getDocumentUnsafe(uri)
+    // NoLock-вариант: reference-резолв вызывается из inferencer-горячих
+    // путей (visitAssignment у диагностик, hover, completion). Захват
+    // per-document RWLock конкурирует с populateContext'ом, что
+    // выливается в парк worker-потоков под fair-RWLock.
+    return serverContextProvider.getDocumentUnsafeNoLock(uri)
       .flatMap(document -> findReference(document, uri, position));
   }
 

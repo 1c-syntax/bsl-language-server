@@ -27,20 +27,51 @@ import java.util.List;
  * Дескриптор одной сигнатуры (варианта синтаксиса) метода.
  * Метод 1С может иметь несколько вариантов синтаксиса — для каждого варианта
  * создаётся отдельный {@code SignatureDescriptor}.
+ * <p>
+ * Возвращаемое значение хранится как {@link TypeSet} ({@link #returnTypes}),
+ * что покрывает случаи union'а ({@code Строка | Число}, {@code СправочникОбъект.X | Неопределено}).
+ * Удобный аксессор {@link #returnType()} возвращает первый ref для legacy-кода,
+ * который рассчитывает на одиночный тип.
  *
  * @param parameters  упорядоченный список параметров
- * @param returnType  тип возвращаемого значения ({@link TypeRef#UNKNOWN} для процедуры или если неизвестно)
+ * @param returnTypes union возвращаемых типов ({@link TypeSet#EMPTY} для процедуры или если неизвестно)
  * @param description краткое описание варианта (может быть пустым)
  */
-public record SignatureDescriptor(List<ParameterDescriptor> parameters, TypeRef returnType, String description) {
+public record SignatureDescriptor(List<ParameterDescriptor> parameters, TypeSet returnTypes, String description) {
 
-  public static final SignatureDescriptor EMPTY = new SignatureDescriptor(List.of(), TypeRef.UNKNOWN, "");
+  public static final SignatureDescriptor EMPTY = new SignatureDescriptor(List.of(), TypeSet.EMPTY, "");
 
   public SignatureDescriptor {
     parameters = List.copyOf(parameters);
+    if (returnTypes == null) {
+      returnTypes = TypeSet.EMPTY;
+    }
+  }
+
+  /**
+   * Совместимый конструктор с одиночным {@link TypeRef}. {@link TypeRef#UNKNOWN}
+   * трактуется как «без возвращаемого значения» ({@link TypeSet#EMPTY}).
+   */
+  public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeRef returnType, String description) {
+    this(parameters, wrapSingle(returnType), description);
+  }
+
+  /**
+   * Удобный аксессор: первый тип из {@link #returnTypes}, либо {@link TypeRef#UNKNOWN}.
+   * Используется legacy-кодом, который ожидает один тип возврата на сигнатуру.
+   */
+  public TypeRef returnType() {
+    return returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
   }
 
   public static SignatureDescriptor of(List<ParameterDescriptor> parameters) {
-    return new SignatureDescriptor(parameters, TypeRef.UNKNOWN, "");
+    return new SignatureDescriptor(parameters, TypeSet.EMPTY, "");
+  }
+
+  private static TypeSet wrapSingle(TypeRef ref) {
+    if (ref == null || ref.equals(TypeRef.UNKNOWN)) {
+      return TypeSet.EMPTY;
+    }
+    return TypeSet.of(ref);
   }
 }

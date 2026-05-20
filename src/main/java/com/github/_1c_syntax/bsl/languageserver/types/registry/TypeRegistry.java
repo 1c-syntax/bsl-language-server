@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.AnyType;
 import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
@@ -51,6 +52,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -107,6 +109,36 @@ public class TypeRegistry {
   private final Map<TypeRef, Boolean> supportsForEach = new ConcurrentHashMap<>();
   /** Тип ↔ {@code supportsIndexAccess} ({@code true} — индексатор {@code [...]} разрешён). */
   private final Map<TypeRef, Boolean> supportsIndexAccess = new ConcurrentHashMap<>();
+  /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника. */
+  private final Map<TypeRef, String> forEachDescriptions = new ConcurrentHashMap<>();
+  /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника. */
+  private final Map<TypeRef, String> indexAccessDescriptions = new ConcurrentHashMap<>();
+  /**
+   * Индекс read-only свойств: тип → набор имён свойств (lowercased), у
+   * которых {@link AccessMode#READ}. Заполняется при регистрации
+   * {@link TypePackProvider.TypeDecl} провайдерами платформенных типов
+   * (bsl-context / JSON-fallback). Используется как дешёвый источник истины
+   * для диагностики присваивания в read-only свойство, без обращения к
+   * {@link MemberSource} лямбдам и без захвата RWLock на {@code ServerContext}.
+   * <p>
+   * Конфигурационные типы (MD-объекты) сюда не попадают: у них нет
+   * {@code accessMode} в метаданных, и они регистрируются через
+   * {@code registerMemberSource} лениво.
+   */
+  private final Map<TypeRef, Set<String>> readOnlyMembersByType = new ConcurrentHashMap<>();
+  /**
+   * Дешёвый набор всех имён read-only свойств (lowercased) — для быстрого
+   * pre-filter'а в диагностике: если имя присваиваемого свойства не входит
+   * в этот набор, дальше идти не нужно. Заполняется параллельно с
+   * {@link #readOnlyMembersByType}.
+   */
+  private final Set<String> readOnlyMemberNames = ConcurrentHashMap.newKeySet();
+  /**
+   * Тип ↔ имена generic-плейсхолдеров (без угловых скобок). Заполняется
+   * платформенным провайдером из {@link TypePackProvider.TypeDecl#typeParameters()}.
+   * Источник истины — {@code Context.typeParameters()} в bsl-context.
+   */
+  private final Map<TypeRef, List<String>> typeParameters = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
@@ -190,6 +222,37 @@ public class TypeRegistry {
   }
 
   /**
+   * Найти ВСЕ зарегистрированные generic-типы, чьё qualifiedName начинается
+   * с указанной family-core строки. Generic'ом считается тип с непустым
+   * {@link #getTypeParameters(TypeRef)} (т.е. был помечен платформенным
+   * провайдером как имеющий placeholder'ы — структурное определение,
+   * без парсинга {@code .<...>} здесь).
+   * <p>
+   * Используется при регистрации MD-объекта для специализации всего семейства
+   * дженериков сразу (СправочникСсылка, СправочникОбъект, СправочникМенеджер,
+   * СправочникВыборка, СправочникСписок и т.п. — для Catalog'а).
+   *
+   * @param familyCore начальная часть имени до семейного суффикса
+   *                   (например, {@code "Справочник"} матчит
+   *                   {@code "СправочникСсылка.<Имя справочника>"},
+   *                   {@code "СправочникВыборка.<Имя справочника>"} и т.п.)
+   * @return список интернированных TypeRef'ов; пустой, если совпадений нет
+   */
+  public List<TypeRef> findAllGenericsByFamilyCore(String familyCore) {
+    if (familyCore == null || familyCore.isEmpty()) {
+      return List.of();
+    }
+    var needle = familyCore.toLowerCase(Locale.ROOT);
+    var result = new ArrayList<TypeRef>();
+    for (var ref : typeParameters.keySet()) {
+      if (ref.qualifiedName().toLowerCase(Locale.ROOT).startsWith(needle)) {
+        result.add(ref);
+      }
+    }
+    return result;
+  }
+
+  /**
    * Найти тип по имени с фильтрацией по типу файла. Тип будет возвращён только
    * если его {@link LanguageScope} совместим с {@code fileType}.
    * Если {@code fileType == null} — фильтрация не применяется.
@@ -243,9 +306,25 @@ public class TypeRegistry {
   /**
    * То же, что {@link #getMembers(TypeRef)}, но фильтрует источники по языковому скоупу.
    * При {@code fileType == null} фильтрация не применяется.
+   * <p>
+   * Fallback по имени: TypeRef в LS — это пара {@code (kind, qualifiedName)}, и
+   * один и тот же тип может предъявляться с разными kind'ами в зависимости от
+   * того, откуда он пришёл (например, specialize generic-типа платформы даёт
+   * {@code (PLATFORM, "СправочникОбъект.X")}, а тот же тип, зарегистрированный
+   * ConfigurationTypesProvider'ом, имеет kind {@code CONFIGURATION}). Чтобы
+   * единый запрос {@code getMembers} находил источники независимо от kind'а,
+   * сначала ищем точное совпадение по (kind, name), а если его нет —
+   * резолвим по {@link #aliasIndex} по {@code qualifiedName} и пробуем
+   * каноничный {@link TypeRef}.
    */
   public Collection<MemberDescriptor> getMembers(TypeRef ref, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
     var sources = memberSources.get(ref);
+    if ((sources == null || sources.isEmpty()) && ref != null) {
+      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+      if (canonical != null && !canonical.equals(ref)) {
+        sources = memberSources.get(canonical);
+      }
+    }
     if (sources == null || sources.isEmpty()) {
       return Collections.emptyList();
     }
@@ -279,6 +358,107 @@ public class TypeRegistry {
     var effective = scope == null ? LanguageScope.BOTH : scope;
     memberSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
       .add(new ScopedMemberSource(source, effective));
+  }
+
+  /**
+   * Зарегистрировать специализацию generic-типа по имени специализированного
+   * типа. Если такого TypeRef ещё нет — интернируется с {@link TypeKind} как
+   * у generic'а (чтобы инференсер и регистрация работали с одной и той же
+   * парой {@code (kind, name)}). Если есть — используется существующий.
+   * После этого делегирует в
+   * {@link #registerSpecialization(TypeRef, TypeRef, Map, LanguageScope)}.
+   *
+   * @param specializedName qualifiedName целевого типа (например,
+   *                        {@code "СправочникВыборка.МойСправочник"})
+   * @param genericRef      generic-тип-источник
+   * @param bindings        подстановки placeholder → имя заменителя
+   * @param scope           языковой скоуп источника; {@code null} — {@link LanguageScope#BSL}
+   * @return интернированный {@link TypeRef} специализированного типа
+   */
+  public TypeRef registerSpecialization(String specializedName, TypeRef genericRef,
+                                        Map<String, String> bindings, LanguageScope scope) {
+    if (specializedName == null || specializedName.isBlank() || genericRef == null) {
+      return TypeRef.UNKNOWN;
+    }
+    var existing = resolve(specializedName).orElse(null);
+    var specializedRef = existing != null
+      ? existing
+      : intern(genericRef.kind(), specializedName);
+    if (existing == null) {
+      // Регистрируем как полноценный тип того же kind, что и generic, чтобы
+      // инференсер (резолвящий типы по имени через aliasIndex / по паре
+      // (kind, name)) находил тот же TypeRef и member-source'ы доходили
+      // до getMembers.
+      types.put(specializedRef, hydrate(specializedRef));
+      addAlias(specializedName, specializedRef);
+      setLanguageScope(specializedRef, scope == null ? LanguageScope.BSL : scope);
+    }
+    registerSpecialization(specializedRef, genericRef, bindings, scope);
+    return specializedRef;
+  }
+
+  /**
+   * Зарегистрировать специализацию generic-типа: {@code specializedRef} —
+   * целевой ссылочный тип ({@code СправочникСсылка.МойСправочник}),
+   * {@code genericRef} — generic-тип ({@code СправочникСсылка.<Имя справочника>}),
+   * {@code bindings} — подстановки placeholder'ов («Имя справочника» →
+   * «МойСправочник»).
+   * <p>
+   * Регистрируется ленивый {@link MemberSource} для {@code specializedRef},
+   * который при каждом запросе:
+   * <ol>
+   *   <li>берёт members generic-типа через {@link #getMembers(TypeRef)};</li>
+   *   <li>отфильтровывает {@link MemberDescriptor#generic()} (слотовые
+   *       члены вида {@code <Имя реквизита>});</li>
+   *   <li>применяет {@link MemberDescriptor#specialize(Map)} к каждому
+   *       члену — подставляет {@code bindings} в возвращаемые типы и
+   *       сигнатуры.</li>
+   * </ol>
+   * <p>
+   * Источник лениво пересобирается на каждый getMembers, чтобы реагировать
+   * на смену языка интерфейса (имена members generic-типа меняются) и не
+   * зависеть от порядка инициализации платформенных провайдеров.
+   * Также индексируются read-only members специализированного типа
+   * (см. {@link #indexReadOnlyMembers}).
+   *
+   * @param specializedRef  целевой TypeRef, который должен «наследовать»
+   *                        members generic-типа
+   * @param genericRef      generic-тип-источник (его qualifiedName обычно
+   *                        содержит placeholder'ы {@code <X>})
+   * @param bindings        placeholder → имя заменителя (например,
+   *                        {@code "Имя справочника"} → {@code "МойСправочник"})
+   * @param scope           языковой скоуп источника; {@code null} — {@link LanguageScope#BSL}
+   */
+  public void registerSpecialization(TypeRef specializedRef, TypeRef genericRef,
+                                     Map<String, String> bindings, LanguageScope scope) {
+    if (specializedRef == null || genericRef == null) {
+      return;
+    }
+    var safeBindings = bindings == null ? Map.<String, String>of() : Map.copyOf(bindings);
+    var effectiveScope = scope == null ? LanguageScope.BSL : scope;
+    MemberSource source = () -> {
+      var raw = getMembers(genericRef);
+      if (raw.isEmpty()) {
+        return List.of();
+      }
+      var result = new ArrayList<MemberDescriptor>(raw.size());
+      for (var member : raw) {
+        if (member.generic()) {
+          continue;
+        }
+        var specialized = member.specialize(safeBindings);
+        result.add(specialized);
+        if (specialized.metadata().accessMode() == AccessMode.READ) {
+          var lc = specialized.name().toLowerCase(Locale.ROOT);
+          readOnlyMemberNames.add(lc);
+          readOnlyMembersByType
+            .computeIfAbsent(specializedRef, k -> ConcurrentHashMap.newKeySet())
+            .add(lc);
+        }
+      }
+      return result;
+    };
+    registerMemberSource(specializedRef, source, effectiveScope);
   }
 
   /**
@@ -542,6 +722,7 @@ public class TypeRegistry {
     }
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members, scope);
+      indexReadOnlyMembers(ref, decl.members());
     }
     if (decl.exposedAsGlobal()) {
       registerAsGlobalProperty(ref, scope);
@@ -554,6 +735,15 @@ public class TypeRegistry {
     }
     if (decl.supportsIndexAccess()) {
       supportsIndexAccess.put(ref, Boolean.TRUE);
+    }
+    if (!decl.forEachDescription().isEmpty()) {
+      forEachDescriptions.put(ref, decl.forEachDescription());
+    }
+    if (!decl.indexAccessDescription().isEmpty()) {
+      indexAccessDescriptions.put(ref, decl.indexAccessDescription());
+    }
+    if (!decl.typeParameters().isEmpty()) {
+      typeParameters.put(ref, List.copyOf(decl.typeParameters()));
     }
     setLanguageScope(ref, scope == null ? LanguageScope.BOTH : scope);
   }
@@ -588,6 +778,89 @@ public class TypeRegistry {
   /** {@code true}, если у типа разрешён индексатор {@code [...]}. */
   public boolean supportsIndexAccess(TypeRef ref) {
     return Boolean.TRUE.equals(supportsIndexAccess.get(ref));
+  }
+
+  /**
+   * Текстовое описание обхода {@code Для Каждого} для типа-коллекции
+   * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
+   */
+  public String getForEachDescription(TypeRef ref) {
+    return forEachDescriptions.getOrDefault(ref, "");
+  }
+
+  /**
+   * Текстовое описание индексатора {@code [...]} для типа-коллекции
+   * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
+   */
+  public String getIndexAccessDescription(TypeRef ref) {
+    return indexAccessDescriptions.getOrDefault(ref, "");
+  }
+
+  /**
+   * Имена generic-плейсхолдеров типа (без угловых скобок), в порядке
+   * появления в qualifiedName. Для не-generic типов — пустой список.
+   * Источник — {@link TypePackProvider.TypeDecl#typeParameters()}
+   * (структурное представление из bsl-context).
+   *
+   * @param ref ссылка на тип
+   * @return неизменяемый список имён placeholder'ов или пустой список
+   */
+  public List<String> getTypeParameters(TypeRef ref) {
+    if (ref == null) {
+      return List.of();
+    }
+    return typeParameters.getOrDefault(ref, List.of());
+  }
+
+  /**
+   * @return {@code true}, если в реестре зарегистрирован хотя бы один член
+   *         с {@link AccessMode#READ}. Дешёвая проверка для early-exit'а в
+   *         диагностиках, не имеющих смысла без read-only-данных
+   *         (например, для JSON-fallback без accessMode).
+   */
+  public boolean hasAnyReadOnlyMember() {
+    return !readOnlyMemberNames.isEmpty();
+  }
+
+  /**
+   * Дешёвая проверка имени присваиваемого свойства: входит ли оно в число
+   * имён, у которых ХОТЯ БЫ НА ОДНОМ платформенном типе режим доступа =
+   * {@link AccessMode#READ}. Используется как pre-filter — отрицательный
+   * ответ гарантирует, что присваивание точно не нарушает read-only.
+   */
+  public boolean isReadOnlyMemberName(String name) {
+    return name != null && readOnlyMemberNames.contains(name.toLowerCase(Locale.ROOT));
+  }
+
+  /**
+   * Точная проверка: помечен ли member {@code name} на типе {@code typeRef}
+   * как {@link AccessMode#READ}. Регистронезависимая. Возвращает
+   * {@code false}, если тип не зарегистрирован или member на нём
+   * не read-only.
+   */
+  public boolean isReadOnlyMember(TypeRef typeRef, String name) {
+    if (typeRef == null || name == null) {
+      return false;
+    }
+    var names = readOnlyMembersByType.get(typeRef);
+    return names != null && names.contains(name.toLowerCase(Locale.ROOT));
+  }
+
+  /**
+   * Регистрирует read-only члены типа {@code ref} в индексе. Имена
+   * сохраняются в lowercased виде для регистронезависимого поиска.
+   */
+  private void indexReadOnlyMembers(TypeRef ref, Collection<MemberDescriptor> members) {
+    for (var member : members) {
+      if (member.metadata().accessMode() != AccessMode.READ) {
+        continue;
+      }
+      var lc = member.name().toLowerCase(Locale.ROOT);
+      readOnlyMemberNames.add(lc);
+      readOnlyMembersByType
+        .computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet())
+        .add(lc);
+    }
   }
 
   private void addAlias(String name, TypeRef ref) {

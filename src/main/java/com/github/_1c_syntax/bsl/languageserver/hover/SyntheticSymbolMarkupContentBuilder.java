@@ -24,7 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
@@ -41,7 +43,10 @@ import org.springframework.stereotype.Component;
  * сюда они не попадают.
  */
 @Component
+@RequiredArgsConstructor
 public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder<SyntheticSymbol> {
+
+  private final TypeRegistry typeRegistry;
 
   @Override
   public MarkupContent getContent(SyntheticSymbol symbol) {
@@ -58,6 +63,10 @@ public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder
     var description = symbol.getDescription();
     if (description != null && !description.isBlank()) {
       sb.append("\n\n").append(description);
+    }
+
+    if (valueType != null && valueType != TypeRef.UNKNOWN) {
+      CollectionHoverHints.append(sb, valueType, typeRegistry);
     }
 
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());

@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -104,9 +106,57 @@ public final class SignatureHelpProvider {
 
     var help = new SignatureHelp();
     help.setSignatures(signatures);
-    help.setActiveSignature(SignatureSelection.pickIndexByActiveParameter(descriptor.signatures(), activeParameter));
+    help.setActiveSignature(pickActiveSignature(descriptor.signatures(), doCall, activeParameter, documentContext));
     help.setActiveParameter(activeParameter);
     return help;
+  }
+
+  /**
+   * Выбирает {@code activeSignature} по типам уже введённых аргументов
+   * (для перегруженных вариантов одинаковой arity). При неудаче — fallback
+   * к {@link SignatureSelection#pickIndexByActiveParameter}, который
+   * выбирает по позиции курсора.
+   */
+  private int pickActiveSignature(
+    List<SignatureDescriptor> signatures,
+    BSLParser.DoCallContext doCall,
+    int activeParameter,
+    DocumentContext documentContext
+  ) {
+    var argTypes = inferArgTypes(doCall, documentContext);
+    int byTypes = SignatureSelection.pickIndexByTypes(signatures, argTypes);
+    if (byTypes >= 0) {
+      return byTypes;
+    }
+    return SignatureSelection.pickIndexByActiveParameter(signatures, activeParameter);
+  }
+
+  /**
+   * Извлекает типы фактических аргументов из {@code doCall} через
+   * {@link TypeService#inferAtPosition}. Незаполненный аргумент или
+   * аргумент с неизвестным типом → {@link TypeSet#EMPTY}.
+   */
+  private List<TypeSet> inferArgTypes(BSLParser.DoCallContext doCall, DocumentContext documentContext) {
+    var paramList = doCall.callParamList();
+    if (paramList == null) {
+      return List.of();
+    }
+    var args = paramList.callParam();
+    if (args.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<TypeSet>(args.size());
+    for (var arg : args) {
+      var text = arg.getText();
+      if (text == null || text.isBlank()) {
+        result.add(TypeSet.EMPTY);
+        continue;
+      }
+      var start = arg.getStart();
+      var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
+      result.add(typeService.inferAtPosition(documentContext, position));
+    }
+    return result;
   }
 
   private static SignatureHelp emptyHelp() {
@@ -453,6 +503,10 @@ public final class SignatureHelpProvider {
       var typesLabel = renderTypes(p.types());
       if (!typesLabel.isEmpty()) {
         label.append(": ").append(typesLabel);
+      }
+      if (p.optional() && !p.defaultValue().isBlank()) {
+        // Платформенный синтаксис: «ИмяПараметра = ЗначениеПоУмолчанию».
+        label.append(" = ").append(p.defaultValue());
       }
       int end = label.length();
       var info = new ParameterInformation();

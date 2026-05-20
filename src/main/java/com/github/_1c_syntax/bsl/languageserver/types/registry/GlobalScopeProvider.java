@@ -102,6 +102,12 @@ public class GlobalScopeProvider {
    * из bsl-context. Для keyword'ов из JSON-fallback — пустая мапа.
    */
   private final Map<String, LanguageKeywordSnippet> keywordSnippets;
+  /**
+   * lowercased имя BSL-keyword'а (canonical или alias) → описание из
+   * синтакс-помощника. Заполняется при загрузке из bsl-context;
+   * для JSON-fallback — пустая мапа.
+   */
+  private final Map<String, String> keywordDescriptions;
   /** lowercased имя глобального свойства (через registerGlobalProperty) → языковой скоуп. */
   private final Map<String, LanguageScope> globalPropertyScopes = new ConcurrentHashMap<>();
   /**
@@ -132,6 +138,7 @@ public class GlobalScopeProvider {
     this.keywordScopes = loaded.keywordScopes;
     this.platformVariableScopes = loaded.platformVariableScopes;
     this.keywordSnippets = loaded.keywordSnippets;
+    this.keywordDescriptions = loaded.keywordDescriptions;
   }
 
   /**
@@ -146,6 +153,23 @@ public class GlobalScopeProvider {
       return Optional.empty();
     }
     return Optional.ofNullable(keywordSnippets.get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Описание BSL-keyword'а из синтакс-помощника (например, для {@code Истина} —
+   * «Литерал для указания значения типа Булево.»). Поиск регистронезависимый,
+   * по обоим написаниям (ru/en). Если описания нет — {@link Optional#empty()}.
+   * Возвращает пустой Optional также если bsl-context недоступен.
+   */
+  public Optional<String> findKeywordDescription(String name) {
+    if (name == null || name.isBlank()) {
+      return Optional.empty();
+    }
+    var description = keywordDescriptions.get(name.toLowerCase(Locale.ROOT));
+    if (description == null || description.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(description);
   }
 
   /**
@@ -685,6 +709,7 @@ public class GlobalScopeProvider {
     var keywordScopes = new HashMap<String, LanguageScope>();
     var keywordSeen = new HashSet<String>();
     var keywordSnippets = new HashMap<String, LanguageKeywordSnippet>();
+    var keywordDescriptions = new HashMap<String, String>();
     var variables = new ArrayList<PlatformVariable>();
     var variableScopes = new HashMap<String, LanguageScope>();
     var variableSeen = new HashSet<String>();
@@ -743,6 +768,13 @@ public class GlobalScopeProvider {
               keywordSnippets.put(kw.name().getAlias().toLowerCase(Locale.ROOT), kw.snippet());
             }
           }
+          if (added && kw.description() != null && !kw.description().isBlank()) {
+            // Описание по обоим написаниям, для hover'а независимо от языка.
+            keywordDescriptions.put(kw.name().getName().toLowerCase(Locale.ROOT), kw.description());
+            if (kw.name().getAlias() != null && !kw.name().getAlias().isBlank()) {
+              keywordDescriptions.put(kw.name().getAlias().toLowerCase(Locale.ROOT), kw.description());
+            }
+          }
         }
       }
     }
@@ -756,7 +788,8 @@ public class GlobalScopeProvider {
       new ConcurrentHashMap<>(classScopes),
       new ConcurrentHashMap<>(keywordScopes),
       new ConcurrentHashMap<>(variableScopes),
-      Map.copyOf(keywordSnippets)
+      Map.copyOf(keywordSnippets),
+      Map.copyOf(keywordDescriptions)
     );
   }
 
@@ -887,6 +920,9 @@ public class GlobalScopeProvider {
     var snippets = new HashMap<String, LanguageKeywordSnippet>();
     snippets.putAll(a.keywordSnippets);
     b.keywordSnippets.forEach(snippets::putIfAbsent);
+    var descriptions = new HashMap<String, String>();
+    descriptions.putAll(a.keywordDescriptions);
+    b.keywordDescriptions.forEach(descriptions::putIfAbsent);
     return new Loaded(
       Collections.unmodifiableMap(functions),
       List.copyOf(classes),
@@ -896,7 +932,8 @@ public class GlobalScopeProvider {
       new ConcurrentHashMap<>(classScopes),
       new ConcurrentHashMap<>(keywordScopes),
       new ConcurrentHashMap<>(varScopes),
-      Map.copyOf(snippets)
+      Map.copyOf(snippets),
+      Map.copyOf(descriptions)
     );
   }
 
@@ -923,11 +960,11 @@ public class GlobalScopeProvider {
         v.aliases().forEach(a -> varScopes.put(a.toLowerCase(Locale.ROOT), scope));
       }
       return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables,
-        fnScopes, clsScopes, kwScopes, varScopes, Map.of());
+        fnScopes, clsScopes, kwScopes, varScopes, Map.of(), Map.of());
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
       return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of(),
-        Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
+        Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
     }
   }
 
@@ -1017,7 +1054,8 @@ public class GlobalScopeProvider {
     Map<String, LanguageScope> classScopes,
     Map<String, LanguageScope> keywordScopes,
     Map<String, LanguageScope> platformVariableScopes,
-    Map<String, LanguageKeywordSnippet> keywordSnippets
+    Map<String, LanguageKeywordSnippet> keywordSnippets,
+    Map<String, String> keywordDescriptions
   ) {
   }
 

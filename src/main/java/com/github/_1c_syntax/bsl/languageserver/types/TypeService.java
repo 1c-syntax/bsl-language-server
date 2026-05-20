@@ -60,6 +60,9 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import jakarta.annotation.Nullable;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -326,7 +329,10 @@ public class TypeService {
       for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
         if (member.kind() == expectedKind && member.name().equalsIgnoreCase(memberName)) {
           int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
-          return Optional.of(new TypedMember(owner, member, Ranges.create(terminal), argCount));
+          var argTypes = (right instanceof MethodCallNode call)
+            ? inferArgTypes(call, documentContext)
+            : List.<TypeSet>of();
+          return Optional.of(new TypedMember(owner, member, Ranges.create(terminal), argCount, argTypes));
         }
       }
     }
@@ -341,6 +347,36 @@ public class TypeService {
       n--;
     }
     return n;
+  }
+
+  /**
+   * Извлекает типы фактических аргументов вызова через
+   * {@link ExpressionTypeInferencer#infer}. Используется для type-aware
+   * подбора перегруженной сигнатуры (см.
+   * {@link com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection#pickIndexByTypes}).
+   * Trailing skipped argument'ы пропускаются (как и в {@link #countMeaningfulArgs}),
+   * чтобы число типов соответствовало callArgCount.
+   */
+  private List<TypeSet> inferArgTypes(MethodCallNode call, DocumentContext documentContext) {
+    var args = call.arguments();
+    int n = args.size();
+    while (n > 0 && args.get(n - 1) instanceof SkippedCallArgumentNode) {
+      n--;
+    }
+    if (n == 0) {
+      return List.of();
+    }
+    var result = new ArrayList<TypeSet>(n);
+    for (int i = 0; i < n; i++) {
+      var arg = args.get(i);
+      if (arg instanceof SkippedCallArgumentNode) {
+        result.add(TypeSet.EMPTY);
+        continue;
+      }
+      var inferred = inferencer.infer(arg, documentContext);
+      result.add(inferred == null ? TypeSet.EMPTY : inferred);
+    }
+    return result;
   }
 
   private static boolean isAccessorIdentifier(TerminalNode terminal) {
@@ -398,10 +434,24 @@ public class TypeService {
    * @param owner       тип-владелец члена; {@code null} для глобальных функций/свойств
    * @param descriptor  описание члена
    * @param range       диапазон идентификатора-члена под курсором
+   * @param callArgCount число фактических аргументов вызова; {@code -1} для не-вызова
+   * @param argTypes    типы фактических аргументов (по порядку). Используется
+   *                    для type-aware подбора перегрузки сигнатуры
+   *                    ({@link com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection#pickIndexByTypes}).
+   *                    Пустой список для не-вызова или если типы не удалось проинферить.
    */
-  public record TypedMember(@jakarta.annotation.Nullable TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
+  public record TypedMember(
+    @Nullable TypeRef owner,
+    MemberDescriptor descriptor,
+    Range range,
+    int callArgCount,
+    List<TypeSet> argTypes
+  ) {
+    public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
+      this(owner, descriptor, range, callArgCount, List.of());
+    }
     public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range) {
-      this(owner, descriptor, range, -1);
+      this(owner, descriptor, range, -1, List.of());
     }
   }
 

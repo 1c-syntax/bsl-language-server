@@ -26,11 +26,14 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import jakarta.annotation.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
+
+import java.util.List;
 
 /**
  * Symbol для члена платформенного / конфигурационного типа или для
@@ -52,6 +55,12 @@ public final class PlatformMemberSymbol implements Symbol {
   private final MemberDescriptor descriptor;
   /** Число фактических аргументов в текущем вызове; {@code -1} если не вызов. */
   private final int callArgCount;
+  /**
+   * Типы фактических аргументов в порядке вызова, для type-aware подбора
+   * перегруженной сигнатуры в hover'е. Пустой список — для не-вызова или
+   * если типы не удалось проинферить.
+   */
+  private final List<TypeSet> argTypes;
 
   @Override
   public SymbolKind getSymbolKind() {
