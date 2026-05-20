@@ -41,23 +41,84 @@ public abstract class AbstractServerContextAwareTest {
 
   protected ServerContext context;
 
+  /**
+   * Включается изнутри {@link #initServerContextOnce(Path)} и отключает
+   * per-method очистку workspace в {@link #cleanupWorkspace()} (и сброс поля
+   * {@link #context} в {@link #resetContext()}). Workspace, инициализированный
+   * один раз, переживает между методами класса; очистка между тест-классами
+   * остаётся через
+   * {@link com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass}
+   * (его {@code beforeTestClass}/{@code afterTestClass} зовёт liteCleanup).
+   * <p>
+   * Подкласс с {@code initServerContextOnce}-сценарием обязан:
+   * <ul>
+   *   <li>звать {@link #initServerContextOnce(Path)} в {@code @BeforeEach} (флаг
+   *       выставляется автоматически);</li>
+   *   <li>не мутировать workspace state между тест-методами (read-only тесты).</li>
+   * </ul>
+   * Уместно для тестов с тяжёлой populateContext-фикстурой (например,
+   * {@code PATH_TO_METADATA}): per-method recreate workspace стоит ~1.5s
+   * из-за повторной регистрации workspace-scoped провайдеров типов
+   * ({@code ConfigurationTypesProvider}, {@code ConfigurationModuleMembersProvider} и др.).
+   * <p>
+   * JUnit 5 default lifecycle (PER_METHOD): новая инстанция тест-класса на
+   * каждый метод. Поле устанавливается в {@code @BeforeEach} (child phase) и
+   * читается в {@code @AfterEach} той же инстанции, поэтому per-method-lifecycle
+   * не мешает.
+   */
+  protected boolean cleanupAfterClass = false;
+
   @BeforeEach
   void resetContext() {
-    context = null;
+    if (!cleanupAfterClass) {
+      context = null;
+    }
   }
 
   @AfterEach
   void cleanupWorkspace() {
-    serverContextProvider.clear();
+    if (!cleanupAfterClass) {
+      serverContextProvider.clear();
+    }
   }
 
   /**
    * Initialize empty server context without metadata.
+   * <p>
+   * Возвращает {@link #cleanupAfterClass} в {@code false}: явное пересоздание
+   * workspace говорит, что подкласс хочет per-method-семантику, и парные
+   * {@code @AfterEach}/{@code @BeforeEach}-cleanup'ы должны снова работать.
    */
   protected void initServerContext() {
+    cleanupAfterClass = false;
     serverContextProvider.clear();
     context = serverContextProvider.addWorkspace(EMPTY_WORKSPACE_URI);
     WorkspaceContextHolder.set(context.getWorkspaceUri());
+  }
+
+  /**
+   * Идемпотентный аналог {@link #initServerContext(Path)}: если workspace уже
+   * зарегистрирован в {@link ServerContextProvider}, переиспользует его без
+   * пере-populate'а. Включает флаг {@link #cleanupAfterClass} для текущей
+   * инстанции, чтобы {@code @AfterEach} не сбросил workspace.
+   * Использовать в {@code @BeforeEach} подкласса.
+   * <p>
+   * Проверка идёт по URI workspace в провайдере, а не по полю {@link #context}:
+   * JUnit 5 по умолчанию (LIFECYCLE.PER_METHOD) создаёт новый instance
+   * тест-класса на каждый метод, поэтому поле всегда null на новой инстанции,
+   * а state провайдера — singleton-bean — переживает между методами.
+   */
+  protected void initServerContextOnce(Path configurationRoot) {
+    var uri = Absolute.uri(configurationRoot.toUri());
+    var existing = serverContextProvider.getServerContext(uri);
+    if (existing.isPresent()) {
+      context = existing.get();
+      WorkspaceContextHolder.set(uri);
+    } else {
+      initServerContext(configurationRoot);
+    }
+    // Включаем флаг ПОСЛЕ initServerContext (он его сбрасывает в false).
+    cleanupAfterClass = true;
   }
 
   protected void initServerContext(String path) {
@@ -75,6 +136,7 @@ public abstract class AbstractServerContextAwareTest {
   }
 
   protected void initServerContext(Path configurationRoot, boolean populate) {
+    cleanupAfterClass = false;
     serverContextProvider.clear();
     var uri = configurationRoot.toUri();
     context = serverContextProvider.addWorkspace(uri);

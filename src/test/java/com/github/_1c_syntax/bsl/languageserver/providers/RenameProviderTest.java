@@ -50,7 +50,7 @@ class RenameProviderTest extends AbstractServerContextAwareTest {
 
   @BeforeEach
   void prepareServerContext() {
-    initServerContext(Path.of(PATH_TO_METADATA));
+    initServerContextOnce(Path.of(PATH_TO_METADATA));
   }
 
   @Test
