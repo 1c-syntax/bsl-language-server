@@ -42,6 +42,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
@@ -139,7 +140,7 @@ public class GlobalScopeProvider {
    *                         (OS-часть всегда из ресурса). Если платформа недоступна —
    *                         fallback на JSON-ресурс.
    */
-  public GlobalScopeProvider(BslContextHolder bslContextHolder) {
+  public GlobalScopeProvider(BslContextHolder bslContextHolder, GlobalSymbolScope globalSymbolScope) {
     var loaded = load(bslContextHolder);
     this.functions = loaded.functions;
     this.classes = loaded.classes;
@@ -152,6 +153,7 @@ public class GlobalScopeProvider {
     this.platformVariableScopes = loaded.platformVariableScopes;
     this.keywordSnippets = loaded.keywordSnippets;
     this.keywordDescriptions = loaded.keywordDescriptions;
+    this.globalSymbolScope = globalSymbolScope;
   }
 
   /**
@@ -199,23 +201,23 @@ public class GlobalScopeProvider {
     return Optional.of(localized);
   }
 
-  /**
-   * Параллельный Symbol-фронт. Заполняется лениво при первом обращении к
-   * глобальной области (см. {@link #ensureGlobalsPublished()}), потому что
-   * @PostConstruct на workspace-scoped bean внутри scope.get() вызывает
-   * рекурсивное создание других workspace-scoped beans (GlobalSymbolScope)
-   * и WorkspaceScope падает с "Recursive update". См. plan-symbol-front.md.
-   */
-  @Autowired(required = false)
-  private @Nullable GlobalSymbolScope globalSymbolScope;
+  /** Параллельный Symbol-фронт. Заполняется лениво в {@link #ensureGlobalsPublished()}. */
+  private final GlobalSymbolScope globalSymbolScope;
 
   /**
    * Источник данных о библиотеках OneScript (lib.config + oscript_modules).
    * Используется для фильтрации видимости symbol'ов из библиотек в BSL-файлах
    * и для согласования с {@code #Использовать &lt;libName&gt;}.
+   * <p>
+   * Field-injection с {@code required=false} здесь — обход циклической
+   * зависимости: {@code OScriptLibraryIndex} → {@code OScriptModuleMembersProvider}
+   * → {@code GlobalScopeProvider} (для регистрации library-классов/модулей).
+   * Корректный фикс — перевести регистрацию на ApplicationEvent'ы, чтобы
+   * {@code OScriptModuleMembersProvider} не зависел от
+   * {@code GlobalScopeProvider}; это отдельная задача.
    */
   @Autowired(required = false)
-  private com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex oScriptLibraryIndex;
+  private @Nullable OScriptLibraryIndex oScriptLibraryIndex;
 
   private final AtomicBoolean globalsPublished = new AtomicBoolean(false);
 
@@ -224,9 +226,6 @@ public class GlobalScopeProvider {
    */
   public Optional<Symbol> findGlobal(String name) {
     ensureGlobalsPublished();
-    if (globalSymbolScope == null) {
-      return Optional.empty();
-    }
     return globalSymbolScope.findSymbol(name);
   }
 
@@ -275,25 +274,16 @@ public class GlobalScopeProvider {
     if (findGlobal(name, fileType).isEmpty()) {
       return Optional.empty();
     }
-    if (globalSymbolScope == null) {
-      return Optional.empty();
-    }
     return globalSymbolScope.findEntry(name);
   }
 
   private void ensureGlobalsPublished() {
-    if (globalSymbolScope == null) {
-      return;
-    }
     if (globalsPublished.compareAndSet(false, true)) {
       publishGlobals();
     }
   }
 
   private void publishGlobals() {
-    if (globalSymbolScope == null) {
-      return;
-    }
     // Регистрируем глобальные функции в GlobalSymbolScope как synthetic-методы.
     var alreadyRegistered = new HashSet<MemberDescriptor>();
     for (var entry : functions.entrySet()) {
@@ -362,7 +352,7 @@ public class GlobalScopeProvider {
    * @return имена платформенных глобальных свойств (canonical, без алиасов).
    */
   public List<String> getGlobalPropertyNames() {
-    return getGlobalPropertyNames(null);
+    return platformVariables.stream().map(PlatformVariable::name).toList();
   }
 
   /**
@@ -391,7 +381,7 @@ public class GlobalScopeProvider {
    * @return имена системных перечислений (canonical, без алиасов).
    */
   public List<String> getGlobalEnumNames() {
-    return getGlobalEnumNames(null);
+    return platformEnums.stream().map(PlatformVariable::name).toList();
   }
 
   /**
@@ -531,9 +521,6 @@ public class GlobalScopeProvider {
     var canonical = ref.qualifiedName();
     var symbol = new SyntheticSymbol(canonical, syntheticKind,
       description, ref, null, sourceSymbol);
-    if (globalSymbolScope == null) {
-      return;
-    }
     var effectiveScope = scope;
     for (var name : names) {
       if (name == null || name.isBlank()) {
@@ -559,9 +546,6 @@ public class GlobalScopeProvider {
     ensureGlobalsPublished();
     var symbol = new SyntheticSymbol(ref.qualifiedName(), SyntheticKind.TYPE_NAME,
       description, ref);
-    if (globalSymbolScope == null) {
-      return;
-    }
     var effectiveScope = scope;
     for (var name : names) {
       if (name == null || name.isBlank()) {
@@ -586,9 +570,6 @@ public class GlobalScopeProvider {
    * попадают — они выдаются через {@link #getClasses()}.
    */
   public List<SyntheticSymbol> getGlobalContexts() {
-    if (globalSymbolScope == null) {
-      return List.of();
-    }
     return globalSymbolScope.streamSymbols()
       .filter(SyntheticSymbol.class::isInstance)
       .map(SyntheticSymbol.class::cast)
@@ -698,7 +679,7 @@ public class GlobalScopeProvider {
    * Источник {@link TypeRef} и {@code libOrigin} — {@code OScriptLibraryIndex}.
    */
   public void registerLibraryModule(String name, TypeRef ref) {
-    if (name == null || name.isBlank() || ref == null || globalSymbolScope == null) {
+    if (name == null || name.isBlank() || ref == null) {
       return;
     }
     ensureGlobalsPublished();
@@ -713,7 +694,7 @@ public class GlobalScopeProvider {
    * {@code OScriptModuleMembersProvider}).
    */
   public void registerLibraryClass(String name, TypeRef classRef) {
-    if (name == null || name.isBlank() || globalSymbolScope == null) {
+    if (name == null || name.isBlank()) {
       return;
     }
     ensureGlobalsPublished();
@@ -737,7 +718,7 @@ public class GlobalScopeProvider {
   }
 
   private void unregisterLibrarySymbol(String name) {
-    if (name == null || name.isBlank() || globalSymbolScope == null) {
+    if (name == null || name.isBlank()) {
       return;
     }
     globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);

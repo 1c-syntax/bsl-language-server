@@ -45,7 +45,6 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -78,13 +77,8 @@ import java.util.function.Supplier;
 public class TypeRegistry {
 
   private final List<PlatformTypesProvider> platformProviders;
-  /**
-   * Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы.
-   * Опционален, чтобы существующие unit-тесты, собирающие TypeRegistry вручную
-   * без Spring, продолжали работать.
-   */
-  @Autowired(required = false)
-  private GlobalScopeProvider globalScopeProvider;
+  /** Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы. */
+  private final GlobalScopeProvider globalScopeProvider;
 
   /** Интернированные TypeRef по канонической форме (kind + lowercased name). */
   private final Map<TypeRef, TypeRef> internedRefs = new ConcurrentHashMap<>();
@@ -552,9 +546,6 @@ public class TypeRegistry {
    */
   public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope, SyntheticKind syntheticKind,
                                        Supplier<Symbol> sourceSymbol) {
-    if (globalScopeProvider == null) {
-      return;
-    }
     var names = new java.util.LinkedHashSet<String>();
     names.add(ref.qualifiedName());
     aliasIndex.forEach((alias, target) -> {
@@ -701,9 +692,6 @@ public class TypeRegistry {
    * из {@link #registerPack} при непустых {@code constructors}.
    */
   private void registerAsPlatformClass(TypeRef ref, LanguageScope scope) {
-    if (globalScopeProvider == null) {
-      return;
-    }
     var names = new java.util.LinkedHashSet<String>();
     names.add(ref.qualifiedName());
     aliasIndex.forEach((alias, target) -> {

@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.context.platform.PlatformContextType;
 import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
 import com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword;
 import com.github._1c_syntax.bsl.context.platform.internal.PlatformContextStorage;
+import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ class GlobalScopeProviderBslContextTest {
       .externalConnectionModuleEvents(Collections.emptyList())
       .build();
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)), new GlobalSymbolScope());
 
     assertThat(scope.findFunction("Сообщить")).isPresent();
     assertThat(scope.findFunction("Message")).isPresent();
@@ -93,7 +94,7 @@ class GlobalScopeProviderBslContextTest {
     var array = type("Массив", "Array");
     var table = type("ТаблицаЗначений", "ValueTable");
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(array, table)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(array, table)), new GlobalSymbolScope());
 
     assertThat(scope.getClasses()).contains("Массив", "Array", "ТаблицаЗначений", "ValueTable");
   }
@@ -105,7 +106,7 @@ class GlobalScopeProviderBslContextTest {
       "CatalogRef.<Catalog name>");
     var plain = type("Массив", "Array");
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(generic, plain)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(generic, plain)), new GlobalSymbolScope());
 
     assertThat(scope.getClasses()).contains("Массив", "Array");
     assertThat(scope.getClasses()).doesNotContain("СправочникСсылка.<Имя справочника>");
@@ -125,7 +126,7 @@ class GlobalScopeProviderBslContextTest {
     var pre = keyword("Область", "Region", LanguageKeywordCategory.PREPROCESSOR_INSTRUCTION, "", "");
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(
-      ifKw, trueKw, procKw, pragma, annotation, pre)));
+      ifKw, trueKw, procKw, pragma, annotation, pre)), new GlobalSymbolScope());
 
     assertThat(scope.getKeywords()).contains("Если", "If", "Истина", "True", "Процедура", "Procedure");
     assertThat(scope.getKeywords()).doesNotContain("НаКлиенте", "Перед", "Область");
@@ -142,7 +143,7 @@ class GlobalScopeProviderBslContextTest {
       .snippet(LanguageKeywordSnippet.EMPTY)
       .build();
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)), new GlobalSymbolScope());
 
     assertThat(scope.findKeywordDescription("Если"))
       .as("description у keyword'а должно проброситься из bsl-context'а")
@@ -156,7 +157,7 @@ class GlobalScopeProviderBslContextTest {
   void keywordSnippetIsBilingualAndAccessibleByEitherName() {
     var ifKw = keyword("Если", "If", LanguageKeywordCategory.STATEMENT,
       "Если <?> Тогда\nКонецЕсли;", "If <?> Then\nEndIf;");
-    var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)), new GlobalSymbolScope());
 
     var byRu = scope.findKeywordSnippet("Если").orElseThrow();
     assertThat(byRu.ru()).isEqualTo("Если <?> Тогда\nКонецЕсли;");
@@ -177,7 +178,7 @@ class GlobalScopeProviderBslContextTest {
       ))
       .build();
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(encoding)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(encoding)), new GlobalSymbolScope());
 
     assertThat(scope.getGlobalEnumNames()).contains("КодировкаТекста");
     assertThat(scope.getGlobalPropertyNames()).doesNotContain("КодировкаТекста");
@@ -207,7 +208,7 @@ class GlobalScopeProviderBslContextTest {
       .externalConnectionModuleEvents(Collections.emptyList())
       .build();
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(catalogsManager, globalContext)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(catalogsManager, globalContext)), new GlobalSymbolScope());
 
     assertThat(scope.getGlobalPropertyNames()).contains("Справочники");
     // Тип «Справочники» — это СправочникиМенеджер (для dot-completion'а).
@@ -237,7 +238,7 @@ class GlobalScopeProviderBslContextTest {
       .externalConnectionModuleEvents(Collections.emptyList())
       .build();
 
-    var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)));
+    var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)), new GlobalSymbolScope());
     // Generic-placeholder отфильтрован; в scope остаются только настоящие глобалы из fallback-JSON.
     assertThat(scope.getGlobalPropertyNames()).isNotEmpty().doesNotContain("<Имя справочника>");
   }
