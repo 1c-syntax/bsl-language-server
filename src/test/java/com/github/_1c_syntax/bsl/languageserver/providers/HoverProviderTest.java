@@ -173,4 +173,47 @@ class HoverProviderTest {
       .isPresent();
   }
 
+  @Test
+  void hoverOnIdentifierWithoutReferenceReturnsEmpty() {
+    // given — идентификатор, который не зарегистрирован нигде.
+    var content = "СовершенноНеизвестныйСимволXYZ;\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 5));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then — ни keyword-hover, ни reference-hover не сработали.
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnPunctuationReturnsEmpty() {
+    // given — курсор на точке с запятой.
+    var content = "А = 1;\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 6));  // на ';'
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnEmptyDocumentReturnsEmpty() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("");
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 0));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(hover).isEmpty();
+  }
 }
