@@ -238,7 +238,8 @@ class GlobalScopeProviderBslContextTest {
       .build();
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)));
-    assertThat(scope.getGlobalPropertyNames()).doesNotContain("<Имя справочника>");
+    // Generic-placeholder отфильтрован; в scope остаются только настоящие глобалы из fallback-JSON.
+    assertThat(scope.getGlobalPropertyNames()).isNotEmpty().doesNotContain("<Имя справочника>");
   }
 
   // --- builders ---

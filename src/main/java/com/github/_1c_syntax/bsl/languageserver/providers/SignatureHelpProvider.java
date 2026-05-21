@@ -47,6 +47,7 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -349,6 +350,7 @@ public final class SignatureHelpProvider {
    * Находит последний токен внутри {@code receiver}, чей tokenIndex меньше tokenIndex {@code before}.
    * Используется чтобы получить позицию конца «приёмника» перед DOT текущего accessCall.
    */
+  @Nullable
   private static Token findTokenBefore(ParserRuleContext receiver, Token before) {
     if (receiver.getStart() == null || before == null) {
       return null;
@@ -356,6 +358,7 @@ public final class SignatureHelpProvider {
     return findTokenBeforeRec(receiver, before.getTokenIndex());
   }
 
+  @Nullable
   private static Token findTokenBeforeRec(ParseTree node, int limit) {
     if (node instanceof TerminalNode tn) {
       var token = tn.getSymbol();
@@ -371,6 +374,7 @@ public final class SignatureHelpProvider {
     return best;
   }
 
+  @Nullable
   private static ParserRuleContext findReceiverExpression(BSLParser.MethodCallContext mc) {
     // accessCall — родитель methodCall. Родитель accessCall — modifier (внутри complexIdentifier)
     // ИЛИ напрямую callStatement (для statements типа MyMod.method(...);).
@@ -388,6 +392,7 @@ public final class SignatureHelpProvider {
    * между {@code IDENTIFIER} ресивера и текущим methodCall), то пробуем
    * зарезолвить его как имя OneScript library-модуля.
    */
+  @Nullable
   private TypeRef findLibraryModuleReceiver(BSLParser.MethodCallContext mc, ParserRuleContext receiver) {
     TerminalNode idNode;
     List<? extends BSLParser.ModifierContext> modifiers;

@@ -163,6 +163,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     }
   }
 
+  @Nullable
   private TypeRef handleProperty(List<SemanticTokenEntry> entries,
                                  BSLParser.AccessPropertyContext accessProperty,
                                  TypeRef ownerType, FileType fileType) {
@@ -185,6 +186,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     return returnType;
   }
 
+  @Nullable
   private TypeRef handleCall(List<SemanticTokenEntry> entries,
                              BSLParser.AccessCallContext accessCall,
                              TypeRef ownerType, FileType fileType) {

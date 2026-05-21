@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -723,6 +724,7 @@ public class TypeRegistry {
       getDescription(ref, fileTypeOf(scope)));
   }
 
+  @Nullable
   private static FileType fileTypeOf(LanguageScope scope) {
     if (scope == null || scope == LanguageScope.BOTH) {
       return null;

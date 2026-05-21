@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -338,6 +339,7 @@ public class PlatformMemberHoverBuilder {
       .collect(Collectors.joining(" | "));
   }
 
+  @Nullable
   private static TypeRef effectiveReturnType(MemberDescriptor descriptor) {
     if (descriptor.returnType() != null
       && !descriptor.returnType().qualifiedName().isEmpty()) {

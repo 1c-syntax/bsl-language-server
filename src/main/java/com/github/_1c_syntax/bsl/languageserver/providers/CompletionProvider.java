@@ -49,6 +49,7 @@ import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -286,6 +287,7 @@ public final class CompletionProvider {
     return toCompletionItems(filtered);
   }
 
+  @Nullable
   private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {
     try {
       var lines = documentContext.getContent().split("\\R", -1);
@@ -470,6 +472,7 @@ public final class CompletionProvider {
     return head.endsWith("новый") || head.endsWith("new");
   }
 
+  @Nullable
   private static LineInfo currentLineInfo(DocumentContext documentContext, Position position) {
     try {
       var lines = documentContext.getContent().split("\\R", -1);

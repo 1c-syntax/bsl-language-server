@@ -46,6 +46,7 @@ import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -214,6 +215,7 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
    * </ul>
    * Возвращает {@code null} для не подходящих контекстов.
    */
+  @Nullable
   private static Position methodNamePosition(BSLParser.DoCallContext doCall) {
     var parent = doCall.getParent();
     if (parent instanceof BSLParser.GlobalMethodCallContext gmc) {
@@ -228,7 +230,11 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
     return null;
   }
 
-  private static Position idPosition(TerminalNode terminal) {
+  @Nullable
+  private static Position idPosition(@Nullable TerminalNode terminal) {
+    if (terminal == null) {
+      return null;
+    }
     var token = terminal.getSymbol();
     // Внутрь токена, чтобы findTerminalNodeContainsPosition попал в IDENTIFIER.
     var col = token.getCharPositionInLine();
@@ -246,6 +252,7 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
    * перегруженных методов с одинаковой arity (например,
    * {@code ТЗ.Скопировать(Массив, …)} vs {@code ТЗ.Скопировать(Структура, …)}).
    */
+  @Nullable
   private static SignatureDescriptor pickSignatureByTypes(
     List<SignatureDescriptor> signatures, int callArgCount, List<TypeSet> argTypes
   ) {

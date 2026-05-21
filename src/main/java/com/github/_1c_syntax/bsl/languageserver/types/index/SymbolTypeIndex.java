@@ -140,6 +140,7 @@ public class SymbolTypeIndex {
    * @return TypeSet, если все сегменты успешно разрешены; {@code null} при
    *         неудаче (вызывающий может попробовать более короткий префикс).
    */
+  @Nullable
   private TypeSet walkMembers(TypeRef headRef, String[] parts, int startIndex, FileType fileType) {
     TypeRef current = headRef;
     MemberDescriptor lastMethod = null;

@@ -142,6 +142,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return ctx -> EnAttachments.EMPTY;
   }
 
+  @Nullable
   private static TypeDecl toTypeDecl(Context context, Function<Object, EnAttachments> enLookup) {
     var kind = mapKind(context);
     if (kind == null) {

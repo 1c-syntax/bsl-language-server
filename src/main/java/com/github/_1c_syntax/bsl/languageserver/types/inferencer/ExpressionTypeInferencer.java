@@ -61,6 +61,7 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -392,6 +393,7 @@ public class ExpressionTypeInferencer {
     return result;
   }
 
+  @Nullable
   private static String extractStringLiteral(BslExpression node) {
     if (node == null) {
       return null;
@@ -435,6 +437,7 @@ public class ExpressionTypeInferencer {
       || lower.equals("фиксированноесоответствие") || lower.equals("fixedmap");
   }
 
+  @Nullable
   private static String extractTypeName(ConstructorCallNode constructor) {
     var ast = constructor.getTypeName().getRepresentingAst();
     if (ast == null) {
@@ -684,6 +687,7 @@ public class ExpressionTypeInferencer {
    * {@code elementSet} (то есть «передать» накопленные колонки/поля строки).
    * Иначе — обычный {@link TypeSet#of(TypeRef)}.
    */
+  @Nullable
   private static TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
     if (!elementSet.refs().contains(ret)) {
       return TypeSet.of(ret);
@@ -695,6 +699,7 @@ public class ExpressionTypeInferencer {
     return enriched;
   }
 
+  @Nullable
   private static String memberNameOf(ParseTree ast) {
     if (ast == null) {
       return null;
@@ -1024,6 +1029,7 @@ public class ExpressionTypeInferencer {
    * если у callStatement ровно один accessProperty-модификатор с именем
    * {@code Колонки}/{@code Columns} и далее идёт accessCall.
    */
+  @Nullable
   private static String extractColumnsAddReceiverName(BSLParser.CallStatementContext ctx) {
     var identifier = ctx.IDENTIFIER();
     if (identifier == null) {
@@ -1047,6 +1053,7 @@ public class ExpressionTypeInferencer {
     return identifier.getText();
   }
 
+  @Nullable
   private static String extractInsertReceiverName(BSLParser.CallStatementContext ctx) {
     var identifier = ctx.IDENTIFIER();
     if (identifier == null) {
@@ -1071,6 +1078,7 @@ public class ExpressionTypeInferencer {
     return "Вставить".equalsIgnoreCase(text) || "Insert".equalsIgnoreCase(text);
   }
 
+  @Nullable
   private static String extractStringLiteralText(BSLParser.ExpressionContext expr) {
     if (expr == null) {
       return null;
@@ -1085,7 +1093,7 @@ public class ExpressionTypeInferencer {
     return text.substring(1, text.length() - 1);
   }
 
-  private static BSLParser.FileContext safeGetOwnerAst(DocumentContext owner) {
+  private static BSLParser.@Nullable FileContext safeGetOwnerAst(DocumentContext owner) {
     try {
       return owner.getAst();
     } catch (NullPointerException e) {
@@ -1217,6 +1225,7 @@ public class ExpressionTypeInferencer {
    *         либо {@code null} если такого метода нет (или ссылка
    *         указывает на cross-module — пока не поддерживается).
    */
+  @Nullable
   private static MethodSymbol findLocalMethod(DocumentContext documentContext, String methodName) {
     if (methodName == null || methodName.contains(".")) {
       return null;

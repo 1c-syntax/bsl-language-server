@@ -202,7 +202,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     var ref = typeRegistry.resolve("ДокументСсылка.Документ1");
     assertThat(ref).isPresent();
     var names = typeRegistry.getMembers(ref.get()).stream().map(m -> m.name()).toList();
-    assertThat(names).noneMatch(n -> n.startsWith("<") && n.endsWith(">"));
+    assertThat(names).isNotEmpty().noneMatch(n -> n.startsWith("<") && n.endsWith(">"));
   }
 
   @Test
@@ -260,7 +260,7 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     var catRef = typeRegistry.resolve("СправочникСсылка.Справочник1");
     assertThat(catRef).isPresent();
     var catMembers = typeRegistry.getMembers(catRef.get()).stream().map(m -> m.name()).toList();
-    assertThat(catMembers).doesNotContain("ОбщийРеквизит1");
+    assertThat(catMembers).isNotEmpty().doesNotContain("ОбщийРеквизит1");
   }
 
   @Test

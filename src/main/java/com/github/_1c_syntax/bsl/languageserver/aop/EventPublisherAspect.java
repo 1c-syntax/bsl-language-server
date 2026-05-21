@@ -57,6 +57,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Аспект подсистемы событий.
@@ -92,7 +93,8 @@ public class EventPublisherAspect {
    * Иммутабельный снимок зарегистрированных контекстов для безлоковой рассылки событий.
    * Перестраивается при каждом register/unregister.
    */
-  private volatile ApplicationContext[] snapshot = new ApplicationContext[0];
+  private final AtomicReference<ApplicationContext[]> snapshot =
+    new AtomicReference<>(new ApplicationContext[0]);
 
   /**
    * Регистрирует Spring-контекст как источник событий.
@@ -102,7 +104,7 @@ public class EventPublisherAspect {
    */
   synchronized void register(ApplicationContext ctx) {
     registeredContexts.add(ctx);
-    snapshot = registeredContexts.toArray(new ApplicationContext[0]);
+    snapshot.set(registeredContexts.toArray(new ApplicationContext[0]));
   }
 
   /**
@@ -113,7 +115,7 @@ public class EventPublisherAspect {
    */
   synchronized void unregister(ApplicationContext ctx) {
     registeredContexts.remove(ctx);
-    snapshot = registeredContexts.toArray(new ApplicationContext[0]);
+    snapshot.set(registeredContexts.toArray(new ApplicationContext[0]));
   }
 
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
@@ -200,7 +202,7 @@ public class EventPublisherAspect {
   }
 
   private void publishEvent(ApplicationEvent event) {
-    var contexts = snapshot;
+    var contexts = snapshot.get();
     if (contexts.length == 0) {
       LOGGER.warn("Trying to send event in not active event publisher.");
       return;

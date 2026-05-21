@@ -41,6 +41,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CompletionProviderTest extends AbstractServerContextAwareTest {
@@ -853,11 +855,14 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     params.setPosition(new Position(0, 10));
 
     var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var instanceMemberLabels = items.stream()
+      .map(CompletionItem::getLabel)
+      .filter(Set.of("Вставить", "Insert", "Удалить", "Delete")::contains)
+      .toList();
 
-    assertThat(items)
+    assertThat(instanceMemberLabels)
       .as("bare class name should not produce instance-member completion")
-      .extracting(CompletionItem::getLabel)
-      .doesNotContain("Вставить", "Insert", "Удалить", "Delete");
+      .isEmpty();
   }
 
   @Test

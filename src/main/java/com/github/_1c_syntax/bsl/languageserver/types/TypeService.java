@@ -398,6 +398,7 @@ public class TypeService {
     return false;
   }
 
+  @Nullable
   private static BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {
     if (root instanceof BinaryOperationNode binary
       && binary.getOperator() == BslOperator.DEREFERENCE
