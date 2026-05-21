@@ -201,6 +201,77 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void getGlobalContextsReturnsRegisteredValueSymbolsOnly() {
+    // given — name символа = canonical qualifiedName ref'а; aliases — это
+    // отдельный регистр в GlobalSymbolScope.
+    var propRef = new TypeRef(TypeKind.PLATFORM, "ОчередьСообщений");
+    var classRef = new TypeRef(TypeKind.PLATFORM, "ОчередьСтек");
+
+    // when
+    scope.registerGlobalProperty(propRef, List.of("МояОчередь"));
+    scope.registerPlatformClass(classRef, List.of("ОчередьСтек"), LanguageScope.BOTH, "");
+
+    // then — Synthetic.getName() возвращает canonical типа.
+    var contexts = scope.getGlobalContexts();
+    assertThat(contexts).extracting(SyntheticSymbol::getName).contains("ОчередьСообщений");
+    assertThat(contexts).extracting(SyntheticSymbol::getName)
+      .as("имена классов (TYPE_NAME) не попадают в global contexts")
+      .doesNotContain("ОчередьСтек");
+  }
+
+  @Test
+  void getGlobalContextNamesProjectsContextSymbolsToNames() {
+    // given
+    scope.registerGlobalProperty(
+      new TypeRef(TypeKind.PLATFORM, "МойУникальныйТипПровайдер"), List.of("МойГлобал"));
+
+    // when
+    var names = scope.getGlobalContextNames();
+
+    // then
+    assertThat(names).contains("МойУникальныйТипПровайдер");
+  }
+
+  @Test
+  void getGlobalContextsFilteredByFileTypeRespectsScope() {
+    // given
+    var ref = new TypeRef(TypeKind.PLATFORM, "СОПТ_BslOnly");
+    scope.registerGlobalProperty(ref, List.of("СОПТ_BslOnly"), LanguageScope.BSL);
+
+    // when
+    var bslVisible = scope.getGlobalContexts(FileType.BSL);
+    var osVisible = scope.getGlobalContexts(FileType.OS);
+
+    // then
+    assertThat(bslVisible).extracting(SyntheticSymbol::getName).contains("СОПТ_BslOnly");
+    assertThat(osVisible).extracting(SyntheticSymbol::getName).doesNotContain("СОПТ_BslOnly");
+  }
+
+  @Test
+  void findGlobalContextResolvesToValueType() {
+    // given
+    var ref = new TypeRef(TypeKind.PLATFORM, "СправочникиМенеджер");
+    scope.registerGlobalProperty(ref, List.of("Справочники"));
+
+    // when
+    var resolved = scope.findGlobalContext("Справочники", FileType.BSL);
+
+    // then
+    assertThat(resolved).contains(ref);
+  }
+
+  @Test
+  void findGlobalContextEmptyWhenScopeMismatch() {
+    // given — символ зарегистрирован только в OS.
+    var ref = new TypeRef(TypeKind.PLATFORM, "T");
+    scope.registerGlobalProperty(ref, List.of("OS_Only"), LanguageScope.OS);
+
+    // when / then
+    assertThat(scope.findGlobalContext("OS_Only", FileType.BSL)).isEmpty();
+    assertThat(scope.findGlobalContext("OS_Only", FileType.OS)).contains(ref);
+  }
+
+  @Test
   void registerConfigurationQualifiedNameStoresAndExposes() {
     // when
     scope.registerConfigurationQualifiedName("Документы.Заказ");
