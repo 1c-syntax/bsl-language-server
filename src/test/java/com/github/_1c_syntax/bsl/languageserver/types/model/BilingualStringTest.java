@@ -30,7 +30,10 @@ class BilingualStringTest {
 
   @Test
   void canonicalConstructorNormalizesNullsToEmptyStrings() {
+    // given / when
     var bs = new BilingualString(null, null);
+
+    // then
     assertThat(bs.ru()).isEmpty();
     assertThat(bs.en()).isEmpty();
     assertThat(bs.isEmpty()).isTrue();
@@ -38,6 +41,7 @@ class BilingualStringTest {
 
   @Test
   void emptySingletonIsReusedFromBothNullsAndEmpties() {
+    // given / when / then
     assertThat(BilingualString.of((String) null)).isSameAs(BilingualString.EMPTY);
     assertThat(BilingualString.of("")).isSameAs(BilingualString.EMPTY);
     assertThat(BilingualString.of(null, null)).isSameAs(BilingualString.EMPTY);
@@ -46,7 +50,10 @@ class BilingualStringTest {
 
   @Test
   void singleLocaleOfPutsValueIntoRuAndKeepsEnEmpty() {
+    // given / when
     var bs = BilingualString.of("Истина");
+
+    // then
     assertThat(bs.ru()).isEqualTo("Истина");
     assertThat(bs.en()).isEmpty();
     assertThat(bs.isEmpty()).isFalse();
@@ -54,27 +61,35 @@ class BilingualStringTest {
 
   @Test
   void forLanguageReturnsRequestedLocaleWhenBothAreNonEmpty() {
+    // given
     var bs = BilingualString.of("Истина", "True");
+
+    // when / then
     assertThat(bs.forLanguage(Language.RU)).isEqualTo("Истина");
     assertThat(bs.forLanguage(Language.EN)).isEqualTo("True");
   }
 
   @Test
   void forLanguageFallsBackToOtherLocaleWhenRequestedIsEmpty() {
+    // given
     var onlyRu = BilingualString.of("Истина", "");
     var onlyEn = BilingualString.of("", "True");
+
+    // when / then
     assertThat(onlyRu.forLanguage(Language.EN)).isEqualTo("Истина");
     assertThat(onlyEn.forLanguage(Language.RU)).isEqualTo("True");
   }
 
   @Test
   void forLanguageReturnsEmptyWhenBothLocalesAreEmpty() {
+    // given / when / then
     assertThat(BilingualString.EMPTY.forLanguage(Language.RU)).isEmpty();
     assertThat(BilingualString.EMPTY.forLanguage(Language.EN)).isEmpty();
   }
 
   @Test
   void primaryPrefersRuOverEn() {
+    // given / when / then
     assertThat(BilingualString.of("Истина", "True").primary()).isEqualTo("Истина");
     assertThat(BilingualString.of("", "True").primary()).isEqualTo("True");
     assertThat(BilingualString.EMPTY.primary()).isEmpty();
@@ -82,7 +97,10 @@ class BilingualStringTest {
 
   @Test
   void matchesIsCaseInsensitiveAcrossBothLocales() {
+    // given
     var bs = BilingualString.of("Истина", "True");
+
+    // when / then
     assertThat(bs.matches("истина")).isTrue();
     assertThat(bs.matches("ИСТИНА")).isTrue();
     assertThat(bs.matches("true")).isTrue();
@@ -92,14 +110,20 @@ class BilingualStringTest {
 
   @Test
   void matchesReturnsFalseForNullOrEmptyCandidate() {
+    // given
     var bs = BilingualString.of("Истина", "True");
+
+    // when / then
     assertThat(bs.matches(null)).isFalse();
     assertThat(bs.matches("")).isFalse();
   }
 
   @Test
   void matchesIgnoresEmptyLocaleSide() {
+    // given
     var onlyRu = BilingualString.of("Истина", "");
+
+    // when / then
     assertThat(onlyRu.matches("")).isFalse();
     assertThat(onlyRu.matches("Истина")).isTrue();
   }

@@ -34,80 +34,138 @@ class SyntheticSymbolTest {
     new TypeRef(TypeKind.PLATFORM, "СправочникиМенеджер");
 
   @Test
-  void mapsKindToSymbolKind_property() {
+  void mapsKindToSymbolKindProperty() {
+    // given
     var symbol = new SyntheticSymbol(
       "Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", CATALOG_MANAGER);
-    assertThat(symbol.getSymbolKind()).isEqualTo(SymbolKind.Property);
+
+    // when
+    var kind = symbol.getSymbolKind();
+
+    // then
+    assertThat(kind).isEqualTo(SymbolKind.Property);
   }
 
   @Test
-  void mapsKindToSymbolKind_memberProperty() {
+  void mapsKindToSymbolKindMemberProperty() {
+    // given
     var symbol = new SyntheticSymbol(
       "Количество", SyntheticKind.PLATFORM_MEMBER_PROPERTY, "");
-    assertThat(symbol.getSymbolKind()).isEqualTo(SymbolKind.Property);
+
+    // when
+    var kind = symbol.getSymbolKind();
+
+    // then
+    assertThat(kind).isEqualTo(SymbolKind.Property);
   }
 
   @Test
-  void mapsKindToSymbolKind_enum() {
+  void mapsKindToSymbolKindEnum() {
+    // given
     var symbol = new SyntheticSymbol(
       "КодировкаТекста", SyntheticKind.PLATFORM_GLOBAL_ENUM, "");
-    assertThat(symbol.getSymbolKind()).isEqualTo(SymbolKind.Enum);
+
+    // when
+    var kind = symbol.getSymbolKind();
+
+    // then
+    assertThat(kind).isEqualTo(SymbolKind.Enum);
   }
 
   @Test
-  void mapsKindToSymbolKind_method() {
+  void mapsKindToSymbolKindMethod() {
+    // given
     var globalMethod = new SyntheticSymbol(
       "Сообщить", SyntheticKind.PLATFORM_GLOBAL_METHOD, "");
     var memberMethod = new SyntheticSymbol(
       "Добавить", SyntheticKind.PLATFORM_MEMBER_METHOD, "");
+
+    // when / then
     assertThat(globalMethod.getSymbolKind()).isEqualTo(SymbolKind.Method);
     assertThat(memberMethod.getSymbolKind()).isEqualTo(SymbolKind.Method);
   }
 
   @Test
-  void mapsKindToSymbolKind_typeName() {
-    var symbol = new SyntheticSymbol(
-      "Массив", SyntheticKind.TYPE_NAME, "");
-    assertThat(symbol.getSymbolKind()).isEqualTo(SymbolKind.Class);
+  void mapsKindToSymbolKindTypeName() {
+    // given
+    var symbol = new SyntheticSymbol("Массив", SyntheticKind.TYPE_NAME, "");
+
+    // when
+    var kind = symbol.getSymbolKind();
+
+    // then
+    assertThat(kind).isEqualTo(SymbolKind.Class);
   }
 
   @Test
-  void mapsKindToSymbolKind_libraryModule() {
-    var symbol = new SyntheticSymbol(
-      "ФС", SyntheticKind.LIBRARY_MODULE, "");
-    assertThat(symbol.getSymbolKind()).isEqualTo(SymbolKind.Module);
+  void mapsKindToSymbolKindLibraryModule() {
+    // given
+    var symbol = new SyntheticSymbol("ФС", SyntheticKind.LIBRARY_MODULE, "");
+
+    // when
+    var kind = symbol.getSymbolKind();
+
+    // then
+    assertThat(kind).isEqualTo(SymbolKind.Module);
   }
 
   @Test
   void getOwnerSymbolEmptyByDefault() {
+    // given
     var symbol = new SyntheticSymbol("X", SyntheticKind.TYPE_NAME, "");
-    assertThat(symbol.getOwnerSymbol()).isEmpty();
+
+    // when
+    var owner = symbol.getOwnerSymbol();
+
+    // then
+    assertThat(owner).isEmpty();
   }
 
   @Test
   void getSourceSymbolEmptyByDefault() {
+    // given
     var symbol = new SyntheticSymbol("X", SyntheticKind.LIBRARY_MODULE, "");
-    assertThat(symbol.getSourceSymbol()).isEmpty();
+
+    // when
+    var source = symbol.getSourceSymbol();
+
+    // then
+    assertThat(source).isEmpty();
   }
 
   @Test
   void symbolDescriptionWrapsDescriptionString() {
+    // given
     var symbol = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_METHOD, "описание");
-    assertThat(symbol.getSymbolDescription()).isNotNull();
-    assertThat(symbol.getSymbolDescription().getPurposeDescription()).isEqualTo("описание");
+
+    // when
+    var description = symbol.getSymbolDescription();
+
+    // then
+    assertThat(description).isNotNull();
+    assertThat(description.getPurposeDescription()).isEqualTo("описание");
   }
 
   @Test
   void valueTypeUnknownInThreeArgConstructor() {
+    // given
     var symbol = new SyntheticSymbol("X", SyntheticKind.TYPE_NAME, "doc");
-    assertThat(symbol.getValueType()).isSameAs(TypeRef.UNKNOWN);
+
+    // when
+    var value = symbol.getValueType();
+
+    // then
+    assertThat(value).isSameAs(TypeRef.UNKNOWN);
   }
 
   @Test
   void equalsAndHashCodeByNameAndKind() {
+    // given
     var a = new SyntheticSymbol("Имя", SyntheticKind.TYPE_NAME, "X");
     var b = new SyntheticSymbol("Имя", SyntheticKind.TYPE_NAME, "Y");
     var different = new SyntheticSymbol("Другое", SyntheticKind.TYPE_NAME, "");
+
+    // when / then
     assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
     assertThat(a).isNotEqualTo(different);
   }

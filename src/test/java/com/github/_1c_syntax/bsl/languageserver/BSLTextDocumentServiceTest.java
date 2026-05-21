@@ -40,6 +40,7 @@ import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.ColorPresentationParams;
+import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
@@ -67,6 +68,7 @@ import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -812,6 +814,33 @@ class BSLTextDocumentServiceTest {
     var params = new DocumentLinkParams(getTextDocumentIdentifier());
     var result = textDocumentService.documentLink(params).get();
     assertThat(result).isNull();
+  }
+
+  @Test
+  void completionUnknownFile() throws Exception {
+    // given
+    var params = new CompletionParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.completion(params).get();
+
+    // then — CompletionList пустой, когда документа в индексе нет.
+    assertThat(result).isNotNull();
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight().getItems()).isEmpty();
+  }
+
+  @Test
+  void signatureHelpUnknownFile() throws Exception {
+    // given
+    var params = new SignatureHelpParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.signatureHelp(params).get();
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getSignatures()).isEmpty();
   }
 
   private File getTestFile() {

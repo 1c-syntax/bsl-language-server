@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TypeSetTest {
 
@@ -37,6 +39,7 @@ class TypeSetTest {
 
   @Test
   void emptyConstants() {
+    // given / when / then
     assertThat(TypeSet.EMPTY.isEmpty()).isTrue();
     assertThat(TypeSet.EMPTY.size()).isZero();
     assertThat(TypeSet.of()).isSameAs(TypeSet.EMPTY);
@@ -45,41 +48,64 @@ class TypeSetTest {
 
   @Test
   void ofVarargsCollectsRefsPreservingOrder() {
+    // given / when
     var ts = TypeSet.of(NUMBER, STRING);
+
+    // then
     assertThat(ts.refs()).containsExactly(NUMBER, STRING);
     assertThat(ts.size()).isEqualTo(2);
   }
 
   @Test
   void ofCollectionCollectsRefs() {
+    // given / when
     var ts = TypeSet.of(List.of(ARRAY, STRUCTURE));
+
+    // then
     assertThat(ts.refs()).containsExactly(ARRAY, STRUCTURE);
   }
 
   @Test
   void addAppendsRef() {
-    var ts = TypeSet.of(NUMBER).add(STRING);
-    assertThat(ts.refs()).containsExactly(NUMBER, STRING);
+    // given
+    var ts = TypeSet.of(NUMBER);
+
+    // when
+    var grown = ts.add(STRING);
+
+    // then
+    assertThat(grown.refs()).containsExactly(NUMBER, STRING);
   }
 
   @Test
   void unionMergesRefs() {
+    // given
     var a = TypeSet.of(NUMBER);
     var b = TypeSet.of(STRING);
+
+    // when
     var result = a.union(b);
+
+    // then
     assertThat(result.refs()).containsExactlyInAnyOrder(NUMBER, STRING);
   }
 
   @Test
   void unionWithEmptyReturnsSelf() {
+    // given
     var ts = TypeSet.of(NUMBER);
+
+    // when / then
     assertThat(ts.union(TypeSet.EMPTY)).isSameAs(ts);
     assertThat(TypeSet.EMPTY.union(ts)).isSameAs(ts);
   }
 
   @Test
   void withElementAttachesElementTypes() {
+    // given / when
     var array = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));
+
+    // then
     assertThat(array.refs()).containsExactly(ARRAY);
     assertThat(array.getElementTypes(ARRAY).refs()).containsExactly(NUMBER);
     assertThat(array.getElementTypes().refs()).containsExactly(NUMBER);
@@ -87,19 +113,31 @@ class TypeSetTest {
 
   @Test
   void withElementAddsRefIfMissing() {
+    // given / when
     var ts = TypeSet.EMPTY.withElement(ARRAY, TypeSet.of(NUMBER));
+
+    // then
     assertThat(ts.refs()).containsExactly(ARRAY);
   }
 
   @Test
   void withElementIgnoresEmpty() {
+    // given
     var ts = TypeSet.of(ARRAY);
-    assertThat(ts.withElement(ARRAY, TypeSet.EMPTY)).isSameAs(ts);
+
+    // when
+    var same = ts.withElement(ARRAY, TypeSet.EMPTY);
+
+    // then
+    assertThat(same).isSameAs(ts);
   }
 
   @Test
   void withFieldAttachesLocalField() {
+    // given / when
     var ts = TypeSet.of(STRUCTURE).withField(STRUCTURE, "Имя", TypeSet.of(STRING));
+
+    // then
     assertThat(ts.getLocalFields(STRUCTURE)).containsKey("Имя");
     assertThat(ts.getFieldTypes("имя").refs()).containsExactly(STRING);
     assertThat(ts.getAllFieldNames()).containsExactly("Имя");
@@ -107,43 +145,59 @@ class TypeSetTest {
 
   @Test
   void withFieldAddsRefIfMissing() {
+    // given / when
     var ts = TypeSet.EMPTY.withField(STRUCTURE, "X", TypeSet.of(NUMBER));
+
+    // then
     assertThat(ts.refs()).containsExactly(STRUCTURE);
   }
 
   @Test
   void getElementTypesEmptyByDefault() {
-    assertThat(TypeSet.of(ARRAY).getElementTypes(ARRAY)).isSameAs(TypeSet.EMPTY);
-    assertThat(TypeSet.of(ARRAY).getElementTypes(NUMBER)).isSameAs(TypeSet.EMPTY);
+    // given
+    var ts = TypeSet.of(ARRAY);
+
+    // when / then
+    assertThat(ts.getElementTypes(ARRAY)).isSameAs(TypeSet.EMPTY);
+    assertThat(ts.getElementTypes(NUMBER)).isSameAs(TypeSet.EMPTY);
   }
 
   @Test
   void getFieldTypesEmptyForUnknownField() {
+    // given
     var ts = TypeSet.of(STRUCTURE).withField(STRUCTURE, "Имя", TypeSet.of(STRING));
+
+    // when / then
     assertThat(ts.getFieldTypes("НетТакого")).isSameAs(TypeSet.EMPTY);
   }
 
   @Test
   void unionMergesElementTypesAndFields() {
-    var a = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));
-    var b = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(STRING));
-    var u = a.union(b);
-    assertThat(u.getElementTypes(ARRAY).refs()).containsExactlyInAnyOrder(NUMBER, STRING);
+    // given
+    var arrayOfNumbers = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));
+    var arrayOfStrings = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(STRING));
+    var structWithNumber = TypeSet.of(STRUCTURE).withField(STRUCTURE, "K", TypeSet.of(NUMBER));
+    var structWithString = TypeSet.of(STRUCTURE).withField(STRUCTURE, "K", TypeSet.of(STRING));
 
-    var s1 = TypeSet.of(STRUCTURE).withField(STRUCTURE, "K", TypeSet.of(NUMBER));
-    var s2 = TypeSet.of(STRUCTURE).withField(STRUCTURE, "K", TypeSet.of(STRING));
-    var su = s1.union(s2);
-    assertThat(su.getFieldTypes("K").refs()).containsExactlyInAnyOrder(NUMBER, STRING);
+    // when
+    var unionArrays = arrayOfNumbers.union(arrayOfStrings);
+    var unionStructs = structWithNumber.union(structWithString);
+
+    // then
+    assertThat(unionArrays.getElementTypes(ARRAY).refs())
+      .containsExactlyInAnyOrder(NUMBER, STRING);
+    assertThat(unionStructs.getFieldTypes("K").refs())
+      .containsExactlyInAnyOrder(NUMBER, STRING);
   }
 
   @Test
   void refsAreUnmodifiable() {
-    Set<TypeRef> input = new java.util.HashSet<>();
+    // given
+    Set<TypeRef> input = new HashSet<>();
     input.add(NUMBER);
     var ts = new TypeSet(input);
-    org.junit.jupiter.api.Assertions.assertThrows(
-      UnsupportedOperationException.class,
-      () -> ts.refs().add(STRING)
-    );
+
+    // when / then
+    assertThrows(UnsupportedOperationException.class, () -> ts.refs().add(STRING));
   }
 }

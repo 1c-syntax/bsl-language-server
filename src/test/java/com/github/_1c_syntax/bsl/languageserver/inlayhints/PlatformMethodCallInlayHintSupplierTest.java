@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.InlayHint;
@@ -30,8 +31,6 @@ import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,18 +49,17 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
 
   @Test
   void hintsForGlobalFunctionCall() {
+    // given
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH, context);
 
+    // when
     var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
 
-    // СтрНайти("abc", "b", НаправлениеПоиска.СНачала, 1) — параметры имеют имена,
-    // которые подмешиваются как inlay-метки.
+    // then — СтрНайти(...) имеет именованные параметры, ожидаем подсказки.
     assertThat(hints)
       .isNotEmpty()
       .allSatisfy(hint -> assertThat(hint.getKind()).isEqualTo(InlayHintKind.Parameter));
-
-    // Хотя бы одна метка относится к СтрНайти
     assertThat(hints)
       .extracting(InlayHint::getLabel)
       .extracting(either -> either.getLeft())
@@ -70,58 +68,63 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
 
   @Test
   void hintsForMethodCallViaDot() {
+    // given
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH, context);
 
+    // when
     var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
 
-    // М.Вставить(0, "x") — два аргумента, ожидаем подсказки имён параметров.
+    // then — М.Вставить(0, "x") даёт подсказки для двух параметров.
     assertThat(hints).isNotEmpty();
   }
 
   @Test
   void hintsForNewConstructor() {
+    // given
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH, context);
 
+    // when
     var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
 
-    // Новый Массив(10) — конструктор с 1 параметром.
+    // then — Новый Массив(10) — конструктор с одним параметром.
     assertThat(hints)
-      .filteredOn(h -> h.getKind() == InlayHintKind.Parameter)
+      .filteredOn(hint -> hint.getKind() == InlayHintKind.Parameter)
       .isNotEmpty();
   }
 
   @Test
   void noHintsForEmptyAst() {
+    // given
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContext("");
 
+    // when
     var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
 
+    // then
     assertThat(hints).isEmpty();
   }
 
   @Test
   void noHintsForSourceDefinedMethodCall() {
-    // Source-defined метод (в модуле есть его описание) НЕ должен получать
-    // inlay-подсказки от PlatformMethodCallInlayHintSupplier — он отдаётся
-    // отдельным SourceDefinedMethodCallInlayHintSupplier.
+    // given — source-defined метод не должен получать подсказки от платформенного
+    // supplier'а (этим занимается SourceDefinedMethodCallInlayHintSupplier).
     initServerContext("./src/test/resources/types", false);
     var documentContext = TestUtils.getDocumentContext(
       "Процедура МойМетод(Параметр)\nКонецПроцедуры\n\nМойМетод(1);\n"
     );
 
+    // when
     var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
 
-    // Платформенный supplier ничего не возвращает для локального метода.
-    assertThat(hints).noneMatch(h ->
-      h.getLabel().isLeft() && h.getLabel().getLeft().contains("Параметр"));
+    // then
+    assertThat(hints).noneMatch(hint ->
+      hint.getLabel().isLeft() && hint.getLabel().getLeft().contains("Параметр"));
   }
 
-  private static InlayHintParams fullRangeParams(
-    com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext
-  ) {
+  private static InlayHintParams fullRangeParams(DocumentContext documentContext) {
     var content = documentContext.getContent();
     var lines = content.split("\\R", -1);
     var lastLine = Math.max(0, lines.length - 1);

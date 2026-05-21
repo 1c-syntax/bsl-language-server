@@ -42,67 +42,99 @@ class SyntheticSymbolMarkupContentBuilderTest extends AbstractServerContextAware
   private SyntheticSymbolMarkupContentBuilder builder;
 
   @Test
-  void getContentForGlobalProperty_includesNameRoleAndDescription() {
-    var ref = new TypeRef(TypeKind.PLATFORM, "СправочникиМенеджер");
+  void getContentForGlobalPropertyIncludesNameRoleAndDescription() {
+    // given
+    var valueType = new TypeRef(TypeKind.PLATFORM, "СправочникиМенеджер");
     var symbol = new SyntheticSymbol(
       "Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY,
-      "Объект для работы со справочниками.", ref);
+      "Объект для работы со справочниками.", valueType);
 
+    // when
     var content = builder.getContent(symbol);
 
+    // then
     assertThat(content.getKind()).isEqualTo(MarkupKind.MARKDOWN);
-    var v = content.getValue();
-    assertThat(v).contains("Справочники");
-    assertThat(v).contains(": СправочникиМенеджер");
-    assertThat(v).contains("глобальное свойство");
-    assertThat(v).contains("Объект для работы со справочниками.");
+    var value = content.getValue();
+    assertThat(value).contains("Справочники");
+    assertThat(value).contains(": СправочникиМенеджер");
+    assertThat(value).contains("глобальное свойство");
+    assertThat(value).contains("Объект для работы со справочниками.");
   }
 
   @Test
   void getContentSkipsValueTypeWhenUnknown() {
+    // given
     var symbol = new SyntheticSymbol(
       "Истина", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+
+    // when
     var content = builder.getContent(symbol);
+
+    // then
     assertThat(content.getValue()).contains("Истина");
     assertThat(content.getValue()).doesNotContain(":");
   }
 
   @Test
   void getContentOmitsEmptyDescription() {
+    // given
     var symbol = new SyntheticSymbol(
       "Истина", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
-    var v = builder.getContent(symbol).getValue();
-    // Только code block и role-line, без отдельной description-секции.
-    var lines = v.split("\n");
+
+    // when
+    var content = builder.getContent(symbol);
+
+    // then
+    var lines = content.getValue().split("\n");
     assertThat(lines.length).isLessThan(10);
   }
 
   @Test
   void getSymbolKindReturnsProperty() {
-    assertThat(builder.getSymbolKind()).isEqualTo(SymbolKind.Property);
+    // given / when
+    var kind = builder.getSymbolKind();
+
+    // then
+    assertThat(kind).isEqualTo(SymbolKind.Property);
   }
 
   @Test
   void getSymbolClassReturnsSyntheticSymbol() {
-    assertThat(builder.getSymbolClass()).isEqualTo(SyntheticSymbol.class);
+    // given / when
+    var symbolClass = builder.getSymbolClass();
+
+    // then
+    assertThat(symbolClass).isEqualTo(SyntheticSymbol.class);
   }
 
   @Test
-  void getContentForLibraryModule_showsRoleAndName() {
+  void getContentForLibraryModuleShowsRoleAndName() {
+    // given
     var symbol = new SyntheticSymbol(
       "ФС", SyntheticKind.LIBRARY_MODULE,
       "OneScript: работа с файловой системой.");
-    var v = builder.getContent(symbol).getValue();
-    assertThat(v).contains("ФС");
-    assertThat(v).contains("модуль библиотеки");
-    assertThat(v).contains("OneScript:");
+
+    // when
+    var content = builder.getContent(symbol);
+
+    // then
+    var value = content.getValue();
+    assertThat(value).contains("ФС");
+    assertThat(value).contains("модуль библиотеки");
+    assertThat(value).contains("OneScript:");
   }
 
   @Test
-  void getContentForTypeName_marksAsTypeName() {
+  void getContentForTypeNameMarksAsTypeName() {
+    // given
     var symbol = new SyntheticSymbol("Массив", SyntheticKind.TYPE_NAME, "Динамический массив.");
-    var v = builder.getContent(symbol).getValue();
-    assertThat(v).contains("Массив");
-    assertThat(v).contains("имя типа");
+
+    // when
+    var content = builder.getContent(symbol);
+
+    // then
+    var value = content.getValue();
+    assertThat(value).contains("Массив");
+    assertThat(value).contains("имя типа");
   }
 }

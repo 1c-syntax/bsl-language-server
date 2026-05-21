@@ -23,8 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * Языковой скоуп символа/типа: к какому из двух BSL-диалектов он принадлежит.
  * <ul>
@@ -44,10 +42,9 @@ public enum LanguageScope {
 
   /**
    * Виден ли символ с данным скоупом в файле с данным типом.
-   * {@code null} fileType трактуется как «без фильтрации» — возвращает {@code true}.
    */
   public boolean matches(FileType fileType) {
-    if (fileType == null || this == BOTH) {
+    if (this == BOTH) {
       return true;
     }
     return switch (fileType) {
@@ -59,10 +56,7 @@ public enum LanguageScope {
   /**
    * Скоуп по умолчанию для встроенных ресурсов BSL.
    */
-  public static LanguageScope forFileType(@Nullable FileType fileType) {
-    if (fileType == null) {
-      return BOTH;
-    }
+  public static LanguageScope forFileType(FileType fileType) {
     return switch (fileType) {
       case BSL -> BSL;
       case OS -> OS;

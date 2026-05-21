@@ -29,42 +29,79 @@ class InlineTypeCommentParserTest {
 
   @Test
   void parseSingleType() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// Число"))
-      .containsExactly("Число");
+    // given
+    var comment = "// Число";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("Число");
   }
 
   @Test
   void parseSingleTypeWithDashDescription() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// Число - сумма"))
-      .containsExactly("Число");
+    // given
+    var comment = "// Число - сумма";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("Число");
   }
 
   @Test
   void parseSingleTypeWithTrailingDash() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// Число -"))
-      .containsExactly("Число");
+    // given
+    var comment = "// Число -";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("Число");
   }
 
   @Test
   void parseMultipleTypes() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// Число, Строка"))
-      .containsExactly("Число", "Строка");
+    // given
+    var comment = "// Число, Строка";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("Число", "Строка");
   }
 
   @Test
   void parseQualifiedTypeName() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// СправочникСсылка.Товары"))
-      .containsExactly("СправочникСсылка.Товары");
+    // given
+    var comment = "// СправочникСсылка.Товары";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("СправочникСсылка.Товары");
   }
 
   @Test
   void parseHandlesSpacesAndExtraDashes() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("//  Число , Строка - какое-то описание"))
-      .containsExactly("Число", "Строка");
+    // given
+    var comment = "//  Число , Строка - какое-то описание";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("Число", "Строка");
   }
 
   @Test
   void parseEmptyOrNull() {
+    // given / when / then
     assertThat(InlineTypeCommentParser.parseTypeNames(null)).isEmpty();
     assertThat(InlineTypeCommentParser.parseTypeNames("")).isEmpty();
     assertThat(InlineTypeCommentParser.parseTypeNames("//")).isEmpty();
@@ -73,34 +110,44 @@ class InlineTypeCommentParserTest {
 
   @Test
   void parseSeeRefReturnsEmpty() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// См. Модуль.Метод"))
-      .isEmpty();
-    assertThat(InlineTypeCommentParser.parseTypeNames("// see. Module.Method"))
-      .isEmpty();
+    // given / when / then
+    assertThat(InlineTypeCommentParser.parseTypeNames("// См. Модуль.Метод")).isEmpty();
+    assertThat(InlineTypeCommentParser.parseTypeNames("// see. Module.Method")).isEmpty();
   }
 
   @Test
   void parseSkipsNonIdentifierTokens() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// 123, Число, $bad, Строка"))
-      .containsExactly("Число", "Строка");
+    // given
+    var comment = "// 123, Число, $bad, Строка";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("Число", "Строка");
   }
 
   @Test
   void parseIdentifierWithUnderscore() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// My_Type, Another_One"))
-      .containsExactly("My_Type", "Another_One");
+    // given
+    var comment = "// My_Type, Another_One";
+
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).containsExactly("My_Type", "Another_One");
   }
 
   @Test
   void parseRejectsInvalidCharsInIdentifier() {
-    assertThat(InlineTypeCommentParser.parseTypeNames("// Bad-Type"))
-      .isEmpty();
-  }
+    // given
+    var comment = "// Bad-Type";
 
-  @Test
-  void parseStopsAtSpaceSurroundedDash() {
-    // Тире внутри типа (без пробелов) не должно его обрезать.
-    assertThat(InlineTypeCommentParser.parseTypeNames("// Foo-Bar"))
-      .isEmpty();  // отклоняется как невалидный identifier
+    // when
+    var result = InlineTypeCommentParser.parseTypeNames(comment);
+
+    // then
+    assertThat(result).isEmpty();
   }
 }

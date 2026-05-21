@@ -29,6 +29,7 @@ class SymbolDescriptionTest {
 
   @Test
   void emptyForNullOrBlankDescriptionUsesSingleton() {
+    // given / when / then
     assertThat(SymbolDescription.of(null)).isSameAs(SymbolDescription.EMPTY);
     assertThat(SymbolDescription.of("")).isSameAs(SymbolDescription.EMPTY);
     assertThat(SymbolDescription.of("   ")).isSameAs(SymbolDescription.EMPTY);
@@ -36,7 +37,10 @@ class SymbolDescriptionTest {
 
   @Test
   void emptyInstanceReturnsEmptyStringsAndIsNotDeprecated() {
+    // given
     var empty = SymbolDescription.EMPTY;
+
+    // when / then
     assertThat(empty.getPurposeDescription()).isEmpty();
     assertThat(empty.getDeprecationInfo()).isEmpty();
     assertThat(empty.isDeprecated()).isFalse();
@@ -45,39 +49,53 @@ class SymbolDescriptionTest {
 
   @Test
   void simpleFactoryStoresDescriptionAndIsNotDeprecated() {
-    var d = SymbolDescription.of("текст описания");
-    assertThat(d.getPurposeDescription()).isEqualTo("текст описания");
-    assertThat(d.isDeprecated()).isFalse();
-    assertThat(d.getDeprecationInfo()).isEmpty();
-    assertThat(d.isEmpty()).isFalse();
+    // given / when
+    var description = SymbolDescription.of("текст описания");
+
+    // then
+    assertThat(description.getPurposeDescription()).isEqualTo("текст описания");
+    assertThat(description.isDeprecated()).isFalse();
+    assertThat(description.getDeprecationInfo()).isEmpty();
+    assertThat(description.isEmpty()).isFalse();
   }
 
   @Test
   void deprecatedFactoryStoresFlagAndInfo() {
-    var d = SymbolDescription.of("description", true, "use Y instead");
-    assertThat(d.getPurposeDescription()).isEqualTo("description");
-    assertThat(d.isDeprecated()).isTrue();
-    assertThat(d.getDeprecationInfo()).isEqualTo("use Y instead");
-    assertThat(d.isEmpty()).isFalse();
+    // given / when
+    var description = SymbolDescription.of("description", true, "use Y instead");
+
+    // then
+    assertThat(description.getPurposeDescription()).isEqualTo("description");
+    assertThat(description.isDeprecated()).isTrue();
+    assertThat(description.getDeprecationInfo()).isEqualTo("use Y instead");
+    assertThat(description.isEmpty()).isFalse();
   }
 
   @Test
   void deprecatedFactoryNormalizesNullsToEmpty() {
-    var d = SymbolDescription.of(null, true, null);
-    assertThat(d.getPurposeDescription()).isEmpty();
-    assertThat(d.getDeprecationInfo()).isEmpty();
-    assertThat(d.isDeprecated()).isTrue();
-    assertThat(d.isEmpty()).isFalse();
+    // given / when
+    var description = SymbolDescription.of(null, true, null);
+
+    // then
+    assertThat(description.getPurposeDescription()).isEmpty();
+    assertThat(description.getDeprecationInfo()).isEmpty();
+    assertThat(description.isDeprecated()).isTrue();
+    assertThat(description.isEmpty()).isFalse();
   }
 
   @Test
   void deprecatedFactoryReturnsEmptyWhenAllArgsBlankAndNotDeprecated() {
+    // given / when / then
     assertThat(SymbolDescription.of("", false, "")).isSameAs(SymbolDescription.EMPTY);
     assertThat(SymbolDescription.of(null, false, null)).isSameAs(SymbolDescription.EMPTY);
   }
 
   @Test
   void isEmptyHonorsDeprecationFlagEvenWithoutText() {
-    assertThat(SymbolDescription.of("", true, "").isEmpty()).isFalse();
+    // given / when
+    var description = SymbolDescription.of("", true, "");
+
+    // then
+    assertThat(description.isEmpty()).isFalse();
   }
 }

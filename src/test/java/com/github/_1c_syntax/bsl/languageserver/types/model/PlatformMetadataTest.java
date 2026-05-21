@@ -32,26 +32,32 @@ class PlatformMetadataTest {
 
   @Test
   void emptyConstantHasAllFieldsBlank() {
-    var e = PlatformMetadata.EMPTY;
-    assertThat(e.sinceVersion()).isEmpty();
-    assertThat(e.deprecatedSinceVersion()).isEmpty();
-    assertThat(e.recommendedReplacements()).isEmpty();
-    assertThat(e.availabilities()).isEmpty();
-    assertThat(e.accessMode()).isNull();
-    assertThat(e.returnValueDescription()).isSameAs(BilingualString.EMPTY);
-    assertThat(e.notes()).isSameAs(BilingualString.EMPTY);
-    assertThat(e.examples()).isEmpty();
-    assertThat(e.seeAlso()).isEmpty();
-    assertThat(e.isEmpty()).isTrue();
-    assertThat(e.hasVersionInfo()).isFalse();
+    // given
+    var empty = PlatformMetadata.EMPTY;
+
+    // when / then
+    assertThat(empty.sinceVersion()).isEmpty();
+    assertThat(empty.deprecatedSinceVersion()).isEmpty();
+    assertThat(empty.recommendedReplacements()).isEmpty();
+    assertThat(empty.availabilities()).isEmpty();
+    assertThat(empty.accessMode()).isNull();
+    assertThat(empty.returnValueDescription()).isSameAs(BilingualString.EMPTY);
+    assertThat(empty.notes()).isSameAs(BilingualString.EMPTY);
+    assertThat(empty.examples()).isEmpty();
+    assertThat(empty.seeAlso()).isEmpty();
+    assertThat(empty.isEmpty()).isTrue();
+    assertThat(empty.hasVersionInfo()).isFalse();
   }
 
   @Test
   void canonicalConstructorNormalizesNullsToDefaults() {
+    // given / when
     var meta = new PlatformMetadata(
       null, null, null, null, null,
       (BilingualString) null, (BilingualString) null, null, null
     );
+
+    // then
     assertThat(meta.sinceVersion()).isEmpty();
     assertThat(meta.deprecatedSinceVersion()).isEmpty();
     assertThat(meta.recommendedReplacements()).isEmpty();
@@ -65,12 +71,15 @@ class PlatformMetadataTest {
 
   @Test
   void compatConstructorWrapsRuStringsIntoBilingual() {
+    // given / when
     var meta = new PlatformMetadata(
       "8.3.10", "", List.of(), Set.of(), AccessMode.READ,
       "результат", "примечание",
       List.of("ru1", "ru2"),
       List.of("См.ссылка")
     );
+
+    // then
     assertThat(meta.returnValueDescription().ru()).isEqualTo("результат");
     assertThat(meta.returnValueDescription().en()).isEmpty();
     assertThat(meta.notes().ru()).isEqualTo("примечание");
@@ -83,33 +92,37 @@ class PlatformMetadataTest {
 
   @Test
   void compatConstructorAcceptsNullRuLists() {
+    // given / when
     var meta = new PlatformMetadata(
       "", "", List.of(), Set.of(), null,
       "", "", null, null
     );
+
+    // then
     assertThat(meta.examples()).isEmpty();
     assertThat(meta.seeAlso()).isEmpty();
   }
 
   @Test
   void isEmptyDetectsNonEmptyFields() {
-    var ver = new PlatformMetadata(
+    // given
+    var withVersion = new PlatformMetadata(
       "8.3.0", "", List.of(), Set.of(), null,
       BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of()
     );
-    assertThat(ver.isEmpty()).isFalse();
-    assertThat(ver.hasVersionInfo()).isTrue();
-
-    var dep = new PlatformMetadata(
+    var deprecated = new PlatformMetadata(
       "", "8.3.20", List.of(), Set.of(), null,
       BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of()
     );
-    assertThat(dep.hasVersionInfo()).isTrue();
-
     var withReplacements = new PlatformMetadata(
       "", "", List.of("Замена"), Set.of(), null,
       BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of()
     );
+
+    // when / then
+    assertThat(withVersion.isEmpty()).isFalse();
+    assertThat(withVersion.hasVersionInfo()).isTrue();
+    assertThat(deprecated.hasVersionInfo()).isTrue();
     assertThat(withReplacements.isEmpty()).isFalse();
     assertThat(withReplacements.hasVersionInfo()).isFalse();
   }
