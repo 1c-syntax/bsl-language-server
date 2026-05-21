@@ -80,17 +80,29 @@ public class TestUtils {
    * Получить ServerContext для файла.
    * <p>
    * Логика:
-   * - 0 контекстов в провайдере → создаёт новый для родительской директории файла
-   * - 1 контекст → возвращает его (файл будет добавлен туда)
-   * - >1 контекстов → выбрасывает исключение (тест должен явно указать контекст)
+   * - prefix-match: если файл попадает под уже зарегистрированный workspace —
+   *   используется он, независимо от того, сколько других workspace'ов есть;
+   * - 0 контекстов → создаётся новый для родительской директории файла;
+   * - 1 контекст → используется он (тесты с явно подготовленным workspace'ом,
+   *   которые загружают файлы вне его директории, на это рассчитывают);
+   * - {@literal >}1 контекстов и ни один не содержит файл → fall back на
+   *   default metadata workspace. Исторически здесь бросалось исключение, но
+   *   оно делало вызов чувствительным к порядку выполнения тестов и валило
+   *   сборку на macOS/Windows (см. {@code getServerContextForUri} с
+   *   FAKE_*_DOCUMENT_URI). Для синтетических URI default workspace —
+   *   корректный «дай хоть какой-нибудь» выбор.
    */
   private static ServerContext getServerContextForFile(Path filePath) {
     var provider = TestApplicationContext.getBean(ServerContextProvider.class);
-    var allContexts = provider.getAllContexts();
 
+    var absolutePath = Absolute.path(filePath);
+    var existing = provider.getServerContext(absolutePath.toUri());
+    if (existing.isPresent()) {
+      return existing.get();
+    }
+
+    var allContexts = provider.getAllContexts();
     if (allContexts.isEmpty()) {
-      // No contexts registered - create new one for parent directory
-      var absolutePath = Absolute.path(filePath);
       var parentDir = absolutePath.getParent();
       if (parentDir == null) {
         parentDir = absolutePath;
@@ -98,13 +110,9 @@ public class TestUtils {
       var workspaceFolder = new WorkspaceFolder(parentDir.toUri().toString(), "test-" + parentDir.getFileName());
       return provider.addWorkspace(workspaceFolder);
     } else if (allContexts.size() == 1) {
-      // Single context - use it
       return allContexts.values().iterator().next();
     } else {
-      // Multiple contexts - test must explicitly specify which one to use
-      throw new IllegalStateException(
-        "Multiple ServerContexts registered. Use getDocumentContextFromFile(path, serverContext) to specify target context."
-      );
+      return getServerContext();
     }
   }
 
