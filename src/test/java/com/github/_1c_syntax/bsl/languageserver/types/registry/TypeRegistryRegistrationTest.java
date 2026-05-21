@@ -1,0 +1,182 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Тесты register*-API и lookup-методов {@link TypeRegistry} (intern,
+ * registerUserType/ConfigurationType/Alias, resolveGenericByPrefix,
+ * findAllGenericsByFamilyCore, setLanguageScope).
+ */
+@SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
+@ExtendWith(MockitoExtension.class)
+class TypeRegistryRegistrationTest {
+
+  @Autowired
+  private TypeRegistry typeRegistry;
+
+  @Mock
+  private SourceDefinedSymbol declaration;
+
+  @Test
+  void internReturnsSameInstanceForSameKindAndName() {
+    // given / when
+    var a = typeRegistry.intern(TypeKind.USER, "X");
+    var b = typeRegistry.intern(TypeKind.USER, "X");
+
+    // then
+    assertThat(a).isSameAs(b);
+  }
+
+  @Test
+  void internReturnsDifferentInstanceForDifferentKind() {
+    // given / when
+    var user = typeRegistry.intern(TypeKind.USER, "X");
+    var conf = typeRegistry.intern(TypeKind.CONFIGURATION, "X");
+
+    // then
+    assertThat(user).isNotEqualTo(conf);
+  }
+
+  @Test
+  void registerUserTypeAddsAlias() {
+    // given / when
+    var ref = typeRegistry.registerUserType("МойКласс", declaration);
+
+    // then
+    assertThat(typeRegistry.resolve("МойКласс")).contains(ref);
+    assertThat(typeRegistry.resolve("мойкласс"))
+      .as("alias case-insensitive")
+      .contains(ref);
+  }
+
+  @Test
+  void registerUserTypeRespectsLanguageScope() {
+    // given / when
+    var ref = typeRegistry.registerUserType("МойOSКласс", declaration, LanguageScope.OS);
+
+    // then
+    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.OS);
+    assertThat(typeRegistry.resolve("МойOSКласс", FileType.OS)).contains(ref);
+    assertThat(typeRegistry.resolve("МойOSКласс", FileType.BSL)).isEmpty();
+  }
+
+  @Test
+  void registerConfigurationTypeIsBslOnly() {
+    // given / when
+    var ref = typeRegistry.registerConfigurationType("Справочники.Контрагенты");
+
+    // then
+    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.BSL);
+    assertThat(typeRegistry.resolve("Справочники.Контрагенты", FileType.BSL)).contains(ref);
+    assertThat(typeRegistry.resolve("Справочники.Контрагенты", FileType.OS))
+      .as("конфигурационные типы недоступны в OS")
+      .isEmpty();
+  }
+
+  @Test
+  void registerConfigurationTypeAliasMakesAdditionalNameResolvable() {
+    // given
+    var ref = typeRegistry.registerConfigurationType("Справочники.Counterparts");
+
+    // when
+    typeRegistry.registerConfigurationTypeAlias("Catalogs.Counterparts", ref);
+
+    // then
+    assertThat(typeRegistry.resolve("Catalogs.Counterparts")).contains(ref);
+    assertThat(typeRegistry.resolve("catalogs.counterparts")).contains(ref);
+  }
+
+  @Test
+  void setLanguageScopeOverwritesExistingScope() {
+    // given
+    var ref = typeRegistry.registerUserType("Y", declaration, LanguageScope.OS);
+
+    // when
+    typeRegistry.setLanguageScope(ref, LanguageScope.BOTH);
+
+    // then
+    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.BOTH);
+  }
+
+  @Test
+  void getLanguageScopeReturnsBothForUnknownRef() {
+    // given
+    var ref = new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
+      TypeKind.USER, "НезарегистрированныйТип");
+
+    // when / then
+    assertThat(typeRegistry.getLanguageScope(ref)).isEqualTo(LanguageScope.BOTH);
+  }
+
+  @Test
+  void resolveReturnsEmptyForBlankName() {
+    // when / then
+    assertThat(typeRegistry.resolve(null)).isEmpty();
+    assertThat(typeRegistry.resolve("")).isEmpty();
+  }
+
+  @Test
+  void resolveGenericByPrefixReturnsEmptyForBlank() {
+    // when / then
+    assertThat(typeRegistry.resolveGenericByPrefix(null)).isEmpty();
+    assertThat(typeRegistry.resolveGenericByPrefix("")).isEmpty();
+  }
+
+  @Test
+  void findAllGenericsByFamilyCoreReturnsEmptyForBlank() {
+    // when / then
+    assertThat(typeRegistry.findAllGenericsByFamilyCore(null)).isEmpty();
+    assertThat(typeRegistry.findAllGenericsByFamilyCore("")).isEmpty();
+  }
+
+  @Test
+  void resolveGenericByPrefixIsCaseInsensitive() {
+    // given — стандартные generic-типы платформы СправочникСсылка.<...>
+    // должны находиться при различных регистрах префикса.
+    // Запускается после init-bootstrap (через resolve("") trigger).
+    typeRegistry.resolve("");
+
+    // when
+    var lower = typeRegistry.resolveGenericByPrefix("справочникссылка");
+    var mixed = typeRegistry.resolveGenericByPrefix("СправочникСсылка");
+
+    // then — либо оба пусты (нет данных платформы), либо равны.
+    if (lower.isPresent() || mixed.isPresent()) {
+      assertThat(lower).isEqualTo(mixed);
+    }
+  }
+}
