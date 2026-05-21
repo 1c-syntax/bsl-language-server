@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -69,7 +71,8 @@ final class BslContextEnumMapping {
     };
   }
 
-  static AccessMode mapAccessMode(com.github._1c_syntax.bsl.context.api.AccessMode mode) {
+  @Nullable
+  static AccessMode mapAccessMode(com.github._1c_syntax.bsl.context.api.@Nullable AccessMode mode) {
     if (mode == null) {
       return null;
     }

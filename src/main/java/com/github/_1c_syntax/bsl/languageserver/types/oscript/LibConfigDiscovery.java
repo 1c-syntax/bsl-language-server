@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -100,14 +101,14 @@ public class LibConfigDiscovery {
    * опционально {@code OSCRIPT_LIB_LOCATION}). Используется не только для
    * поиска {@code lib.config}, но и для convention-based discovery.
    */
-  public List<Path> getRoots(ServerContext serverContext) {
+  public List<Path> getRoots(@Nullable ServerContext serverContext) {
     return getRoots(serverContext == null ? null : serverContext.getConfigurationRoot());
   }
 
   /**
    * См. {@link #getRoots(ServerContext)}.
    */
-  public List<Path> getRoots(Path workspaceRoot) {
+  public List<Path> getRoots(@Nullable Path workspaceRoot) {
     Set<Path> roots = new LinkedHashSet<>();
     if (workspaceRoot != null) {
       var wsAbs = workspaceRoot.toAbsolutePath().normalize();

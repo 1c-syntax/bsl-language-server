@@ -14,4 +14,7 @@
  * bootstrap). Пользовательские типы из .os-файлов регистрируются
  * {@code OScriptModuleMembersProvider} (см. пакет {@code types.oscript}).
  */
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import org.jspecify.annotations.NullMarked;

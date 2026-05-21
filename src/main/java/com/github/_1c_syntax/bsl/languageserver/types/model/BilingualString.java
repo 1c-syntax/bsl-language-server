@@ -40,6 +40,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
  *   <li>{@link #primary()} — ru, если есть; иначе en (для legacy-callsite'ов,
  *       которые ожидали одиночное "канонически-русское" имя).</li>
  * </ul>
+ *
+ * @param ru русское написание (пустая строка, если отсутствует)
+ * @param en английское написание (пустая строка, если отсутствует)
  */
 public record BilingualString(String ru, String en) {
 

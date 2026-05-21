@@ -41,6 +41,7 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -74,9 +75,6 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     List<SemanticTokenEntry> entries = new ArrayList<>();
     var ast = documentContext.getAst();
-    if (ast == null) {
-      return entries;
-    }
     var fileType = documentContext.getFileType();
     var symbolTree = documentContext.getSymbolTree();
 
@@ -98,7 +96,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
   }
 
   private void processIdentifier(List<SemanticTokenEntry> entries,
-                                 TerminalNode identifier,
+                                 @Nullable TerminalNode identifier,
                                  List<? extends BSLParser.ModifierContext> modifiers,
                                  FileType fileType,
                                  SymbolTree symbolTree) {
@@ -106,7 +104,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
       return;
     }
     var name = identifier.getText();
-    if (name == null || name.isBlank()) {
+    if (name.isBlank()) {
       return;
     }
     // Локальные имена (переменные/параметры) перекрывают глобальные — пропускаем.
@@ -212,6 +210,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     return member.returnType();
   }
 
+  @Nullable
   private MemberDescriptor findMember(TypeRef ownerType, String memberName,
                                       MemberKind expectedKind, FileType fileType) {
     if (ownerType == null || memberName == null || memberName.isBlank()) {

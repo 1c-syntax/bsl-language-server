@@ -85,7 +85,8 @@ public class ServerContextProvider {
   /**
    * Добавить workspace по URI и создать для нее контекст сервера.
    *
-   * @param workspaceUri URI корня workspace
+   * @param workspaceUri нормализованный через {@link Absolute#uri(URI)} URI
+   *                     корня workspace
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(URI workspaceUri) {
@@ -94,8 +95,13 @@ public class ServerContextProvider {
 
   /**
    * Добавить workspace по URI и создать для нее контекст сервера.
+   * <p>
+   * {@code workspaceUri} должен быть нормализован через
+   * {@link Absolute#uri(URI)} — иначе {@link #clear()} /
+   * {@link #removeWorkspace(WorkspaceFolder)} не смогут найти запись по
+   * ключу (они ищут через {@code Absolute.uri(...)} ещё раз).
    *
-   * @param workspaceUri URI корня workspace
+   * @param workspaceUri  нормализованный URI корня workspace
    * @param workspaceName имя workspace (если null — извлекается из URI)
    * @return созданный контекст сервера
    */

@@ -51,13 +51,7 @@ public class UseDirectiveScanner {
    *         в порядке их появления.
    */
   public static Set<String> usedLibraries(DocumentContext documentContext) {
-    if (documentContext == null) {
-      return Set.of();
-    }
     var ast = documentContext.getAst();
-    if (ast == null) {
-      return Set.of();
-    }
     var nodes = Trees.<BSLParser.UseContext>findAllRuleNodes(ast, BSLParser.RULE_use);
     if (nodes.isEmpty()) {
       return Set.of();

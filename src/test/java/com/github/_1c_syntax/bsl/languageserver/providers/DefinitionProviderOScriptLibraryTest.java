@@ -31,6 +31,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.net.URI;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,7 +153,11 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     assertThat(definitions)
       .as("go-to-def на методе модуля (когда тот же файл регистрирует и класс) должен вести в .os-файл")
       .isNotEmpty();
-    assertThat(definitions.get(0).getTargetUri()).contains("%D0%92%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%D0%A4%D0%B0%D0%B9%D0%BB%D1%8B.os");
+    // Сравниваем по ASCII-форме: Path.toUri()/Absolute.uri на Windows может
+    // вернуть URI с литеральной кириллицей вместо percent-encoded (JDK quirk),
+    // что давало OS-зависимый зелёный/красный тест.
+    assertThat(URI.create(definitions.get(0).getTargetUri()).toASCIIString())
+      .contains("%D0%92%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%D0%A4%D0%B0%D0%B9%D0%BB%D1%8B.os");
   }
 
   @Test
@@ -174,7 +179,11 @@ class DefinitionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
     assertThat(definitions)
       .as("go-to-def на имени модуля библиотеки (модуль+класс с одного файла) должен вести в .os-файл")
       .isNotEmpty();
-    assertThat(definitions.get(0).getTargetUri()).contains("%D0%92%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%D0%A4%D0%B0%D0%B9%D0%BB%D1%8B.os");
+    // Сравниваем по ASCII-форме: Path.toUri()/Absolute.uri на Windows может
+    // вернуть URI с литеральной кириллицей вместо percent-encoded (JDK quirk),
+    // что давало OS-зависимый зелёный/красный тест.
+    assertThat(URI.create(definitions.get(0).getTargetUri()).toASCIIString())
+      .contains("%D0%92%D1%80%D0%B5%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5%D0%A4%D0%B0%D0%B9%D0%BB%D1%8B.os");
   }
 
   private void initLib() {

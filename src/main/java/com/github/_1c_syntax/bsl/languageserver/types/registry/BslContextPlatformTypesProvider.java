@@ -48,6 +48,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -112,7 +113,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return LanguageScope.BSL;
   }
 
-  private static List<TypeDecl> build(ContextProvider provider) {
+  private static List<TypeDecl> build(@Nullable ContextProvider provider) {
     if (provider == null) {
       return List.of();
     }
@@ -244,6 +245,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return false;
   }
 
+  @Nullable
   private static TypeKind mapKind(Context context) {
     return switch (context.kind()) {
       case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;

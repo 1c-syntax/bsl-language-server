@@ -94,12 +94,18 @@ public final class LibConfigParser {
 
   /**
    * Запись манифеста.
+   *
+   * @param modules список объявленных модулей
+   * @param classes список объявленных классов
    */
   public record LibConfig(List<LibEntry> modules, List<LibEntry> classes) {
   }
 
   /**
    * Одна запись манифеста — {@code <module>} или {@code <class>}.
+   *
+   * @param name имя модуля или класса
+   * @param file путь к {@code .os}-файлу
    */
   public record LibEntry(String name, String file) {
   }

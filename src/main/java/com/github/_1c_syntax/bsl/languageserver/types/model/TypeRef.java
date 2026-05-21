@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -158,6 +160,7 @@ public record TypeRef(TypeKind kind, String qualifiedName) {
     return changed ? TypeSet.of(rebuilt) : typeSet;
   }
 
+  @Nullable
   private static String lookup(Map<String, String> bindings, String placeholder) {
     var key = placeholder.toLowerCase(Locale.ROOT);
     for (var entry : bindings.entrySet()) {

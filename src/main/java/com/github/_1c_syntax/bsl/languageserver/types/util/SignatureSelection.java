@@ -96,7 +96,7 @@ public final class SignatureSelection {
     if (signatures.isEmpty()) {
       return -1;
     }
-    var argCount = argTypes == null ? 0 : argTypes.size();
+    var argCount = argTypes.size();
     int bestIndex = -1;
     int bestScore = Integer.MIN_VALUE;
     for (int i = 0; i < signatures.size(); i++) {

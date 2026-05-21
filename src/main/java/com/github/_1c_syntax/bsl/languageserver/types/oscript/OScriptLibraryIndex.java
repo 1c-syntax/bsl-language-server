@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
@@ -275,7 +276,8 @@ public class OScriptLibraryIndex {
     }
   }
 
-  private static String libOriginOf(Path libRoot) {
+  @Nullable
+  private static String libOriginOf(@Nullable Path libRoot) {
     if (libRoot == null) {
       return null;
     }

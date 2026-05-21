@@ -176,9 +176,6 @@ public final class SignatureHelpProvider {
     } catch (NullPointerException e) {
       return Optional.empty();
     }
-    if (ast == null) {
-      return Optional.empty();
-    }
 
     // Идём по дереву: ищем самый глубокий doCall, у которого LPAREN < pos <= RPAREN.
     return findInnermostDoCallEnclosing(ast, position);

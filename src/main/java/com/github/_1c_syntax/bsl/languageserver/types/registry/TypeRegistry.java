@@ -149,7 +149,7 @@ public class TypeRegistry {
   /**
    * Двуязычные имена типов (для hover/inlay): для канонических TypeRef
    * храним {@link BilingualString} с ru + en написанием. Источник —
-   * {@link TypeDecl#bilingualName()} платформенного провайдера. Пустые/
+   * {@link TypeDecl#name()} платформенного провайдера. Пустые/
    * отсутствующие — fallback на {@link TypeRef#qualifiedName()}.
    */
   private final Map<TypeRef, BilingualString> displayNames = new ConcurrentHashMap<>();
@@ -811,7 +811,7 @@ public class TypeRegistry {
 
   /**
    * Возвращает имя типа для отображения в указанной локали LS. Если в
-   * реестре есть двуязычное имя ({@link TypePackProvider.TypeDecl#bilingualName()}),
+   * реестре есть двуязычное имя ({@link TypePackProvider.TypeDecl#name()}),
    * выбирает ru или en по {@code language}; иначе — {@code ref.qualifiedName()}.
    */
   public String displayName(TypeRef ref, Language language) {

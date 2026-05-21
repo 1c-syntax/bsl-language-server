@@ -13,4 +13,7 @@
  * неизменяемое множество типов {@link com.github._1c_syntax.bsl.languageserver.types.model.TypeSet},
  * описание членов {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor}.
  */
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.types.model;
+
+import org.jspecify.annotations.NullMarked;

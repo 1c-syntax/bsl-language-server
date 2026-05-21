@@ -46,6 +46,7 @@ import com.github._1c_syntax.bsl.types.ValueType;
 import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
@@ -676,6 +677,7 @@ public class ConfigurationTypesProvider {
     return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
+  @Nullable
   private TypeRef resolveValueType(ValueType vt) {
     if (vt instanceof PrimitiveValueType primitive) {
       var fullName = primitive.fullName();

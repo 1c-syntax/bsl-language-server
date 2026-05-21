@@ -91,9 +91,6 @@ public final class HoverProvider {
     } catch (NullPointerException e) {
       return Optional.empty();
     }
-    if (ast == null) {
-      return Optional.empty();
-    }
     var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, params.getPosition());
     if (terminalOpt.isEmpty()) {
       return Optional.empty();

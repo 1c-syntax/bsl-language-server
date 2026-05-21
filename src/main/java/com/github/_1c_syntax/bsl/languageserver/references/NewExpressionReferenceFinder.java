@@ -73,9 +73,6 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     } catch (NullPointerException e) {
       return Optional.empty();
     }
-    if (ast == null) {
-      return Optional.empty();
-    }
     var nex = findInnermostNewExpression(ast, position);
     if (nex.isEmpty()) {
       return Optional.empty();
