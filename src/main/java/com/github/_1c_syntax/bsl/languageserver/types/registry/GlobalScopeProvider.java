@@ -362,7 +362,7 @@ public class GlobalScopeProvider {
    * @return имена платформенных глобальных свойств (canonical, без алиасов).
    */
   public List<String> getGlobalPropertyNames() {
-    return getGlobalPropertyNames(null);
+    return platformVariables.stream().map(PlatformVariable::name).toList();
   }
 
   /**
@@ -391,7 +391,7 @@ public class GlobalScopeProvider {
    * @return имена системных перечислений (canonical, без алиасов).
    */
   public List<String> getGlobalEnumNames() {
-    return getGlobalEnumNames(null);
+    return platformEnums.stream().map(PlatformVariable::name).toList();
   }
 
   /**
