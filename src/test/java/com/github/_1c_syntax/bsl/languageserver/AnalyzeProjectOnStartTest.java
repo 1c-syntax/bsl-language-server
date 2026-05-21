@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopu
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,7 @@ import static org.mockito.Mockito.verify;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class AnalyzeProjectOnStartTest {
 
-  private static final URI TEST_WORKSPACE_URI = URI.create("file:///test-analyze-workspace");
+  private static final URI TEST_WORKSPACE_URI = Absolute.uri("file:///test-analyze-workspace");
 
   @Autowired
   private AnalyzeProjectOnStart analyzeProjectOnStart;
