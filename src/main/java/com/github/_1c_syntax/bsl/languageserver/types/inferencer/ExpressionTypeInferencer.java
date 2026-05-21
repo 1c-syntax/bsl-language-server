@@ -400,11 +400,7 @@ public class ExpressionTypeInferencer {
     if (ast == null) {
       return null;
     }
-    var text = ast.getText();
-    if (text == null) {
-      return null;
-    }
-    var trimmed = text.trim();
+    var trimmed = ast.getText().trim();
     if (trimmed.length() >= 2
       && (trimmed.charAt(0) == '"' || trimmed.charAt(0) == '\'')
       && trimmed.charAt(0) == trimmed.charAt(trimmed.length() - 1)) {
@@ -440,11 +436,7 @@ public class ExpressionTypeInferencer {
   }
 
   private static String extractTypeName(ConstructorCallNode constructor) {
-    var typeNameNode = constructor.getTypeName();
-    if (typeNameNode == null) {
-      return null;
-    }
-    var ast = typeNameNode.getRepresentingAst();
+    var ast = constructor.getTypeName().getRepresentingAst();
     if (ast == null) {
       return null;
     }
@@ -1272,15 +1264,7 @@ public class ExpressionTypeInferencer {
     DocumentContext owner,
     BSLParser.AssignmentContext assignment
   ) {
-    var stop = assignment.getStop();
-    if (stop == null) {
-      return TypeSet.EMPTY;
-    }
-    var tokens = owner.getTokens();
-    if (tokens == null) {
-      return TypeSet.EMPTY;
-    }
-    return Trees.getTrailingComment(tokens, stop).map(commentToken -> {
+    return Trees.getTrailingComment(owner.getTokens(), assignment.getStop()).map(commentToken -> {
       Set<TypeRef> refs = new LinkedHashSet<>();
       for (var name : InlineTypeCommentParser.parseTypeNames(commentToken.getText())) {
         typeRegistry.resolve(name, owner.getFileType()).ifPresent(refs::add);
