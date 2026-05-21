@@ -168,7 +168,7 @@ public class SymbolTypeIndex {
 
   private MemberDescriptor findMember(TypeRef typeRef, String name, FileType fileType) {
     for (var member : typeRegistry.getMembers(typeRef, fileType)) {
-      if (member.name().equalsIgnoreCase(name)) {
+      if (member.matches(name)) {
         return member;
       }
     }
@@ -185,7 +185,7 @@ public class SymbolTypeIndex {
     }
     for (var signature : member.signatures()) {
       for (var parameter : signature.parameters()) {
-        if (parameter.name().equalsIgnoreCase(parameterName)) {
+        if (parameter.matches(parameterName)) {
           return parameter.types();
         }
       }

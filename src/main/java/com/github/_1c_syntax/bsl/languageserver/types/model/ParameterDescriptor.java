@@ -21,42 +21,88 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+
 /**
  * Дескриптор формального параметра метода.
  *
- * @param name         имя параметра
- * @param types        допустимые типы параметра ({@link TypeSet#EMPTY} если не указаны)
- * @param optional     является ли параметр опциональным (имеет значение по умолчанию)
- * @param description  краткое описание параметра (может быть пустым)
- * @param defaultValue текстовое представление значения по умолчанию из синтакс-помощника
- *                     (например, {@code "Истина"}, {@code "\"\""}, {@code "Неопределено"});
- *                     пустая строка, если значение не указано или параметр обязательный
+ * @param bilingualName        двуязычное имя параметра (ru + en)
+ * @param types                допустимые типы параметра
+ * @param optional             является ли параметр опциональным
+ * @param bilingualDescription двуязычное краткое описание параметра
+ * @param defaultValue         текстовое представление значения по умолчанию
  */
 public record ParameterDescriptor(
-  String name,
+  BilingualString bilingualName,
   TypeSet types,
   boolean optional,
-  String description,
+  BilingualString bilingualDescription,
   String defaultValue
 ) {
 
   public ParameterDescriptor {
-    description = description == null ? "" : description;
+    if (bilingualName == null) {
+      bilingualName = BilingualString.EMPTY;
+    }
+    if (bilingualDescription == null) {
+      bilingualDescription = BilingualString.EMPTY;
+    }
     defaultValue = defaultValue == null ? "" : defaultValue;
   }
 
-  /**
-   * Совместимый конструктор без {@code defaultValue} — выставляет пустую строку.
-   */
+  /** Compat-конструктор с одноязычными name/description и {@code bilingualName}. */
+  public ParameterDescriptor(String name, TypeSet types, boolean optional, String description,
+                             String defaultValue, BilingualString bilingualName) {
+    this(bilingualName == null || bilingualName.isEmpty() ? BilingualString.of(name) : bilingualName,
+      types, optional, BilingualString.of(description), defaultValue);
+  }
+
+  /** Compat-конструктор: одноязычный {@code defaultValue}. */
+  public ParameterDescriptor(String name, TypeSet types, boolean optional, String description,
+                             String defaultValue) {
+    this(BilingualString.of(name), types, optional, BilingualString.of(description), defaultValue);
+  }
+
+  /** Compat-конструктор без {@code defaultValue}. */
   public ParameterDescriptor(String name, TypeSet types, boolean optional, String description) {
-    this(name, types, optional, description, "");
+    this(BilingualString.of(name), types, optional, BilingualString.of(description), "");
   }
 
   public static ParameterDescriptor of(String name) {
-    return new ParameterDescriptor(name, TypeSet.EMPTY, false, "", "");
+    return new ParameterDescriptor(BilingualString.of(name), TypeSet.EMPTY, false,
+      BilingualString.EMPTY, "");
   }
 
   public static ParameterDescriptor of(String name, boolean optional) {
-    return new ParameterDescriptor(name, TypeSet.EMPTY, optional, "", "");
+    return new ParameterDescriptor(BilingualString.of(name), TypeSet.EMPTY, optional,
+      BilingualString.EMPTY, "");
+  }
+
+  /** Compat-аксессор: primary написание имени. */
+  public String name() {
+    return bilingualName.primary();
+  }
+
+  /** Compat-аксессор: primary описание. */
+  public String description() {
+    return bilingualDescription.primary();
+  }
+
+  /**
+   * Сравнивает имя параметра с {@code candidate} без учёта регистра —
+   * по обоим написаниям из {@link #bilingualName}.
+   */
+  public boolean matches(String candidate) {
+    return bilingualName.matches(candidate);
+  }
+
+  /** Имя параметра для отображения в указанной локали LS. */
+  public String displayName(Language language) {
+    return bilingualName.forLanguage(language);
+  }
+
+  /** Описание параметра для отображения в указанной локали LS. */
+  public String displayDescription(Language language) {
+    return bilingualDescription.forLanguage(language);
   }
 }

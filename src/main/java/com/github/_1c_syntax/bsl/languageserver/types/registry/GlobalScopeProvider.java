@@ -31,6 +31,9 @@ import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.context.platform.EnAttachments;
+import com.github._1c_syntax.bsl.context.platform.PlatformContextProvider;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -115,7 +118,7 @@ public class GlobalScopeProvider {
    * синтакс-помощника. Заполняется при загрузке из bsl-context;
    * для JSON-fallback — пустая мапа.
    */
-  private final Map<String, String> keywordDescriptions;
+  private final Map<String, BilingualString> keywordDescriptions;
   /** lowercased имя глобального свойства (через registerGlobalProperty) → языковой скоуп. */
   private final Map<String, LanguageScope> globalContextScopes = new ConcurrentHashMap<>();
   /**
@@ -171,14 +174,28 @@ public class GlobalScopeProvider {
    * Возвращает пустой Optional также если bsl-context недоступен.
    */
   public Optional<String> findKeywordDescription(String name) {
+    return findKeywordDescription(name,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE);
+  }
+
+  /**
+   * То же, что {@link #findKeywordDescription(String)}, но возвращает описание
+   * в указанной локали LS (с fallback на другую локаль, если запрошенная пуста).
+   */
+  public Optional<String> findKeywordDescription(String name,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language language) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
     var description = keywordDescriptions.get(name.toLowerCase(Locale.ROOT));
-    if (description == null || description.isBlank()) {
+    if (description == null || description.isEmpty()) {
       return Optional.empty();
     }
-    return Optional.of(description);
+    var localized = description.forLanguage(language);
+    if (localized == null || localized.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(localized);
   }
 
   /**
@@ -791,12 +808,19 @@ public class GlobalScopeProvider {
 
   private static Loaded buildBslFromContext(ContextProvider provider) {
     var globalContext = provider.getGlobalContext();
+    // Bilingual: если provider — Platform, тащим en-attachments для всех
+    // глобальных функций (description, returnValueDescription, notes,
+    // examples, seeAlso). MemberDescriptor станет bilingual.
+    java.util.function.Function<Object, EnAttachments> enLookup =
+      provider instanceof PlatformContextProvider pcp
+        ? pcp::getEnAttachments
+        : ctx -> EnAttachments.EMPTY;
 
     var functions = new LinkedHashMap<String, MemberDescriptor>();
     var functionScopes = new HashMap<String, LanguageScope>();
     if (globalContext != null) {
       for (var method : globalContext.methods()) {
-        var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(method);
+        var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(method, enLookup);
         putFunction(functions, functionScopes, method.name().getName(), descriptor);
         putFunction(functions, functionScopes, method.name().getAlias(), descriptor);
       }
@@ -809,7 +833,7 @@ public class GlobalScopeProvider {
     var keywordScopes = new HashMap<String, LanguageScope>();
     var keywordSeen = new HashSet<String>();
     var keywordSnippets = new HashMap<String, LanguageKeywordSnippet>();
-    var keywordDescriptions = new HashMap<String, String>();
+    var keywordDescriptions = new HashMap<String, BilingualString>();
     var variables = new ArrayList<PlatformVariable>();
     var enums = new ArrayList<PlatformVariable>();
     var variableScopes = new HashMap<String, LanguageScope>();
@@ -868,11 +892,18 @@ public class GlobalScopeProvider {
               keywordSnippets.put(kw.name().getAlias().toLowerCase(Locale.ROOT), kw.snippet());
             }
           }
-          if (added && kw.description() != null && !kw.description().isBlank()) {
-            // Описание по обоим написаниям, для hover'а независимо от языка.
-            keywordDescriptions.put(kw.name().getName().toLowerCase(Locale.ROOT), kw.description());
-            if (kw.name().getAlias() != null && !kw.name().getAlias().isBlank()) {
-              keywordDescriptions.put(kw.name().getAlias().toLowerCase(Locale.ROOT), kw.description());
+          if (added) {
+            // Описание ru + en (en хранится в PlatformLanguageKeyword.descriptionEn).
+            // Доступно по обоим написаниям имени.
+            var enDesc = kw instanceof com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword pk
+              ? pk.descriptionEn() : "";
+            var biDesc = BilingualString.of(
+              kw.description() == null ? "" : kw.description(), enDesc);
+            if (!biDesc.isEmpty()) {
+              keywordDescriptions.put(kw.name().getName().toLowerCase(Locale.ROOT), biDesc);
+              if (kw.name().getAlias() != null && !kw.name().getAlias().isBlank()) {
+                keywordDescriptions.put(kw.name().getAlias().toLowerCase(Locale.ROOT), biDesc);
+              }
             }
           }
         }
@@ -1029,7 +1060,7 @@ public class GlobalScopeProvider {
     var snippets = new HashMap<String, LanguageKeywordSnippet>();
     snippets.putAll(a.keywordSnippets);
     b.keywordSnippets.forEach(snippets::putIfAbsent);
-    var descriptions = new HashMap<String, String>();
+    var descriptions = new HashMap<String, BilingualString>();
     descriptions.putAll(a.keywordDescriptions);
     b.keywordDescriptions.forEach(descriptions::putIfAbsent);
     return new Loaded(
@@ -1121,6 +1152,14 @@ public class GlobalScopeProvider {
         (List<Map<String, Object>>) entry.get("signatures"), returnType
       );
       var descriptor = MemberDescriptor.method(name, description, signatures);
+      // Двуязычные имена: опциональные `nameRu` и `nameEn`. Если не заданы —
+      // дескриптор остаётся с пустыми {@code nameRu}/{@code nameEn} (и
+      // {@code displayName} падает на {@code name}).
+      var nameRu = stringEntry(entry, "nameRu");
+      var nameEn = stringEntry(entry, "nameEn");
+      if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
+        descriptor = descriptor.withLocalizedNames(nameRu, nameEn);
+      }
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
       var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
       for (var alias : aliases) {
@@ -1128,6 +1167,11 @@ public class GlobalScopeProvider {
       }
     }
     return Collections.unmodifiableMap(result);
+  }
+
+  private static String stringEntry(Map<String, Object> raw, String key) {
+    var v = raw.get(key);
+    return v instanceof String s ? s : "";
   }
 
   @SuppressWarnings("unchecked")
@@ -1150,7 +1194,10 @@ public class GlobalScopeProvider {
         var pname = (String) p.get("name");
         var optional = Boolean.TRUE.equals(p.get("optional"));
         var pdesc = (String) p.getOrDefault("description", "");
-        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc));
+        var pNameRu = stringEntry(p, "nameRu");
+        var pNameEn = stringEntry(p, "nameEn");
+        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, "",
+          BilingualString.of(pNameRu, pNameEn)));
       }
       result.add(new SignatureDescriptor(params, returnType, description));
     }
@@ -1168,7 +1215,7 @@ public class GlobalScopeProvider {
     Map<String, LanguageScope> keywordScopes,
     Map<String, LanguageScope> platformVariableScopes,
     Map<String, LanguageKeywordSnippet> keywordSnippets,
-    Map<String, String> keywordDescriptions
+    Map<String, BilingualString> keywordDescriptions
   ) {
   }
 

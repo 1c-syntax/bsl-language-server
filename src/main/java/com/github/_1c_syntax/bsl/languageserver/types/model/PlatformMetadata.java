@@ -21,36 +21,27 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 /**
  * Платформенные метаданные члена ({@link MemberDescriptor}) или конструктора.
- * <p>
- * Поля — опциональные сведения из синтакс-помощника (bsl-context),
- * нужные hover'у/completion'у/диагностикам версий: «доступно с», «устарело с»,
- * список контекстов исполнения (тонкий клиент / сервер / …), режим доступа,
- * рекомендуемая замена, описание возвращаемого значения, заметки/примеры/
- * ссылки. Все поля могут быть пустыми ({@code ""}, {@link List#of()}) —
- * {@link #EMPTY} собирает «нулевой» вариант.
+ * Все текстовые поля и текстовые списки — {@link BilingualString}; при
+ * смене LS-локали hover'у не нужно пересоздавать дескриптор, локаль
+ * выбирается на лету через {@link BilingualString#forLanguage(Language)}.
  *
- * @param sinceVersion             версия платформы, начиная с которой член
- *                                 доступен (например, {@code "8.3.27"});
- *                                 пустая строка — не указано
- * @param deprecatedSinceVersion   версия платформы, начиная с которой член
- *                                 признан устаревшим; пустая строка — не указано
- * @param recommendedReplacements  имена рекомендуемых заменяющих методов/
- *                                 свойств; пустой список — не указано
- * @param availabilities           контексты исполнения, в которых член доступен;
- *                                 пустой набор — не ограничено
- * @param accessMode               режим доступа для свойств; {@code null} —
- *                                 не указано / не применимо
- * @param returnValueDescription   текстовое описание возвращаемого значения
- *                                 (для методов); пустая строка — не указано
- * @param notes                    «Замечание» из синтакс-помощника; пустая
- *                                 строка — не указано
- * @param examples                 примеры использования; пустой список — не указано
- * @param seeAlso                  «См. также» — ссылки на связанные сущности
+ * @param sinceVersion            версия платформы, начиная с которой член доступен
+ * @param deprecatedSinceVersion  версия, начиная с которой устарел
+ * @param recommendedReplacements рекомендуемые замены
+ * @param availabilities          контексты исполнения
+ * @param accessMode              режим доступа (для свойств)
+ * @param returnValueDescription  «Возвращаемое значение:» (ru + en)
+ * @param notes                   «Замечание:» (ru + en)
+ * @param examples                примеры использования (каждый элемент — ru + en)
+ * @param seeAlso                 «См. также» — связанные сущности (каждый — ru + en)
  */
 public record PlatformMetadata(
   String sinceVersion,
@@ -58,14 +49,16 @@ public record PlatformMetadata(
   List<String> recommendedReplacements,
   Set<Availability> availabilities,
   AccessMode accessMode,
-  String returnValueDescription,
-  String notes,
-  List<String> examples,
-  List<String> seeAlso
+  BilingualString returnValueDescription,
+  BilingualString notes,
+  List<BilingualString> examples,
+  List<BilingualString> seeAlso
 ) {
 
   public static final PlatformMetadata EMPTY = new PlatformMetadata(
-    "", "", List.of(), Set.of(), null, "", "", List.of(), List.of()
+    "", "", List.of(), Set.of(), null,
+    BilingualString.EMPTY, BilingualString.EMPTY,
+    List.of(), List.of()
   );
 
   public PlatformMetadata {
@@ -73,15 +66,47 @@ public record PlatformMetadata(
     deprecatedSinceVersion = deprecatedSinceVersion == null ? "" : deprecatedSinceVersion;
     recommendedReplacements = recommendedReplacements == null ? List.of() : List.copyOf(recommendedReplacements);
     availabilities = availabilities == null ? Set.of() : Set.copyOf(availabilities);
-    returnValueDescription = returnValueDescription == null ? "" : returnValueDescription;
-    notes = notes == null ? "" : notes;
+    if (returnValueDescription == null) {
+      returnValueDescription = BilingualString.EMPTY;
+    }
+    if (notes == null) {
+      notes = BilingualString.EMPTY;
+    }
     examples = examples == null ? List.of() : List.copyOf(examples);
     seeAlso = seeAlso == null ? List.of() : List.copyOf(seeAlso);
   }
 
   /**
-   * @return {@code true}, если все поля пустые — метаданные эффективно отсутствуют.
+   * Compat-конструктор: одноязычные строки {@code returnValueDescription}/
+   * {@code notes} + одни лишь ru-{@code examples}/{@code seeAlso} (без en).
    */
+  public PlatformMetadata(
+    String sinceVersion,
+    String deprecatedSinceVersion,
+    List<String> recommendedReplacements,
+    Set<Availability> availabilities,
+    AccessMode accessMode,
+    String returnValueDescription,
+    String notes,
+    List<String> ruExamples,
+    List<String> ruSeeAlso
+  ) {
+    this(sinceVersion, deprecatedSinceVersion, recommendedReplacements, availabilities, accessMode,
+      BilingualString.of(returnValueDescription), BilingualString.of(notes),
+      wrapRu(ruExamples), wrapRu(ruSeeAlso));
+  }
+
+  private static List<BilingualString> wrapRu(List<String> ruOnly) {
+    if (ruOnly == null || ruOnly.isEmpty()) {
+      return List.of();
+    }
+    var out = new ArrayList<BilingualString>(ruOnly.size());
+    for (var s : ruOnly) {
+      out.add(BilingualString.of(s));
+    }
+    return List.copyOf(out);
+  }
+
   public boolean isEmpty() {
     return sinceVersion.isEmpty()
       && deprecatedSinceVersion.isEmpty()
@@ -92,12 +117,8 @@ public record PlatformMetadata(
       && notes.isEmpty()
       && examples.isEmpty()
       && seeAlso.isEmpty();
-    }
+  }
 
-  /**
-   * @return {@code true}, если у члена указано «доступно с …» (sinceVersion непустой)
-   *         или «устарело с …» (deprecatedSinceVersion непустой).
-   */
   public boolean hasVersionInfo() {
     return !sinceVersion.isEmpty() || !deprecatedSinceVersion.isEmpty();
   }

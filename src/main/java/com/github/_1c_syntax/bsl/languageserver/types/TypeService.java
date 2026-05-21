@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -161,7 +163,7 @@ public class TypeService {
    * То же, что {@link #getMembers(TypeRef)}, но фильтрует члены по языковому скоупу
    * источника. Источники, не совместимые с {@code fileType}, пропускаются.
    */
-  public Collection<MemberDescriptor> getMembers(TypeRef typeRef, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  public Collection<MemberDescriptor> getMembers(TypeRef typeRef, FileType fileType) {
     return typeRegistry.getMembers(typeRef, fileType);
   }
 
@@ -176,8 +178,13 @@ public class TypeService {
    * То же, но фильтрует описания по скоупу языка (BSL/OS). Используется,
    * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
    */
-  public String getDescription(TypeRef typeRef, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  public String getDescription(TypeRef typeRef, FileType fileType) {
     return typeRegistry.getDescription(typeRef, fileType);
+  }
+
+  /** Описание типа в указанной локали LS (с fallback). */
+  public String getDescription(TypeRef typeRef, Language language) {
+    return typeRegistry.getDescription(typeRef, language);
   }
 
   /**
@@ -192,7 +199,7 @@ public class TypeService {
    * То же, но фильтрует конструкторы по скоупу языка (BSL/OS).
    */
   public java.util.List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(
-    TypeRef typeRef, com.github._1c_syntax.bsl.languageserver.context.FileType fileType
+    TypeRef typeRef, FileType fileType
   ) {
     return typeRegistry.getConstructors(typeRef, fileType);
   }
@@ -207,7 +214,7 @@ public class TypeService {
   /**
    * Резолв типа по имени с учётом языкового скоупа.
    */
-  public Optional<TypeRef> resolve(String name, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  public Optional<TypeRef> resolve(String name, FileType fileType) {
     return typeRegistry.resolve(name, fileType);
   }
 
@@ -221,7 +228,7 @@ public class TypeService {
   /**
    * То же, что {@link #findGlobalContext(String)}, но с фильтрацией по типу файла.
    */
-  public Optional<TypeRef> findGlobalContext(String name, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  public Optional<TypeRef> findGlobalContext(String name, FileType fileType) {
     // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы system enum'ы
     // и прочие глобальные свойства из платформенных провайдеров были зарегистрированы.
     typeRegistry.resolve(name);
@@ -239,7 +246,7 @@ public class TypeService {
   /**
    * То же, что {@link #getGlobalContextNames()}, но с фильтрацией по типу файла.
    */
-  public Collection<String> getGlobalContextNames(com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  public Collection<String> getGlobalContextNames(FileType fileType) {
     typeRegistry.resolve("");
     return globalScopeProvider.getGlobalContextNames(fileType);
   }
@@ -327,7 +334,7 @@ public class TypeService {
     }
     for (var owner : leftTypes.refs()) {
       for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
-        if (member.kind() == expectedKind && member.name().equalsIgnoreCase(memberName)) {
+        if (member.kind() == expectedKind && member.matches(memberName)) {
           int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
           var argTypes = (right instanceof MethodCallNode call)
             ? inferArgTypes(call, documentContext)

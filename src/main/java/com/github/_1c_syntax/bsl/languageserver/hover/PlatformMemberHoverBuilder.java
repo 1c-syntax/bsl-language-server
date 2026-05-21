@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -30,6 +34,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
@@ -47,7 +53,16 @@ import java.util.stream.Collectors;
  * привязки к контейнеру.
  */
 @Component
+@RequiredArgsConstructor
 public class PlatformMemberHoverBuilder {
+
+  private final Resources resources;
+  private final LanguageServerConfiguration configuration;
+  private final TypeRegistry typeRegistry;
+
+  private String tr(String key) {
+    return resources.getResourceString(getClass(), key);
+  }
 
   public MarkupContent build(TypeRef owner, MemberDescriptor descriptor, int callArgCount) {
     return build(owner, descriptor, callArgCount, List.of());
@@ -88,12 +103,13 @@ public class PlatformMemberHoverBuilder {
         chosenIndex = 0;
       }
     }
+    var lang = configuration.getLanguage();
     if (descriptor.kind() == MemberKind.METHOD) {
       sb.append("```bsl\n");
-      sb.append(descriptor.name()).append('(');
+      sb.append(descriptor.displayName(lang)).append('(');
       if (chosen != null) {
         sb.append(chosen.parameters().stream()
-          .map(p -> p.name())
+          .map(p -> p.displayName(lang))
           .collect(Collectors.joining(", ")));
       }
       sb.append(')');
@@ -101,14 +117,14 @@ public class PlatformMemberHoverBuilder {
       // descriptor.returnTypes() (HBK может декларировать несколько
       // типов в "Тип:" возврата метода). Fallback: chosen.returnType()
       // и effectiveReturnType (для legacy-членов без TypeSet).
-      var returnLabel = renderTypeSet(descriptor.returnTypes());
+      var returnLabel = renderTypeSet(descriptor.returnTypes(), lang);
       if (returnLabel.isEmpty()) {
         TypeRef ret = (chosen != null && chosen.returnType() != null
           && !chosen.returnType().qualifiedName().isEmpty())
           ? chosen.returnType()
           : effectiveReturnType(descriptor);
         if (ret != null) {
-          returnLabel = ret.qualifiedName();
+          returnLabel = typeRegistry.displayName(ret, lang);
         }
       }
       if (!returnLabel.isEmpty()) {
@@ -117,57 +133,68 @@ public class PlatformMemberHoverBuilder {
       sb.append("\n```\n");
     } else {
       sb.append("```bsl\n");
-      sb.append(descriptor.name());
+      sb.append(descriptor.displayName(lang));
       // Для свойств тоже отображаем union, если у дескриптора несколько
       // типов (например, composite-реквизит "Строка | Число").
-      var propertyLabel = renderTypeSet(descriptor.returnTypes());
+      var propertyLabel = renderTypeSet(descriptor.returnTypes(), lang);
       if (!propertyLabel.isEmpty()) {
         sb.append(": ").append(propertyLabel);
       } else if (descriptor.returnType() != null
         && descriptor.returnType().qualifiedName() != null
         && !descriptor.returnType().qualifiedName().isEmpty()) {
-        sb.append(": ").append(descriptor.returnType().qualifiedName());
+        sb.append(": ").append(typeRegistry.displayName(descriptor.returnType(), lang));
       }
       sb.append("\n```\n");
     }
     if (owner != null) {
-      sb.append("\n_member of_ `").append(owner.qualifiedName()).append('`');
+      sb.append("\n_").append(tr("memberOf")).append("_ `")
+        .append(typeRegistry.displayName(owner, lang)).append('`');
     } else if (descriptor.kind() == MemberKind.METHOD) {
-      sb.append("\n_глобальная функция_");
+      sb.append("\n_").append(tr("globalFunction")).append('_');
     } else {
-      sb.append("\n_глобальное свойство_");
+      sb.append("\n_").append(tr("globalProperty")).append('_');
     }
     var symDesc = descriptor.getSymbolDescription();
     if (symDesc.isDeprecated()) {
-      sb.append("\n\n**Устарело.**");
+      sb.append("\n\n**").append(tr("deprecatedFlag")).append("**");
       if (!symDesc.getDeprecationInfo().isBlank()) {
         sb.append(' ').append(symDesc.getDeprecationInfo());
       }
     }
-    if (!symDesc.getPurposeDescription().isBlank()) {
+    // Для платформенных членов (sourceSymbol==null) — берём bilingual-описание
+    // напрямую (учитывает en-локаль). Для source-defined — getSymbolDescription
+    // приоритетно (BSL-doc-comment).
+    if (descriptor.sourceSymbol() != null && !symDesc.getPurposeDescription().isBlank()) {
       sb.append("\n\n").append(symDesc.getPurposeDescription());
-    } else if (descriptor.description() != null && !descriptor.description().isBlank()) {
-      sb.append("\n\n").append(descriptor.description());
+    } else {
+      var desc = descriptor.displayDescription(lang);
+      if (desc != null && !desc.isBlank()) {
+        sb.append("\n\n").append(desc);
+      }
     }
-    if (chosen != null && chosen.description() != null && !chosen.description().isBlank()) {
-      sb.append("\n\n").append(chosen.description());
+    if (chosen != null) {
+      var chosenDesc = chosen.displayDescription(lang);
+      if (chosenDesc != null && !chosenDesc.isBlank()) {
+        sb.append("\n\n").append(chosenDesc);
+      }
     }
     if (chosen != null && !chosen.parameters().isEmpty()) {
-      sb.append("\n\n**Параметры:**\n");
+      sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        sb.append("- `").append(p.name()).append('`');
-        var typesLabel = renderTypeSet(p.types());
+        sb.append("- `").append(p.displayName(lang)).append('`');
+        var typesLabel = renderTypeSet(p.types(), lang);
         if (!typesLabel.isEmpty()) {
           sb.append(": ").append(typesLabel);
         }
         if (p.optional()) {
-          sb.append(" _(необязательный)_");
+          sb.append(" _(").append(tr("optionalParameter")).append(")_");
         }
         if (!p.defaultValue().isBlank()) {
           sb.append(" _= ").append(p.defaultValue()).append('_');
         }
-        if (p.description() != null && !p.description().isBlank()) {
-          sb.append(" — ").append(p.description());
+        var pDesc = p.displayDescription(lang);
+        if (pDesc != null && !pDesc.isBlank()) {
+          sb.append(" — ").append(pDesc);
         }
         sb.append('\n');
       }
@@ -177,24 +204,24 @@ public class PlatformMemberHoverBuilder {
       // returnValueDescription уже зашит в общий description выше
     }
     if (disclaim) {
-      sb.append("\n\n_Не найдено описание, подходящее под текущий вызов метода._");
+      sb.append("\n\n_").append(tr("noMatchingSignature")).append('_');
     }
     if (descriptor.kind() == MemberKind.METHOD && descriptor.signatures().size() > 1) {
-      sb.append("\n\n**Все варианты вызова:**\n");
+      sb.append("\n\n**").append(tr("allCallVariants")).append("**\n");
       for (int i = 0; i < descriptor.signatures().size(); i++) {
         var sig = descriptor.signatures().get(i);
         sb.append("- ");
         if (i == chosenIndex && !disclaim) {
           sb.append("**");
         }
-        sb.append('`').append(descriptor.name()).append('(')
-          .append(sig.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")))
+        sb.append('`').append(descriptor.displayName(lang)).append('(')
+          .append(sig.parameters().stream().map(p -> p.displayName(lang)).collect(Collectors.joining(", ")))
           .append(")`");
         // Полный union типов сигнатуры (sig.returnTypes); fallback на
         // descriptor.returnTypes если у сигнатуры пусто (legacy кейс).
-        var sigLabel = renderTypeSet(sig.returnTypes());
+        var sigLabel = renderTypeSet(sig.returnTypes(), lang);
         if (sigLabel.isEmpty()) {
-          sigLabel = renderTypeSet(descriptor.returnTypes());
+          sigLabel = renderTypeSet(descriptor.returnTypes(), lang);
         }
         if (!sigLabel.isEmpty()) {
           sb.append(": ").append(sigLabel);
@@ -214,60 +241,69 @@ public class PlatformMemberHoverBuilder {
    * возвращаемого значения, «Замечание», примеры, «См. также».
    * Если метаданные пусты — ничего не пишет.
    */
-  private static void appendMetadata(StringBuilder sb, PlatformMetadata md) {
+  private void appendMetadata(StringBuilder sb, PlatformMetadata md) {
     if (md == null || md.isEmpty()) {
       return;
     }
     if (!md.deprecatedSinceVersion().isBlank()) {
-      sb.append("\n\n**Устарело с:** ").append(md.deprecatedSinceVersion());
+      sb.append("\n\n**").append(tr("deprecatedSince")).append("** ").append(md.deprecatedSinceVersion());
     }
     if (!md.sinceVersion().isBlank()) {
-      sb.append("\n\n**Доступно с:** ").append(md.sinceVersion());
+      sb.append("\n\n**").append(tr("sinceVersion")).append("** ").append(md.sinceVersion());
     }
     if (!md.recommendedReplacements().isEmpty()) {
-      sb.append("\n\n**Рекомендуется использовать:** ")
+      sb.append("\n\n**").append(tr("recommendedReplacements")).append("** ")
         .append(md.recommendedReplacements().stream()
           .map(r -> "`" + r + "`")
           .collect(Collectors.joining(", ")));
     }
     if (md.accessMode() == AccessMode.READ) {
-      sb.append("\n\n**Доступ:** только чтение");
+      sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadOnly"));
     } else if (md.accessMode() == AccessMode.READ_WRITE) {
-      sb.append("\n\n**Доступ:** чтение и запись");
+      sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadWrite"));
     }
     appendAvailabilities(sb, md.availabilities());
-    if (!md.returnValueDescription().isBlank()) {
-      sb.append("\n\n**Возвращаемое значение:** ").append(md.returnValueDescription());
+    var lang = configuration.getLanguage();
+    var rv = md.returnValueDescription().forLanguage(lang);
+    if (!rv.isBlank()) {
+      sb.append("\n\n**").append(tr("returnValueDescription")).append("** ").append(rv);
     }
-    if (!md.notes().isBlank()) {
-      sb.append("\n\n**Замечание:** ").append(md.notes());
+    var nt = md.notes().forLanguage(lang);
+    if (!nt.isBlank()) {
+      sb.append("\n\n**").append(tr("notes")).append("** ").append(nt);
     }
-    appendList(sb, "Пример", md.examples(), true);
-    appendList(sb, "См. также", md.seeAlso(), false);
+    appendBilingualList(sb, tr("example"), md.examples(), true, lang);
+    appendBilingualList(sb, tr("seeAlso"), md.seeAlso(), false, lang);
   }
 
-  private static void appendAvailabilities(StringBuilder sb, Set<Availability> availabilities) {
+  private static void appendBilingualList(StringBuilder sb, String title,
+                                          List<BilingualString> items, boolean asCodeBlock,
+                                          Language lang) {
+    if (items == null || items.isEmpty()) {
+      return;
+    }
+    var resolved = new java.util.ArrayList<String>(items.size());
+    for (var bi : items) {
+      var s = bi.forLanguage(lang);
+      if (s != null && !s.isBlank()) {
+        resolved.add(s);
+      }
+    }
+    appendList(sb, title, resolved, asCodeBlock);
+  }
+
+  private void appendAvailabilities(StringBuilder sb, Set<Availability> availabilities) {
     if (availabilities == null || availabilities.isEmpty()) {
       return;
     }
-    sb.append("\n\n**Доступно в контекстах:** ");
+    sb.append("\n\n**").append(tr("availabilities")).append("** ");
     sb.append(availabilities.stream()
-      .map(PlatformMemberHoverBuilder::displayName)
+      .map(this::displayName)
       .collect(Collectors.joining(", ")));
   }
 
-  private static String displayName(Availability availability) {
-    return switch (availability) {
-      case THIN_CLIENT -> "тонкий клиент";
-      case WEB_CLIENT -> "веб-клиент";
-      case MOBILE_CLIENT -> "мобильный клиент";
-      case SERVER -> "сервер";
-      case THICK_CLIENT -> "толстый клиент";
-      case EXTERNAL_CONNECTION -> "внешнее соединение";
-      case MOBILE_APPLICATION_CLIENT -> "мобильное приложение (клиент)";
-      case MOBILE_APPLICATION_SERVER -> "мобильное приложение (сервер)";
-      case MOBILE_STANDALONE_SERVER -> "мобильный автономный сервер";
-    };
+  private String displayName(Availability availability) {
+    return tr("availability." + availability.name());
   }
 
   private static void appendList(StringBuilder sb, String title, List<String> items, boolean asCodeBlock) {
@@ -292,12 +328,12 @@ public class PlatformMemberHoverBuilder {
    * пустая строка. Используется для рендеринга union-типов возврата и
    * union-свойств в одиночном блоке кода hover'а.
    */
-  private static String renderTypeSet(TypeSet types) {
+  private String renderTypeSet(TypeSet types, Language lang) {
     if (types == null || types.isEmpty()) {
       return "";
     }
     return types.refs().stream()
-      .map(TypeRef::qualifiedName)
+      .map(r -> typeRegistry.displayName(r, lang))
       .filter(name -> name != null && !name.isEmpty())
       .collect(Collectors.joining(" | "));
   }

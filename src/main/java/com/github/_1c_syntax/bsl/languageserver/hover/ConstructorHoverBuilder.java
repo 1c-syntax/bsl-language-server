@@ -21,11 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -45,6 +48,13 @@ public class ConstructorHoverBuilder {
 
   private final TypeService typeService;
   private final TypeRegistry typeRegistry;
+  private final CollectionHoverHints collectionHoverHints;
+  private final Resources resources;
+  private final LanguageServerConfiguration configuration;
+
+  private String tr(String key) {
+    return resources.getResourceString(getClass(), key);
+  }
 
   public MarkupContent build(
     String typeName,
@@ -55,51 +65,66 @@ public class ConstructorHoverBuilder {
     String classDescription
   ) {
     var sb = new StringBuilder();
-    sb.append("```bsl\nНовый ").append(typeName).append('(');
+    var lang = configuration.getLanguage();
+    var localizedTypeName = typeRegistry.displayName(ref, lang);
+    if (localizedTypeName.isBlank()) {
+      localizedTypeName = typeName;
+    }
+    sb.append("```bsl\n").append(tr("newKeyword")).append(' ').append(localizedTypeName).append('(');
     if (chosen != null) {
-      sb.append(chosen.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")));
+      sb.append(chosen.parameters().stream().map(p -> p.displayName(lang)).collect(Collectors.joining(", ")));
     }
     sb.append(')').append("\n```\n");
-    sb.append("\n_конструктор типа_ `").append(ref.qualifiedName()).append('`');
-    var classDesc = classDescription != null ? classDescription : typeService.getDescription(ref);
+    sb.append("\n_").append(tr("constructorOf")).append("_ `").append(localizedTypeName).append('`');
+    // Bilingual: всегда зовём typeService.getDescription(ref, lang) — он отдаст
+    // ru или en по текущей LS-локали. {@code classDescription} от caller'а
+    // используется только если registry не знает описание (legacy/source-defined
+    // символы).
+    var bilingual = typeService.getDescription(ref, lang);
+    var classDesc = !bilingual.isBlank() ? bilingual : (classDescription != null ? classDescription : "");
     if (!classDesc.isBlank()) {
       sb.append("\n\n").append(classDesc);
     }
-    if (chosen != null && chosen.description() != null && !chosen.description().isBlank()) {
-      sb.append("\n\n").append(chosen.description());
+    if (chosen != null) {
+      var chosenDesc = chosen.displayDescription(lang);
+      if (chosenDesc != null && !chosenDesc.isBlank()) {
+        sb.append("\n\n").append(chosenDesc);
+      }
     }
     if (chosen != null && !chosen.parameters().isEmpty()) {
-      sb.append("\n\n**Параметры:**\n");
+      sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        sb.append("- `").append(p.name()).append('`');
-        var typesLabel = renderTypeSet(p.types());
+        sb.append("- `").append(p.displayName(lang)).append('`');
+        var typesLabel = renderTypeSet(p.types(), lang);
         if (!typesLabel.isEmpty()) {
           sb.append(": ").append(typesLabel);
         }
         if (p.optional()) {
-          sb.append(" _(необязательный)_");
+          sb.append(" _(").append(tr("optionalParameter")).append(")_");
         }
         if (!p.defaultValue().isBlank()) {
           sb.append(" _= ").append(p.defaultValue()).append('_');
         }
-        if (p.description() != null && !p.description().isBlank()) {
-          sb.append(" — ").append(p.description());
+        var pDesc = p.displayDescription(lang);
+        if (pDesc != null && !pDesc.isBlank()) {
+          sb.append(" — ").append(pDesc);
         }
         sb.append('\n');
       }
     }
-    CollectionHoverHints.append(sb, ref, typeRegistry);
+    collectionHoverHints.append(sb, ref, typeRegistry);
     if (disclaim) {
-      sb.append("\n\n_Не найдено описание, подходящее под текущий вызов конструктора._");
+      sb.append("\n\n_").append(tr("noMatchingConstructor")).append('_');
     }
     if (ctors.size() > 1) {
-      sb.append("\n\n**Все варианты конструктора:**\n");
+      sb.append("\n\n**").append(tr("allConstructorVariants")).append("**\n");
       for (var sig : ctors) {
-        sb.append("- `Новый ").append(typeName).append('(')
-          .append(sig.parameters().stream().map(p -> p.name()).collect(Collectors.joining(", ")))
+        sb.append("- `").append(tr("newKeyword")).append(' ').append(localizedTypeName).append('(')
+          .append(sig.parameters().stream().map(p -> p.displayName(lang)).collect(Collectors.joining(", ")))
           .append(")`");
-        if (sig.description() != null && !sig.description().isBlank()) {
-          sb.append(" — ").append(sig.description());
+        var sigDesc = sig.displayDescription(lang);
+        if (sigDesc != null && !sigDesc.isBlank()) {
+          sb.append(" — ").append(sigDesc);
         }
         sb.append('\n');
       }
@@ -111,12 +136,12 @@ public class ConstructorHoverBuilder {
    * Форматирует {@code TypeSet} как {@code "Тип1 | Тип2"}. Пустой набор —
    * пустая строка.
    */
-  private static String renderTypeSet(TypeSet types) {
+  private String renderTypeSet(TypeSet types, Language lang) {
     if (types == null || types.isEmpty()) {
       return "";
     }
     return types.refs().stream()
-      .map(TypeRef::qualifiedName)
+      .map(r -> typeRegistry.displayName(r, lang))
       .filter(name -> name != null && !name.isEmpty())
       .collect(Collectors.joining(" | "));
   }

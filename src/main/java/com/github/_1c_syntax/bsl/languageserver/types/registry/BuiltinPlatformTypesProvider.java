@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -134,7 +135,22 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var kind = mapJsonKind(kindStr);
         var isEnum = "ENUM".equals(kindStr);
         var qualifiedName = (String) entry.get("name");
-        var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+        // JSON-схема: en-имя ожидается в `nameEn`, ru-имя — в `name` (или
+        // явно в `nameRu`). Двуязычное имя пакуется в BilingualString.
+        var nameRu = stringField(entry, "nameRu");
+        var nameEn = stringField(entry, "nameEn");
+        // Legacy `aliases` (одиночный en-вариант) пока поддерживаем — если
+        // nameEn не задан, берём первый alias как en-имя; остальные aliases
+        // отбрасываем (для JSON-fallback стандартный кейс — один alias).
+        @SuppressWarnings("unchecked")
+        var legacyAliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
+        if (nameEn.isEmpty() && legacyAliases != null && !legacyAliases.isEmpty()) {
+          nameEn = legacyAliases.get(0);
+        }
+        if (nameRu.isEmpty()) {
+          nameRu = qualifiedName == null ? "" : qualifiedName;
+        }
+        var bilingualName = BilingualString.of(nameRu, nameEn);
         var members = readMembers((List<Map<String, Object>>) entry.getOrDefault("members", Collections.emptyList()));
         var exposedAsGlobal = Boolean.TRUE.equals(entry.get("exposedAsGlobal"));
         var description = (String) entry.getOrDefault("description", "");
@@ -155,7 +171,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         // (тот же парсер, что использует bsl-context, чтобы LS и
         // JSON-fallback видели одни и те же placeholder'ы).
         var typeParameters = ContextNames.typeParameters(new ContextName(qualifiedName, ""));
-        result.add(new TypeDecl(kind, qualifiedName, aliases, members,
+        result.add(new TypeDecl(kind, bilingualName, members,
           exposedAsGlobal, description, constructors,
           List.copyOf(defaultElementTypes), supportsForEach, supportsIndexAccess,
           forEachDescription, indexAccessDescription, typeParameters, isEnum));
@@ -202,6 +218,15 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var metadata = readMetadata(m, kind);
       if (!metadata.isEmpty()) {
         descriptor = descriptor.withMetadata(metadata);
+      }
+      // Двуязычные имена: опциональные JSON-поля `nameRu` и `nameEn`.
+      // Если задан только `nameEn`, в `nameRu` остаётся пусто, и
+      // `displayName(RU)` отдаст {@code name}. Если задан `nameRu` —
+      // используется явно; иначе `displayName(RU)` тоже падает на name.
+      var nameRu = stringField(m, "nameRu");
+      var nameEn = stringField(m, "nameEn");
+      if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
+        descriptor = descriptor.withLocalizedNames(nameRu, nameEn);
       }
       members.add(descriptor);
     }
@@ -295,7 +320,10 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var optional = Boolean.TRUE.equals(p.get("optional"));
         var pdesc = (String) p.getOrDefault("description", "");
         var pdefault = (String) p.getOrDefault("defaultValue", "");
-        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, pdefault));
+        var pNameRu = stringField(p, "nameRu");
+        var pNameEn = stringField(p, "nameEn");
+        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, pdefault,
+          BilingualString.of(pNameRu, pNameEn)));
       }
       result.add(new SignatureDescriptor(params, returnType, description));
     }

@@ -64,6 +64,8 @@ public final class HoverProvider {
   private final ReferenceResolver referenceResolver;
   private final GlobalScopeProvider globalScopeProvider;
   private final Map<Class<? extends Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
+  private final com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration configuration;
+  private final com.github._1c_syntax.bsl.languageserver.utils.Resources resources;
 
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
     var keywordHover = tryKeywordHover(documentContext, params);
@@ -100,10 +102,12 @@ public final class HoverProvider {
     if (!isKeywordToken(terminal)) {
       return Optional.empty();
     }
-    return globalScopeProvider.findKeywordDescription(terminal.getText())
+    var lang = configuration.getLanguage();
+    return globalScopeProvider.findKeywordDescription(terminal.getText(), lang)
       .map(description -> {
+        var label = resources.getResourceString(HoverProvider.class, "keywordLabel");
         var content = new MarkupContent(MarkupKind.MARKDOWN,
-          "```bsl\n" + terminal.getText() + "\n```\n\n_ключевое слово_\n\n" + description);
+          "```bsl\n" + terminal.getText() + "\n```\n\n_" + label + "_\n\n" + description);
         return new Hover(content, Ranges.create(terminal));
       });
   }

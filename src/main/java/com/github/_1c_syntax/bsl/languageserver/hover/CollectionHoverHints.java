@@ -21,8 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Утилита для добавления в hover-блок коллекционных подсказок (обход
@@ -30,10 +34,12 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
  * {@link TypeRegistry}. Информация подмешивается источниками
  * платформенных типов (bsl-context / JSON-fallback) из синтакс-помощника.
  */
-public final class CollectionHoverHints {
+@Component
+@RequiredArgsConstructor
+public class CollectionHoverHints {
 
-  private CollectionHoverHints() {
-  }
+  private final Resources resources;
+  private final LanguageServerConfiguration configuration;
 
   /**
    * Добавляет markdown-блоки про обход и индексатор для типа, если
@@ -42,13 +48,13 @@ public final class CollectionHoverHints {
    * <p>
    * Формат блоков:
    * <pre>
-   * **Обход коллекции:** &lt;описание из синтакс-помощника&gt;
-   * **Индексатор:** &lt;описание из синтакс-помощника&gt;
+   * **&lt;label-обхода&gt;** &lt;описание из синтакс-помощника&gt;
+   * **&lt;label-индексатора&gt;** &lt;описание из синтакс-помощника&gt;
    * </pre>
    * Если в TypeRegistry есть {@code supportsForEach}, но описание пустое —
-   * пишем общий текст: «доступен обход в цикле {@code Для Каждого}».
+   * пишем общий текст-fallback.
    */
-  public static void append(StringBuilder sb, TypeRef ref, TypeRegistry registry) {
+  public void append(StringBuilder sb, TypeRef ref, TypeRegistry registry) {
     if (sb == null || ref == null || registry == null) {
       return;
     }
@@ -57,19 +63,20 @@ public final class CollectionHoverHints {
     if (!supportsForEach && !supportsIndex) {
       return;
     }
+    var lang = configuration.getLanguage();
     if (supportsForEach) {
-      sb.append("\n\n**Обход коллекции:** ");
-      var description = registry.getForEachDescription(ref);
-      sb.append(description.isBlank()
-        ? "доступен обход `Для Каждого … Из … Цикл`."
-        : description);
+      sb.append("\n\n**").append(tr("forEachLabel")).append("** ");
+      var description = registry.getForEachDescription(ref, lang);
+      sb.append(description.isBlank() ? tr("forEachFallback") : description);
     }
     if (supportsIndex) {
-      sb.append("\n\n**Индексатор `[…]`:** ");
-      var description = registry.getIndexAccessDescription(ref);
-      sb.append(description.isBlank()
-        ? "доступен доступ к элементу по индексу или ключу."
-        : description);
+      sb.append("\n\n**").append(tr("indexAccessLabel")).append("** ");
+      var description = registry.getIndexAccessDescription(ref, lang);
+      sb.append(description.isBlank() ? tr("indexAccessFallback") : description);
     }
+  }
+
+  private String tr(String key) {
+    return resources.getResourceString(getClass(), key);
   }
 }

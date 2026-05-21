@@ -142,4 +142,38 @@ class TypeRegistrySpecializationTest {
       .extracting(MemberDescriptor::name)
       .containsExactly("М");
   }
+
+  // === Двуязычные имена из JSON-fallback ===
+
+  @Test
+  void jsonNameRuAndNameEnPropagateToMemberDescriptor() {
+    // В builtin-platform-types.json у Массив.Добавить заданы nameRu/nameEn,
+    // и аналогично для его параметра Значение → Value. После bootstrap'а
+    // member и параметр должны резолвиться через matches() в обе стороны
+    // и отдавать правильное displayName для нужной локали.
+    // BSL-провайдер хранит localized-names; OScript-JSON держит тип Массив со
+    // своим набором членов без имен. Фильтр по FileType.BSL отбрасывает
+    // OScript-источник (его scope=OS), и в getMembers попадает только BSL.
+    var arrayRef = typeRegistry.resolve("Массив").orElseThrow();
+    var add = typeRegistry.getMembers(arrayRef,
+        com.github._1c_syntax.bsl.languageserver.context.FileType.BSL).stream()
+      .filter(m -> "Добавить".equalsIgnoreCase(m.name()))
+      .findFirst().orElseThrow();
+    assertThat(add.bilingualName().ru()).isEqualTo("Добавить");
+    assertThat(add.bilingualName().en()).isEqualTo("Add");
+    assertThat(add.matches("Add"))
+      .as("lookup по en-имени должен находить member, объявленный в ru")
+      .isTrue();
+    assertThat(add.matches("Добавить")).isTrue();
+    assertThat(add.displayName(
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.EN)).isEqualTo("Add");
+    assertThat(add.displayName(
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU)).isEqualTo("Добавить");
+
+    var param = add.signatures().get(0).parameters().get(0);
+    assertThat(param.bilingualName().ru()).isEqualTo("Значение");
+    assertThat(param.bilingualName().en()).isEqualTo("Value");
+    assertThat(param.matches("Value")).isTrue();
+    assertThat(param.matches("Значение")).isTrue();
+  }
 }

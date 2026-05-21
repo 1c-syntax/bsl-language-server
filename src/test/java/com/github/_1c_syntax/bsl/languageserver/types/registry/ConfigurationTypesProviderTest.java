@@ -150,6 +150,32 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void emptyRefOnManagerReturnsSpecializedRef() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // На `ДокументМенеджер.Документ1.ПустаяСсылка()` тип возврата должен
+    // специализироваться в конкретный `ДокументСсылка.Документ1`, а не
+    // оставаться generic-шаблоном `ДокументСсылка.<Имя документа>`.
+    var ref = typeRegistry.resolve("ДокументМенеджер.Документ1").orElseThrow();
+    var empty = typeRegistry.getMembers(ref).stream()
+      .filter(m -> "ПустаяСсылка".equals(m.name()))
+      .findFirst().orElseThrow();
+    assertThat(empty.returnType().qualifiedName())
+      .as("ПустаяСсылка должна вернуть специализированный ДокументСсылка.Документ1")
+      .isEqualTo("ДокументСсылка.Документ1");
+
+    var catRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
+    var catEmpty = typeRegistry.getMembers(catRef).stream()
+      .filter(m -> "ПустаяСсылка".equals(m.name()))
+      .findFirst().orElseThrow();
+    assertThat(catEmpty.returnType().qualifiedName())
+      .as("ПустаяСсылка на СправочникМенеджер.Справочник1 → СправочникСсылка.Справочник1")
+      .isEqualTo("СправочникСсылка.Справочник1");
+  }
+
+  @Test
   void documentsCollectionInheritsCollectionManagerMembers() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();

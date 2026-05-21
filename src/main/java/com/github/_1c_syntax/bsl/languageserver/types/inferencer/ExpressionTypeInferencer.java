@@ -666,7 +666,7 @@ public class ExpressionTypeInferencer {
         if (member.kind() != expectedKind) {
           continue;
         }
-        if (!member.name().equalsIgnoreCase(memberName)) {
+        if (!member.matches(memberName)) {
           continue;
         }
         // Сначала composite-набор типов; для single-type returnType-fallback

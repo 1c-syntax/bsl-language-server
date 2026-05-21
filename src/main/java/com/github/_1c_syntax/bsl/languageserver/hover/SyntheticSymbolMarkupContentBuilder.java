@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -47,6 +48,8 @@ import org.springframework.stereotype.Component;
 public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder<SyntheticSymbol> {
 
   private final TypeRegistry typeRegistry;
+  private final CollectionHoverHints collectionHoverHints;
+  private final Resources resources;
 
   @Override
   public MarkupContent getContent(SyntheticSymbol symbol) {
@@ -66,7 +69,7 @@ public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder
     }
 
     if (valueType != null && valueType != TypeRef.UNKNOWN) {
-      CollectionHoverHints.append(sb, valueType, typeRegistry);
+      collectionHoverHints.append(sb, valueType, typeRegistry);
     }
 
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
@@ -82,15 +85,8 @@ public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder
     return SyntheticSymbol.class;
   }
 
-  private static String roleDescription(SyntheticSymbol symbol) {
-    return switch (symbol.getSyntheticKind()) {
-      case PLATFORM_GLOBAL_PROPERTY -> "_глобальное свойство_";
-      case PLATFORM_GLOBAL_ENUM -> "_системное перечисление_";
-      case PLATFORM_GLOBAL_METHOD -> "_глобальная функция_";
-      case PLATFORM_MEMBER_PROPERTY -> "_свойство_";
-      case PLATFORM_MEMBER_METHOD -> "_метод_";
-      case TYPE_NAME -> "_имя типа_";
-      case LIBRARY_MODULE -> "_модуль библиотеки_";
-    };
+  private String roleDescription(SyntheticSymbol symbol) {
+    return "_" + resources.getResourceString(getClass(),
+      "role." + symbol.getSyntheticKind().name()) + "_";
   }
 }

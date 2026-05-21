@@ -340,7 +340,7 @@ public final class SignatureHelpProvider {
     }
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, documentContext.getFileType())) {
-        if (member.kind() == MemberKind.METHOD && member.name().equalsIgnoreCase(methodName)) {
+        if (member.kind() == MemberKind.METHOD && member.matches(methodName)) {
           return Optional.of(member);
         }
       }
@@ -450,8 +450,9 @@ public final class SignatureHelpProvider {
     if (ref != null) {
       for (var member : typeService.getMembers(ref, fileType)) {
         if (member.kind() == MemberKind.METHOD
-          && (member.name().equalsIgnoreCase("Constructor")
-          || member.name().equalsIgnoreCase("ПриСозданииОбъекта"))) {
+          && (member.matches("Constructor")
+          || member.matches("ПриСозданииОбъекта")
+          || member.matches("OnObjectCreation"))) {
           return Optional.of(member);
         }
       }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolDescription;
@@ -33,42 +34,25 @@ import java.util.Optional;
 /**
  * Член типа (метод или свойство).
  * <p>
- * Минимальный набор метаданных, необходимый для отображения в hover/completion
- * и сигнатур-помощнике (signature help).
- * <ul>
- *   <li>Для свойств {@code signatures} всегда пуст.</li>
- *   <li>Для методов {@code signatures} может содержать одну или несколько сигнатур.</li>
- *   <li>{@link #returnTypes} — union возможных типов (для composite-членов,
- *       например, атрибут справочника с типом {@code Строка | Число}). Для
- *       single-type содержит один ref; для UNKNOWN — {@link TypeSet#EMPTY}.</li>
- *   <li>{@link #sourceSymbol} — опциональный «бэкинг»-символ. Если член реально
- *       объявлен в коде (например, экспортный метод общего модуля) —
- *       здесь находится
- *       {@link com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol}.</li>
- *   <li>{@link #metadata} — платформенные метаданные (deprecated/sinceVersion/
- *       availabilities/accessMode и т.п.). Для не-платформенных членов —
- *       {@link PlatformMetadata#EMPTY}.</li>
- * </ul>
+ * Двуязычность: имя и описание хранятся как {@link BilingualString} — ru+en
+ * пара из bsl-context (для legacy-источников en-сторона может быть пуста,
+ * тогда {@link #displayName(Language)}/{@link #displayDescription(Language)}
+ * fallback'ятся на primary). Compat-аксессоры {@link #name()} и
+ * {@link #description()} возвращают primary-строку.
  *
- * @param name         имя члена в каноническом написании (как пишется в коде)
- * @param kind         метод или свойство
- * @param description  краткое описание (может быть пустым)
- * @param returnTypes  union типов возвращаемого значения / типа свойства
- * @param signatures   список сигнатур для метода (пустой для свойства)
- * @param sourceSymbol опциональный символ-источник члена
- * @param generic      признак «слотового» члена generic-типа платформы (например,
- *                     {@code <Имя реквизита>}, {@code <Имя табличной части>}).
- *                     Используется, чтобы не публиковать эти псевдо-члены при
- *                     наследовании от generic-типа в его специализациях
- *                     ({@code ДокументСсылка.МойДокумент} и т.п.).
- * @param metadata     платформенные метаданные (sinceVersion/deprecated/
- *                     availabilities/accessMode/recommendedReplacements/
- *                     notes/examples/seeAlso/returnValueDescription)
+ * @param bilingualName        двуязычное имя (ru + en); primary = ru или en если ru пуст
+ * @param kind                 метод или свойство
+ * @param bilingualDescription двуязычное краткое описание
+ * @param returnTypes          union возможных типов
+ * @param signatures           список сигнатур для метода
+ * @param sourceSymbol         опциональный символ-источник
+ * @param generic              признак «слотового» члена generic-типа платформы
+ * @param metadata             платформенные метаданные
  */
 public record MemberDescriptor(
-  String name,
+  BilingualString bilingualName,
   MemberKind kind,
-  String description,
+  BilingualString bilingualDescription,
   TypeSet returnTypes,
   List<SignatureDescriptor> signatures,
   Symbol sourceSymbol,
@@ -84,6 +68,58 @@ public record MemberDescriptor(
     if (metadata == null) {
       metadata = PlatformMetadata.EMPTY;
     }
+    if (bilingualName == null) {
+      bilingualName = BilingualString.EMPTY;
+    }
+    if (bilingualDescription == null) {
+      bilingualDescription = BilingualString.EMPTY;
+    }
+  }
+
+  /** Compat-конструктор: одноязычные {@code name}/{@code description}. */
+  public MemberDescriptor(String name, MemberKind kind, String description, TypeSet returnTypes,
+                          List<SignatureDescriptor> signatures, Symbol sourceSymbol,
+                          boolean generic, PlatformMetadata metadata) {
+    this(BilingualString.of(name), kind, BilingualString.of(description), returnTypes,
+      signatures, sourceSymbol, generic, metadata);
+  }
+
+  /** Compat-конструктор: одноязычное описание + двуязычное имя. */
+  public MemberDescriptor(String name, MemberKind kind, String description, TypeSet returnTypes,
+                          List<SignatureDescriptor> signatures, Symbol sourceSymbol,
+                          boolean generic, PlatformMetadata metadata,
+                          BilingualString bilingualName) {
+    this(bilingualName == null || bilingualName.isEmpty() ? BilingualString.of(name) : bilingualName,
+      kind, BilingualString.of(description), returnTypes,
+      signatures, sourceSymbol, generic, metadata);
+  }
+
+  /** Compat-аксессор: primary написание имени (для legacy-callsite'ов). */
+  public String name() {
+    return bilingualName.primary();
+  }
+
+  /** Compat-аксессор: primary описание (для legacy-callsite'ов). */
+  public String description() {
+    return bilingualDescription.primary();
+  }
+
+  /**
+   * Сравнивает имя члена с {@code candidate} без учёта регистра по обоим
+   * локализованным написаниям.
+   */
+  public boolean matches(String candidate) {
+    return bilingualName.matches(candidate);
+  }
+
+  /** Имя члена для отображения в указанной локали LS. */
+  public String displayName(Language language) {
+    return bilingualName.forLanguage(language);
+  }
+
+  /** Описание члена для отображения в указанной локали LS. */
+  public String displayDescription(Language language) {
+    return bilingualDescription.forLanguage(language);
   }
 
   /**
@@ -103,8 +139,7 @@ public record MemberDescriptor(
    * <p>
    * Если {@link #sourceSymbol} реализует {@link Describable} — описание
    * берётся из него (BSL-doc-comment, с поддержкой пометки об устаревании).
-   * Иначе — используется {@link #description}, переданный явно (платформенный
-   * JSON, конфигурационные метаданные и т.п.).
+   * Иначе — используется primary описание {@link #bilingualDescription}.
    *
    * @return унифицированное описание или {@link SymbolDescription#EMPTY}.
    */
@@ -115,40 +150,44 @@ public record MemberDescriptor(
         return fromSource;
       }
     }
-    return SymbolDescription.of(description);
+    return SymbolDescription.of(description());
   }
 
-  /**
-   * @return копия дескриптора с прикреплённым символом-источником.
-   */
+  /** Копия дескриптора с прикреплённым символом-источником. */
   public MemberDescriptor withSourceSymbol(Symbol symbol) {
-    return new MemberDescriptor(name, kind, description, returnTypes, signatures, symbol, generic, metadata);
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
+      signatures, symbol, generic, metadata);
   }
 
-  /**
-   * @return копия дескриптора с заменёнными метаданными платформы.
-   */
+  /** Копия дескриптора с заменёнными метаданными платформы. */
   public MemberDescriptor withMetadata(PlatformMetadata newMetadata) {
-    return new MemberDescriptor(name, kind, description, returnTypes, signatures, sourceSymbol, generic,
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
+      signatures, sourceSymbol, generic,
       newMetadata == null ? PlatformMetadata.EMPTY : newMetadata);
+  }
+
+  /** Копия дескриптора с заполненным двуязычным именем (ru + en). */
+  public MemberDescriptor withBilingualName(BilingualString newName) {
+    return new MemberDescriptor(newName == null ? BilingualString.EMPTY : newName,
+      kind, bilingualDescription, returnTypes, signatures, sourceSymbol, generic, metadata);
+  }
+
+  /** Копия дескриптора с заполненным двуязычным описанием (ru + en). */
+  public MemberDescriptor withBilingualDescription(BilingualString newDescription) {
+    return new MemberDescriptor(bilingualName, kind,
+      newDescription == null ? BilingualString.EMPTY : newDescription,
+      returnTypes, signatures, sourceSymbol, generic, metadata);
+  }
+
+  /** Compat shortcut для двуязычных имён ru/en строками. */
+  public MemberDescriptor withLocalizedNames(String newNameRu, String newNameEn) {
+    return withBilingualName(BilingualString.of(newNameRu, newNameEn));
   }
 
   /**
    * Возвращает копию дескриптора, в которой placeholder'ы {@code <X>} в
    * {@link #returnTypes} и {@link SignatureDescriptor#returnType} заменены
-   * по {@code bindings} (имя placeholder'а без угловых скобок → имя
-   * заменителя). Используется для специализации generic-членов:
-   * например, для {@code <Имя справочника>} → {@code Контрагенты} member
-   * {@code ПолучитьОбъект()} с returnType {@code СправочникОбъект.<Имя справочника>}
-   * превращается в {@code СправочникОбъект.Контрагенты}.
-   * <p>
-   * Если в дескрипторе нет ни одного placeholder'а — возвращает {@code this}
-   * без аллокации.
-   *
-   * @param bindings подстановки имя placeholder'а → имя заменителя; пустой
-   *                 map — no-op
-   * @return специализированный дескриптор либо {@code this}, если
-   *         специализация не потребовалась
+   * по {@code bindings}.
    */
   public MemberDescriptor specialize(Map<String, String> bindings) {
     if (bindings == null || bindings.isEmpty()) {
@@ -160,9 +199,6 @@ public record MemberDescriptor(
     if (!newSignatures.isEmpty()) {
       var rebuilt = new ArrayList<SignatureDescriptor>(newSignatures.size());
       for (var sig : newSignatures) {
-        // Специализируем ВЕСЬ union возврата сигнатуры — без потери второго
-        // варианта (например, СправочникОбъект.<…> | Неопределено →
-        // СправочникОбъект.X | Неопределено).
         var specializedReturn = TypeRef.specialize(sig.returnTypes(), bindings);
         if (specializedReturn == sig.returnTypes()) {
           rebuilt.add(sig);
@@ -178,40 +214,45 @@ public record MemberDescriptor(
     if (newReturnTypes == returnTypes && !signaturesChanged) {
       return this;
     }
-    return new MemberDescriptor(name, kind, description,
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription,
       newReturnTypes, newSignatures, sourceSymbol, generic, metadata);
   }
 
   public static MemberDescriptor method(String name) {
-    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeSet.EMPTY, List.of(), null, false, PlatformMetadata.EMPTY);
+    return new MemberDescriptor(name, MemberKind.METHOD, "", TypeSet.EMPTY, List.of(), null, false,
+      PlatformMetadata.EMPTY);
   }
 
   public static MemberDescriptor method(String name, List<SignatureDescriptor> signatures) {
     var ret = signatureReturnTypes(signatures);
-    return new MemberDescriptor(name, MemberKind.METHOD, "", ret, signatures, null, false, PlatformMetadata.EMPTY);
+    return new MemberDescriptor(name, MemberKind.METHOD, "", ret, signatures, null, false,
+      PlatformMetadata.EMPTY);
   }
 
-  public static MemberDescriptor method(String name, String description, List<SignatureDescriptor> signatures) {
+  public static MemberDescriptor method(String name, String description,
+                                        List<SignatureDescriptor> signatures) {
     var ret = signatureReturnTypes(signatures);
-    return new MemberDescriptor(name, MemberKind.METHOD, description, ret, signatures, null, false, PlatformMetadata.EMPTY);
+    return new MemberDescriptor(name, MemberKind.METHOD, description, ret, signatures, null, false,
+      PlatformMetadata.EMPTY);
   }
 
   public static MemberDescriptor property(String name) {
-    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeSet.EMPTY, List.of(), null, false, PlatformMetadata.EMPTY);
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", TypeSet.EMPTY, List.of(), null, false,
+      PlatformMetadata.EMPTY);
   }
 
   public static MemberDescriptor property(String name, TypeRef returnType) {
-    return new MemberDescriptor(name, MemberKind.PROPERTY, "", typesOf(returnType), List.of(), null, false, PlatformMetadata.EMPTY);
+    return new MemberDescriptor(name, MemberKind.PROPERTY, "", typesOf(returnType), List.of(),
+      null, false, PlatformMetadata.EMPTY);
   }
 
   public static MemberDescriptor property(String name, TypeRef returnType, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
-      description == null ? "" : description, typesOf(returnType), List.of(), null, false, PlatformMetadata.EMPTY);
+      description == null ? "" : description, typesOf(returnType), List.of(), null, false,
+      PlatformMetadata.EMPTY);
   }
 
-  /**
-   * Свойство с composite-типом ({@code Строка | Число}).
-   */
+  /** Свойство с composite-типом ({@code Строка | Число}). */
   public static MemberDescriptor property(String name, TypeSet returnTypes, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
       description == null ? "" : description,
@@ -222,7 +263,8 @@ public record MemberDescriptor(
   /** Generic-property платформенного типа (например, {@code <Имя реквизита>}). */
   public static MemberDescriptor genericProperty(String name, TypeRef returnType, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
-      description == null ? "" : description, typesOf(returnType), List.of(), null, true, PlatformMetadata.EMPTY);
+      description == null ? "" : description, typesOf(returnType), List.of(), null, true,
+      PlatformMetadata.EMPTY);
   }
 
   private static TypeSet typesOf(TypeRef ref) {

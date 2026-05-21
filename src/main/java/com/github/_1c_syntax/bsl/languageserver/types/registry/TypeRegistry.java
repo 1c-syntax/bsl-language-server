@@ -25,8 +25,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.AnyType;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -114,9 +116,9 @@ public class TypeRegistry {
   /** Тип ↔ {@code supportsIndexAccess} ({@code true} — индексатор {@code [...]} разрешён). */
   private final Map<TypeRef, Boolean> supportsIndexAccess = new ConcurrentHashMap<>();
   /** Тип ↔ текстовое описание обхода {@code Для Каждого} из синтакс-помощника. */
-  private final Map<TypeRef, String> forEachDescriptions = new ConcurrentHashMap<>();
+  private final Map<TypeRef, BilingualString> forEachDescriptions = new ConcurrentHashMap<>();
   /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника. */
-  private final Map<TypeRef, String> indexAccessDescriptions = new ConcurrentHashMap<>();
+  private final Map<TypeRef, BilingualString> indexAccessDescriptions = new ConcurrentHashMap<>();
   /**
    * Индекс read-only свойств: тип → набор имён свойств (lowercased), у
    * которых {@link AccessMode#READ}. Заполняется при регистрации
@@ -143,6 +145,21 @@ public class TypeRegistry {
    * Источник истины — {@code Context.typeParameters()} в bsl-context.
    */
   private final Map<TypeRef, List<String>> typeParameters = new ConcurrentHashMap<>();
+
+  /**
+   * Двуязычные имена типов (для hover/inlay): для канонических TypeRef
+   * храним {@link BilingualString} с ru + en написанием. Источник —
+   * {@link TypeDecl#bilingualName()} платформенного провайдера. Пустые/
+   * отсутствующие — fallback на {@link TypeRef#qualifiedName()}.
+   */
+  private final Map<TypeRef, BilingualString> displayNames = new ConcurrentHashMap<>();
+
+  /**
+   * Двуязычные описания типов (ru + en) — параллельный индекс к
+   * {@link #descriptions}, который продолжает хранить scoped primary-форму
+   * для legacy-логики. Заполняется из {@link TypePackProvider.TypeDecl#description()}.
+   */
+  private final Map<TypeRef, BilingualString> typeDescriptionsBilingual = new ConcurrentHashMap<>();
 
   /** Источник членов вместе с его языковым скоупом. */
   private record ScopedMemberSource(MemberSource source, LanguageScope scope) {
@@ -556,7 +573,7 @@ public class TypeRegistry {
    * Возвращает пустую строку, если описание отсутствует.
    */
   public String getDescription(TypeRef ref) {
-    return getDescription(ref, null);
+    return getDescription(ref, (FileType) null);
   }
 
   /**
@@ -732,12 +749,27 @@ public class TypeRegistry {
   private void registerPack(TypePackProvider.TypeDecl decl, LanguageScope scope) {
     var ref = intern(decl.kind(), decl.qualifiedName());
     types.put(ref, hydrate(ref));
+    // BilingualString name покрывает ru+en — обе стороны должны находиться
+    // в aliasIndex, чтобы lookup по любому написанию резолвился в один TypeRef.
     addAlias(decl.qualifiedName(), ref);
-    for (var alias : decl.aliases()) {
-      addAlias(alias, ref);
+    if (!decl.name().isEmpty()) {
+      var bnRu = decl.name().ru();
+      var bnEn = decl.name().en();
+      if (!bnRu.isEmpty()) {
+        addAlias(bnRu, ref);
+      }
+      if (!bnEn.isEmpty()) {
+        addAlias(bnEn, ref);
+      }
     }
-    if (decl.description() != null && !decl.description().isBlank()) {
-      registerDescription(ref, decl.description(), scope);
+    if (decl.description() != null && !decl.description().isEmpty()) {
+      // TypeRegistry хранит description как scoped-String (ConfigurationTypesProvider
+      // и пр. передают одноязычные). Bilingual TypeDecl.description раскрываем
+      // через primary для legacy-индекса; en-сторону отдаёт displayDescription(ref, lang).
+      registerDescription(ref, decl.description().primary(), scope);
+      if (!decl.description().isEmpty()) {
+        typeDescriptionsBilingual.putIfAbsent(ref, decl.description());
+      }
     }
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
       registerConstructors(ref, decl.constructors(), scope);
@@ -771,7 +803,32 @@ public class TypeRegistry {
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
     }
+    if (!decl.name().isEmpty()) {
+      displayNames.putIfAbsent(ref, decl.name());
+    }
     setLanguageScope(ref, scope == null ? LanguageScope.BOTH : scope);
+  }
+
+  /**
+   * Возвращает имя типа для отображения в указанной локали LS. Если в
+   * реестре есть двуязычное имя ({@link TypePackProvider.TypeDecl#bilingualName()}),
+   * выбирает ru или en по {@code language}; иначе — {@code ref.qualifiedName()}.
+   */
+  public String displayName(TypeRef ref, Language language) {
+    if (ref == null) {
+      return "";
+    }
+    var bn = displayNames.get(ref);
+    if (bn == null) {
+      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+      if (canonical != null) {
+        bn = displayNames.get(canonical);
+      }
+    }
+    if (bn == null || bn.isEmpty()) {
+      return ref.qualifiedName();
+    }
+    return bn.forLanguage(language);
   }
 
   /**
@@ -811,7 +868,12 @@ public class TypeRegistry {
    * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
    */
   public String getForEachDescription(TypeRef ref) {
-    return forEachDescriptions.getOrDefault(ref, "");
+    return getForEachDescription(ref, Language.DEFAULT_LANGUAGE);
+  }
+
+  /** Описание обхода в указанной локали (с fallback на другую). */
+  public String getForEachDescription(TypeRef ref, Language language) {
+    return forEachDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
   }
 
   /**
@@ -819,7 +881,21 @@ public class TypeRegistry {
    * (из синтакс-помощника платформы). Пустая строка, если описание не задано.
    */
   public String getIndexAccessDescription(TypeRef ref) {
-    return indexAccessDescriptions.getOrDefault(ref, "");
+    return getIndexAccessDescription(ref, Language.DEFAULT_LANGUAGE);
+  }
+
+  /** Описание индексатора в указанной локали. */
+  public String getIndexAccessDescription(TypeRef ref, Language language) {
+    return indexAccessDescriptions.getOrDefault(ref, BilingualString.EMPTY).forLanguage(language);
+  }
+
+  /** Описание типа в указанной локали (для hover'а класса/конструктора). */
+  public String getDescription(TypeRef ref, Language language) {
+    var bn = typeDescriptionsBilingual.get(ref);
+    if (bn != null && !bn.isEmpty()) {
+      return bn.forLanguage(language);
+    }
+    return getDescription(ref);
   }
 
   /**

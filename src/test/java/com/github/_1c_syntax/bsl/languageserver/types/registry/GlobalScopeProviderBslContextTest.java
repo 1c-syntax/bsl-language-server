@@ -132,6 +132,27 @@ class GlobalScopeProviderBslContextTest {
   }
 
   @Test
+  void keywordDescriptionPropagatesToFindKeywordDescription() {
+    // Регрессия: hover на keyword'е должен показывать description из синтакс-помощника.
+    // Описание берётся из bsl-context через GlobalScopeProvider.findKeywordDescription.
+    var ifKw = PlatformLanguageKeyword.builder()
+      .name(new ContextName("Если", "If"))
+      .category(LanguageKeywordCategory.STATEMENT)
+      .description("Используется для разветвления алгоритма.")
+      .snippet(LanguageKeywordSnippet.EMPTY)
+      .build();
+
+    var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)));
+
+    assertThat(scope.findKeywordDescription("Если"))
+      .as("description у keyword'а должно проброситься из bsl-context'а")
+      .contains("Используется для разветвления алгоритма.");
+    // По en-алиасу — то же описание.
+    assertThat(scope.findKeywordDescription("If"))
+      .contains("Используется для разветвления алгоритма.");
+  }
+
+  @Test
   void keywordSnippetIsBilingualAndAccessibleByEitherName() {
     var ifKw = keyword("Если", "If", LanguageKeywordCategory.STATEMENT,
       "Если <?> Тогда\nКонецЕсли;", "If <?> Then\nEndIf;");

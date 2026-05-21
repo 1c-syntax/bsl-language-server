@@ -218,7 +218,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
       return null;
     }
     for (var m : typeRegistry.getMembers(ownerType, fileType)) {
-      if (m.kind() == expectedKind && m.name().equalsIgnoreCase(memberName)) {
+      if (m.kind() == expectedKind && m.matches(memberName)) {
         return m;
       }
     }

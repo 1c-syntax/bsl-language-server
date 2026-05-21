@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -31,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
@@ -80,6 +82,11 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
 
   private final TypeService typeService;
   private final LanguageServerConfiguration configuration;
+  private final Resources resources;
+
+  private Language currentLanguage() {
+    return configuration.getLanguage();
+  }
 
   @Override
   public List<InlayHint> getInlayHints(DocumentContext documentContext, InlayHintParams params) {
@@ -276,10 +283,14 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
         // `Новый Массив(Массив:);`.
         continue;
       }
+      var label = parameter.displayName(currentLanguage());
+      var bn = parameter.bilingualName();
       if (!showParametersWithTheSameName()
-        && parameter.name() != null
-        && !parameter.name().isBlank()
-        && Strings.CI.contains(passedValue, parameter.name())) {
+        && label != null
+        && !label.isBlank()
+        && (Strings.CI.contains(passedValue, label)
+          || (!bn.ru().isEmpty() && Strings.CI.contains(passedValue, bn.ru()))
+          || (!bn.en().isEmpty() && Strings.CI.contains(passedValue, bn.en())))) {
         continue;
       }
       var hint = new InlayHint();
@@ -296,7 +307,7 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
 
   private String buildLabel(ParameterDescriptor parameter, String passedValue) {
     var sb = new StringBuilder();
-    sb.append(parameter.name());
+    sb.append(parameter.displayName(currentLanguage()));
     if (showDefaultValues() && passedValue.isBlank() && !parameter.defaultValue().isBlank()) {
       sb.append(" (").append(parameter.defaultValue()).append(')');
     } else {
@@ -305,11 +316,12 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
     return sb.toString();
   }
 
-  private static MarkupContent buildTooltip(ParameterDescriptor parameter, MemberDescriptor member) {
+  private MarkupContent buildTooltip(ParameterDescriptor parameter, MemberDescriptor member) {
     var sb = new StringBuilder();
-    sb.append("**").append(parameter.name()).append("**");
+    var lang = currentLanguage();
+    sb.append("**").append(parameter.displayName(lang)).append("**");
     if (parameter.optional()) {
-      sb.append(" _(необязательный)_");
+      sb.append(" _(").append(tr("optionalParameter")).append(")_");
     }
     if (!parameter.defaultValue().isBlank()) {
       sb.append(" _= ").append(parameter.defaultValue()).append('_');
@@ -325,11 +337,16 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
         first = false;
       }
     }
-    if (!parameter.description().isBlank()) {
-      sb.append("\n\n").append(parameter.description());
+    var pDesc = parameter.displayDescription(lang);
+    if (!pDesc.isBlank()) {
+      sb.append("\n\n").append(pDesc);
     }
-    sb.append("\n\n_метод_ `").append(member.name()).append('`');
+    sb.append("\n\n_").append(tr("methodLabel")).append("_ `").append(member.displayName(lang)).append('`');
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
+  }
+
+  private String tr(String key) {
+    return resources.getResourceString(getClass(), key);
   }
 
   private boolean showParametersWithTheSameName() {

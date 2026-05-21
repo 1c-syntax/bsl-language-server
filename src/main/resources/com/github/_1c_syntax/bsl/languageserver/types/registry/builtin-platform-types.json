@@ -80,12 +80,16 @@
       },
       {
         "name": "Добавить",
+        "nameRu": "Добавить",
+        "nameEn": "Add",
         "kind": "METHOD",
         "signatures": [
           {
             "parameters": [
               {
-                "name": "Значение"
+                "name": "Значение",
+                "nameRu": "Значение",
+                "nameEn": "Value"
               }
             ],
             "description": "Добавляет значение в конец массива."

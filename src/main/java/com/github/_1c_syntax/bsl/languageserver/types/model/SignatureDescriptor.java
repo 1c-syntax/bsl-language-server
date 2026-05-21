@@ -21,39 +21,56 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+
 import java.util.List;
 
 /**
- * Дескриптор одной сигнатуры (варианта синтаксиса) метода.
- * Метод 1С может иметь несколько вариантов синтаксиса — для каждого варианта
- * создаётся отдельный {@code SignatureDescriptor}.
- * <p>
- * Возвращаемое значение хранится как {@link TypeSet} ({@link #returnTypes}),
- * что покрывает случаи union'а ({@code Строка | Число}, {@code СправочникОбъект.X | Неопределено}).
- * Удобный аксессор {@link #returnType()} возвращает первый ref для legacy-кода,
- * который рассчитывает на одиночный тип.
+ * Дескриптор одной сигнатуры (варианта синтаксиса) метода/конструктора.
  *
- * @param parameters  упорядоченный список параметров
- * @param returnTypes union возвращаемых типов ({@link TypeSet#EMPTY} для процедуры или если неизвестно)
- * @param description краткое описание варианта (может быть пустым)
+ * @param parameters           упорядоченный список параметров
+ * @param returnTypes          union возвращаемых типов
+ * @param bilingualDescription краткое описание варианта (ru + en)
  */
-public record SignatureDescriptor(List<ParameterDescriptor> parameters, TypeSet returnTypes, String description) {
+public record SignatureDescriptor(
+  List<ParameterDescriptor> parameters,
+  TypeSet returnTypes,
+  BilingualString bilingualDescription
+) {
 
-  public static final SignatureDescriptor EMPTY = new SignatureDescriptor(List.of(), TypeSet.EMPTY, "");
+  public static final SignatureDescriptor EMPTY = new SignatureDescriptor(
+    List.of(), TypeSet.EMPTY, BilingualString.EMPTY);
 
   public SignatureDescriptor {
     parameters = List.copyOf(parameters);
     if (returnTypes == null) {
       returnTypes = TypeSet.EMPTY;
     }
+    if (bilingualDescription == null) {
+      bilingualDescription = BilingualString.EMPTY;
+    }
   }
 
-  /**
-   * Совместимый конструктор с одиночным {@link TypeRef}. {@link TypeRef#UNKNOWN}
-   * трактуется как «без возвращаемого значения» ({@link TypeSet#EMPTY}).
-   */
-  public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeRef returnType, String description) {
-    this(parameters, wrapSingle(returnType), description);
+  /** Compat-конструктор: одноязычное {@code description} строкой. */
+  public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeSet returnTypes,
+                             String description) {
+    this(parameters, returnTypes, BilingualString.of(description));
+  }
+
+  /** Compat-конструктор: одиночный {@link TypeRef} + одноязычное description. */
+  public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeRef returnType,
+                             String description) {
+    this(parameters, wrapSingle(returnType), BilingualString.of(description));
+  }
+
+  /** Compat-аксессор: primary описание. */
+  public String description() {
+    return bilingualDescription.primary();
+  }
+
+  /** Описание варианта в указанной локали LS (fallback на ru). */
+  public String displayDescription(Language language) {
+    return bilingualDescription.forLanguage(language);
   }
 
   /**
@@ -65,7 +82,7 @@ public record SignatureDescriptor(List<ParameterDescriptor> parameters, TypeSet 
   }
 
   public static SignatureDescriptor of(List<ParameterDescriptor> parameters) {
-    return new SignatureDescriptor(parameters, TypeSet.EMPTY, "");
+    return new SignatureDescriptor(parameters, TypeSet.EMPTY, BilingualString.EMPTY);
   }
 
   private static TypeSet wrapSingle(TypeRef ref) {

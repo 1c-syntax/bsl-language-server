@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -84,29 +85,54 @@ public interface TypePackProvider {
    */
   record TypeDecl(
     TypeKind kind,
-    String qualifiedName,
-    List<String> aliases,
+    BilingualString name,
     Collection<MemberDescriptor> members,
     boolean exposedAsGlobal,
-    String description,
+    BilingualString description,
     List<SignatureDescriptor> constructors,
     List<TypeRef> defaultElementTypes,
     boolean supportsForEach,
     boolean supportsIndexAccess,
-    String forEachDescription,
-    String indexAccessDescription,
+    BilingualString forEachDescription,
+    BilingualString indexAccessDescription,
     List<String> typeParameters,
     boolean isEnum
   ) {
 
     public TypeDecl {
-      forEachDescription = forEachDescription == null ? "" : forEachDescription;
-      indexAccessDescription = indexAccessDescription == null ? "" : indexAccessDescription;
+      if (description == null) description = BilingualString.EMPTY;
+      if (forEachDescription == null) forEachDescription = BilingualString.EMPTY;
+      if (indexAccessDescription == null) indexAccessDescription = BilingualString.EMPTY;
       typeParameters = typeParameters == null ? List.of() : List.copyOf(typeParameters);
+      if (name == null) {
+        name = BilingualString.EMPTY;
+      }
+    }
+
+    /**
+     * Compat-конструктор: одноязычные {@code description}/{@code forEachDescription}/
+     * {@code indexAccessDescription} строками.
+     */
+    public TypeDecl(TypeKind kind, BilingualString name, Collection<MemberDescriptor> members,
+                    boolean exposedAsGlobal, String description,
+                    List<SignatureDescriptor> constructors, List<TypeRef> defaultElementTypes,
+                    boolean supportsForEach, boolean supportsIndexAccess,
+                    String forEachDescription, String indexAccessDescription,
+                    List<String> typeParameters, boolean isEnum) {
+      this(kind, name, members, exposedAsGlobal,
+        BilingualString.of(description), constructors, defaultElementTypes,
+        supportsForEach, supportsIndexAccess,
+        BilingualString.of(forEachDescription), BilingualString.of(indexAccessDescription),
+        typeParameters, isEnum);
+    }
+
+    /** Каноничное имя типа (ru-сторона; для legacy-источников — primary). */
+    public String qualifiedName() {
+      return name.primary();
     }
 
     public TypeRef toRef() {
-      return new TypeRef(kind, qualifiedName);
+      return new TypeRef(kind, qualifiedName());
     }
   }
 
