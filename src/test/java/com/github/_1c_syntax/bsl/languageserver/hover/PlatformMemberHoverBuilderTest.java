@@ -288,4 +288,83 @@ class PlatformMemberHoverBuilderTest {
       .contains("[optionalParameter]")
       .contains("= 0");
   }
+
+  @Test
+  void typeAwareSignaturePickWithArgTypes() {
+    // given — две сигнатуры одной арности (1 параметр) с разными типами;
+    // type-aware pick должен выбрать ту, что соответствует argType=Строка.
+    var sigNumber = new SignatureDescriptor(
+      List.of(new ParameterDescriptor(BilingualString.of("a"), TypeSet.of(NUMBER),
+        false, BilingualString.EMPTY, "")),
+      TypeSet.of(NUMBER), "number variant");
+    var sigString = new SignatureDescriptor(
+      List.of(new ParameterDescriptor(BilingualString.of("a"), TypeSet.of(STRING),
+        false, BilingualString.EMPTY, "")),
+      TypeSet.of(STRING), "string variant");
+    var descriptor = MemberDescriptor.method("F", "", List.of(sigNumber, sigString));
+
+    // when — argTypes говорит, что переданная строка
+    var content = builder.build(null, descriptor, 1, List.of(TypeSet.of(STRING)));
+
+    // then — выбран string variant (нет noMatchingSignature)
+    assertThat(content.getValue())
+      .contains("string variant")
+      .doesNotContain("[noMatchingSignature]");
+  }
+
+  @Test
+  void compositePropertyRendersUnionTypes() {
+    // given — свойство с union-типами (Строка | Число).
+    var descriptor = MemberDescriptor.property("Поле",
+      TypeSet.of(NUMBER, STRING), "");
+
+    // when
+    var content = builder.build(ARRAY, descriptor, -1);
+
+    // then
+    var value = content.getValue();
+    assertThat(value).contains("Поле");
+    assertThat(value).containsAnyOf("Число | Строка", "Строка | Число");
+  }
+
+  @Test
+  void methodWithoutMatchingArityFallsBackToFirstSignature() {
+    // given — 2 сигнатуры, ни одна не подходит под callArgCount=10.
+    var sig1 = new SignatureDescriptor(
+      List.of(new ParameterDescriptor(BilingualString.of("a"), TypeSet.of(NUMBER),
+        false, BilingualString.EMPTY, "")),
+      TypeSet.of(NUMBER), "");
+    var sig2 = new SignatureDescriptor(
+      List.of(new ParameterDescriptor(BilingualString.of("a"), TypeSet.of(NUMBER),
+        false, BilingualString.EMPTY, "")),
+      TypeSet.of(NUMBER), "");
+    var descriptor = MemberDescriptor.method("F", "", List.of(sig1, sig2));
+
+    // when
+    var content = builder.build(null, descriptor, 10);
+
+    // then — disclaim + всё равно отрисовали сигнатуру.
+    assertThat(content.getValue()).contains("[noMatchingSignature]");
+  }
+
+  @Test
+  void emptyMetadataSetSkipsAvailabilitiesBlock() {
+    // given
+    var meta = new PlatformMetadata(
+      "", "", List.of(), Set.of(), null,
+      BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of()
+    );
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("X"), MemberKind.PROPERTY, BilingualString.EMPTY,
+      TypeSet.EMPTY, List.of(), null, false, meta
+    );
+
+    // when
+    var content = builder.build(null, descriptor, -1);
+
+    // then — нет блока availabilities, accessMode и т.п.
+    assertThat(content.getValue())
+      .doesNotContain("[availabilities]")
+      .doesNotContain("[accessMode]");
+  }
 }
