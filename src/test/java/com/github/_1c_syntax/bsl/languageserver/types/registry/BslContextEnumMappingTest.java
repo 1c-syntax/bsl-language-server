@@ -57,6 +57,8 @@ class BslContextEnumMappingTest {
     var raw = List.of(
       com.github._1c_syntax.bsl.context.api.Availability.SERVER,
       com.github._1c_syntax.bsl.context.api.Availability.THIN_CLIENT,
+      com.github._1c_syntax.bsl.context.api.Availability.WEB_CLIENT,
+      com.github._1c_syntax.bsl.context.api.Availability.MOBILE_CLIENT,
       com.github._1c_syntax.bsl.context.api.Availability.THICK_CLIENT,
       com.github._1c_syntax.bsl.context.api.Availability.EXTERNAL_CONNECTION,
       com.github._1c_syntax.bsl.context.api.Availability.MOBILE_APPLICATION_CLIENT,
@@ -71,6 +73,8 @@ class BslContextEnumMappingTest {
     assertThat(result).containsExactlyInAnyOrder(
       Availability.SERVER,
       Availability.THIN_CLIENT,
+      Availability.WEB_CLIENT,
+      Availability.MOBILE_CLIENT,
       Availability.THICK_CLIENT,
       Availability.EXTERNAL_CONNECTION,
       Availability.MOBILE_APPLICATION_CLIENT,

@@ -54,6 +54,32 @@ class ConventionalLibraryDiscoveryTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void entryNameStripsExtension() {
+    // given / when / then
+    assertThat(ConventionalLibraryDiscovery.entryName(Path.of("Модули/ФС.os"))).isEqualTo("ФС");
+    assertThat(ConventionalLibraryDiscovery.entryName(Path.of("X.bsl"))).isEqualTo("X");
+    // basename без точки → возвращает как есть
+    assertThat(ConventionalLibraryDiscovery.entryName(Path.of("README"))).isEqualTo("README");
+  }
+
+  @Test
+  void exposesClassAndModuleDirNamesForDocumentation() {
+    // given / when
+    var classDirs = ConventionalLibraryDiscovery.classDirNames();
+    var moduleDirs = ConventionalLibraryDiscovery.moduleDirNames();
+
+    // then
+    assertThat(classDirs).isNotEmpty();
+    assertThat(moduleDirs).isNotEmpty();
+    // Списки должны быть неизменяемыми
+    assertThat(classDirs).isInstanceOf(java.util.List.class);
+    org.junit.jupiter.api.Assertions.assertThrows(UnsupportedOperationException.class,
+      () -> classDirs.add("foo"));
+    org.junit.jupiter.api.Assertions.assertThrows(UnsupportedOperationException.class,
+      () -> moduleDirs.add("foo"));
+  }
+
+  @Test
   void registersClassesAndModulesFromConventionDirs(@TempDir Path tempDir) throws IOException {
     var lib = tempDir.resolve("convlib");
     var classes = lib.resolve("Классы");
