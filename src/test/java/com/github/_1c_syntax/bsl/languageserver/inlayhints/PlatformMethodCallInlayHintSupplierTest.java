@@ -125,8 +125,7 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   }
 
   private static InlayHintParams fullRangeParams(DocumentContext documentContext) {
-    var content = documentContext.getContent();
-    var lines = content.split("\\R", -1);
+    var lines = documentContext.getContentList();
     var lastLine = Math.max(0, lines.length - 1);
     var lastCol = lines[lastLine].length();
     var range = new Range(

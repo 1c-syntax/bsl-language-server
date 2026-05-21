@@ -290,7 +290,7 @@ public final class CompletionProvider {
   @Nullable
   private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {
     try {
-      var lines = documentContext.getContent().split("\\R", -1);
+      var lines = documentContext.getContentList();
       if (position.getLine() >= lines.length) {
         return null;
       }
@@ -475,7 +475,7 @@ public final class CompletionProvider {
   @Nullable
   private static LineInfo currentLineInfo(DocumentContext documentContext, Position position) {
     try {
-      var lines = documentContext.getContent().split("\\R", -1);
+      var lines = documentContext.getContentList();
       if (position.getLine() >= lines.length) {
         return null;
       }
@@ -501,7 +501,7 @@ public final class CompletionProvider {
 
   private static boolean isDotCompletion(DocumentContext documentContext, Position position) {
     try {
-      var lines = documentContext.getContent().split("\\R", -1);
+      var lines = documentContext.getContentList();
       if (position.getLine() >= lines.length) {
         return false;
       }
