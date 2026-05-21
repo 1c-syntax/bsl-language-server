@@ -45,8 +45,7 @@ public final class ParserSymbolDescriptionAdapter implements SymbolDescription {
 
   @Override
   public String getPurposeDescription() {
-    var purpose = delegate.getPurposeDescription();
-    return purpose == null ? "" : purpose;
+    return delegate.getPurposeDescription();
   }
 
   @Override
@@ -56,7 +55,6 @@ public final class ParserSymbolDescriptionAdapter implements SymbolDescription {
 
   @Override
   public String getDeprecationInfo() {
-    var info = delegate.getDeprecationInfo();
-    return info == null ? "" : info;
+    return delegate.getDeprecationInfo();
   }
 }

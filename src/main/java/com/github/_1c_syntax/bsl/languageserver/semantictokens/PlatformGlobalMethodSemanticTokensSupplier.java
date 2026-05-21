@@ -57,9 +57,6 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     List<SemanticTokenEntry> entries = new ArrayList<>();
     var ast = documentContext.getAst();
-    if (ast == null) {
-      return entries;
-    }
     var fileType = documentContext.getFileType();
     var symbolTree = documentContext.getSymbolTree();
 
@@ -71,12 +68,8 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
       if (methodNameCtx == null) {
         continue;
       }
-      var token = methodNameCtx.getStart();
-      if (token == null) {
-        continue;
-      }
-      var name = token.getText();
-      if (name == null || name.isBlank()) {
+      var name = methodNameCtx.getStart().getText();
+      if (name.isBlank()) {
         continue;
       }
       // Локальное определение в модуле имеет приоритет: подсветка как обычного Method

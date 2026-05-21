@@ -222,13 +222,10 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
   }
 
   private static Position idPosition(TerminalNode terminal) {
-    if (terminal == null) {
-      return null;
-    }
     var token = terminal.getSymbol();
     // Внутрь токена, чтобы findTerminalNodeContainsPosition попал в IDENTIFIER.
     var col = token.getCharPositionInLine();
-    var len = token.getText() == null ? 0 : token.getText().length();
+    var len = token.getText().length();
     return new Position(token.getLine() - 1, col + Math.max(0, len / 2));
   }
 

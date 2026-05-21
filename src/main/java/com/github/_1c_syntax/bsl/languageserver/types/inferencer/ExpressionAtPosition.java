@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.experimental.UtilityClass;
 import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -180,7 +181,7 @@ public class ExpressionAtPosition {
     return forEach.IDENTIFIER() == hit ? Optional.of(forEach) : Optional.empty();
   }
 
-  private static BSLParser.FileContext safeGetAst(DocumentContext documentContext) {
+  private static BSLParser.@Nullable FileContext safeGetAst(DocumentContext documentContext) {
     try {
       return documentContext.getAst();
     } catch (NullPointerException e) {

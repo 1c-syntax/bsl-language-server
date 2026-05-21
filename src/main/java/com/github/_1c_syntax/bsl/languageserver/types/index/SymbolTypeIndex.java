@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
@@ -166,6 +167,7 @@ public class SymbolTypeIndex {
     return TypeSet.of(current);
   }
 
+  @Nullable
   private MemberDescriptor findMember(TypeRef typeRef, String name, FileType fileType) {
     for (var member : typeRegistry.getMembers(typeRef, fileType)) {
       if (member.name().equalsIgnoreCase(name)) {
@@ -179,10 +181,8 @@ public class SymbolTypeIndex {
    * Достать типы параметра по имени из сигнатур member-метода.
    * Возвращает {@code null}, если такого параметра нет.
    */
+  @Nullable
   private static TypeSet parameterFromMember(MemberDescriptor member, String parameterName) {
-    if (parameterName == null) {
-      return null;
-    }
     for (var signature : member.signatures()) {
       for (var parameter : signature.parameters()) {
         if (parameter.name().equalsIgnoreCase(parameterName)) {

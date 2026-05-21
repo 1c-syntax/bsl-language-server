@@ -373,8 +373,7 @@ public class TypeService {
         result.add(TypeSet.EMPTY);
         continue;
       }
-      var inferred = inferencer.infer(arg, documentContext);
-      result.add(inferred == null ? TypeSet.EMPTY : inferred);
+      result.add(inferencer.infer(arg, documentContext));
     }
     return result;
   }

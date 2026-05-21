@@ -142,13 +142,13 @@ public final class CompletionProvider {
   private static String memberFingerprint(MemberDescriptor m) {
     var sb = new StringBuilder();
     sb.append(m.kind()).append('|');
-    sb.append(m.returnType() == null ? "" : m.returnType().qualifiedName()).append('|');
+    sb.append(m.returnType().qualifiedName()).append('|');
     sb.append(m.signatures().size());
     for (var sig : m.signatures()) {
       sb.append('#').append(sig.parameters().size());
       for (var p : sig.parameters()) {
         sb.append(';').append(p.optional()).append(',');
-        sb.append(p.types() == null ? "" : p.types().refs());
+        sb.append(p.types().refs());
       }
     }
     return sb.toString();
@@ -288,11 +288,7 @@ public final class CompletionProvider {
 
   private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {
     try {
-      var content = documentContext.getContent();
-      if (content == null) {
-        return null;
-      }
-      var lines = content.split("\\R", -1);
+      var lines = documentContext.getContent().split("\\R", -1);
       if (position.getLine() >= lines.length) {
         return null;
       }
@@ -476,11 +472,7 @@ public final class CompletionProvider {
 
   private static LineInfo currentLineInfo(DocumentContext documentContext, Position position) {
     try {
-      var content = documentContext.getContent();
-      if (content == null) {
-        return null;
-      }
-      var lines = content.split("\\R", -1);
+      var lines = documentContext.getContent().split("\\R", -1);
       if (position.getLine() >= lines.length) {
         return null;
       }
@@ -506,11 +498,7 @@ public final class CompletionProvider {
 
   private static boolean isDotCompletion(DocumentContext documentContext, Position position) {
     try {
-      var content = documentContext.getContent();
-      if (content == null) {
-        return false;
-      }
-      var lines = content.split("\\R", -1);
+      var lines = documentContext.getContent().split("\\R", -1);
       if (position.getLine() >= lines.length) {
         return false;
       }
