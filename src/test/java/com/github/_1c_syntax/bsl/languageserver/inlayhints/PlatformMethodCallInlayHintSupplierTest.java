@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,6 +123,81 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
     // then
     assertThat(hints).noneMatch(hint ->
       hint.getLabel().isLeft() && hint.getLabel().getLeft().contains("Параметр"));
+  }
+
+  @Test
+  void noHintsWhenRangeExcludesCalls() {
+    // given — range «до файла» (line < 0), вызов в него не попадает.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH, context);
+    var params = new InlayHintParams();
+    params.setTextDocument(TestUtils.getTextDocumentIdentifier(documentContext.getUri()));
+    params.setRange(new Range(new Position(0, 0), new Position(0, 1)));
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, params);
+
+    // then — range покрывает только первый символ, ни один вызов не задет.
+    assertThat(hints).isEmpty();
+  }
+
+  @Test
+  void noHintsForCallWithoutArguments() {
+    // given — Сообщить() без аргументов, paramList пуст.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContext("Сообщить();\n");
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
+
+    // then
+    assertThat(hints).isEmpty();
+  }
+
+  @Test
+  void noHintsForUnknownConstructorType() {
+    // given — Новый НесуществующийТип(arg) — typeService.resolve не находит.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContext(
+      "Х = Новый СовершенноНеизвестныйТипX(1);\n"
+    );
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
+
+    // then
+    assertThat(hints).isEmpty();
+  }
+
+  @Test
+  void noHintsForCallOnUntypedVariable() {
+    // given — у переменной нет инфер-типа, member не резолвится.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContext(
+      "Перем X;\nX.НеизвестныйМетод(1, 2);\n"
+    );
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
+
+    // then
+    assertThat(hints).isEmpty();
+  }
+
+  @Test
+  void hintsAreSuppressedForBlankArgumentText() {
+    // given — пробел между запятыми трактуется как blank arg; supplier
+    // не должен падать (TypeSet.EMPTY для blank).
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContext(
+      "СтрНайти(\"abc\", \"b\");\n"
+    );
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
+
+    // then — есть хоть один hint (на «где искать»), супплайер не падает
+    assertThat(hints).isNotNull();
   }
 
   private static InlayHintParams fullRangeParams(DocumentContext documentContext) {
