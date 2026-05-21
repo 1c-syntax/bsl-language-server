@@ -239,7 +239,7 @@ public class GlobalScopeProvider {
     if (sym.isEmpty() || fileType == null) {
       return sym;
     }
-    var lc = name == null ? "" : name.toLowerCase(Locale.ROOT);
+    var lc = name.toLowerCase(Locale.ROOT);
     // Library entries — только в OS-файлах.
     if (oScriptLibraryIndex != null && oScriptLibraryIndex.findByName(lc).isPresent()) {
       return fileType == FileType.OS ? sym : Optional.empty();
@@ -535,11 +535,11 @@ public class GlobalScopeProvider {
     ensureGlobalsPublished();
     var canonical = ref.qualifiedName();
     var symbol = new SyntheticSymbol(canonical, syntheticKind,
-      description == null ? "" : description, ref, null, sourceSymbol);
+      description, ref, null, sourceSymbol);
     if (globalSymbolScope == null) {
       return;
     }
-    var effectiveScope = scope == null ? LanguageScope.BOTH : scope;
+    var effectiveScope = scope;
     for (var name : names) {
       if (name == null || name.isBlank()) {
         continue;
@@ -563,11 +563,11 @@ public class GlobalScopeProvider {
     }
     ensureGlobalsPublished();
     var symbol = new SyntheticSymbol(ref.qualifiedName(), SyntheticKind.TYPE_NAME,
-      description == null ? "" : description, ref);
+      description, ref);
     if (globalSymbolScope == null) {
       return;
     }
-    var effectiveScope = scope == null ? LanguageScope.BOTH : scope;
+    var effectiveScope = scope;
     for (var name : names) {
       if (name == null || name.isBlank()) {
         continue;

@@ -395,9 +395,6 @@ public class ExpressionTypeInferencer {
 
   @Nullable
   private static String extractStringLiteral(BslExpression node) {
-    if (node == null) {
-      return null;
-    }
     var ast = node.getRepresentingAst();
     if (ast == null) {
       return null;
@@ -412,9 +409,6 @@ public class ExpressionTypeInferencer {
   }
 
   private static boolean isStructureLike(String typeName) {
-    if (typeName == null) {
-      return false;
-    }
     var lower = typeName.toLowerCase(Locale.ROOT);
     return lower.equals("структура") || lower.equals("structure")
       || lower.equals("фиксированнаяструктура") || lower.equals("fixedstructure");
@@ -428,9 +422,6 @@ public class ExpressionTypeInferencer {
   private static boolean isStructureOrMapLike(String typeName) {
     if (isStructureLike(typeName)) {
       return true;
-    }
-    if (typeName == null) {
-      return false;
     }
     var lower = typeName.toLowerCase(Locale.ROOT);
     return lower.equals("соответствие") || lower.equals("map")
@@ -701,9 +692,6 @@ public class ExpressionTypeInferencer {
 
   @Nullable
   private static String memberNameOf(ParseTree ast) {
-    if (ast == null) {
-      return null;
-    }
     if (ast instanceof TerminalNode terminal) {
       return terminal.getText();
     }
@@ -965,9 +953,6 @@ public class ExpressionTypeInferencer {
   }
 
   private static boolean isValueTableLike(String typeName) {
-    if (typeName == null) {
-      return false;
-    }
     var lower = typeName.toLowerCase(Locale.ROOT);
     return lower.equals("таблицазначений") || lower.equals("valuetable");
   }
@@ -992,9 +977,6 @@ public class ExpressionTypeInferencer {
    * </ul>
    */
   private TypeSet extractColumnTypes(BSLParser.ExpressionContext expr, InferenceContext ctx) {
-    if (expr == null) {
-      return TypeSet.EMPTY;
-    }
     var bslExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(expr);
     if (bslExpr == null) {
       return TypeSet.EMPTY;
@@ -1080,9 +1062,6 @@ public class ExpressionTypeInferencer {
 
   @Nullable
   private static String extractStringLiteralText(BSLParser.ExpressionContext expr) {
-    if (expr == null) {
-      return null;
-    }
     var text = expr.getText();
     if (text == null || text.length() < 2) {
       return null;

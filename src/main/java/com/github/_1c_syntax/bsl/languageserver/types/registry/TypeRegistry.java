@@ -295,9 +295,6 @@ public class TypeRegistry {
    * новый скоуп мержится: при различии повышается до {@link LanguageScope#BOTH}.
    */
   public void setLanguageScope(TypeRef ref, LanguageScope scope) {
-    if (ref == null || scope == null) {
-      return;
-    }
     typeScopes.merge(ref, scope, LanguageScope::merge);
   }
 
@@ -377,7 +374,7 @@ public class TypeRegistry {
    * {@link LanguageScope#BOTH}.
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, LanguageScope scope) {
-    var effective = scope == null ? LanguageScope.BOTH : scope;
+    var effective = scope;
     memberSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
       .add(new ScopedMemberSource(source, effective));
   }
@@ -413,7 +410,7 @@ public class TypeRegistry {
       // до getMembers.
       types.put(specializedRef, hydrate(specializedRef));
       addAlias(specializedName, specializedRef);
-      setLanguageScope(specializedRef, scope == null ? LanguageScope.BSL : scope);
+      setLanguageScope(specializedRef, scope);
     }
     registerSpecialization(specializedRef, genericRef, bindings, scope);
     return specializedRef;
@@ -456,8 +453,8 @@ public class TypeRegistry {
     if (specializedRef == null || genericRef == null) {
       return;
     }
-    var safeBindings = bindings == null ? Map.<String, String>of() : Map.copyOf(bindings);
-    var effectiveScope = scope == null ? LanguageScope.BSL : scope;
+    var safeBindings = Map.copyOf(bindings);
+    var effectiveScope = scope;
     MemberSource source = () -> {
       var raw = getMembers(genericRef);
       if (raw.isEmpty()) {
@@ -497,7 +494,7 @@ public class TypeRegistry {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.put(ref, new UserType(ref, declaration));
     addAlias(qualifiedName, ref);
-    setLanguageScope(ref, scope == null ? LanguageScope.BOTH : scope);
+    setLanguageScope(ref, scope);
     return ref;
   }
 
@@ -583,9 +580,6 @@ public class TypeRegistry {
    * возвращается первое зарегистрированное). Если ни одно описание не подходит — "".
    */
   public String getDescription(TypeRef ref, FileType fileType) {
-    if (ref == null) {
-      return "";
-    }
     var list = descriptions.get(ref);
     if (list == null || list.isEmpty()) {
       return "";
@@ -606,7 +600,7 @@ public class TypeRegistry {
     if (ref == null || text == null || text.isBlank()) {
       return;
     }
-    var effective = scope == null ? LanguageScope.BOTH : scope;
+    var effective = scope;
     descriptions.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
       .add(new ScopedDescription(text, effective));
   }
@@ -627,9 +621,6 @@ public class TypeRegistry {
   public List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(
     TypeRef ref, FileType fileType
   ) {
-    if (ref == null) {
-      return List.of();
-    }
     var result = new ArrayList<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>();
     var fromPack = constructors.get(ref);
     if (fromPack != null) {
@@ -667,7 +658,7 @@ public class TypeRegistry {
     if (ref == null || ctors == null || ctors.isEmpty()) {
       return;
     }
-    var effective = scope == null ? LanguageScope.BOTH : scope;
+    var effective = scope;
     constructors.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
       .add(new ScopedConstructors(List.copyOf(ctors), effective));
   }
@@ -697,7 +688,7 @@ public class TypeRegistry {
     if (ref == null || source == null) {
       return;
     }
-    var effective = scope == null ? LanguageScope.BOTH : scope;
+    var effective = scope;
     constructorSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
       .add(new ScopedConstructorSource(source, effective));
   }
@@ -726,7 +717,7 @@ public class TypeRegistry {
 
   @Nullable
   private static FileType fileTypeOf(LanguageScope scope) {
-    if (scope == null || scope == LanguageScope.BOTH) {
+    if (scope == LanguageScope.BOTH) {
       return null;
     }
     return scope == LanguageScope.BSL ? FileType.BSL : FileType.OS;
@@ -808,7 +799,7 @@ public class TypeRegistry {
     if (!decl.name().isEmpty()) {
       displayNames.putIfAbsent(ref, decl.name());
     }
-    setLanguageScope(ref, scope == null ? LanguageScope.BOTH : scope);
+    setLanguageScope(ref, scope);
   }
 
   /**
@@ -817,9 +808,6 @@ public class TypeRegistry {
    * выбирает ru или en по {@code language}; иначе — {@code ref.qualifiedName()}.
    */
   public String displayName(TypeRef ref, Language language) {
-    if (ref == null) {
-      return "";
-    }
     var bn = displayNames.get(ref);
     if (bn == null) {
       var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
@@ -910,9 +898,6 @@ public class TypeRegistry {
    * @return неизменяемый список имён placeholder'ов или пустой список
    */
   public List<String> getTypeParameters(TypeRef ref) {
-    if (ref == null) {
-      return List.of();
-    }
     return typeParameters.getOrDefault(ref, List.of());
   }
 

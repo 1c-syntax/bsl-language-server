@@ -300,7 +300,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
         safe(property.description()), safe(enLookup.apply(property).description())));
   }
 
-  private static String safe(String s) {
+  private static String safe(@Nullable String s) {
     return s == null ? "" : s;
   }
 
@@ -330,7 +330,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   /** Преобразует {@link ContextName} в {@link BilingualString}. */
-  private static BilingualString bilingualName(ContextName name) {
+  private static BilingualString bilingualName(@Nullable ContextName name) {
     if (name == null) {
       return BilingualString.EMPTY;
     }

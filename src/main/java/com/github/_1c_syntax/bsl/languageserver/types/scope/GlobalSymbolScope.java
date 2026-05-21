@@ -172,17 +172,20 @@ public class GlobalSymbolScope {
   }
 
   /**
-   * Очистить scope (используется при полной переиндексации library-сущностей).
+   * Очистить весь scope (используется при полной переиндексации library-сущностей).
+   */
+  public void clear() {
+    entries.clear();
+    displayNames.clear();
+    aliasesBySymbol.clear();
+  }
+
+  /**
+   * Очистить только записи с указанной ролью.
    *
-   * @param role если указан — удаляются только записи с этой ролью; {@code null} — все.
+   * @param role роль, по которой фильтруются удаляемые записи
    */
   public void clear(Role role) {
-    if (role == null) {
-      entries.clear();
-      displayNames.clear();
-      aliasesBySymbol.clear();
-      return;
-    }
     entries.entrySet().removeIf(e -> e.getValue().role() == role);
     aliasesBySymbol.entrySet().removeIf(e -> e.getValue().stream().allMatch(k -> !entries.containsKey(k)));
     displayNames.keySet().removeIf(k -> !entries.containsKey(k));

@@ -162,20 +162,18 @@ public record MemberDescriptor(
   /** Копия дескриптора с заменёнными метаданными платформы. */
   public MemberDescriptor withMetadata(PlatformMetadata newMetadata) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      signatures, sourceSymbol, generic,
-      newMetadata == null ? PlatformMetadata.EMPTY : newMetadata);
+      signatures, sourceSymbol, generic, newMetadata);
   }
 
   /** Копия дескриптора с заполненным двуязычным именем (ru + en). */
   public MemberDescriptor withBilingualName(BilingualString newName) {
-    return new MemberDescriptor(newName == null ? BilingualString.EMPTY : newName,
+    return new MemberDescriptor(newName,
       kind, bilingualDescription, returnTypes, signatures, sourceSymbol, generic, metadata);
   }
 
   /** Копия дескриптора с заполненным двуязычным описанием (ru + en). */
   public MemberDescriptor withBilingualDescription(BilingualString newDescription) {
-    return new MemberDescriptor(bilingualName, kind,
-      newDescription == null ? BilingualString.EMPTY : newDescription,
+    return new MemberDescriptor(bilingualName, kind, newDescription,
       returnTypes, signatures, sourceSymbol, generic, metadata);
   }
 
@@ -248,22 +246,22 @@ public record MemberDescriptor(
 
   public static MemberDescriptor property(String name, TypeRef returnType, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
-      description == null ? "" : description, typesOf(returnType), List.of(), null, false,
+      description, typesOf(returnType), List.of(), null, false,
       PlatformMetadata.EMPTY);
   }
 
   /** Свойство с composite-типом ({@code Строка | Число}). */
   public static MemberDescriptor property(String name, TypeSet returnTypes, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
-      description == null ? "" : description,
-      returnTypes == null ? TypeSet.EMPTY : returnTypes,
+      description,
+      returnTypes,
       List.of(), null, false, PlatformMetadata.EMPTY);
   }
 
   /** Generic-property платформенного типа (например, {@code <Имя реквизита>}). */
   public static MemberDescriptor genericProperty(String name, TypeRef returnType, String description) {
     return new MemberDescriptor(name, MemberKind.PROPERTY,
-      description == null ? "" : description, typesOf(returnType), List.of(), null, true,
+      description, typesOf(returnType), List.of(), null, true,
       PlatformMetadata.EMPTY);
   }
 
