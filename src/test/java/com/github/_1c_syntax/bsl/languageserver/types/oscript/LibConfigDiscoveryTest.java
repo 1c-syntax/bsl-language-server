@@ -21,8 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +35,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @CleanupContextBeforeClassAndAfterClass
 class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private LibConfigDiscovery discovery;
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
+
+  @AfterEach
+  void resetOscriptOptions() {
+    configuration.getOscriptOptions().getLibRoots().clear();
+    configuration.getOscriptOptions().setUseEnvLibLocation(false);
+  }
 
   @Test
   void discoversLibConfigInsideWorkspace(@TempDir Path workspace) throws IOException {
@@ -79,5 +93,88 @@ class LibConfigDiscoveryTest extends AbstractServerContextAwareTest {
       workspace.toAbsolutePath().normalize(),
       workspace.resolve("oscript_modules/fs").toAbsolutePath().normalize()
     );
+  }
+
+  @Test
+  void discoverFromServerContextDelegatesToConfigurationRoot(@TempDir Path workspace) throws IOException {
+    // given
+    Files.writeString(workspace.resolve("lib.config"), "<package-def/>");
+    var context = mock(ServerContext.class);
+    when(context.getConfigurationRoot()).thenReturn(workspace);
+
+    // when
+    var result = discovery.discover(context);
+
+    // then
+    assertThat(result).contains(workspace.resolve("lib.config").toAbsolutePath().normalize());
+  }
+
+  @Test
+  void getRootsFromNullServerContextReturnsOnlyLibRoots() {
+    // given / when
+    var roots = discovery.getRoots((ServerContext) null);
+
+    // then — без workspace получаем только глобальные источники (libRoots/env)
+    assertThat(roots).isNotNull();
+  }
+
+  @Test
+  void getRootsIncludesAbsoluteLibRoot(@TempDir Path workspace, @TempDir Path libDir) {
+    // given
+    configuration.getOscriptOptions().getLibRoots().add(libDir.toAbsolutePath().toString());
+
+    // when
+    var roots = discovery.getRoots(workspace);
+
+    // then
+    assertThat(roots).contains(libDir.toAbsolutePath().normalize());
+  }
+
+  @Test
+  void getRootsResolvesRelativeLibRootAgainstWorkspace(@TempDir Path workspace) throws IOException {
+    // given
+    Files.createDirectories(workspace.resolve("vendor/lib"));
+    configuration.getOscriptOptions().getLibRoots().add("vendor/lib");
+
+    // when
+    var roots = discovery.getRoots(workspace);
+
+    // then
+    assertThat(roots).contains(workspace.resolve("vendor/lib").toAbsolutePath().normalize());
+  }
+
+  @Test
+  void getRootsWithEnvLibLocationDisabledIgnoresEnv(@TempDir Path workspace) {
+    // given — useEnvLibLocation=false (по умолчанию)
+    configuration.getOscriptOptions().setUseEnvLibLocation(false);
+
+    // when
+    var roots = discovery.getRoots(workspace);
+
+    // then — only workspace + oscript_modules children (нет лишних путей из env)
+    assertThat(roots).hasSize(1).contains(workspace.toAbsolutePath().normalize());
+  }
+
+  @Test
+  void getRootsHandlesWorkspaceWithoutOscriptModules(@TempDir Path workspace) {
+    // given — нет oscript_modules директории
+
+    // when
+    var roots = discovery.getRoots(workspace);
+
+    // then — только сам workspace
+    assertThat(roots).containsExactly(workspace.toAbsolutePath().normalize());
+  }
+
+  @Test
+  void discoverSkipsMissingWorkspace(@TempDir Path parent) {
+    // given
+    var missing = parent.resolve("not-exist");
+
+    // when
+    var result = discovery.discover(missing);
+
+    // then — scan() == no-op для не-каталога; libRoots пуст → пустой результат
+    assertThat(result).isEmpty();
   }
 }
