@@ -87,8 +87,8 @@ public final class CompletionProvider {
   // прикрепления `editor.action.triggerParameterHints` к completion item.
   private boolean snippetSupport;
 
-  @EventListener
-  public void handleInitializeEvent(LanguageServerInitializeRequestReceivedEvent ignored) {
+  @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
+  public void handleInitializeEvent() {
     snippetSupport = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getCompletion)
