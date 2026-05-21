@@ -107,7 +107,7 @@ class BinaryOperatorInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void stringConcatenationPromotesToString() {
+  void leftStringPromotesToString() {
     // given
     var documentContext = doc();
 
@@ -116,8 +116,17 @@ class BinaryOperatorInferenceTest extends AbstractServerContextAwareTest {
       "СтрокаПлюсСтрока = ".length()))).containsExactly("Строка");
     assertThat(qnames(infer(documentContext, "СтрокаПлюсЧисло = \"пять \" + 500",
       "СтрокаПлюсЧисло = ".length()))).containsExactly("Строка");
+  }
+
+  @Test
+  void leftNumberStaysNumberEvenWithStringRight() {
+    // given
+    var documentContext = doc();
+
+    // when / then — правый приводится к Числу (в runtime будет ошибка
+    // конвертации, но статически — арифметика).
     assertThat(qnames(infer(documentContext, "ЧислоПлюсСтрока = 500 + \" пять\"",
-      "ЧислоПлюсСтрока = ".length()))).containsExactly("Строка");
+      "ЧислоПлюсСтрока = ".length()))).containsExactly("Число");
   }
 
   @Test

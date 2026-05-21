@@ -520,12 +520,12 @@ public class ExpressionTypeInferencer {
       return TypeSet.of(BOOLEAN);
     }
     if (op == BslOperator.ADD) {
+      // Тип `+` определяется ЛЕВЫМ операндом — правый приводится к нему.
       var left = inferInternal(node.getLeft(), ctx);
-      var right = inferInternal(node.getRight(), ctx);
-      if (left.refs().contains(STRING) || right.refs().contains(STRING)) {
+      if (left.refs().contains(STRING)) {
         return TypeSet.of(STRING);
       }
-      if (left.refs().contains(DATE) || right.refs().contains(DATE)) {
+      if (left.refs().contains(DATE)) {
         return TypeSet.of(DATE);
       }
       return TypeSet.of(NUMBER);
