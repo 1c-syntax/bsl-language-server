@@ -46,6 +46,7 @@ import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -206,7 +207,7 @@ public class GlobalScopeProvider {
    * и WorkspaceScope падает с "Recursive update". См. plan-symbol-front.md.
    */
   @Autowired(required = false)
-  private GlobalSymbolScope globalSymbolScope;
+  private @Nullable GlobalSymbolScope globalSymbolScope;
 
   /**
    * Источник данных о библиотеках OneScript (lib.config + oscript_modules).
@@ -419,9 +420,6 @@ public class GlobalScopeProvider {
   }
 
   private List<String> namesFromList(List<PlatformVariable> list, FileType fileType) {
-    if (fileType == null) {
-      return list.stream().map(PlatformVariable::name).toList();
-    }
     return list.stream()
       .filter(v -> {
         var s = platformVariableScopes.get(v.name().toLowerCase(Locale.ROOT));
@@ -442,9 +440,6 @@ public class GlobalScopeProvider {
    * То же, что {@link #getFunctions()}, но с фильтрацией по типу файла.
    */
   public Collection<MemberDescriptor> getFunctions(FileType fileType) {
-    if (fileType == null) {
-      return getFunctions();
-    }
     var result = new LinkedHashSet<MemberDescriptor>();
     for (var entry : functions.entrySet()) {
       var s = functionScopes.get(entry.getKey());
@@ -668,9 +663,6 @@ public class GlobalScopeProvider {
    * То же, что {@link #getClasses()}, но с фильтрацией по типу файла.
    */
   public List<String> getClasses(FileType fileType) {
-    if (fileType == null) {
-      return classes;
-    }
     return classes.stream()
       .filter(c -> {
         var s = classScopes.get(c.toLowerCase(Locale.ROOT));
@@ -690,9 +682,6 @@ public class GlobalScopeProvider {
    * То же, что {@link #getKeywords()}, но с фильтрацией по типу файла.
    */
   public List<String> getKeywords(FileType fileType) {
-    if (fileType == null) {
-      return keywords;
-    }
     return keywords.stream()
       .filter(k -> {
         var s = keywordScopes.get(k.toLowerCase(Locale.ROOT));
@@ -728,7 +717,7 @@ public class GlobalScopeProvider {
       return;
     }
     ensureGlobalsPublished();
-    var ref = classRef != null ? classRef : TypeRef.UNKNOWN;
+    var ref = classRef;
     var symbol = new SyntheticSymbol(name, SyntheticKind.TYPE_NAME, "", ref);
     globalSymbolScope.register(name, symbol, GlobalSymbolScope.Role.TYPE_NAME);
   }

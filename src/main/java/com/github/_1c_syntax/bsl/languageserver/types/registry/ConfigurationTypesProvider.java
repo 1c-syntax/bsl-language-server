@@ -590,9 +590,6 @@ public class ConfigurationTypesProvider {
       return List.of();
     }
     var mdoRef = md.getMdoReference();
-    if (mdoRef == null) {
-      return List.of();
-    }
     var result = new ArrayList<CommonAttribute>();
     for (var ca : all) {
       var effective = ca.contains(mdoRef) ? ca.useMode(mdoRef) : ca.getAutoUse();
@@ -680,18 +677,10 @@ public class ConfigurationTypesProvider {
   @Nullable
   private TypeRef resolveValueType(ValueType vt) {
     if (vt instanceof PrimitiveValueType primitive) {
-      var fullName = primitive.fullName();
-      if (fullName == null) {
-        return null;
-      }
-      return typeRegistry.resolve(fullName.getRu()).orElse(null);
+      return typeRegistry.resolve(primitive.fullName().getRu()).orElse(null);
     }
     // V8 / METADATA / UNKNOWN — пока не поддерживаем точно; resolve по имени даст
     // частичное покрытие для V8-типов, имена которых совпадают с регистрационными.
-    var fullName = vt.fullName();
-    if (fullName == null) {
-      return null;
-    }
-    return typeRegistry.resolve(fullName.getRu()).orElse(null);
+    return typeRegistry.resolve(vt.fullName().getRu()).orElse(null);
   }
 }

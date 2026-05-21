@@ -112,9 +112,6 @@ public class ExpressionTypeInferencer {
    * Вывести типы выражения в контексте документа.
    */
   public TypeSet infer(BslExpression expression, DocumentContext documentContext) {
-    if (expression == null) {
-      return TypeSet.EMPTY;
-    }
     var ctx = new InferenceContext(documentContext);
     try {
       return inferInternal(expression, ctx);
