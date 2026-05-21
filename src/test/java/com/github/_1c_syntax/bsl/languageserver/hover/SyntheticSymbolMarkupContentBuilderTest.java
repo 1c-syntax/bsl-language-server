@@ -21,25 +21,46 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
-/**
- * Unit-тесты построителя hover-контента для synthetic-символов.
- */
-class SyntheticSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class SyntheticSymbolMarkupContentBuilderTest {
 
-  @Autowired
+  @Mock
+  private TypeRegistry typeRegistry;
+  @Mock
+  private CollectionHoverHints collectionHoverHints;
+  @Mock
+  private Resources resources;
+
   private SyntheticSymbolMarkupContentBuilder builder;
+
+  @BeforeEach
+  void setUp() {
+    builder = new SyntheticSymbolMarkupContentBuilder(typeRegistry, collectionHoverHints, resources);
+    when(resources.getResourceString(eq(SyntheticSymbolMarkupContentBuilder.class), any(String.class)))
+      .thenAnswer(inv -> "[" + inv.getArgument(1) + "]");
+  }
 
   @Test
   void getContentForGlobalPropertyIncludesNameRoleAndDescription() {
@@ -55,10 +76,11 @@ class SyntheticSymbolMarkupContentBuilderTest extends AbstractServerContextAware
     // then
     assertThat(content.getKind()).isEqualTo(MarkupKind.MARKDOWN);
     var value = content.getValue();
-    assertThat(value).contains("Справочники");
-    assertThat(value).contains(": СправочникиМенеджер");
-    assertThat(value).contains("глобальное свойство");
-    assertThat(value).contains("Объект для работы со справочниками.");
+    assertThat(value)
+      .contains("Справочники")
+      .contains(": СправочникиМенеджер")
+      .contains("[role.PLATFORM_GLOBAL_PROPERTY]")
+      .contains("Объект для работы со справочниками.");
   }
 
   @Test
@@ -119,9 +141,10 @@ class SyntheticSymbolMarkupContentBuilderTest extends AbstractServerContextAware
 
     // then
     var value = content.getValue();
-    assertThat(value).contains("ФС");
-    assertThat(value).contains("модуль библиотеки");
-    assertThat(value).contains("OneScript:");
+    assertThat(value)
+      .contains("ФС")
+      .contains("[role.LIBRARY_MODULE]")
+      .contains("OneScript:");
   }
 
   @Test
@@ -134,7 +157,8 @@ class SyntheticSymbolMarkupContentBuilderTest extends AbstractServerContextAware
 
     // then
     var value = content.getValue();
-    assertThat(value).contains("Массив");
-    assertThat(value).contains("имя типа");
+    assertThat(value)
+      .contains("Массив")
+      .contains("[role.TYPE_NAME]");
   }
 }
