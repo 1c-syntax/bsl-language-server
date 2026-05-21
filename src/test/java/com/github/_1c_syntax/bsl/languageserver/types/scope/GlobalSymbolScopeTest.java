@@ -79,4 +79,98 @@ class GlobalSymbolScopeTest {
     assertThat(scope.findSymbol("ФС")).isEmpty();
     assertThat(scope.findSymbol("СессияПользователя")).isPresent();
   }
+
+  @Test
+  void registerIgnoresBlankOrNullNameAndNullSymbol() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var sym = new SyntheticSymbol("X", SyntheticKind.TYPE_NAME, "");
+
+    // when
+    scope.register("", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("   ", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register(null, sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("X", null, GlobalSymbolScope.Role.VALUE);
+
+    // then
+    assertThat(scope.findSymbol("X")).isEmpty();
+    assertThat(scope.getNames()).isEmpty();
+  }
+
+  @Test
+  void findEntryReturnsEmptyForBlankInput() {
+    // given
+    var scope = new GlobalSymbolScope();
+
+    // when / then
+    assertThat(scope.findEntry(null)).isEmpty();
+    assertThat(scope.findEntry("")).isEmpty();
+    assertThat(scope.findEntry("   ")).isEmpty();
+  }
+
+  @Test
+  void getNamesPreservesOriginalSpelling() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var sym = new SyntheticSymbol("ФайловыеПотоки", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    scope.register("ФайловыеПотоки", sym, GlobalSymbolScope.Role.VALUE);
+
+    // when
+    var names = scope.getNames();
+
+    // then
+    assertThat(names).contains("ФайловыеПотоки");
+  }
+
+  @Test
+  void getEntriesReturnsOneEntryPerSymbolEvenWithAliases() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    scope.register("Справочники", sym, GlobalSymbolScope.Role.VALUE);
+    scope.register("Catalogs", sym, GlobalSymbolScope.Role.VALUE);
+
+    // when
+    var entries = scope.getEntries();
+
+    // then
+    assertThat(entries).hasSize(1);
+    assertThat(entries.iterator().next().symbol()).isEqualTo(sym);
+  }
+
+  @Test
+  void streamSymbolsReturnsUniqueSymbols() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var sym1 = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    var sym2 = new SyntheticSymbol("ФС", SyntheticKind.LIBRARY_MODULE, "");
+    scope.register("Справочники", sym1, GlobalSymbolScope.Role.VALUE);
+    scope.register("Catalogs", sym1, GlobalSymbolScope.Role.VALUE);
+    scope.register("ФС", sym2, GlobalSymbolScope.Role.VALUE);
+
+    // when
+    var symbols = scope.streamSymbols().toList();
+
+    // then
+    assertThat(symbols).containsExactlyInAnyOrder(sym1, sym2);
+  }
+
+  @Test
+  void clearWithoutRoleRemovesAllEntries() {
+    // given
+    var scope = new GlobalSymbolScope();
+    var sym1 = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    var sym2 = new SyntheticSymbol("Y", SyntheticKind.TYPE_NAME, "");
+    scope.register("X", sym1, GlobalSymbolScope.Role.VALUE);
+    scope.register("Y", sym2, GlobalSymbolScope.Role.TYPE_NAME);
+
+    // when
+    scope.clear();
+
+    // then
+    assertThat(scope.findSymbol("X")).isEmpty();
+    assertThat(scope.findSymbol("Y")).isEmpty();
+    assertThat(scope.getEntries()).isEmpty();
+    assertThat(scope.getNames()).isEmpty();
+  }
 }
