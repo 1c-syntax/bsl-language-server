@@ -24,4 +24,7 @@
  * членов, конфигурационных коллекций и других сущностей, объявленных
  * вне BSL/OScript кода.
  */
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.types.symbol;
+
+import org.jspecify.annotations.NullMarked;

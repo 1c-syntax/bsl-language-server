@@ -23,4 +23,7 @@
  * Глобальная область видимости символов workspace'а — точка резолюции имён,
  * не требующих квалификации (платформенные глобалы, library-модули и т.п.).
  */
+@NullMarked
 package com.github._1c_syntax.bsl.languageserver.types.scope;
+
+import org.jspecify.annotations.NullMarked;
