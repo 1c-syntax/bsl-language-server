@@ -138,7 +138,7 @@ public abstract class AbstractServerContextAwareTest {
   protected void initServerContext(Path configurationRoot, boolean populate) {
     cleanupAfterClass = false;
     serverContextProvider.clear();
-    var uri = configurationRoot.toUri();
+    var uri = Absolute.uri(configurationRoot.toUri());
     context = serverContextProvider.addWorkspace(uri);
     context.setConfigurationRoot(configurationRoot);
     WorkspaceContextHolder.set(context.getWorkspaceUri());
