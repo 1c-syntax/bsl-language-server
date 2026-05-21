@@ -143,6 +143,98 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void noSignatureForUnknownTypeConstructor() {
+    // given — несуществующий тип
+    var content = "А = Новый НесуществующийТип(1, 2);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, "А = Новый НесуществующийТип(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then
+    assertThat(help.getSignatures()).isEmpty();
+  }
+
+  @Test
+  void noSignatureWhenCursorOutsideParens() {
+    // given — курсор ДО открывающей скобки
+    var content = "Сообщить(\"привет\");\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 3));  // в середине слова `Сообщить`
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then
+    assertThat(help.getSignatures()).isEmpty();
+  }
+
+  @Test
+  void emptyCallReturnsSignatureWithZeroActiveParameter() {
+    // given
+    var content =
+      "Процедура М(А) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "М();\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "М(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then
+    assertThat(help.getSignatures()).hasSize(1);
+    assertThat(help.getActiveParameter()).isZero();
+  }
+
+  @Test
+  void accessCallOnUntypedVariableReturnsNoSignature() {
+    // given — переменная без типа, точный метод не определить
+    var content =
+      "Перем X;\n"
+        + "X.СомнительныйМетод(1);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, "X.СомнительныйМетод(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then
+    assertThat(help.getSignatures()).isEmpty();
+  }
+
+  @Test
+  void localMethodCallFindsSignatureCaseInsensitive() {
+    // given — вызов локального метода в другом регистре
+    var content =
+      "Процедура МояПроцедура(А) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "мОяПрОцЕдУрА(1);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "мОяПрОцЕдУрА(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then
+    assertThat(help.getSignatures()).hasSize(1);
+    assertThat(help.getSignatures().get(0).getLabel()).startsWith("МояПроцедура(");
+  }
+
+  @Test
   void testLocalMethodSignatureRendersDeclaredParameterAndReturnTypes() {
     // Объявленные типы параметров и возвращаемого значения из JsDoc должны
     // попадать в label сигнатуры локального метода.
