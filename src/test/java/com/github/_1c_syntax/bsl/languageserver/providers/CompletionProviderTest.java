@@ -59,7 +59,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   @AfterEach
   void resetClientCapabilities() {
     clientCapabilitiesHolder.setCapabilities(null);
-    completionProvider.handleInitializeEvent(null);
+    completionProvider.handleInitializeEvent();
   }
 
   private void enableSnippetSupport(boolean enabled) {
@@ -72,7 +72,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var caps = new ClientCapabilities();
     caps.setTextDocument(textDocumentCaps);
     clientCapabilitiesHolder.setCapabilities(caps);
-    completionProvider.handleInitializeEvent(null);
+    completionProvider.handleInitializeEvent();
   }
 
   @Test
