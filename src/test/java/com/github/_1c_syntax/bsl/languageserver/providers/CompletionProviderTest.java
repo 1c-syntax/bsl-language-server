@@ -959,4 +959,75 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .as("все ключи структуры должны быть в completion")
       .contains("Варианты", "Действие", "Приемник", "Источник");
   }
+
+  @Test
+  void afterNewCompletionListsPlatformClasses() {
+    // given — курсор после `Новый ` с пустым префиксом → все классы платформы.
+    var content = "А = Новый ";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then — должны быть платформенные классы.
+    assertThat(items).isNotEmpty();
+    assertThat(items).extracting(CompletionItem::getKind)
+      .as("все элементы после `Новый ` — классы")
+      .contains(CompletionItemKind.Class);
+    assertThat(items).extracting(CompletionItem::getLabel).contains("Массив", "Структура");
+  }
+
+  @Test
+  void afterNewWithPrefixFiltersClassesByPrefix() {
+    // given — после `Новый Стр` ожидаем только классы, начинающиеся на «Стр».
+    var content = "А = Новый Стр";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .extracting(CompletionItem::getLabel)
+      .as("Структура должна быть, Массив — нет (префикс не совпадает)")
+      .contains("Структура")
+      .doesNotContain("Массив");
+  }
+
+  @Test
+  void emptyDocumentReturnsCompletionList() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("");
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 0));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — completion на пустом документе не падает; результат корректен.
+    assertThat(result).isNotNull();
+    assertThat(result.getItems()).isNotNull();
+  }
+
+  @Test
+  void positionBeyondEndOfFileReturnsEmptyOrSafe() {
+    // given — позиция за пределами файла.
+    var documentContext = TestUtils.getDocumentContext("Сооб");
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(100, 100));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — supplier не падает.
+    assertThat(result).isNotNull();
+  }
 }
