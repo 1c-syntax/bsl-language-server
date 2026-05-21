@@ -252,13 +252,14 @@ tasks.test {
     //
     // Уровень параллелизма можно переопределить Gradle-свойством
     // `maxParallelForks` (например, `-PmaxParallelForks=4`). По умолчанию
-    // на CI (env `CI=true` / `GITHUB_ACTIONS=true`) используется один форк,
-    // чтобы не упереться в OOM при `maxHeapSize=3g` на каждый форк.
+    // на CI (env `CI=true` / `GITHUB_ACTIONS=true`) используется два форка
+    // для ускорения прогона при сохранении запаса по памяти
+    // (`maxHeapSize=3g` на каждый форк).
     // Локально — половина доступных процессоров, ограниченная диапазоном
     // от 1 до 4.
     val isCi = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
     maxParallelForks = (project.findProperty("maxParallelForks") as String?)?.toIntOrNull()
-        ?: if (isCi) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
+        ?: if (isCi) 2 else (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
