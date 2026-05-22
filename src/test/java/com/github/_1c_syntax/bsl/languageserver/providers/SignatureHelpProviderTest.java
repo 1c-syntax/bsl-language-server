@@ -214,6 +214,46 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void signatureHelpFallbackToActiveParameterWhenTypesNoMatch() {
+    // given — локальный метод с двумя параметрами + аргументы без типов.
+    var content =
+      "Процедура М(А, Б, В) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "М(, , );\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // курсор сразу после второй запятой — активный параметр = 2.
+    var thirdParamCol = content.split("\n")[3].lastIndexOf(", ") + 2;
+    params.setPosition(new Position(3, thirdParamCol));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — fallback к pickIndexByActiveParameter.
+    assertThat(help.getSignatures()).hasSize(1);
+    assertThat(help.getActiveParameter()).isEqualTo(2);
+  }
+
+  @Test
+  void signatureHelpForCallStatementOnSameLine() {
+    // given — standalone callStatement (Объект.Метод();) на той же строке.
+    var content = "Сообщить(\"hello\", \"info\");\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.indexOf(", ") + 2));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — supplier находит сигнатуру глобальной функции.
+    assertThat(help.getSignatures()).isNotEmpty();
+    assertThat(help.getActiveParameter()).isPositive();
+  }
+
+  @Test
   void localMethodCallFindsSignatureCaseInsensitive() {
     // given — вызов локального метода в другом регистре
     var content =
