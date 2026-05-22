@@ -843,6 +843,35 @@ class BSLTextDocumentServiceTest {
     assertThat(result.getSignatures()).isEmpty();
   }
 
+  @Test
+  void completionForOpenedFileDelegatesToProvider() throws Exception {
+    // given
+    doOpen();
+    var params = new CompletionParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.completion(params).get();
+
+    // then — провайдер вернул CompletionList (нерасширяемый), supplier не упал.
+    assertThat(result).isNotNull();
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight()).isNotNull();
+  }
+
+  @Test
+  void signatureHelpForOpenedFileDelegatesToProvider() throws Exception {
+    // given
+    doOpen();
+    var params = new SignatureHelpParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.signatureHelp(params).get();
+
+    // then — без активного вызова на позиции (0,0) сигнатур не будет.
+    assertThat(result).isNotNull();
+    assertThat(result.getSignatures()).isEmpty();
+  }
+
   private File getTestFile() {
     return new File("./src/test/resources/BSLTextDocumentServiceTest.bsl");
   }
