@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
@@ -820,6 +821,20 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getDiagnostic)
       .isPresent();
+  }
+
+  /**
+   * Останавливает executor для удалённого документа, чтобы не оставлять stale-reference
+   * на старый {@link DocumentContext} в карте {@link #documentExecutors} — иначе следующий
+   * {@code didOpen} того же URI получит из {@code computeIfAbsent} executor с прежним
+   * {@code DocumentContext}, и {@code didChange} применит изменения к чужому документу.
+   */
+  @EventListener
+  public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    var docExecutor = documentExecutors.remove(event.getUri());
+    if (docExecutor != null) {
+      docExecutor.shutdown();
+    }
   }
 
   private void validate(DocumentContext documentContext) {
