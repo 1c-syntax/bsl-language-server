@@ -546,7 +546,7 @@ public class TypeRegistry {
    */
   public void registerAsGlobalProperty(TypeRef ref, LanguageScope scope, SyntheticKind syntheticKind,
                                        Supplier<Symbol> sourceSymbol) {
-    var names = new java.util.LinkedHashSet<String>();
+    var names = new LinkedHashSet<String>();
     names.add(ref.qualifiedName());
     aliasIndex.forEach((alias, target) -> {
       if (target.equals(ref)) {
@@ -692,7 +692,7 @@ public class TypeRegistry {
    * из {@link #registerPack} при непустых {@code constructors}.
    */
   private void registerAsPlatformClass(TypeRef ref, LanguageScope scope) {
-    var names = new java.util.LinkedHashSet<String>();
+    var names = new LinkedHashSet<String>();
     names.add(ref.qualifiedName());
     aliasIndex.forEach((alias, target) -> {
       if (target.equals(ref)) {

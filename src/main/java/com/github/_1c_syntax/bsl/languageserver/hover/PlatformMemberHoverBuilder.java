@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
@@ -41,6 +40,7 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +58,6 @@ import java.util.stream.Collectors;
 public class PlatformMemberHoverBuilder {
 
   private final Resources resources;
-  private final LanguageServerConfiguration configuration;
   private final TypeRegistry typeRegistry;
 
   private String tr(String key) {
@@ -104,7 +103,7 @@ public class PlatformMemberHoverBuilder {
         chosenIndex = 0;
       }
     }
-    var lang = configuration.getLanguage();
+    var lang = resources.getLanguage();
     if (descriptor.kind() == MemberKind.METHOD) {
       sb.append("```bsl\n");
       sb.append(descriptor.displayName(lang)).append('(');
@@ -264,7 +263,7 @@ public class PlatformMemberHoverBuilder {
       sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadWrite"));
     }
     appendAvailabilities(sb, md.availabilities());
-    var lang = configuration.getLanguage();
+    var lang = resources.getLanguage();
     var rv = md.returnValueDescription().forLanguage(lang);
     if (!rv.isBlank()) {
       sb.append("\n\n**").append(tr("returnValueDescription")).append("** ").append(rv);
@@ -283,7 +282,7 @@ public class PlatformMemberHoverBuilder {
     if (items == null || items.isEmpty()) {
       return;
     }
-    var resolved = new java.util.ArrayList<String>(items.size());
+    var resolved = new ArrayList<String>(items.size());
     for (var bi : items) {
       var s = bi.forLanguage(lang);
       if (s != null && !s.isBlank()) {

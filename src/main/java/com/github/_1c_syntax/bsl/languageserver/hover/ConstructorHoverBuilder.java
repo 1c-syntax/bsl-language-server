@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -50,7 +49,6 @@ public class ConstructorHoverBuilder {
   private final TypeRegistry typeRegistry;
   private final CollectionHoverHints collectionHoverHints;
   private final Resources resources;
-  private final LanguageServerConfiguration configuration;
 
   private String tr(String key) {
     return resources.getResourceString(getClass(), key);
@@ -65,7 +63,7 @@ public class ConstructorHoverBuilder {
     String classDescription
   ) {
     var sb = new StringBuilder();
-    var lang = configuration.getLanguage();
+    var lang = resources.getLanguage();
     var localizedTypeName = typeRegistry.displayName(ref, lang);
     if (localizedTypeName.isBlank()) {
       localizedTypeName = typeName;

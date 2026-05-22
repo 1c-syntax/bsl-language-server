@@ -64,16 +64,14 @@ class ConstructorHoverBuilderTest {
   private CollectionHoverHints collectionHoverHints;
   @Mock
   private Resources resources;
-  @Mock
-  private LanguageServerConfiguration configuration;
 
   private ConstructorHoverBuilder builder;
 
   @BeforeEach
   void setUp() {
     builder = new ConstructorHoverBuilder(
-      typeService, typeRegistry, collectionHoverHints, resources, configuration);
-    when(configuration.getLanguage()).thenReturn(Language.RU);
+      typeService, typeRegistry, collectionHoverHints, resources);
+    when(resources.getLanguage()).thenReturn(Language.RU);
     when(typeRegistry.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
     when(typeService.getDescription(any(TypeRef.class), any(Language.class))).thenReturn("");

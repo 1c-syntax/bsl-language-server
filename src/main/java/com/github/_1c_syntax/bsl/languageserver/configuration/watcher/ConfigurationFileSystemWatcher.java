@@ -187,9 +187,34 @@ public class ConfigurationFileSystemWatcher {
         && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
         lastModified = file.lastModified();
         listener.onGlobalChange(file, watchEvent.kind());
+        // Workspace LSC, у которых нет своего конфиг-файла, во время init()
+        // подтянули настройки из глобального файла и закрепили его как
+        // {@code configurationFile}. При его runtime-изменении эти workspace
+        // LSC тоже должны перечитаться — иначе workspace-level настройки
+        // (inlayHintOptions, diagnosticsOptions и т.д.) остаются «замороженными»
+        // с момента init.
+        propagateGlobalChangeToWorkspaces(file, watchEvent.kind());
       }
     }
     globalWatchKey.reset();
+  }
+
+  private void propagateGlobalChangeToWorkspaces(File globalFile, WatchEvent.Kind<?> eventKind) {
+    // Workspace LSC — workspace-scoped proxy; обращение к нему вне WorkspaceContextHolder
+    // выкидывает ScopeNotActiveException. Заходим в скоуп каждого workspace отдельно
+    // (так же как watchWorkspaceConfig делает свою итерацию).
+    // {@link File#equals} сравнивает path как строку, поэтому relative
+    // {@code .bsl-language-server.json} != absolute. Нормализуем оба через
+    // {@code getAbsoluteFile}.
+    var globalAbsolute = globalFile.getAbsoluteFile();
+    workspaceConfigurations.forEach((workspaceUri, configuration) ->
+      WorkspaceContextHolder.run(workspaceUri, () -> {
+        var workspaceFile = configuration.getConfigurationFile();
+        if (workspaceFile != null && globalAbsolute.equals(workspaceFile.getAbsoluteFile())) {
+          listener.onWorkspaceChange(globalFile, eventKind, configuration, workspaceUri);
+        }
+      })
+    );
   }
 
   private void watchWorkspaceConfig(URI workspaceUri, WatchKey watchKey) {

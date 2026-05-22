@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.context.platform.EnAttachments;
 import com.github._1c_syntax.bsl.context.platform.PlatformContextProvider;
+import com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -71,6 +72,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -119,8 +121,14 @@ public class GlobalScopeProvider {
    * lowercased имя BSL-keyword'а (canonical или alias) → описание из
    * синтакс-помощника. Заполняется при загрузке из bsl-context;
    * для JSON-fallback — пустая мапа.
+   * <p>
+   * Запись хранит {@link KeywordDescription#primary()} — generic-описание
+   * (когда контекст использования неизвестен) — и {@link KeywordDescription#byParent()} —
+   * описания, контекстно-зависимые по родительской конструкции (например,
+   * {@code Async}, {@code Знач}, {@code Возврат} имеют различное описание
+   * в контексте {@code Функция} vs {@code Процедура}).
    */
-  private final Map<String, BilingualString> keywordDescriptions;
+  private final Map<String, KeywordDescription> keywordDescriptions;
   /** lowercased имя глобального свойства (через registerGlobalProperty) → языковой скоуп. */
   private final Map<String, LanguageScope> globalContextScopes = new ConcurrentHashMap<>();
   /**
@@ -187,10 +195,31 @@ public class GlobalScopeProvider {
    */
   public Optional<String> findKeywordDescription(String name,
       com.github._1c_syntax.bsl.languageserver.configuration.Language language) {
+    return findKeywordDescription(name, language, null);
+  }
+
+  /**
+   * Контекстно-зависимый lookup: если у keyword'а есть описание для
+   * указанной родительской конструкции (например, {@code "Функция"} или
+   * {@code "Процедура"} для {@code Async}/{@code Знач}/{@code Возврат}) —
+   * возвращается оно; иначе используется generic-описание.
+   * <p>
+   * {@code parentContext} — ru-имя родительской конструкции
+   * (из {@link com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword#descriptionByParent}).
+   * Может быть {@code null}, тогда поведение эквивалентно
+   * {@link #findKeywordDescription(String, com.github._1c_syntax.bsl.languageserver.configuration.Language)}.
+   */
+  public Optional<String> findKeywordDescription(String name,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language language,
+      String parentContext) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    var description = keywordDescriptions.get(name.toLowerCase(Locale.ROOT));
+    var entry = keywordDescriptions.get(name.toLowerCase(Locale.ROOT));
+    if (entry == null) {
+      return Optional.empty();
+    }
+    var description = entry.forContext(parentContext);
     if (description == null || description.isEmpty()) {
       return Optional.empty();
     }
@@ -199,6 +228,46 @@ public class GlobalScopeProvider {
       return Optional.empty();
     }
     return Optional.of(localized);
+  }
+
+  /**
+   * Контекстно-зависимое описание keyword'а: основное описание
+   * {@link #primary()} плюс набор описаний {@link #byParent()} по родительским
+   * конструкциям (ru-имя родителя → пара ru/en описаний). Источник —
+   * {@code PlatformLanguageKeyword.descriptionByParent()} из bsl-context.
+   * <p>
+   * Метод {@link #forContext(String)} возвращает описание для указанной
+   * родительской конструкции; если такового нет — {@link #primary()}.
+   */
+  public record KeywordDescription(BilingualString primary, Map<String, BilingualString> byParent) {
+    public static final KeywordDescription EMPTY = new KeywordDescription(BilingualString.EMPTY, Map.of());
+
+    public KeywordDescription {
+      byParent = byParent == null ? Map.of() : Map.copyOf(byParent);
+    }
+
+    public BilingualString forContext(String parentRuName) {
+      if (parentRuName != null && !parentRuName.isBlank()) {
+        var ctx = byParent.get(parentRuName);
+        if (ctx != null && !ctx.isEmpty()) {
+          return ctx;
+        }
+      }
+      // Не нашли точного match по parent'у. byParent содержит реальные описания
+      // из СП — они полезнее generic-заглушки primary вида «Часть конструкции
+      // «Процедура»». Возвращаем первый непустой byParent (детерминированный
+      // порядок — LinkedHashMap, заполняется по порядку обхода parent-страниц).
+      for (var bi : byParent.values()) {
+        if (!bi.isEmpty()) {
+          return bi;
+        }
+      }
+      return primary;
+    }
+
+    public boolean isEmpty() {
+      return primary.isEmpty() && byParent.isEmpty();
+    }
   }
 
   /** Параллельный Symbol-фронт. Заполняется лениво в {@link #ensureGlobalsPublished()}. */
@@ -781,7 +850,7 @@ public class GlobalScopeProvider {
     // Bilingual: если provider — Platform, тащим en-attachments для всех
     // глобальных функций (description, returnValueDescription, notes,
     // examples, seeAlso). MemberDescriptor станет bilingual.
-    java.util.function.Function<Object, EnAttachments> enLookup =
+    Function<Object, EnAttachments> enLookup =
       provider instanceof PlatformContextProvider pcp
         ? pcp::getEnAttachments
         : ctx -> EnAttachments.EMPTY;
@@ -803,7 +872,7 @@ public class GlobalScopeProvider {
     var keywordScopes = new HashMap<String, LanguageScope>();
     var keywordSeen = new HashSet<String>();
     var keywordSnippets = new HashMap<String, LanguageKeywordSnippet>();
-    var keywordDescriptions = new HashMap<String, BilingualString>();
+    var keywordDescriptions = new HashMap<String, KeywordDescription>();
     var variables = new ArrayList<PlatformVariable>();
     var enums = new ArrayList<PlatformVariable>();
     var variableScopes = new HashMap<String, LanguageScope>();
@@ -865,14 +934,32 @@ public class GlobalScopeProvider {
           if (added) {
             // Описание ru + en (en хранится в PlatformLanguageKeyword.descriptionEn).
             // Доступно по обоим написаниям имени.
-            var enDesc = kw instanceof com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword pk
+            var enDesc = kw instanceof PlatformLanguageKeyword pk
               ? pk.descriptionEn() : "";
-            var biDesc = BilingualString.of(
+            var primary = BilingualString.of(
               kw.description() == null ? "" : kw.description(), enDesc);
-            if (!biDesc.isEmpty()) {
-              keywordDescriptions.put(kw.name().getName().toLowerCase(Locale.ROOT), biDesc);
+            // Контекстно-зависимые описания (Async/Знач/Возврат и т.п. имеют
+            // разное описание в Функция vs Процедура — см. shlang_*.hbk).
+            var byParent = new LinkedHashMap<String, BilingualString>();
+            if (kw instanceof PlatformLanguageKeyword pk) {
+              var ruByCtx = pk.descriptionByParent();
+              var enByCtx = pk.descriptionByParentEn();
+              var keys = new LinkedHashSet<String>();
+              keys.addAll(ruByCtx.keySet());
+              keys.addAll(enByCtx.keySet());
+              for (var k : keys) {
+                var bi = BilingualString.of(
+                  ruByCtx.getOrDefault(k, ""), enByCtx.getOrDefault(k, ""));
+                if (!bi.isEmpty()) {
+                  byParent.put(k, bi);
+                }
+              }
+            }
+            var entry = new KeywordDescription(primary, byParent);
+            if (!entry.isEmpty()) {
+              keywordDescriptions.put(kw.name().getName().toLowerCase(Locale.ROOT), entry);
               if (kw.name().getAlias() != null && !kw.name().getAlias().isBlank()) {
-                keywordDescriptions.put(kw.name().getAlias().toLowerCase(Locale.ROOT), biDesc);
+                keywordDescriptions.put(kw.name().getAlias().toLowerCase(Locale.ROOT), entry);
               }
             }
           }
@@ -1030,7 +1117,7 @@ public class GlobalScopeProvider {
     var snippets = new HashMap<String, LanguageKeywordSnippet>();
     snippets.putAll(a.keywordSnippets);
     b.keywordSnippets.forEach(snippets::putIfAbsent);
-    var descriptions = new HashMap<String, BilingualString>();
+    var descriptions = new HashMap<String, KeywordDescription>();
     descriptions.putAll(a.keywordDescriptions);
     b.keywordDescriptions.forEach(descriptions::putIfAbsent);
     return new Loaded(
@@ -1185,7 +1272,7 @@ public class GlobalScopeProvider {
     Map<String, LanguageScope> keywordScopes,
     Map<String, LanguageScope> platformVariableScopes,
     Map<String, LanguageKeywordSnippet> keywordSnippets,
-    Map<String, BilingualString> keywordDescriptions
+    Map<String, KeywordDescription> keywordDescriptions
   ) {
   }
 
