@@ -124,7 +124,14 @@ public class ConventionalLibraryDiscovery {
       return;
     }
     try (var stream = Files.list(dir)) {
-      stream.filter(Files::isDirectory).forEach(child -> walk(child, skip, visited, sink, depth + 1));
+      stream
+        .filter(Files::isDirectory)
+        // Не заходим в oscript_modules уже обходимого каталога — транзитивные
+        // зависимости не должны переоткрываться convention-discovery'ем как
+        // отдельные библиотеки. Корневой workspace/oscript_modules/<lib>
+        // обрабатывается отдельно через addOscriptModulesChildren.
+        .filter(child -> !LibConfigDiscovery.OSCRIPT_MODULES_DIRNAME.equals(child.getFileName().toString()))
+        .forEach(child -> walk(child, skip, visited, sink, depth + 1));
     } catch (IOException e) {
       LOGGER.debug("Skipping unreadable directory while scanning conventional libraries: {}", dir, e);
     }

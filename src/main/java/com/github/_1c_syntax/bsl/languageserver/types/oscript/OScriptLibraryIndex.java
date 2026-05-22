@@ -234,6 +234,7 @@ public class OScriptLibraryIndex {
     for (var moduleFile : lib.moduleFiles()) {
       registerEntry(ConventionalLibraryDiscovery.entryName(moduleFile), moduleFile, EntryKind.MODULE, serverContext, libOrigin);
     }
+    collectImplicitEntries(lib.root(), libOrigin, serverContext);
   }
 
   private void indexLibrary(Path libConfigPath, ServerContext serverContext) {
