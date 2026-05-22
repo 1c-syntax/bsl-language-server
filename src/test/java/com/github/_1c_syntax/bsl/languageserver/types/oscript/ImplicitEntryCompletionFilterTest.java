@@ -78,9 +78,9 @@ class ImplicitEntryCompletionFilterTest extends AbstractServerContextAwareTest {
 
     // then
     var labels = items.stream().map(CompletionItem::getLabel).toList();
-    assertThat(labels)
+    assertThat(labels.contains(IMPLICIT_CLASS_NAME))
       .as("при default-флаге implicit-класс не должен попадать в подсказки после `Новый`")
-      .doesNotContain(IMPLICIT_CLASS_NAME);
+      .isFalse();
   }
 
   @Test
