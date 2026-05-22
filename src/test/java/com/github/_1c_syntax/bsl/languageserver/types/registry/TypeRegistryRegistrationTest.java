@@ -347,6 +347,33 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void registerSpecializationByNameWithBlankReturnsUnknown() {
+    // given
+    var generic = typeRegistry.registerUserType("ТипG", declaration);
+    java.util.Map<String, String> bindings = java.util.Map.of("X", "Y");
+
+    // when / then — blank specializedName → UNKNOWN.
+    assertThat(typeRegistry.registerSpecialization((String) null, generic, bindings, LanguageScope.BOTH))
+      .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
+    assertThat(typeRegistry.registerSpecialization("", generic, bindings, LanguageScope.BOTH))
+      .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
+    assertThat(typeRegistry.registerSpecialization("  ", generic, bindings, LanguageScope.BOTH))
+      .isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeRef.UNKNOWN);
+  }
+
+  @Test
+  void registerAsGlobalPropertyWithScope() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипP", declaration);
+
+    // when — overload с LanguageScope (без SyntheticKind, default = PLATFORM_GLOBAL_PROPERTY).
+    typeRegistry.registerAsGlobalProperty(ref, LanguageScope.BOTH);
+
+    // then — не падает.
+    assertThat(typeRegistry.getMembers(ref)).isNotNull();
+  }
+
+  @Test
   void registerSpecializationWithEmptyGenericReturnsEmptyMembers() {
     // given — specialized type, generic type без членов.
     var generic = typeRegistry.registerUserType("ПустойGeneric", declaration);
