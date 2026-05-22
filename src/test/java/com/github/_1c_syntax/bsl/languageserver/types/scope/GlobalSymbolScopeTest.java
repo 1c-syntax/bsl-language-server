@@ -54,6 +54,21 @@ class GlobalSymbolScopeTest {
   }
 
   @Test
+  void unregisterNullSymbolIsNoop() {
+    var scope = new GlobalSymbolScope();
+    // не должно бросать
+    scope.unregister(null);
+  }
+
+  @Test
+  void unregisterUnknownSymbolIsNoop() {
+    var scope = new GlobalSymbolScope();
+    var sym = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    // символ не был зарегистрирован — unregister — no-op, без NPE.
+    scope.unregister(sym);
+  }
+
+  @Test
   void unregisterRemovesAllAliases() {
     var scope = new GlobalSymbolScope();
     var sym = new SyntheticSymbol("Справочники", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", TypeRef.UNKNOWN);
