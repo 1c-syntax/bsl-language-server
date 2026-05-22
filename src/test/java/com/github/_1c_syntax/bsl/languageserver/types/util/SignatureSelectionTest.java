@@ -236,6 +236,44 @@ class SignatureSelectionTest {
   }
 
   @Test
+  void pickIndexByTypesVariadicMismatchedExtraArgsPenalized() {
+    // given — variadic-сигнатура с типом Число, аргументы со Строкой.
+    var variadic = signature(List.of(
+      param("N1,...,Nm", true, TypeSet.of(NUMBER))
+    ));
+    var byString = signature(List.of(
+      param("a", false, TypeSet.of(STRING)),
+      param("b", false, TypeSet.of(STRING))
+    ));
+    var sigs = List.of(variadic, byString);
+
+    // when — 2 строковых аргумента: variadic получает -2 (оба extra mismatch),
+    // byString +2 → byString выбран.
+    int idx = SignatureSelection.pickIndexByTypes(sigs,
+      List.of(TypeSet.of(STRING), TypeSet.of(STRING)));
+
+    // then
+    assertThat(idx).isEqualTo(1);
+  }
+
+  @Test
+  void pickIndexByTypesVariadicSkipsEmptyAndNullExtraArgs() {
+    // given — variadic с типом Число и extra-args пустые / без типа.
+    var variadic = signature(List.of(
+      param("N1,...,Nm", true, TypeSet.of(NUMBER))
+    ));
+    var sigs = List.of(variadic);
+
+    // when — переданы 3 args, последние 2 — EMPTY. По коду строки L184-185
+    // (argType == null || argType.isEmpty()) → continue, без штрафов.
+    int idx = SignatureSelection.pickIndexByTypes(sigs,
+      List.of(TypeSet.of(NUMBER), TypeSet.EMPTY, TypeSet.EMPTY));
+
+    // then
+    assertThat(idx).isZero();
+  }
+
+  @Test
   void pickIndexByArityFallbackWhenRequiredCountExceedsArgs() {
     // given — обязательных параметров больше, чем передано аргументов,
     // но total совпадает (хвост optional).
