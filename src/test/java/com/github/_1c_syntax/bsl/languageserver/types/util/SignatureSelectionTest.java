@@ -302,6 +302,18 @@ class SignatureSelectionTest {
     assertThat(idx).isNegative();
   }
 
+  @Test
+  void pickIndexByTypesEmptyParamsSigWithNoArgsReturnsThatSig() {
+    // given — сигнатура без параметров, аргументов нет.
+    var emptyParamsSig = signature(List.of());
+
+    // when — params.isEmpty() → scoreByTypes возвращает 0 (L156).
+    int idx = SignatureSelection.pickIndexByTypes(List.of(emptyParamsSig), List.of());
+
+    // then — единственная сигнатура выбрана.
+    assertThat(idx).isZero();
+  }
+
   // === helpers ===
 
   private static ParameterDescriptor param(String name, boolean optional) {
