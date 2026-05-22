@@ -376,6 +376,20 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void findKeywordDescriptionBlankOrNullName() {
+    // when / then
+    assertThat(scope.findKeywordDescription(null)).isEmpty();
+    assertThat(scope.findKeywordDescription("")).isEmpty();
+    assertThat(scope.findKeywordDescription("   ")).isEmpty();
+  }
+
+  @Test
+  void findKeywordDescriptionNoArgOverload() {
+    // when / then — no-arg overload использует DEFAULT_LANGUAGE.
+    assertThat(scope.findKeywordDescription("НетТакогоКлючевогоСлова")).isEmpty();
+  }
+
+  @Test
   void findGlobalPropertyAndEnumAreSeparateNamespaces() {
     // given
     var propRef = new TypeRef(TypeKind.PLATFORM, "ТипPP");
