@@ -347,6 +347,20 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void registerSpecializationWithEmptyGenericReturnsEmptyMembers() {
+    // given — specialized type, generic type без членов.
+    var generic = typeRegistry.registerUserType("ПустойGeneric", declaration);
+    var specialized = typeRegistry.registerUserType("СпециализированныйТип", declaration);
+    java.util.Map<String, String> bindings = java.util.Map.of("Имя", "МойТип");
+
+    // when
+    typeRegistry.registerSpecialization(specialized, generic, bindings, LanguageScope.BOTH);
+
+    // then — нет членов у specialized.
+    assertThat(typeRegistry.getMembers(specialized)).isEmpty();
+  }
+
+  @Test
   void isReadOnlyMemberFalseForNullArgsAndUnregisteredRef() {
     // given
     var ref = typeRegistry.registerUserType("Тип1ReadOnlyCheck", declaration);
