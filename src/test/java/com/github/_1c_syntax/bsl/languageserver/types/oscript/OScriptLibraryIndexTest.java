@@ -237,4 +237,19 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     // when / then
     assertThat(index.findEntriesByUri(unknownUri)).isEmpty();
   }
+
+  @Test
+  void handleWorkspaceAddedWithNullServerContextIsNoop() {
+    // given — событие с null serverContext.
+    var source = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider.class);
+    var event = new com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEvent(
+      source, java.net.URI.create("file:///fake/workspace"), null);
+
+    // when — handleWorkspaceAdded должен корректно отработать null serverContext.
+    index.handleWorkspaceAdded(event);
+
+    // then — индекс не сломался.
+    assertThat(index.allEntries()).isNotNull();
+  }
 }
