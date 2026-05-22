@@ -18,4 +18,8 @@
 
 	// Глобальный property — КодировкаТекста должна резолвиться через GlobalSymbolScope.
 	Кодировка = КодировкаТекста;
+
+	// Глобальная функция (PLATFORM_GLOBAL_METHOD) как identifier-ссылка (не вызов).
+	// L299 filter в inferIdentifier должен отсечь PLATFORM_GLOBAL_METHOD.
+	ССылкаНаГлобал = Сообщить;
 КонецПроцедуры
