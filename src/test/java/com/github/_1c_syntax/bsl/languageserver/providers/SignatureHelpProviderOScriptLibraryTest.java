@@ -125,6 +125,43 @@ class SignatureHelpProviderOScriptLibraryTest extends AbstractServerContextAware
     assertThat(help.getSignatures()).isEmpty();
   }
 
+  @Test
+  void signatureForVariableTypedAsLibraryClass() {
+    initLib();
+
+    // Объект объявлен типизированно через JsDoc — вызов через .Метод()
+    // должен резолвиться через findLibraryModuleReceiver.
+    var content = "Перем Объект Экспорт;\n"
+      + "Объект = Новый MyClass(\"name\");\n"
+      + "Объект.ПолучитьСтроку(\"x\");\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(2, content.split("\n")[2].indexOf('(') + 1));
+
+    var help = signatureHelpProvider.getSignatureHelp(dc, params);
+    assertThat(help).isNotNull();
+  }
+
+  @Test
+  void signatureForLibraryClassConstructorWithBareName() {
+    initLib();
+
+    // Конструктор класса с пустыми скобками — конструктор должен резолвиться.
+    var content = "Х = Новый RenamedClass();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(0, content.indexOf('(') + 1));
+
+    var help = signatureHelpProvider.getSignatureHelp(dc, params);
+
+    assertThat(help).isNotNull();
+    assertThat(help.getSignatures()).isNotEmpty();
+  }
+
   private void initLib() {
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);
