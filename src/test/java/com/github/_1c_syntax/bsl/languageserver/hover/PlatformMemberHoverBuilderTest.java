@@ -403,6 +403,50 @@ class PlatformMemberHoverBuilderTest {
   }
 
   @Test
+  void methodWithSignaturesButAllReturnTypeNullEffectiveReturnTypeIsNull() {
+    // given — descriptor без returnTypes, signature без returnType.
+    var param = new ParameterDescriptor(
+      BilingualString.of("A"), TypeSet.of(NUMBER), false, BilingualString.EMPTY, "");
+    var sig = new SignatureDescriptor(List.of(param), (TypeRef) null, "");
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("F"), MemberKind.METHOD, BilingualString.EMPTY,
+      TypeSet.EMPTY, List.of(sig),
+      null, false, PlatformMetadata.EMPTY
+    );
+
+    // when — effectiveReturnType должен вернуть null (L354).
+    var content = builder.build(null, descriptor, 0);
+
+    // then — нет ": Что-то" в label метода.
+    var lines = content.getValue().split("\n");
+    // первая строка: "```bsl"
+    // вторая: "F(A): Тип" или "F(A)"
+    var bslLine = java.util.Arrays.stream(lines).filter(l -> l.startsWith("F(")).findFirst().orElse("");
+    assertThat(bslLine).doesNotContain(": null");
+  }
+
+  @Test
+  void renderTypeSetFiltersEmptyDisplayNames() {
+    // given — typeRegistry возвращает пустую строку для определённого TypeRef.
+    var emptyDisplayRef = new TypeRef(TypeKind.PLATFORM, "_EMPTY_");
+    when(typeRegistry.displayName(eq(emptyDisplayRef), any(Language.class)))
+      .thenReturn("");
+
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("X"), MemberKind.PROPERTY, BilingualString.EMPTY,
+      TypeSet.of(java.util.Set.of(emptyDisplayRef, NUMBER)),
+      List.of(),
+      null, false, PlatformMetadata.EMPTY
+    );
+
+    // when
+    var content = builder.build(null, descriptor, -1);
+
+    // then — _EMPTY_ filtered out, Число остаётся.
+    assertThat(content.getValue()).contains(": Число");
+  }
+
+  @Test
   void metadataWithRecommendedReplacementsRenderedAsList() {
     // given — replacements ИЛИ blank — пропускаются.
     var meta = new PlatformMetadata(
