@@ -1,0 +1,36 @@
+name: Dependency Submission
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  submit-dependencies:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --force --tags
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Submit Gradle dependencies
+        uses: gradle/actions/dependency-submission@v4
