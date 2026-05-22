@@ -289,6 +289,56 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void registerConstructorSourceWithoutScopeUsesBoth() {
+    // given
+    var ref = typeRegistry.registerUserType("МойТипC", declaration);
+    var sig = com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY;
+
+    // when — overload без scope.
+    typeRegistry.registerConstructorSource(ref, () -> java.util.List.of(sig));
+
+    // then — конструктор виден через getConstructors.
+    assertThat(typeRegistry.getConstructors(ref)).contains(sig);
+  }
+
+  @Test
+  void registerConstructorSourceIgnoresNullArgs() {
+    // given
+    var ref = typeRegistry.registerUserType("МойТипC2", declaration);
+
+    // when
+    typeRegistry.registerConstructorSource(null, () -> java.util.List.of(), LanguageScope.BOTH);
+    typeRegistry.registerConstructorSource(ref, null, LanguageScope.BOTH);
+
+    // then — никаких источников не зарегистрировано.
+    assertThat(typeRegistry.getConstructors(ref)).isEmpty();
+  }
+
+  @Test
+  void getConstructorsScopeMismatchFiltersOutSource() {
+    // given — конструктор-источник зарегистрирован с BSL-only scope.
+    var ref = typeRegistry.registerUserType("МойТипK", declaration);
+    var sig = com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY;
+    typeRegistry.registerConstructorSource(ref, () -> java.util.List.of(sig), LanguageScope.BSL);
+
+    // when / then — для BSL виден, для OS — отфильтрован.
+    assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).contains(sig);
+    assertThat(typeRegistry.getConstructors(ref, FileType.OS)).doesNotContain(sig);
+  }
+
+  @Test
+  void registerConstructorsScopeMismatchFiltersOut() {
+    // given
+    var ref = typeRegistry.registerUserType("МойТипR3", declaration);
+    var sig = com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY;
+    typeRegistry.registerConstructors(ref, java.util.List.of(sig), LanguageScope.BSL);
+
+    // when / then
+    assertThat(typeRegistry.getConstructors(ref, FileType.BSL)).contains(sig);
+    assertThat(typeRegistry.getConstructors(ref, FileType.OS)).doesNotContain(sig);
+  }
+
+  @Test
   void isReadOnlyMemberNameFalseForUnknownNameAndNull() {
     // when / then
     assertThat(typeRegistry.isReadOnlyMemberName(
