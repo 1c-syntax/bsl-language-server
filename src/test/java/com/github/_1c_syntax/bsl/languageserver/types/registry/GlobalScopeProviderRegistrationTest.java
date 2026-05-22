@@ -376,6 +376,21 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void findFunctionByFileTypeBlankName() {
+    // when / then
+    assertThat(scope.findFunction(null, FileType.BSL)).isEmpty();
+    assertThat(scope.findFunction("", FileType.BSL)).isEmpty();
+    assertThat(scope.findFunction("   ", FileType.BSL)).isEmpty();
+  }
+
+  @Test
+  void findFunctionWithoutFileTypeOverloadAndBlankName() {
+    // when / then — no-arg overload (без fileType).
+    assertThat(scope.findFunction(null)).isEmpty();
+    assertThat(scope.findFunction("")).isEmpty();
+  }
+
+  @Test
   void findKeywordDescriptionBlankOrNullName() {
     // when / then
     assertThat(scope.findKeywordDescription(null)).isEmpty();
