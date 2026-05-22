@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Component;
 public class CollectionHoverHints {
 
   private final Resources resources;
+  private final LanguageServerConfiguration configuration;
 
   /**
    * Добавляет markdown-блоки про обход и индексатор для типа, если
@@ -61,7 +63,7 @@ public class CollectionHoverHints {
     if (!supportsForEach && !supportsIndex) {
       return;
     }
-    var lang = resources.getLanguage();
+    var lang = configuration.getLanguage();
     if (supportsForEach) {
       sb.append("\n\n**").append(tr("forEachLabel")).append("** ");
       var description = registry.getForEachDescription(ref, lang);

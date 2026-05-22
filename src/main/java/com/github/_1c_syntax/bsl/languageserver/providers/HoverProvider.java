@@ -66,6 +66,7 @@ public final class HoverProvider {
   private final ReferenceResolver referenceResolver;
   private final GlobalScopeProvider globalScopeProvider;
   private final Map<Class<? extends Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
+  private final com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration configuration;
   private final com.github._1c_syntax.bsl.languageserver.utils.Resources resources;
 
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
@@ -100,7 +101,7 @@ public final class HoverProvider {
     if (!isKeywordToken(terminal)) {
       return Optional.empty();
     }
-    var lang = resources.getLanguage();
+    var lang = configuration.getLanguage();
     var parentContext = findKeywordParentContext(terminal);
     return globalScopeProvider.findKeywordDescription(terminal.getText(), lang, parentContext)
       .map(description -> {

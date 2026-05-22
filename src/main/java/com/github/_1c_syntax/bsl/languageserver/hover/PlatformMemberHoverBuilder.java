@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
@@ -58,6 +59,7 @@ import java.util.stream.Collectors;
 public class PlatformMemberHoverBuilder {
 
   private final Resources resources;
+  private final LanguageServerConfiguration configuration;
   private final TypeRegistry typeRegistry;
 
   private String tr(String key) {
@@ -103,7 +105,7 @@ public class PlatformMemberHoverBuilder {
         chosenIndex = 0;
       }
     }
-    var lang = resources.getLanguage();
+    var lang = configuration.getLanguage();
     if (descriptor.kind() == MemberKind.METHOD) {
       sb.append("```bsl\n");
       sb.append(descriptor.displayName(lang)).append('(');
@@ -263,7 +265,7 @@ public class PlatformMemberHoverBuilder {
       sb.append("\n\n**").append(tr("accessMode")).append("** ").append(tr("accessReadWrite"));
     }
     appendAvailabilities(sb, md.availabilities());
-    var lang = resources.getLanguage();
+    var lang = configuration.getLanguage();
     var rv = md.returnValueDescription().forLanguage(lang);
     if (!rv.isBlank()) {
       sb.append("\n\n**").append(tr("returnValueDescription")).append("** ").append(rv);

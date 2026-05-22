@@ -65,15 +65,17 @@ class PlatformMemberHoverBuilderTest {
   @Mock
   private Resources resources;
   @Mock
+  private LanguageServerConfiguration configuration;
+  @Mock
   private TypeRegistry typeRegistry;
 
   private PlatformMemberHoverBuilder builder;
 
   @BeforeEach
   void setUp() {
-    builder = new PlatformMemberHoverBuilder(resources, typeRegistry);
+    builder = new PlatformMemberHoverBuilder(resources, configuration, typeRegistry);
 
-    when(resources.getLanguage()).thenReturn(Language.RU);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
 
     // typeRegistry.displayName(ref, lang) → ref.qualifiedName() для ru.
     when(typeRegistry.displayName(any(TypeRef.class), any(Language.class)))

@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
@@ -42,25 +42,7 @@ public class Resources {
 
   private static final StringInterner stringInterner = new StringInterner();
 
-  /**
-   * Источник локали — глобальная конфигурация (а не workspace
-   * {@code LanguageServerConfiguration}). Workspace LSC хранит дублирующее поле
-   * {@code language}, которое заполняется только при init из конфиг-файла;
-   * runtime-перезагрузка глобального файла обновляет только
-   * {@link GlobalLanguageServerConfiguration}, и потребители workspace LSC
-   * (Resources в том числе) видели stale-значение — hover/inlay/диагностики
-   * не реагировали на смену языка без перезапуска workspace.
-   */
-  private final GlobalLanguageServerConfiguration configuration;
-
-  /**
-   * @return Текущая локаль LS. Доступ для потребителей, которым нужно передать
-   * её в API, принимающее {@link Language} как параметр (например,
-   * {@code TypeRegistry.getForEachDescription(ref, lang)}).
-   */
-  public Language getLanguage() {
-    return configuration.getLanguage();
-  }
+  private final LanguageServerConfiguration configuration;
 
   /**
    * @param clazz    Класс, ресурсы которого необходимо прочитать.

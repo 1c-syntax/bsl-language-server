@@ -89,10 +89,7 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
   }
 
   private Language currentLanguage() {
-    // Локаль читаем через Resources (он привязан к GlobalLanguageServerConfiguration —
-    // единственный источник истины для language). Workspace LSC через
-    // {@code super.configuration} оставляем для остальных опций (inlayHintOptions).
-    return resources.getLanguage();
+    return configuration.getLanguage();
   }
 
   @Override

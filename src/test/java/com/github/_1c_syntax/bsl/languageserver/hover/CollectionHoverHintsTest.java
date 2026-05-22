@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -48,14 +49,16 @@ class CollectionHoverHintsTest {
   @Mock
   private Resources resources;
   @Mock
+  private LanguageServerConfiguration configuration;
+  @Mock
   private TypeRegistry registry;
 
   private CollectionHoverHints hints;
 
   @BeforeEach
   void setUp() {
-    hints = new CollectionHoverHints(resources);
-    when(resources.getLanguage()).thenReturn(Language.RU);
+    hints = new CollectionHoverHints(resources, configuration);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
     when(resources.getResourceString(eq(CollectionHoverHints.class), any(String.class)))
       .thenAnswer(inv -> "[" + inv.getArgument(1) + "]");
   }
