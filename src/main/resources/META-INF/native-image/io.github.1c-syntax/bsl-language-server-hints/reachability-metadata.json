@@ -1,0 +1,136 @@
+{
+  "reflection": [
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.TypeService$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptModuleMembersProvider$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptModuleTypeResolver$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.BslContextHolder$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.BslContextPlatformTypesProvider$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.BuiltinOScriptPlatformTypesProvider$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.BuiltinPlatformTypesProvider$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationModuleMembersProvider$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationTypesProvider$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.PlatformContextProviderFactory$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.utils.Resources$$SpringCGLIB$$1",
+      "allDeclaredFields": true,
+      "allDeclaredConstructors": true,
+      "allDeclaredMethods": true
+    }
+  ]
+}

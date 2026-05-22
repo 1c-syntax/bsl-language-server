@@ -7,6 +7,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
+    id("org.graalvm.buildtools.native") version "1.1.0"
     id("com.diffplug.spotless") version "7.0.4"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.5.0"
@@ -100,16 +101,34 @@ dependencies {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
+        // gRPC используется LanguageTool только для удалённых правил (n-gram сервис и т.п.).
+        // Мы их не используем, а транзитивный io.grpc.netty-shaded ломает native-image
+        // (захват ch.qos.logback.classic.Logger в image heap через netty static init).
+        exclude("io.grpc", "grpc-netty-shaded")
+        exclude("io.grpc", "grpc-protobuf")
+        exclude("io.grpc", "grpc-stub")
     }
     implementation("org.languagetool:language-en:$languageToolVersion") {
         exclude("commons-logging:commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
+        // gRPC используется LanguageTool только для удалённых правил (n-gram сервис и т.п.).
+        // Мы их не используем, а транзитивный io.grpc.netty-shaded ломает native-image
+        // (захват ch.qos.logback.classic.Logger в image heap через netty static init).
+        exclude("io.grpc", "grpc-netty-shaded")
+        exclude("io.grpc", "grpc-protobuf")
+        exclude("io.grpc", "grpc-stub")
     }
     implementation("org.languagetool:language-ru:$languageToolVersion") {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
+        // gRPC используется LanguageTool только для удалённых правил (n-gram сервис и т.п.).
+        // Мы их не используем, а транзитивный io.grpc.netty-shaded ломает native-image
+        // (захват ch.qos.logback.classic.Logger в image heap через netty static init).
+        exclude("io.grpc", "grpc-netty-shaded")
+        exclude("io.grpc", "grpc-protobuf")
+        exclude("io.grpc", "grpc-stub")
     }
 
     // AOP
@@ -198,6 +217,36 @@ tasks.bootJar {
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
     imageName.set("docker.io/1csyntax/bsl-language-server:${project.version}")
+}
+
+// aspectjweaver требуется Spring AOT-процессору (AspectJBeanFactoryInitializationAotProcessor)
+// для парсинга @Aspect pointcut-выражений при processAot. В рантайм-classpath его подключать
+// не нужно — у нас compile-time weaving через io.freefair.aspectj.post-compile-weaving, и
+// runtime-AOP Spring AOP-прокси (CGLIB) ломает native-image из-за конфликта с pre-generated
+// CGLIB-стабами Spring AOT.
+val aotProcessorClasspath: Configuration by configurations.creating
+dependencies {
+    aotProcessorClasspath("org.aspectj:aspectjweaver:1.9.25.1")
+}
+tasks.withType<org.springframework.boot.gradle.tasks.aot.ProcessAot>().configureEach {
+    classpath += aotProcessorClasspath
+}
+tasks.withType<org.springframework.boot.gradle.tasks.aot.ProcessTestAot>().configureEach {
+    classpath += aotProcessorClasspath
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            sharedLibrary.set(false)
+            mainClass.set("com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher")
+            buildArgs.addAll(
+                "--no-fallback",
+                "-H:+UnlockExperimentalVMOptions",
+                "-H:+ReportExceptionStackTraces"
+            )
+        }
+    }
 }
 
 afterEvaluate {
