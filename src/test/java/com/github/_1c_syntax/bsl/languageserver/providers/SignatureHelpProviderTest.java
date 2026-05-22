@@ -320,6 +320,27 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void signatureHelpForMethodWithOptionalParameter() {
+    // given — М(А, Б = "default") — supplier строит сигнатуру с optional Б.
+    var content =
+      "Процедура М(А, Б = \"default\") Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "М(1, \"X\");\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, "М(".length()));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — label содержит Б (optional не убран из label).
+    assertThat(help.getSignatures()).isNotEmpty();
+    assertThat(help.getSignatures().get(0).getLabel()).contains("Б");
+  }
+
+  @Test
   void signatureHelpForArrayInsertMethod() {
     // given — Массив.Вставить(...) — access call на платформенном типе.
     var content = "А = Новый Массив;\nА.Вставить(0, \"X\");\n";
