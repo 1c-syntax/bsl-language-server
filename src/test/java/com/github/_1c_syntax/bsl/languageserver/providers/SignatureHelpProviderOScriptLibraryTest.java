@@ -88,6 +88,43 @@ class SignatureHelpProviderOScriptLibraryTest extends AbstractServerContextAware
     assertThat(help.getActiveParameter()).isEqualTo(1);
   }
 
+  @Test
+  void signatureForLibraryClassInstanceMethod() {
+    initLib();
+
+    // Создаём экземпляр класса и вызываем его метод.
+    var content = "Объект = Новый MyClass(\"Имя1\");\n"
+      + "Объект.ПолучитьСтроку(\"Префикс\");\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    // курсор внутри ПолучитьСтроку(...)
+    params.setPosition(new Position(1, content.split("\n")[1].indexOf('(') + 1));
+
+    var help = signatureHelpProvider.getSignatureHelp(dc, params);
+
+    assertThat(help).isNotNull();
+  }
+
+  @Test
+  void signatureForOScriptModuleInBslFileNotAvailable() {
+    initLib();
+
+    // В BSL-файле library-модули не должны давать сигнатуру.
+    var content = "MyModule.ВывестиСообщение(\"x\", \"y\");\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(0, content.indexOf(',') + 2));
+
+    var help = signatureHelpProvider.getSignatureHelp(dc, params);
+
+    // BSL-файл — library-модули не видны, сигнатуры быть не должно.
+    assertThat(help.getSignatures()).isEmpty();
+  }
+
   private void initLib() {
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);
