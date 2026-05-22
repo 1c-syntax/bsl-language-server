@@ -60,6 +60,19 @@ class StructureInsertFieldsInferenceTest extends AbstractServerContextAwareTest 
       .containsExactly("Число");
   }
 
+  @Test
+  void structureInsertWithOnlyKeyGivesUndefinedValue() {
+    // Параметры.Вставить("ТолькоКлюч") (без value-arg) → ключ с типом Неопределено.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/StructureInsertFields.bsl");
+
+    var types = inferAtMarker(documentContext, "Z = Параметры.ТолькоКлюч",
+      "Z = Параметры.".length() + 1);
+    assertThat(types.refs())
+      .extracting(r -> r.qualifiedName())
+      .containsExactly("Неопределено");
+  }
+
   private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {
     var content = documentContext.getContent();
     int markerStart = content.indexOf(marker);
