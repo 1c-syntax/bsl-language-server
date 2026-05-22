@@ -320,6 +320,39 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void signatureHelpForArrayInsertMethod() {
+    // given — Массив.Вставить(...) — access call на платформенном типе.
+    var content = "А = Новый Массив;\nА.Вставить(0, \"X\");\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, content.split("\n")[1].indexOf(", ") + 2));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — Массив.Вставить имеет сигнатуру.
+    assertThat(help.getSignatures()).isNotEmpty();
+  }
+
+  @Test
+  void signatureHelpForChainedDereferenceCall() {
+    // given — Объект.Свойство.Метод() — chain через 2 точки до methodCall.
+    var content = "О = Новый Структура;\nО.Вставить(\"К\", Новый Массив);\nО.К.Добавить(1);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, content.split("\n")[2].indexOf("(") + 1));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — supplier не падает; сигнатура может быть найдена или нет в зависимости
+    // от инференса типа через chain.
+    assertThat(help).isNotNull();
+  }
+
+  @Test
   void signatureHelpForNestedNewExpression() {
     // given — Новый Массив(Новый ФиксированныйМассив(...))
     var content = "А = Новый Массив(Новый ФиксированныйМассив(1, 2, 3));\n";
