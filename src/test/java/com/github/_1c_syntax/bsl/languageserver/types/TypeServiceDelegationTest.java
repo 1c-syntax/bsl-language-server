@@ -211,4 +211,60 @@ class TypeServiceDelegationTest {
     // when / then
     assertThat(typeService.getMembers(ARRAY, FileType.BSL)).containsExactly(m);
   }
+
+  @Test
+  void resolveByFileTypeDelegates() {
+    // given
+    when(typeRegistry.resolve(eq("Массив"), any(FileType.class)))
+      .thenReturn(Optional.of(ARRAY));
+
+    // when / then
+    assertThat(typeService.resolve("Массив", FileType.BSL)).contains(ARRAY);
+  }
+
+  @Test
+  void getDescriptionByLanguageDelegates() {
+    // given
+    when(typeRegistry.getDescription(eq(ARRAY),
+      any(com.github._1c_syntax.bsl.languageserver.configuration.Language.class)))
+      .thenReturn("ru-описание");
+
+    // when / then
+    assertThat(typeService.getDescription(ARRAY,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU))
+      .isEqualTo("ru-описание");
+  }
+
+  @Test
+  void getDescriptionByFileTypeDelegates() {
+    // given
+    when(typeRegistry.getDescription(eq(ARRAY), any(FileType.class)))
+      .thenReturn("bsl-описание");
+
+    // when / then
+    assertThat(typeService.getDescription(ARRAY, FileType.BSL))
+      .isEqualTo("bsl-описание");
+  }
+
+  @Test
+  void getConstructorsByFileTypeDelegates() {
+    // given
+    var sig = SignatureDescriptor.EMPTY;
+    when(typeRegistry.getConstructors(eq(ARRAY), any(FileType.class)))
+      .thenReturn(List.of(sig));
+
+    // when / then
+    assertThat(typeService.getConstructors(ARRAY, FileType.BSL)).containsExactly(sig);
+  }
+
+  @Test
+  void findGlobalContextNoArgUsesNullFileType() {
+    // given
+    when(globalScopeProvider.findGlobalContext(eq("X"), eq((FileType) null)))
+      .thenReturn(Optional.of(ARRAY));
+    lenient().when(typeRegistry.resolve("X")).thenReturn(Optional.empty());
+
+    // when / then
+    assertThat(typeService.findGlobalContext("X")).contains(ARRAY);
+  }
 }
