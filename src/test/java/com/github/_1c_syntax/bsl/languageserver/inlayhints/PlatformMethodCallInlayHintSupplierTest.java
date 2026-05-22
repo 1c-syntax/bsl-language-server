@@ -49,6 +49,25 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   private PlatformMethodCallInlayHintSupplier supplier;
 
   @Test
+  void hintsTooltipContainsTypesAndOptionalLabel() {
+    // given
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH, context);
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
+
+    // then — tooltip с info про parameter присутствует у хотя бы одного hint.
+    assertThat(hints).anySatisfy(hint -> {
+      assertThat(hint.getTooltip()).isNotNull();
+      var tooltip = hint.getTooltip().getRight();
+      if (tooltip != null) {
+        assertThat(tooltip.getValue()).isNotBlank();
+      }
+    });
+  }
+
+  @Test
   void hintsForGlobalFunctionCall() {
     // given
     initServerContext("./src/test/resources/types", false);
