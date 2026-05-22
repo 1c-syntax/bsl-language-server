@@ -54,4 +54,15 @@ public class OScriptOptions {
    */
   @JsonProperty("useEnvLibLocation")
   private boolean useEnvLibLocation = false;
+
+  /**
+   * Если {@code true}, в no-dot completion (включая список после {@code Новый })
+   * предлагаются также неявные записи библиотек — необъявленные в {@code lib.config}
+   * {@code .os}-файлы, лежащие внутри каталога обнаруженной библиотеки. По
+   * умолчанию отключено: потребителю библиотеки не нужно видеть её внутренние
+   * сущности в подсказках. Разработчику самой библиотеки удобно включить, чтобы
+   * видеть свои internal-классы в completion'е своего же проекта.
+   */
+  @JsonProperty("showImplicitLibraryEntriesInCompletion")
+  private boolean showImplicitLibraryEntriesInCompletion = false;
 }

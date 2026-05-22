@@ -221,10 +221,27 @@ public final class CompletionProvider {
   }
 
   private List<String> libraryEntryNames(OScriptLibraryIndex.EntryKind kind) {
+    var showImplicit = configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion();
     return oScriptLibraryIndex.findEntries(kind).stream()
+      .filter(entry -> showImplicit || !entry.implicit())
       .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
       .distinct()
       .toList();
+  }
+
+  /**
+   * Скрывать ли имя из no-dot completion из-за {@code implicit}-флага.
+   * Если по имени в {@link OScriptLibraryIndex} нет записи или она не помечена
+   * implicit — ничего не скрываем. Если помечена и
+   * {@code oscript.showImplicitLibraryEntriesInCompletion = false} — скрываем.
+   */
+  private boolean isImplicitlyHiddenInCompletion(String name) {
+    if (configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion()) {
+      return false;
+    }
+    return oScriptLibraryIndex.findByName(name)
+      .map(OScriptLibraryIndex.LibraryEntry::implicit)
+      .orElse(false);
   }
 
   /**
@@ -344,6 +361,9 @@ public final class CompletionProvider {
 
     if (afterNew) {
       for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType)) {
+        if (isImplicitlyHiddenInCompletion(className)) {
+          continue;
+        }
         if (matches(className, prefix)) {
           var item = new CompletionItem(className);
           item.setKind(CompletionItemKind.Class);
@@ -399,6 +419,9 @@ public final class CompletionProvider {
         continue;
       }
       if (ctx.getSyntheticKind() == SyntheticKind.LIBRARY_MODULE && !libVisible.test(name)) {
+        continue;
+      }
+      if (isImplicitlyHiddenInCompletion(name)) {
         continue;
       }
       var item = new CompletionItem(name);

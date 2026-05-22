@@ -97,8 +97,13 @@ public class OScriptLibraryIndex {
    * @param kind          класс или модуль
    * @param libOrigin     имя библиотеки (имя каталога с {@code lib.config}),
    *                      используется gating'ом {@code #Использовать}
+   * @param implicit      {@code true}, если запись добавлена неявно
+   *                      (необъявленный {@code .os} внутри каталога-библиотеки):
+   *                      полноценно индексируется во всех системах типов и ссылок,
+   *                      но скрывается из no-dot completion при выключенном
+   *                      {@code oscript.showImplicitLibraryEntriesInCompletion}.
    */
-  public record LibraryEntry(URI uri, String qualifiedName, EntryKind kind, String libOrigin) {
+  public record LibraryEntry(URI uri, String qualifiedName, EntryKind kind, String libOrigin, boolean implicit) {
   }
 
   @EventListener
@@ -243,6 +248,16 @@ public class OScriptLibraryIndex {
   }
 
   private void registerEntry(String qualifiedName, Path osFile, EntryKind kind, ServerContext serverContext, String libOrigin) {
+    registerEntry(qualifiedName, osFile, kind, serverContext, libOrigin, false);
+  }
+
+  /**
+   * Зарегистрировать запись с явным {@code implicit}-флагом. Используется как
+   * для неявных записей (необъявленный .os внутри каталога-библиотеки), так и
+   * из тестов — package-private видимость намеренно сохранена.
+   */
+  void registerEntry(String qualifiedName, Path osFile, EntryKind kind, ServerContext serverContext,
+                     String libOrigin, boolean implicit) {
     var uri = Absolute.uri(osFile.toUri());
     var moduleType = kind == EntryKind.CLASS ? ModuleType.OScriptClass : ModuleType.OScriptModule;
     // Сначала сообщаем резолверу тип модуля — это нужно, чтобы при первом
@@ -254,7 +269,7 @@ public class OScriptLibraryIndex {
     // менял свою идентичность в ServerContext.
     oScriptModuleTypeResolver.register(uri, moduleType);
 
-    var entry = new LibraryEntry(uri, qualifiedName, kind, libOrigin);
+    var entry = new LibraryEntry(uri, qualifiedName, kind, libOrigin, implicit);
     entriesByUri.computeIfAbsent(uri, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(entry);
     entriesByName.put(qualifiedName.toLowerCase(Locale.ROOT), entry);
 
