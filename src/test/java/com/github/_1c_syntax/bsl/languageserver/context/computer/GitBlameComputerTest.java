@@ -75,6 +75,8 @@ class GitBlameComputerTest {
     try (var git = Git.init().setDirectory(gitDir.toFile()).call()) {
       git.getRepository().getConfig().setString("user", null, "email", "author@example.com");
       git.getRepository().getConfig().setString("user", null, "name", "Test Author");
+      git.getRepository().getConfig().setBoolean("commit", null, "gpgSign", false);
+      git.getRepository().getConfig().setBoolean("tag", null, "gpgSign", false);
       git.getRepository().getConfig().save();
 
       var testFile = gitDir.resolve("test.bsl");
@@ -106,6 +108,8 @@ class GitBlameComputerTest {
     try (var git = Git.init().setDirectory(gitDir.toFile()).call()) {
       git.getRepository().getConfig().setString("user", null, "email", "other@example.com");
       git.getRepository().getConfig().setString("user", null, "name", "Other Author");
+      git.getRepository().getConfig().setBoolean("commit", null, "gpgSign", false);
+      git.getRepository().getConfig().setBoolean("tag", null, "gpgSign", false);
       git.getRepository().getConfig().save();
 
       var testFile = gitDir.resolve("test.bsl");
@@ -135,6 +139,8 @@ class GitBlameComputerTest {
     try (var git = Git.init().setDirectory(gitDir.toFile()).call()) {
       git.getRepository().getConfig().setString("user", null, "email", "first@example.com");
       git.getRepository().getConfig().setString("user", null, "name", "First Author");
+      git.getRepository().getConfig().setBoolean("commit", null, "gpgSign", false);
+      git.getRepository().getConfig().setBoolean("tag", null, "gpgSign", false);
       git.getRepository().getConfig().save();
 
       var testFile = gitDir.resolve("test.bsl");
