@@ -304,6 +304,39 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void signatureHelpForGlobalMethodCallOfUnknownFunction() {
+    // given — вызов несуществующей глобальной функции.
+    var content = "НеТакаяФункция12345(1);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length() - 3));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then
+    assertThat(help.getSignatures()).isEmpty();
+  }
+
+  @Test
+  void signatureHelpForNestedNewExpression() {
+    // given — Новый Массив(Новый ФиксированныйМассив(...))
+    var content = "А = Новый Массив(Новый ФиксированныйМассив(1, 2, 3));\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // курсор внутри внутреннего конструктора, после первой запятой.
+    params.setPosition(new Position(0, content.indexOf(", ") + 2));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — supplier выбирает внутренний конструктор и активный параметр.
+    assertThat(help).isNotNull();
+  }
+
+  @Test
   void localMethodCallFindsSignatureCaseInsensitive() {
     // given — вызов локального метода в другом регистре
     var content =

@@ -355,6 +355,27 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void getGlobalPropertyAndEnumNamesByFileTypeWork() {
+    // when / then — overload-ы не падают и возвращают список.
+    assertThat(scope.getGlobalPropertyNames(FileType.BSL)).isNotNull();
+    assertThat(scope.getGlobalPropertyNames(FileType.OS)).isNotNull();
+    assertThat(scope.getGlobalEnumNames(FileType.BSL)).isNotNull();
+    assertThat(scope.getGlobalEnumNames(FileType.OS)).isNotNull();
+  }
+
+  @Test
+  void findGlobalEnumWithoutFileTypeOverload() {
+    // when / then — no-arg overload.
+    assertThat(scope.findGlobalEnum("НетТакогоПеречисления")).isEmpty();
+  }
+
+  @Test
+  void findGlobalPropertyWithoutFileTypeOverload() {
+    // when / then — no-arg overload.
+    assertThat(scope.findGlobalProperty("НетТакогоСвойства")).isEmpty();
+  }
+
+  @Test
   void findGlobalPropertyAndEnumAreSeparateNamespaces() {
     // given
     var propRef = new TypeRef(TypeKind.PLATFORM, "ТипPP");

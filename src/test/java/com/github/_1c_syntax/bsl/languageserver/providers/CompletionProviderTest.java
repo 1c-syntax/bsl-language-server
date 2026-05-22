@@ -1017,6 +1017,80 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionFiltersByPrefix() {
+    // given — пользователь набрал "Соо", ожидает Сообщить.
+    var content = "Соо";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, 3));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — есть хотя бы один кандидат, начинающийся с "Соо".
+    assertThat(result.getItems())
+      .as("completion подсказывает Сообщить и подобные")
+      .anySatisfy(it ->
+        assertThat(it.getLabel().toLowerCase()).startsWith("соо"));
+  }
+
+  @Test
+  void afterNewCompletionListsConstructibleTypes() {
+    // given — позиция после "Новый ".
+    var content = "Х = Новый Стр";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — Структура есть в списке.
+    assertThat(result.getItems())
+      .anySatisfy(it ->
+        assertThat(it.getLabel().toLowerCase()).startsWith("стр"));
+  }
+
+  @Test
+  void dotCompletionOnUnknownTypeReturnsEmpty() {
+    // given
+    var content = """
+            Х = Неизв12345;
+            Х.""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 2));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — нет типа, нет членов.
+    assertThat(result.getItems()).isEmpty();
+  }
+
+  @Test
+  void dotCompletionOnStructureFieldsListsKeys() {
+    // given
+    var content = """
+            Стр = Новый Структура("Имя, Возраст", "Иван", 30);
+            Стр.""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 4));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — Имя и Возраст в списке.
+    var labels = result.getItems().stream().map(CompletionItem::getLabel).toList();
+    assertThat(labels).contains("Имя", "Возраст");
+  }
+
+  @Test
   void positionBeyondEndOfFileReturnsEmptyOrSafe() {
     // given — позиция за пределами файла.
     var documentContext = TestUtils.getDocumentContext("Сооб");
