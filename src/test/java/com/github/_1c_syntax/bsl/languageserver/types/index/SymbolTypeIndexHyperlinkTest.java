@@ -158,6 +158,25 @@ class SymbolTypeIndexHyperlinkTest {
   }
 
   @Test
+  void resolveHyperlinkReturnsEmptyWhenParameterNotFound() {
+    // given — Модуль.Метод.НеизвестныйПараметр — у метода один параметр Док,
+    // запрос с другим именем должен вернуть EMPTY (не null).
+    var param = new ParameterDescriptor(
+      BilingualString.of("Док"), TypeSet.of(ARRAY), false, BilingualString.EMPTY, "");
+    var method = MemberDescriptor.method("МойМетод",
+      List.of(new SignatureDescriptor(List.of(param), STRING, "")));
+    when(typeRegistry.resolve(eq("Модуль"), any(FileType.class)))
+      .thenReturn(Optional.of(MODULE));
+    when(typeRegistry.getMembers(eq(MODULE), any(FileType.class))).thenReturn(List.of(method));
+
+    // when
+    var result = index.resolveHyperlink("Модуль.МойМетод.НеизвестныйПараметр", FileType.BSL);
+
+    // then
+    assertThat(result).isSameAs(TypeSet.EMPTY);
+  }
+
+  @Test
   void resolveHyperlinkReturnsEmptyWhenMemberReturnsUnknown() {
     // given — метод найден, но его returnType — Unknown
     var method = MemberDescriptor.method("X",
