@@ -257,6 +257,38 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void resolveByKindAndQualifiedNameReturnsInternedRef() {
+    // given
+    var ref = typeRegistry.intern(TypeKind.USER, "ТипR2");
+
+    // when
+    var resolved = typeRegistry.resolve(TypeKind.USER, "ТипR2");
+
+    // then
+    assertThat(resolved).contains(ref);
+  }
+
+  @Test
+  void resolveByKindReturnsEmptyForUnknownType() {
+    // when / then
+    assertThat(typeRegistry.resolve(TypeKind.USER, "ОченьНеизвестныйТип")).isEmpty();
+  }
+
+  @Test
+  void getReturnsUnknownTypeForUnregistered() {
+    // given
+    var ref = new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(
+      TypeKind.USER, "ЕщёНеизвестныйТип");
+
+    // when
+    var t = typeRegistry.get(ref);
+
+    // then — для незарегистрированного ref возвращается UnknownType.INSTANCE
+    assertThat(t).isInstanceOf(
+      com.github._1c_syntax.bsl.languageserver.types.model.UnknownType.class);
+  }
+
+  @Test
   void resolveGenericByPrefixIsCaseInsensitive() {
     // given — стандартные generic-типы платформы СправочникСсылка.<...>
     // должны находиться при различных регистрах префикса.

@@ -325,6 +325,36 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void findGlobalPropertyBlankNameReturnsEmpty() {
+    // when / then — findInList с blank name возвращает empty.
+    assertThat(scope.findGlobalProperty(null)).isEmpty();
+    assertThat(scope.findGlobalProperty("")).isEmpty();
+    assertThat(scope.findGlobalProperty("   ")).isEmpty();
+  }
+
+  @Test
+  void findGlobalEnumBlankNameReturnsEmpty() {
+    // when / then
+    assertThat(scope.findGlobalEnum(null)).isEmpty();
+    assertThat(scope.findGlobalEnum("")).isEmpty();
+  }
+
+  @Test
+  void findGlobalWithScopeMismatchReturnsEmpty() {
+    // given
+    var ref = new TypeRef(TypeKind.PLATFORM, "ТипSP");
+    scope.registerGlobalProperty(ref, List.of("СП_Имя"), LanguageScope.BSL);
+
+    // when — поиск через findGlobal с OS-fileType отсекает BSL-scope.
+    var bslFound = scope.findGlobal("СП_Имя", FileType.BSL);
+    var osFound = scope.findGlobal("СП_Имя", FileType.OS);
+
+    // then
+    assertThat(bslFound).isPresent();
+    assertThat(osFound).isEmpty();
+  }
+
+  @Test
   void findGlobalPropertyAndEnumAreSeparateNamespaces() {
     // given
     var propRef = new TypeRef(TypeKind.PLATFORM, "ТипPP");
