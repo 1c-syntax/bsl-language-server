@@ -13,9 +13,9 @@ plugins {
     id("io.freefair.javadoc-links") version "9.5.0"
     id("io.freefair.javadoc-utf-8") version "9.5.0"
     id("io.freefair.aspectj.post-compile-weaving") version "9.5.0"
-    // id("io.freefair.maven-central.validate-poms") version "9.0.0" // TODO: Re-enable when compatible with Gradle 9
+     id("io.freefair.maven-central.validate-poms") version "9.5.0"
     id("com.github.ben-manes.versions") version "0.54.0"
-    id("org.springframework.boot") version "4.0.1"
+    id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "6.8.1"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
@@ -145,7 +145,7 @@ dependencies {
     // CONSTRAINTS
     implementation("com.google.guava:guava") {
         version {
-            strictly("33.5.0-jre")
+            strictly("33.6.0-jre")
         }
     }
 
