@@ -1017,6 +1017,28 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dotCompletionOnValueTableHasCopyMethodWithMultipleSignatures() {
+    // given — ТЗ.| на ТаблицаЗначений — есть метод Скопировать с
+    // несколькими сигнатурами.
+    var content = """
+            ТЗ = Новый ТаблицаЗначений;
+            ТЗ.""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 3));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — Скопировать в списке + detail с "вариантов синтаксиса" (multiple sigs).
+    var copyItems = result.getItems().stream()
+      .filter(it -> it.getLabel().equalsIgnoreCase("Скопировать") || it.getLabel().equalsIgnoreCase("Copy"))
+      .toList();
+    assertThat(copyItems).as("ТЗ имеет метод Скопировать").isNotEmpty();
+  }
+
+  @Test
   void dotCompletionOnMassivShowsMethodsAsMethodKind() {
     // given — М.| на Массив — все members с MemberKind=METHOD получают
     // CompletionItemKind.Method (см. buildMemberItem).
