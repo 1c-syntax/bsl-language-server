@@ -72,6 +72,46 @@ class GlobalScopeInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void globalFunctionAsBareIdentifierReturnsEmpty() {
+    // Сообщить как identifier (не вызов) — PLATFORM_GLOBAL_METHOD filter
+    // отсекает в inferIdentifier (L299).
+    var types = at("ССылкаНаГлобал = Сообщить", "ССылкаНаГлобал = ".length());
+    assertThat(types.refs()).isEmpty();
+  }
+
+  @Test
+  void globalPropertyResolvesViaGlobalSymbolScope() {
+    // КодировкаТекста — global property, должно резолвиться.
+    var types = at("Кодировка = КодировкаТекста", "Кодировка = ".length());
+    assertThat(types).isNotNull();
+  }
+
+  @Test
+  void enumIdentifierResolvedViaScope() {
+    var types = at("ЕнумПерем = НаправлениеПоиска", "ЕнумПерем = ".length());
+    assertThat(types).isNotNull();
+  }
+
+  @Test
+  void datePlusNumberIsDate() {
+    var types = at("ДатаПлюсЧисло = '20200101' + 3600", "ДатаПлюсЧисло = ".length());
+    assertThat(qnames(types)).containsExactly("Дата");
+  }
+
+  @Test
+  void stringComparisonIsBoolean() {
+    var types = at("СравнСтрок = \"abc\" = \"abc\"", "СравнСтрок = ".length());
+    assertThat(qnames(types)).containsExactly("Булево");
+  }
+
+  @Test
+  void nestedLogicalIsBoolean() {
+    var types = at("СложноеЛог = (1 > 0) И (Истина ИЛИ Ложь)",
+      "СложноеЛог = ".length());
+    assertThat(qnames(types)).containsExactly("Булево");
+  }
+
+  @Test
   void ternaryReturnsUnionOfBranches() {
     // `?(Истина, "string", 42)` → union(Строка, Число).
     var types = at("Тернарный = ?(Истина, \"string\", 42)", "Тернарный = ".length());
