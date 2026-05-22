@@ -1017,6 +1017,53 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void noDotCompletionShowsLocalProceduresAndFunctions() {
+    // given — модуль с локальной функцией и процедурой.
+    var content =
+      "Функция МояФун() Экспорт\n"
+        + "  Возврат 0;\n"
+        + "КонецФункции\n"
+        + "\n"
+        + "Процедура МояПроц() Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "Мо";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(7, 2));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — функция Function kind, процедура Method kind.
+    var labels = result.getItems().stream()
+      .filter(it -> it.getLabel().startsWith("Мо")).toList();
+    assertThat(labels).anySatisfy(it -> assertThat(it.getLabel()).isEqualTo("МояФун"));
+    assertThat(labels).anySatisfy(it -> assertThat(it.getLabel()).isEqualTo("МояПроц"));
+  }
+
+  @Test
+  void noDotCompletionShowsLocalVariables() {
+    // given
+    var content =
+      "Перем МояПеременная;\n"
+        + "\n"
+        + "Мо";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(2, 2));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then
+    assertThat(result.getItems())
+      .anySatisfy(it -> assertThat(it.getLabel()).isEqualTo("МояПеременная"));
+  }
+
+  @Test
   void noDotCompletionFiltersByPrefix() {
     // given — пользователь набрал "Соо", ожидает Сообщить.
     var content = "Соо";
