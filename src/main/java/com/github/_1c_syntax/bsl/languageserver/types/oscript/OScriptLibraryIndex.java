@@ -115,6 +115,8 @@ public class OScriptLibraryIndex {
   }
 
   /** Полная переиндексация OneScript-библиотек workspace. */
+  // TODO: watcher на lib.config (создание/изменение/удаление) — триггерить reindex();
+  //       без него правки манифеста не подхватываются до рестарта LS. См. TaskList #1.
   public void reindex(ServerContext serverContext) {
     oScriptModuleTypeResolver.clear();
     entriesByUri.clear();
