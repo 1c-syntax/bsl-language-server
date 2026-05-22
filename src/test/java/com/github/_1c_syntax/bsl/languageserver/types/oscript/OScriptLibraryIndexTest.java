@@ -149,4 +149,74 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     assertThat(index.findByName("MyModule")).isEmpty();
     assertThat(typeRegistry.resolve("MyModule")).isEmpty();
   }
+
+  @Test
+  void findByNameEmptyForBlankInput() {
+    // when / then — без reindex'а
+    assertThat(index.findByName(null)).isEmpty();
+    assertThat(index.findByName("")).isEmpty();
+    assertThat(index.findByName("   ")).isEmpty();
+  }
+
+  @Test
+  void findClassAndModuleUriDistinguishedByKind() {
+    // given
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    // when / then
+    assertThat(index.findClassUri("MyClass")).isPresent();
+    assertThat(index.findModuleUri("MyClass"))
+      .as("findModuleUri не должен находить класс")
+      .isEmpty();
+
+    assertThat(index.findModuleUri("MyModule")).isPresent();
+    assertThat(index.findClassUri("MyModule"))
+      .as("findClassUri не должен находить модуль")
+      .isEmpty();
+  }
+
+  @Test
+  void findUriResolvesByQualifiedName() {
+    // given
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    // when / then
+    assertThat(index.findUri("MyModule")).isPresent();
+    assertThat(index.findUri("ОченьСомнительныйИмяКлассаXYZ")).isEmpty();
+  }
+
+  @Test
+  void allEntriesReturnsClassesAndModulesTogether() {
+    // given
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    // when
+    var all = index.allEntries();
+
+    // then
+    assertThat(all).extracting(LibraryEntry::qualifiedName)
+      .contains("MyModule", "MyClass");
+  }
+
+  @Test
+  void findEntriesByUriReturnsRolesForLibraryFile() {
+    // given
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+    var moduleUri = Absolute.uri(fixtureRoot.resolve("src/MyModule.os").toUri());
+
+    // when
+    var entries = index.findEntriesByUri(moduleUri);
+
+    // then
+    assertThat(entries).isNotEmpty();
+    assertThat(entries).extracting(LibraryEntry::qualifiedName).contains("MyModule");
+  }
 }
