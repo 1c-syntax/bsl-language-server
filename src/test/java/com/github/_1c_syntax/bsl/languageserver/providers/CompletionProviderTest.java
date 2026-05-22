@@ -1142,6 +1142,39 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void afterNewCompletionWithEmptyPrefix() {
+    // given — "Х = Новый " (после пробела, без префикса).
+    var content = "Х = Новый ";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — есть список конструктабельных классов.
+    assertThat(result.getItems()).isNotEmpty();
+  }
+
+  @Test
+  void afterNewCompletionShowsClassKind() {
+    // given — "Х = Новый Стр" — completion items должны иметь Class kind.
+    var content = "Х = Новый Стр";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — Структура и пр. с Class kind.
+    assertThat(result.getItems())
+      .anySatisfy(it -> assertThat(it.getKind()).isEqualTo(CompletionItemKind.Class));
+  }
+
+  @Test
   void afterNewCompletionListsConstructibleTypes() {
     // given — позиция после "Новый ".
     var content = "Х = Новый Стр";
