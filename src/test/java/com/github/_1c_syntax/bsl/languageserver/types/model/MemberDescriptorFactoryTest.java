@@ -189,4 +189,81 @@ class MemberDescriptorFactoryTest {
     assertThat(multi.returnType()).isEqualTo(NUMBER);
     assertThat(empty.returnType()).isSameAs(TypeRef.UNKNOWN);
   }
+
+  @Test
+  void compatConstructorMonolingualNameAndDescription() {
+    // given / when
+    var m = new MemberDescriptor("Имя", MemberKind.METHOD, "описание",
+      TypeSet.of(NUMBER), List.of(), null, false, PlatformMetadata.EMPTY);
+
+    // then
+    assertThat(m.name()).isEqualTo("Имя");
+    assertThat(m.description()).isEqualTo("описание");
+    assertThat(m.returnType()).isEqualTo(NUMBER);
+  }
+
+  @Test
+  void compatConstructorBilingualNameOverridesMonolingual() {
+    // given
+    var bilingual = BilingualString.of("ИмяRu", "NameEn");
+
+    // when
+    var m = new MemberDescriptor("legacy", MemberKind.PROPERTY, "д",
+      TypeSet.of(NUMBER), List.of(), null, false, PlatformMetadata.EMPTY, bilingual);
+
+    // then
+    assertThat(m.displayName(Language.RU)).isEqualTo("ИмяRu");
+    assertThat(m.displayName(Language.EN)).isEqualTo("NameEn");
+  }
+
+  @Test
+  void compatConstructorBilingualEmptyFallsBackToMonolingual() {
+    // given
+    var emptyBilingual = BilingualString.EMPTY;
+
+    // when
+    var m = new MemberDescriptor("Имя", MemberKind.PROPERTY, "д",
+      TypeSet.of(NUMBER), List.of(), null, false, PlatformMetadata.EMPTY, emptyBilingual);
+
+    // then — пустое bilingual → используется monolingual name.
+    assertThat(m.name()).isEqualTo("Имя");
+  }
+
+  @Test
+  void getSourceSymbolEmptyWhenAbsent() {
+    // given
+    var m = MemberDescriptor.method("X");
+
+    // when / then
+    assertThat(m.getSourceSymbol()).isEmpty();
+  }
+
+  @Test
+  void withSourceSymbolAttachesSymbol() {
+    // given
+    var m = MemberDescriptor.method("X");
+    var symbol = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol.class);
+
+    // when
+    var updated = m.withSourceSymbol(symbol);
+
+    // then
+    assertThat(updated.getSourceSymbol()).contains(symbol);
+    assertThat(updated.name()).isEqualTo("X");
+  }
+
+  @Test
+  void specializeNoBindingsReturnsSameInstance() {
+    // given
+    var m = MemberDescriptor.method("X");
+
+    // when
+    var noOp = m.specialize(java.util.Map.of());
+    var nullOp = m.specialize(null);
+
+    // then
+    assertThat(noOp).isSameAs(m);
+    assertThat(nullOp).isSameAs(m);
+  }
 }
