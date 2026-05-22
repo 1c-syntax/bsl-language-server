@@ -216,4 +216,34 @@ class HoverProviderTest {
     // then
     assertThat(hover).isEmpty();
   }
+
+  @Test
+  void hoverOnNumericLiteralReturnsEmpty() {
+    // given — курсор на числовом литерале.
+    var content = "А = 12345;\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 5));  // на 12345
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then — числовой токен фильтруется isKeywordToken (L126).
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnStringLiteralReturnsEmpty() {
+    // given — курсор внутри строкового литерала.
+    var content = "А = \"строка\";\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 6));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(hover).isEmpty();
+  }
 }
