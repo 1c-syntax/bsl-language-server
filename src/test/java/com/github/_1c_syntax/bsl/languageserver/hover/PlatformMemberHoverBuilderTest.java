@@ -381,6 +381,28 @@ class PlatformMemberHoverBuilderTest {
   }
 
   @Test
+  void metadataWithRecommendedReplacementsRenderedAsList() {
+    // given — replacements ИЛИ blank — пропускаются.
+    var meta = new PlatformMetadata(
+      "", "8.3.0", List.of("ИспользоватьНовый", "", "ИспользоватьДругой"),
+      Set.of(), null,
+      BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of()
+    );
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("X"), MemberKind.PROPERTY, BilingualString.EMPTY,
+      TypeSet.EMPTY, List.of(), null, false, meta
+    );
+
+    // when
+    var content = builder.build(null, descriptor, -1);
+
+    // then — список замен есть, пустые элементы пропущены.
+    assertThat(content.getValue())
+      .contains("ИспользоватьНовый")
+      .contains("ИспользоватьДругой");
+  }
+
+  @Test
   void emptyMetadataSetSkipsAvailabilitiesBlock() {
     // given
     var meta = new PlatformMetadata(
