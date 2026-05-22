@@ -217,6 +217,53 @@ class SignatureSelectionTest {
     assertThat(idx).isEqualTo(1);
   }
 
+  @Test
+  void pickIndexByTypesFallsBackToArityForUnmatchedTypes() {
+    // given — обе сигнатуры одинаковой arity, ни одна не соответствует по типу,
+    // но обе принимают 1 аргумент → pickIndexByArity вернёт первую.
+    var sigs = List.of(
+      signature(List.of(param("a", false, TypeSet.of(NUMBER)))),
+      signature(List.of(param("a", false, TypeSet.of(NUMBER))))
+    );
+
+    // when — передаём аргумент Строка (несовместимый): обе получат -1, fallback
+    // в pickIndexByArity вернёт первую.
+    int idx = SignatureSelection.pickIndexByTypes(sigs, List.of(TypeSet.of(STRING)));
+
+    // then — score у обоих равен -1, выбирается первая (имеет тот же score, но
+    // меньший индекс).
+    assertThat(idx).isZero();
+  }
+
+  @Test
+  void pickIndexByArityFallbackWhenRequiredCountExceedsArgs() {
+    // given — обязательных параметров больше, чем передано аргументов,
+    // но total совпадает (хвост optional).
+    var sigs = List.of(
+      signature(List.of(param("a", false), param("b", false), param("c", true)))
+    );
+
+    // when — переданы 2 args (≥ required=2, ≤ total=3) → подходит.
+    int idx = SignatureSelection.pickIndexByArity(sigs, 2);
+
+    // then
+    assertThat(idx).isZero();
+  }
+
+  @Test
+  void pickIndexByTypesReturnsZeroForEmptyArgTypes() {
+    // given — пустой argTypes (нет вызова).
+    var sigs = List.of(
+      signature(List.of(param("a", false, TypeSet.of(NUMBER))))
+    );
+
+    // when — пустой список → arity=0, не подходит (required=1).
+    int idx = SignatureSelection.pickIndexByTypes(sigs, List.of());
+
+    // then — fallback к pickIndexByArity(sigs, 0) тоже -1.
+    assertThat(idx).isNegative();
+  }
+
   // === helpers ===
 
   private static ParameterDescriptor param(String name, boolean optional) {
