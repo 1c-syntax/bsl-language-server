@@ -174,6 +174,96 @@ class ExpressionTreeBuildingVisitorTest {
     assertThat(visitor.getExpressionTree()).isInstanceOf(ConstructorCallNode.class);
   }
 
+  @Test
+  void buildExpressionTreeFromNullComplexIdentifierReturnsNull() {
+    assertThat(ExpressionTreeBuildingVisitor.buildExpressionTree(
+      (com.github._1c_syntax.bsl.parser.BSLParser.ComplexIdentifierContext) null)).isNull();
+  }
+
+  @Test
+  void buildExpressionTreeFromNullLValueReturnsNull() {
+    assertThat(ExpressionTreeBuildingVisitor.buildExpressionTree(
+      (com.github._1c_syntax.bsl.parser.BSLParser.LValueContext) null)).isNull();
+  }
+
+  @Test
+  void buildExpressionTreeFromNullCallStatementReturnsNull() {
+    assertThat(ExpressionTreeBuildingVisitor.buildExpressionTree(
+      (com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext) null)).isNull();
+  }
+
+  @Test
+  void buildExpressionTreeFromNullExpressionReturnsNull() {
+    assertThat(ExpressionTreeBuildingVisitor.buildExpressionTree(
+      (com.github._1c_syntax.bsl.parser.BSLParser.ExpressionContext) null)).isNull();
+  }
+
+  @Test
+  void buildExpressionTreeFromComplexIdentifierReturnsTree() {
+    // given — поднимаемся к ComplexIdentifierContext из expression «Объект.Свойство».
+    var content = """
+                Процедура Имя()
+                  А = Объект.Свойство;
+                КонецПроцедуры
+                """;
+    var ast = TestUtils.getDocumentContext(content).getAst();
+    var complex = Trees.getDescendants(ast).stream()
+      .filter(com.github._1c_syntax.bsl.parser.BSLParser.ComplexIdentifierContext.class::isInstance)
+      .map(com.github._1c_syntax.bsl.parser.BSLParser.ComplexIdentifierContext.class::cast)
+      .findFirst()
+      .orElseThrow();
+
+    // when
+    var tree = ExpressionTreeBuildingVisitor.buildExpressionTree(complex);
+
+    // then
+    assertThat(tree).isNotNull();
+  }
+
+  @Test
+  void buildExpressionTreeFromLValueReturnsTree() {
+    // given — assignment `Объект.Поле = 1;`, поднимаемся к LValueContext.
+    var content = """
+                Процедура Имя()
+                  Объект.Поле = 1;
+                КонецПроцедуры
+                """;
+    var ast = TestUtils.getDocumentContext(content).getAst();
+    var lvalue = Trees.getDescendants(ast).stream()
+      .filter(com.github._1c_syntax.bsl.parser.BSLParser.LValueContext.class::isInstance)
+      .map(com.github._1c_syntax.bsl.parser.BSLParser.LValueContext.class::cast)
+      .findFirst()
+      .orElseThrow();
+
+    // when
+    var tree = ExpressionTreeBuildingVisitor.buildExpressionTree(lvalue);
+
+    // then
+    assertThat(tree).isNotNull();
+  }
+
+  @Test
+  void buildExpressionTreeFromCallStatementReturnsTree() {
+    // given — standalone `Сообщить("...");`.
+    var content = """
+                Процедура Имя()
+                  Сообщить("привет");
+                КонецПроцедуры
+                """;
+    var ast = TestUtils.getDocumentContext(content).getAst();
+    var callStmt = Trees.getDescendants(ast).stream()
+      .filter(com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext.class::isInstance)
+      .map(com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext.class::cast)
+      .findFirst()
+      .orElseThrow();
+
+    // when
+    var tree = ExpressionTreeBuildingVisitor.buildExpressionTree(callStmt);
+
+    // then
+    assertThat(tree).isNotNull();
+  }
+
   private static com.github._1c_syntax.bsl.parser.BSLParser.ExpressionContext parseIfCondition(String condition) {
     var code = """
                 Процедура Имя()
