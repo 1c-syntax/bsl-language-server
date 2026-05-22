@@ -276,6 +276,70 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void findKeywordSnippetReturnsEmptyForBlankName() {
+    // when / then
+    assertThat(scope.findKeywordSnippet(null)).isEmpty();
+    assertThat(scope.findKeywordSnippet("")).isEmpty();
+    assertThat(scope.findKeywordSnippet("   ")).isEmpty();
+  }
+
+  @Test
+  void findKeywordDescriptionReturnsEmptyForBlankName() {
+    // when / then
+    assertThat(scope.findKeywordDescription(null)).isEmpty();
+    assertThat(scope.findKeywordDescription("")).isEmpty();
+  }
+
+  @Test
+  void findKeywordSnippetEmptyForUnknownKeyword() {
+    // given — bsl-context недоступен в этом тесте, поэтому любой keyword
+    // вернёт пустой Optional.
+
+    // when / then
+    assertThat(scope.findKeywordSnippet("Если")).isEmpty();
+  }
+
+  @Test
+  void findGlobalCaseInsensitiveOnRegisteredSymbol() {
+    // given
+    scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "ТипC"),
+      List.of("МойГлобалC"));
+
+    // when / then — поиск независим от регистра.
+    assertThat(scope.findGlobal("мойглобалc")).isPresent();
+    assertThat(scope.findGlobal("МОЙГЛОБАЛC")).isPresent();
+  }
+
+  @Test
+  void findGlobalEntryReturnsEntryWithRole() {
+    // given
+    scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "ТипR"),
+      List.of("МойГлобалR"));
+
+    // when
+    var entry = scope.findGlobalEntry("МойГлобалR", FileType.BSL);
+
+    // then
+    assertThat(entry).isPresent();
+    assertThat(entry.get().role()).isEqualTo(GlobalSymbolScope.Role.VALUE);
+  }
+
+  @Test
+  void findGlobalPropertyAndEnumAreSeparateNamespaces() {
+    // given
+    var propRef = new TypeRef(TypeKind.PLATFORM, "ТипPP");
+    var enumRef = new TypeRef(TypeKind.PLATFORM, "ТипEE");
+    scope.registerGlobalProperty(propRef, List.of("ПрG"));
+    // Регистрация enum через kind в registerGlobalProperty с явным SyntheticKind.PLATFORM_GLOBAL_ENUM
+    scope.registerGlobalProperty(enumRef, List.of("ПрE"),
+      LanguageScope.BOTH, "", SyntheticKind.PLATFORM_GLOBAL_ENUM);
+
+    // when / then — оба видны через findGlobal.
+    assertThat(scope.findGlobal("ПрG")).isPresent();
+    assertThat(scope.findGlobal("ПрE")).isPresent();
+  }
+
+  @Test
   void registerConfigurationQualifiedNameStoresAndExposes() {
     // when
     scope.registerConfigurationQualifiedName("Документы.Заказ");
