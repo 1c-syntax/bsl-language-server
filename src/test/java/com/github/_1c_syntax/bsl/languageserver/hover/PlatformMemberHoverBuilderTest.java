@@ -348,6 +348,39 @@ class PlatformMemberHoverBuilderTest {
   }
 
   @Test
+  void methodWithChosenSignatureReturnTypeFromSignatureFallback() {
+    // given — descriptor с пустым returnTypes, но у signature есть returnType.
+    var param = new ParameterDescriptor(
+      BilingualString.of("A"), TypeSet.of(NUMBER), false, BilingualString.EMPTY, "");
+    var sig = new SignatureDescriptor(List.of(param), NUMBER, "");
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("F"), MemberKind.METHOD, BilingualString.EMPTY,
+      TypeSet.EMPTY,          // пустой descriptor.returnTypes
+      List.of(sig),
+      null, false, PlatformMetadata.EMPTY
+    );
+
+    // when
+    var content = builder.build(null, descriptor, 1);
+
+    // then — fallback к chosen.returnType() → Число.
+    assertThat(content.getValue()).contains(": Число");
+  }
+
+  @Test
+  void compositePropertyFallsBackToReturnType() {
+    // given — property с пустым returnTypes, но returnType установлен.
+    // Используется compat-ctor через property factory.
+    var descriptor = MemberDescriptor.property("X", NUMBER);
+
+    // when
+    var content = builder.build(null, descriptor, -1);
+
+    // then
+    assertThat(content.getValue()).contains(": Число");
+  }
+
+  @Test
   void emptyMetadataSetSkipsAvailabilitiesBlock() {
     // given
     var meta = new PlatformMetadata(
