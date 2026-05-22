@@ -381,6 +381,28 @@ class PlatformMemberHoverBuilderTest {
   }
 
   @Test
+  void methodWithMultipleSignaturesEmptyReturnTypesFallsBackToDescriptor() {
+    // given — две сигнатуры, sig1 пустой returnTypes, sig2 с returnTypes;
+    // descriptor returnTypes установлен. Должны увидеть fallback (L225).
+    var param = new ParameterDescriptor(
+      BilingualString.of("A"), TypeSet.of(NUMBER), false, BilingualString.EMPTY, "");
+    var sig1 = new SignatureDescriptor(List.of(param), TypeRef.UNKNOWN, "");
+    var sig2 = new SignatureDescriptor(List.of(param), NUMBER, "");
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("Calc"), MemberKind.METHOD, BilingualString.EMPTY,
+      TypeSet.of(NUMBER),    // descriptor.returnTypes
+      List.of(sig1, sig2),
+      null, false, PlatformMetadata.EMPTY
+    );
+
+    // when
+    var content = builder.build(null, descriptor, 0);
+
+    // then — рендерится с типом Число (fallback с descriptor.returnTypes).
+    assertThat(content.getValue()).contains(": Число");
+  }
+
+  @Test
   void metadataWithRecommendedReplacementsRenderedAsList() {
     // given — replacements ИЛИ blank — пропускаются.
     var meta = new PlatformMetadata(
