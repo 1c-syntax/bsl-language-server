@@ -266,4 +266,25 @@ class MemberDescriptorFactoryTest {
     assertThat(noOp).isSameAs(m);
     assertThat(nullOp).isSameAs(m);
   }
+
+  @Test
+  void canonicalConstructorNormalizesAllNullFields() {
+    // given / when — все опциональные поля переданы null.
+    var m = new MemberDescriptor(
+      (BilingualString) null, // bilingualName
+      MemberKind.METHOD,
+      (BilingualString) null, // bilingualDescription
+      null,                   // returnTypes
+      List.of(),
+      null,                   // sourceSymbol
+      false,
+      null                    // metadata
+    );
+
+    // then — все null'ы заменены на EMPTY-singleton'ы.
+    assertThat(m.bilingualName()).isSameAs(BilingualString.EMPTY);
+    assertThat(m.bilingualDescription()).isSameAs(BilingualString.EMPTY);
+    assertThat(m.returnTypes()).isSameAs(TypeSet.EMPTY);
+    assertThat(m.metadata()).isSameAs(PlatformMetadata.EMPTY);
+  }
 }
