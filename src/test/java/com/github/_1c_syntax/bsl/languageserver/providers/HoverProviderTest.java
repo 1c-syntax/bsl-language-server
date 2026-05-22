@@ -246,4 +246,19 @@ class HoverProviderTest {
     // then
     assertThat(hover).isEmpty();
   }
+
+  @Test
+  void hoverOnDateLiteralReturnsEmpty() {
+    // given — курсор внутри даты-литерала.
+    var content = "А = '20200101';\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 8));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then — DATETIME токен не keyword.
+    assertThat(hover).isEmpty();
+  }
 }
