@@ -38,6 +38,8 @@ import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEve
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -54,8 +56,10 @@ import org.springframework.context.ApplicationEvent;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -201,6 +205,18 @@ public class EventPublisherAspect {
     ));
   }
 
+  @AfterReturning(
+    pointcut = "Pointcuts.isOScriptLibraryIndex() && Pointcuts.isReindexCall() && args(serverContext)",
+    returning = "configs"
+  )
+  public void oscriptLibraryIndexed(JoinPoint joinPoint, ServerContext serverContext, List<Path> configs) {
+    publishEvent(new OScriptLibraryIndexedEvent(
+      (OScriptLibraryIndex) joinPoint.getThis(),
+      serverContext,
+      configs
+    ));
+  }
+
   private void publishEvent(ApplicationEvent event) {
     var contexts = snapshot.get();
     if (contexts.length == 0) {
@@ -302,6 +318,9 @@ public class EventPublisherAspect {
     }
     if (event instanceof BeforeWorkspaceRemovedEvent beforeRemoved) {
       return beforeRemoved.getServerContext();
+    }
+    if (event instanceof OScriptLibraryIndexedEvent indexed) {
+      return indexed.getServerContext();
     }
     return null;
   }

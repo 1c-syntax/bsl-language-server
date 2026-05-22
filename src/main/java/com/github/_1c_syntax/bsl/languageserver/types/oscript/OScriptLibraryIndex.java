@@ -125,10 +125,14 @@ public class OScriptLibraryIndex {
     }
   }
 
-  /** Полная переиндексация OneScript-библиотек workspace. */
-  // TODO: watcher на lib.config (создание/изменение/удаление) — триггерить reindex();
-  //       без него правки манифеста не подхватываются до рестарта LS. См. TaskList #1.
-  public void reindex(ServerContext serverContext) {
+  /**
+   * Полная переиндексация OneScript-библиотек workspace.
+   *
+   * @return список найденных {@code lib.config}-манифестов (для подписчиков
+   *         {@code OScriptLibraryIndexedEvent} — публикуется advice'ом
+   *         {@code EventPublisherAspect}).
+   */
+  public List<Path> reindex(ServerContext serverContext) {
     oScriptModuleTypeResolver.clear();
     entriesByUri.clear();
     entriesByName.clear();
@@ -152,6 +156,8 @@ public class OScriptLibraryIndex {
     if (configs.isEmpty() && conventional.isEmpty()) {
       LOGGER.debug("No OneScript libraries discovered for workspace");
     }
+
+    return configs;
   }
 
   @EventListener
