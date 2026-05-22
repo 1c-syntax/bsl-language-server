@@ -30,6 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
@@ -100,13 +102,46 @@ public final class HoverProvider {
       return Optional.empty();
     }
     var lang = configuration.getLanguage();
-    return globalScopeProvider.findKeywordDescription(terminal.getText(), lang)
+    var parentContext = findKeywordParentContext(terminal);
+    return globalScopeProvider.findKeywordDescription(terminal.getText(), lang, parentContext)
       .map(description -> {
         var label = resources.getResourceString(HoverProvider.class, "keywordLabel");
         var content = new MarkupContent(MarkupKind.MARKDOWN,
           "```bsl\n" + terminal.getText() + "\n```\n\n_" + label + "_\n\n" + description);
         return new Hover(content, Ranges.create(terminal));
       });
+  }
+
+  /**
+   * Поднимается по AST от позиции keyword-токена к ближайшей объемлющей
+   * декларации (функции, процедуры, или объявления переменной модуля/функции)
+   * и возвращает ru-имя соответствующей родительской конструкции из СП.
+   * <p>
+   * Используется для контекстно-зависимых описаний: keyword'ы
+   * {@code Async}/{@code Знач}/{@code Возврат}/{@code Экспорт} имеют разное
+   * описание в {@code Функция} vs {@code Процедура}; {@code Экспорт}
+   * существует и в декларации модульной переменной ({@code Перем X Экспорт}).
+   * Если контекст не определяется — {@code null} и потребитель берёт generic.
+   */
+  private static String findKeywordParentContext(TerminalNode terminal) {
+    ParseTree node = terminal;
+    while (node != null) {
+      if (node instanceof BSLParser.FuncDeclarationContext
+        || node instanceof BSLParser.FunctionContext) {
+        return "Функция";
+      }
+      if (node instanceof BSLParser.ProcDeclarationContext
+        || node instanceof BSLParser.ProcedureContext) {
+        return "Процедура";
+      }
+      if (node instanceof BSLParser.ModuleVarDeclarationContext
+        || node instanceof BSLParser.ModuleVarContext
+        || node instanceof BSLParser.SubVarDeclarationContext) {
+        return "Перем";
+      }
+      node = node instanceof ParserRuleContext prc ? prc.getParent() : node.getParent();
+    }
+    return null;
   }
 
   /**

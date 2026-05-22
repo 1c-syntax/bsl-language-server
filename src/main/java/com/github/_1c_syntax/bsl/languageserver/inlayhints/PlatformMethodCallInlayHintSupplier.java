@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.Strings;
@@ -45,7 +44,6 @@ import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -75,15 +73,20 @@ import java.util.List;
  * MemberDescriptor с непустым sourceSymbol.
  */
 @Component
-@RequiredArgsConstructor
-public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
-
-  private static final boolean DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME = false;
-  private static final boolean DEFAULT_SHOW_DEFAULT_VALUES = true;
+public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlayHintSupplier {
 
   private final TypeService typeService;
-  private final LanguageServerConfiguration configuration;
   private final Resources resources;
+
+  public PlatformMethodCallInlayHintSupplier(
+    LanguageServerConfiguration configuration,
+    TypeService typeService,
+    Resources resources
+  ) {
+    super(configuration);
+    this.typeService = typeService;
+    this.resources = resources;
+  }
 
   private Language currentLanguage() {
     return configuration.getLanguage();
@@ -353,23 +356,4 @@ public class PlatformMethodCallInlayHintSupplier implements InlayHintSupplier {
     return resources.getResourceString(getClass(), key);
   }
 
-  private boolean showParametersWithTheSameName() {
-    var option = configuration.getInlayHintOptions().getParameters()
-      .getOrDefault(getId(), Either.forLeft(true));
-    if (option.isLeft()) {
-      return DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME;
-    }
-    return (boolean) option.getRight().getOrDefault(
-      "showParametersWithTheSameName", DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME);
-  }
-
-  private boolean showDefaultValues() {
-    var option = configuration.getInlayHintOptions().getParameters()
-      .getOrDefault(getId(), Either.forLeft(true));
-    if (option.isLeft()) {
-      return DEFAULT_SHOW_DEFAULT_VALUES;
-    }
-    return (boolean) option.getRight().getOrDefault(
-      "showDefaultValues", DEFAULT_SHOW_DEFAULT_VALUES);
-  }
 }

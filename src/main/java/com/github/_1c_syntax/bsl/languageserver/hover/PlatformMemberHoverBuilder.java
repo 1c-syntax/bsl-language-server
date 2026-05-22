@@ -41,6 +41,7 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -283,7 +284,7 @@ public class PlatformMemberHoverBuilder {
     if (items == null || items.isEmpty()) {
       return;
     }
-    var resolved = new java.util.ArrayList<String>(items.size());
+    var resolved = new ArrayList<String>(items.size());
     for (var bi : items) {
       var s = bi.forLanguage(lang);
       if (s != null && !s.isBlank()) {
