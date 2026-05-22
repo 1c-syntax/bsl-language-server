@@ -164,6 +164,99 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void registerDescriptionIgnoresBlankInput() {
+    // given
+    var ref = typeRegistry.registerUserType("Т", declaration);
+
+    // when
+    typeRegistry.registerDescription(null, "x", LanguageScope.BOTH);
+    typeRegistry.registerDescription(ref, null, LanguageScope.BOTH);
+    typeRegistry.registerDescription(ref, "  ", LanguageScope.BOTH);
+
+    // then — описание не сохранилось
+    assertThat(typeRegistry.getDescription(ref)).isEmpty();
+  }
+
+  @Test
+  void registerDescriptionStoresAndExposesByScope() {
+    // given
+    var ref = typeRegistry.registerUserType("Т2", declaration);
+
+    // when
+    typeRegistry.registerDescription(ref, "ru-описание", LanguageScope.BOTH);
+
+    // then
+    assertThat(typeRegistry.getDescription(ref)).isEqualTo("ru-описание");
+  }
+
+  @Test
+  void registerConstructorsIgnoresEmptyList() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипK", declaration);
+
+    // when
+    typeRegistry.registerConstructors(ref, java.util.List.of(), LanguageScope.BOTH);
+    typeRegistry.registerConstructors(null,
+      java.util.List.of(com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor.EMPTY),
+      LanguageScope.BOTH);
+
+    // then — конструкторы не зарегистрированы
+    assertThat(typeRegistry.getConstructors(ref)).isEmpty();
+  }
+
+  @Test
+  void supportsForEachAndIndexAccessReturnFalseByDefault() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипУ", declaration);
+
+    // when / then — без явной регистрации флаги выключены.
+    assertThat(typeRegistry.supportsForEach(ref)).isFalse();
+    assertThat(typeRegistry.supportsIndexAccess(ref)).isFalse();
+  }
+
+  @Test
+  void getTypeParametersReturnsEmptyForNonGeneric() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипП", declaration);
+
+    // when / then
+    assertThat(typeRegistry.getTypeParameters(ref)).isEmpty();
+  }
+
+  @Test
+  void displayNameFallsBackToQualifiedNameWhenNoBilingual() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипD", declaration);
+
+    // when
+    var ru = typeRegistry.displayName(ref,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU);
+
+    // then
+    assertThat(ru).isEqualTo("ТипD");
+  }
+
+  @Test
+  void getForEachDescriptionDefaultsToEmpty() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипF", declaration);
+
+    // when / then
+    assertThat(typeRegistry.getForEachDescription(ref)).isEmpty();
+    assertThat(typeRegistry.getIndexAccessDescription(ref)).isEmpty();
+  }
+
+  @Test
+  void getDefaultElementTypesEmptyForNonCollection() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипE", declaration);
+
+    // when / then
+    assertThat(typeRegistry.getDefaultElementTypes(ref))
+      .isSameAs(com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY);
+  }
+
+  @Test
   void resolveGenericByPrefixIsCaseInsensitive() {
     // given — стандартные generic-типы платформы СправочникСсылка.<...>
     // должны находиться при различных регистрах префикса.
