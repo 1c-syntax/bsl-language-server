@@ -130,4 +130,82 @@ class ExpressionAtPositionTest {
     // then
     assertThat(expr).isPresent();
   }
+
+  @Test
+  void findCallStatementContextReturnsCallStatement() {
+    // given — standalone vyzov Сообщить("привет");
+    var content = "Сообщить(\"привет\");\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция внутри идентификатора Сообщить.
+    var callStmt = ExpressionAtPosition.findCallStatementContext(dc, new Position(0, 3));
+
+    // then
+    assertThat(callStmt).isPresent();
+  }
+
+  @Test
+  void findCallStatementContextEmptyForAssignment() {
+    // given — assignment, не callStatement.
+    var content = "А = 100;\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when
+    var callStmt = ExpressionAtPosition.findCallStatementContext(dc, new Position(0, 0));
+
+    // then
+    assertThat(callStmt).isEmpty();
+  }
+
+  @Test
+  void findLValueContextReturnsLValue() {
+    // given — assignment с lValue dot-chain.
+    var content = "Объект.Поле = 100;\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция внутри `Поле`.
+    var lValue = ExpressionAtPosition.findLValueContext(dc, new Position(0, 8));
+
+    // then
+    assertThat(lValue).isPresent();
+  }
+
+  @Test
+  void findComplexIdentifierContextReturnsComplex() {
+    // given — RHS с dot-chain.
+    var content = "А = Объект.Свойство;\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция внутри `Свойство`.
+    var ci = ExpressionAtPosition.findComplexIdentifierContext(dc, new Position(0, 12));
+
+    // then
+    assertThat(ci).isPresent();
+  }
+
+  @Test
+  void findExpressionTreeReturnsBslExpressionForAssignmentRhs() {
+    // given
+    var content = "Х = 1 + 2;\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция внутри «1».
+    var tree = ExpressionAtPosition.findExpressionTree(dc, new Position(0, 4));
+
+    // then — построено выражение поверх ExpressionContext.
+    assertThat(tree).isPresent();
+  }
+
+  @Test
+  void findExpressionTreeReturnsBslExpressionForLValue() {
+    // given
+    var content = "Объект.Свойство = 1;\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция внутри `Свойство` (lValue, не expression).
+    var tree = ExpressionAtPosition.findExpressionTree(dc, new Position(0, 10));
+
+    // then — fallback на findLValueContext сработал.
+    assertThat(tree).isPresent();
+  }
 }
