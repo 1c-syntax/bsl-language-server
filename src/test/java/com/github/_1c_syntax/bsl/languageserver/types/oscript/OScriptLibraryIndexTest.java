@@ -219,4 +219,22 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
     assertThat(entries).isNotEmpty();
     assertThat(entries).extracting(LibraryEntry::qualifiedName).contains("MyModule");
   }
+
+  @Test
+  void findByUriUnknownReturnsEmpty() {
+    // given — uri, который не зарегистрирован.
+    var unknownUri = java.net.URI.create("file:///fake/unknown.os");
+
+    // when / then
+    assertThat(index.findByUri(unknownUri)).isEmpty();
+  }
+
+  @Test
+  void findEntriesByUriUnknownReturnsEmptyList() {
+    // given
+    var unknownUri = java.net.URI.create("file:///fake/unknown.os");
+
+    // when / then
+    assertThat(index.findEntriesByUri(unknownUri)).isEmpty();
+  }
 }
