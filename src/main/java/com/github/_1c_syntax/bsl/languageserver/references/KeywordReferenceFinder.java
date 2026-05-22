@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -76,9 +77,6 @@ public class KeywordReferenceFinder implements ReferenceFinder {
     try {
       ast = documentContext.getAst();
     } catch (NullPointerException e) {
-      return Optional.empty();
-    }
-    if (ast == null) {
       return Optional.empty();
     }
     var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, position);
@@ -137,6 +135,7 @@ public class KeywordReferenceFinder implements ReferenceFinder {
    * Если контекст не определяется — {@code null}, и
    * {@link GlobalScopeProvider#findKeywordDescription} вернёт generic-описание.
    */
+  @Nullable
   private static String findKeywordParentContext(TerminalNode terminal) {
     ParseTree node = terminal;
     while (node != null) {
