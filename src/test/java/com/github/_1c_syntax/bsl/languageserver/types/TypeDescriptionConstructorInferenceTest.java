@@ -119,6 +119,23 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
   }
 
   @Test
+  void typeDescriptionWithNonStringFirstArgReturnsBaseUnchanged() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/TypeDescriptionConstructor.bsl");
+
+    // when — literal == null → return base.
+    var types = inferAtMarker(documentContext,
+      "ОписаниеНеСтрокаАрг = Новый ОписаниеТипов(КакаяТоПеременная)",
+      "ОписаниеНеСтрокаАрг = ".length());
+
+    // then — base preserved, есть ref ОписаниеТипов.
+    assertThat(types.refs()).isNotEmpty();
+    var ref = types.refs().iterator().next();
+    assertThat(ref.qualifiedName()).isEqualToIgnoringCase("ОписаниеТипов");
+  }
+
+  @Test
   void emptyTypeNamesBetweenCommasAreSkipped() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(
