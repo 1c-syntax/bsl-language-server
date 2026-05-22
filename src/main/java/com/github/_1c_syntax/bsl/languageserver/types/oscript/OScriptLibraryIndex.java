@@ -35,13 +35,19 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -244,6 +250,87 @@ public class OScriptLibraryIndex {
     for (var klass : manifest.classes()) {
       var osFile = libRoot.resolve(klass.file()).toAbsolutePath().normalize();
       registerEntry(klass.name(), osFile, EntryKind.CLASS, serverContext, libOrigin);
+    }
+    collectImplicitEntries(libRoot, libOrigin, serverContext);
+  }
+
+  /**
+   * Глубина рекурсивного обхода каталога-библиотеки для сбора implicit-записей
+   * ({@code .os} в convention-каталогах {@code Классы}/{@code Classes}/
+   * {@code Модули}/{@code Modules}, не объявленных в манифесте). Чуть больше,
+   * чем у {@link LibConfigDiscovery}/{@link ConventionalLibraryDiscovery},
+   * чтобы дотянуться до структур вида {@code src/<подсистема>/Классы/...} с
+   * запасом.
+   */
+  private static final int IMPLICIT_SCAN_MAX_DEPTH = 8;
+
+  /**
+   * Найти под {@code libRoot} все {@code .os}-файлы в convention-каталогах
+   * ({@code Классы}/{@code Classes}/{@code Модули}/{@code Modules}, на любой
+   * глубине), которые ещё не зарегистрированы (например, не объявлены в
+   * {@code lib.config}), и зарегистрировать их как implicit-записи.
+   * <p>
+   * Каталоги {@code oscript_modules} пропускаются на любой глубине: транзитивные
+   * зависимости библиотеки не должны попадать в её собственный индекс
+   * (резолвер/индекс по умолчанию работает только с корневым {@code oscript_modules}
+   * workspace'а).
+   */
+  private void collectImplicitEntries(Path libRoot, @Nullable String libOrigin, ServerContext serverContext) {
+    if (libRoot == null || !Files.isDirectory(libRoot)) {
+      return;
+    }
+    var rootAbs = libRoot.toAbsolutePath().normalize();
+    try {
+      Files.walkFileTree(rootAbs, Set.of(), IMPLICIT_SCAN_MAX_DEPTH, new SimpleFileVisitor<>() {
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+          if (dir.equals(rootAbs)) {
+            return FileVisitResult.CONTINUE;
+          }
+          var name = dir.getFileName().toString();
+          if (LibConfigDiscovery.OSCRIPT_MODULES_DIRNAME.equals(name)) {
+            return FileVisitResult.SKIP_SUBTREE;
+          }
+          return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+          var fileName = file.getFileName().toString();
+          if (!fileName.toLowerCase(Locale.ROOT).endsWith(ConventionalLibraryDiscovery.OS_SUFFIX)) {
+            return FileVisitResult.CONTINUE;
+          }
+          var parent = file.getParent();
+          if (parent == null) {
+            return FileVisitResult.CONTINUE;
+          }
+          var parentName = parent.getFileName().toString();
+          EntryKind kind;
+          if (ConventionalLibraryDiscovery.CLASS_DIRS.contains(parentName)) {
+            kind = EntryKind.CLASS;
+          } else if (ConventionalLibraryDiscovery.MODULE_DIRS.contains(parentName)) {
+            kind = EntryKind.MODULE;
+          } else {
+            return FileVisitResult.CONTINUE;
+          }
+          var normalized = file.toAbsolutePath().normalize();
+          var uri = Absolute.uri(normalized.toUri());
+          if (entriesByUri.containsKey(uri)) {
+            return FileVisitResult.CONTINUE;
+          }
+          var entryName = ConventionalLibraryDiscovery.entryName(normalized);
+          registerEntry(entryName, normalized, kind, serverContext, libOrigin, true);
+          return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException exc) {
+          LOGGER.debug("Skipping unreadable path during implicit library scan: {}", file, exc);
+          return FileVisitResult.CONTINUE;
+        }
+      });
+    } catch (IOException e) {
+      LOGGER.warn("Failed implicit library scan under {}", rootAbs, e);
     }
   }
 

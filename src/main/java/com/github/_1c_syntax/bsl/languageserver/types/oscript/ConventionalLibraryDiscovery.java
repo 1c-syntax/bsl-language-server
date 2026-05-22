@@ -56,12 +56,15 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class ConventionalLibraryDiscovery {
 
-  static final List<String> CLASS_DIRS = List.of("Классы", "Classes");
-  static final List<String> MODULE_DIRS = List.of("Модули", "Modules");
+  /** Имена convention-каталогов для классов. */
+  public static final List<String> CLASS_DIRS = List.of("Классы", "Classes");
+  /** Имена convention-каталогов для модулей. */
+  public static final List<String> MODULE_DIRS = List.of("Модули", "Modules");
   /** Дополнительный префикс для конвенциональных каталогов: {@code src/Классы}, {@code src/Modules}, … */
   static final String SRC_PREFIX = "src";
 
-  private static final String OS_SUFFIX = ".os";
+  /** Расширение OneScript-файлов. */
+  public static final String OS_SUFFIX = ".os";
   private static final int MAX_DEPTH = 6;
 
   private final LibConfigDiscovery libConfigDiscovery;

@@ -158,8 +158,26 @@ public class LibConfigDiscovery {
     if (!Files.isDirectory(root)) {
       return;
     }
+    var rootAbs = root.toAbsolutePath().normalize();
     try {
-      Files.walkFileTree(root, Set.of(), MAX_DEPTH, new SimpleFileVisitor<>() {
+      Files.walkFileTree(rootAbs, Set.of(), MAX_DEPTH, new SimpleFileVisitor<>() {
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+          // Сам root всегда обходим, иначе обнаружение библиотеки из корневого
+          // workspace/oscript_modules/<lib> сразу бы остановилось.
+          if (dir.equals(rootAbs)) {
+            return FileVisitResult.CONTINUE;
+          }
+          // Не заходим в oscript_modules уже обнаруженной библиотеки — её
+          // транзитивные зависимости не должны попадать в индекс верхнего
+          // workspace. Корневой workspace/oscript_modules обрабатывается
+          // отдельно через addOscriptModulesChildren().
+          if (OSCRIPT_MODULES_DIRNAME.equals(dir.getFileName().toString())) {
+            return FileVisitResult.SKIP_SUBTREE;
+          }
+          return FileVisitResult.CONTINUE;
+        }
+
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
           var name = file.getFileName().toString().toLowerCase(Locale.ROOT);
