@@ -25,12 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.hover.MarkupContentBuilder;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -38,8 +35,16 @@ import java.util.Optional;
 
 /**
  * Провайдер для отображения всплывающих подсказок при наведении курсора.
- * <p>
- * Обрабатывает запросы {@code textDocument/hover}.
+ *
+ * <p>Тонкий слой поверх {@link ReferenceResolver}: резолвит ссылку под курсором
+ * и выбирает {@link MarkupContentBuilder} по классу разрешённого символа.
+ * Никакой собственной логики поиска символов или типов: всё, что относится к
+ * подбору ссылки, живёт в реализациях {@link com.github._1c_syntax.bsl.languageserver.references.ReferenceFinder}
+ * (в том числе synthetic-символы для аннотаций и keyword'ов —
+ * {@link com.github._1c_syntax.bsl.languageserver.references.AnnotationReferenceFinder},
+ * {@link com.github._1c_syntax.bsl.languageserver.references.KeywordReferenceFinder}),
+ * всё, что относится к формированию текста подсказки — в соответствующем
+ * {@code MarkupContentBuilder}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover">Hover Request specification</a>
  */
@@ -48,27 +53,23 @@ import java.util.Optional;
 public final class HoverProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final Map<SymbolKind, MarkupContentBuilder<Symbol>> markupContentBuilders;
+  private final Map<Class<? extends Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
 
-  /**
-   * Получить информацию для отображения при наведении курсора на символ.
-   *
-   * @param documentContext Контекст документа
-   * @param params Параметры запроса hover
-   * @return Информация для отображения во всплывающей подсказке
-   */
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
-    Position position = params.getPosition();
-
-    return referenceResolver.findReference(documentContext.getUri(), position)
-      .flatMap((Reference reference) -> {
-        var symbol = reference.symbol();
-        var range = reference.selectionRange();
-
-        return Optional.ofNullable(markupContentBuilders.get(symbol.getSymbolKind()))
-          .map(markupContentBuilder -> markupContentBuilder.getContent(symbol))
-          .map(content -> new Hover(content, range));
-      });
+    return referenceResolver.findReference(documentContext.getUri(), params.getPosition())
+      .flatMap(reference -> findBuilder(reference.symbol())
+        .map(builder -> builder.getContent(reference.symbol()))
+        .map(content -> new Hover(content, reference.selectionRange())));
   }
 
+  private Optional<MarkupContentBuilder<Symbol>> findBuilder(Symbol symbol) {
+    var direct = markupContentBuilders.get(symbol.getClass());
+    if (direct != null) {
+      return Optional.of(direct);
+    }
+    return markupContentBuilders.entrySet().stream()
+      .filter(entry -> entry.getKey().isInstance(symbol))
+      .map(Map.Entry::getValue)
+      .findFirst();
+  }
 }

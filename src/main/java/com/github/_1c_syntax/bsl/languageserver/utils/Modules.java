@@ -21,10 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -39,6 +43,12 @@ public class Modules {
     "ЭтотОбъект|ThisObject"
   );
 
+  private static final Set<ModuleType> STATIC_MODULE_TYPES = EnumSet.of(
+    ModuleType.CommonModule,
+    ModuleType.ManagerModule,
+    ModuleType.OScriptModule
+  );
+
   /**
    * Проверить, является ли идентификатор ссылкой на "ЭтотОбъект" (ThisObject).
    *
@@ -51,6 +61,15 @@ public class Modules {
       return false;
     }
     return THIS_OBJECT_PATTERN.matcher(identifier.getText()).matches();
+  }
+
+  /**
+   * Объявляет ли модуль «статические» (модуль-уровень) методы:
+   * CommonModule / ManagerModule / OScriptModule. ObjectModule, формы и
+   * OScript-классы — instance-методы.
+   */
+  public static boolean isStaticModule(DocumentContext documentContext) {
+    return STATIC_MODULE_TYPES.contains(documentContext.getModuleType());
   }
 
 }

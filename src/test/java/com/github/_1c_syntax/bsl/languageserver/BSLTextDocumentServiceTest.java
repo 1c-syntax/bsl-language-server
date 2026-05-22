@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
@@ -40,6 +40,7 @@ import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.ColorPresentationParams;
+import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
@@ -67,6 +68,7 @@ import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -104,7 +106,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterClass
+// didOpen/didChange-тесты оставляют документ в индексе провайдера; *UnknownFile-тесты
+// предполагают, что фикстура НЕ открыта. Per-method liteCleanup сбрасывает workspace-state
+// между методами, изолируя интра-классовые мутации.
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class BSLTextDocumentServiceTest {
 
   @Autowired
@@ -809,6 +814,62 @@ class BSLTextDocumentServiceTest {
     var params = new DocumentLinkParams(getTextDocumentIdentifier());
     var result = textDocumentService.documentLink(params).get();
     assertThat(result).isNull();
+  }
+
+  @Test
+  void completionUnknownFile() throws Exception {
+    // given
+    var params = new CompletionParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.completion(params).get();
+
+    // then — CompletionList пустой, когда документа в индексе нет.
+    assertThat(result).isNotNull();
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight().getItems()).isEmpty();
+  }
+
+  @Test
+  void signatureHelpUnknownFile() throws Exception {
+    // given
+    var params = new SignatureHelpParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.signatureHelp(params).get();
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getSignatures()).isEmpty();
+  }
+
+  @Test
+  void completionForOpenedFileDelegatesToProvider() throws Exception {
+    // given
+    doOpen();
+    var params = new CompletionParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.completion(params).get();
+
+    // then — провайдер вернул CompletionList (нерасширяемый), supplier не упал.
+    assertThat(result).isNotNull();
+    assertThat(result.isRight()).isTrue();
+    assertThat(result.getRight()).isNotNull();
+  }
+
+  @Test
+  void signatureHelpForOpenedFileDelegatesToProvider() throws Exception {
+    // given
+    doOpen();
+    var params = new SignatureHelpParams(getTextDocumentIdentifier(), new Position(0, 0));
+
+    // when
+    var result = textDocumentService.signatureHelp(params).get();
+
+    // then — без активного вызова на позиции (0,0) сигнатур не будет.
+    assertThat(result).isNotNull();
+    assertThat(result.getSignatures()).isEmpty();
   }
 
   private File getTestFile() {

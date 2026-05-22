@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.lang3.Strings;
 import org.eclipse.lsp4j.InlayHint;
@@ -41,7 +40,6 @@ import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -52,17 +50,23 @@ import java.util.List;
  * Поставщик подсказок о параметрах вызываемого метода.
  */
 @Component
-@RequiredArgsConstructor
-public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSupplier {
+public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCallInlayHintSupplier {
 
   // TODO: высчитать позицию хинта относительно последнего параметра.
   private static final boolean DEFAULT_SHOW_ALL_PARAMETERS = false;
-  private static final boolean DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME = false;
-  private static final boolean DEFAULT_DEFAULT_VALUES = true;
 
   private final ReferenceIndex referenceIndex;
-  private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
+
+  public SourceDefinedMethodCallInlayHintSupplier(
+    LanguageServerConfiguration configuration,
+    ReferenceIndex referenceIndex,
+    DescriptionFormatter descriptionFormatter
+  ) {
+    super(configuration);
+    this.referenceIndex = referenceIndex;
+    this.descriptionFormatter = descriptionFormatter;
+  }
 
 
   @Override
@@ -160,28 +164,6 @@ public class SourceDefinedMethodCallInlayHintSupplier implements InlayHintSuppli
     var markdown = descriptionFormatter.parameterToString(parameter);
     var tooltip = new MarkupContent(MarkupKind.MARKDOWN, markdown);
     inlayHint.setTooltip(tooltip);
-  }
-
-
-  private boolean showParametersWithTheSameName() {
-    var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
-    if (parameters.isLeft()) {
-      return DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME;
-    } else {
-      return (boolean) parameters.getRight().getOrDefault(
-        "showParametersWithTheSameName",
-        DEFAULT_SHOW_PARAMETERS_WITH_THE_SAME_NAME
-      );
-    }
-  }
-
-  private boolean showDefaultValues() {
-    var parameters = configuration.getInlayHintOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
-    if (parameters.isLeft()) {
-      return DEFAULT_DEFAULT_VALUES;
-    } else {
-      return (boolean) parameters.getRight().getOrDefault("showDefaultValues", DEFAULT_DEFAULT_VALUES);
-    }
   }
 
 

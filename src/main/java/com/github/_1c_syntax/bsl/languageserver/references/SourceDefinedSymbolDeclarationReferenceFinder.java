@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -38,6 +39,7 @@ import java.util.Optional;
  * Реализация поискового движка на основе попадания искомой позиции в строку объявления метода.
  */
 @Component
+@Order(170)
 @RequiredArgsConstructor
 public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceFinder {
 
@@ -45,7 +47,8 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(uri);
+    // Горячий путь — без захвата RWLock на ServerContext.
+    var maybeDocument = serverContextProvider.getDocumentUnsafeNoLock(uri);
     if (maybeDocument.isEmpty()) {
       return Optional.empty();
     }

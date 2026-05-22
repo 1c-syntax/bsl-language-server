@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -89,6 +90,11 @@ public class AnnotationSymbolMarkupContentBuilder implements MarkupContentBuilde
   @Override
   public SymbolKind getSymbolKind() {
     return SymbolKind.Interface;
+  }
+
+  @Override
+  public Class<? extends Symbol> getSymbolClass() {
+    return AnnotationSymbol.class;
   }
 
 }

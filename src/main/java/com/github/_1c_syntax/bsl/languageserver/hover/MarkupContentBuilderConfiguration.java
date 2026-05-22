@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,17 +34,20 @@ import java.util.stream.Collectors;
 public class MarkupContentBuilderConfiguration {
 
   /**
-   * Строит карту построителей контента для всплывающего окна и типов символов.
+   * Строит карту построителей контента для всплывающего окна, ключ — класс
+   * конкретного символа. Использование класса (а не {@link org.eclipse.lsp4j.SymbolKind})
+   * позволяет иметь несколько построителей для одного {@code SymbolKind},
+   * различающихся реализацией {@link Symbol}.
    *
    * @param builders Список зарегистрированных построителей контента для всплывающего окна.
    * @param <T>      Тип символа ({@link Symbol}).
-   * @return Карта построителей контента для всплывающего окна и типов символов, для которых они предназначены.
+   * @return Карта построителей контента для всплывающего окна и классов символов, для которых они предназначены.
    */
   @Bean
-  public <T extends Symbol> Map<SymbolKind, MarkupContentBuilder<T>> markupContentBuilders(
+  public <T extends Symbol> Map<Class<? extends Symbol>, MarkupContentBuilder<T>> markupContentBuilders(
     Collection<MarkupContentBuilder<T>> builders
   ) {
-    return builders.stream().collect(Collectors.toMap(MarkupContentBuilder::getSymbolKind, Function.identity()));
+    return builders.stream().collect(Collectors.toMap(MarkupContentBuilder::getSymbolClass, Function.identity()));
   }
 
 }

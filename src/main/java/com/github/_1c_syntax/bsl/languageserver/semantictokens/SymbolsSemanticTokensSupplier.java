@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Modules;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -55,9 +56,14 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     var uri = documentContext.getUri();
 
     // Add method symbols (functions and procedures)
+    var isStatic = Modules.isStaticModule(documentContext);
     for (var method : symbolTree.getMethods()) {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
-      helper.addRange(entries, method.getSubNameRange(), semanticTokenType);
+      if (isStatic) {
+        helper.addRange(entries, method.getSubNameRange(), semanticTokenType, SemanticTokenModifiers.Static);
+      } else {
+        helper.addRange(entries, method.getSubNameRange(), semanticTokenType);
+      }
       for (ParameterDefinition parameter : method.getParameters()) {
         helper.addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
       }

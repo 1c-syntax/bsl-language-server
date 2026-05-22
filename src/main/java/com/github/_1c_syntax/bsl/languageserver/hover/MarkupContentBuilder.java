@@ -45,4 +45,14 @@ public interface MarkupContentBuilder<T extends Symbol> {
    * @return тип символа.
    */
   SymbolKind getSymbolKind();
+
+  /**
+   * Конкретный класс символа, который умеет обрабатывать данный построитель.
+   * Используется HoverProvider'ом для выбора подходящего билдера —
+   * это позволяет разделять рендеринг {@link com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol}
+   * и synthetic-символов с {@link SymbolKind#Method}, и т.п.
+   *
+   * @return класс символа.
+   */
+  Class<? extends Symbol> getSymbolClass();
 }

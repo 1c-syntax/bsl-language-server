@@ -22,7 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +36,7 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -39,10 +44,12 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
 
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
+  private static final String TYPE_KEY = "type";
 
   private final LanguageServerConfiguration configuration;
   private final DescriptionFormatter descriptionFormatter;
   private final Resources resources;
+  private final TypeService typeService;
 
   @Override
   public MarkupContent getContent(VariableSymbol symbol) {
@@ -60,6 +67,10 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     // информация о переменной
     var variableInfo = getVariableInfo(symbol);
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, variableInfo);
+
+    // тип (выведенный)
+    var typesInfo = getInferredTypes(symbol);
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, typesInfo);
 
     // местоположение переменной
     var location = descriptionFormatter.getLocation(symbol);
@@ -85,6 +96,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     return SymbolKind.Variable;
   }
 
+  @Override
+  public Class<? extends Symbol> getSymbolClass() {
+    return VariableSymbol.class;
+  }
+
   private String getVariableInfo(VariableSymbol symbol) {
     return switch (symbol.getKind()) {
       case GLOBAL -> getResourceString("globalVariable");
@@ -99,6 +115,38 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
 
   private String getResourceString(String key) {
     return resources.getResourceString(getClass(), key);
+  }
+
+  private String getInferredTypes(VariableSymbol symbol) {
+    TypeSet types = typeService.findTypes(symbol);
+    if (types.isEmpty()) {
+      return "";
+    }
+    String joined = types.refs().stream()
+      .map(ref -> renderRef(types, ref))
+      .collect(Collectors.joining(" | "));
+    return "%s: %s".formatted(getResourceString(TYPE_KEY), joined);
+  }
+
+  private static String renderRef(TypeSet owner, TypeRef ref) {
+    var name = ref.qualifiedName();
+    var elementTypes = owner.getElementTypes(ref);
+    if (!elementTypes.isEmpty()) {
+      var elemJoined = elementTypes.refs().stream()
+        .map(r -> renderRef(elementTypes, r))
+        .collect(Collectors.joining(", "));
+      name = name + " из " + elemJoined;
+    }
+    var fields = owner.getLocalFields(ref);
+    if (!fields.isEmpty()) {
+      var fieldsJoined = fields.entrySet().stream()
+        .map(e -> e.getKey() + ": " + e.getValue().refs().stream()
+          .map(r -> renderRef(e.getValue(), r))
+          .collect(Collectors.joining(" | ")))
+        .collect(Collectors.joining(", "));
+      name = name + " { " + fieldsJoined + " }";
+    }
+    return name;
   }
 
 }

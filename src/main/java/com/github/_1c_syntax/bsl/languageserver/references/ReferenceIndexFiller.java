@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
@@ -80,6 +81,7 @@ public class ReferenceIndexFiller {
 
   private final ReferenceIndex index;
   private final LanguageServerConfiguration configuration;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -137,6 +139,7 @@ public class ReferenceIndexFiller {
 
       var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
+        tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
         return super.visitCallStatement(ctx);
       }
 
@@ -152,6 +155,7 @@ public class ReferenceIndexFiller {
     public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
       var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
+        tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
         return super.visitComplexIdentifier(ctx);
       }
 
@@ -201,6 +205,8 @@ public class ReferenceIndexFiller {
         return super.visitNewExpression(ctx);
       }
 
+      tryRegisterLibraryClassReference(ctx);
+
       return super.visitNewExpression(ctx);
     }
 
@@ -230,6 +236,76 @@ public class ReferenceIndexFiller {
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
       }
+    }
+
+    /**
+     * Если в выражении {@code Новый MyClass(...)} имя типа соответствует
+     * зарегистрированному OneScript library-классу, регистрирует ссылку на
+     * .os-файл класса по позиции идентификатора имени типа.
+     */
+    private void tryRegisterLibraryClassReference(BSLParser.NewExpressionContext ctx) {
+      var typeName = ctx.typeName();
+      if (typeName == null || typeName.IDENTIFIER() == null) {
+        return;
+      }
+      var name = typeName.IDENTIFIER().getText();
+      var libUri = oScriptLibraryIndex.findClassUri(name);
+      if (libUri.isEmpty()) {
+        return;
+      }
+      index.addModuleReference(
+        documentContext.getUri(),
+        libUri.get().toString(),
+        actualLibraryModuleType(libUri.get(), ModuleType.OScriptClass),
+        Ranges.create(typeName.IDENTIFIER())
+      );
+    }
+
+    /**
+     * Если идентификатор соответствует имени зарегистрированного OneScript
+     * library-модуля, регистрирует:
+     * <ul>
+     *   <li>ссылку на сам идентификатор модуля (go-to-definition на имени модуля),</li>
+     *   <li>если в выражении присутствует вызов метода — ссылку на метод по его позиции.</li>
+     * </ul>
+     */
+    private void tryRegisterLibraryModuleCall(@Nullable TerminalNode identifier, Optional<Token> methodName) {
+      if (identifier == null) {
+        return;
+      }
+      var libUri = oScriptLibraryIndex.findModuleUri(identifier.getText());
+      if (libUri.isEmpty()) {
+        return;
+      }
+      var libMdoRef = libUri.get().toString();
+      var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptModule);
+
+      // Ссылка на сам identifier модуля — нужна для go-to-definition без точки.
+      index.addModuleReference(
+        documentContext.getUri(),
+        libMdoRef,
+        moduleType,
+        Ranges.create(identifier)
+      );
+
+      if (methodName.isPresent()) {
+        var methodNameToken = methodName.get();
+        addMethodCall(libMdoRef, moduleType, Strings.trimQuotes(methodNameToken.getText()),
+          Ranges.create(methodNameToken));
+      }
+    }
+
+    /**
+     * Возвращает фактический {@link ModuleType} документа библиотечного .os-файла.
+     * Один .os может быть зарегистрирован одновременно и как класс, и как модуль
+     * (см. {@link OScriptLibraryIndex}); чтобы ссылка корректно резолвилась через
+     * {@code ServerContext.getDocument(mdoRef, moduleType)}, используем тип
+     * фактически загруженного {@link DocumentContext}, а не «теоретический»
+     * тип из роли регистрации.
+     */
+    private ModuleType actualLibraryModuleType(java.net.URI libUri, ModuleType fallback) {
+      var dc = documentContext.getServerContext().getDocument(libUri);
+      return dc != null ? dc.getModuleType() : fallback;
     }
 
     /**
@@ -318,6 +394,8 @@ public class ReferenceIndexFiller {
     @SuppressWarnings("NullAway.Init")
     private @Nullable SourceDefinedSymbol currentScope;
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
+    /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
+    private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
 
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext) {
       this.documentContext = documentContext;
@@ -377,6 +455,9 @@ public class ReferenceIndexFiller {
         // Если переменной нет на уровне модуля - это локальная переменная, удаляем mapping
         return moduleVariable.isEmpty();
       });
+      variableToLibraryClassUriMap.keySet().removeIf((String variableKey) ->
+        moduleSymbolTree.getVariableSymbol(variableKey, module).isEmpty()
+      );
     }
 
     @Override
@@ -392,7 +473,11 @@ public class ReferenceIndexFiller {
 
       if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
         var variableKey = lValue.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH);
-        if (ModuleReference.isCommonModuleExpression(expression, parsedAccessors)) {
+        var libClassUri = extractLibraryClassUriFromExpression(expression);
+        if (libClassUri != null) {
+          variableToLibraryClassUriMap.put(variableKey, libClassUri);
+          variableToCommonModuleMap.remove(variableKey);
+        } else if (ModuleReference.isCommonModuleExpression(expression, parsedAccessors)) {
           var commonModuleOpt = ModuleReference.extractCommonModuleName(expression, parsedAccessors)
             .flatMap(moduleName -> documentContext.getServerContext()
               .getConfiguration()
@@ -404,13 +489,42 @@ public class ReferenceIndexFiller {
             // Модуль не найден - удаляем старый mapping если был
             variableToCommonModuleMap.remove(variableKey);
           }
+          variableToLibraryClassUriMap.remove(variableKey);
         } else {
           // Переменная переназначена на что-то другое - очищаем mapping
           variableToCommonModuleMap.remove(variableKey);
+          variableToLibraryClassUriMap.remove(variableKey);
         }
       }
 
       return super.visitAssignment(ctx);
+    }
+
+    /**
+     * Если выражение представляет собой {@code Новый MyLibClass(...)}, где
+     * {@code MyLibClass} зарегистрирован как OneScript library-класс, возвращает
+     * URI .os-файла этого класса в виде строки.
+     */
+    private @Nullable String extractLibraryClassUriFromExpression(BSLParser.ExpressionContext expression) {
+      var members = expression.member();
+      if (members == null || members.isEmpty()) {
+        return null;
+      }
+      var complexId = members.get(0).complexIdentifier();
+      if (complexId == null) {
+        return null;
+      }
+      var newExpression = complexId.newExpression();
+      if (newExpression == null) {
+        return null;
+      }
+      var typeName = newExpression.typeName();
+      if (typeName == null || typeName.IDENTIFIER() == null) {
+        return null;
+      }
+      return oScriptLibraryIndex.findClassUri(typeName.IDENTIFIER().getText())
+        .map(java.net.URI::toString)
+        .orElse(null);
     }
 
     @Override
@@ -440,9 +554,10 @@ public class ReferenceIndexFiller {
       }
 
       var variableName = ctx.IDENTIFIER().getText();
+      var variableKey = variableName.toLowerCase(Locale.ENGLISH);
 
       // Check if variable references a common module
-      var commonModuleMdoRef = variableToCommonModuleMap.get(variableName.toLowerCase(Locale.ENGLISH));
+      var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
 
       if (commonModuleMdoRef != null) {
         // Process method calls on the common module variable
@@ -452,6 +567,16 @@ public class ReferenceIndexFiller {
         }
         if (ctx.accessCall() != null) {
           processCommonModuleAccessCall(ctx.accessCall(), commonModuleMdoRef);
+        }
+      }
+
+      var libClassUri = variableToLibraryClassUriMap.get(variableKey);
+      if (libClassUri != null) {
+        if (!ctx.modifier().isEmpty()) {
+          processLibraryClassMethodCalls(ctx.modifier(), libClassUri);
+        }
+        if (ctx.accessCall() != null) {
+          processLibraryClassAccessCall(ctx.accessCall(), libClassUri);
         }
       }
 
@@ -470,6 +595,7 @@ public class ReferenceIndexFiller {
       }
 
       var variableName = ctx.IDENTIFIER().getText();
+      var variableKey = variableName.toLowerCase(Locale.ENGLISH);
 
       // Check if we are inside a callStatement - if so, skip processing here to avoid duplication
       var parentCallStatement = Trees.getRootParent(ctx, BSLParser.RULE_callStatement);
@@ -480,10 +606,15 @@ public class ReferenceIndexFiller {
       }
 
       // Check if variable references a common module
-      var commonModuleMdoRef = variableToCommonModuleMap.get(variableName.toLowerCase(Locale.ENGLISH));
+      var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
       if (commonModuleMdoRef != null && !ctx.modifier().isEmpty() && !isInsideCallStatement) {
         // Process method calls on the common module variable
         processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
+      }
+
+      var libClassUri = variableToLibraryClassUriMap.get(variableKey);
+      if (libClassUri != null && !ctx.modifier().isEmpty() && !isInsideCallStatement) {
+        processLibraryClassMethodCalls(ctx.modifier(), libClassUri);
       }
 
       findVariableSymbol(variableName)
@@ -602,6 +733,31 @@ public class ReferenceIndexFiller {
             documentContext.getUri(),
             mdoRef,
             ModuleType.CommonModule,
+            methodNameToken.getText(),
+            Ranges.create(methodNameToken)
+          );
+        }
+      }
+    }
+
+    private void processLibraryClassMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String libClassUri) {
+      for (var modifier : modifiers) {
+        var accessCall = modifier.accessCall();
+        if (accessCall != null) {
+          processLibraryClassAccessCall(accessCall, libClassUri);
+        }
+      }
+    }
+
+    private void processLibraryClassAccessCall(BSLParser.AccessCallContext accessCall, String libClassUri) {
+      var methodCall = accessCall.methodCall();
+      if (methodCall != null && methodCall.methodName() != null) {
+        var methodNameToken = methodCall.methodName().IDENTIFIER();
+        if (methodNameToken != null) {
+          index.addMethodCall(
+            documentContext.getUri(),
+            libClassUri,
+            ModuleType.OScriptClass,
             methodNameToken.getText(),
             Ranges.create(methodNameToken)
           );

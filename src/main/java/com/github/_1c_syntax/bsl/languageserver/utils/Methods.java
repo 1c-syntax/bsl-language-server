@@ -51,8 +51,10 @@ public class Methods {
     Optional<Token> methodName;
     if (ctx.globalMethodCall() != null) {
       methodName = getMethodName(ctx.globalMethodCall());
-    } else {
+    } else if (ctx.accessCall() != null) {
       methodName = getMethodName(ctx.accessCall());
+    } else {
+      methodName = Optional.empty();
     }
 
     if (modifiers.isEmpty()) {

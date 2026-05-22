@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -86,6 +87,11 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   @Override
   public SymbolKind getSymbolKind() {
     return SymbolKind.Method;
+  }
+
+  @Override
+  public Class<? extends Symbol> getSymbolClass() {
+    return MethodSymbol.class;
   }
 
 }

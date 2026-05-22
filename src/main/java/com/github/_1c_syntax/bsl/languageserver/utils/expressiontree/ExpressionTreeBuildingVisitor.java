@@ -76,6 +76,118 @@ public final class ExpressionTreeBuildingVisitor extends BSLParserBaseVisitor<Pa
   }
 
   /**
+   * Хелпер построения дерева выражения на основе AST «сложного идентификатора»
+   * вне контекста выражения (например, в составе callStatement —
+   * {@code Объект.Метод();} или {@code Идентификатор.Свойство = …}, левая часть).
+   *
+   * @param ctx AST complexIdentifier
+   * @return дерево вычисления выражения
+   */
+  public static @Nullable BslExpression buildExpressionTree(BSLParser.@Nullable ComplexIdentifierContext ctx) {
+    if (ctx == null) {
+      return null;
+    }
+    var instance = new ExpressionTreeBuildingVisitor();
+    instance.recursionLevel = 0;
+    instance.visitComplexIdentifier(ctx);
+    if (!instance.operands.isEmpty()) {
+      var operand = instance.operands.pop();
+      if (operand.getRepresentingAst() == null) {
+        operand.setRepresentingAst(ctx);
+      }
+      instance.resultExpression = operand;
+    }
+    return instance.getExpressionTree();
+  }
+
+  /**
+   * Хелпер построения дерева выражения для lValue — левой части присваивания
+   * {@code Объект.Свойство = …}. Грамматика:
+   * {@code lValue : (IDENTIFIER | globalMethodCall) acceptor?;
+   *  acceptor   : modifier* (accessProperty | accessIndex);}
+   *
+   * <p>В отличие от {@code complexIdentifier}, lValue — отдельная продукция и не
+   * накрывается ни {@code expression}, ни {@code complexIdentifier}, поэтому позиционный
+   * lookup в {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition}
+   * нуждается в отдельном fallback'е именно на этот контекст.
+   *
+   * @param ctx AST lValue
+   * @return дерево вычисления выражения (как правило — DEREFERENCE)
+   */
+  public static @Nullable BslExpression buildExpressionTree(BSLParser.@Nullable LValueContext ctx) {
+    if (ctx == null) {
+      return null;
+    }
+    var instance = new ExpressionTreeBuildingVisitor();
+    instance.recursionLevel = 0;
+    if (ctx.IDENTIFIER() != null) {
+      instance.operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
+    } else if (ctx.globalMethodCall() != null) {
+      instance.visitGlobalMethodCall(ctx.globalMethodCall());
+    } else {
+      return null;
+    }
+    var acceptor = ctx.acceptor();
+    if (acceptor != null) {
+      for (var modifier : acceptor.modifier()) {
+        modifier.accept(instance);
+      }
+      if (acceptor.accessProperty() != null) {
+        instance.visitAccessProperty(acceptor.accessProperty());
+      } else if (acceptor.accessIndex() != null) {
+        instance.visitAccessIndex(acceptor.accessIndex());
+      }
+    }
+    if (!instance.operands.isEmpty()) {
+      var operand = instance.operands.pop();
+      if (operand.getRepresentingAst() == null) {
+        operand.setRepresentingAst(ctx);
+      }
+      instance.resultExpression = operand;
+    }
+    return instance.getExpressionTree();
+  }
+
+  /**
+   * Хелпер построения дерева выражения для callStatement —
+   * {@code Объект.Метод();} как отдельное утверждение. В BSL grammar
+   * callStatement не оборачивается в {@code complexIdentifier},
+   * а имеет собственную продукцию
+   * {@code (IDENTIFIER | globalMethodCall) modifier* accessCall}.
+   *
+   * @param ctx AST callStatement
+   * @return дерево вычисления выражения (как правило — DEREFERENCE)
+   */
+  public static @Nullable BslExpression buildExpressionTree(BSLParser.@Nullable CallStatementContext ctx) {
+    if (ctx == null) {
+      return null;
+    }
+    var instance = new ExpressionTreeBuildingVisitor();
+    instance.recursionLevel = 0;
+    if (ctx.IDENTIFIER() != null) {
+      instance.operands.push(TerminalSymbolNode.identifier(ctx.IDENTIFIER()));
+    } else if (ctx.globalMethodCall() != null) {
+      instance.visitGlobalMethodCall(ctx.globalMethodCall());
+    } else {
+      return null;
+    }
+    for (var modifier : ctx.modifier()) {
+      modifier.accept(instance);
+    }
+    if (ctx.accessCall() != null) {
+      instance.visitAccessCall(ctx.accessCall());
+    }
+    if (!instance.operands.isEmpty()) {
+      var operand = instance.operands.pop();
+      if (operand.getRepresentingAst() == null) {
+        operand.setRepresentingAst(ctx);
+      }
+      instance.resultExpression = operand;
+    }
+    return instance.getExpressionTree();
+  }
+
+  /**
    * @return результирующее выражение в виде дерева вычисления операций
    */
   public @Nullable BslExpression getExpressionTree() {

@@ -45,6 +45,7 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -57,6 +58,7 @@ import java.util.Optional;
  * и находит ссылки на методы, указанные в них.
  */
 @Component
+@Order(180)
 @RequiredArgsConstructor
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
@@ -117,7 +119,8 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    var documentContext = serverContextProvider.getDocument(uri).orElse(null);
+    // Горячий путь — без захвата RWLock на ServerContext.
+    var documentContext = serverContextProvider.getDocumentNoLock(uri).orElse(null);
     if (documentContext == null || documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }

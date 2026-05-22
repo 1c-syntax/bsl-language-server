@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.ColorProviderOptions;
+import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
@@ -61,6 +62,7 @@ import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensServerFull;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
+import org.eclipse.lsp4j.SignatureHelpOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -134,6 +136,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentLinkProvider(getDocumentLinkProvider());
     capabilities.setWorkspaceSymbolProvider(getWorkspaceProvider());
     capabilities.setHoverProvider(getHoverProvider());
+    capabilities.setCompletionProvider(getCompletionProvider());
+    capabilities.setSignatureHelpProvider(getSignatureHelpProvider());
     capabilities.setDocumentHighlightProvider(getDocumentHighlightProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
@@ -336,6 +340,20 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var hoverOptions = new HoverOptions();
     hoverOptions.setWorkDoneProgress(Boolean.FALSE);
     return hoverOptions;
+  }
+
+  private static CompletionOptions getCompletionProvider() {
+    var completionOptions = new CompletionOptions();
+    completionOptions.setResolveProvider(Boolean.FALSE);
+    completionOptions.setTriggerCharacters(List.of("."));
+    return completionOptions;
+  }
+
+  private static SignatureHelpOptions getSignatureHelpProvider() {
+    var signatureHelpOptions = new SignatureHelpOptions();
+    signatureHelpOptions.setTriggerCharacters(List.of("(", ","));
+    signatureHelpOptions.setRetriggerCharacters(List.of(","));
+    return signatureHelpOptions;
   }
 
   private static DocumentHighlightOptions getDocumentHighlightProvider() {

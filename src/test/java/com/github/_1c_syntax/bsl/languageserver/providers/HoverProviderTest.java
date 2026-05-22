@@ -95,4 +95,170 @@ class HoverProviderTest {
     assertThat(hover.getRange()).isEqualTo(Ranges.create(6, 10, 20));
   }
 
+  @Test
+  void hoverOnMemberInRhsDereferenceWorks() {
+    // Контрольная точка: dereference в RHS (правой части присваивания) — hover должен работать.
+    var content = """
+      ТЗ = Новый ТаблицаЗначений;
+      Х = ТЗ.Колонки;
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «Колонки» в `ТЗ.Колонки`
+    params.setPosition(new Position(1, 9));
+
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+    assertThat(optionalHover)
+      .as("hover на .Колонки в RHS должен резолвиться через PlatformMemberReferenceFinder")
+      .isPresent();
+  }
+
+  @Test
+  void hoverOnDereferencedPropertyMustNotMatchSameNameLocalVariable() {
+    // Регрессия: правая часть dereference `Контейнер.Поле` — это имя свойства, а не bare-identifier.
+    // ReferenceIndex не должен ловить эту позицию как ссылку на локальную переменную с таким же именем,
+    // объявленную выше в файле. Иначе hover/goto показывают «фантом» — попадание на переменную,
+    // тогда как реальная цель — property типа.
+    var content = """
+      ИсточникДанных = "что-то";
+      НаборДанных = Новый Структура;
+      НаборДанных.ИсточникДанных = "ИсточникДанных1";
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на втором (правом) `ИсточникДанных` — в позиции accessProperty
+    var line = "НаборДанных.ИсточникДанных = \"ИсточникДанных1\";";
+    var col = line.indexOf("ИсточникДанных", line.indexOf('.')) + 3;
+    params.setPosition(new Position(2, col));
+
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+    if (optionalHover.isPresent()) {
+      // Если hover есть — он должен указывать на свойство (Property symbol), а не на переменную.
+      var range = optionalHover.get().getRange();
+      var refLine = line.substring(range.getStart().getCharacter(), range.getEnd().getCharacter());
+      assertThat(refLine)
+        .as("hover в dereference-позиции не должен резолвиться на bare variable `%s` сверху файла",
+          "ИсточникДанных")
+        .isNotNull();
+      var content2 = optionalHover.get().getContents().getRight().getValue();
+      // Признак «фантомного» попадания в переменную — наличие ссылки [file://...] на исходник,
+      // характерной для variable markup builder.
+      assertThat(content2)
+        .as("содержимое hover не должно быть variable-markup'ом (с file:// ссылкой на собственную декларацию)")
+        .doesNotContain("file:");
+    }
+  }
+
+  @Test
+  void hoverOnMemberInLvalueAssignmentTarget() {
+    // Регрессия: dereference в LHS присваивания (lValue) — hover должен резолвиться так же,
+    // как в RHS. ExpressionAtPosition.findExpressionTree сейчас не покрывает lValue,
+    // поэтому findMemberAt возвращает пусто на `ИсточникДанных.Имя = …`.
+    var content = """
+      СхемаКомпоновкиДанных = Новый СхемаКомпоновкиДанных;
+      ИсточникДанных = СхемаКомпоновкиДанных.ИсточникиДанных.Добавить();
+      ИсточникДанных.Имя = "ИсточникДанных1";
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    HoverParams params = new HoverParams();
+    // курсор на «Имя» в строке `ИсточникДанных.Имя = …`
+    params.setPosition(new Position(2, 17));
+
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+    assertThat(optionalHover)
+      .as("hover на .Имя в lValue должен показывать описание PROPERTY типа ИсточникДанныхСхемыКомпоновкиДанных")
+      .isPresent();
+  }
+
+  @Test
+  void hoverOnIdentifierWithoutReferenceReturnsEmpty() {
+    // given — идентификатор, который не зарегистрирован нигде.
+    var content = "СовершенноНеизвестныйСимволXYZ;\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 5));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then — ни keyword-hover, ни reference-hover не сработали.
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnPunctuationReturnsEmpty() {
+    // given — курсор на точке с запятой.
+    var content = "А = 1;\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 6));  // на ';'
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnEmptyDocumentReturnsEmpty() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("");
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 0));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnNumericLiteralReturnsEmpty() {
+    // given — курсор на числовом литерале.
+    var content = "А = 12345;\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 5));  // на 12345
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then — числовой токен фильтруется isKeywordToken (L126).
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnStringLiteralReturnsEmpty() {
+    // given — курсор внутри строкового литерала.
+    var content = "А = \"строка\";\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 6));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(hover).isEmpty();
+  }
+
+  @Test
+  void hoverOnDateLiteralReturnsEmpty() {
+    // given — курсор внутри даты-литерала.
+    var content = "А = '20200101';\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, 8));
+
+    // when
+    var hover = hoverProvider.getHover(documentContext, params);
+
+    // then — DATETIME токен не keyword.
+    assertThat(hover).isEmpty();
+  }
 }

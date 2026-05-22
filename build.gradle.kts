@@ -33,6 +33,7 @@ repositories {
     maven("https://central.sonatype.com/repository/maven-snapshots")
 }
 
+
 group = "io.github.1c-syntax"
 gitVersioning.apply {
     refs {
@@ -89,6 +90,7 @@ dependencies {
     api("io.github.1c-syntax:mdclasses:0.18.0")
     api("io.github.1c-syntax:bsl-common-library:0.10.0")
     api("io.github.1c-syntax:supportconf:0.16.0")
+    api("io.github.1c-syntax:bsl-context:0.3.0")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.0")
@@ -233,7 +235,7 @@ tasks.test {
     // Increase heap size to prevent OOM during test execution.
     // With CleanupContextBeforeClassAndAfterClass tests causing frequent Spring context reloads,
     // multiple contexts can be in memory simultaneously (old being GC'd while new is created).
-    // 3g gives enough headroom on GitHub Actions ubuntu-latest runners (7GB RAM, 1 fork).
+    // 3g gives enough headroom on GitHub Actions ubuntu-latest runners with 1 fork.
     maxHeapSize = "3g"
 
     // Параллельное выполнение тестов JUnit на уровне процессов (форков JVM).
@@ -245,11 +247,13 @@ tasks.test {
     //
     // Уровень параллелизма можно переопределить Gradle-свойством
     // `maxParallelForks` (например, `-PmaxParallelForks=4`). По умолчанию
-    // используется половина доступных процессоров, ограниченная диапазоном
-    // от 1 до 4, чтобы ограничить общий расход памяти (maxHeapSize по 2g
-    // на форк).
+    // на CI (env `CI=true` / `GITHUB_ACTIONS=true`) используется один форк,
+    // чтобы не упереться в OOM при `maxHeapSize=3g` на каждый форк.
+    // Локально — половина доступных процессоров, ограниченная диапазоном
+    // от 1 до 4.
+    val isCi = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
     maxParallelForks = (project.findProperty("maxParallelForks") as String?)?.toIntOrNull()
-        ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
+        ?: if (isCi) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath

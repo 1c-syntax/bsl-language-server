@@ -85,7 +85,8 @@ public class ServerContextProvider {
   /**
    * Добавить workspace по URI и создать для нее контекст сервера.
    *
-   * @param workspaceUri URI корня workspace
+   * @param workspaceUri нормализованный через {@link Absolute#uri(URI)} URI
+   *                     корня workspace
    * @return созданный контекст сервера
    */
   public ServerContext addWorkspace(URI workspaceUri) {
@@ -94,8 +95,13 @@ public class ServerContextProvider {
 
   /**
    * Добавить workspace по URI и создать для нее контекст сервера.
+   * <p>
+   * {@code workspaceUri} должен быть нормализован через
+   * {@link Absolute#uri(URI)} — иначе {@link #clear()} /
+   * {@link #removeWorkspace(WorkspaceFolder)} не смогут найти запись по
+   * ключу (они ищут через {@code Absolute.uri(...)} ещё раз).
    *
-   * @param workspaceUri URI корня workspace
+   * @param workspaceUri  нормализованный URI корня workspace
    * @param workspaceName имя workspace (если null — извлекается из URI)
    * @return созданный контекст сервера
    */
@@ -144,12 +150,22 @@ public class ServerContextProvider {
     var uri = Absolute.uri(workspaceFolder.getUri());
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
+
+    // serverContext.clear() публикует ServerContextDocumentRemovedEvent через AOP
+    // для каждого удалённого документа; подписчики (workspace-scoped — ReferenceIndexFiller,
+    // OScriptLibraryIndex, etc.) должны иметь возможность резолвиться. Поэтому событие должно
+    // отлететь ДО уничтожения scope, и в этом thread'е должен быть выставлен workspaceUri.
+    // Two-arg forUri используем, чтобы не требовать наличие URI в WORKSPACE_NAMES
+    // (для async-propagated workspace'ов запись там может отсутствовать).
+    if (serverContext != null) {
+      var name = extractWorkspaceName(uri);
+      try (var ctx = WorkspaceContextHolder.forUri(uri, name)) {
+        serverContext.clear();
+      }
+    }
+
     workspaceScope.removeWorkspace(uri);
     WorkspaceContextHolder.unregisterWorkspace(uri);
-
-    if (serverContext != null) {
-      serverContext.clear();
-    }
   }
 
   /**
@@ -231,6 +247,34 @@ public class ServerContextProvider {
   public Optional<DocumentContext> getDocument(URI uri) {
     return getServerContext(uri)
       .flatMap(ctx -> Optional.ofNullable(ctx.getDocument(uri)));
+  }
+
+  /**
+   * Получить документ по URI без захвата per-document RWLock.
+   * <p>
+   * Используется горячими путями инференции (reference finders, type
+   * inferencer), которые массово опрашивают документы во время
+   * {@code populateContext}. RWLock с queued writer'ом блокирует новых
+   * readers (fair-mode), что приводит к парку всех worker-потоков.
+   * <p>
+   * Безопасно для read-only-доступа: документы не пересоздаются, они
+   * обновляются in-place под write-lock'ом; чтение без лока даёт snapshot
+   * текущего AST/symbol-tree, что допустимо для type-инференции (та и без
+   * того eventually-consistent относительно правок пользователя).
+   */
+  public Optional<DocumentContext> getDocumentNoLock(URI uri) {
+    return getServerContext(uri)
+      .flatMap(ctx -> Optional.ofNullable(ctx.getDocumentNoLock(uri)));
+  }
+
+  /**
+   * То же, что {@link #getDocumentNoLock(URI)}, но с нормализацией.
+   * Аналог {@link #getDocumentUnsafe(URI)} для контекстов, где нельзя
+   * брать per-document RWLock (см. документацию к {@link #getDocumentNoLock(URI)}).
+   */
+  public Optional<DocumentContext> getDocumentUnsafeNoLock(URI uri) {
+    var normalizedUri = Absolute.uri(uri);
+    return getDocumentNoLock(normalizedUri);
   }
 
   /**

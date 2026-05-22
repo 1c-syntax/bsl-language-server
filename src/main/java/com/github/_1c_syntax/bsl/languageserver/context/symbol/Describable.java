@@ -33,7 +33,26 @@ import java.util.Optional;
 public interface Describable {
 
   /**
-   * @return Описание символа.
+   * @return Описание символа в форме, поставляемой {@code bsl-parser}'ом
+   *         (используется диагностиками, которые знают конкретные подтипы
+   *         {@code MethodDescription}/{@code VariableDescription} и т.п.).
    */
   Optional<? extends SourceDefinedSymbolDescription> getDescription();
+
+  /**
+   * Унифицированное представление описания символа: подходит для hover'а,
+   * completion'а и signature-help'а, не зависит от {@code bsl-parser}'ского
+   * AST. По умолчанию строится через {@link ParserSymbolDescriptionAdapter}
+   * поверх {@link #getDescription()}, что покрывает все BSL-doc-комментарии.
+   * Сущности без parser-описания (платформенные члены, oscript-библиотеки,
+   * MD-объекты конфигурации) переопределяют этот метод напрямую.
+   *
+   * @return унифицированное описание или {@link SymbolDescription#EMPTY}, если
+   *         описание отсутствует.
+   */
+  default SymbolDescription getSymbolDescription() {
+    return getDescription()
+      .<SymbolDescription>map(ParserSymbolDescriptionAdapter::of)
+      .orElse(SymbolDescription.EMPTY);
+  }
 }

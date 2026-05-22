@@ -29,8 +29,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Маркерная аннотация для теста, заставляющая сбросить контекст приложения
- * при инстанцировании тест-класса и после окончания работы каждого тест-метода.
+ * Маркерная аннотация для теста, заставляющая сбросить состояние workspace'а
+ * (ServerContextProvider, и через него — все workspace-scoped beans + index'ы,
+ * подписанные на {@code ServerContextDocumentRemovedEvent}) при инстанцировании
+ * тест-класса и после окончания работы каждого тест-метода.
+ *
+ * @param fullRefresh если {@code true}, дополнительно помечается ApplicationContext
+ *                    как dirty и Spring пересоздаёт ВСЕ singleton-bean'ы. Дорого
+ *                    (3–7 секунд на цикл, умножается на число тест-методов класса).
+ *                    Включать только когда тест-методы класса модифицируют
+ *                    singleton-state (например, {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}
+ *                    через {@code .update(...)} / {@code .setLanguage(...)}) и
+ *                    нуждаются в полной перезагрузке singleton'ов.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -39,4 +49,5 @@ import java.lang.annotation.Target;
   listeners = {DirtyContextBeforeClassAndAfterTestMethodTestExecutionListener.class}
 )
 public @interface CleanupContextBeforeClassAndAfterEachTestMethod {
+  boolean fullRefresh() default false;
 }

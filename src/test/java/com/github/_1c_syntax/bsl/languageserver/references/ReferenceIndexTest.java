@@ -32,10 +32,12 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -54,7 +56,7 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
   @BeforeEach
   void prepareServerContext() {
-    initServerContext(PATH_TO_METADATA);
+    initServerContextOnce(Path.of(PATH_TO_METADATA));
   }
 
   @Test
@@ -326,50 +328,66 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
     ;
   }
 
-  @Test
-  @DirtiesContext
-  void clearReferences() {
-    // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+  /**
+   * Тесты, мутирующие ReferenceIndex (addMethodCall, clearReferences). Чтобы
+   * мутации не попадали в read-only тесты внешнего класса (которые делят
+   * workspace через {@link #initServerContextOnce}), вынесены в @Nested и
+   * получают свежий workspace на каждый метод через
+   * {@link #initServerContext(Path)} (это сбрасывает флаг cleanupAfterClass).
+   */
+  @Nested
+  class MutatingTests {
 
-    var uri = documentContext.getUri();
-    var position = new Position(1, 10);
+    @BeforeEach
+    void freshWorkspace() {
+      initServerContext(Path.of(PATH_TO_METADATA));
+    }
 
-    // when
-    referenceIndex.clearReferences(documentContext.getUri());
+    @Test
+    @DirtiesContext
+    void clearReferences() {
+      // given
+      var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
-    // then
-    var reference = referenceIndex.getReference(uri, position);
+      var uri = documentContext.getUri();
+      var position = new Position(1, 10);
 
-    assertThat(reference).isEmpty();
-  }
+      // when
+      referenceIndex.clearReferences(documentContext.getUri());
 
-  @Test
-  @DirtiesContext
-  void crossWorkspaceIsolation() {
-    // given - workspace 1 is already initialized with PATH_TO_METADATA in @BeforeEach
-    // Manually add a reference to workspace 1's repos to verify isolation
-    var workspace1Uri = context.getDocuments().keySet().iterator().next();
-    referenceIndex.addMethodCall(
-      workspace1Uri, "CommonModule.TestModule", ModuleType.CommonModule, "TestMethod",
-      Ranges.create(0, 0, 10)
-    );
+      // then
+      var reference = referenceIndex.getReference(uri, position);
 
-    // Build the same Symbol key used for both workspaces
-    var symbolDto = com.github._1c_syntax.bsl.languageserver.references.model.Symbol.builder()
-      .mdoRef("CommonModule.TestModule")
-      .moduleType(ModuleType.CommonModule)
-      .scopeName("")
-      .symbolKind(SymbolKind.Method)
-      .symbolName("testmethod")
-      .build();
+      assertThat(reference).isEmpty();
+    }
 
-    // Workspace-scoped bean should contain the occurrence we just added
-    var occurrences = symbolOccurrenceRepository.getAllBySymbol(symbolDto);
-    assertThat(occurrences).hasSize(1);
+    @Test
+    @DirtiesContext
+    void crossWorkspaceIsolation() {
+      // given - workspace 1 is already initialized with PATH_TO_METADATA in @BeforeEach
+      // Manually add a reference to workspace 1's repos to verify isolation
+      var workspace1Uri = context.getDocuments().keySet().iterator().next();
+      referenceIndex.addMethodCall(
+        workspace1Uri, "CommonModule.TestModule", ModuleType.CommonModule, "TestMethod",
+        Ranges.create(0, 0, 10)
+      );
 
-    // Verify clearing works
-    referenceIndex.clearReferences(workspace1Uri);
-    assertThat(symbolOccurrenceRepository.getAllBySymbol(symbolDto)).isEmpty();
+      // Build the same Symbol key used for both workspaces
+      var symbolDto = com.github._1c_syntax.bsl.languageserver.references.model.Symbol.builder()
+        .mdoRef("CommonModule.TestModule")
+        .moduleType(ModuleType.CommonModule)
+        .scopeName("")
+        .symbolKind(SymbolKind.Method)
+        .symbolName("testmethod")
+        .build();
+
+      // Workspace-scoped bean should contain the occurrence we just added
+      var occurrences = symbolOccurrenceRepository.getAllBySymbol(symbolDto);
+      assertThat(occurrences).hasSize(1);
+
+      // Verify clearing works
+      referenceIndex.clearReferences(workspace1Uri);
+      assertThat(symbolOccurrenceRepository.getAllBySymbol(symbolDto)).isEmpty();
+    }
   }
 }

@@ -86,3 +86,4 @@ bsl-language-server_*.zip
 /.idea/material_theme_project_new.xml
 .bsl-ls-cache/
 __pycache__/
+.claude/

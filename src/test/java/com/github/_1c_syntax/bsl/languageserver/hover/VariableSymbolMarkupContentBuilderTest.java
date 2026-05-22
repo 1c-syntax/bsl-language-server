@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,7 +44,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
   @BeforeEach
   void prepareMetadataServerContext() {
-    initServerContext(TestUtils.PATH_TO_METADATA);
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
   }
 
   @Test
@@ -215,6 +216,23 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
 
       """);
     assertThat(blocks.get(2)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ObjectModule.bsl#\\d+\\)\n\n");
+  }
+
+  @Test
+  void testInferredTypeShownInHover() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем СтрокаПеременная;
+      СтрокаПеременная = "значение";
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = symbolTree.getVariableSymbol("СтрокаПеременная", symbolTree.getModule()).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    // then
+    assertThat(content).contains("Тип: Строка");
   }
 
 }

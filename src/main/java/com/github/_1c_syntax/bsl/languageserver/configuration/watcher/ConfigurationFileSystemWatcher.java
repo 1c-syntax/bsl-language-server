@@ -105,23 +105,65 @@ public class ConfigurationFileSystemWatcher {
 
   /**
    * Фоновая процедура, отслеживающая изменения файлов.
+   * <p>
+   * Java NIO {@code WatchService.register} для уже зарегистрированной директории
+   * возвращает <b>тот же</b> {@link WatchKey} (см. javadoc); поэтому
+   * {@link #globalWatchKey} и {@code workspaceWatchKeys.get(uri)} могут быть
+   * физически одним и тем же объектом, когда workspace LSC при init подтянул
+   * настройки из глобального файла и {@code configurationFile} workspace
+   * указывает на ту же директорию. В таком случае «два listener'а на один
+   * файл» нельзя реализовать через два независимых ключа: первый
+   * {@code pollEvents()} consume-ит события у другого.
+   * <p>
+   * Решение — диспатч по файлу: один проход по уникальным ключам, события
+   * каждого ключа распределяются между всеми заинтересованными listener'ами
+   * (global + workspace LSC, у которых файл совпадает с
+   * {@link LanguageServerConfiguration#getConfigurationFile()}).
    */
   @Scheduled(fixedDelay = 5000L)
   @Synchronized
   public void watch() {
-    // Watch global config
-    if (globalWatchKey != null) {
-      watchGlobalConfig();
+    var processedKeys = new java.util.IdentityHashMap<WatchKey, Path>();
+    if (globalWatchKey != null && globalRegisteredPath != null) {
+      processedKeys.putIfAbsent(globalWatchKey, globalRegisteredPath);
     }
-
-    // Watch per-workspace configs
     for (var entry : workspaceWatchKeys.entrySet()) {
-      var workspaceUri = entry.getKey();
-      var watchKey = entry.getValue();
-      WorkspaceContextHolder.run(workspaceUri, () ->
-        watchWorkspaceConfig(workspaceUri, watchKey)
-      );
+      var path = workspaceRegisteredPaths.get(entry.getKey());
+      if (path != null) {
+        processedKeys.putIfAbsent(entry.getValue(), path);
+      }
     }
+    processedKeys.forEach(this::pollAndDispatch);
+  }
+
+  private void pollAndDispatch(WatchKey key, Path registeredPath) {
+    long lastModified = 0L;
+    for (WatchEvent<?> watchEvent : key.pollEvents()) {
+      var context = (Path) watchEvent.context();
+      if (context == null) {
+        continue;
+      }
+      var file = new File(registeredPath.toFile(), context.toFile().getName());
+      if (file.lastModified() == lastModified && !ENTRY_DELETE.equals(watchEvent.kind())) {
+        continue;
+      }
+      lastModified = file.lastModified();
+      dispatch(file, watchEvent.kind());
+    }
+    key.reset();
+  }
+
+  private void dispatch(File file, WatchEvent.Kind<?> eventKind) {
+    if (isGlobalConfigurationFile(file)) {
+      listener.onGlobalChange(file, eventKind);
+    }
+    workspaceConfigurations.forEach((workspaceUri, configuration) ->
+      WorkspaceContextHolder.run(workspaceUri, () -> {
+        if (isWorkspaceConfigurationFile(file, configuration)) {
+          listener.onWorkspaceChange(file, eventKind, configuration, workspaceUri);
+        }
+      })
+    );
   }
 
   /**
@@ -172,49 +214,6 @@ public class ConfigurationFileSystemWatcher {
     }
     workspaceRegisteredPaths.remove(workspaceUri);
     workspaceConfigurations.remove(workspaceUri);
-  }
-
-  private void watchGlobalConfig() {
-    long lastModified = 0L;
-    for (WatchEvent<?> watchEvent : globalWatchKey.pollEvents()) {
-      var context = (Path) watchEvent.context();
-      if (context == null) {
-        continue;
-      }
-
-      var file = new File(globalRegisteredPath.toFile(), context.toFile().getName());
-      if (isGlobalConfigurationFile(file)
-        && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
-        lastModified = file.lastModified();
-        listener.onGlobalChange(file, watchEvent.kind());
-      }
-    }
-    globalWatchKey.reset();
-  }
-
-  private void watchWorkspaceConfig(URI workspaceUri, WatchKey watchKey) {
-    var registeredPath = workspaceRegisteredPaths.get(workspaceUri);
-    var configuration = workspaceConfigurations.get(workspaceUri);
-
-    if (registeredPath == null || configuration == null) {
-      return;
-    }
-
-    long lastModified = 0L;
-    for (WatchEvent<?> watchEvent : watchKey.pollEvents()) {
-      Path context = (Path) watchEvent.context();
-      if (context == null) {
-        continue;
-      }
-
-      var file = new File(registeredPath.toFile(), context.toFile().getName());
-      if (isWorkspaceConfigurationFile(file, configuration)
-        && (file.lastModified() != lastModified || watchEvent.kind().equals(ENTRY_DELETE))) {
-        lastModified = file.lastModified();
-        listener.onWorkspaceChange(file, watchEvent.kind(), configuration, workspaceUri);
-      }
-    }
-    watchKey.reset();
   }
 
   @SneakyThrows

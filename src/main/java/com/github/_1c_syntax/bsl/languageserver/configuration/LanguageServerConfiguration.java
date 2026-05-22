@@ -32,6 +32,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.Docum
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.formating.FormattingOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.oscript.OScriptOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -117,6 +119,14 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
 
+  @JsonProperty("oscript")
+  @Setter(value = AccessLevel.NONE)
+  private OScriptOptions oscriptOptions = new OScriptOptions();
+
+  @JsonProperty("platform")
+  @Setter(value = AccessLevel.NONE)
+  private V8PlatformOptions platformOptions = new V8PlatformOptions();
+
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
 
@@ -147,6 +157,22 @@ public class LanguageServerConfiguration {
   private String globalConfigPath = System.getProperty("user.home") + "/.bsl-language-server.json";
 
   /**
+   * Снимок состояния, сделанный в {@link #init()} ПОСЛЕ применения Spring-инициализации и
+   * чтения дефолтного конфиг-файла. Используется {@link #reset()} — он возвращает
+   * конфигурацию именно к этому состоянию, а не к голому {@code new LanguageServerConfiguration()}
+   * (у которого нет ни Spring-injected значений из {@code application.properties}, ни прочитанного
+   * с диска конфига).
+   * <p>
+   * Исключён из сериализации и из {@link #copyPropertiesFrom(LanguageServerConfiguration)} —
+   * snapshot принадлежит инстансу и не должен переноситься при импорте чужих свойств.
+   */
+  @JsonIgnore
+  @Getter(AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
+  @Nullable
+  private LanguageServerConfiguration initialSnapshot;
+
+  /**
    * Инициализация конфигурации при создании workspace-scoped бина.
    * Ищет конфиг-файл в workspace root, затем глобальный.
    */
@@ -154,6 +180,7 @@ public class LanguageServerConfiguration {
   void init() {
     var workspaceUri = WorkspaceContextHolder.get();
     if (workspaceUri == null) {
+      captureInitialSnapshot();
       return;
     }
 
@@ -162,6 +189,7 @@ public class LanguageServerConfiguration {
       workspaceRoot = Absolute.path(workspaceUri);
     } catch (RuntimeException e) {
       LOGGER.debug("Cannot resolve workspace path from URI: {}", workspaceUri, e);
+      captureInitialSnapshot();
       return;
     }
 
@@ -174,6 +202,7 @@ public class LanguageServerConfiguration {
     if (configFile.isFile()) {
       loadConfigurationFile(configFile);
       this.configurationFile = configFile;
+      captureInitialSnapshot();
       return;
     }
 
@@ -182,6 +211,7 @@ public class LanguageServerConfiguration {
     if (workspaceConfig.isFile()) {
       loadConfigurationFile(workspaceConfig);
       this.configurationFile = workspaceConfig;
+      captureInitialSnapshot();
       return;
     }
 
@@ -191,6 +221,21 @@ public class LanguageServerConfiguration {
       loadConfigurationFile(globalConfig);
       this.configurationFile = globalConfig;
     }
+    captureInitialSnapshot();
+  }
+
+  /**
+   * Сохранить snapshot текущего состояния как «инициализационный». Используется
+   * {@link #reset()} для возврата к этому состоянию.
+   * <p>
+   * Snapshot — новый инстанс {@link LanguageServerConfiguration} с независимыми
+   * nested options (благодаря {@code copyPropertiesFrom}, который копирует
+   * properties по значению через {@code PropertyUtils}).
+   */
+  private void captureInitialSnapshot() {
+    var snapshot = new LanguageServerConfiguration();
+    snapshot.copyPropertiesFrom(this);
+    this.initialSnapshot = snapshot;
   }
 
   /**
@@ -209,10 +254,19 @@ public class LanguageServerConfiguration {
   }
 
   /**
-   * Сбросить конфигурацию к значениям по умолчанию.
+   * Сбросить конфигурацию к Spring-инициализированным значениям по умолчанию.
+   * <p>
+   * Восстанавливает состояние, зафиксированное в {@link #init()} после применения
+   * Spring-инжектированных полей ({@code @Value}) и чтения дефолтного конфиг-файла.
+   * Не возвращает к голому {@code new LanguageServerConfiguration()} — это разрушило бы
+   * настройки, накаченные из {@code application.properties} и других bootstrap-источников.
    */
   public void reset() {
-    copyPropertiesFrom(new LanguageServerConfiguration());
+    var snapshot = initialSnapshot;
+    if (snapshot == null) {
+      snapshot = new LanguageServerConfiguration();
+    }
+    copyPropertiesFrom(snapshot);
     // Событие публикуется через EventPublisherAspect
   }
 

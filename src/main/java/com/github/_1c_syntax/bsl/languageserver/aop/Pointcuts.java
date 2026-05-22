@@ -118,6 +118,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это обращение к классу {@code OScriptLibraryIndex}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex)")
+  public void isOScriptLibraryIndex() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода rebuild.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* rebuild(..))")
@@ -202,6 +210,14 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* removeWorkspace(..))")
   public void isRemoveWorkspaceCall() {
+    // no-op
+  }
+
+  /**
+   * Это вызов метода reindex.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* reindex(..))")
+  public void isReindexCall() {
     // no-op
   }
 

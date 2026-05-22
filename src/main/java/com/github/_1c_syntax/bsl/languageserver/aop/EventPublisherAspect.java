@@ -38,6 +38,8 @@ import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceAddedEve
 import com.github._1c_syntax.bsl.languageserver.context.events.WorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -48,15 +50,18 @@ import org.aspectj.lang.annotation.Before;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Аспект подсистемы событий.
@@ -77,17 +82,23 @@ public class EventPublisherAspect {
   /**
    * Упорядоченное множество зарегистрированных Spring-контекстов (порядок вставки = порядок регистрации).
    * <p>
-   * При отмене регистрации одного контекста аспект переключается на первый оставшийся
-   * (т.е. на дефолтный кешируемый контекст, зарегистрированный первым).
+   * Используется для рассылки событий <em>во все</em> живые контексты — каждый контекст
+   * получает событие в своих собственных listener'ах и обновляет свои workspace-scoped бины.
+   * Контексты, в которых соответствующий workspace не зарегистрирован, просто обработают
+   * событие в своих singleton-листенерах, но workspace-scoped бины при этом не затронут
+   * чужое состояние (каждый контекст имеет собственную область видимости).
    * <p>
-   * {@code LinkedHashSet} обеспечивает детерминированный fallback через {@code iterator().next()}.
-   * Синхронизация выполняется явно методами {@code register}/{@code unregister}.
+   * Синхронизация чтения/записи — через {@code synchronized}-методы register/unregister
+   * и волатильную пере-публикацию ссылки на массив-снимок в {@link #snapshot}.
    */
   private final Set<ApplicationContext> registeredContexts = new LinkedHashSet<>();
 
-  private boolean active;
-  @SuppressWarnings("NullAway.Init")
-  private ApplicationEventPublisher applicationEventPublisher;
+  /**
+   * Иммутабельный снимок зарегистрированных контекстов для безлоковой рассылки событий.
+   * Перестраивается при каждом register/unregister.
+   */
+  private final AtomicReference<ApplicationContext[]> snapshot =
+    new AtomicReference<>(new ApplicationContext[0]);
 
   /**
    * Регистрирует Spring-контекст как источник событий.
@@ -97,31 +108,18 @@ public class EventPublisherAspect {
    */
   synchronized void register(ApplicationContext ctx) {
     registeredContexts.add(ctx);
-    applicationEventPublisher = ctx;
-    active = true;
+    snapshot.set(registeredContexts.toArray(new ApplicationContext[0]));
   }
 
   /**
    * Отменяет регистрацию Spring-контекста.
    * Вызывается из {@link EventPublisherAspectRegistration} при уничтожении каждого контекста.
-   * <p>
-   * Если после удаления остались другие контексты — аспект переключается на первый из них
-   * (дефолтный кешируемый). Если контекстов не осталось — аспект переходит в неактивное состояние.
    *
    * @param ctx контекст, регистрацию которого необходимо отменить
    */
   synchronized void unregister(ApplicationContext ctx) {
     registeredContexts.remove(ctx);
-    if (registeredContexts.isEmpty()) {
-      active = false;
-      applicationEventPublisher = null;
-    } else {
-      // Fallback на первый зарегистрированный оставшийся контекст.
-      // В рамках одного JVM-форка тесты выполняются последовательно, поэтому одновременно
-      // существуют не более двух контекстов: дефолтный (A) и @DirtiesContext (B).
-      // При закрытии B первым в множестве всегда остаётся A — результат детерминирован.
-      applicationEventPublisher = registeredContexts.iterator().next();
-    }
+    snapshot.set(registeredContexts.toArray(new ApplicationContext[0]));
   }
 
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
@@ -207,11 +205,123 @@ public class EventPublisherAspect {
     ));
   }
 
+  @AfterReturning(
+    pointcut = "Pointcuts.isOScriptLibraryIndex() && Pointcuts.isReindexCall() && args(serverContext)",
+    returning = "configs"
+  )
+  public void oscriptLibraryIndexed(JoinPoint joinPoint, ServerContext serverContext, List<Path> configs) {
+    publishEvent(new OScriptLibraryIndexedEvent(
+      (OScriptLibraryIndex) joinPoint.getThis(),
+      serverContext,
+      configs
+    ));
+  }
+
   private void publishEvent(ApplicationEvent event) {
-    if (!active || applicationEventPublisher == null) {
+    var contexts = snapshot.get();
+    if (contexts.length == 0) {
       LOGGER.warn("Trying to send event in not active event publisher.");
       return;
     }
-    applicationEventPublisher.publishEvent(event);
+    // Если установлен workspace-контекст, событие принадлежит конкретному
+    // workspace и должно идти только в Spring-контекст-владельца этого workspace.
+    // В тестах это критично: несколько Spring-контекстов с разными @SpringBootTest-
+    // конфигурациями висят в TestContext-кэше и зарегистрированы в JVM-singleton
+    // аспекте. Если рассылать во ВСЕ, listener'ы non-owning контекстов создают
+    // workspace-scoped beans под текущий WSCH-URI и затрагивают чужое состояние —
+    // в боевом сценарии это маловероятно (один LS = один контекст), но в тестах
+    // ломает соседние тест-классы. Когда WSCH не установлен (глобальные события
+    // вроде {@link GlobalLanguageServerConfigurationChangedEvent} или Initialize),
+    // рассылаем во все — у них нет workspace-привязки.
+    var owner = findOwningContext(contexts, event);
+    if (owner != null) {
+      try {
+        owner.publishEvent(event);
+      } catch (RuntimeException e) {
+        LOGGER.warn("Failed to publish event {} to owning context {}: {}", event, owner, e.toString());
+      }
+      return;
+    }
+    for (var ctx : contexts) {
+      try {
+        ctx.publishEvent(event);
+      } catch (RuntimeException e) {
+        LOGGER.warn("Failed to publish event {} to context {}: {}", event, ctx, e.toString());
+      }
+    }
+  }
+
+  /**
+   * Найти Spring-контекст, чей {@link ServerContextProvider} владеет источником
+   * события. Сначала пробуем матч по identity {@link ServerContext} (источник
+   * для большинства workspace-событий) — это надёжнее, чем по URI, потому что
+   * разные Spring-контексты могут зарегистрировать workspace с одним и тем же
+   * URI. Фолбэк — по URI из WorkspaceContextHolder. Возвращает {@code null},
+   * если владелец не определяется (тогда вызывающий рассылает во все контексты).
+   */
+  private static @Nullable ApplicationContext findOwningContext(
+    ApplicationContext[] contexts, ApplicationEvent event
+  ) {
+    var serverContext = extractServerContext(event);
+    if (serverContext != null) {
+      for (var ctx : contexts) {
+        try {
+          var provider = ctx.getBean(ServerContextProvider.class);
+          if (provider.getAllContexts().containsValue(serverContext)) {
+            return ctx;
+          }
+        } catch (RuntimeException ignored) {
+          // Бин может быть недоступен (контекст закрывается) — пропускаем.
+        }
+      }
+      // Если identity-матч не сработал (workspace уже удалён, контекст в процессе закрытия),
+      // не делаем фолбэка по URI: лучше отправить во все контексты (выше по стеку), чем
+      // случайно попасть в чужой контекст с тем же URI.
+      return null;
+    }
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      return null;
+    }
+    for (var ctx : contexts) {
+      try {
+        var provider = ctx.getBean(ServerContextProvider.class);
+        if (provider.getAllContexts().containsKey(workspaceUri)) {
+          return ctx;
+        }
+      } catch (RuntimeException ignored) {
+        // Бин может быть недоступен.
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Достать {@link ServerContext} из источника события, чтобы прокидывать
+   * routing по identity. {@code null} — у события нет привязки к конкретному
+   * ServerContext (глобальные события вроде Initialize, LSC).
+   */
+  private static @Nullable ServerContext extractServerContext(ApplicationEvent event) {
+    // События с source = ServerContext (DocumentAdded/Removed/Closed, Populated):
+    // ловим через instanceof ниже.
+    var src = event.getSource();
+    if (src instanceof DocumentContext documentContext) {
+      return documentContext.getServerContext();
+    }
+    if (src instanceof ServerContext serverContext) {
+      return serverContext;
+    }
+    // События workspace-жизненного цикла: source = ServerContextProvider, но они
+    // несут ServerContext в отдельном поле.
+    if (event instanceof WorkspaceAddedEvent addedWs) {
+      return addedWs.getServerContext();
+    }
+    if (event instanceof BeforeWorkspaceRemovedEvent beforeRemoved) {
+      return beforeRemoved.getServerContext();
+    }
+    if (event instanceof OScriptLibraryIndexedEvent indexed) {
+      return indexed.getServerContext();
+    }
+    return null;
   }
 }

@@ -1,0 +1,240 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.model;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+/**
+ * Неизменяемый, hash-stable union типов.
+ * <p>
+ * Используется как результат запроса типа выражения/символа: одно выражение
+ * может иметь несколько возможных типов (например, переменная присваивается
+ * в нескольких ветках разными значениями).
+ * <p>
+ * Дополнительно каждый {@link TypeRef} в наборе может быть «декорирован»
+ * сайтовой информацией, которая не является частью идентичности типа в
+ * {@link com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry},
+ * но важна для качества подсказок:
+ * <ul>
+ *   <li>{@code elementTypes} — типы элементов коллекции
+ *       ({@code Массив из СправочникСсылка.Товары});</li>
+ *   <li>{@code localFields} — поля «открытого» объекта данных
+ *       ({@code Структура} с известным набором ключей).</li>
+ * </ul>
+ * Декорации опциональны: пустые мапы означают «нет уточнений».
+ */
+public record TypeSet(
+  Set<TypeRef> refs,
+  Map<TypeRef, TypeSet> elementTypes,
+  Map<TypeRef, Map<String, TypeSet>> localFields
+) {
+
+  public static final TypeSet EMPTY = new TypeSet(Collections.emptySet());
+
+  public TypeSet {
+    refs = Collections.unmodifiableSet(new LinkedHashSet<>(refs));
+    elementTypes = elementTypes == null || elementTypes.isEmpty()
+      ? Collections.emptyMap()
+      : Collections.unmodifiableMap(new LinkedHashMap<>(elementTypes));
+    if (localFields == null || localFields.isEmpty()) {
+      localFields = Collections.emptyMap();
+    } else {
+      var copy = new LinkedHashMap<TypeRef, Map<String, TypeSet>>();
+      for (var entry : localFields.entrySet()) {
+        copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
+      }
+      localFields = Collections.unmodifiableMap(copy);
+    }
+  }
+
+  public TypeSet(Set<TypeRef> refs) {
+    this(refs, Collections.emptyMap(), Collections.emptyMap());
+  }
+
+  public static TypeSet of(TypeRef... refs) {
+    if (refs.length == 0) {
+      return EMPTY;
+    }
+    return new TypeSet(new LinkedHashSet<>(Arrays.asList(refs)));
+  }
+
+  public static TypeSet of(Collection<TypeRef> refs) {
+    if (refs.isEmpty()) {
+      return EMPTY;
+    }
+    return new TypeSet(new LinkedHashSet<>(refs));
+  }
+
+  public boolean isEmpty() {
+    return refs.isEmpty();
+  }
+
+  public int size() {
+    return refs.size();
+  }
+
+  /**
+   * @return объединение двух множеств типов; декорации (element/field) обоих
+   *         наборов сохраняются, при пересечении ref union-ятся per-key.
+   */
+  public TypeSet union(TypeSet other) {
+    if (other.isEmpty() && other.elementTypes.isEmpty() && other.localFields.isEmpty()) {
+      return this;
+    }
+    if (this.isEmpty() && this.elementTypes.isEmpty() && this.localFields.isEmpty()) {
+      return other;
+    }
+    var merged = new LinkedHashSet<>(this.refs);
+    merged.addAll(other.refs);
+
+    var mergedElements = new LinkedHashMap<>(this.elementTypes);
+    for (var entry : other.elementTypes.entrySet()) {
+      mergedElements.merge(entry.getKey(), entry.getValue(), TypeSet::union);
+    }
+
+    var mergedFields = new LinkedHashMap<TypeRef, Map<String, TypeSet>>();
+    for (var entry : this.localFields.entrySet()) {
+      mergedFields.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+    }
+    for (var entry : other.localFields.entrySet()) {
+      var existing = mergedFields.computeIfAbsent(entry.getKey(), k -> new LinkedHashMap<>());
+      for (var fieldEntry : entry.getValue().entrySet()) {
+        existing.merge(fieldEntry.getKey(), fieldEntry.getValue(), TypeSet::union);
+      }
+    }
+
+    return new TypeSet(merged, mergedElements, mergedFields);
+  }
+
+  public TypeSet add(TypeRef ref) {
+    var merged = new LinkedHashSet<>(this.refs);
+    merged.add(ref);
+    return new TypeSet(merged, this.elementTypes, this.localFields);
+  }
+
+  /**
+   * Прикрепить к указанному {@code ref} (который должен быть в наборе)
+   * информацию о типах элементов коллекции.
+   *
+   * @return новый {@link TypeSet}, идентичный текущему, но с дополненным
+   *         {@code elementTypes[ref]} (через {@link #union(TypeSet)}).
+   */
+  public TypeSet withElement(TypeRef ref, TypeSet element) {
+    Objects.requireNonNull(ref, "ref");
+    Objects.requireNonNull(element, "element");
+    if (element.isEmpty() && element.elementTypes.isEmpty() && element.localFields.isEmpty()) {
+      return this;
+    }
+    var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
+    var merged = new LinkedHashMap<>(this.elementTypes);
+    merged.merge(ref, element, TypeSet::union);
+    return new TypeSet(newRefs, merged, this.localFields);
+  }
+
+  /**
+   * Прикрепить к указанному {@code ref} одно поле «открытого» объекта данных.
+   *
+   * @return новый {@link TypeSet} с дополненным {@code localFields[ref][name]}.
+   */
+  public TypeSet withField(TypeRef ref, String name, TypeSet types) {
+    Objects.requireNonNull(ref, "ref");
+    Objects.requireNonNull(name, "name");
+    Objects.requireNonNull(types, "types");
+    var newRefs = this.refs.contains(ref) ? this.refs : addRef(ref);
+    var merged = new LinkedHashMap<TypeRef, Map<String, TypeSet>>();
+    for (var entry : this.localFields.entrySet()) {
+      merged.put(entry.getKey(), new LinkedHashMap<>(entry.getValue()));
+    }
+    var bucket = merged.computeIfAbsent(ref, k -> new LinkedHashMap<>());
+    bucket.merge(name, types, TypeSet::union);
+    return new TypeSet(newRefs, this.elementTypes, merged);
+  }
+
+  /**
+   * @return типы элементов коллекции для указанного {@code ref}, либо
+   *         {@link #EMPTY}.
+   */
+  public TypeSet getElementTypes(TypeRef ref) {
+    return elementTypes.getOrDefault(ref, EMPTY);
+  }
+
+  /**
+   * @return объединение типов элементов по всем коллекционным ref'ам в наборе.
+   */
+  public TypeSet getElementTypes() {
+    TypeSet acc = EMPTY;
+    for (var ts : elementTypes.values()) {
+      acc = acc.union(ts);
+    }
+    return acc;
+  }
+
+  /**
+   * @return поля «открытого» объекта для указанного {@code ref}, либо пустую
+   *         мапу.
+   */
+  public Map<String, TypeSet> getLocalFields(TypeRef ref) {
+    return localFields.getOrDefault(ref, Collections.emptyMap());
+  }
+
+  /**
+   * @return типы значения поля {@code name} по всем ref'ам, у которых это поле
+   *         объявлено; case-insensitive.
+   */
+  public TypeSet getFieldTypes(String name) {
+    TypeSet acc = EMPTY;
+    var lookup = name.toLowerCase(Locale.ROOT);
+    for (var fields : localFields.values()) {
+      for (var entry : fields.entrySet()) {
+        if (entry.getKey().toLowerCase(Locale.ROOT).equals(lookup)) {
+          acc = acc.union(entry.getValue());
+        }
+      }
+    }
+    return acc;
+  }
+
+  /**
+   * @return имена всех известных полей открытых объектов в наборе.
+   */
+  public Set<String> getAllFieldNames() {
+    var names = new LinkedHashSet<String>();
+    for (var fields : localFields.values()) {
+      names.addAll(fields.keySet());
+    }
+    return Collections.unmodifiableSet(names);
+  }
+
+  private Set<TypeRef> addRef(TypeRef ref) {
+    var copy = new LinkedHashSet<>(this.refs);
+    copy.add(ref);
+    return copy;
+  }
+}
