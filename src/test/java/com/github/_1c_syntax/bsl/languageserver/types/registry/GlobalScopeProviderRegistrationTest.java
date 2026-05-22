@@ -234,17 +234,21 @@ class GlobalScopeProviderRegistrationTest {
 
   @Test
   void getGlobalContextsFilteredByFileTypeRespectsScope() {
-    // given
-    var ref = new TypeRef(TypeKind.PLATFORM, "СОПТ_BslOnly");
-    scope.registerGlobalProperty(ref, List.of("СОПТ_BslOnly"), LanguageScope.BSL);
+    // given — два символа: один BSL-only, второй OS-only.
+    var bslRef = new TypeRef(TypeKind.PLATFORM, "СОПТ_BslOnly");
+    var osRef = new TypeRef(TypeKind.PLATFORM, "СОПТ_OsOnly");
+    scope.registerGlobalProperty(bslRef, List.of("СОПТ_BslOnly"), LanguageScope.BSL);
+    scope.registerGlobalProperty(osRef, List.of("СОПТ_OsOnly"), LanguageScope.OS);
 
     // when
-    var bslVisible = scope.getGlobalContexts(FileType.BSL);
-    var osVisible = scope.getGlobalContexts(FileType.OS);
+    var bslNames = scope.getGlobalContexts(FileType.BSL).stream()
+      .map(SyntheticSymbol::getName).toList();
+    var osNames = scope.getGlobalContexts(FileType.OS).stream()
+      .map(SyntheticSymbol::getName).toList();
 
-    // then
-    assertThat(bslVisible).extracting(SyntheticSymbol::getName).contains("СОПТ_BslOnly");
-    assertThat(osVisible).extracting(SyntheticSymbol::getName).doesNotContain("СОПТ_BslOnly");
+    // then — оба списка непустые, в каждом виден только «свой» символ.
+    assertThat(bslNames).contains("СОПТ_BslOnly").doesNotContain("СОПТ_OsOnly");
+    assertThat(osNames).contains("СОПТ_OsOnly").doesNotContain("СОПТ_BslOnly");
   }
 
   @Test
