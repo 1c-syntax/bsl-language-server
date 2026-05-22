@@ -163,6 +163,60 @@ class SignatureSelectionTest {
     assertThat(SignatureSelection.pickIndexByTypes(List.of(), List.of())).isEqualTo(-1);
   }
 
+  @Test
+  void pickIndexByTypesPenalizesMismatchedTypes() {
+    // given — две сигнатуры одинаковой arity с разными типами параметра.
+    var sigs = List.of(
+      signature(List.of(param("a", false, TypeSet.of(NUMBER)))),
+      signature(List.of(param("a", false, TypeSet.of(STRING))))
+    );
+
+    // when — передаём аргумент типа Строка: первая сигнатура (Число)
+    // получает -1 (несовместимость), вторая +1 → выбираем вторую.
+    int idx = SignatureSelection.pickIndexByTypes(sigs,
+      List.of(TypeSet.of(STRING)));
+
+    // then
+    assertThat(idx).isEqualTo(1);
+  }
+
+  @Test
+  void pickIndexByTypesTreatsAnyTypeAsCompatible() {
+    // given
+    var sigs = List.of(
+      signature(List.of(param("a", false, TypeSet.of(NUMBER))))
+    );
+
+    // when — аргумент типа ANY → совместим с любым параметром.
+    int idx = SignatureSelection.pickIndexByTypes(sigs,
+      List.of(TypeSet.of(TypeRef.ANY)));
+
+    // then
+    assertThat(idx).isZero();
+  }
+
+  @Test
+  void pickIndexByActiveParameterEmptySignaturesReturnsZero() {
+    // when / then
+    assertThat(SignatureSelection.pickIndexByActiveParameter(List.of(), 0)).isZero();
+    assertThat(SignatureSelection.pickIndexByActiveParameter(List.of(), 5)).isZero();
+  }
+
+  @Test
+  void pickIndexByActiveParameterFallsBackToLargestSignature() {
+    // given — все сигнатуры имеют меньше параметров чем activeParameter.
+    var sigs = List.of(
+      signature(List.of(param("a", false))),
+      signature(List.of(param("a", false), param("b", false)))
+    );
+
+    // when
+    int idx = SignatureSelection.pickIndexByActiveParameter(sigs, 10);
+
+    // then — выбран вариант с наибольшим числом параметров.
+    assertThat(idx).isEqualTo(1);
+  }
+
   // === helpers ===
 
   private static ParameterDescriptor param(String name, boolean optional) {
