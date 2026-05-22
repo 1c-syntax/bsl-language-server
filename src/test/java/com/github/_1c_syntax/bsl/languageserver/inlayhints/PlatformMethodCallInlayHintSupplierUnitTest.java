@@ -60,7 +60,7 @@ class PlatformMethodCallInlayHintSupplierUnitTest {
 
   @BeforeEach
   void setUp() {
-    supplier = new PlatformMethodCallInlayHintSupplier(typeService, configuration, resources);
+    supplier = new PlatformMethodCallInlayHintSupplier(configuration, typeService, resources);
   }
 
   @Test
