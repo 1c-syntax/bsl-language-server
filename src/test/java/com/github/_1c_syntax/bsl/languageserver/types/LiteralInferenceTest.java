@@ -113,6 +113,12 @@ class LiteralInferenceTest extends AbstractServerContextAwareTest {
       .containsExactly("Число");
   }
 
+  @Test
+  void floatLiteralIsNumber() {
+    assertThat(qnames(at("ДробноеЧисло = 12.345", "ДробноеЧисло = ".length())))
+      .containsExactly("Число");
+  }
+
   private TypeSet at(String marker, int offsetInMarker) {
     var documentContext = doc();
     var content = documentContext.getContent();
