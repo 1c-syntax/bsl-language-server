@@ -22,6 +22,8 @@ com.github._1c_syntax.bsl.languageserver.configuration.documentlink
 com.github._1c_syntax.bsl.languageserver.configuration.events
 com.github._1c_syntax.bsl.languageserver.configuration.formating
 com.github._1c_syntax.bsl.languageserver.configuration.inlayhints
+com.github._1c_syntax.bsl.languageserver.configuration.oscript
+com.github._1c_syntax.bsl.languageserver.configuration.platform
 com.github._1c_syntax.bsl.languageserver.configuration.references
 com.github._1c_syntax.bsl.languageserver.configuration.semantictokens
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
@@ -55,6 +57,15 @@ com.github._1c_syntax.bsl.languageserver.reporters.databind
 com.github._1c_syntax.bsl.languageserver.reporters.infrastructure
 com.github._1c_syntax.bsl.languageserver.semantictokens
 com.github._1c_syntax.bsl.languageserver.semantictokens.strings
+com.github._1c_syntax.bsl.languageserver.types
+com.github._1c_syntax.bsl.languageserver.types.index
+com.github._1c_syntax.bsl.languageserver.types.inferencer
+com.github._1c_syntax.bsl.languageserver.types.model
+com.github._1c_syntax.bsl.languageserver.types.oscript
+com.github._1c_syntax.bsl.languageserver.types.registry
+com.github._1c_syntax.bsl.languageserver.types.scope
+com.github._1c_syntax.bsl.languageserver.types.symbol
+com.github._1c_syntax.bsl.languageserver.types.util
 com.github._1c_syntax.bsl.languageserver.utils
 com.github._1c_syntax.bsl.languageserver.utils.bsl
 com.github._1c_syntax.bsl.languageserver.utils.expressiontree
