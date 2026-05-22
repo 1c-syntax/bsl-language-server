@@ -181,6 +181,19 @@ class ExpressionTreeBuildingVisitorTest {
   }
 
   @Test
+  void buildExpressionTreeFromParenthesisExpression() {
+    // given — (1 + 2)
+    var expression = parseIfCondition("(1 + 2)");
+    var visitor = new ExpressionTreeBuildingVisitor();
+
+    // when
+    visitor.visitExpression(expression);
+
+    // then
+    assertThat(visitor.getExpressionTree()).isNotNull();
+  }
+
+  @Test
   void buildExpressionTreeFromNullLValueReturnsNull() {
     assertThat(ExpressionTreeBuildingVisitor.buildExpressionTree(
       (com.github._1c_syntax.bsl.parser.BSLParser.LValueContext) null)).isNull();
