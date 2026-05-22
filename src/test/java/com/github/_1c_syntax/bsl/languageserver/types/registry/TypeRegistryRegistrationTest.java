@@ -289,6 +289,50 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void isReadOnlyMemberNameFalseForUnknownNameAndNull() {
+    // when / then
+    assertThat(typeRegistry.isReadOnlyMemberName(
+      "СовершенноНепохожиЙНаПлатформенный_МемберName_XYZ")).isFalse();
+    assertThat(typeRegistry.isReadOnlyMemberName(null)).isFalse();
+  }
+
+  @Test
+  void isReadOnlyMemberFalseForNullArgsAndUnregisteredRef() {
+    // given
+    var ref = typeRegistry.registerUserType("Тип1ReadOnlyCheck", declaration);
+
+    // when / then
+    assertThat(typeRegistry.isReadOnlyMember(ref, "X")).isFalse();
+    assertThat(typeRegistry.isReadOnlyMember(null, "X")).isFalse();
+    assertThat(typeRegistry.isReadOnlyMember(ref, null)).isFalse();
+  }
+
+  @Test
+  void getDescriptionByLanguageFallsBackToFileTypeMethod() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипD2", declaration);
+
+    // when — описание не регистрировали; и (lang) и (FileType) → "".
+    var ruDesc = typeRegistry.getDescription(ref,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU);
+
+    // then
+    assertThat(ruDesc).isEmpty();
+  }
+
+  @Test
+  void getForEachDescriptionAndIndexAccessRespectLanguage() {
+    // given
+    var ref = typeRegistry.registerUserType("ТипL", declaration);
+
+    // when / then — без регистрации для обоих языков empty.
+    assertThat(typeRegistry.getForEachDescription(ref,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.EN)).isEmpty();
+    assertThat(typeRegistry.getIndexAccessDescription(ref,
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.EN)).isEmpty();
+  }
+
+  @Test
   void resolveGenericByPrefixIsCaseInsensitive() {
     // given — стандартные generic-типы платформы СправочникСсылка.<...>
     // должны находиться при различных регистрах префикса.
