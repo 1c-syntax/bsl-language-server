@@ -258,6 +258,34 @@ class TypeServiceDelegationTest {
   }
 
   @Test
+  void findMemberAtWithNullAstReturnsEmpty() {
+    // given — DocumentContext.getAst() возвращает null.
+    var dc = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(dc.getAst()).thenReturn(null);
+
+    // when
+    var result = typeService.findMemberAt(dc, new org.eclipse.lsp4j.Position(0, 0));
+
+    // then — L269 return Optional.empty().
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void inferAtPositionWithNullAstReturnsEmpty() {
+    // given — DocumentContext без AST.
+    var dc = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(dc.getAst()).thenReturn(null);
+
+    // when
+    var result = typeService.inferAtPosition(dc, new org.eclipse.lsp4j.Position(0, 0));
+
+    // then
+    assertThat(result).isSameAs(TypeSet.EMPTY);
+  }
+
+  @Test
   void findGlobalContextNoArgUsesNullFileType() {
     // given
     when(globalScopeProvider.findGlobalContext(eq("X"), eq((FileType) null)))
