@@ -169,4 +169,30 @@ class SyntheticSymbolTest {
     assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
     assertThat(a).isNotEqualTo(different);
   }
+
+  @Test
+  void constructorWithOwnerSetsOwnerSymbol() {
+    // given — конструктор с явным owner
+    var owner = new SyntheticSymbol("Owner", SyntheticKind.TYPE_NAME, "");
+    var symbol = new SyntheticSymbol("Член", SyntheticKind.PLATFORM_MEMBER_PROPERTY,
+      "описание", TypeRef.UNKNOWN, owner);
+
+    // when / then
+    assertThat(symbol.getOwnerSymbol()).contains(owner);
+  }
+
+  @Test
+  void acceptVisitorDoesNothing() {
+    // given
+    var symbol = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    // Mock visitor — accept должен ничего не вызвать на нём.
+    var visitor = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor.class);
+
+    // when
+    symbol.accept(visitor);
+
+    // then — visitor не получает никаких вызовов.
+    org.mockito.Mockito.verifyNoInteractions(visitor);
+  }
 }
