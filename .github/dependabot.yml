@@ -11,10 +11,6 @@ updates:
       interval: "daily"
     ignore:
       - dependency-name: "com.diffplug.spotless"
-  - package-ecosystem: "gradle" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "daily"
     groups:
       freefair:
         patterns:
