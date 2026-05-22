@@ -119,6 +119,24 @@ class TypeDescriptionConstructorInferenceTest extends AbstractServerContextAware
   }
 
   @Test
+  void emptyTypeNamesBetweenCommasAreSkipped() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/TypeDescriptionConstructor.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext,
+      "ОписаниеСПустыми = Новый ОписаниеТипов(\",Число, ,Строка,\")",
+      "ОписаниеСПустыми = ".length());
+
+    // then — пустые элементы между запятыми отброшены, валидные собраны.
+    var ref = types.refs().iterator().next();
+    assertThat(types.getElementTypes(ref).refs())
+      .extracting(r -> r.qualifiedName())
+      .containsExactlyInAnyOrder("Число", "Строка");
+  }
+
+  @Test
   void englishConstructorTypeDescriptionAlsoTriggersTypeExtraction() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(

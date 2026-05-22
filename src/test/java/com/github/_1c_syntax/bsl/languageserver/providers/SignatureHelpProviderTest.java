@@ -143,6 +143,56 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void signatureHelpFindsInnermostNestedCall() {
+    // given — вложенные вызовы, курсор внутри внутреннего.
+    var content =
+      "Процедура М(А) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "Процедура Внутр(Б, В) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "М(Внутр(1, 2));\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // курсор сразу после первой запятой во внутреннем вызове.
+    var line = 6;
+    var col = content.split("\n")[line].indexOf(", ") + 2;
+    params.setPosition(new Position(line, col));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then — supplier выбирает внутренний (innermost) doCall = Внутр(...).
+    assertThat(help.getSignatures()).hasSize(1);
+    assertThat(help.getSignatures().get(0).getLabel()).startsWith("Внутр(");
+    assertThat(help.getActiveParameter()).isEqualTo(1);
+  }
+
+  @Test
+  void signatureHelpWithBlankInRangeReturnsCorrectActiveParameter() {
+    // given
+    var content =
+      "Процедура М(А, Б, В) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "М(, , );\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // курсор после первой запятой → активный параметр = 1.
+    params.setPosition(new Position(3, content.split("\n")[3].indexOf(',') + 2));
+
+    // when
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    // then
+    assertThat(help.getSignatures()).hasSize(1);
+    assertThat(help.getActiveParameter()).isEqualTo(1);
+  }
+
+  @Test
   void noSignatureForUnknownTypeConstructor() {
     // given — несуществующий тип
     var content = "А = Новый НесуществующийТип(1, 2);\n";
