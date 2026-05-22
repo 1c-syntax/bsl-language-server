@@ -80,4 +80,68 @@ class BuiltinPlatformTypesProviderTest {
     // when / then
     assertThat(provider.getLanguageScope()).isEqualTo(LanguageScope.BSL);
   }
+
+  @Test
+  void typesIncludePrimitiveStringAndNumber() {
+    // given
+    when(holder.get()).thenReturn(Optional.empty());
+    var provider = new BuiltinPlatformTypesProvider(holder);
+
+    // when
+    var typeNames = provider.getTypes().stream()
+      .map(td -> td.name().primary())
+      .toList();
+
+    // then — встроенный JSON-pack обязан включать основные примитивы.
+    assertThat(typeNames).contains("Строка", "Число", "Булево");
+  }
+
+  @Test
+  void typesIncludeBasicCollectionTypes() {
+    // given
+    when(holder.get()).thenReturn(Optional.empty());
+    var provider = new BuiltinPlatformTypesProvider(holder);
+
+    // when
+    var typeNames = provider.getTypes().stream()
+      .map(td -> td.name().primary())
+      .toList();
+
+    // then
+    assertThat(typeNames).contains("Массив", "Структура", "Соответствие");
+  }
+
+  @Test
+  void platformTypeMassivHasPlatformMembers() {
+    // given
+    when(holder.get()).thenReturn(Optional.empty());
+    var provider = new BuiltinPlatformTypesProvider(holder);
+
+    // when
+    var arrayDecl = provider.getTypes().stream()
+      .filter(td -> "Массив".equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+
+    // then
+    assertThat(arrayDecl.members())
+      .extracting(m -> m.name())
+      .containsAnyOf("Добавить", "Количество", "ВерхняяГраница", "Очистить");
+  }
+
+  @Test
+  void primitiveTypesHaveNoConstructors() {
+    // given
+    when(holder.get()).thenReturn(Optional.empty());
+    var provider = new BuiltinPlatformTypesProvider(holder);
+
+    // when — Число — это примитив, конструкторов у него быть не должно.
+    var numberDecl = provider.getTypes().stream()
+      .filter(td -> "Число".equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+
+    // then
+    assertThat(numberDecl.constructors()).isEmpty();
+  }
 }
