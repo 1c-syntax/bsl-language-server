@@ -1017,6 +1017,43 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dotCompletionOnMassivShowsMethodsAsMethodKind() {
+    // given — М.| на Массив — все members с MemberKind=METHOD получают
+    // CompletionItemKind.Method (см. buildMemberItem).
+    var content = """
+            М = Новый Массив;
+            М.""";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 2));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — есть Method kind items.
+    assertThat(result.getItems())
+      .anySatisfy(it -> assertThat(it.getKind()).isEqualTo(CompletionItemKind.Method));
+  }
+
+  @Test
+  void completionForPartiallyTypedAfterDot() {
+    // given — М.Доб| — partial prefix после точки.
+    var content = "М = Новый Массив;\nМ.Доб";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 5));
+
+    // when
+    var result = completionProvider.getCompletion(documentContext, params);
+
+    // then — supplier не падает; конкретные members зависят от bsl-context.
+    assertThat(result).isNotNull();
+    assertThat(result.getItems()).isNotNull();
+  }
+
+  @Test
   void noDotCompletionShowsLocalProceduresAndFunctions() {
     // given — модуль с локальной функцией и процедурой.
     var content =
