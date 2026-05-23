@@ -1,6 +1,33 @@
 {
   "reflection": [
     {
+      "type": "com.github._1c_syntax.bsl.languageserver.aop.EventPublisherAspect",
+      "methods": [
+        {
+          "name": "aspectOf",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.aop.SentryAspect",
+      "methods": [
+        {
+          "name": "aspectOf",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.github._1c_syntax.bsl.languageserver.aop.MeasuresAspect",
+      "methods": [
+        {
+          "name": "aspectOf",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration$$SpringCGLIB$$1",
       "allDeclaredFields": true,
       "allDeclaredConstructors": true,
@@ -131,6 +158,623 @@
       "allDeclaredFields": true,
       "allDeclaredConstructors": true,
       "allDeclaredMethods": true
+    }
+  ],
+  "bundles": [
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.AnalyzeProjectOnStart"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.aop.SentryAspect"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.aop.sentry.PermissionFilterBeforeSendCallback"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codeactions.DisableDiagnosticTriggeringSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codeactions.ExtractStructureConstructorSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codeactions.GenerateStandardRegionsSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codelenses.CognitiveComplexityCodeLensSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codelenses.CyclomaticComplexityCodeLensSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codelenses.DebugTestCodeLensSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codelenses.RunAllTestsCodeLensSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.codelenses.RunTestCodeLensSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.color.ConstructorColorPresentationSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.color.WebColorPresentationSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.context.ServerContext"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.AllFunctionPathMustHaveReturnDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.AssignAliasFieldsInQueryDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.AssignToReadOnlyPropertyDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.BadWordsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.BeginTransactionBeforeTryCatchDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CachedPublicDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CodeAfterAsyncCallDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CodeBlockBeforeSubDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CodeOutOfRegionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CognitiveComplexityDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommandModuleExportMethodsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommentedCodeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommitTransactionOutsideTryCatchDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleAssignDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleInvalidTypeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleMissingAPIDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameCachedDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameClientDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameClientServerDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameFullAccessDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameGlobalClientDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameGlobalDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameServerCallDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CommonModuleNameWordsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CompilationDirectiveLostDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CompilationDirectiveNeedLessDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ConsecutiveEmptyLinesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CrazyMultilineStringDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CreateQueryInCycleDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.CyclomaticComplexityDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DataExchangeLoadingDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeletingCollectionItemDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DenyIncompleteValuesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedAttributes8312Diagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedCurrentDateDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedFindDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedMessageDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedMethodCallDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedMethods8310Diagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedMethods8317Diagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedTypeManagedFormDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DisableSafeModeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DoubleNegativesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DuplicateRegionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DuplicateStringLiteralDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.DuplicatedInsertionIntoCollectionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyRegionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyStatementDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ExcessiveAutoTestCheckDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ExecuteExternalCodeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ExecuteExternalCodeInCommonModuleDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ExportVariablesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ExternalAppStartingDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ExtraCommasDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FieldsFromJoinsWithoutIsNullDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FileSystemAccessDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ForbiddenMetadataNameDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FormDataToValueDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FullOuterJoinQueryDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FunctionNameStartsWithGetDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FunctionOutParameterDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FunctionReturnsSamePrimitiveDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.FunctionShouldHaveReturnDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.GetFormMethodDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.GlobalContextMethodCollision8312Diagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IdenticalExpressionsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IfConditionComplexityDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedCodeBlockDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedConditionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IfElseIfEndsWithElseDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IncorrectLineBreakDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IncorrectUseLikeInQueryDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IncorrectUseOfStrTemplateDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.InternetAccessDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.InvalidCharacterInFileDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.IsInRoleMethodDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.JoinWithSubQueryDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.JoinWithVirtualTableDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.LatinAndCyrillicSymbolInWordDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.LogicalOrInJoinQuerySectionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.LogicalOrInTheWhereSectionOfQueryDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MagicDateDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MagicNumberDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MetadataObjectNameLengthDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MethodSizeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissedRequiredParameterDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingCodeTryCatchExDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingCommonModuleMethodDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingEventSubscriptionHandlerDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingParameterDescriptionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingReturnedValueDescriptionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingSpaceDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingTempStorageDeletionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingTemporaryFileDeletionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MissingVariablesDescriptionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MultilineStringInQueryDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringUsingWithTemplateDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NestedConstructorsInStructureDeclarationDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NestedFunctionInParametersDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NestedStatementsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NestedTernaryOperatorDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NonExportMethodsInApiRegionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NonStandardRegionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfParamsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfValuesInStructureConstructorDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.OSUsersMethodDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.OneStatementPerLineDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.OrderOfParamsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.OrdinaryAppSupportDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.PairingBrokenTransactionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ParseErrorDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.PrivilegedModuleMethodCallDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ProcedureReturnsValueDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ProtectedModuleDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.PublicMethodsDescriptionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.QueryNestedFieldsByDotDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.QueryParseErrorDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.QueryToMissingMetadataDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.RedundantAccessToObjectDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.RefOveruseDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ReservedParameterNamesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.RewriteMethodParameterDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SameMetadataObjectAndChildNamesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ScheduledJobHandlerDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SelectTopWithoutOrderByDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SelfAssignDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SelfInsertionDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ServerCallsInFormEventsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ServerSideExportFormMethodDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SetPermissionsForNewObjectsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SetPrivilegedModeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SeveralCompilerDirectivesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.SpaceAtStartCommentDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.StyleElementConstructorsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.TempFilesDirDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.TernaryOperatorUsageDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.ThisObjectAssignDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.TimeoutsInExternalResourcesDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.TooManyReturnsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.TransferringParametersBetweenClientAndServerDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.TryNumberDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.TypoDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnaryPlusInConcatenationDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnionAllDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnreachableCodeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnsafeFindByCodeDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnsafeSafeModeMethodCallDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedLocalMethodDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedLocalVariableDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedParametersDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsageWriteLogEventDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UseLessForEachDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UseSystemInformationDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UselessTernaryOperatorDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingExternalCodeToolsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingFindElementByStringDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingGotoDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingHardcodeNetworkAddressDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingHardcodePathDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingHardcodeSecretInformationDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingLikeInQueryDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingModalWindowsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingObjectNotAvailableUnixDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingServiceTagDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingSynchronousCallsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.UsingThisFormDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.VirtualTableCallWithoutParametersDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.WrongDataPathForFormElementsDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.WrongHttpServiceHandlerDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.WrongUseFunctionProceedWithCallDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.WrongUseOfRollbackTransactionMethodDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.WrongWebServiceHandlerDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.documentlink.DiagnosticDescriptionDocumentLinkSupplier"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.CollectionHoverHints"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.ConstructorHoverBuilder"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.DescriptionFormatter"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.KeywordSymbolMarkupContentBuilder"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.ModuleSymbolMarkupContentBuilder"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.PlatformMemberHoverBuilder"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.SyntheticSymbolMarkupContentBuilder"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.hover.VariableSymbolMarkupContentBuilder"
+    },
+    {
+      "name": "com.github._1c_syntax.bsl.languageserver.inlayhints.PlatformMethodCallInlayHintSupplier"
     }
   ]
 }

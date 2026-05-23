@@ -133,6 +133,11 @@ dependencies {
 
     // AOP
     implementation("org.aspectj:aspectjrt:1.9.25.1")
+    // aspectjweaver нужен Spring AOP в рантайме для парсинга pointcut-выражений у @Aspect-бинов
+    // из транзитивных зависимостей (Sentry CheckIn / Spring caching advisor / etc.).
+    // Наши собственные аспекты по-прежнему вплетаются в байт-код через CTW
+    // (io.freefair.aspectj.post-compile-weaving), runtime-Spring AOP их не проксирует.
+    implementation("org.aspectj:aspectjweaver:1.9.25.1")
 
     // commons utils
     implementation("commons-io:commons-io:2.22.0")
@@ -217,22 +222,6 @@ tasks.bootJar {
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
     imageName.set("docker.io/1csyntax/bsl-language-server:${project.version}")
-}
-
-// aspectjweaver требуется Spring AOT-процессору (AspectJBeanFactoryInitializationAotProcessor)
-// для парсинга @Aspect pointcut-выражений при processAot. В рантайм-classpath его подключать
-// не нужно — у нас compile-time weaving через io.freefair.aspectj.post-compile-weaving, и
-// runtime-AOP Spring AOP-прокси (CGLIB) ломает native-image из-за конфликта с pre-generated
-// CGLIB-стабами Spring AOT.
-val aotProcessorClasspath: Configuration by configurations.creating
-dependencies {
-    aotProcessorClasspath("org.aspectj:aspectjweaver:1.9.25.1")
-}
-tasks.withType<org.springframework.boot.gradle.tasks.aot.ProcessAot>().configureEach {
-    classpath += aotProcessorClasspath
-}
-tasks.withType<org.springframework.boot.gradle.tasks.aot.ProcessTestAot>().configureEach {
-    classpath += aotProcessorClasspath
 }
 
 graalvmNative {
