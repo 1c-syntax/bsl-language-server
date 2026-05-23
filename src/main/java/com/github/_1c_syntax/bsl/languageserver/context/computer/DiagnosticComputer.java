@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
-import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -40,18 +40,23 @@ import java.util.stream.Stream;
 /**
  * Вычислитель диагностик для документа.
  * <p>
- * Абстрактный класс, обеспечивающий параллельное вычисление диагностик
- * всеми зарегистрированными анализаторами с обработкой ошибок.
+ * Обеспечивает параллельное вычисление диагностик всеми зарегистрированными
+ * анализаторами с обработкой ошибок. Список применимых диагностик для документа
+ * подтягивается через {@link ObjectProvider} prototype-бина {@code diagnostics}
+ * — native-image не поддерживает {@code @Lookup}-инъекцию (Spring строит CGLIB-сабкласс
+ * во время выполнения, что несовместимо с AOT-компиляцией).
  */
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public abstract class DiagnosticComputer {
+public class DiagnosticComputer {
 
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("diagnosticComputerExecutor")
   private final ExecutorService executor;
+
+  private final ObjectProvider<List<BSLDiagnostic>> diagnosticsProvider;
 
   /**
    * Вычислить все диагностики для документа.
@@ -93,6 +98,7 @@ public abstract class DiagnosticComputer {
 
   }
 
-  @Lookup("diagnostics")
-  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
+  private List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
+    return diagnosticsProvider.getObject(documentContext);
+  }
 }

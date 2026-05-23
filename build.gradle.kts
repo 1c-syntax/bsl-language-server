@@ -101,34 +101,34 @@ dependencies {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
-        // gRPC используется LanguageTool только для удалённых правил (n-gram сервис и т.п.).
-        // Мы их не используем, а транзитивный io.grpc.netty-shaded ломает native-image
-        // (захват ch.qos.logback.classic.Logger в image heap через netty static init).
+        // io.grpc.netty-shaded ломает native-image: его static init захватывает
+        // ch.qos.logback.classic.Logger в image heap. LanguageTool сам netty-shaded
+        // не использует — только в составе grpc-stub-а для удалённых правил, который
+        // мы не задействуем; остальные grpc-api/grpc-protobuf остаются на classpath,
+        // чтобы LanguageTool мог разрешать `io.grpc.Channel` при загрузке правил.
         exclude("io.grpc", "grpc-netty-shaded")
-        exclude("io.grpc", "grpc-protobuf")
-        exclude("io.grpc", "grpc-stub")
     }
     implementation("org.languagetool:language-en:$languageToolVersion") {
         exclude("commons-logging:commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
-        // gRPC используется LanguageTool только для удалённых правил (n-gram сервис и т.п.).
-        // Мы их не используем, а транзитивный io.grpc.netty-shaded ломает native-image
-        // (захват ch.qos.logback.classic.Logger в image heap через netty static init).
+        // io.grpc.netty-shaded ломает native-image: его static init захватывает
+        // ch.qos.logback.classic.Logger в image heap. LanguageTool сам netty-shaded
+        // не использует — только в составе grpc-stub-а для удалённых правил, который
+        // мы не задействуем; остальные grpc-api/grpc-protobuf остаются на classpath,
+        // чтобы LanguageTool мог разрешать `io.grpc.Channel` при загрузке правил.
         exclude("io.grpc", "grpc-netty-shaded")
-        exclude("io.grpc", "grpc-protobuf")
-        exclude("io.grpc", "grpc-stub")
     }
     implementation("org.languagetool:language-ru:$languageToolVersion") {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
-        // gRPC используется LanguageTool только для удалённых правил (n-gram сервис и т.п.).
-        // Мы их не используем, а транзитивный io.grpc.netty-shaded ломает native-image
-        // (захват ch.qos.logback.classic.Logger в image heap через netty static init).
+        // io.grpc.netty-shaded ломает native-image: его static init захватывает
+        // ch.qos.logback.classic.Logger в image heap. LanguageTool сам netty-shaded
+        // не использует — только в составе grpc-stub-а для удалённых правил, который
+        // мы не задействуем; остальные grpc-api/grpc-protobuf остаются на classpath,
+        // чтобы LanguageTool мог разрешать `io.grpc.Channel` при загрузке правил.
         exclude("io.grpc", "grpc-netty-shaded")
-        exclude("io.grpc", "grpc-protobuf")
-        exclude("io.grpc", "grpc-stub")
     }
 
     // AOP
