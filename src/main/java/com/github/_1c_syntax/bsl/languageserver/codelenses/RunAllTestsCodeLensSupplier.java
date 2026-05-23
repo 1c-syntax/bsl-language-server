@@ -26,12 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -54,18 +51,13 @@ public class RunAllTestsCodeLensSupplier
   private final TestRunnerAdapter testRunnerAdapter;
   private final Resources resources;
 
-  // Self-injection для работы кэша в базовом классе.
-  @Autowired
-  @Lazy
-  @Getter
-  private RunAllTestsCodeLensSupplier self;
-
   public RunAllTestsCodeLensSupplier(
     LanguageServerConfiguration configuration,
+    TestSourcesProvider testSourcesProvider,
     TestRunnerAdapter testRunnerAdapter,
     Resources resources
   ) {
-    super(configuration);
+    super(configuration, testSourcesProvider);
     this.testRunnerAdapter = testRunnerAdapter;
     this.resources = resources;
   }
