@@ -131,6 +131,15 @@ dependencies {
         exclude("io.grpc", "grpc-netty-shaded")
     }
 
+    // Shadow-копия ExtendXStream из mdclasses нуждается в прямом доступе к XStream API
+    // (мы переопределяем protected методы XStream). XStream и так в рантайме через mdclasses,
+    // здесь — compileOnly, чтобы не дублировать в graph.
+    compileOnly("com.thoughtworks.xstream:xstream:1.4.21")
+    compileOnly("io.github.classgraph:classgraph:4.8.184")
+    // ImageInfo.inImageRuntimeCode() для разделения JVM/native веток в shadow ExtendXStream;
+    // в JVM возвращает false, в native — true. Артефакт лёгкий и без транзитивов.
+    implementation("org.graalvm.sdk:nativeimage:24.2.2")
+
     // AOP
     implementation("org.aspectj:aspectjrt:1.9.25.1")
     // aspectjweaver нужен Spring AOP в рантайме для парсинга pointcut-выражений у @Aspect-бинов
@@ -232,7 +241,12 @@ graalvmNative {
             buildArgs.addAll(
                 "--no-fallback",
                 "-H:+UnlockExperimentalVMOptions",
-                "-H:+ReportExceptionStackTraces"
+                "-H:+ReportExceptionStackTraces",
+                // LanguageTool's Languages.<clinit> читает ресурсы языковых модулей.
+                // В native build-time `language-module.properties` ещё не виден — деферим инит.
+                "--initialize-at-run-time=org.languagetool.Languages",
+                "--initialize-at-run-time=org.languagetool.Language",
+                "--initialize-at-run-time=org.languagetool.JLanguageTool"
             )
         }
     }
