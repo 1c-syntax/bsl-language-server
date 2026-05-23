@@ -115,6 +115,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
   @SuppressWarnings("NullAway.Init")
   private OScriptModuleTypeResolver oScriptModuleTypeResolver;
+  // StringInterner — singleton-бин, нужен computer'ам complexities, которые сами
+  // prototype'ы и страдают тем же AOT-багом (см. ниже initializeDependencies).
+  @SuppressWarnings("NullAway.Init")
+  private com.github._1c_syntax.utils.StringInterner stringInterner;
 
   @Nullable
   private BSLTokenizer tokenizer;
@@ -165,12 +169,14 @@ public class DocumentContext implements Comparable<DocumentContext> {
     DiagnosticComputer diagnosticComputer,
     ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider,
     ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider,
-    OScriptModuleTypeResolver oScriptModuleTypeResolver
+    OScriptModuleTypeResolver oScriptModuleTypeResolver,
+    com.github._1c_syntax.utils.StringInterner stringInterner
   ) {
     this.diagnosticComputer = diagnosticComputer;
     this.cognitiveComplexityComputerProvider = cognitiveComplexityComputerProvider;
     this.cyclomaticComplexityComputerProvider = cyclomaticComplexityComputerProvider;
     this.oScriptModuleTypeResolver = oScriptModuleTypeResolver;
+    this.stringInterner = stringInterner;
   }
 
   public ServerContext getServerContext() {
@@ -434,13 +440,17 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   private ComplexityData computeCognitiveComplexity() {
-    Computer<ComplexityData> cognitiveComplexityComputer = cognitiveComplexityComputerProvider.getObject(this);
-    return cognitiveComplexityComputer.compute();
+    var computer = cognitiveComplexityComputerProvider.getObject(this);
+    // см. комментарий к initializeDependencies — Spring AOT в native не вызовет
+    // @Setter @Autowired у prototype-бина, поэтому ставим stringInterner вручную.
+    computer.setStringInterner(stringInterner);
+    return computer.compute();
   }
 
   private ComplexityData computeCyclomaticComplexity() {
-    Computer<ComplexityData> cyclomaticComplexityComputer = cyclomaticComplexityComputerProvider.getObject(this);
-    return cyclomaticComplexityComputer.compute();
+    var computer = cyclomaticComplexityComputerProvider.getObject(this);
+    computer.setStringInterner(stringInterner);
+    return computer.compute();
   }
 
   private MetricStorage computeMetrics() {

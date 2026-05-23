@@ -81,6 +81,7 @@ public class ServerContext {
   private final ObjectProvider<com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
   private final ObjectProvider<com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
   private final com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptModuleTypeResolver oScriptModuleTypeResolver;
+  private final com.github._1c_syntax.utils.StringInterner stringInterner;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
   @Qualifier("computeConfigurationExecutor")
@@ -443,7 +444,8 @@ public class ServerContext {
       diagnosticComputer,
       cognitiveComplexityComputerProvider,
       cyclomaticComplexityComputerProvider,
-      oScriptModuleTypeResolver
+      oScriptModuleTypeResolver,
+      stringInterner
     );
 
     documents.put(uri, documentContext);
