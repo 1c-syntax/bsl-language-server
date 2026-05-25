@@ -138,27 +138,24 @@ public final class CompletionProvider {
    * Имена, состоящие только из не-букв (служебные/составные), не фильтруются.
    * Локальные пользовательские символы фильтру не подлежат — у пользователя свой язык.
    */
-  private boolean isInConfiguredLanguage(String name, Language language) {
+  private static boolean isInConfiguredLanguage(String name, Language language) {
     if (name.isEmpty()) {
       return true;
     }
-    boolean hasCyrillic = false;
-    boolean hasLatin = false;
-    for (int i = 0; i < name.length(); i++) {
-      var ch = name.charAt(i);
-      if (Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC) {
-        hasCyrillic = true;
-      } else if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
-        hasLatin = true;
-      }
-    }
+    var hasCyrillic = name.chars().anyMatch(CompletionProvider::isCyrillic);
+    var hasLatin = name.chars().anyMatch(CompletionProvider::isAsciiLetter);
     if (!hasCyrillic && !hasLatin) {
       return true;
     }
-    if (language == Language.RU) {
-      return hasCyrillic || !hasLatin;
-    }
-    return hasLatin || !hasCyrillic;
+    return language == Language.RU ? hasCyrillic || !hasLatin : hasLatin || !hasCyrillic;
+  }
+
+  private static boolean isCyrillic(int ch) {
+    return Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC;
+  }
+
+  private static boolean isAsciiLetter(int ch) {
+    return Character.isLetter(ch) && Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.BASIC_LATIN;
   }
 
   private List<String> libraryEntryNames(OScriptLibraryIndex.EntryKind kind) {

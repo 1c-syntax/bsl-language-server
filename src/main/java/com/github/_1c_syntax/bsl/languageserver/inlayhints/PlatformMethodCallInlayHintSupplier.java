@@ -302,6 +302,7 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
    * нумерованные имена по фактическим аргументам (Значение → Значение1, …).
    * {@code null}, если аргументов больше, чем параметров, и хвост не вариадик.
    */
+  @Nullable
   private static NamedParam paramAt(List<ParameterDescriptor> parameters, int variadicIndex,
                                     int i, Language lang) {
     if (variadicIndex >= 0 && i >= variadicIndex) {

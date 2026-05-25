@@ -283,12 +283,22 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   private static boolean isBilingualPair(MemberDescriptor ru, MemberDescriptor en) {
-    return ru.bilingualName().en().isEmpty()
-      && en.bilingualName().en().isEmpty()
+    var bothMonolingual = ru.bilingualName().en().isEmpty() && en.bilingualName().en().isEmpty();
+    var ruThenEn = isCyrillicName(ru.name()) && isLatinName(en.name());
+    return bothMonolingual
       && ru.kind() == en.kind()
-      && isCyrillic(ru.name()) && !isLatin(ru.name())
-      && isLatin(en.name()) && !isCyrillic(en.name())
+      && ruThenEn
       && fingerprint(ru).equals(fingerprint(en));
+  }
+
+  /** Имя строго кириллическое (есть кириллица, нет латиницы). */
+  private static boolean isCyrillicName(String name) {
+    return isCyrillic(name) && !isLatin(name);
+  }
+
+  /** Имя строго латинское (есть латиница, нет кириллицы). */
+  private static boolean isLatinName(String name) {
+    return isLatin(name) && !isCyrillic(name);
   }
 
   private static MemberDescriptor mergePair(MemberDescriptor ru, MemberDescriptor en) {
@@ -357,8 +367,9 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   private static boolean isLatin(String name) {
-    // ASCII-буква = латиница (кириллица и прочее — вне диапазона < 128).
-    return name.chars().anyMatch(ch -> ch < 128 && Character.isLetter(ch));
+    // Латиница = ASCII-буква (блок BASIC_LATIN = 0x00..0x7F).
+    return name.chars().anyMatch(ch ->
+      Character.isLetter(ch) && Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.BASIC_LATIN);
   }
 
   /**
@@ -437,11 +448,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     var result = new ArrayList<SignatureDescriptor>(raw.size());
     for (var sig : raw) {
       var description = (String) sig.getOrDefault("description", "");
-      var descriptionRu = stringField(sig, "descriptionRu");
-      var descriptionEn = stringField(sig, "descriptionEn");
-      var bilingualDescription = descriptionRu.isEmpty() && descriptionEn.isEmpty()
-        ? BilingualString.of(description)
-        : BilingualString.of(descriptionRu.isEmpty() ? description : descriptionRu, descriptionEn);
+      var sigDescription = bilingualOrMono(description,
+        stringField(sig, "descriptionRu"), stringField(sig, "descriptionEn"));
       var returnTypeName = (String) sig.get("returnType");
       var returnType = returnTypeName == null
         ? fallbackReturnType
@@ -460,8 +468,21 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
           BilingualString.of(pNameRu, pNameEn)).withVariadic(variadic));
       }
       var returnTypes = returnType.equals(TypeRef.UNKNOWN) ? TypeSet.EMPTY : TypeSet.of(returnType);
-      result.add(new SignatureDescriptor(params, returnTypes, bilingualDescription));
+      result.add(new SignatureDescriptor(params, returnTypes, sigDescription));
     }
     return result;
+  }
+
+  /**
+   * Двуязычное описание сигнатуры: при отсутствии {@code descriptionRu}/{@code descriptionEn}
+   * — моноязычное {@code mono}; иначе ru-сторона берёт {@code descriptionRu} (или {@code mono},
+   * если пусто), en-сторона — {@code descriptionEn}.
+   */
+  private static BilingualString bilingualOrMono(String mono, String descriptionRu, String descriptionEn) {
+    if (descriptionRu.isEmpty() && descriptionEn.isEmpty()) {
+      return BilingualString.of(mono);
+    }
+    var ru = descriptionRu.isEmpty() ? mono : descriptionRu;
+    return BilingualString.of(ru, descriptionEn);
   }
 }

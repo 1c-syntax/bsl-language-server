@@ -50,24 +50,15 @@ public final class SignatureSelection {
    * у которого {@code required ≤ argCount ≤ total}
    */
   public static int pickIndexByArity(List<SignatureDescriptor> signatures, int argCount) {
-    if (signatures.isEmpty() || argCount < 0) {
+    if (argCount < 0) {
       return -1;
     }
-    int fallback = -1;
-    for (int i = 0; i < signatures.size(); i++) {
-      var sig = signatures.get(i);
-      var params = sig.parameters();
-      int total = params.size();
-      int required = (int) params.stream().filter(p -> !p.optional()).count();
-      var variadic = !params.isEmpty() && params.getLast().variadic();
-      if (argCount >= required && (argCount <= total || variadic)) {
+    for (var i = 0; i < signatures.size(); i++) {
+      if (acceptsArity(signatures.get(i), argCount)) {
         return i;
       }
-      if (fallback == -1 && !variadic && total == argCount) {
-        fallback = i;
-      }
     }
-    return fallback;
+    return -1;
   }
 
   /**

@@ -505,7 +505,7 @@ public final class SignatureHelpProvider {
     var label = new StringBuilder(methodName).append('(');
     var units = expandParameters(sig.parameters(), lang, argCount);
     var paramInfos = new ArrayList<ParameterInformation>(units.size());
-    for (int i = 0; i < units.size(); i++) {
+    for (var i = 0; i < units.size(); i++) {
       var unit = units.get(i);
       var p = unit.descriptor();
       if (i > 0) {
@@ -558,11 +558,11 @@ public final class SignatureHelpProvider {
     List<ParameterDescriptor> params, Language lang, int argCount
   ) {
     var units = new ArrayList<ParamUnit>(params.size());
-    for (int i = 0; i < params.size(); i++) {
+    for (var i = 0; i < params.size(); i++) {
       var p = params.get(i);
       if (p.variadic()) {
         var count = Math.max(1, Math.max(0, argCount - i) + 1);
-        for (int k = 1; k <= count; k++) {
+        for (var k = 1; k <= count; k++) {
           units.add(new ParamUnit(p.displayName(lang) + k, p));
         }
       } else {
@@ -578,7 +578,7 @@ public final class SignatureHelpProvider {
       return 0;
     }
     return (int) paramList.callParam().stream()
-      .map(callParam -> callParam.getText())
+      .map(ParseTree::getText)
       .filter(text -> text != null && !text.isBlank())
       .count();
   }
