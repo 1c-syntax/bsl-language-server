@@ -321,7 +321,7 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     var passedValue = callParam.getText();
     // `Новый Тип();` парсится как один пустой callParam — не показываем хинт для
     // пустого аргумента, иначе получим бессмысленное `Новый Массив(Массив:);`.
-    if (passedValue == null || passedValue.isBlank()) {
+    if (passedValue.isBlank()) {
       return;
     }
     if (!showParametersWithTheSameName() && shadowsName(passedValue, unit.name(), unit.descriptor())) {

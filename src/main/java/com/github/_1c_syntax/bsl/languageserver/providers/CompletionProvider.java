@@ -147,7 +147,7 @@ public final class CompletionProvider {
     if (!hasCyrillic && !hasLatin) {
       return true;
     }
-    return language == Language.RU ? hasCyrillic || !hasLatin : hasLatin || !hasCyrillic;
+    return language == Language.RU ? (hasCyrillic || !hasLatin) : (hasLatin || !hasCyrillic);
   }
 
   private static boolean isCyrillic(int ch) {
