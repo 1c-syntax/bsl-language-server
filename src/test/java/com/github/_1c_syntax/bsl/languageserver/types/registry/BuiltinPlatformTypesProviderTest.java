@@ -158,6 +158,62 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   @Test
+  void mixedScriptMemberPairsAreMergedIntoSingleBilingualMember() {
+    // Русское имя метода может содержать латинскую аббревиатуру (ЗаписатьJSON,
+    // ПрочитатьXML). Оно всё равно должно склеиваться со своей англоязычной
+    // парой (WriteJSON, ReadXML): наличие кириллицы однозначно относит имя к
+    // русскому, встроенная латиница склейке не мешает.
+    var typeDecl = loadMixedScriptType();
+
+    var jsonMembers = typeDecl.members().stream()
+      .filter(m -> m.matches("ЗаписатьJSON") || m.matches("WriteJSON"))
+      .toList();
+    assertThat(jsonMembers)
+      .as("ЗаписатьJSON/WriteJSON должны схлопнуться в один двуязычный член")
+      .hasSize(1);
+    var json = jsonMembers.get(0);
+    assertThat(json.matches("ЗаписатьJSON")).as("находится по русскому имени").isTrue();
+    assertThat(json.matches("WriteJSON")).as("находится по английскому имени").isTrue();
+    assertThat(json.displayName(Language.RU)).isEqualTo("ЗаписатьJSON");
+    assertThat(json.displayName(Language.EN)).isEqualTo("WriteJSON");
+
+    var xmlMembers = typeDecl.members().stream()
+      .filter(m -> m.matches("ПрочитатьXML") || m.matches("ReadXML"))
+      .toList();
+    assertThat(xmlMembers)
+      .as("ПрочитатьXML/ReadXML должны схлопнуться в один двуязычный член")
+      .hasSize(1);
+    assertThat(xmlMembers.get(0).displayName(Language.RU)).isEqualTo("ПрочитатьXML");
+    assertThat(xmlMembers.get(0).displayName(Language.EN)).isEqualTo("ReadXML");
+  }
+
+  @Test
+  void latinOnlyMemberWithoutCyrillicPartnerIsNotMerged() {
+    // Метод с чисто-латинским именем и без кириллической пары (Flush) не
+    // является русской стороной склейки и не должен теряться: остаётся
+    // самостоятельным членом, видимым в обоих языках одинаково.
+    var typeDecl = loadMixedScriptType();
+
+    var flush = typeDecl.members().stream()
+      .filter(m -> m.matches("Flush"))
+      .toList();
+    assertThat(flush)
+      .as("Flush должен остаться ровно одним самостоятельным членом")
+      .hasSize(1);
+    assertThat(flush.get(0).displayName(Language.RU)).isEqualTo("Flush");
+    assertThat(flush.get(0).displayName(Language.EN)).isEqualTo("Flush");
+  }
+
+  private static TypePackProvider.TypeDecl loadMixedScriptType() {
+    return BuiltinPlatformTypesProvider.loadFromResource(
+        "com/github/_1c_syntax/bsl/languageserver/types/registry/mixed-script-member-merge.json")
+      .stream()
+      .filter(td -> "ТестовыйТип".equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  @Test
   void primitiveTypesHaveNoConstructors() {
     // given
     when(holder.get()).thenReturn(Optional.empty());

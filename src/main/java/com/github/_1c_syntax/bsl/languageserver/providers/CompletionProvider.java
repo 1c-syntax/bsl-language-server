@@ -133,10 +133,13 @@ public final class CompletionProvider {
   }
 
   /**
-   * Имя считается совместимым с настроенным {@link Language}, если оно
-   * не содержит «чужих» букв. Эвристика: кириллица → RU, латиница → EN.
-   * Имена, состоящие только из не-букв (служебные/составные), не фильтруются.
-   * Локальные пользовательские символы фильтру не подлежат — у пользователя свой язык.
+   * Имя считается совместимым с настроенным {@link Language}.
+   * Ключевой инвариант 1С: русские идентификаторы могут содержать
+   * латинские аббревиатуры ({@code ЧтениеJSON}, {@code ЗаписьXML},
+   * {@code HTTPСоединение}), а английские — всегда чистый ASCII.
+   * Поэтому наличие кириллицы однозначно относит имя к RU, и эвристика
+   * строится только на её присутствии. Имена без букв
+   * (служебные/составные) не фильтруются.
    */
   private static boolean isInConfiguredLanguage(String name, Language language) {
     if (name.isEmpty()) {
@@ -147,7 +150,10 @@ public final class CompletionProvider {
     if (!hasCyrillic && !hasLatin) {
       return true;
     }
-    return language == Language.RU ? (hasCyrillic || !hasLatin) : (hasLatin || !hasCyrillic);
+    if (language == Language.RU) {
+      return hasCyrillic;
+    }
+    return !hasCyrillic;
   }
 
   private static boolean isCyrillic(int ch) {
@@ -626,10 +632,10 @@ public final class CompletionProvider {
     // У платформенных/конфигурационных членов source-символа нет, поэтому
     // берём bilingual-описание в языке ScriptVariant, иначе документация
     // всегда оставалась бы на русском (primary).
-    var sourceDoc = member.getSourceSymbol().isPresent()
-      ? symDesc.getPurposeDescription()
-      : "";
-    var purpose = sourceDoc.isBlank() ? member.displayDescription(scriptVariant) : sourceDoc;
+    var purpose = member.getSourceSymbol()
+      .map(symbol -> symDesc.getPurposeDescription())
+      .filter(doc -> !doc.isBlank())
+      .orElseGet(() -> member.displayDescription(scriptVariant));
     var sb = new StringBuilder();
     if (symDesc.isDeprecated()) {
       sb.append(scriptVariant == Language.EN ? "**Deprecated.**" : "**Устарело.**");

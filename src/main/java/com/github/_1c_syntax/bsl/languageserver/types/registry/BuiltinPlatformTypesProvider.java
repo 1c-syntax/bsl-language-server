@@ -284,20 +284,24 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
 
   private static boolean isBilingualPair(MemberDescriptor ru, MemberDescriptor en) {
     var bothMonolingual = ru.bilingualName().en().isEmpty() && en.bilingualName().en().isEmpty();
-    var ruThenEn = isCyrillicName(ru.name()) && isLatinName(en.name());
+    var ruThenEn = isRussianName(ru.name()) && isEnglishName(en.name());
     return bothMonolingual
       && ru.kind() == en.kind()
       && ruThenEn
       && fingerprint(ru).equals(fingerprint(en));
   }
 
-  /** Имя строго кириллическое (есть кириллица, нет латиницы). */
-  private static boolean isCyrillicName(String name) {
-    return isCyrillic(name) && !isLatin(name);
+  /**
+   * Имя русское, если содержит кириллицу. Русские идентификаторы платформы
+   * могут включать латинские аббревиатуры ({@code ЧтениеJSON},
+   * {@code ЗаписьXML}), поэтому отсутствие латиницы не требуется.
+   */
+  private static boolean isRussianName(String name) {
+    return isCyrillic(name);
   }
 
-  /** Имя строго латинское (есть латиница, нет кириллицы). */
-  private static boolean isLatinName(String name) {
+  /** Имя английское, если содержит латиницу и не содержит кириллицы (чистый ASCII). */
+  private static boolean isEnglishName(String name) {
     return isLatin(name) && !isCyrillic(name);
   }
 
