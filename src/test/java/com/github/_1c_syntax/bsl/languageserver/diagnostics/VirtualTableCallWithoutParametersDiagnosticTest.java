@@ -38,12 +38,13 @@ class VirtualTableCallWithoutParametersDiagnosticTest extends AbstractDiagnostic
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(5, 8, 43)
       .hasRange(48, 8, 42)
       .hasRange(58, 8, 44)
       .hasRange(78, 8, 51)
+      .hasRange(101, 7, 42)
     ;
 
   }
