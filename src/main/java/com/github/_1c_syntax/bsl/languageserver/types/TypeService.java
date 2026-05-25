@@ -187,6 +187,11 @@ public class TypeService {
     return typeRegistry.getDescription(typeRef, language);
   }
 
+  /** Имя типа для отображения в указанной локали LS (ru/en, с fallback). */
+  public String displayName(TypeRef typeRef, Language language) {
+    return typeRegistry.displayName(typeRef, language);
+  }
+
   /**
    * Сигнатуры конструкторов типа (для платформенных классов из JSON-пакета).
    * Пустой список, если конструкторов нет.

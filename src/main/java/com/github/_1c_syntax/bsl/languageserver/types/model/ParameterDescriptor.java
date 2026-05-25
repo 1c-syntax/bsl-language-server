@@ -31,29 +31,36 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
  * @param optional             является ли параметр опциональным
  * @param bilingualDescription двуязычное краткое описание параметра
  * @param defaultValue         текстовое представление значения по умолчанию
+ * @param variadic             вариадик-хвост: метод/конструктор принимает в этой
+ *                             позиции переменное число значений. Имя содержит
+ *                             единственную базу ({@code Значение}), которую
+ *                             потребитель нумерует по фактическим аргументам.
  */
 public record ParameterDescriptor(
   BilingualString bilingualName,
   TypeSet types,
   boolean optional,
   BilingualString bilingualDescription,
-  String defaultValue
+  String defaultValue,
+  boolean variadic
 ) {
 
-  public ParameterDescriptor {
-    if (bilingualName == null) {
-      bilingualName = BilingualString.EMPTY;
-    }
-    if (bilingualDescription == null) {
-      bilingualDescription = BilingualString.EMPTY;
-    }
-    defaultValue = defaultValue == null ? "" : defaultValue;
+  /** Compat-конструктор без флага {@code variadic} (=false). */
+  public ParameterDescriptor(BilingualString bilingualName, TypeSet types, boolean optional,
+                             BilingualString bilingualDescription, String defaultValue) {
+    this(bilingualName, types, optional, bilingualDescription, defaultValue, false);
+  }
+
+  /** Копия дескриптора с проставленным флагом {@code variadic}. */
+  public ParameterDescriptor withVariadic(boolean isVariadic) {
+    return new ParameterDescriptor(bilingualName, types, optional, bilingualDescription,
+      defaultValue, isVariadic);
   }
 
   /** Compat-конструктор с одноязычными name/description и {@code bilingualName}. */
   public ParameterDescriptor(String name, TypeSet types, boolean optional, String description,
                              String defaultValue, BilingualString bilingualName) {
-    this(bilingualName == null || bilingualName.isEmpty() ? BilingualString.of(name) : bilingualName,
+    this(bilingualName.isEmpty() ? BilingualString.of(name) : bilingualName,
       types, optional, BilingualString.of(description), defaultValue);
   }
 

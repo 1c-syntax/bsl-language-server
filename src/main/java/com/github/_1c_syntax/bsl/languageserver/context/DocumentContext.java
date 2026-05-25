@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
@@ -222,20 +223,34 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   public Locale getScriptVariantLocale() {
-    var mdConfiguration = getServerContext().getConfiguration();
+    return getScriptVariantLanguage().getLocale();
+  }
 
-    String languageTag;
+  /**
+   * Язык исходников проекта: для конфигурации с заданным {@code ScriptVariant} —
+   * именно он (русский/английский); для OS-файлов и проектов без mdclasses-конфы —
+   * {@link LanguageServerConfiguration#getLanguage()}.
+   * <p>
+   * Этот язык — преобладающий в коде. Completion/format/canonicalization keyword'ов
+   * пишут именно в нём, чтобы соответствовать стилю проекта (а не персональным
+   * настройкам интерфейса).
+   */
+  public Language getScriptVariantLanguage() {
+    var mdConfiguration = getServerContext().getConfiguration();
     if (mdConfiguration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
-      languageTag = getServerContext().getLanguageServerConfiguration().getLanguage().getLanguageCode();
-    } else {
-      var scriptVariant = mdConfiguration.getScriptVariant();
-      if (scriptVariant != ScriptVariant.UNKNOWN) {
-        languageTag = scriptVariant.shortName();
-      } else {
-        throw new IllegalArgumentException("Unknown scriptVariant " + scriptVariant);
-      }
+      return getServerContext().getLanguageServerConfiguration().getLanguage();
     }
-    return Locale.forLanguageTag(languageTag);
+    var scriptVariant = mdConfiguration.getScriptVariant();
+    if (scriptVariant == ScriptVariant.UNKNOWN) {
+      // Не удалось определить язык встроенного языка конфигурации —
+      // мягкий фолбэк на UI-язык LS (бросать нельзя: метод дёргается в
+      // hot-path completion/hover).
+      return getServerContext().getLanguageServerConfiguration().getLanguage();
+    }
+    var shortName = scriptVariant.shortName();
+    return "en".equalsIgnoreCase(shortName)
+      ? Language.EN
+      : Language.RU;
   }
 
   public MetricStorage getMetrics() {

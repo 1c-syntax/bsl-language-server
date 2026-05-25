@@ -36,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Подсвечивает присваивание значению в свойство, у которого режим доступа —
@@ -52,16 +53,18 @@ import org.eclipse.lsp4j.Position;
  * <ol>
  *   <li>{@link TypeRegistry#hasAnyReadOnlyMember()} — глобальный гейт.
  *       Без HBK / без accessMode-данных диагностика моментально no-op.</li>
- *   <li>{@link TypeRegistry#isReadOnlyMemberName(String)} — pre-filter по
- *       имени присваиваемого свойства.</li>
  *   <li>{@link TypeService#findMemberAt(com.github._1c_syntax.bsl.languageserver.context.DocumentContext,
  *       Position)} — точный резолв member'а с учётом инференции типа
  *       ресивера (глобальное свойство, локальная переменная, цепочка
- *       аксессоров).</li>
- *   <li>Финальная проверка {@code member.metadata().accessMode() == READ}
- *       либо {@link TypeRegistry#isReadOnlyMember(TypeRef, String)} как
- *       страховка.</li>
+ *       аксессоров). Резолв bilingual: read-only находится независимо от
+ *       того, на каком языке (ru/en) записано имя свойства.</li>
+ *   <li>Финальная проверка {@code member.metadata().accessMode() == READ}.</li>
  * </ol>
+ * <p>
+ * Pre-filter по имени свойства намеренно отсутствует: одно и то же имя
+ * (например, {@code Ссылка}) может быть read-only на одном типе и
+ * read-write на другом, поэтому решение принимается только по
+ * резолвленному member'у конкретного типа-владельца.
  * <p>
  * <b>Lock contention.</b> Раньше шаг 3 (findMemberAt → ExpressionTypeInferencer
  * → ReferenceResolver → ServerContextProvider.getDocument) брал per-document
@@ -85,7 +88,7 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
   private final TypeService typeService;
 
   @Override
-  public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
+  public @Nullable ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
     if (!typeRegistry.hasAnyReadOnlyMember()) {
       return super.visitAssignment(ctx);
     }
@@ -106,9 +109,6 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
       return super.visitAssignment(ctx);
     }
     var propertyName = propertyId.getText();
-    if (!typeRegistry.isReadOnlyMemberName(propertyName)) {
-      return super.visitAssignment(ctx);
-    }
     var member = typeService.findMemberAt(documentContext, positionInside(propertyId))
       .map(TypedMember::descriptor)
       .orElse(null);

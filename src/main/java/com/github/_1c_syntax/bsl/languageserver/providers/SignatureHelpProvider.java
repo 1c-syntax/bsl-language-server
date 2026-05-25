@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -28,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -77,6 +78,7 @@ public final class SignatureHelpProvider {
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final LanguageServerConfiguration configuration;
 
   /**
    * @return signature help для указанной позиции, либо пустой {@link SignatureHelp} если контекст
@@ -100,9 +102,12 @@ public final class SignatureHelpProvider {
       return emptyHelp();
     }
 
+    // Signature help — элемент интерфейса: язык из настроек LS, а не ScriptVariant.
+    var lang = configuration.getLanguage();
+    var argCount = argCount(doCall);
     var signatures = new ArrayList<SignatureInformation>(descriptor.signatures().size());
     for (var sig : descriptor.signatures()) {
-      signatures.add(toSignatureInformation(descriptor.name(), sig));
+      signatures.add(toSignatureInformation(descriptor.displayName(lang), sig, lang, argCount));
     }
 
     var help = new SignatureHelp();
@@ -332,7 +337,7 @@ public final class SignatureHelpProvider {
       if (documentContext.getFileType() != com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
         var libRef = findLibraryModuleReceiver(mc, receiver);
         if (libRef != null) {
-          typeSet = com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.of(libRef);
+          typeSet = TypeSet.of(libRef);
         }
       }
     }
@@ -478,7 +483,7 @@ public final class SignatureHelpProvider {
       var p = parameters.get(i);
       var types = i < declaredParamTypes.size()
         ? declaredParamTypes.get(i)
-        : com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY;
+        : TypeSet.EMPTY;
       var paramDescription = p.getDescription()
         .map(SignatureHelpProvider::buildParameterDescription)
         .orElse("");
@@ -493,17 +498,21 @@ public final class SignatureHelpProvider {
     return MemberDescriptor.method(method.getName(), description, List.of(sig));
   }
 
-  private static SignatureInformation toSignatureInformation(String methodName, SignatureDescriptor sig) {
+  private SignatureInformation toSignatureInformation(
+    String methodName, SignatureDescriptor sig, Language lang, int argCount
+  ) {
     var label = new StringBuilder(methodName).append('(');
-    var paramInfos = new ArrayList<ParameterInformation>(sig.parameters().size());
-    for (int i = 0; i < sig.parameters().size(); i++) {
-      var p = sig.parameters().get(i);
+    var units = expandParameters(sig.parameters(), lang, argCount);
+    var paramInfos = new ArrayList<ParameterInformation>(units.size());
+    for (int i = 0; i < units.size(); i++) {
+      var unit = units.get(i);
+      var p = unit.descriptor();
       if (i > 0) {
         label.append(", ");
       }
       int start = label.length();
-      label.append(p.name());
-      var typesLabel = renderTypes(p.types());
+      label.append(unit.name());
+      var typesLabel = renderTypes(p.types(), lang);
       if (!typesLabel.isEmpty()) {
         label.append(": ").append(typesLabel);
       }
@@ -514,25 +523,60 @@ public final class SignatureHelpProvider {
       int end = label.length();
       var info = new ParameterInformation();
       info.setLabel(Either.forRight(new org.eclipse.lsp4j.jsonrpc.messages.Tuple.Two<>(start, end)));
-      if (!p.description().isBlank()) {
-        info.setDocumentation(p.description());
+      var pDesc = p.displayDescription(lang);
+      if (!pDesc.isBlank()) {
+        info.setDocumentation(pDesc);
       }
       paramInfos.add(info);
     }
     label.append(')');
     if (sig.returnType() != null && sig.returnType() != TypeRef.UNKNOWN) {
-      label.append(": ").append(sig.returnType().qualifiedName());
+      label.append(": ").append(typeService.displayName(sig.returnType(), lang));
     }
     var info = new SignatureInformation();
     info.setLabel(label.toString());
     info.setParameters(paramInfos);
-    if (!sig.description().isBlank()) {
-      info.setDocumentation(sig.description());
+    var sigDesc = sig.displayDescription(lang);
+    if (!sigDesc.isBlank()) {
+      info.setDocumentation(sigDesc);
     }
     return info;
   }
 
-  private static String renderTypes(com.github._1c_syntax.bsl.languageserver.types.model.TypeSet types) {
+  /** Имя параметра + его дескриптор для отрисовки в signature help. */
+  private record ParamUnit(String name, ParameterDescriptor descriptor) {
+  }
+
+  /**
+   * Разворачивает параметры сигнатуры в плоский список единиц отрисовки.
+   * Вариадик-параметр (база {@code Значение}) превращается в нумерованные
+   * {@code Значение1}, {@code Значение2}, … по фактическому числу аргументов
+   * в хвосте плюс один следующий (минимум один). Остальные параметры — 1:1.
+   */
+  private static List<ParamUnit> expandParameters(
+    List<ParameterDescriptor> params, Language lang, int argCount
+  ) {
+    var units = new ArrayList<ParamUnit>(params.size());
+    for (int i = 0; i < params.size(); i++) {
+      var p = params.get(i);
+      if (p.variadic()) {
+        var count = Math.max(1, Math.max(0, argCount - i) + 1);
+        for (int k = 1; k <= count; k++) {
+          units.add(new ParamUnit(p.displayName(lang) + k, p));
+        }
+      } else {
+        units.add(new ParamUnit(p.displayName(lang), p));
+      }
+    }
+    return units;
+  }
+
+  private static int argCount(BSLParser.DoCallContext doCall) {
+    var paramList = doCall.callParamList();
+    return paramList == null ? 0 : paramList.callParam().size();
+  }
+
+  private String renderTypes(TypeSet types, Language lang) {
     if (types == null || types.isEmpty()) {
       return "";
     }
@@ -542,7 +586,7 @@ public final class SignatureHelpProvider {
       if (!first) {
         sb.append(", ");
       }
-      sb.append(ref.qualifiedName());
+      sb.append(typeService.displayName(ref, lang));
       first = false;
     }
     return sb.toString();

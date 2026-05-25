@@ -279,9 +279,25 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     List<? extends BSLParser.CallParamContext> args
   ) {
     var parameters = signature.parameters();
-    var max = Math.min(parameters.size(), args.size());
-    for (int i = 0; i < max; i++) {
-      var parameter = parameters.get(i);
+    if (parameters.isEmpty()) {
+      return;
+    }
+    var lang = currentLanguage();
+    var variadicIndex = variadicIndex(parameters);
+    for (int i = 0; i < args.size(); i++) {
+      ParameterDescriptor parameter;
+      String paramName;
+      if (variadicIndex >= 0 && i >= variadicIndex) {
+        // Вариадик-хвост: один параметр-база разворачивается в нумерованные
+        // имена по фактическим аргументам (Значение → Значение1, Значение2 …).
+        parameter = parameters.get(variadicIndex);
+        paramName = parameter.displayName(lang) + (i - variadicIndex + 1);
+      } else if (i < parameters.size()) {
+        parameter = parameters.get(i);
+        paramName = parameter.displayName(lang);
+      } else {
+        break;
+      }
       var callParam = args.get(i);
       var passedValue = callParam.getText();
       if (passedValue == null || passedValue.isBlank()) {
@@ -290,31 +306,45 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
         // `Новый Массив(Массив:);`.
         continue;
       }
-      var label = parameter.displayName(currentLanguage());
-      var bn = parameter.bilingualName();
-      if (!showParametersWithTheSameName()
-        && label != null
-        && !label.isBlank()
-        && (Strings.CI.contains(passedValue, label)
-          || (!bn.ru().isEmpty() && Strings.CI.contains(passedValue, bn.ru()))
-          || (!bn.en().isEmpty() && Strings.CI.contains(passedValue, bn.en())))) {
+      if (!showParametersWithTheSameName() && shadowsName(passedValue, paramName, parameter)) {
         continue;
       }
       var hint = new InlayHint();
       hint.setKind(InlayHintKind.Parameter);
-      hint.setLabel(buildLabel(parameter, passedValue));
+      hint.setLabel(buildLabel(paramName, parameter, passedValue));
       hint.setPosition(positionOf(callParam.getStart()));
-      if (!parameter.name().isBlank() || !parameter.description().isBlank()) {
-        hint.setTooltip(buildTooltip(parameter, member));
+      if (!paramName.isBlank() || !parameter.description().isBlank()) {
+        hint.setTooltip(buildTooltip(paramName, parameter, member));
       }
       hint.setPaddingRight(Boolean.TRUE);
       sink.add(hint);
     }
   }
 
-  private String buildLabel(ParameterDescriptor parameter, String passedValue) {
+  /** Индекс вариадик-параметра (он же последний), либо {@code -1}. */
+  private static int variadicIndex(List<ParameterDescriptor> parameters) {
+    for (int i = 0; i < parameters.size(); i++) {
+      if (parameters.get(i).variadic()) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /** Аргумент уже содержит имя параметра — хинт был бы избыточен. */
+  private static boolean shadowsName(String passedValue, String paramName, ParameterDescriptor parameter) {
+    if (paramName == null || paramName.isBlank()) {
+      return false;
+    }
+    var bn = parameter.bilingualName();
+    return Strings.CI.contains(passedValue, paramName)
+      || (!bn.ru().isEmpty() && Strings.CI.contains(passedValue, bn.ru()))
+      || (!bn.en().isEmpty() && Strings.CI.contains(passedValue, bn.en()));
+  }
+
+  private String buildLabel(String paramName, ParameterDescriptor parameter, String passedValue) {
     var sb = new StringBuilder();
-    sb.append(parameter.displayName(currentLanguage()));
+    sb.append(paramName);
     if (showDefaultValues() && passedValue.isBlank() && !parameter.defaultValue().isBlank()) {
       sb.append(" (").append(parameter.defaultValue()).append(')');
     } else {
@@ -323,10 +353,10 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     return sb.toString();
   }
 
-  private MarkupContent buildTooltip(ParameterDescriptor parameter, MemberDescriptor member) {
+  private MarkupContent buildTooltip(String paramName, ParameterDescriptor parameter, MemberDescriptor member) {
     var sb = new StringBuilder();
     var lang = currentLanguage();
-    sb.append("**").append(parameter.displayName(lang)).append("**");
+    sb.append("**").append(paramName).append("**");
     if (parameter.optional()) {
       sb.append(" _(").append(tr("optionalParameter")).append(")_");
     }

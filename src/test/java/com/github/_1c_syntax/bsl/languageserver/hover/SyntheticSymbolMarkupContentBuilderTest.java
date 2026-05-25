@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -52,14 +54,20 @@ class SyntheticSymbolMarkupContentBuilderTest {
   private CollectionHoverHints collectionHoverHints;
   @Mock
   private Resources resources;
+  @Mock
+  private LanguageServerConfiguration configuration;
 
   private SyntheticSymbolMarkupContentBuilder builder;
 
   @BeforeEach
   void setUp() {
-    builder = new SyntheticSymbolMarkupContentBuilder(typeRegistry, collectionHoverHints, resources);
+    builder = new SyntheticSymbolMarkupContentBuilder(typeRegistry, collectionHoverHints, resources, configuration);
     when(resources.getResourceString(eq(SyntheticSymbolMarkupContentBuilder.class), any(String.class)))
       .thenAnswer(inv -> "[" + inv.getArgument(1) + "]");
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    // displayName в реальном реестре отдаёт qualifiedName, если нет двуязычного имени.
+    when(typeRegistry.displayName(any(TypeRef.class), any()))
+      .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
   }
 
   @Test

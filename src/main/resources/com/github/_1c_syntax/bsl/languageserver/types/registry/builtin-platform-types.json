@@ -83,6 +83,8 @@
         "nameRu": "Добавить",
         "nameEn": "Add",
         "kind": "METHOD",
+        "descriptionRu": "Добавляет значение в конец массива.",
+        "descriptionEn": "Adds a value to the end of the array.",
         "signatures": [
           {
             "parameters": [
@@ -189,6 +191,20 @@
             "returnType": "Число"
           }
         ]
+      }
+    ],
+    "constructors": [
+      {
+        "parameters": [
+          {
+            "name": "КоличествоЭлементов",
+            "nameRu": "КоличествоЭлементов",
+            "nameEn": "ElementCount",
+            "optional": true,
+            "variadic": true
+          }
+        ],
+        "description": "Создаёт массив заданного размера (по числу элементов в каждом измерении)."
       }
     ]
   },
@@ -1287,61 +1303,88 @@
       },
       {
         "name": "ВерсияДанных",
+        "nameRu": "ВерсияДанных",
+        "nameEn": "DataVersion",
         "kind": "PROPERTY",
         "returnType": "Строка",
-        "description": "Содержит текущую версию данных объекта.",
+        "descriptionRu": "Содержит текущую версию данных объекта.",
+        "descriptionEn": "Contains the current version of the object data.",
         "accessMode": "READ"
       },
       {
         "name": "Код",
+        "nameRu": "Код",
+        "nameEn": "Code",
         "kind": "PROPERTY",
         "returnType": "Строка",
-        "description": "Содержит код элемента справочника.",
+        "descriptionRu": "Содержит код элемента справочника.",
+        "descriptionEn": "Contains catalog item code.",
         "accessMode": "READ"
       },
       {
         "name": "Наименование",
+        "nameRu": "Наименование",
+        "nameEn": "Description",
         "kind": "PROPERTY",
         "returnType": "Строка",
-        "description": "Содержит наименование элемента справочника.",
+        "descriptionRu": "Содержит наименование элемента справочника.",
+        "descriptionEn": "Contains the description of a catalog item.",
         "accessMode": "READ"
       },
       {
         "name": "ПометкаУдаления",
+        "nameRu": "ПометкаУдаления",
+        "nameEn": "DeletionMark",
         "kind": "PROPERTY",
         "returnType": "Булево",
-        "description": "Содержит признак пометки на удаление элемента справочника.",
+        "descriptionRu": "Содержит признак пометки на удаление элемента справочника.",
+        "descriptionEn": "Contains catalog item deletion mark.",
         "accessMode": "READ"
       },
       {
         "name": "Ссылка",
+        "nameRu": "Ссылка",
+        "nameEn": "Ref",
         "kind": "PROPERTY",
         "returnType": "СправочникСсылка.<Имя справочника>",
-        "description": "Содержит ссылку на элемент справочника.",
+        "descriptionRu": "Содержит ссылку на элемент справочника.",
+        "descriptionEn": "Contains reference to the catalog item.",
         "accessMode": "READ"
       },
       {
         "name": "Метаданные",
+        "nameRu": "Метаданные",
+        "nameEn": "Metadata",
         "kind": "METHOD",
-        "description": "Предоставляет доступ к объекту описания метаданных справочника."
+        "descriptionRu": "Предоставляет доступ к объекту описания метаданных справочника.",
+        "descriptionEn": "Provides access to metadata description object of the catalog."
       },
       {
         "name": "ПолучитьОбъект",
+        "nameRu": "ПолучитьОбъект",
+        "nameEn": "GetObject",
         "kind": "METHOD",
         "returnType": "СправочникОбъект.<Имя справочника>",
-        "description": "Получает по ссылке объект."
+        "descriptionRu": "Получает по ссылке объект.",
+        "descriptionEn": "Uses reference to obtain object."
       },
       {
         "name": "Пустая",
+        "nameRu": "Пустая",
+        "nameEn": "IsEmpty",
         "kind": "METHOD",
         "returnType": "Булево",
-        "description": "Определяет, является ли ссылка пустой или нет."
+        "descriptionRu": "Определяет, является ли ссылка пустой или нет.",
+        "descriptionEn": "Determines whether a reference is empty or not."
       },
       {
         "name": "УникальныйИдентификатор",
+        "nameRu": "УникальныйИдентификатор",
+        "nameEn": "UUID",
         "kind": "METHOD",
         "returnType": "УникальныйИдентификатор",
-        "description": "Получает уникальный идентификатор ссылки."
+        "descriptionRu": "Получает уникальный идентификатор ссылки.",
+        "descriptionEn": "Obtains reference unique identifier."
       }
     ]
   },
@@ -1482,61 +1525,89 @@
       },
       {
         "name": "ВерсияДанных",
+        "nameRu": "ВерсияДанных",
+        "nameEn": "DataVersion",
         "kind": "PROPERTY",
         "returnType": "Строка",
-        "description": "Содержит текущую версию данных объекта.",
+        "descriptionRu": "Содержит текущую версию данных объекта.",
+        "descriptionEn": "Contains the current version of the object data.",
         "accessMode": "READ"
       },
       {
         "name": "Дата",
+        "nameRu": "Дата",
+        "nameEn": "Date",
         "kind": "PROPERTY",
         "returnType": "Дата",
-        "description": "Содержит дату и время документа.",
+        "descriptionRu": "Содержит дату и время документа.",
+        "descriptionEn": "Contains date and time of the document.",
         "accessMode": "READ"
       },
       {
         "name": "Номер",
+        "nameRu": "Номер",
+        "nameEn": "Number",
         "kind": "PROPERTY",
         "returnType": "Строка",
-        "description": "Содержит номер документа.",
+        "descriptionRu": "Содержит номер документа.",
+        "descriptionEn": "Contains the document number.",
         "accessMode": "READ"
       },
       {
         "name": "ПометкаУдаления",
+        "nameRu": "ПометкаУдаления",
+        "nameEn": "DeletionMark",
         "kind": "PROPERTY",
         "returnType": "Булево",
-        "description": "Содержит признак пометки на удаление документа.",
+        "descriptionRu": "Содержит признак пометки на удаление документа.",
+        "descriptionEn": "Contains document deletion mark.",
         "accessMode": "READ"
       },
       {
         "name": "Проведен",
+        "nameRu": "Проведен",
+        "nameEn": "Posted",
         "kind": "PROPERTY",
         "returnType": "Булево",
-        "description": "Содержит признак проведенности документа.",
+        "descriptionRu": "Содержит признак проведенности документа.",
+        "descriptionEn": "Contains document posted flag.",
         "accessMode": "READ"
       },
       {
         "name": "Ссылка",
+        "nameRu": "Ссылка",
+        "nameEn": "Ref",
         "kind": "PROPERTY",
         "returnType": "ДокументСсылка.<Имя документа>",
-        "description": "Содержит ссылку на документ.",
+        "descriptionRu": "Содержит ссылку на документ.",
+        "descriptionEn": "Contains reference to the document.",
         "accessMode": "READ"
       },
       {
         "name": "Метаданные",
+        "nameRu": "Метаданные",
+        "nameEn": "Metadata",
         "kind": "METHOD",
-        "description": "Предоставляет доступ к объекту описания метаданных документа."
+        "descriptionRu": "Предоставляет доступ к объекту описания метаданных документа.",
+        "descriptionEn": "Provides access to metadata description object of the document."
       },
       {
         "name": "ПолучитьОбъект",
+        "nameRu": "ПолучитьОбъект",
+        "nameEn": "GetObject",
         "kind": "METHOD",
         "returnType": "ДокументОбъект.<Имя документа>",
-        "description": "Получает по ссылке объект для чтения, изменения и удаления документа."
+        "descriptionRu": "Получает по ссылке объект для чтения, изменения и удаления документа.",
+        "descriptionEn": "Uses reference to obtain object for reading, modifying and deleting the document."
       },
       {
         "name": "Пустая",
+        "nameRu": "Пустая",
+        "nameEn": "IsEmpty",
         "kind": "METHOD",
-        "returnType": "Булево"
+        "returnType": "Булево",
+        "descriptionRu": "Определяет, является ли ссылка пустой или нет.",
+        "descriptionEn": "Determines whether a reference is empty or not."
       }
     ]
   },

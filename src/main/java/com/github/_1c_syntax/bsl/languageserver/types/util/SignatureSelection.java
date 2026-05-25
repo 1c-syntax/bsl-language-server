@@ -120,7 +120,8 @@ public final class SignatureSelection {
   /**
    * Сигнатура принимает {@code argCount} аргументов, если {@code argCount}
    * попадает в диапазон {@code [required, total]} либо последний параметр
-   * variadic (имя содержит {@code ",..."}) — тогда верхняя граница неограничена.
+   * вариадик ({@code ParameterDescriptor.variadic()}) — тогда верхняя граница
+   * неограничена.
    */
   private static boolean acceptsArity(SignatureDescriptor sig, int argCount) {
     var params = sig.parameters();
@@ -135,10 +136,7 @@ public final class SignatureSelection {
       return true;
     }
     if (!params.isEmpty()) {
-      var last = params.get(params.size() - 1);
-      if (last.name() != null && last.name().contains(",...,") && argCount >= total - 1) {
-        return true;
-      }
+      return params.getLast().variadic() && argCount >= total - 1;
     }
     return false;
   }
@@ -152,17 +150,17 @@ public final class SignatureSelection {
   private static int scoreByTypes(SignatureDescriptor sig, List<TypeSet> argTypes) {
     int score = 0;
     var params = sig.parameters();
-    if (params.isEmpty() || argTypes == null || argTypes.isEmpty()) {
+    if (params.isEmpty() || argTypes.isEmpty()) {
       return 0;
     }
     int n = Math.min(params.size(), argTypes.size());
     for (int i = 0; i < n; i++) {
       var argType = argTypes.get(i);
       var paramType = params.get(i).types();
-      if (argType == null || argType.isEmpty()) {
+      if (argType.isEmpty()) {
         continue;
       }
-      if (paramType == null || paramType.isEmpty()) {
+      if (paramType.isEmpty()) {
         continue;
       }
       if (typesIntersect(argType, paramType)) {
@@ -176,12 +174,12 @@ public final class SignatureSelection {
     // Если последний параметр variadic, считаем что «лишние» аргументы
     // matches на нём с типом последнего параметра.
     if (argTypes.size() > params.size()) {
-      var last = params.get(params.size() - 1);
-      if (last.name() != null && last.name().contains(",...,")) {
+      var last = params.getLast();
+      if (last.variadic()) {
         var paramType = last.types();
         for (int i = params.size(); i < argTypes.size(); i++) {
           var argType = argTypes.get(i);
-          if (argType == null || argType.isEmpty() || paramType == null || paramType.isEmpty()) {
+          if (argType.isEmpty() || paramType.isEmpty()) {
             continue;
           }
           if (typesIntersect(argType, paramType)) {

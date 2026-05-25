@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -122,31 +123,39 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     if (types.isEmpty()) {
       return "";
     }
+    // Hover — элемент интерфейса, поэтому язык отображения берём из настроек
+    // LS (configuration), а не из ScriptVariant (язык исходников).
+    var lang = configuration.getLanguage();
     String joined = types.refs().stream()
-      .map(ref -> renderRef(types, ref))
+      .map(ref -> renderRef(types, ref, lang))
       .collect(Collectors.joining(" | "));
     return "%s: %s".formatted(getResourceString(TYPE_KEY), joined);
   }
 
-  private static String renderRef(TypeSet owner, TypeRef ref) {
-    var name = ref.qualifiedName();
+  private String renderRef(TypeSet owner, TypeRef ref, Language lang) {
+    var name = typeService.displayName(ref, lang);
     var elementTypes = owner.getElementTypes(ref);
     if (!elementTypes.isEmpty()) {
       var elemJoined = elementTypes.refs().stream()
-        .map(r -> renderRef(elementTypes, r))
+        .map(r -> renderRef(elementTypes, r, lang))
         .collect(Collectors.joining(", "));
-      name = name + " из " + elemJoined;
+      name = name + collectionOf(lang) + elemJoined;
     }
     var fields = owner.getLocalFields(ref);
     if (!fields.isEmpty()) {
       var fieldsJoined = fields.entrySet().stream()
         .map(e -> e.getKey() + ": " + e.getValue().refs().stream()
-          .map(r -> renderRef(e.getValue(), r))
+          .map(r -> renderRef(e.getValue(), r, lang))
           .collect(Collectors.joining(" | ")))
         .collect(Collectors.joining(", "));
       name = name + " { " + fieldsJoined + " }";
     }
     return name;
+  }
+
+  /** Разделитель «коллекция → тип элемента» в локали отображения. */
+  private static String collectionOf(Language lang) {
+    return lang == Language.EN ? " Of " : " из ";
   }
 
 }
