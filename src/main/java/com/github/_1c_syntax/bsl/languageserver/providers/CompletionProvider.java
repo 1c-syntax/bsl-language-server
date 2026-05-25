@@ -561,7 +561,7 @@ public final class CompletionProvider {
   private static String methodDetail(MemberDescriptor member, Language scriptVariant) {
     var signatures = member.signatures();
     if (signatures.size() > 1) {
-      return formatSignaturesCount(signatures.size());
+      return formatSignaturesCount(signatures.size(), scriptVariant);
     }
     if (signatures.isEmpty()) {
       return "";
@@ -604,7 +604,10 @@ public final class CompletionProvider {
     return ref.simpleName();
   }
 
-  private static String formatSignaturesCount(int count) {
+  private static String formatSignaturesCount(int count, Language scriptVariant) {
+    if (scriptVariant == Language.EN) {
+      return count + (count == 1 ? " overload" : " overloads");
+    }
     var mod10 = count % 10;
     var mod100 = count % 100;
     String word;

@@ -423,7 +423,22 @@
       {
         "name": "Скопировать",
         "kind": "METHOD",
-        "returnType": "ТаблицаЗначений"
+        "returnType": "ТаблицаЗначений",
+        "signatures": [
+          {
+            "parameters": [],
+            "returnType": "ТаблицаЗначений",
+            "description": "Создаёт полную копию таблицы значений."
+          },
+          {
+            "parameters": [
+              { "name": "Строки", "optional": true },
+              { "name": "Колонки", "optional": true }
+            ],
+            "returnType": "ТаблицаЗначений",
+            "description": "Создаёт копию по отобранным строкам и колонкам."
+          }
+        ]
       }
     ]
   },

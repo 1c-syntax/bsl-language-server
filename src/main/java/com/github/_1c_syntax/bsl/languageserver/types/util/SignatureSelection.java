@@ -136,7 +136,10 @@ public final class SignatureSelection {
       return true;
     }
     if (!params.isEmpty()) {
-      return params.getLast().variadic() && argCount >= total - 1;
+      // Вариадик-хвост снимает верхнюю границу arity, но нижняя остаётся
+      // required (обязательный вариадик-параметр, например Макс(Значение…),
+      // требует хотя бы одного значения).
+      return params.getLast().variadic() && argCount >= required;
     }
     return false;
   }

@@ -148,6 +148,25 @@ class SignatureSelectionTest {
   }
 
   @Test
+  void pickIndexByTypesRequiredVariadicRejectsTooFewArgs() {
+    // Макс(Значение…) — вариадик ОБЯЗАТЕЛЕН: нижняя граница arity = required (≥1),
+    // а не total-1. 0 аргументов не подходит.
+    var requiredVariadic = signature(List.of(
+      variadicParam("Значение", false, TypeSet.of(NUMBER))
+    ));
+    var sigs = List.of(requiredVariadic);
+
+    assertThat(SignatureSelection.pickIndexByTypes(sigs, List.of()))
+      .as("обязательный вариадик требует хотя бы один аргумент")
+      .isEqualTo(-1);
+    assertThat(SignatureSelection.pickIndexByTypes(sigs, List.of(TypeSet.of(NUMBER))))
+      .isEqualTo(0);
+    assertThat(SignatureSelection.pickIndexByTypes(sigs,
+      List.of(TypeSet.of(NUMBER), TypeSet.of(NUMBER), TypeSet.of(NUMBER))))
+      .isEqualTo(0);
+  }
+
+  @Test
   void pickIndexByTypesFallsBackToArityWhenNoMatch() {
     var sigs = List.of(
       signature(List.of(param("a", false, TypeSet.of(ARRAY)))),

@@ -1099,6 +1099,40 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void multiSignatureDetailFollowsConfiguredLanguage() {
+    // detail метода с несколькими сигнатурами («N вариантов синтаксиса») —
+    // на языке проекта, а не всегда по-русски.
+    var content = "ТЗ = Новый ТаблицаЗначений;\nТЗ.";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 3));
+
+    languageServerConfiguration.setLanguage(Language.RU);
+    try {
+      assertThat(copyDetail(documentContext, params))
+        .as("RU detail — «N … синтаксиса»").endsWith("синтаксиса");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+
+    languageServerConfiguration.setLanguage(Language.EN);
+    try {
+      assertThat(copyDetail(documentContext, params))
+        .as("EN detail — «N overloads», не русский").isEqualTo("2 overloads");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+  }
+
+  private String copyDetail(com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext,
+                            CompletionParams params) {
+    return completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> "Скопировать".equalsIgnoreCase(it.getLabel()) || "Copy".equalsIgnoreCase(it.getLabel()))
+      .findFirst().orElseThrow().getDetail();
+  }
+
+  @Test
   void dotCompletionOnMassivShowsMethodsAsMethodKind() {
     // given — М.| на Массив — все members с MemberKind=METHOD получают
     // CompletionItemKind.Method (см. buildMemberItem).
