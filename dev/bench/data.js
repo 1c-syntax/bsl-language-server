@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779715159016,
+  "lastUpdate": 1779731777440,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35495,6 +35495,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.975193016487569",
             "extra": "mean: 74.54921396573384 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3e052e34140c4e7f0fd3758ea714ef0fc78406e0",
+          "message": "Merge pull request #3942 from 1c-syntax/feature/type-system-v2-stdattrs-bilingual\n\nfeat(types): bilingual hover/completion/signature + вариадик-параметры",
+          "timestamp": "2026-05-25T18:58:48+02:00",
+          "tree_id": "b5caf50883da17ef9e191a13e7f95ea7d1e74ede",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3e052e34140c4e7f0fd3758ea714ef0fc78406e0"
+        },
+        "date": 1779731769449,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 384.31145723660785,
+            "unit": "sec",
+            "range": "stddev: 26.979347826949894",
+            "extra": "mean: 384.31145723660785 sec\nrounds: 3"
           }
         ]
       }
