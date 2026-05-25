@@ -436,7 +436,8 @@
               { "name": "Колонки", "nameRu": "Колонки", "nameEn": "Columns", "optional": true }
             ],
             "returnType": "ТаблицаЗначений",
-            "description": "Создаёт копию по отобранным строкам и колонкам."
+            "descriptionRu": "Создаёт копию по отобранным строкам и колонкам.",
+            "descriptionEn": "Creates a copy by selected rows and columns."
           }
         ]
       }
