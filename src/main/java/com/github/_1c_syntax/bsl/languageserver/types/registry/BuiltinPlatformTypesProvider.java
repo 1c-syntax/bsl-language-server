@@ -69,6 +69,9 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json";
 
+  /** Размер пары ru/en-членов при склейке двуязычных дубликатов. */
+  private static final int PAIR_SIZE = 2;
+
   /**
    * Кэш десериализованных деклараций. JSON-ресурс упакован в jar и неизменен,
    * поэтому парсим его один раз на JVM (десятки workspace-контекстов в тестах
@@ -261,7 +264,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
    * (en-слот заполнен) правило не срабатывает — метод остаётся no-op.
    */
   private static List<MemberDescriptor> mergeBilingualPairs(List<MemberDescriptor> members) {
-    if (members.size() < 2) {
+    if (members.size() < PAIR_SIZE) {
       return members;
     }
     var result = new ArrayList<MemberDescriptor>(members.size());
@@ -270,7 +273,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var ru = members.get(i);
       if (i + 1 < members.size() && isBilingualPair(ru, members.get(i + 1))) {
         result.add(mergePair(ru, members.get(i + 1)));
-        i += 2;
+        i += PAIR_SIZE;
       } else {
         result.add(ru);
         i++;

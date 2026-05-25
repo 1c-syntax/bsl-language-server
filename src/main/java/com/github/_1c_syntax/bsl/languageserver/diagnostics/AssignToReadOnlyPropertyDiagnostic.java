@@ -38,6 +38,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Optional;
+
 /**
  * Подсвечивает присваивание значению в свойство, у которого режим доступа —
  * {@link AccessMode#READ}.
@@ -89,38 +91,36 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public @Nullable ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
+    readOnlyProperty(ctx).ifPresent(propertyId ->
+      diagnosticStorage.addDiagnostic(Ranges.create(propertyId), info.getMessage(propertyId.getText())));
+    return super.visitAssignment(ctx);
+  }
+
+  /**
+   * Идентификатор присваиваемого свойства, если оно резолвится в read-only член
+   * конкретного типа-владельца (независимо от языка имени). Иначе — empty.
+   */
+  private Optional<TerminalNode> readOnlyProperty(BSLParser.AssignmentContext ctx) {
     if (!typeRegistry.hasAnyReadOnlyMember()) {
-      return super.visitAssignment(ctx);
+      return Optional.empty();
     }
     var lValue = ctx.lValue();
-    if (lValue == null) {
-      return super.visitAssignment(ctx);
+    if (lValue == null || lValue.acceptor() == null) {
+      return Optional.empty();
     }
-    var acceptor = lValue.acceptor();
-    if (acceptor == null) {
-      return super.visitAssignment(ctx);
-    }
-    var accessProperty = acceptor.accessProperty();
-    if (accessProperty == null) {
-      return super.visitAssignment(ctx);
+    var accessProperty = lValue.acceptor().accessProperty();
+    if (accessProperty == null || accessProperty.IDENTIFIER() == null) {
+      return Optional.empty();
     }
     var propertyId = accessProperty.IDENTIFIER();
-    if (propertyId == null) {
-      return super.visitAssignment(ctx);
-    }
-    var propertyName = propertyId.getText();
     var member = typeService.findMemberAt(documentContext, positionInside(propertyId))
       .map(TypedMember::descriptor)
       .orElse(null);
-    if (member == null || member.kind() != MemberKind.PROPERTY) {
-      return super.visitAssignment(ctx);
+    if (member == null || member.kind() != MemberKind.PROPERTY
+      || member.metadata().accessMode() != AccessMode.READ) {
+      return Optional.empty();
     }
-    if (member.metadata().accessMode() != AccessMode.READ) {
-      return super.visitAssignment(ctx);
-    }
-    diagnosticStorage.addDiagnostic(Ranges.create(propertyId),
-      info.getMessage(propertyName));
-    return super.visitAssignment(ctx);
+    return Optional.of(propertyId);
   }
 
   private static Position positionInside(TerminalNode terminal) {

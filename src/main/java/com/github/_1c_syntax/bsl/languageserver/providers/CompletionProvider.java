@@ -279,7 +279,6 @@ public final class CompletionProvider {
     var prefix = lineInfo.prefix.toLowerCase(Locale.ROOT);
     var afterNew = isAfterNew(lineInfo.line, lineInfo.cursor - lineInfo.prefix.length());
     var fileType = documentContext.getFileType();
-    var scriptVariant = documentContext.getScriptVariantLanguage();
 
     var items = new ArrayList<CompletionItem>();
 
@@ -302,6 +301,7 @@ public final class CompletionProvider {
       return usedLibsLower.contains(origin.get().toLowerCase(Locale.ROOT));
     };
 
+    var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
       for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType, scriptVariant)) {
         if (isImplicitlyHiddenInCompletion(className)) {

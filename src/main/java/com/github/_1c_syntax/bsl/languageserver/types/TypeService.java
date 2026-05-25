@@ -456,10 +456,11 @@ public class TypeService {
     int callArgCount,
     List<TypeSet> argTypes
   ) {
-    public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
+    public TypedMember(@Nullable TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
       this(owner, descriptor, range, callArgCount, List.of());
     }
-    public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range) {
+
+    public TypedMember(@Nullable TypeRef owner, MemberDescriptor descriptor, Range range) {
       this(owner, descriptor, range, -1, List.of());
     }
   }
