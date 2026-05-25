@@ -59,16 +59,10 @@ public record ParameterDescriptor(
     this(bilingualName, types, optional, bilingualDescription, defaultValue, false);
   }
 
-  /** Копия дескриптора с проставленным флагом {@code variadic}. */
-  public ParameterDescriptor withVariadic(boolean isVariadic) {
-    return new ParameterDescriptor(bilingualName, types, optional, bilingualDescription,
-      defaultValue, isVariadic);
-  }
-
   /** Compat-конструктор с одноязычными name/description и {@code bilingualName}. */
   public ParameterDescriptor(String name, TypeSet types, boolean optional, String description,
                              String defaultValue, BilingualString bilingualName) {
-    this(bilingualName.isEmpty() ? BilingualString.of(name) : bilingualName,
+    this(nameOrFallback(name, bilingualName),
       types, optional, BilingualString.of(description), defaultValue);
   }
 
@@ -91,6 +85,17 @@ public record ParameterDescriptor(
   public static ParameterDescriptor of(String name, boolean optional) {
     return new ParameterDescriptor(BilingualString.of(name), TypeSet.EMPTY, optional,
       BilingualString.EMPTY, "");
+  }
+
+  private static BilingualString nameOrFallback(String name, BilingualString bilingualName) {
+    var bn = Objects.requireNonNullElse(bilingualName, BilingualString.EMPTY);
+    return bn.isEmpty() ? BilingualString.of(name) : bn;
+  }
+
+  /** Копия дескриптора с проставленным флагом {@code variadic}. */
+  public ParameterDescriptor withVariadic(boolean isVariadic) {
+    return new ParameterDescriptor(bilingualName, types, optional, bilingualDescription,
+      defaultValue, isVariadic);
   }
 
   /** Compat-аксессор: primary написание имени. */

@@ -84,10 +84,11 @@ class AssignToReadOnlyPropertyDiagnosticTest extends AbstractDiagnosticTest<Assi
     var messages = diagnostics.stream()
       .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
       .toList();
-    assertThat(messages).anyMatch(m -> m.contains("Ссылка"));
-    assertThat(messages).anyMatch(m -> m.contains("Дата"));
-    assertThat(messages).anyMatch(m -> m.contains("Ref"));
-    assertThat(messages).anyMatch(m -> m.contains("Date"));
+    assertThat(messages)
+      .anyMatch(m -> m.contains("Ссылка"))
+      .anyMatch(m -> m.contains("Дата"))
+      .anyMatch(m -> m.contains("Ref"))
+      .anyMatch(m -> m.contains("Date"));
   }
 
   @Test

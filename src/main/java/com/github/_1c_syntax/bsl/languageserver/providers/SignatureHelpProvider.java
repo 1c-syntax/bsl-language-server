@@ -48,6 +48,7 @@ import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.Tuple;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -510,7 +511,7 @@ public final class SignatureHelpProvider {
       if (i > 0) {
         label.append(", ");
       }
-      int start = label.length();
+      var start = label.length();
       label.append(unit.name());
       var typesLabel = renderTypes(p.types(), lang);
       if (!typesLabel.isEmpty()) {
@@ -520,9 +521,9 @@ public final class SignatureHelpProvider {
         // Платформенный синтаксис: «ИмяПараметра = ЗначениеПоУмолчанию».
         label.append(" = ").append(p.defaultValue());
       }
-      int end = label.length();
+      var end = label.length();
       var info = new ParameterInformation();
-      info.setLabel(Either.forRight(new org.eclipse.lsp4j.jsonrpc.messages.Tuple.Two<>(start, end)));
+      info.setLabel(Either.forRight(new Tuple.Two<>(start, end)));
       var pDesc = p.displayDescription(lang);
       if (!pDesc.isBlank()) {
         info.setDocumentation(pDesc);
@@ -573,7 +574,13 @@ public final class SignatureHelpProvider {
 
   private static int argCount(BSLParser.DoCallContext doCall) {
     var paramList = doCall.callParamList();
-    return paramList == null ? 0 : paramList.callParam().size();
+    if (paramList == null) {
+      return 0;
+    }
+    return (int) paramList.callParam().stream()
+      .map(callParam -> callParam.getText())
+      .filter(text -> text != null && !text.isBlank())
+      .count();
   }
 
   private String renderTypes(TypeSet types, Language lang) {

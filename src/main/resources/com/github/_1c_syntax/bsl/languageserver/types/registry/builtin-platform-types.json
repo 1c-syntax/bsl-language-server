@@ -432,8 +432,8 @@
           },
           {
             "parameters": [
-              { "name": "Строки", "optional": true },
-              { "name": "Колонки", "optional": true }
+              { "name": "Строки", "nameRu": "Строки", "nameEn": "Rows", "optional": true },
+              { "name": "Колонки", "nameRu": "Колонки", "nameEn": "Columns", "optional": true }
             ],
             "returnType": "ТаблицаЗначений",
             "description": "Создаёт копию по отобранным строкам и колонкам."

@@ -160,10 +160,10 @@ class SignatureSelectionTest {
       .as("обязательный вариадик требует хотя бы один аргумент")
       .isEqualTo(-1);
     assertThat(SignatureSelection.pickIndexByTypes(sigs, List.of(TypeSet.of(NUMBER))))
-      .isEqualTo(0);
+      .isZero();
     assertThat(SignatureSelection.pickIndexByTypes(sigs,
       List.of(TypeSet.of(NUMBER), TypeSet.of(NUMBER), TypeSet.of(NUMBER))))
-      .isEqualTo(0);
+      .isZero();
   }
 
   @Test

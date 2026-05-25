@@ -46,14 +46,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;

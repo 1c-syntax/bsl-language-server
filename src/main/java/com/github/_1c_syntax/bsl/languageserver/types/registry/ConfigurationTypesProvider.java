@@ -174,10 +174,10 @@ public class ConfigurationTypesProvider {
       if (!fullName.getRu().isBlank()) {
         managerRu = fullName.getRu() + "Менеджер." + name;
         var fullEn = fullName.getEn();
-        managerEn = fullEn.isBlank() ? null : fullEn + "Manager." + name;
+        managerEn = fullEn.isBlank() ? null : (fullEn + "Manager." + name);
       } else {
         managerRu = groupRu + "." + name;
-        managerEn = groupEn.equals(groupRu) ? null : groupEn + "." + name;
+        managerEn = groupEn.equals(groupRu) ? null : (groupEn + "." + name);
       }
 
       var ref = typeRegistry.registerConfigurationType(managerRu);
@@ -289,7 +289,7 @@ public class ConfigurationTypesProvider {
     final var capturedFullRu = fullRu;
 
     var objectRu = fullRu + "Объект." + name;
-    var objectEn = fullEn.isBlank() ? "" : fullEn + "Object." + name;
+    var objectEn = fullEn.isBlank() ? "" : (fullEn + "Object." + name);
     var objectRef = registerWithAlias(objectRu, objectEn);
 
     var refRu = fullRu + "Ссылка." + name;
@@ -472,7 +472,7 @@ public class ConfigurationTypesProvider {
 
   private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
     var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (!qualifiedEn.equals(qualifiedRu)) {
+    if (!qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
       typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
     }
     return ref;

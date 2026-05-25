@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.util;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -55,12 +56,14 @@ public final class SignatureSelection {
     int fallback = -1;
     for (int i = 0; i < signatures.size(); i++) {
       var sig = signatures.get(i);
-      int total = sig.parameters().size();
-      int required = (int) sig.parameters().stream().filter(p -> !p.optional()).count();
-      if (argCount >= required && argCount <= total) {
+      var params = sig.parameters();
+      int total = params.size();
+      int required = (int) params.stream().filter(p -> !p.optional()).count();
+      var variadic = !params.isEmpty() && params.getLast().variadic();
+      if (argCount >= required && (argCount <= total || variadic)) {
         return i;
       }
-      if (fallback == -1 && total == argCount) {
+      if (fallback == -1 && !variadic && total == argCount) {
         fallback = i;
       }
     }
@@ -151,47 +154,42 @@ public final class SignatureSelection {
    * вычитают score).
    */
   private static int scoreByTypes(SignatureDescriptor sig, List<TypeSet> argTypes) {
-    int score = 0;
     var params = sig.parameters();
     if (params.isEmpty() || argTypes.isEmpty()) {
       return 0;
     }
-    int n = Math.min(params.size(), argTypes.size());
-    for (int i = 0; i < n; i++) {
-      var argType = argTypes.get(i);
-      var paramType = params.get(i).types();
-      if (argType.isEmpty()) {
-        continue;
-      }
-      if (paramType.isEmpty()) {
-        continue;
-      }
-      if (typesIntersect(argType, paramType)) {
-        score++;
-      } else {
-        // Заявленный тип параметра несовместим с типом аргумента — это
-        // сильный негативный сигнал.
-        score--;
-      }
+    var score = 0;
+    var n = Math.min(params.size(), argTypes.size());
+    for (var i = 0; i < n; i++) {
+      score += scoreOne(argTypes.get(i), params.get(i).types());
     }
-    // Если последний параметр variadic, считаем что «лишние» аргументы
-    // matches на нём с типом последнего параметра.
-    if (argTypes.size() > params.size()) {
-      var last = params.getLast();
-      if (last.variadic()) {
-        var paramType = last.types();
-        for (int i = params.size(); i < argTypes.size(); i++) {
-          var argType = argTypes.get(i);
-          if (argType.isEmpty() || paramType.isEmpty()) {
-            continue;
-          }
-          if (typesIntersect(argType, paramType)) {
-            score++;
-          } else {
-            score--;
-          }
-        }
-      }
+    return score + scoreVariadicTail(params, argTypes);
+  }
+
+  /**
+   * Скоринг одного аргумента: {@code +1} при пересечении типов, {@code -1} при
+   * несовместимости (сильный негативный сигнал), {@code 0} если тип аргумента
+   * или параметра неизвестен.
+   */
+  private static int scoreOne(TypeSet argType, TypeSet paramType) {
+    if (argType.isEmpty() || paramType.isEmpty()) {
+      return 0;
+    }
+    return typesIntersect(argType, paramType) ? 1 : -1;
+  }
+
+  /**
+   * Доскоринг «лишних» аргументов (сверх числа параметров) на типе вариадик-хвоста.
+   * {@code 0}, если хвост не вариадик или лишних аргументов нет.
+   */
+  private static int scoreVariadicTail(List<ParameterDescriptor> params, List<TypeSet> argTypes) {
+    if (argTypes.size() <= params.size() || !params.getLast().variadic()) {
+      return 0;
+    }
+    var paramType = params.getLast().types();
+    var score = 0;
+    for (var i = params.size(); i < argTypes.size(); i++) {
+      score += scoreOne(argTypes.get(i), paramType);
     }
     return score;
   }

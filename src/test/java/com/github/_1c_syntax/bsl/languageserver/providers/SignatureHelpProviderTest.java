@@ -128,9 +128,10 @@ class SignatureHelpProviderTest {
     // Signature help — элемент интерфейса: при language=EN имя метода и
     // параметр показываются по-английски (Add(Value)), хотя в исходнике
     // написано русское Добавить.
-    var content =
-      "Массив = Новый Массив;\n"
-        + "Массив.Добавить(1);\n";
+    var content = """
+      Массив = Новый Массив;
+      Массив.Добавить(1);
+      """;
     var documentContext = TestUtils.getDocumentContext(content);
 
     var params = new SignatureHelpParams();

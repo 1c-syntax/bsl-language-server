@@ -349,22 +349,13 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   private static boolean isCyrillic(String name) {
-    for (var i = 0; i < name.length(); i++) {
-      if (Character.UnicodeBlock.of(name.charAt(i)) == Character.UnicodeBlock.CYRILLIC) {
-        return true;
-      }
-    }
-    return false;
+    return name.chars()
+      .anyMatch(ch -> Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC);
   }
 
   private static boolean isLatin(String name) {
-    for (var i = 0; i < name.length(); i++) {
-      var ch = name.charAt(i);
-      if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
-        return true;
-      }
-    }
-    return false;
+    // ASCII-буква = латиница (кириллица и прочее — вне диапазона < 128).
+    return name.chars().anyMatch(ch -> ch < 128 && Character.isLetter(ch));
   }
 
   /**
@@ -443,6 +434,11 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     var result = new ArrayList<SignatureDescriptor>(raw.size());
     for (var sig : raw) {
       var description = (String) sig.getOrDefault("description", "");
+      var descriptionRu = stringField(sig, "descriptionRu");
+      var descriptionEn = stringField(sig, "descriptionEn");
+      var bilingualDescription = descriptionRu.isEmpty() && descriptionEn.isEmpty()
+        ? BilingualString.of(description)
+        : BilingualString.of(descriptionRu.isEmpty() ? description : descriptionRu, descriptionEn);
       var returnTypeName = (String) sig.get("returnType");
       var returnType = returnTypeName == null
         ? fallbackReturnType
@@ -460,7 +456,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, pdefault,
           BilingualString.of(pNameRu, pNameEn)).withVariadic(variadic));
       }
-      result.add(new SignatureDescriptor(params, returnType, description));
+      var returnTypes = returnType.equals(TypeRef.UNKNOWN) ? TypeSet.EMPTY : TypeSet.of(returnType);
+      result.add(new SignatureDescriptor(params, returnTypes, bilingualDescription));
     }
     return result;
   }

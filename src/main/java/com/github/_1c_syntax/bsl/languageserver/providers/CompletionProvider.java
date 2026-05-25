@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -32,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
@@ -102,7 +102,7 @@ public final class CompletionProvider {
    * глобальные свойства и т.п. Алиас-пары определяются по тому, что разные
    * имена резолвятся к одному global symbol.
    */
-  private List<String> filterNamesByLanguage(Collection<String> names, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  private List<String> filterNamesByLanguage(Collection<String> names, FileType fileType, Language language) {
     if (names.isEmpty()) {
       return List.of();
     }
@@ -122,7 +122,7 @@ public final class CompletionProvider {
       }
       String pick = null;
       for (var name : group) {
-        if (isInConfiguredLanguage(name)) {
+        if (isInConfiguredLanguage(name, language)) {
           pick = name;
           break;
         }
@@ -138,11 +138,10 @@ public final class CompletionProvider {
    * Имена, состоящие только из не-букв (служебные/составные), не фильтруются.
    * Локальные пользовательские символы фильтру не подлежат — у пользователя свой язык.
    */
-  private boolean isInConfiguredLanguage(String name) {
-    if (name == null || name.isEmpty()) {
+  private boolean isInConfiguredLanguage(String name, Language language) {
+    if (name.isEmpty()) {
       return true;
     }
-    var lang = configuration.getLanguage();
     boolean hasCyrillic = false;
     boolean hasLatin = false;
     for (int i = 0; i < name.length(); i++) {
@@ -156,7 +155,7 @@ public final class CompletionProvider {
     if (!hasCyrillic && !hasLatin) {
       return true;
     }
-    if (lang == Language.RU) {
+    if (language == Language.RU) {
       return hasCyrillic || !hasLatin;
     }
     return hasLatin || !hasCyrillic;
@@ -297,14 +296,14 @@ public final class CompletionProvider {
       if (origin.isEmpty()) {
         return true;
       }
-      if (fileType == com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
+      if (fileType == FileType.BSL) {
         return false;
       }
       return usedLibsLower.contains(origin.get().toLowerCase(Locale.ROOT));
     };
 
     if (afterNew) {
-      for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType)) {
+      for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType, scriptVariant)) {
         if (isImplicitlyHiddenInCompletion(className)) {
           continue;
         }
@@ -344,8 +343,8 @@ public final class CompletionProvider {
     }
 
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
-    if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.OS) {
-      for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType)) {
+    if (fileType != FileType.OS) {
+      for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType, scriptVariant)) {
         if (matches(qualified, prefix)) {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
@@ -407,7 +406,7 @@ public final class CompletionProvider {
     }
 
     // Keywords
-    for (var keyword : filterNamesByLanguage(globalScopeProvider.getKeywords(fileType), fileType)) {
+    for (var keyword : filterNamesByLanguage(globalScopeProvider.getKeywords(fileType), fileType, scriptVariant)) {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
