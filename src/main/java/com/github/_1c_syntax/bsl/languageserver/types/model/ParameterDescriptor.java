@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 
+import java.util.Objects;
+
 /**
  * Дескриптор формального параметра метода.
  *
@@ -44,6 +46,12 @@ public record ParameterDescriptor(
   String defaultValue,
   boolean variadic
 ) {
+
+  public ParameterDescriptor {
+    bilingualName = Objects.requireNonNullElse(bilingualName, BilingualString.EMPTY);
+    bilingualDescription = Objects.requireNonNullElse(bilingualDescription, BilingualString.EMPTY);
+    defaultValue = Objects.requireNonNullElse(defaultValue, "");
+  }
 
   /** Compat-конструктор без флага {@code variadic} (=false). */
   public ParameterDescriptor(BilingualString bilingualName, TypeSet types, boolean optional,

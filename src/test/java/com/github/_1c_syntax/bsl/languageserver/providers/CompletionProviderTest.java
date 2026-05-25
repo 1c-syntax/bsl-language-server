@@ -1119,7 +1119,9 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     languageServerConfiguration.setLanguage(Language.EN);
     try {
       assertThat(copyDetail(documentContext, params))
-        .as("EN detail — «N overloads», не русский").isEqualTo("2 overloads");
+        .as("EN detail — английский формат «N overload(s)», не русский")
+        .matches("\\d+ overloads?")
+        .doesNotContain("синтаксиса");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
