@@ -109,10 +109,10 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
       return Optional.empty();
     }
     var accessProperty = lValue.acceptor().accessProperty();
-    if (accessProperty == null || accessProperty.IDENTIFIER() == null) {
+    var propertyId = accessProperty == null ? null : accessProperty.IDENTIFIER();
+    if (propertyId == null) {
       return Optional.empty();
     }
-    var propertyId = accessProperty.IDENTIFIER();
     var member = typeService.findMemberAt(documentContext, positionInside(propertyId))
       .map(TypedMember::descriptor)
       .orElse(null);
