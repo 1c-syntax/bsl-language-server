@@ -44,6 +44,11 @@ public class VirtualTableCallWithoutParametersDiagnostic extends AbstractSDBLVis
 
   @Override
   public ParseTree visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
+    // для критерия отбора параметр имеет иную семантику (значение отбора, а не параметр ВТ),
+    // диагностика на него не распространяется
+    if (ctx.type != null) {
+      return super.visitVirtualTable(ctx);
+    }
     var vtContext = ctx.virtualTableParameters;
     if (vtContext == null) {
       diagnosticStorage.addDiagnostic(ctx);
