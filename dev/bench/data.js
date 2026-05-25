@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779488694914,
+  "lastUpdate": 1779715159016,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35464,6 +35464,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2228262729449142",
             "extra": "mean: 72.90864491462708 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "72c0c9f0776f5f325f4f610fb4196eb0e3121cce",
+          "message": "Merge pull request #3939 from 1c-syntax/copilot/fix-virtual-table-parameter-diagnosis\n\nfix(VirtualTableCallWithoutParameters): корректная работа на КритерийОтбора",
+          "timestamp": "2026-05-25T14:37:09+02:00",
+          "tree_id": "f7a3d2256ee6987a8a00ab8c97f5e1b1b658f3eb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/72c0c9f0776f5f325f4f610fb4196eb0e3121cce"
+        },
+        "date": 1779715151553,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.54921396573384,
+            "unit": "sec",
+            "range": "stddev: 1.975193016487569",
+            "extra": "mean: 74.54921396573384 sec\nrounds: 3"
           }
         ]
       }
