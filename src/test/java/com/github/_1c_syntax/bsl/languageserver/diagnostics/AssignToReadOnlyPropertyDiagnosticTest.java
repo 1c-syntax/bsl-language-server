@@ -75,14 +75,20 @@ class AssignToReadOnlyPropertyDiagnosticTest extends AbstractDiagnosticTest<Assi
     var diagnostics = getDiagnosticsAsCommonModule();
 
     // У ДокументСсылка все свойства read-only — мутабельны только у Объекта.
-    // В фикстуре два присваивания (Ссылка, Дата) — оба должны сработать.
+    // Фикстура содержит присваивания и русскими (Ссылка, Дата), и английскими
+    // (Ref, Date) именами — read-only должно находиться независимо от языка.
     assertThat(diagnostics)
-      .as("оба присваивания свойствам ДокументСсылка должны подсвечиваться")
-      .hasSize(2);
-    var msg0 = DiagnosticMessage.getStringValue(diagnostics.get(0).getMessage());
-    var msg1 = DiagnosticMessage.getStringValue(diagnostics.get(1).getMessage());
-    assertThat(msg0).contains("Ссылка");
-    assertThat(msg1).contains("Дата");
+      .as("все присваивания свойствам ДокументСсылка должны подсвечиваться "
+        + "независимо от языка имени свойства")
+      .hasSize(4);
+    var messages = diagnostics.stream()
+      .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
+      .toList();
+    assertThat(messages)
+      .anyMatch(m -> m.contains("Ссылка"))
+      .anyMatch(m -> m.contains("Дата"))
+      .anyMatch(m -> m.contains("Ref"))
+      .anyMatch(m -> m.contains("Date"));
   }
 
   @Test

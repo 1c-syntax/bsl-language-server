@@ -115,6 +115,25 @@ class PlatformMethodCallInlayHintSupplierTest extends AbstractServerContextAware
   }
 
   @Test
+  void variadicConstructorHintsAreNumbered() {
+    // given — `Новый Массив(2, 3)` в фикстуре: вариадик-конструктор
+    // (КоличествоЭлементов…) разворачивается в нумерованные метки.
+    initServerContext("./src/test/resources/types", false);
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH, context);
+
+    // when
+    var hints = supplier.getInlayHints(documentContext, fullRangeParams(documentContext));
+
+    // then — у вариадик-хвоста метки нумеруются по фактическим аргументам.
+    var labels = hints.stream()
+      .map(InlayHint::getLabel)
+      .filter(org.eclipse.lsp4j.jsonrpc.messages.Either::isLeft)
+      .map(org.eclipse.lsp4j.jsonrpc.messages.Either::getLeft)
+      .toList();
+    assertThat(labels).contains("КоличествоЭлементов1:", "КоличествоЭлементов2:");
+  }
+
+  @Test
   void noHintsForEmptyAst() {
     // given
     initServerContext("./src/test/resources/types", false);

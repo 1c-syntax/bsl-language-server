@@ -279,42 +279,89 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     List<? extends BSLParser.CallParamContext> args
   ) {
     var parameters = signature.parameters();
-    var max = Math.min(parameters.size(), args.size());
-    for (int i = 0; i < max; i++) {
-      var parameter = parameters.get(i);
-      var callParam = args.get(i);
-      var passedValue = callParam.getText();
-      if (passedValue == null || passedValue.isBlank()) {
-        // `Новый Тип();` парсится как один пустой callParam — не показываем
-        // хинт для пустого аргумента, иначе получим бессмысленное
-        // `Новый Массив(Массив:);`.
-        continue;
+    if (parameters.isEmpty()) {
+      return;
+    }
+    var lang = currentLanguage();
+    var variadicIndex = variadicIndex(parameters);
+    for (var i = 0; i < args.size(); i++) {
+      var unit = paramAt(parameters, variadicIndex, i, lang);
+      if (unit == null) {
+        break;
       }
-      var label = parameter.displayName(currentLanguage());
-      var bn = parameter.bilingualName();
-      if (!showParametersWithTheSameName()
-        && label != null
-        && !label.isBlank()
-        && (Strings.CI.contains(passedValue, label)
-          || (!bn.ru().isEmpty() && Strings.CI.contains(passedValue, bn.ru()))
-          || (!bn.en().isEmpty() && Strings.CI.contains(passedValue, bn.en())))) {
-        continue;
-      }
-      var hint = new InlayHint();
-      hint.setKind(InlayHintKind.Parameter);
-      hint.setLabel(buildLabel(parameter, passedValue));
-      hint.setPosition(positionOf(callParam.getStart()));
-      if (!parameter.name().isBlank() || !parameter.description().isBlank()) {
-        hint.setTooltip(buildTooltip(parameter, member));
-      }
-      hint.setPaddingRight(Boolean.TRUE);
-      sink.add(hint);
+      appendHint(sink, member, unit, args.get(i));
     }
   }
 
-  private String buildLabel(ParameterDescriptor parameter, String passedValue) {
+  /** Имя параметра + дескриптор для конкретной позиции аргумента. */
+  private record NamedParam(String name, ParameterDescriptor descriptor) {
+  }
+
+  /**
+   * Параметр для позиции аргумента {@code i}. Вариадик-хвост разворачивается в
+   * нумерованные имена по фактическим аргументам (Значение → Значение1, …).
+   * {@code null}, если аргументов больше, чем параметров, и хвост не вариадик.
+   */
+  @Nullable
+  private static NamedParam paramAt(List<ParameterDescriptor> parameters, int variadicIndex,
+                                    int i, Language lang) {
+    if (variadicIndex >= 0 && i >= variadicIndex) {
+      var p = parameters.get(variadicIndex);
+      return new NamedParam(p.displayName(lang) + (i - variadicIndex + 1), p);
+    }
+    if (i < parameters.size()) {
+      var p = parameters.get(i);
+      return new NamedParam(p.displayName(lang), p);
+    }
+    return null;
+  }
+
+  private void appendHint(List<InlayHint> sink, MemberDescriptor member, NamedParam unit,
+                          BSLParser.CallParamContext callParam) {
+    var passedValue = callParam.getText();
+    // `Новый Тип();` парсится как один пустой callParam — не показываем хинт для
+    // пустого аргумента, иначе получим бессмысленное `Новый Массив(Массив:);`.
+    if (passedValue.isBlank()) {
+      return;
+    }
+    if (!showParametersWithTheSameName() && shadowsName(passedValue, unit.name(), unit.descriptor())) {
+      return;
+    }
+    var hint = new InlayHint();
+    hint.setKind(InlayHintKind.Parameter);
+    hint.setLabel(buildLabel(unit.name(), unit.descriptor(), passedValue));
+    hint.setPosition(positionOf(callParam.getStart()));
+    if (!unit.name().isBlank() || !unit.descriptor().description().isBlank()) {
+      hint.setTooltip(buildTooltip(unit.name(), unit.descriptor(), member));
+    }
+    hint.setPaddingRight(Boolean.TRUE);
+    sink.add(hint);
+  }
+
+  /** Индекс вариадик-параметра (он же последний), либо {@code -1}. */
+  private static int variadicIndex(List<ParameterDescriptor> parameters) {
+    for (var i = 0; i < parameters.size(); i++) {
+      if (parameters.get(i).variadic()) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /** Аргумент уже содержит имя параметра — хинт был бы избыточен. */
+  private static boolean shadowsName(String passedValue, String paramName, ParameterDescriptor parameter) {
+    if (paramName.isBlank()) {
+      return false;
+    }
+    var bn = parameter.bilingualName();
+    return Strings.CI.contains(passedValue, paramName)
+      || (!bn.ru().isEmpty() && Strings.CI.contains(passedValue, bn.ru()))
+      || (!bn.en().isEmpty() && Strings.CI.contains(passedValue, bn.en()));
+  }
+
+  private String buildLabel(String paramName, ParameterDescriptor parameter, String passedValue) {
     var sb = new StringBuilder();
-    sb.append(parameter.displayName(currentLanguage()));
+    sb.append(paramName);
     if (showDefaultValues() && passedValue.isBlank() && !parameter.defaultValue().isBlank()) {
       sb.append(" (").append(parameter.defaultValue()).append(')');
     } else {
@@ -323,10 +370,10 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
     return sb.toString();
   }
 
-  private MarkupContent buildTooltip(ParameterDescriptor parameter, MemberDescriptor member) {
+  private MarkupContent buildTooltip(String paramName, ParameterDescriptor parameter, MemberDescriptor member) {
     var sb = new StringBuilder();
     var lang = currentLanguage();
-    sb.append("**").append(parameter.displayName(lang)).append("**");
+    sb.append("**").append(paramName).append("**");
     if (parameter.optional()) {
       sb.append(" _(").append(tr("optionalParameter")).append(")_");
     }

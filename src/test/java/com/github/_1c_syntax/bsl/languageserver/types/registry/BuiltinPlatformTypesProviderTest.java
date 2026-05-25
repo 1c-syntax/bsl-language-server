@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -127,6 +128,33 @@ class BuiltinPlatformTypesProviderTest {
     assertThat(arrayDecl.members())
       .extracting(m -> m.name())
       .containsAnyOf("Добавить", "Количество", "ВерхняяГраница", "Очистить");
+  }
+
+  @Test
+  void oscriptBilingualMemberPairsAreMergedIntoSingleBilingualMember() {
+    // В дампе OneScript Массив.Добавить и Массив.Add — два отдельных
+    // моноязычных члена подряд. После склейки при загрузке это один
+    // двуязычный член, как в BSL-модели.
+    var types = BuiltinPlatformTypesProvider.loadFromResource(
+      "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json");
+
+    var arrayDecl = types.stream()
+      .filter(td -> "Массив".equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+
+    var addMembers = arrayDecl.members().stream()
+      .filter(m -> m.matches("Добавить") || m.matches("Add"))
+      .toList();
+
+    assertThat(addMembers)
+      .as("Добавить/Add должны схлопнуться в один двуязычный член")
+      .hasSize(1);
+    var add = addMembers.get(0);
+    assertThat(add.matches("Добавить")).as("находится по русскому имени").isTrue();
+    assertThat(add.matches("Add")).as("находится по английскому имени").isTrue();
+    assertThat(add.displayName(Language.RU)).isEqualTo("Добавить");
+    assertThat(add.displayName(Language.EN)).isEqualTo("Add");
   }
 
   @Test

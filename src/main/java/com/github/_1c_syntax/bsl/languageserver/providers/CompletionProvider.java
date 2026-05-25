@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
@@ -32,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
@@ -98,69 +98,11 @@ public final class CompletionProvider {
   }
 
   /**
-   * Из коллекции членов оставить только те, чьё имя соответствует
-   * настроенному {@link Language}. Алиас-пары (Ru/En) определяются по
-   * одинаковому fingerprint (kind + параметры + returnType): они есть в
-   * платформенных JSON-ах OneScript. Для членов без пары имя оставляем
-   * как есть (например, значения перечислений вида {@code UTF8}).
-   */
-  private Collection<MemberDescriptor> filterMembersByLanguage(Collection<MemberDescriptor> members) {
-    if (members.isEmpty()) {
-      return members;
-    }
-    // Свойства (включая значения перечислений) не группируем — у них нет сигнатуры,
-    // по которой можно надёжно определить алиас. Например, UTF8/ANSI у КодировкаТекста
-    // имеют одинаковый fingerprint, но семантически независимы.
-    // Методы группируем по сигнатуре: алиас-пары Ru↔En имеют идентичную сигнатуру.
-    var byFingerprint = new LinkedHashMap<String, List<MemberDescriptor>>();
-    var passthrough = new ArrayList<MemberDescriptor>();
-    for (var m : members) {
-      if (m.kind() != MemberKind.METHOD || m.signatures().isEmpty()) {
-        passthrough.add(m);
-        continue;
-      }
-      byFingerprint.computeIfAbsent(memberFingerprint(m), k -> new ArrayList<>()).add(m);
-    }
-    var result = new ArrayList<MemberDescriptor>(members.size());
-    result.addAll(passthrough);
-    for (var group : byFingerprint.values()) {
-      if (group.size() == 1) {
-        result.add(group.get(0));
-        continue;
-      }
-      MemberDescriptor pick = null;
-      for (var m : group) {
-        if (isInConfiguredLanguage(m.name())) {
-          pick = m;
-          break;
-        }
-      }
-      result.add(pick != null ? pick : group.get(0));
-    }
-    return result;
-  }
-
-  private static String memberFingerprint(MemberDescriptor m) {
-    var sb = new StringBuilder();
-    sb.append(m.kind()).append('|');
-    sb.append(m.returnType().qualifiedName()).append('|');
-    sb.append(m.signatures().size());
-    for (var sig : m.signatures()) {
-      sb.append('#').append(sig.parameters().size());
-      for (var p : sig.parameters()) {
-        sb.append(';').append(p.optional()).append(',');
-        sb.append(p.types().refs());
-      }
-    }
-    return sb.toString();
-  }
-
-  /**
    * Фильтр для plain-имён ({@code List<String>}) — классы, ключевые слова,
    * глобальные свойства и т.п. Алиас-пары определяются по тому, что разные
    * имена резолвятся к одному global symbol.
    */
-  private List<String> filterNamesByLanguage(Collection<String> names, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
+  private List<String> filterNamesByLanguage(Collection<String> names, FileType fileType, Language language) {
     if (names.isEmpty()) {
       return List.of();
     }
@@ -180,7 +122,7 @@ public final class CompletionProvider {
       }
       String pick = null;
       for (var name : group) {
-        if (isInConfiguredLanguage(name)) {
+        if (isInConfiguredLanguage(name, language)) {
           pick = name;
           break;
         }
@@ -196,28 +138,24 @@ public final class CompletionProvider {
    * Имена, состоящие только из не-букв (служебные/составные), не фильтруются.
    * Локальные пользовательские символы фильтру не подлежат — у пользователя свой язык.
    */
-  private boolean isInConfiguredLanguage(String name) {
-    if (name == null || name.isEmpty()) {
+  private static boolean isInConfiguredLanguage(String name, Language language) {
+    if (name.isEmpty()) {
       return true;
     }
-    var lang = configuration.getLanguage();
-    boolean hasCyrillic = false;
-    boolean hasLatin = false;
-    for (int i = 0; i < name.length(); i++) {
-      var ch = name.charAt(i);
-      if (Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC) {
-        hasCyrillic = true;
-      } else if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
-        hasLatin = true;
-      }
-    }
+    var hasCyrillic = name.chars().anyMatch(CompletionProvider::isCyrillic);
+    var hasLatin = name.chars().anyMatch(CompletionProvider::isAsciiLetter);
     if (!hasCyrillic && !hasLatin) {
       return true;
     }
-    if (lang == Language.RU) {
-      return hasCyrillic || !hasLatin;
-    }
-    return hasLatin || !hasCyrillic;
+    return language == Language.RU ? (hasCyrillic || !hasLatin) : (hasLatin || !hasCyrillic);
+  }
+
+  private static boolean isCyrillic(int ch) {
+    return Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC;
+  }
+
+  private static boolean isAsciiLetter(int ch) {
+    return Character.isLetter(ch) && Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.BASIC_LATIN;
   }
 
   private List<String> libraryEntryNames(OScriptLibraryIndex.EntryKind kind) {
@@ -298,10 +236,11 @@ public final class CompletionProvider {
     }
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
-    var filtered = filterMembersByLanguage(members.values()).stream()
-      .filter(m -> matches(m.name(), prefix))
+    var scriptVariant = documentContext.getScriptVariantLanguage();
+    var filtered = members.values().stream()
+      .filter(m -> matches(m.displayName(scriptVariant), prefix))
       .toList();
-    return toCompletionItems(filtered);
+    return toCompletionItems(filtered, scriptVariant);
   }
 
   @Nullable
@@ -353,14 +292,15 @@ public final class CompletionProvider {
       if (origin.isEmpty()) {
         return true;
       }
-      if (fileType == com.github._1c_syntax.bsl.languageserver.context.FileType.BSL) {
+      if (fileType == FileType.BSL) {
         return false;
       }
       return usedLibsLower.contains(origin.get().toLowerCase(Locale.ROOT));
     };
 
+    var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
-      for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType)) {
+      for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType, scriptVariant)) {
         if (isImplicitlyHiddenInCompletion(className)) {
           continue;
         }
@@ -372,11 +312,11 @@ public final class CompletionProvider {
             if (!ctors.isEmpty()) {
               var first = ctors.get(0);
               var paramList = first.parameters().stream()
-                .map(p -> p.name())
+                .map(p -> p.displayName(scriptVariant))
                 .collect(java.util.stream.Collectors.joining(", "));
               item.setDetail("(" + paramList + ")");
             }
-            var desc = typeService.getDescription(ref, fileType);
+            var desc = typeService.getDescription(ref, scriptVariant);
             if (!desc.isEmpty()) {
               item.setDocumentation(desc);
             }
@@ -400,8 +340,8 @@ public final class CompletionProvider {
     }
 
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
-    if (fileType != com.github._1c_syntax.bsl.languageserver.context.FileType.OS) {
-      for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType)) {
+    if (fileType != FileType.OS) {
+      for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType, scriptVariant)) {
         if (matches(qualified, prefix)) {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
@@ -429,14 +369,17 @@ public final class CompletionProvider {
       items.add(item);
     }
 
-    // Global functions
+    // Global functions. Один и тот же двуязычный дескриптор зарегистрирован
+    // под ru- и en-ключом, поэтому в values() встречается дважды — дедуп по
+    // primary-имени через seenFn.
     var seenFn = new java.util.HashSet<String>();
-    for (var fn : filterMembersByLanguage(globalScopeProvider.getFunctions(fileType))) {
+    for (var fn : globalScopeProvider.getFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
-      if (matches(fn.name(), prefix)) {
-        items.add(toCompletionItem(fn));
+      var displayName = fn.displayName(scriptVariant);
+      if (matches(displayName, prefix)) {
+        items.add(toCompletionItem(fn, scriptVariant));
       }
     }
 
@@ -460,7 +403,7 @@ public final class CompletionProvider {
     }
 
     // Keywords
-    for (var keyword : filterNamesByLanguage(globalScopeProvider.getKeywords(fileType), fileType)) {
+    for (var keyword : filterNamesByLanguage(globalScopeProvider.getKeywords(fileType), fileType, scriptVariant)) {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
@@ -541,14 +484,14 @@ public final class CompletionProvider {
     }
   }
 
-  private CompletionItem toCompletionItem(MemberDescriptor member) {
-    return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable);
+  private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant) {
+    return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant);
   }
 
-  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members) {
+  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members, Language scriptVariant) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
-      items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property));
+      items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant));
     }
     return items;
   }
@@ -567,12 +510,14 @@ public final class CompletionProvider {
    */
   private CompletionItem buildMemberItem(MemberDescriptor member,
                                          CompletionItemKind methodKind,
-                                         CompletionItemKind propertyKind) {
-    var item = new CompletionItem(member.name());
+                                         CompletionItemKind propertyKind,
+                                         Language scriptVariant) {
+    var displayName = member.displayName(scriptVariant);
+    var item = new CompletionItem(displayName);
     if (member.kind() == MemberKind.METHOD) {
       item.setKind(methodKind);
-      applyCallableInsertText(item, member.name());
-      var detail = methodDetail(member);
+      applyCallableInsertText(item, displayName);
+      var detail = methodDetail(member, scriptVariant);
       if (!detail.isBlank()) {
         item.setDetail(detail);
       }
@@ -583,7 +528,7 @@ public final class CompletionProvider {
         item.setDetail(detail);
       }
     }
-    applyDocumentation(item, member);
+    applyDocumentation(item, member, scriptVariant);
     return item;
   }
 
@@ -609,18 +554,18 @@ public final class CompletionProvider {
     }
   }
 
-  private static String methodDetail(MemberDescriptor member) {
+  private static String methodDetail(MemberDescriptor member, Language scriptVariant) {
     var signatures = member.signatures();
     if (signatures.size() > 1) {
-      return formatSignaturesCount(signatures.size());
+      return formatSignaturesCount(signatures.size(), scriptVariant);
     }
     if (signatures.isEmpty()) {
       return "";
     }
-    return formatSignature(signatures.get(0));
+    return formatSignature(signatures.get(0), scriptVariant);
   }
 
-  private static String formatSignature(SignatureDescriptor signature) {
+  private static String formatSignature(SignatureDescriptor signature, Language scriptVariant) {
     var sb = new StringBuilder();
     sb.append('(');
     var params = signature.parameters();
@@ -629,10 +574,11 @@ public final class CompletionProvider {
         sb.append(", ");
       }
       var p = params.get(i);
+      var paramName = p.displayName(scriptVariant);
       if (p.optional()) {
-        sb.append('[').append(p.name()).append(']');
+        sb.append('[').append(paramName).append(']');
       } else {
-        sb.append(p.name());
+        sb.append(paramName);
       }
     }
     sb.append(')');
@@ -654,7 +600,10 @@ public final class CompletionProvider {
     return ref.simpleName();
   }
 
-  private static String formatSignaturesCount(int count) {
+  private static String formatSignaturesCount(int count, Language scriptVariant) {
+    if (scriptVariant == Language.EN) {
+      return count + (count == 1 ? " overload" : " overloads");
+    }
     var mod10 = count % 10;
     var mod100 = count % 100;
     String word;
@@ -670,12 +619,20 @@ public final class CompletionProvider {
     return count + " " + word + " синтаксиса";
   }
 
-  private static void applyDocumentation(CompletionItem item, MemberDescriptor member) {
+  private static void applyDocumentation(CompletionItem item, MemberDescriptor member, Language scriptVariant) {
     var symDesc = member.getSymbolDescription();
-    var purpose = symDesc.getPurposeDescription();
+    // У source-defined членов (пользовательские методы/свойства) описание —
+    // это doc-comment в коде пользователя, он на языке проекта as-is.
+    // У платформенных/конфигурационных членов source-символа нет, поэтому
+    // берём bilingual-описание в языке ScriptVariant, иначе документация
+    // всегда оставалась бы на русском (primary).
+    var sourceDoc = member.getSourceSymbol().isPresent()
+      ? symDesc.getPurposeDescription()
+      : "";
+    var purpose = sourceDoc.isBlank() ? member.displayDescription(scriptVariant) : sourceDoc;
     var sb = new StringBuilder();
     if (symDesc.isDeprecated()) {
-      sb.append("**Устарело.**");
+      sb.append(scriptVariant == Language.EN ? "**Deprecated.**" : "**Устарело.**");
       if (!symDesc.getDeprecationInfo().isBlank()) {
         sb.append(' ').append(symDesc.getDeprecationInfo());
       }
@@ -685,10 +642,6 @@ public final class CompletionProvider {
     }
     if (!purpose.isBlank()) {
       sb.append(purpose);
-    } else if (sb.length() == 0 && !member.description().isBlank()) {
-      // Запасной источник: у platform/configuration членов нет source-defined doc-comment'а,
-      // основной текст лежит в самом MemberDescriptor.description().
-      sb.append(member.description());
     }
     if (sb.length() > 0) {
       item.setDocumentation(sb.toString());

@@ -385,13 +385,13 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    * Если en-список пуст или короче ru — соответствующая en-сторона пуста.
    */
   private static List<BilingualString> zipBilingual(List<String> ru, List<String> en) {
-    if (ru == null || ru.isEmpty()) {
+    if (ru.isEmpty()) {
       return List.of();
     }
     var out = new ArrayList<BilingualString>(ru.size());
     for (int i = 0; i < ru.size(); i++) {
       var ruItem = ru.get(i);
-      var enItem = en != null && i < en.size() ? en.get(i) : "";
+      var enItem = i < en.size() ? en.get(i) : "";
       out.add(BilingualString.of(safe(ruItem), safe(enItem)));
     }
     return List.copyOf(out);
@@ -436,7 +436,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     TypeRef returnType,
     Function<Object, EnAttachments> enLookup
   ) {
-    if (signatures == null || signatures.isEmpty()) {
+    if (signatures.isEmpty()) {
       return List.of();
     }
     var result = new ArrayList<SignatureDescriptor>(signatures.size());
@@ -459,12 +459,13 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       typeSet(parameter.types()),
       !parameter.isRequired(),
       BilingualString.of(safe(parameter.description()), safe(enLookup.apply(parameter).description())),
-      safe(parameter.defaultValue())
+      safe(parameter.defaultValue()),
+      parameter.isVariadic()
     );
   }
 
   private static TypeSet typeSet(List<Context> contexts) {
-    if (contexts == null || contexts.isEmpty()) {
+    if (contexts.isEmpty()) {
       return TypeSet.EMPTY;
     }
     var refs = new ArrayList<TypeRef>(contexts.size());

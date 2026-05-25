@@ -910,6 +910,66 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dotCompletionMemberDocumentationAndSignatureFollowConfiguredLanguageRu() {
+    // BSL standalone-документ: getScriptVariantLanguage() = язык LS.
+    // Массив.Добавить — единый bilingual-член (Добавить/Add) с bilingual-параметром
+    // (Значение/Value) и bilingual-описанием в builtin-platform-types.json.
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    languageServerConfiguration.setLanguage(Language.RU);
+    try {
+      var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+      assertThat(documentationText(add))
+        .as("документация члена — на русском при language=RU")
+        .contains("Добавляет значение");
+      assertThat(add.getDetail())
+        .as("имя параметра в сигнатуре — на русском")
+        .isEqualTo("(Значение)");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+  }
+
+  @Test
+  void dotCompletionMemberDocumentationAndSignatureFollowConfiguredLanguageEn() {
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    languageServerConfiguration.setLanguage(Language.EN);
+    try {
+      var add = dotCompletionItem(documentContext, new Position(1, 2), "Add");
+      assertThat(documentationText(add))
+        .as("документация члена — на английском при language=EN, а не русский primary")
+        .contains("Adds a value")
+        .doesNotContain("Добавляет");
+      assertThat(add.getDetail())
+        .as("имя параметра в сигнатуре — на английском")
+        .isEqualTo("(Value)");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+  }
+
+  private CompletionItem dotCompletionItem(
+    com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext,
+    Position position,
+    String label
+  ) {
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(position);
+    return completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> label.equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  private static String documentationText(CompletionItem item) {
+    var doc = item.getDocumentation();
+    assertThat(doc).as("у члена должна быть проставлена документация").isNotNull();
+    return doc.isLeft() ? doc.getLeft() : doc.getRight().getValue();
+  }
+
+  @Test
   void dotCompletionExposesStructureKeysFromConstructor() {
     // Размещение = Новый Структура("Варианты, Действие, Приемник, Источник");
     // Y = Размещение.В;  → completion после точки с prefix "В" должен включать
@@ -1036,6 +1096,42 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .filter(it -> it.getLabel().equalsIgnoreCase("Скопировать") || it.getLabel().equalsIgnoreCase("Copy"))
       .toList();
     assertThat(copyItems).as("ТЗ имеет метод Скопировать").isNotEmpty();
+  }
+
+  @Test
+  void multiSignatureDetailFollowsConfiguredLanguage() {
+    // detail метода с несколькими сигнатурами («N вариантов синтаксиса») —
+    // на языке проекта, а не всегда по-русски.
+    var content = "ТЗ = Новый ТаблицаЗначений;\nТЗ.";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(1, 3));
+
+    languageServerConfiguration.setLanguage(Language.RU);
+    try {
+      assertThat(copyDetail(documentContext, params))
+        .as("RU detail — «N … синтаксиса»").endsWith("синтаксиса");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+
+    languageServerConfiguration.setLanguage(Language.EN);
+    try {
+      assertThat(copyDetail(documentContext, params))
+        .as("EN detail — английский формат «N overload(s)», не русский")
+        .matches("\\d+ overloads?")
+        .doesNotContain("синтаксиса");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+  }
+
+  private String copyDetail(com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext,
+                            CompletionParams params) {
+    return completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> "Скопировать".equalsIgnoreCase(it.getLabel()) || "Copy".equalsIgnoreCase(it.getLabel()))
+      .findFirst().orElseThrow().getDetail();
   }
 
   @Test

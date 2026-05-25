@@ -46,14 +46,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -185,6 +182,11 @@ public class TypeService {
   /** Описание типа в указанной локали LS (с fallback). */
   public String getDescription(TypeRef typeRef, Language language) {
     return typeRegistry.getDescription(typeRef, language);
+  }
+
+  /** Имя типа для отображения в указанной локали LS (ru/en, с fallback). */
+  public String displayName(TypeRef typeRef, Language language) {
+    return typeRegistry.displayName(typeRef, language);
   }
 
   /**
@@ -454,10 +456,11 @@ public class TypeService {
     int callArgCount,
     List<TypeSet> argTypes
   ) {
-    public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
+    public TypedMember(@Nullable TypeRef owner, MemberDescriptor descriptor, Range range, int callArgCount) {
       this(owner, descriptor, range, callArgCount, List.of());
     }
-    public TypedMember(TypeRef owner, MemberDescriptor descriptor, Range range) {
+
+    public TypedMember(@Nullable TypeRef owner, MemberDescriptor descriptor, Range range) {
       this(owner, descriptor, range, -1, List.of());
     }
   }

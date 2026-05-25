@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SignatureHelpParams;
@@ -36,6 +38,9 @@ class SignatureHelpProviderTest {
 
   @Autowired
   private SignatureHelpProvider signatureHelpProvider;
+
+  @Autowired
+  private LanguageServerConfiguration languageServerConfiguration;
 
   @Test
   void testNoSignatureWithoutCall() {
@@ -96,6 +101,58 @@ class SignatureHelpProviderTest {
     assertThat(help).isNotNull();
     assertThat(help.getSignatures()).isNotEmpty();
     assertThat(help.getSignatures().get(0).getLabel()).startsWith("Добавить(");
+  }
+
+  @Test
+  void variadicConstructorSignatureExpandsNumberedParameters() {
+    // `Новый Массив(2, 3, 4)` — вариадик-конструктор: один параметр-база
+    // КоличествоЭлементов разворачивается в нумерованные по числу аргументов.
+    var content = "М = Новый Массив(2, 3, 4);\n";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.indexOf("Массив(") + "Массив(".length();
+    params.setPosition(new Position(0, col));
+
+    var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+
+    assertThat(help.getSignatures()).isNotEmpty();
+    assertThat(help.getSignatures().get(0).getLabel())
+      .contains("КоличествоЭлементов1", "КоличествоЭлементов2", "КоличествоЭлементов3")
+      .doesNotContain("КоличествоЭлементов,");
+  }
+
+  @Test
+  void signatureHelpRendersInConfiguredLanguageEn() {
+    // Signature help — элемент интерфейса: при language=EN имя метода и
+    // параметр показываются по-английски (Add(Value)), хотя в исходнике
+    // написано русское Добавить.
+    var content = """
+      Массив = Новый Массив;
+      Массив.Добавить(1);
+      """;
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new SignatureHelpParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var col = content.split("\n")[1].indexOf("Добавить(") + "Добавить(".length();
+    params.setPosition(new Position(1, col));
+
+    languageServerConfiguration.setLanguage(Language.EN);
+    try {
+      var help = signatureHelpProvider.getSignatureHelp(documentContext, params);
+      assertThat(help.getSignatures()).isNotEmpty();
+      var label = help.getSignatures().get(0).getLabel();
+      assertThat(label)
+        .as("имя метода и параметр signature help — на языке конфига (EN)")
+        .startsWith("Add(")
+        .contains("Value")
+        .doesNotContain("Добавить")
+        .doesNotContain("Значение");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
   }
 
   @Test

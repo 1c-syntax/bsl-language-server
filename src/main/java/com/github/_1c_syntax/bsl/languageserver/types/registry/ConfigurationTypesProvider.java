@@ -26,11 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Attribute;
@@ -38,9 +38,7 @@ import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
-import com.github._1c_syntax.bsl.mdo.children.ObjectTabularSection;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
-import com.github._1c_syntax.bsl.mdo.support.AttributeKind;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ValueType;
 import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
@@ -130,7 +128,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     var configuration = serverContext.getConfiguration();
-    if (configuration == null || configuration.isEmpty()) {
+    if (configuration.isEmpty()) {
       return;
     }
     if (!registered.compareAndSet(false, true)) {
@@ -162,7 +160,7 @@ public class ConfigurationTypesProvider {
       var groupRu = mdoType.fullGroupName().getRu();
       var groupEn = mdoType.fullGroupName().getEn();
       var name = md.getName();
-      if (name == null || name.isBlank()) {
+      if (name.isBlank()) {
         continue;
       }
 
@@ -173,15 +171,13 @@ public class ConfigurationTypesProvider {
       var fullName = mdoType.fullName();
       String managerRu;
       String managerEn;
-      String managerFamilyPrefix = null;
-      if (fullName != null && fullName.getRu() != null && !fullName.getRu().isBlank()) {
+      if (!fullName.getRu().isBlank()) {
         managerRu = fullName.getRu() + "Менеджер." + name;
-        managerFamilyPrefix = fullName.getRu() + "Менеджер";
         var fullEn = fullName.getEn();
-        managerEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Manager." + name;
+        managerEn = fullEn.isBlank() ? null : (fullEn + "Manager." + name);
       } else {
         managerRu = groupRu + "." + name;
-        managerEn = groupEn == null || groupEn.equals(groupRu) ? null : groupEn + "." + name;
+        managerEn = groupEn.equals(groupRu) ? null : (groupEn + "." + name);
       }
 
       var ref = typeRegistry.registerConfigurationType(managerRu);
@@ -202,7 +198,7 @@ public class ConfigurationTypesProvider {
         typeRegistry.registerConfigurationTypeAlias(collectionAliasRu, ref);
       }
       globalScopeProvider.registerConfigurationQualifiedName(collectionAliasRu);
-      if (groupEn != null && !groupEn.equals(groupRu)) {
+      if (!groupEn.equals(groupRu)) {
         var collectionAliasEn = groupEn + "." + name;
         if (!collectionAliasEn.equals(managerRu) && !collectionAliasEn.equals(managerEn)) {
           typeRegistry.registerConfigurationTypeAlias(collectionAliasEn, ref);
@@ -220,12 +216,12 @@ public class ConfigurationTypesProvider {
     for (var entry : collectionMembersByType.entrySet()) {
       var mdoType = entry.getKey();
       var members = entry.getValue();
-      var groupRu = mdoType.fullGroupName().getRu();
-      var groupEn = mdoType.fullGroupName().getEn();
-      var collectionRu = groupRu; // "Справочники", "Документы", ...
-      var collectionEn = groupEn; // "Catalogs", "Documents", ...
+      // "Справочники", "Документы", ...
+      var collectionRu = mdoType.fullGroupName().getRu();
+      // "Catalogs", "Documents", ...
+      var collectionEn = mdoType.fullGroupName().getEn();
       var ref = typeRegistry.registerConfigurationType(collectionRu);
-      if (collectionEn != null && !collectionEn.equals(collectionRu)) {
+      if (!collectionEn.equals(collectionRu)) {
         typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
       }
       typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.BSL);
@@ -234,7 +230,7 @@ public class ConfigurationTypesProvider {
       // Подмешиваем платформенные методы коллекции-менеджера (СправочникиМенеджер,
       // ДокументыМенеджер и т.п.) — это методы уровня всех справочников/документов,
       // например `ТипВсеСсылки()`. Имя фиксированное (без generic-плейсхолдера).
-      registerInheritedMembers(ref, groupRu + "Менеджер");
+      registerInheritedMembers(ref, collectionRu + "Менеджер");
 
       collections++;
     }
@@ -267,12 +263,12 @@ public class ConfigurationTypesProvider {
                                          String name,
                                          com.github._1c_syntax.bsl.types.MultiName fullName,
                                          List<CommonAttribute> commonAttributes) {
-    if (!OBJECT_TYPES.contains(mdoType) || fullName == null) {
+    if (!OBJECT_TYPES.contains(mdoType)) {
       return;
     }
     var fullRu = fullName.getRu();
     var fullEn = fullName.getEn();
-    if (fullRu == null || fullRu.isBlank()) {
+    if (fullRu.isBlank()) {
       return;
     }
 
@@ -293,11 +289,11 @@ public class ConfigurationTypesProvider {
     final var capturedFullRu = fullRu;
 
     var objectRu = fullRu + "Объект." + name;
-    var objectEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Object." + name;
+    var objectEn = fullEn.isBlank() ? "" : (fullEn + "Object." + name);
     var objectRef = registerWithAlias(objectRu, objectEn);
 
     var refRu = fullRu + "Ссылка." + name;
-    var refEn = (fullEn == null || fullEn.isBlank()) ? null : fullEn + "Ref." + name;
+    var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
     var refRef = registerWithAlias(refRu, refEn);
 
     // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
@@ -307,7 +303,7 @@ public class ConfigurationTypesProvider {
     if (!singularRu.equals(refRu)) {
       typeRegistry.registerConfigurationTypeAlias(singularRu, refRef);
     }
-    if (fullEn != null && !fullEn.isBlank()) {
+    if (!fullEn.isBlank()) {
       var singularEn = fullEn + "." + name;
       if (!singularEn.equals(refEn)) {
         typeRegistry.registerConfigurationTypeAlias(singularEn, refRef);
@@ -374,27 +370,27 @@ public class ConfigurationTypesProvider {
       return;
     }
     var sections = owner.getTabularSections();
-    if (sections == null || sections.isEmpty()) {
+    if (sections.isEmpty()) {
       return;
     }
     var tsMembers = new ArrayList<MemberDescriptor>(sections.size());
     for (var ts : sections) {
       var tsName = ts.getName();
-      if (tsName == null || tsName.isBlank()) {
+      if (tsName.isBlank()) {
         continue;
       }
       var rowRu = fullRu + "ТабличнаяЧастьСтрока." + name + "." + tsName;
-      var rowEn = (fullEn == null || fullEn.isBlank()) ? null
+      var rowEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSectionRow." + name + "." + tsName;
       var rowRef = registerWithAlias(rowRu, rowEn);
 
       var collRu = fullRu + "ТабличнаяЧасть." + name + "." + tsName;
-      var collEn = (fullEn == null || fullEn.isBlank()) ? null
+      var collEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSection." + name + "." + tsName;
       var collRef = registerWithAlias(collRu, collEn);
 
       var tsAttributes = ts.getAttributes();
-      if (tsAttributes != null && !tsAttributes.isEmpty()) {
+      if (!tsAttributes.isEmpty()) {
         // Аналогично основным реквизитам: лямбда вызывает buildAttributeMembers
         // на каждый getMembers, поэтому язык читается per-call и подхватывает
         // workspace/didChangeConfiguration.
@@ -476,37 +472,41 @@ public class ConfigurationTypesProvider {
 
   private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
     var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (qualifiedEn != null && !qualifiedEn.equals(qualifiedRu)) {
+    if (!qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
       typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
     }
     return ref;
   }
 
   private List<MemberDescriptor> buildAttributeMembers(List<? extends Attribute> attributes,
-                                                       Map<String, String> platformDescriptions,
+                                                       Map<String, BilingualString> platformDescriptions,
                                                        Map<String, PlatformMetadata> platformMetadata) {
-    if (attributes == null || attributes.isEmpty()) {
+    if (attributes.isEmpty()) {
       return List.of();
     }
     var result = new ArrayList<MemberDescriptor>(attributes.size());
     for (var attribute : attributes) {
-      var attrName = attributeNameLocalized(attribute);
-      if (attrName == null || attrName.isBlank()) {
+      var bilingualName = attributeBilingualName(attribute);
+      if (bilingualName.isEmpty()) {
         continue;
       }
-      var lc = attrName.toLowerCase(Locale.ROOT);
-      var description = platformDescriptions.getOrDefault(lc, "");
+      // По ru-имени матчим описания/мета платформы — словарь HBK именован по-русски.
+      var lc = bilingualName.primary().toLowerCase(Locale.ROOT);
+      var description = platformDescriptions.getOrDefault(lc, BilingualString.EMPTY);
       var meta = platformMetadata.getOrDefault(lc, PlatformMetadata.EMPTY);
       var returnTypes = resolveAttributeReturnTypes(attribute);
+      var primaryName = bilingualName.primary();
       MemberDescriptor descriptor;
       if (returnTypes.isEmpty()) {
-        descriptor = description.isEmpty()
-          ? MemberDescriptor.property(attrName)
-          : MemberDescriptor.property(attrName, TypeRef.UNKNOWN, description);
+        descriptor = MemberDescriptor.property(primaryName);
       } else if (returnTypes.size() == 1) {
-        descriptor = MemberDescriptor.property(attrName, returnTypes.refs().iterator().next(), description);
+        descriptor = MemberDescriptor.property(primaryName, returnTypes.refs().iterator().next(), "");
       } else {
-        descriptor = MemberDescriptor.property(attrName, returnTypes, description);
+        descriptor = MemberDescriptor.property(primaryName, returnTypes, "");
+      }
+      descriptor = descriptor.withBilingualName(bilingualName);
+      if (!description.isEmpty()) {
+        descriptor = descriptor.withBilingualDescription(description);
       }
       if (!meta.isEmpty()) {
         descriptor = descriptor.withMetadata(meta);
@@ -522,18 +522,21 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Собирает {@code name(lower) → description} для платформенных generic-типов
-   * {@code <fullRu>Ссылка.<...>} и {@code <fullRu>Объект.<...>} — это HBK-описания,
-   * подходящие к стандартным реквизитам соответствующего MD.
+   * Собирает {@code name(lower) → }{@link BilingualString} (ru + en описание)
+   * для платформенных generic-типов {@code <fullRu>Ссылка.<...>} и
+   * {@code <fullRu>Объект.<...>} — это HBK-описания, подходящие к стандартным
+   * реквизитам соответствующего MD. Двуязычность нужна, чтобы hover на
+   * стандартном реквизите (Дата/Ссылка/...) показывал описание в текущей
+   * локали, а не всегда ru-вариант.
    */
-  private Map<String, String> collectPlatformMemberDescriptions(String fullRu) {
-    var result = new HashMap<String, String>();
+  private Map<String, BilingualString> collectPlatformMemberDescriptions(String fullRu) {
+    var result = new HashMap<String, BilingualString>();
     addPlatformDescriptionsTo(result, fullRu + "Ссылка");
     addPlatformDescriptionsTo(result, fullRu + "Объект");
     return result;
   }
 
-  private void addPlatformDescriptionsTo(Map<String, String> sink, String familyPrefix) {
+  private void addPlatformDescriptionsTo(Map<String, BilingualString> sink, String familyPrefix) {
     var generic = typeRegistry.resolveGenericByPrefix(familyPrefix).orElse(null);
     if (generic == null) {
       return;
@@ -542,10 +545,11 @@ public class ConfigurationTypesProvider {
       if (m.generic()) {
         continue;
       }
-      if (m.description() == null || m.description().isBlank()) {
+      var desc = m.bilingualDescription();
+      if (desc.isEmpty()) {
         continue;
       }
-      sink.putIfAbsent(m.name().toLowerCase(Locale.ROOT), m.description());
+      sink.putIfAbsent(m.name().toLowerCase(Locale.ROOT), desc);
     }
   }
 
@@ -572,7 +576,7 @@ public class ConfigurationTypesProvider {
         continue;
       }
       var meta = m.metadata();
-      if (meta == null || meta.isEmpty()) {
+      if (meta.isEmpty()) {
         continue;
       }
       result.putIfAbsent(m.name().toLowerCase(Locale.ROOT), meta);
@@ -608,7 +612,7 @@ public class ConfigurationTypesProvider {
     var result = new ArrayList<MemberDescriptor>(commonAttributes.size());
     for (var ca : commonAttributes) {
       var attrName = ca.getName();
-      if (attrName == null || attrName.isBlank()) {
+      if (attrName.isBlank()) {
         continue;
       }
       var returnTypes = resolveCommonAttributeReturnTypes(ca);
@@ -625,7 +629,7 @@ public class ConfigurationTypesProvider {
 
   private TypeSet resolveCommonAttributeReturnTypes(CommonAttribute ca) {
     var valueType = ca.getValueType();
-    if (valueType == null || valueType.isEmpty()) {
+    if (valueType.isEmpty()) {
       return TypeSet.EMPTY;
     }
     var refs = new java.util.LinkedHashSet<TypeRef>();
@@ -639,20 +643,38 @@ public class ConfigurationTypesProvider {
   }
 
   /**
-   * Имя реквизита, локализованное под сконфигурированный {@link
-   * com.github._1c_syntax.bsl.languageserver.configuration.Language}. Кастомные
-   * реквизиты ({@link com.github._1c_syntax.bsl.mdo.children.ObjectAttribute}) имеют
-   * только одно имя — оно и возвращается. Стандартные реквизиты (Дата/Номер/Ссылка/...) хранят
-   * имя в {@link com.github._1c_syntax.bsl.types.MultiName} с обоими языками — берём нужный.
+   * Двуязычное имя реквизита. Стандартные реквизиты (Дата/Номер/Ссылка/...)
+   * хранят оба написания в {@link com.github._1c_syntax.bsl.types.MultiName} —
+   * собираем {@link BilingualString} ровно из этой пары, чтобы:
+   * <ul>
+   *   <li>{@code MemberDescriptor.matches(name)} находил член по любому
+   *       написанию (hover, диагностика {@code AssignToReadOnly}, и т.п.);</li>
+   *   <li>completion выдавал имя в нужной локали через
+   *       {@code displayName(scriptVariant)}, без необходимости держать два
+   *       параллельных дескриптора на одном члене.</li>
+   * </ul>
+   * Кастомные реквизиты ({@link com.github._1c_syntax.bsl.mdo.children.ObjectAttribute})
+   * имеют только одно имя — возвращаем моноязычный {@link BilingualString#of(String)}.
    */
-  private String attributeNameLocalized(Attribute attribute) {
+  private static BilingualString attributeBilingualName(Attribute attribute) {
     if (attribute instanceof StandardAttribute std) {
       var fullName = std.getFullName();
-      if (fullName != null && !fullName.isEmpty()) {
-        return fullName.get(configuration.getLanguage().getLanguageCode());
+      if (!fullName.isEmpty()) {
+        var ru = fullName.get("ru");
+        var en = fullName.get("en");
+        if (!ru.isBlank() && !en.isBlank()) {
+          return BilingualString.of(ru, en);
+        }
+        if (!ru.isBlank()) {
+          return BilingualString.of(ru);
+        }
+        if (!en.isBlank()) {
+          return BilingualString.of("", en);
+        }
       }
     }
-    return attribute.getName();
+    var name = attribute.getName();
+    return name.isBlank() ? BilingualString.EMPTY : BilingualString.of(name);
   }
 
   /**
@@ -661,7 +683,7 @@ public class ConfigurationTypesProvider {
    */
   private TypeSet resolveAttributeReturnTypes(Attribute attribute) {
     var valueType = attribute.getValueType();
-    if (valueType == null || valueType.isEmpty()) {
+    if (valueType.isEmpty()) {
       return TypeSet.EMPTY;
     }
     var refs = new java.util.LinkedHashSet<TypeRef>();

@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 
+import java.util.Objects;
+
 /**
  * Дескриптор формального параметра метода.
  *
@@ -31,29 +33,36 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
  * @param optional             является ли параметр опциональным
  * @param bilingualDescription двуязычное краткое описание параметра
  * @param defaultValue         текстовое представление значения по умолчанию
+ * @param variadic             вариадик-хвост: метод/конструктор принимает в этой
+ *                             позиции переменное число значений. Имя содержит
+ *                             единственную базу ({@code Значение}), которую
+ *                             потребитель нумерует по фактическим аргументам.
  */
 public record ParameterDescriptor(
   BilingualString bilingualName,
   TypeSet types,
   boolean optional,
   BilingualString bilingualDescription,
-  String defaultValue
+  String defaultValue,
+  boolean variadic
 ) {
 
   public ParameterDescriptor {
-    if (bilingualName == null) {
-      bilingualName = BilingualString.EMPTY;
-    }
-    if (bilingualDescription == null) {
-      bilingualDescription = BilingualString.EMPTY;
-    }
-    defaultValue = defaultValue == null ? "" : defaultValue;
+    bilingualName = Objects.requireNonNullElse(bilingualName, BilingualString.EMPTY);
+    bilingualDescription = Objects.requireNonNullElse(bilingualDescription, BilingualString.EMPTY);
+    defaultValue = Objects.requireNonNullElse(defaultValue, "");
+  }
+
+  /** Compat-конструктор без флага {@code variadic} (=false). */
+  public ParameterDescriptor(BilingualString bilingualName, TypeSet types, boolean optional,
+                             BilingualString bilingualDescription, String defaultValue) {
+    this(bilingualName, types, optional, bilingualDescription, defaultValue, false);
   }
 
   /** Compat-конструктор с одноязычными name/description и {@code bilingualName}. */
   public ParameterDescriptor(String name, TypeSet types, boolean optional, String description,
                              String defaultValue, BilingualString bilingualName) {
-    this(bilingualName == null || bilingualName.isEmpty() ? BilingualString.of(name) : bilingualName,
+    this(nameOrFallback(name, bilingualName),
       types, optional, BilingualString.of(description), defaultValue);
   }
 
@@ -76,6 +85,17 @@ public record ParameterDescriptor(
   public static ParameterDescriptor of(String name, boolean optional) {
     return new ParameterDescriptor(BilingualString.of(name), TypeSet.EMPTY, optional,
       BilingualString.EMPTY, "");
+  }
+
+  private static BilingualString nameOrFallback(String name, BilingualString bilingualName) {
+    var bn = Objects.requireNonNullElse(bilingualName, BilingualString.EMPTY);
+    return bn.isEmpty() ? BilingualString.of(name) : bn;
+  }
+
+  /** Копия дескриптора с проставленным флагом {@code variadic}. */
+  public ParameterDescriptor withVariadic(boolean isVariadic) {
+    return new ParameterDescriptor(bilingualName, types, optional, bilingualDescription,
+      defaultValue, isVariadic);
   }
 
   /** Compat-аксессор: primary написание имени. */

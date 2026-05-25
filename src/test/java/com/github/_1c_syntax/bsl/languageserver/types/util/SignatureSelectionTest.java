@@ -127,9 +127,9 @@ class SignatureSelectionTest {
 
   @Test
   void pickIndexByTypesVariadicLastParameter() {
-    // Новый Массив(<КоличествоЭлементов1,...,КоличествоЭлементовN>): Число variadic.
+    // Новый Массив(КоличествоЭлементов…): Число variadic.
     var variadic = signature(List.of(
-      param("КоличествоЭлементов1,...,КоличествоЭлементовN", true, TypeSet.of(NUMBER))
+      variadicParam("КоличествоЭлементов", true, TypeSet.of(NUMBER))
     ));
     var byFixedArray = signature(List.of(
       param("Массив", true, TypeSet.of(FIXED_ARRAY))
@@ -145,6 +145,25 @@ class SignatureSelectionTest {
     // 1 аргумент ФиксированныйМассив → конкретный вариант
     assertThat(SignatureSelection.pickIndexByTypes(sigs, List.of(TypeSet.of(FIXED_ARRAY))))
       .isEqualTo(0);
+  }
+
+  @Test
+  void pickIndexByTypesRequiredVariadicRejectsTooFewArgs() {
+    // Макс(Значение…) — вариадик ОБЯЗАТЕЛЕН: нижняя граница arity = required (≥1),
+    // а не total-1. 0 аргументов не подходит.
+    var requiredVariadic = signature(List.of(
+      variadicParam("Значение", false, TypeSet.of(NUMBER))
+    ));
+    var sigs = List.of(requiredVariadic);
+
+    assertThat(SignatureSelection.pickIndexByTypes(sigs, List.of()))
+      .as("обязательный вариадик требует хотя бы один аргумент")
+      .isEqualTo(-1);
+    assertThat(SignatureSelection.pickIndexByTypes(sigs, List.of(TypeSet.of(NUMBER))))
+      .isZero();
+    assertThat(SignatureSelection.pickIndexByTypes(sigs,
+      List.of(TypeSet.of(NUMBER), TypeSet.of(NUMBER), TypeSet.of(NUMBER))))
+      .isZero();
   }
 
   @Test
@@ -239,7 +258,7 @@ class SignatureSelectionTest {
   void pickIndexByTypesVariadicMismatchedExtraArgsPenalized() {
     // given — variadic-сигнатура с типом Число, аргументы со Строкой.
     var variadic = signature(List.of(
-      param("N1,...,Nm", true, TypeSet.of(NUMBER))
+      variadicParam("N", true, TypeSet.of(NUMBER))
     ));
     var byString = signature(List.of(
       param("a", false, TypeSet.of(STRING)),
@@ -260,7 +279,7 @@ class SignatureSelectionTest {
   void pickIndexByTypesVariadicSkipsEmptyAndNullExtraArgs() {
     // given — variadic с типом Число и extra-args пустые / без типа.
     var variadic = signature(List.of(
-      param("N1,...,Nm", true, TypeSet.of(NUMBER))
+      variadicParam("N", true, TypeSet.of(NUMBER))
     ));
     var sigs = List.of(variadic);
 
@@ -322,6 +341,11 @@ class SignatureSelectionTest {
 
   private static ParameterDescriptor param(String name, boolean optional, TypeSet types) {
     return new ParameterDescriptor(name, types, optional, "");
+  }
+
+  /** Вариадик-параметр (хвост переменной длины) — помечен флагом. */
+  private static ParameterDescriptor variadicParam(String name, boolean optional, TypeSet types) {
+    return new ParameterDescriptor(name, types, optional, "").withVariadic(true);
   }
 
   private static SignatureDescriptor signature(List<ParameterDescriptor> params) {

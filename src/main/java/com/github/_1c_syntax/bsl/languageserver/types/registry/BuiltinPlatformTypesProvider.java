@@ -69,6 +69,9 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json";
 
+  /** Размер пары ru/en-членов при склейке двуязычных дубликатов. */
+  private static final int PAIR_SIZE = 2;
+
   /**
    * Кэш десериализованных деклараций. JSON-ресурс упакован в jar и неизменен,
    * поэтому парсим его один раз на JVM (десятки workspace-контекстов в тестах
@@ -144,8 +147,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         // отбрасываем (для JSON-fallback стандартный кейс — один alias).
         @SuppressWarnings("unchecked")
         var legacyAliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
-        if (nameEn.isEmpty() && legacyAliases != null && !legacyAliases.isEmpty()) {
-          nameEn = legacyAliases.get(0);
+        if (nameEn.isEmpty() && !legacyAliases.isEmpty()) {
+          nameEn = legacyAliases.getFirst();
         }
         if (nameRu.isEmpty()) {
           nameRu = qualifiedName == null ? "" : qualifiedName;
@@ -228,9 +231,145 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
         descriptor = descriptor.withLocalizedNames(nameRu, nameEn);
       }
+      // Двуязычное описание: опциональные `descriptionRu`/`descriptionEn`.
+      // Если заданы — приоритетнее моноязычного `description` (которое
+      // попало в primary при сборке дескриптора выше).
+      var descriptionRu = stringField(m, "descriptionRu");
+      var descriptionEn = stringField(m, "descriptionEn");
+      if (!descriptionRu.isEmpty() || !descriptionEn.isEmpty()) {
+        var ru = descriptionRu.isEmpty() ? description : descriptionRu;
+        descriptor = descriptor.withBilingualDescription(BilingualString.of(ru, descriptionEn));
+      }
       members.add(descriptor);
     }
-    return members;
+    return mergeBilingualPairs(members);
+  }
+
+  /**
+   * Схлопывает соседние ru/en-пары моноязычных членов в один двуязычный
+   * {@link MemberDescriptor}. В дампе платформы OneScript каждый член
+   * перечислен дважды подряд — русским и английским именем (например,
+   * {@code Добавить} и сразу за ним {@code Add}) с идентичной сигнатурой.
+   * Это приводило к раздвоению в completion и к моноязычному hover/диагностике.
+   * После склейки модель члена идентична двуязычной BSL-модели
+   * ({@code builtin-platform-types.json}), и весь downstream (completion,
+   * hover, диагностики) работает с одним представлением.
+   * <p>
+   * Правило склейки намеренно консервативно: сливаются только
+   * <b>соседние</b> элементы, где первый — кириллический, второй —
+   * латинский, оба моноязычны (en-слот пуст), совпадают {@link MemberKind}
+   * и {@link #fingerprint(MemberDescriptor) сигнатурный отпечаток}.
+   * Соседство (а не группировка по отпечатку) исключает ложное слияние
+   * разных методов с совпадающим отпечатком; для уже двуязычных BSL-членов
+   * (en-слот заполнен) правило не срабатывает — метод остаётся no-op.
+   */
+  private static List<MemberDescriptor> mergeBilingualPairs(List<MemberDescriptor> members) {
+    if (members.size() < PAIR_SIZE) {
+      return members;
+    }
+    var result = new ArrayList<MemberDescriptor>(members.size());
+    var i = 0;
+    while (i < members.size()) {
+      var ru = members.get(i);
+      if (i + 1 < members.size() && isBilingualPair(ru, members.get(i + 1))) {
+        result.add(mergePair(ru, members.get(i + 1)));
+        i += PAIR_SIZE;
+      } else {
+        result.add(ru);
+        i++;
+      }
+    }
+    return result;
+  }
+
+  private static boolean isBilingualPair(MemberDescriptor ru, MemberDescriptor en) {
+    var bothMonolingual = ru.bilingualName().en().isEmpty() && en.bilingualName().en().isEmpty();
+    var ruThenEn = isCyrillicName(ru.name()) && isLatinName(en.name());
+    return bothMonolingual
+      && ru.kind() == en.kind()
+      && ruThenEn
+      && fingerprint(ru).equals(fingerprint(en));
+  }
+
+  /** Имя строго кириллическое (есть кириллица, нет латиницы). */
+  private static boolean isCyrillicName(String name) {
+    return isCyrillic(name) && !isLatin(name);
+  }
+
+  /** Имя строго латинское (есть латиница, нет кириллицы). */
+  private static boolean isLatinName(String name) {
+    return isLatin(name) && !isCyrillic(name);
+  }
+
+  private static MemberDescriptor mergePair(MemberDescriptor ru, MemberDescriptor en) {
+    return new MemberDescriptor(
+      BilingualString.of(ru.name(), en.name()),
+      ru.kind(),
+      BilingualString.of(ru.description(), en.description()),
+      ru.returnTypes(),
+      mergeSignatures(ru.signatures(), en.signatures()),
+      ru.sourceSymbol(),
+      ru.generic(),
+      ru.metadata()
+    );
+  }
+
+  /**
+   * Сливает имена параметров двух наборов сигнатур (ru + en) в двуязычные.
+   * Размеры гарантированно совпадают благодаря отпечатку; на случай
+   * рассинхрона — возвращаются ru-сигнатуры без изменений.
+   */
+  private static List<SignatureDescriptor> mergeSignatures(
+    List<SignatureDescriptor> ruSigs, List<SignatureDescriptor> enSigs
+  ) {
+    if (ruSigs.size() != enSigs.size()) {
+      return ruSigs;
+    }
+    var result = new ArrayList<SignatureDescriptor>(ruSigs.size());
+    for (var s = 0; s < ruSigs.size(); s++) {
+      var ruSig = ruSigs.get(s);
+      var enSig = enSigs.get(s);
+      var ruParams = ruSig.parameters();
+      var enParams = enSig.parameters();
+      if (ruParams.size() != enParams.size()) {
+        result.add(ruSig);
+        continue;
+      }
+      var params = new ArrayList<ParameterDescriptor>(ruParams.size());
+      for (var j = 0; j < ruParams.size(); j++) {
+        var ruParam = ruParams.get(j);
+        var enParam = enParams.get(j);
+        params.add(new ParameterDescriptor(
+          ruParam.name(), ruParam.types(), ruParam.optional(), ruParam.description(),
+          ruParam.defaultValue(), BilingualString.of(ruParam.name(), enParam.name()))
+          .withVariadic(ruParam.variadic()));
+      }
+      result.add(new SignatureDescriptor(params, ruSig.returnTypes(),
+        BilingualString.of(ruSig.description(), enSig.description())));
+    }
+    return result;
+  }
+
+  private static String fingerprint(MemberDescriptor m) {
+    var sb = new StringBuilder();
+    sb.append(m.kind()).append('|');
+    sb.append(m.returnType().qualifiedName()).append('|');
+    sb.append(m.signatures().size());
+    for (var sig : m.signatures()) {
+      sb.append('#').append(sig.parameters().size());
+    }
+    return sb.toString();
+  }
+
+  private static boolean isCyrillic(String name) {
+    return name.chars()
+      .anyMatch(ch -> Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.CYRILLIC);
+  }
+
+  private static boolean isLatin(String name) {
+    // Латиница = ASCII-буква (блок BASIC_LATIN = 0x00..0x7F).
+    return name.chars().anyMatch(ch ->
+      Character.isLetter(ch) && Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.BASIC_LATIN);
   }
 
   /**
@@ -266,12 +405,12 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     var seeAlso = (List<String>) raw.getOrDefault("seeAlso", Collections.emptyList());
     return new PlatformMetadata(
       sinceVersion, deprecatedSinceVersion,
-      recommended == null ? List.of() : recommended,
+      recommended,
       availabilities,
       accessMode,
       returnValueDescription, notes,
-      examples == null ? List.of() : examples,
-      seeAlso == null ? List.of() : seeAlso
+      examples,
+      seeAlso
     );
   }
 
@@ -281,7 +420,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     }
     var result = EnumSet.noneOf(Availability.class);
     for (var name : raw) {
-      if (name == null || name.isBlank()) {
+      if (name.isBlank()) {
         continue;
       }
       try {
@@ -309,6 +448,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     var result = new ArrayList<SignatureDescriptor>(raw.size());
     for (var sig : raw) {
       var description = (String) sig.getOrDefault("description", "");
+      var sigDescription = bilingualOrMono(description,
+        stringField(sig, "descriptionRu"), stringField(sig, "descriptionEn"));
       var returnTypeName = (String) sig.get("returnType");
       var returnType = returnTypeName == null
         ? fallbackReturnType
@@ -322,11 +463,26 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var pdefault = (String) p.getOrDefault("defaultValue", "");
         var pNameRu = stringField(p, "nameRu");
         var pNameEn = stringField(p, "nameEn");
+        var variadic = Boolean.TRUE.equals(p.get("variadic"));
         params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, pdefault,
-          BilingualString.of(pNameRu, pNameEn)));
+          BilingualString.of(pNameRu, pNameEn)).withVariadic(variadic));
       }
-      result.add(new SignatureDescriptor(params, returnType, description));
+      var returnTypes = returnType.equals(TypeRef.UNKNOWN) ? TypeSet.EMPTY : TypeSet.of(returnType);
+      result.add(new SignatureDescriptor(params, returnTypes, sigDescription));
     }
     return result;
+  }
+
+  /**
+   * Двуязычное описание сигнатуры: при отсутствии {@code descriptionRu}/{@code descriptionEn}
+   * — моноязычное {@code mono}; иначе ru-сторона берёт {@code descriptionRu} (или {@code mono},
+   * если пусто), en-сторона — {@code descriptionEn}.
+   */
+  private static BilingualString bilingualOrMono(String mono, String descriptionRu, String descriptionEn) {
+    if (descriptionRu.isEmpty() && descriptionEn.isEmpty()) {
+      return BilingualString.of(mono);
+    }
+    var ru = descriptionRu.isEmpty() ? mono : descriptionRu;
+    return BilingualString.of(ru, descriptionEn);
   }
 }

@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -276,34 +278,71 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void standardAttributeNamesFollowLanguageAtCallTime() {
-    // workspace/didChangeConfiguration может поменять язык в рантайме.
-    // MemberSource ConfigurationTypesProvider'а — это лямбда, которая на каждом
-    // getMembers пересобирает members через attributeNameLocalized, поэтому
-    // смена языка должна отражаться без re-register.
+  void standardAttributesAreBilingualIndependentOfConfiguredLanguage() {
+    // Стандартные реквизиты (Дата/Номер/Ссылка/...) хранятся в MemberDescriptor
+    // двуязычно: bilingualName.matches(name) находит член по любому написанию,
+    // displayName(language) возвращает имя в нужной локали. Это и есть единая
+    // точка для hover/диагностик (через matches) и completion (через displayName)
+    // без необходимости держать два параллельных дескриптора per-language.
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
     provider.tryRegister();
 
-    var refOpt = typeRegistry.resolve("ДокументСсылка.Документ1");
-    assertThat(refOpt).isPresent();
-    var ref = refOpt.get();
+    var ref = typeRegistry.resolve("ДокументСсылка.Документ1").orElseThrow();
+    var members = typeRegistry.getMembers(ref);
 
-    // По умолчанию RU — стандартные реквизиты по-русски
-    configuration.setLanguage(Language.RU);
-    var ruNames = typeRegistry.getMembers(ref).stream().map(m -> m.name()).toList();
-    assertThat(ruNames).contains("Дата", "Номер", "Ссылка");
-
-    // Переключаем на EN — те же стандартные реквизиты появляются по-английски.
-    // (Platform-inherited members из generic-типа остаются на языке кэша
-    // BslContextPlatformTypesProvider — для их пересборки нужен re-bootstrap
-    // TypeRegistry, не входит в scope этого PR.)
-    configuration.setLanguage(Language.EN);
-    try {
-      var enNames = typeRegistry.getMembers(ref).stream().map(m -> m.name()).toList();
-      assertThat(enNames).contains("Date", "Number", "Ref");
-    } finally {
-      configuration.setLanguage(Language.RU);
+    // matches должен находить «Дата»/«Date», «Номер»/«Number», «Ссылка»/«Ref»
+    // в одном и том же MemberDescriptor — без дублирования.
+    for (var pair : List.of(
+      new String[]{"Дата", "Date"},
+      new String[]{"Номер", "Number"},
+      new String[]{"Ссылка", "Ref"}
+    )) {
+      var ru = pair[0];
+      var en = pair[1];
+      var matchedByRu = members.stream().filter(m -> m.matches(ru)).toList();
+      var matchedByEn = members.stream().filter(m -> m.matches(en)).toList();
+      assertThat(matchedByRu)
+        .as("matches(%s) должен находить ровно один член", ru)
+        .hasSize(1);
+      assertThat(matchedByEn)
+        .as("matches(%s) должен находить ровно один член — тот же, что и matches(%s)", en, ru)
+        .hasSize(1)
+        .containsExactlyElementsOf(matchedByRu);
+      var descriptor = matchedByRu.get(0);
+      assertThat(descriptor.displayName(Language.RU)).isEqualTo(ru);
+      assertThat(descriptor.displayName(Language.EN)).isEqualTo(en);
     }
+  }
+
+  @Test
+  void standardAttributeDescriptionsAreBilingual() {
+    // Описания стандартных реквизитов подмешиваются из платформенного generic-типа
+    // (СправочникСсылка.<Имя справочника>). В JSON-fallback они заданы двуязычно
+    // (descriptionRu/descriptionEn), и displayDescription(language) должен отдавать
+    // описание в нужной локали — иначе hover на en-проекте показывает ru-текст.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var ref = typeRegistry.resolve("СправочникСсылка.Справочник1").orElseThrow();
+    var members = typeRegistry.getMembers(ref);
+
+    var ssylka = members.stream()
+      .filter(m -> m.matches("Ссылка"))
+      .findFirst()
+      .orElseThrow();
+    assertThat(ssylka.displayName(Language.RU)).isEqualTo("Ссылка");
+    assertThat(ssylka.displayName(Language.EN)).isEqualTo("Ref");
+    assertThat(ssylka.displayDescription(Language.RU)).contains("ссылку на элемент справочника");
+    assertThat(ssylka.displayDescription(Language.EN)).contains("reference to the catalog item");
+
+    var code = members.stream()
+      .filter(m -> m.matches("Code"))
+      .findFirst()
+      .orElseThrow();
+    assertThat(code.matches("Код")).isTrue();
+    assertThat(code.displayDescription(Language.RU)).contains("код элемента справочника");
+    assertThat(code.displayDescription(Language.EN)).contains("catalog item code");
   }
 }

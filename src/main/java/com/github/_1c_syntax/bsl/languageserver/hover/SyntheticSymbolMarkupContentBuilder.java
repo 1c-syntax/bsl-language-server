@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -50,14 +51,18 @@ public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder
   private final TypeRegistry typeRegistry;
   private final CollectionHoverHints collectionHoverHints;
   private final Resources resources;
+  private final LanguageServerConfiguration configuration;
 
   @Override
   public MarkupContent getContent(SyntheticSymbol symbol) {
+    // Hover — элемент интерфейса: язык отображения из настроек LS, а не из
+    // ScriptVariant (язык исходников).
+    var lang = configuration.getLanguage();
     var sb = new StringBuilder();
     sb.append("```bsl\n").append(symbol.getName());
     var valueType = symbol.getValueType();
     if (valueType != null && valueType != TypeRef.UNKNOWN && !valueType.qualifiedName().isEmpty()) {
-      sb.append(": ").append(valueType.qualifiedName());
+      sb.append(": ").append(typeRegistry.displayName(valueType, lang));
     }
     sb.append("\n```\n");
 
