@@ -132,6 +132,21 @@ class AutumnComponentInferencerTest {
   }
 
   @Test
+  void fallsBackToBeanNameWhenTypeIsBlank() {
+    // given
+    var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
+    when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
+    var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "")));
+
+    // when
+    var types = inferencer.inferInjectedType(annotations, "Поле", FILE_TYPE);
+
+    // then
+    assertThat(types.refs()).containsExactly(beanRef);
+  }
+
+  @Test
   void resolvesByBeanNameWhenTypeIsBeanLiteral() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
