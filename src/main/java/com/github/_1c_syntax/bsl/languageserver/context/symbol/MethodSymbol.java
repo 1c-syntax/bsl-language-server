@@ -45,6 +45,13 @@ public interface MethodSymbol extends SourceDefinedSymbol, Exportable, Describab
 
   boolean isDeprecated();
 
+  /**
+   * Объявлен ли метод с ключевым словом {@code Асинх} ({@code Async}).
+   * Влияет на семантическую подсветку (модификатор {@code async}) у объявления
+   * и у вызовов такого метода.
+   */
+  boolean isAsync();
+
   List<ParameterDefinition> getParameters();
 
   @Override

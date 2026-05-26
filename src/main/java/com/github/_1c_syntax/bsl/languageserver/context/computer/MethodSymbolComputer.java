@@ -112,6 +112,7 @@ public final class MethodSymbolComputer
       declaration.paramList(),
       true,
       declaration.EXPORT_KEYWORD() != null,
+      asyncKeyword != null,
       getCompilerDirective(declaration.compilerDirective()),
       createAnnotations(declaration.annotation()));
 
@@ -147,6 +148,7 @@ public final class MethodSymbolComputer
       declaration.paramList(),
       false,
       declaration.EXPORT_KEYWORD() != null,
+      asyncKeyword != null,
       getCompilerDirective(declaration.compilerDirective()),
       createAnnotations(declaration.annotation())
     );
@@ -229,6 +231,7 @@ public final class MethodSymbolComputer
     BSLParser.ParamListContext paramList,
     boolean function,
     boolean export,
+    boolean async,
     Optional<CompilerDirectiveKind> compilerDirective,
     List<Annotation> annotations
   ) {
@@ -251,6 +254,7 @@ public final class MethodSymbolComputer
         .subNameRange(subNameRange)
         .function(function)
         .export(export)
+        .async(async)
         .description(description)
         .deprecated(deprecated)
         .parameters(parameters)
@@ -266,6 +270,7 @@ public final class MethodSymbolComputer
       .subNameRange(subNameRange)
       .function(function)
       .export(export)
+      .async(async)
       .description(description)
       .deprecated(deprecated)
       .parameters(parameters)

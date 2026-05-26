@@ -322,6 +322,7 @@ class MethodSymbolComputerTest {
     assertThat(methods).hasSize(1);
     var method = methods.getFirst();
     assertThat(method.getName()).isEqualTo("ОбработатьЖелудь");
+    assertThat(method.isAsync()).isTrue();
     assertThat(method.getDescription()).isPresent();
     assertThat(method.getDescription().orElseThrow().getDescription())
       .contains("Описание асинхронной функции");
@@ -354,6 +355,7 @@ class MethodSymbolComputerTest {
     assertThat(methods).hasSize(1);
     var method = methods.getFirst();
     assertThat(method.getName()).isEqualTo("ВыполнитьЧтоТо");
+    assertThat(method.isAsync()).isTrue();
     assertThat(method.getDescription()).isPresent();
     assertThat(method.getParameters()).hasSize(1);
     assertThat(method.getParameters().getFirst().getDescription()).isPresent();
@@ -380,6 +382,7 @@ class MethodSymbolComputerTest {
     assertThat(methods).hasSize(1);
     var method = methods.getFirst();
     assertThat(method.getName()).isEqualTo("ОбработатьСобытие");
+    assertThat(method.isAsync()).isTrue();
     assertThat(method.getDescription()).isPresent();
     assertThat(method.getParameters().getFirst().getDescription()).isPresent();
     assertThat(method.getAnnotations()).hasSize(1);
@@ -409,11 +412,34 @@ class MethodSymbolComputerTest {
     assertThat(methods).hasSize(1);
     var method = methods.getFirst();
     assertThat(method.getName()).isEqualTo("ВыполнитьНаКлиенте");
+    assertThat(method.isAsync()).isTrue();
     assertThat(method.getDescription()).isPresent();
     assertThat(method.getParameters().getFirst().getDescription()).isPresent();
     assertThat(method.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
     // директивы компиляции исторически не входят в range; ASYNC задаёт начало range
     assertThat(method.getRange()).isEqualTo(Ranges.create(5, 0, 6, 14));
+  }
+
+  @Test
+  void testNonAsyncMethodHasNoAsyncFlag() {
+    // given
+    var source = """
+      Процедура Обычная()
+      КонецПроцедуры
+
+      Функция ОбычнаяФункция()
+          Возврат 1;
+      КонецФункции
+      """;
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(source);
+    var methods = documentContext.getSymbolTree().getMethods();
+
+    // then
+    assertThat(methods).hasSize(2);
+    assertThat(methods.get(0).isAsync()).isFalse();
+    assertThat(methods.get(1).isAsync()).isFalse();
   }
 
   private static void checkCompilerDirective_for_AtClient_AndAnnotation_After(MethodSymbol methodSymbol) {
