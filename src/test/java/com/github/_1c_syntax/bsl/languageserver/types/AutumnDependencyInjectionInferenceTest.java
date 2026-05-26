@@ -140,6 +140,19 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
   }
 
+  @Test
+  void infersBeanTypeThroughMetaAnnotations() {
+    // given
+    // поле помечено &Внедряемое (= &Пластилин через &Аннотация),
+    // а желудь СовременныйЛоггер объявлен через &Компонент (= &Желудь)
+
+    // when
+    var types = typeService.findTypes(variable("ЧерезМетаАннотацию"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("СовременныйЛоггер");
+  }
+
   private VariableSymbol variable(String name) {
     return consumer.getSymbolTree().getVariables().stream()
       .filter(v -> name.equals(v.getName()))

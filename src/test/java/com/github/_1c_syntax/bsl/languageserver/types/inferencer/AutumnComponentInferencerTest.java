@@ -25,14 +25,16 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -54,8 +56,21 @@ class AutumnComponentInferencerTest {
   @Mock
   private AutumnBeanIndex beanIndex;
 
-  @InjectMocks
+  @Mock
+  private OScriptLibraryIndex libraryIndex;
+
+  @Mock
+  private ServerContextProvider serverContextProvider;
+
   private AutumnComponentInferencer inferencer;
+
+  @BeforeEach
+  void setup() {
+    // Реальный резолвер мета-аннотаций: для базовых имён (Пластилин) он
+    // короткозамыкается и не обращается к индексу библиотек.
+    var metaResolver = new AutumnMetaAnnotationResolver(libraryIndex, serverContextProvider);
+    inferencer = new AutumnComponentInferencer(typeRegistry, beanIndex, metaResolver);
+  }
 
   @Test
   void resolvesBeanByPositionalName() {

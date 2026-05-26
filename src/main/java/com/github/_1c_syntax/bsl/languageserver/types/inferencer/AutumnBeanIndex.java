@@ -66,6 +66,7 @@ public class AutumnBeanIndex {
   private final OScriptLibraryIndex libraryIndex;
   private final ServerContextProvider serverContextProvider;
   private final TypeRegistry typeRegistry;
+  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   private volatile Map<String, List<BeanCandidate>> beansByName;
 
@@ -154,7 +155,7 @@ public class AutumnBeanIndex {
     TypeRef ownerType
   ) {
     var annotations = method.getAnnotations();
-    var component = AutumnAnnotations.find(annotations, AutumnAnnotations.COMPONENT);
+    var component = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.COMPONENT).orElse(null);
     if (component == null || ownerType == null) {
       return;
     }
@@ -167,7 +168,7 @@ public class AutumnBeanIndex {
 
   private void registerFactory(Map<String, List<BeanCandidate>> map, MethodSymbol method) {
     var annotations = method.getAnnotations();
-    var factory = AutumnAnnotations.find(annotations, AutumnAnnotations.FACTORY);
+    var factory = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.FACTORY).orElse(null);
     if (factory == null) {
       return;
     }
@@ -196,11 +197,11 @@ public class AutumnBeanIndex {
     String primaryName,
     TypeRef type
   ) {
-    var primary = AutumnAnnotations.has(annotations, AutumnAnnotations.PRIMARY);
+    var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
     var candidate = new BeanCandidate(type, primary);
 
     addCandidate(map, primaryName, candidate);
-    for (var alias : AutumnAnnotations.values(annotations, AutumnAnnotations.QUALIFIER)) {
+    for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {
       addCandidate(map, alias, candidate);
     }
   }

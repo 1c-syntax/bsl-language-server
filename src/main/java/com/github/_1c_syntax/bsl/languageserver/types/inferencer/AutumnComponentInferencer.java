@@ -61,6 +61,7 @@ public class AutumnComponentInferencer {
 
   private final TypeRegistry typeRegistry;
   private final AutumnBeanIndex beanIndex;
+  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   /**
    * Вывести тип внедряемой зависимости по аннотациям объявления.
@@ -73,7 +74,7 @@ public class AutumnComponentInferencer {
    *         внедрения либо тип не разрешился
    */
   public TypeSet inferInjectedType(List<Annotation> annotations, String fallbackName, FileType fileType) {
-    var injection = AutumnAnnotations.find(annotations, AutumnAnnotations.INJECTION);
+    var injection = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION).orElse(null);
     if (injection == null) {
       return TypeSet.EMPTY;
     }
