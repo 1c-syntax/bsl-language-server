@@ -184,6 +184,8 @@ public class ConfigurationTypesProvider {
       if (managerEn != null && !managerEn.equals(managerRu)) {
         typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
       }
+      typeRegistry.registerDisplayName(ref,
+        BilingualString.of(managerRu, managerEn == null ? managerRu : managerEn));
 
       // Подмешивание платформенных методов менеджера-семейства, ссылки,
       // объекта, выборки и т.п. для конкретного MD-имени делается единым
@@ -224,6 +226,7 @@ public class ConfigurationTypesProvider {
       if (!collectionEn.equals(collectionRu)) {
         typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
       }
+      typeRegistry.registerDisplayName(ref, BilingualString.of(collectionRu, collectionEn));
       typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.BSL);
       typeRegistry.registerAsGlobalProperty(ref);
 

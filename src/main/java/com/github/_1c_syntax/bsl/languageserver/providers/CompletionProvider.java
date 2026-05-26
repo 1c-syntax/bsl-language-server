@@ -529,7 +529,7 @@ public final class CompletionProvider {
       }
     } else {
       item.setKind(propertyKind);
-      var detail = propertyDetail(member);
+      var detail = propertyDetail(member, scriptVariant);
       if (!detail.isBlank()) {
         item.setDetail(detail);
       }
@@ -560,7 +560,7 @@ public final class CompletionProvider {
     }
   }
 
-  private static String methodDetail(MemberDescriptor member, Language scriptVariant) {
+  private String methodDetail(MemberDescriptor member, Language scriptVariant) {
     var signatures = member.signatures();
     if (signatures.size() > 1) {
       return formatSignaturesCount(signatures.size(), scriptVariant);
@@ -571,7 +571,7 @@ public final class CompletionProvider {
     return formatSignature(signatures.get(0), scriptVariant);
   }
 
-  private static String formatSignature(SignatureDescriptor signature, Language scriptVariant) {
+  private String formatSignature(SignatureDescriptor signature, Language scriptVariant) {
     var sb = new StringBuilder();
     sb.append('(');
     var params = signature.parameters();
@@ -588,22 +588,30 @@ public final class CompletionProvider {
       }
     }
     sb.append(')');
-    var returnTypeName = formatTypeName(signature.returnType());
+    var returnTypeName = formatTypeName(signature.returnType(), scriptVariant);
     if (!returnTypeName.isEmpty()) {
       sb.append(": ").append(returnTypeName);
     }
     return sb.toString();
   }
 
-  private static String propertyDetail(MemberDescriptor member) {
-    return formatTypeName(member.returnType());
+  private String propertyDetail(MemberDescriptor member, Language scriptVariant) {
+    return formatTypeName(member.returnType(), scriptVariant);
   }
 
-  private static String formatTypeName(TypeRef ref) {
+  /**
+   * Короткое имя типа в языке {@code scriptVariant}. Берётся двуязычное
+   * отображаемое имя из реестра ({@code Строка}/{@code String},
+   * {@code Массив}/{@code Array}), затем — последний сегмент (для
+   * квалифицированных имён вида {@code СправочникСсылка.Контрагенты}).
+   */
+  private String formatTypeName(TypeRef ref, Language scriptVariant) {
     if (ref == null || ref.kind() == TypeKind.UNKNOWN || ref.equals(TypeRef.UNKNOWN)) {
       return "";
     }
-    return ref.simpleName();
+    var displayName = typeService.displayName(ref, scriptVariant);
+    var dot = displayName.lastIndexOf('.');
+    return dot < 0 ? displayName : displayName.substring(dot + 1);
   }
 
   private static String formatSignaturesCount(int count, Language scriptVariant) {

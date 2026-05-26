@@ -75,6 +75,25 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void configurationTypeDisplayNamesAreBilingual() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Менеджер-обёртка: в EN показывается CatalogManager.Справочник1, а не ru-написание.
+    var managerRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
+    assertThat(typeService.displayName(managerRef, Language.RU))
+      .isEqualTo("СправочникМенеджер.Справочник1");
+    assertThat(typeService.displayName(managerRef, Language.EN))
+      .isEqualTo("CatalogManager.Справочник1");
+
+    // Коллекция-namespace: Справочники / Catalogs.
+    var collectionRef = typeRegistry.resolve("Справочники").orElseThrow();
+    assertThat(typeService.displayName(collectionRef, Language.RU)).isEqualTo("Справочники");
+    assertThat(typeService.displayName(collectionRef, Language.EN)).isEqualTo("Catalogs");
+  }
+
+  @Test
   void registersCollectionNamespacesWithMetadataMembers() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();

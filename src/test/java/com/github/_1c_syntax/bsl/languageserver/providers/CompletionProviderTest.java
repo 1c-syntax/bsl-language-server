@@ -949,6 +949,34 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     }
   }
 
+  @Test
+  void dotCompletionReturnTypeInDetailFollowsConfiguredLanguage() {
+    // Тип возвращаемого значения в детали completion-item локализуется по языку:
+    // Массив.Количество(): Число (ru) / (): Number (en). Имя самого члена здесь
+    // моноязычное — проверяется именно язык типа, а не имени.
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    languageServerConfiguration.setLanguage(Language.RU);
+    try {
+      var count = dotCompletionItem(documentContext, new Position(1, 2), "Количество");
+      assertThat(count.getDetail())
+        .as("тип возврата — на русском при language=RU")
+        .isEqualTo("(): Число");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+
+    languageServerConfiguration.setLanguage(Language.EN);
+    try {
+      var count = dotCompletionItem(documentContext, new Position(1, 2), "Количество");
+      assertThat(count.getDetail())
+        .as("тип возврата — на английском при language=EN, а не русский primary")
+        .isEqualTo("(): Number");
+    } finally {
+      languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
+    }
+  }
+
   private CompletionItem dotCompletionItem(
     com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext,
     Position position,
