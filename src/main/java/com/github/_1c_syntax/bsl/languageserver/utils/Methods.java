@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Утилитный класс для работы с методами в контексте AST.
@@ -39,6 +39,26 @@ import java.util.Optional;
  */
 @UtilityClass
 public class Methods {
+
+  /**
+   * Имена методов, которые в {@code .os}-файлах семантически являются
+   * конструктором OneScript-класса.
+   */
+  private static final Set<String> OSCRIPT_CLASS_CONSTRUCTOR_NAMES = Set.of(
+    "присозданииобъекта",
+    "onobjectcreate"
+  );
+
+  /**
+   * Регистронезависимая проверка: является ли это имя методом-конструктором
+   * OneScript-класса ({@code ПриСозданииОбъекта} / {@code OnObjectCreate}).
+   */
+  public static boolean isOscriptClassConstructorName(String methodName) {
+    if (methodName == null || methodName.isEmpty()) {
+      return false;
+    }
+    return OSCRIPT_CLASS_CONSTRUCTOR_NAMES.contains(methodName.toLowerCase(Locale.ROOT));
+  }
 
   /**
    * Получить имя метода из контекста вызова.
@@ -132,17 +152,6 @@ public class Methods {
     return Optional.ofNullable(lValueContext.acceptor())
       .map(BSLParser.AcceptorContext::modifier)
       .flatMap(Methods::getMethodName);
-  }
-
-  /**
-   * Получить конструктор класса OScript (ПриСозданииОбъекта/OnObjectCreate).
-   *
-   * @param symbolTree Дерево символов документа
-   * @return Символ метода-конструктора, если найден
-   */
-  public static Optional<MethodSymbol> getOscriptClassConstructor(SymbolTree symbolTree) {
-    return symbolTree.getMethodSymbol("ПриСозданииОбъекта")
-      .or(() -> symbolTree.getMethodSymbol("OnObjectCreate"));
   }
 
 }

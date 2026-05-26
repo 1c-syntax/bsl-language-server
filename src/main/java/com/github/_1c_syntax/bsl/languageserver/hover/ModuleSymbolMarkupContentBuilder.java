@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -44,9 +45,19 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
 
   private final Resources resources;
   private final DescriptionFormatter descriptionFormatter;
+  private final OScriptClassConstructorRenderer oScriptClassConstructorRenderer;
 
   @Override
   public MarkupContent getContent(ModuleSymbol symbol) {
+    var documentContext = symbol.getOwner();
+
+    // Для OneScript-классов без явного конструктора (ссылка из Новый ИмяКласса()
+    // приходит сюда, потому что ReferenceIndexFiller не нашёл ПриСозданииОбъекта)
+    // — рендерим constructor-стилевой hover, как и для классов с явным конструктором.
+    if (documentContext.getModuleType() == ModuleType.OScriptClass) {
+      return oScriptClassConstructorRenderer.renderWithoutConstructor(documentContext);
+    }
+
     var markupBuilder = new StringJoiner("\n");
 
     // Местоположение модуля

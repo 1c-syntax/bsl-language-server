@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -340,6 +341,13 @@ public class ReferenceIndex {
     var to = reference.getSourceDefinedSymbol().orElseThrow();
     var from = reference.from();
     if (to.getOwner().equals(from.getOwner())) {
+      return true;
+    }
+
+    // Конструктор OneScript-класса (ПриСозданииОбъекта/OnObjectCreate) по
+    // convention'у объявляется без `Экспорт`, но фактически вызывается извне
+    // через `Новый ИмяКласса()` — поэтому такая ссылка всегда accessible.
+    if (to instanceof ConstructorSymbol) {
       return true;
     }
 

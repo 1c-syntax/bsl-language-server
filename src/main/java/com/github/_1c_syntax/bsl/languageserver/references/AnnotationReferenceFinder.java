@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -101,7 +100,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
     var symbolTree = documentContext.getSymbolTree();
 
-    var methodSymbolAnnotationPair = Methods.getOscriptClassConstructor(symbolTree)
+    var methodSymbolAnnotationPair = symbolTree.getConstructor()
       .flatMap(AnnotationReferenceFinder::findAnnotation);
 
     methodSymbolAnnotationPair
@@ -116,6 +115,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     var annotationName = annotationNode.getText();
     return annotationRepository.findByName(annotationName);
   }
+
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {

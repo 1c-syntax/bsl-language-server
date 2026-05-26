@@ -98,7 +98,7 @@ public class SymbolProvider {
   private static boolean isSupported(Symbol symbol) {
     var symbolKind = symbol.getSymbolKind();
     return switch (symbolKind) {
-      case Method -> true;
+      case Method, Constructor -> true;
       case Variable -> SUPPORTED_VARIABLE_KINDS.contains(((VariableSymbol) symbol).getKind());
       default -> false;
     };
