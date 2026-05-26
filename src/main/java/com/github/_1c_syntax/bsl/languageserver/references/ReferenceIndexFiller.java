@@ -25,7 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -51,6 +53,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -240,8 +243,14 @@ public class ReferenceIndexFiller {
 
     /**
      * Если в выражении {@code Новый MyClass(...)} имя типа соответствует
-     * зарегистрированному OneScript library-классу, регистрирует ссылку на
-     * .os-файл класса по позиции идентификатора имени типа.
+     * зарегистрированному OneScript library-классу, регистрирует ссылку:
+     * <ul>
+     *   <li>на метод-конструктор класса ({@code ПриСозданииОбъекта} /
+     *   {@code OnObjectCreate}), если он явно объявлен — тогда go-to-def
+     *   ведёт сразу на тело конструктора, а hover показывает его сигнатуру;</li>
+     *   <li>на сам .os-файл класса (модуль), если конструктора в исходнике нет —
+     *   тогда go-to-def ведёт в файл целиком.</li>
+     * </ul>
      */
     private void tryRegisterLibraryClassReference(BSLParser.NewExpressionContext ctx) {
       var typeName = ctx.typeName();
@@ -253,12 +262,33 @@ public class ReferenceIndexFiller {
       if (libUri.isEmpty()) {
         return;
       }
-      index.addModuleReference(
-        documentContext.getUri(),
-        libUri.get().toString(),
-        actualLibraryModuleType(libUri.get(), ModuleType.OScriptClass),
-        Ranges.create(typeName.IDENTIFIER())
-      );
+      var libMdoRef = libUri.get().toString();
+      var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptClass);
+      var range = Ranges.create(typeName.IDENTIFIER());
+
+      var ctor = libraryClassConstructor(libUri.get());
+      if (ctor.isPresent()) {
+        index.addMethodCall(
+          documentContext.getUri(),
+          libMdoRef,
+          moduleType,
+          ctor.get().getName(),
+          range
+        );
+      } else {
+        index.addModuleReference(
+          documentContext.getUri(),
+          libMdoRef,
+          moduleType,
+          range
+        );
+      }
+    }
+
+    private Optional<ConstructorSymbol> libraryClassConstructor(URI libUri) {
+      return Optional.ofNullable(documentContext.getServerContext().getDocument(libUri))
+        .map(DocumentContext::getSymbolTree)
+        .flatMap(SymbolTree::getConstructor);
     }
 
     /**

@@ -22,19 +22,23 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition.ParameterType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -213,19 +217,56 @@ public final class MethodSymbolComputer
       .map(MethodDescription::isDeprecated)
       .orElse(false);
 
-    return MethodSymbol.builder()
-      .name(subName.getText().intern())
+    var name = subName.getText().intern();
+    var range = Ranges.create(startNode, stopNode);
+    var subNameRange = Ranges.create(subName);
+    var parameters = createParameters(paramList, description);
+
+    if (isOscriptClassConstructor(name, function)) {
+      return ConstructorSymbol.builder()
+        .name(name)
+        .owner(documentContext)
+        .range(range)
+        .subNameRange(subNameRange)
+        .function(function)
+        .export(export)
+        .description(description)
+        .deprecated(deprecated)
+        .parameters(parameters)
+        .compilerDirectiveKind(compilerDirective)
+        .annotations(annotations)
+        .build();
+    }
+
+    return RegularMethodSymbol.builder()
+      .name(name)
       .owner(documentContext)
-      .range(Ranges.create(startNode, stopNode))
-      .subNameRange(Ranges.create(subName))
+      .range(range)
+      .subNameRange(subNameRange)
       .function(function)
       .export(export)
       .description(description)
       .deprecated(deprecated)
-      .parameters(createParameters(paramList, description))
+      .parameters(parameters)
       .compilerDirectiveKind(compilerDirective)
       .annotations(annotations)
       .build();
+  }
+
+  /**
+   * Конструктор OneScript-класса — это процедура с именем {@code ПриСозданииОбъекта}
+   * или {@code OnObjectCreate} в файле, обозначающем класс
+   * ({@link ModuleType#OScriptClass}). В {@link ModuleType#OScriptModule} такая
+   * процедура — обычный метод (в OScript-модулях нет конструкторов).
+   */
+  private boolean isOscriptClassConstructor(String name, boolean function) {
+    if (function) {
+      return false;
+    }
+    if (documentContext.getModuleType() != ModuleType.OScriptClass) {
+      return false;
+    }
+    return Methods.isOscriptClassConstructorName(name);
   }
 
   private Optional<MethodDescription> createDescription(Token token) {

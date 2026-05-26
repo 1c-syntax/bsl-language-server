@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -162,7 +161,7 @@ public class OScriptModuleMembersProvider {
 
   private Collection<MemberDescriptor> collectMembers(DocumentContext documentContext) {
     var symbolTree = documentContext.getSymbolTree();
-    var constructor = Methods.getOscriptClassConstructor(symbolTree);
+    var constructor = symbolTree.getConstructor();
     var members = new ArrayList<MemberDescriptor>();
     for (var method : symbolTree.getMethods()) {
       if (constructor.isPresent() && method == constructor.get()) {
@@ -182,7 +181,7 @@ public class OScriptModuleMembersProvider {
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {
-    var ctor = Methods.getOscriptClassConstructor(documentContext.getSymbolTree());
+    var ctor = documentContext.getSymbolTree().getConstructor();
     if (ctor.isEmpty()) {
       return List.of(new SignatureDescriptor(List.of(), classRef, ""));
     }

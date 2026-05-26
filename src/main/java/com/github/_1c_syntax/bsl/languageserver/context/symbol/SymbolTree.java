@@ -70,6 +70,13 @@ public class SymbolTree {
   Map<String, MethodSymbol> methodsByName = createMethodsByName();
 
   /**
+   * Конструктор OneScript-класса ({@code ПриСозданииОбъекта} / {@code OnObjectCreate}),
+   * если он объявлен в документе.
+   */
+  @Getter(lazy = true)
+  Optional<ConstructorSymbol> constructor = createConstructor();
+
+  /**
    * Плоский список всех переменных документа
    */
   @Getter(lazy = true)
@@ -238,6 +245,10 @@ public class SymbolTree {
 
   private List<MethodSymbol> createMethods() {
     return getChildrenFlat(MethodSymbol.class);
+  }
+
+  private Optional<ConstructorSymbol> createConstructor() {
+    return getChildrenFlat(ConstructorSymbol.class).stream().findFirst();
   }
 
   private List<VariableSymbol> createVariables() {

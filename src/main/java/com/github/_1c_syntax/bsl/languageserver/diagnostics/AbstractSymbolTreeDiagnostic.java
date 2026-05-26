@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -55,9 +57,27 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
     visitChildren(region.getChildren());
   }
 
-  @Override
+  /**
+   * Делегаты {@link #visitRegularMethod(RegularMethodSymbol)} и
+   * {@link #visitConstructor(ConstructorSymbol)} вызывают этот метод.
+   * Диагностики, не различающие тип callable-символа, переопределяют
+   * только его. Переопределение {@link #visitConstructor(ConstructorSymbol)}
+   * или {@link #visitRegularMethod(RegularMethodSymbol)} напрямую — путь
+   * для случаев, когда конструкторы (или обычные методы) надо обработать
+   * иначе либо вовсе пропустить.
+   */
   public void visitMethod(MethodSymbol method) {
     visitChildren(method.getChildren());
+  }
+
+  @Override
+  public void visitRegularMethod(RegularMethodSymbol method) {
+    visitMethod(method);
+  }
+
+  @Override
+  public void visitConstructor(ConstructorSymbol constructor) {
+    visitMethod(constructor);
   }
 
   @Override

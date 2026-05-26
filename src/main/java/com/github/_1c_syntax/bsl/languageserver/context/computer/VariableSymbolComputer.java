@@ -68,7 +68,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private SourceDefinedSymbol currentMethod;
 
-  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,  List<MethodSymbol> methods) {
+  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,  List<? extends MethodSymbol> methods) {
     this.documentContext = documentContext;
     this.module = module;
     this.methods = methods.stream().collect(toMap(MethodSymbol::getSubNameRange, Function.identity()));

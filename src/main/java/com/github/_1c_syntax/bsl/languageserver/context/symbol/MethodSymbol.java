@@ -21,26 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Builder.Default;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
-import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,126 +35,34 @@ import java.util.Optional;
  * Представляет метод или функцию в модуле BSL с информацией о параметрах,
  * аннотациях, экспортности и вложенных элементах.
  */
-@Value
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable, Comparable<MethodSymbol> {
-  @EqualsAndHashCode.Include
-  String name;
+public interface MethodSymbol extends SourceDefinedSymbol, Exportable, Describable {
+  String getName();
 
-  @Default
-  SymbolKind symbolKind = SymbolKind.Method;
-
-  @EqualsAndHashCode.Include
-  DocumentContext owner;
-
-  @Getter(AccessLevel.NONE)
-  int startLine;
-  @Getter(AccessLevel.NONE)
-  int startCharacter;
-  @Getter(AccessLevel.NONE)
-  int endLine;
-  @Getter(AccessLevel.NONE)
-  int endCharacter;
-
-  @Getter(AccessLevel.NONE)
-  @EqualsAndHashCode.Include
-  int subNameLine;
-  @Getter(AccessLevel.NONE)
-  @EqualsAndHashCode.Include
-  int subNameStartCharacter;
-  @Getter(AccessLevel.NONE)
-  @EqualsAndHashCode.Include
-  int subNameEndCharacter;
-
-  @Getter
-  @Setter
-  @Default
-  @NonFinal
-  Optional<SourceDefinedSymbol> parent = Optional.empty();
-
-  @Default
-  List<SourceDefinedSymbol> children = new ArrayList<>();
-
-  boolean function;
-  boolean export;
-  Optional<MethodDescription> description;
-
-  boolean deprecated;
-
-  @Default
-  List<ParameterDefinition> parameters = Collections.emptyList();
-
-  @Default
-  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
-  @Default
-  List<Annotation> annotations = Collections.emptyList();
+  boolean isFunction();
 
   @Override
-  public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
-  }
+  boolean isExport();
 
-  public Range getSubNameRange() {
-    return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
-  }
+  boolean isDeprecated();
 
-  public Optional<RegionSymbol> getRegion() {
-    return getParent()
-      .filter(RegionSymbol.class::isInstance)
-      .map(RegionSymbol.class::cast);
-  }
+  List<ParameterDefinition> getParameters();
 
   @Override
-  public void accept(SymbolTreeVisitor visitor) {
-    visitor.visitMethod(this);
-  }
+  Optional<MethodDescription> getDescription();
 
-  @Override
-  public Range getSelectionRange() {
-    return getSubNameRange();
-  }
+  Optional<CompilerDirectiveKind> getCompilerDirectiveKind();
 
-  @Override
-  public int compareTo(@Nullable MethodSymbol other) {
-    if (other == null) {
-      return 1;
-    }
+  List<Annotation> getAnnotations();
 
-    return java.util.Comparator.comparing(MethodSymbol::getName)
-      .thenComparing(MethodSymbol::getOwner)
-      .thenComparingInt(m -> m.subNameLine)
-      .thenComparingInt(m -> m.subNameStartCharacter)
-      .thenComparingInt(m -> m.subNameEndCharacter)
-      .compare(this, other);
-  }
+  /**
+   * Диапазон имени метода/конструктора (без ключевых слов и параметров) —
+   * используется как selection-range и для матчинга позиции к символу.
+   */
+  Range getSubNameRange();
 
-  public static MethodSymbolBuilder builder() {
-    return new MethodSymbolBuilder();
-  }
-
-  public static class MethodSymbolBuilder {
-
-    public MethodSymbolBuilder range(Range range) {
-      var start = range.getStart();
-      var end = range.getEnd();
-      startLine = start.getLine();
-      startCharacter = start.getCharacter();
-      endLine = end.getLine();
-      endCharacter = end.getCharacter();
-
-      return this;
-    }
-
-    public MethodSymbolBuilder subNameRange(Range range) {
-      var start = range.getStart();
-      var end = range.getEnd();
-      subNameLine = start.getLine();
-      subNameStartCharacter = start.getCharacter();
-      subNameEndCharacter = end.getCharacter();
-
-      return this;
-    }
-  }
+  /**
+   * Регион/область, в которой объявлен метод/конструктор, если он находится
+   * непосредственно внутри {@link RegionSymbol}.
+   */
+  Optional<RegionSymbol> getRegion();
 }

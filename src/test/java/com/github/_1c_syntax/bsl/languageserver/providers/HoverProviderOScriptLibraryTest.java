@@ -89,4 +89,59 @@ class HoverProviderOScriptLibraryTest extends AbstractServerContextAwareTest {
     var text = hover.get().getContents().getRight().getValue();
     assertThat(text).contains("ВременныеФайлы");
   }
+
+  @Test
+  void hoverOnTypeNameInNewExpressionForClassWithCtorIsConstructorStyleAndSingleBlock() {
+    // given: класс с явным ПриСозданииОбъекта(Параметр).
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/internal-classes-test").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    var content = "#Использовать internal-classes-lib\nХ = Новый PublicEntity();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    int typeNameStart = content.indexOf("PublicEntity") - content.indexOf('\n') - 1;
+    var params = new HoverParams();
+    params.setPosition(new Position(1, typeNameStart + 2));
+
+    // when
+    var hover = hoverProvider.getHover(dc, params);
+
+    // then
+    assertThat(hover).as("hover на typeName c явным конструктором должен быть").isPresent();
+    var text = hover.get().getContents().getRight().getValue();
+    assertThat(text)
+      .as("hover constructor-стиля содержит сигнатуру `Новый ИмяКласса(...)`")
+      .contains("Новый PublicEntity(");
+    // Защита от регресса "hover задублирован": ровно один заголовок,
+    // ровно одна секция Параметры (если параметры есть).
+    int titleCount = text.split("Новый PublicEntity\\(", -1).length - 1;
+    assertThat(titleCount).as("заголовок не должен дублироваться, контент: %s", text).isEqualTo(1);
+  }
+
+  @Test
+  void hoverOnTypeNameInNewExpressionForClassWithoutCtorIsConstructorStyle() {
+    // given: класс БЕЗ ПриСозданииОбъекта — hover всё равно constructor-стиля
+    // через ModuleSymbolMarkupContentBuilder → OScriptClassConstructorRenderer.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/internal-classes-test").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    var content = "#Использовать internal-classes-lib\nХ = Новый ClassWithoutCtor();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    int typeNameStart = content.indexOf("ClassWithoutCtor") - content.indexOf('\n') - 1;
+    var params = new HoverParams();
+    params.setPosition(new Position(1, typeNameStart + 2));
+
+    // when
+    var hover = hoverProvider.getHover(dc, params);
+
+    // then
+    assertThat(hover).isPresent();
+    var text = hover.get().getContents().getRight().getValue();
+    assertThat(text)
+      .as("hover для класса без конструктора — всё равно constructor-стиля")
+      .contains("Новый ClassWithoutCtor(");
+  }
 }
