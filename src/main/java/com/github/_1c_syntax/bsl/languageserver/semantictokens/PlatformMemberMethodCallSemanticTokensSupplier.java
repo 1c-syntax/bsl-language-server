@@ -39,6 +39,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -69,45 +70,33 @@ public class PlatformMemberMethodCallSemanticTokensSupplier implements SemanticT
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     var entries = new ArrayList<SemanticTokenEntry>();
     var ast = documentContext.getAst();
-    if (ast == null) {
-      return entries;
-    }
 
     // Позиции, уже обработанные MethodCallSemanticTokensSupplier: пропускаем,
     // чтобы не дублировать токен на одной и той же позиции.
-    Set<Position> sourceDefinedCallSites = collectSourceDefinedCallSites(documentContext);
+    var sourceDefinedCallSites = collectSourceDefinedCallSites(documentContext);
 
     for (var accessCall : Trees.<BSLParser.AccessCallContext>findAllRuleNodes(ast, BSLParser.RULE_accessCall)) {
-      var methodCall = accessCall.methodCall();
-      if (methodCall == null) {
-        continue;
-      }
-      var methodNameCtx = methodCall.methodName();
-      if (methodNameCtx == null) {
-        continue;
-      }
-      var methodIdentifier = methodNameCtx.IDENTIFIER();
-      if (methodIdentifier == null) {
-        continue;
-      }
-
-      Range range = Ranges.create(methodIdentifier);
-      if (sourceDefinedCallSites.contains(range.getStart())) {
-        continue;
-      }
-
-      var member = typeService.findMemberAt(documentContext, range.getStart());
-      if (member.isEmpty()) {
-        continue;
-      }
-      if (member.get().descriptor().kind() != MemberKind.METHOD) {
-        continue;
-      }
-
-      helper.addRange(entries, range, SemanticTokenTypes.Method, DEFAULT_LIBRARY_MODIFIERS);
+      methodNameRange(accessCall)
+        .filter(range -> !sourceDefinedCallSites.contains(range.getStart()))
+        .filter(range -> isPlatformMethodAt(documentContext, range.getStart()))
+        .ifPresent(range -> helper.addRange(entries, range, SemanticTokenTypes.Method, DEFAULT_LIBRARY_MODIFIERS));
     }
 
     return entries;
+  }
+
+  private static Optional<Range> methodNameRange(BSLParser.AccessCallContext accessCall) {
+    return Optional.ofNullable(accessCall.methodCall())
+      .map(BSLParser.MethodCallContext::methodName)
+      .map(BSLParser.MethodNameContext::IDENTIFIER)
+      .map(Ranges::create);
+  }
+
+  private boolean isPlatformMethodAt(DocumentContext documentContext, Position position) {
+    return typeService.findMemberAt(documentContext, position)
+      .map(TypeService.TypedMember::descriptor)
+      .map(descriptor -> descriptor.kind() == MemberKind.METHOD)
+      .orElse(false);
   }
 
   private Set<Position> collectSourceDefinedCallSites(DocumentContext documentContext) {
