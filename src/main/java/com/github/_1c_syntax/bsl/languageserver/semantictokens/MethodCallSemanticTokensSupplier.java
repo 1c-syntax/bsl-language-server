@@ -41,6 +41,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier {
 
+  private static final String[] NO_MODIFIERS = new String[0];
+  private static final String[] ASYNC_MODIFIERS = {SemanticTokenModifiers.Async};
+  private static final String[] STATIC_MODIFIERS = {SemanticTokenModifiers.Static};
+  private static final String[] STATIC_ASYNC_MODIFIERS = {
+    SemanticTokenModifiers.Static,
+    SemanticTokenModifiers.Async
+  };
+
   private final ReferenceIndex referenceIndex;
   private final SemanticTokensHelper helper;
 
@@ -74,13 +82,10 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
   }
 
   private static String[] methodCallModifiers(boolean isStatic, boolean isAsync) {
-    if (!isStatic && !isAsync) {
-      return new String[0];
+    if (isStatic) {
+      return isAsync ? STATIC_ASYNC_MODIFIERS : STATIC_MODIFIERS;
     }
-    if (isStatic && isAsync) {
-      return new String[]{SemanticTokenModifiers.Static, SemanticTokenModifiers.Async};
-    }
-    return new String[]{isStatic ? SemanticTokenModifiers.Static : SemanticTokenModifiers.Async};
+    return isAsync ? ASYNC_MODIFIERS : NO_MODIFIERS;
   }
 }
 
