@@ -151,6 +151,42 @@ class VariableSymbolTest {
   }
 
   @Test
+  void moduleVariableCarriesInjectionAnnotation() {
+    // given
+    var code = """
+      &Пластилин("ИмяЖелудя")
+      Перем ВнедренныйЖелудь;
+      """;
+
+    // when
+    var ctx = TestUtils.getDocumentContext(code);
+    var variable = ctx.getSymbolTree().getVariables().stream()
+      .filter(v -> "ВнедренныйЖелудь".equals(v.getName()))
+      .findFirst()
+      .orElseThrow();
+
+    // then
+    assertThat(variable.getAnnotations()).hasSize(1);
+    var annotation = variable.getAnnotations().getFirst();
+    assertThat(annotation.getName()).isEqualTo("Пластилин");
+    assertThat(annotation.getParameters()).hasSize(1);
+    assertThat(annotation.getParameters().getFirst().value().getLeft()).isEqualTo("ИмяЖелудя");
+  }
+
+  @Test
+  void plainModuleVariableHasNoAnnotations() {
+    // given
+    var code = "Перем ОбычноеПоле;\n";
+
+    // when
+    var ctx = TestUtils.getDocumentContext(code);
+    var variable = ctx.getSymbolTree().getVariables().getFirst();
+
+    // then
+    assertThat(variable.getAnnotations()).isEmpty();
+  }
+
+  @Test
   void testNoNPEOnMalformedLValue() {
     // Test for issue BSL-LANGUAGE-SERVER-G5
     // Malformed code with syntax errors should not cause NPE

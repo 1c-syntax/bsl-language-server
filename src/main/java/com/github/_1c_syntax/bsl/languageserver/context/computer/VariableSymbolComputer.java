@@ -26,6 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotations;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -97,6 +99,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .export(ctx.EXPORT_KEYWORD() != null)
       .kind(VariableKind.MODULE)
       .description(createDescription(ctx))
+      .annotations(moduleVarAnnotations(ctx))
       .scope(module)
       .build();
     variables.add(symbol);
@@ -204,6 +207,19 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
     updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
     return super.visitForEachStatement(ctx);
+  }
+
+  /**
+   * Аннотации объявления переменной модуля. Грамматически они висят на
+   * охватывающем {@code moduleVar} (общем для всех переменных в одном
+   * {@code Перем А, Б;}), поэтому поднимаемся к нему от объявления.
+   */
+  private List<Annotation> moduleVarAnnotations(BSLParser.ModuleVarDeclarationContext ctx) {
+    var moduleVar = (BSLParser.ModuleVarContext) Trees.getRootParent(ctx, BSLParser.RULE_moduleVar);
+    if (moduleVar == null) {
+      return Collections.emptyList();
+    }
+    return Annotations.from(moduleVar.annotation());
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubVarDeclarationContext ctx) {
