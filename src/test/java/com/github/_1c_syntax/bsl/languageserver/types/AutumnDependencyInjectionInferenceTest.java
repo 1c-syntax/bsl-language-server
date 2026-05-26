@@ -92,6 +92,54 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
   }
 
+  @Test
+  void infersBeanTypeByQualifier() {
+    // given
+    // желудь Василий объявлен с &Прозвище("Васян")
+
+    // when
+    var types = typeService.findTypes(variable("ЧерезПрозвище"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Василий");
+  }
+
+  @Test
+  void prefersPrimaryBeanOnQualifierConflict() {
+    // given
+    // прозвище "Панк" есть у ДжонниРоттен и СидВишес; СидВишес помечен &Верховный
+
+    // when
+    var types = typeService.findTypes(variable("ПриоритетныйПанк"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("СидВишес");
+  }
+
+  @Test
+  void infersBeanTypeForRenamedComponent() {
+    // given
+    // РеальныйКласс объявлен как &Желудь("ЛогическоеИмя")
+
+    // when
+    var types = typeService.findTypes(variable("Переименованный"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("РеальныйКласс");
+  }
+
+  @Test
+  void infersBeanTypeForFactoryMethod() {
+    // given
+    // &Завязь(Значение = "ФабричныйЖелудь", Тип = "Логгер")
+
+    // when
+    var types = typeService.findTypes(variable("ИзФабрики"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Логгер");
+  }
+
   private VariableSymbol variable(String name) {
     return consumer.getSymbolTree().getVariables().stream()
       .filter(v -> name.equals(v.getName()))

@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,9 @@ class AutumnComponentInferencerTest {
   @Mock
   private TypeRegistry typeRegistry;
 
+  @Mock
+  private AutumnBeanIndex beanIndex;
+
   @InjectMocks
   private AutumnComponentInferencer inferencer;
 
@@ -57,6 +61,7 @@ class AutumnComponentInferencerTest {
   void resolvesBeanByPositionalName() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
     var annotations = List.of(plasticine(positional("ИмяЖелудя")));
 
@@ -71,6 +76,7 @@ class AutumnComponentInferencerTest {
   void resolvesBeanByNamedValueParameter() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
     var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя")));
 
@@ -85,6 +91,7 @@ class AutumnComponentInferencerTest {
   void fallsBackToVariableNameWhenAnnotationHasNoValue() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "Логин");
+    when(beanIndex.resolve("Логин")).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.resolve("Логин", FILE_TYPE)).thenReturn(Optional.of(beanRef));
     var annotations = List.of(plasticine());
 
@@ -113,6 +120,7 @@ class AutumnComponentInferencerTest {
   void resolvesByBeanNameWhenTypeIsBeanLiteral() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
     var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "Желудь")));
 
@@ -121,6 +129,21 @@ class AutumnComponentInferencerTest {
 
     // then
     assertThat(types.refs()).containsExactly(beanRef);
+  }
+
+  @Test
+  void prefersBeanIndexOverDirectTypeResolution() {
+    // given
+    var renamedRef = new TypeRef(TypeKind.USER, "ПереименованныйКласс");
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(renamedRef));
+    var annotations = List.of(plasticine(positional("ИмяЖелудя")));
+
+    // when
+    var types = inferencer.inferInjectedType(annotations, "Поле", FILE_TYPE);
+
+    // then
+    assertThat(types.refs()).containsExactly(renamedRef);
+    verifyNoInteractions(typeRegistry);
   }
 
   @Test
@@ -133,12 +156,13 @@ class AutumnComponentInferencerTest {
 
     // then
     assertThat(types.isEmpty()).isTrue();
-    verifyNoInteractions(typeRegistry);
+    verifyNoInteractions(typeRegistry, beanIndex);
   }
 
   @Test
   void returnsEmptyWhenTypeUnresolved() {
     // given
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.empty());
     var annotations = List.of(plasticine(positional("ИмяЖелудя")));
 

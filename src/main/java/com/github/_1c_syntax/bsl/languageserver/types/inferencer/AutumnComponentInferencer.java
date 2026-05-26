@@ -33,7 +33,6 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Вывод типа внедряемой зависимости фреймворка «ОСень» (Autumn).
@@ -50,32 +49,18 @@ import java.util.Set;
  * коллекцией ({@code Массив}, {@code ТаблицаЗначений} и т.п.) означает внедрение
  * коллекции желудей — тогда типом становится сама коллекция.
  * <p>
- * На этом этапе имя желудя резолвится напрямую через {@link TypeRegistry}, что
- * покрывает случай «имя желудя == имя типа .os-класса» (поведение по умолчанию
- * аннотации {@code &Желудь}). Переименованные желуди и прозвища — отдельная
- * задача (индекс желудей).
+ * Имя желудя резолвится сначала через {@link AutumnBeanIndex} (переименованные
+ * желуди, прозвища, {@code &Верховный}), затем — прямым резолвом имени типа
+ * через {@link TypeRegistry} (поведение по умолчанию «имя желудя == имя
+ * .os-класса»).
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class AutumnComponentInferencer {
 
-  /**
-   * Имена аннотаций-точек внедрения. Базовый набор фреймворка; алиасы и
-   * пользовательские аннотации через мета-аннотации — отдельная задача.
-   */
-  private static final Set<String> INJECTION_ANNOTATIONS = Set.of("Пластилин");
-
-  private static final String VALUE_PARAMETER = "Значение";
-  private static final String TYPE_PARAMETER = "Тип";
-
-  /**
-   * Значение параметра {@code Тип}, означающее «внедрить желудь как таковой» —
-   * тип в этом случае определяется по имени желудя, а не по {@code Тип}.
-   */
-  private static final String BEAN_TYPE = "Желудь";
-
   private final TypeRegistry typeRegistry;
+  private final AutumnBeanIndex beanIndex;
 
   /**
    * Вывести тип внедряемой зависимости по аннотациям объявления.
@@ -88,66 +73,47 @@ public class AutumnComponentInferencer {
    *         внедрения либо тип не разрешился
    */
   public TypeSet inferInjectedType(List<Annotation> annotations, String fallbackName, FileType fileType) {
-    var injection = findInjectionAnnotation(annotations);
+    var injection = AutumnAnnotations.find(annotations, AutumnAnnotations.INJECTION);
     if (injection == null) {
       return TypeSet.EMPTY;
     }
 
-    var typeName = resolveTypeName(injection, fallbackName);
-    if (typeName == null || typeName.isBlank()) {
+    var collectionType = collectionType(injection);
+    if (collectionType != null) {
+      // Тип-коллекция: внедряется коллекция желудей — типом становится коллекция.
+      return typeRegistry.resolve(collectionType, fileType)
+        .map(TypeSet::of)
+        .orElse(TypeSet.EMPTY);
+    }
+
+    var beanName = beanName(injection, fallbackName);
+    if (beanName == null || beanName.isBlank()) {
       return TypeSet.EMPTY;
     }
 
-    return typeRegistry.resolve(typeName, fileType)
+    var fromIndex = beanIndex.resolve(beanName);
+    if (!fromIndex.isEmpty()) {
+      return fromIndex;
+    }
+    return typeRegistry.resolve(beanName, fileType)
       .map(TypeSet::of)
       .orElse(TypeSet.EMPTY);
   }
 
-  private static @Nullable Annotation findInjectionAnnotation(List<Annotation> annotations) {
-    for (var annotation : annotations) {
-      if (INJECTION_ANNOTATIONS.contains(annotation.getName())) {
-        return annotation;
-      }
-    }
-    return null;
-  }
-
-  private static @Nullable String resolveTypeName(Annotation injection, String fallbackName) {
-    var explicitType = stringParameter(injection, TYPE_PARAMETER, 1);
-    if (explicitType != null && !explicitType.isBlank() && !BEAN_TYPE.equalsIgnoreCase(explicitType)) {
-      // Тип-коллекция: внедряется коллекция желудей — типом становится коллекция.
+  private static @Nullable String collectionType(Annotation injection) {
+    var explicitType = AutumnAnnotations.stringParameter(injection, AutumnAnnotations.TYPE_PARAMETER, 1);
+    if (explicitType != null && !explicitType.isBlank()
+      && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(explicitType)) {
       return explicitType;
     }
-
-    var beanName = stringParameter(injection, VALUE_PARAMETER, 0);
-    if (beanName != null && !beanName.isBlank()) {
-      return beanName;
-    }
-    return fallbackName;
+    return null;
   }
 
-  /**
-   * Значение строкового параметра аннотации: сначала по имени, затем по позиции
-   * среди безымянных (позиционных) параметров.
-   */
-  private static @Nullable String stringParameter(Annotation annotation, String name, int positionalIndex) {
-    var parameters = annotation.getParameters();
-    for (var parameter : parameters) {
-      if (name.equalsIgnoreCase(parameter.name()) && parameter.value().isLeft()) {
-        return parameter.value().getLeft();
-      }
+  private static @Nullable String beanName(Annotation injection, String fallbackName) {
+    var name = AutumnAnnotations.stringParameter(injection, AutumnAnnotations.VALUE_PARAMETER, 0);
+    if (name != null && !name.isBlank()) {
+      return name;
     }
-
-    int position = 0;
-    for (var parameter : parameters) {
-      if (!parameter.name().isEmpty()) {
-        continue;
-      }
-      if (position == positionalIndex && parameter.value().isLeft()) {
-        return parameter.value().getLeft();
-      }
-      position++;
-    }
-    return null;
+    return fallbackName;
   }
 }
