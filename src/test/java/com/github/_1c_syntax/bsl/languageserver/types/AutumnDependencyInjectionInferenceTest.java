@@ -1,0 +1,105 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types;
+
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.utils.Absolute;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Вывод типа внедряемых через {@code &Пластилин} зависимостей фреймворка «ОСень».
+ */
+@CleanupContextBeforeClassAndAfterClass
+class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareTest {
+
+  private static final Path FIXTURE_ROOT =
+    Path.of("src/test/resources/oscript-libraries/autumn-di").toAbsolutePath();
+
+  @Autowired
+  private OScriptLibraryIndex index;
+
+  @Autowired
+  private TypeService typeService;
+
+  private DocumentContext consumer;
+
+  @BeforeEach
+  void setup() {
+    initServerContext(FIXTURE_ROOT, false);
+    index.reindex(context);
+    var uri = Absolute.uri(FIXTURE_ROOT.resolve("src/Приложение.os").toUri());
+    consumer = context.getDocument(uri);
+  }
+
+  @Test
+  void infersBeanTypeForFieldWithExplicitName() {
+    // when
+    var types = typeService.findTypes(variable("ВнедренныйПоИмени"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Логгер");
+  }
+
+  @Test
+  void infersBeanTypeForFieldByVariableName() {
+    // given
+    // поле объявлено как `&Пластилин Перем Логгер;` — имя желудя берётся из имени поля
+
+    // when
+    var types = typeService.findTypes(variable("Логгер"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Логгер");
+  }
+
+  @Test
+  void infersBeanTypeForConstructorParameter() {
+    // when
+    var types = typeService.findTypes(variable("ЛоггерИзКонструктора"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Логгер");
+  }
+
+  private VariableSymbol variable(String name) {
+    return consumer.getSymbolTree().getVariables().stream()
+      .filter(v -> name.equals(v.getName()))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  private static List<String> qualifiedNames(TypeSet types) {
+    return types.refs().stream().map(r -> r.qualifiedName()).toList();
+  }
+}

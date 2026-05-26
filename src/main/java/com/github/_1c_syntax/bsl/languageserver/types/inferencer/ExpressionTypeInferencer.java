@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -72,6 +73,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -107,6 +109,7 @@ public class ExpressionTypeInferencer {
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final AutumnComponentInferencer autumnComponentInferencer;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -775,10 +778,40 @@ public class ExpressionTypeInferencer {
         acc = acc.union(inferFromDefinitionPosition(owner, start, ctx));
       }
     }
+    acc = acc.union(autumnInjectedType(variable));
     acc = attachDefaultElementTypes(acc);
     acc = accumulateStructureInsertFields(variable, acc, ctx);
     acc = accumulateValueTableColumnFields(variable, acc, ctx);
     return acc;
+  }
+
+  /**
+   * Тип внедряемой через {@code &Пластилин} зависимости фреймворка «ОСень».
+   * Аннотации поля модуля хранятся на самом символе, аннотации параметра
+   * конструктора/завязи — на {@link ParameterDefinition} метода-скоупа.
+   */
+  private TypeSet autumnInjectedType(VariableSymbol variable) {
+    var fileType = variable.getOwner().getFileType();
+    return switch (variable.getKind()) {
+      case MODULE -> autumnComponentInferencer.inferInjectedType(
+        variable.getAnnotations(), variable.getName(), fileType);
+      case PARAMETER -> autumnComponentInferencer.inferInjectedType(
+        parameterAnnotations(variable), variable.getName(), fileType);
+      default -> TypeSet.EMPTY;
+    };
+  }
+
+  private List<Annotation> parameterAnnotations(VariableSymbol variable) {
+    if (!(variable.getScope() instanceof MethodSymbol method)) {
+      return List.of();
+    }
+    var name = variable.getName();
+    for (var parameter : method.getParameters()) {
+      if (parameter.getName().equalsIgnoreCase(name)) {
+        return parameter.getAnnotations();
+      }
+    }
+    return List.of();
   }
 
   /**
