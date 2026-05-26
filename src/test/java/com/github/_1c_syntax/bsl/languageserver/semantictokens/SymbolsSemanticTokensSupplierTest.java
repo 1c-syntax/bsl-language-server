@@ -146,6 +146,60 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void testAsyncModifierOnAsyncFunctionDeclaration() {
+    // given
+    String bsl = """
+      Асинх Функция ОбработатьАсинхронно()
+        Возврат 1;
+      КонецФункции
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 14, 20, SemanticTokenTypes.Function,
+        Set.of(SemanticTokenModifiers.Async), "ОбработатьАсинхронно")
+    ));
+  }
+
+  @Test
+  void testAsyncModifierOnAsyncProcedureDeclaration() {
+    // given
+    String bsl = """
+      Асинх Процедура ВыполнитьАсинхронно()
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 16, 19, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.Async), "ВыполнитьАсинхронно")
+    ));
+  }
+
+  @Test
+  void testAsyncModifierAbsentOnRegularMethod() {
+    // given
+    String bsl = """
+      Процедура Обычная()
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — нет модификатора Async у обычного метода
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 10, 7, SemanticTokenTypes.Method, "Обычная")
+    ));
+  }
+
+  @Test
   void testVariableDeclaration() {
     // given
     String bsl = """

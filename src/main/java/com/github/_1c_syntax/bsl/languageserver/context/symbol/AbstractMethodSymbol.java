@@ -146,6 +146,11 @@ public abstract class AbstractMethodSymbol implements MethodSymbol {
   private final boolean deprecated;
 
   /**
+   * Объявлен ли метод с ключевым словом {@code Асинх} ({@code Async}).
+   */
+  private final boolean async;
+
+  /**
    * Объявленные параметры метода в порядке объявления.
    */
   @Builder.Default

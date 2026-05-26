@@ -73,7 +73,8 @@ public class SemanticTokensLegendConfiguration {
       SemanticTokenModifiers.DefaultLibrary,  // Added for SDBL built-in functions and types
       SemanticTokenModifiers.Declaration,  // Added for SDBL alias declarations
       SemanticTokenModifiers.Readonly,  // Added for SDBL parameters
-      SemanticTokenModifiers.Static  // Methods of CommonModule / ManagerModule / OScript-module
+      SemanticTokenModifiers.Static,  // Methods of CommonModule / ManagerModule / OScript-module
+      SemanticTokenModifiers.Async  // Methods declared as Асинх/Async (both declarations and call sites)
     );
 
     return new SemanticTokensLegend(tokenTypes, tokenModifiers);

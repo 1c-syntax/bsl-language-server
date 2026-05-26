@@ -140,6 +140,51 @@ class MethodCallSemanticTokensSupplierTest extends AbstractServerContextAwareTes
   }
 
   @Test
+  void testAsyncModifierOnCallToAsyncMethod() {
+    // given — async-метод объявлен в том же модуле и вызывается из обычного метода.
+    String bsl = """
+      Асинх Процедура ЖдатьАсинх()
+      КонецПроцедуры
+
+      Процедура Тест()
+        ЖдатьАсинх();
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — сайт вызова async-метода получает модификатор Async.
+    var expected = List.of(
+      new ExpectedToken(4, 2, 10, SemanticTokenTypes.Method,
+        Set.of(SemanticTokenModifiers.Async), "ЖдатьАсинх")
+    );
+    helper.assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void testAsyncModifierAbsentOnCallToRegularMethod() {
+    // given
+    String bsl = """
+      Процедура Обычная()
+      КонецПроцедуры
+
+      Процедура Тест()
+        Обычная();
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then — нет модификатора Async у вызова обычного метода.
+    var expected = List.of(
+      new ExpectedToken(4, 2, 7, SemanticTokenTypes.Method, "Обычная")
+    );
+    helper.assertTokensMatch(decoded, expected);
+  }
+
+  @Test
   void testStaticModifierOnCallToCommonModuleMethod() {
     // given - конфигурация загружена; вызывающий файл содержит
     // `ПервыйОбщийМодуль.УстаревшаяПроцедура();` на строке 2 (0-idx).

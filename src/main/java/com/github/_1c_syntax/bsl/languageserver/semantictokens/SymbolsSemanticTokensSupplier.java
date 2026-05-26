@@ -46,6 +46,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
 
+  private static final String[] NO_MODIFIERS = new String[0];
+  private static final String[] ASYNC_MODIFIERS = {SemanticTokenModifiers.Async};
+  private static final String[] STATIC_MODIFIERS = {SemanticTokenModifiers.Static};
+  private static final String[] STATIC_ASYNC_MODIFIERS = {
+    SemanticTokenModifiers.Static,
+    SemanticTokenModifiers.Async
+  };
+
   private final ReferenceIndex referenceIndex;
   private final SemanticTokensHelper helper;
 
@@ -59,11 +67,8 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     var isStatic = Modules.isStaticModule(documentContext);
     for (var method : symbolTree.getMethods()) {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
-      if (isStatic) {
-        helper.addRange(entries, method.getSubNameRange(), semanticTokenType, SemanticTokenModifiers.Static);
-      } else {
-        helper.addRange(entries, method.getSubNameRange(), semanticTokenType);
-      }
+      var modifiers = methodModifiers(isStatic, method.isAsync());
+      helper.addRange(entries, method.getSubNameRange(), semanticTokenType, modifiers);
       for (ParameterDefinition parameter : method.getParameters()) {
         helper.addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
       }
@@ -100,6 +105,13 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
         }));
 
     return entries;
+  }
+
+  private static String[] methodModifiers(boolean isStatic, boolean isAsync) {
+    if (isStatic) {
+      return isAsync ? STATIC_ASYNC_MODIFIERS : STATIC_MODIFIERS;
+    }
+    return isAsync ? ASYNC_MODIFIERS : NO_MODIFIERS;
   }
 }
 
