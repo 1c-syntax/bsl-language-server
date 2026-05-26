@@ -77,10 +77,7 @@ public class PlatformMemberMethodCallSemanticTokensSupplier implements SemanticT
     // чтобы не дублировать токен на одной и той же позиции.
     Set<Position> sourceDefinedCallSites = collectSourceDefinedCallSites(documentContext);
 
-    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_accessCall)) {
-      if (!(node instanceof BSLParser.AccessCallContext accessCall)) {
-        continue;
-      }
+    for (var accessCall : Trees.<BSLParser.AccessCallContext>findAllRuleNodes(ast, BSLParser.RULE_accessCall)) {
       var methodCall = accessCall.methodCall();
       if (methodCall == null) {
         continue;

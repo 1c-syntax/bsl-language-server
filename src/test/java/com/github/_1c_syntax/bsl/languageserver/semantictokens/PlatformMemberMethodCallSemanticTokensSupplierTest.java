@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -36,7 +35,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@CleanupContextBeforeClassAndAfterClass
 @Import(SemanticTokensTestHelper.class)
 class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
