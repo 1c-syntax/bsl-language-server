@@ -55,21 +55,32 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
       }
 
       reference.getSourceDefinedSymbol().ifPresent(symbol -> {
+        if (!(symbol instanceof MethodSymbol method)) {
+          helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method);
+          return;
+        }
         // Метод объявлен в «статическом» модуле (CommonModule/ManagerModule/OScript-модуль)?
         // Тогда подсвечиваем вызов как Method + Static. instance-методы
-        // (ObjectModule, формы, OScript-классы) остаются без модификатора.
-        boolean isStatic = symbol instanceof MethodSymbol method
-          && Modules.isStaticModule(method.getOwner());
-        if (isStatic) {
-          helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method,
-            SemanticTokenModifiers.Static);
-        } else {
-          helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method);
-        }
+        // (ObjectModule, формы, OScript-классы) остаются без Static.
+        // Вызовы async-методов получают модификатор Async — это касается и
+        // statics, и instance-методов, поэтому Async может комбинироваться со Static.
+        boolean isStatic = Modules.isStaticModule(method.getOwner());
+        var modifiers = methodCallModifiers(isStatic, method.isAsync());
+        helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method, modifiers);
       });
     }
 
     return entries;
+  }
+
+  private static String[] methodCallModifiers(boolean isStatic, boolean isAsync) {
+    if (!isStatic && !isAsync) {
+      return new String[0];
+    }
+    if (isStatic && isAsync) {
+      return new String[]{SemanticTokenModifiers.Static, SemanticTokenModifiers.Async};
+    }
+    return new String[]{isStatic ? SemanticTokenModifiers.Static : SemanticTokenModifiers.Async};
   }
 }
 

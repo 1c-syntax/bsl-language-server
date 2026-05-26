@@ -59,11 +59,8 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
     var isStatic = Modules.isStaticModule(documentContext);
     for (var method : symbolTree.getMethods()) {
       var semanticTokenType = method.isFunction() ? SemanticTokenTypes.Function : SemanticTokenTypes.Method;
-      if (isStatic) {
-        helper.addRange(entries, method.getSubNameRange(), semanticTokenType, SemanticTokenModifiers.Static);
-      } else {
-        helper.addRange(entries, method.getSubNameRange(), semanticTokenType);
-      }
+      var modifiers = methodModifiers(isStatic, method.isAsync());
+      helper.addRange(entries, method.getSubNameRange(), semanticTokenType, modifiers);
       for (ParameterDefinition parameter : method.getParameters()) {
         helper.addRange(entries, parameter.getRange(), SemanticTokenTypes.Parameter, SemanticTokenModifiers.Definition);
       }
@@ -100,6 +97,16 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
         }));
 
     return entries;
+  }
+
+  private static String[] methodModifiers(boolean isStatic, boolean isAsync) {
+    if (!isStatic && !isAsync) {
+      return new String[0];
+    }
+    if (isStatic && isAsync) {
+      return new String[]{SemanticTokenModifiers.Static, SemanticTokenModifiers.Async};
+    }
+    return new String[]{isStatic ? SemanticTokenModifiers.Static : SemanticTokenModifiers.Async};
   }
 }
 
