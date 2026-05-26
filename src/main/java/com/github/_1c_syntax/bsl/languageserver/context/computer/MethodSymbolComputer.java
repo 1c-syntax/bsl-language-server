@@ -89,25 +89,25 @@ public final class MethodSymbolComputer
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
 
-    TerminalNode startNode = declaration.FUNCTION_KEYWORD();
+    TerminalNode functionKeyword = declaration.FUNCTION_KEYWORD();
     TerminalNode stopNode = ctx.ENDFUNCTION_KEYWORD();
 
-    if (startNode == null
-      || startNode instanceof ErrorNode
+    if (functionKeyword == null
+      || functionKeyword instanceof ErrorNode
       || stopNode == null
       || stopNode instanceof ErrorNode
     ) {
       return ctx;
     }
 
-    if (!declaration.annotation().isEmpty()) {
-      startNode = declaration.annotation().getFirst().AMPERSAND();
-    }
+    TerminalNode asyncKeyword = declaration.ASYNC_KEYWORD();
+    TerminalNode startNode = selectStartNode(declaration.annotation(), asyncKeyword, functionKeyword);
+    Token startOfMethod = asyncKeyword != null ? asyncKeyword.getSymbol() : functionKeyword.getSymbol();
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
-      declaration.FUNCTION_KEYWORD().getSymbol(),
+      startOfMethod,
       declaration.subName().getStart(),
       declaration.paramList(),
       true,
@@ -124,25 +124,25 @@ public final class MethodSymbolComputer
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
 
-    TerminalNode startNode = declaration.PROCEDURE_KEYWORD();
+    TerminalNode procedureKeyword = declaration.PROCEDURE_KEYWORD();
     TerminalNode stopNode = ctx.ENDPROCEDURE_KEYWORD();
 
-    if (startNode == null
-      || startNode instanceof ErrorNode
+    if (procedureKeyword == null
+      || procedureKeyword instanceof ErrorNode
       || stopNode == null
       || stopNode instanceof ErrorNode
     ) {
       return ctx;
     }
 
-    if (!declaration.annotation().isEmpty()) {
-      startNode = declaration.annotation().getFirst().AMPERSAND();
-    }
+    TerminalNode asyncKeyword = declaration.ASYNC_KEYWORD();
+    TerminalNode startNode = selectStartNode(declaration.annotation(), asyncKeyword, procedureKeyword);
+    Token startOfMethod = asyncKeyword != null ? asyncKeyword.getSymbol() : procedureKeyword.getSymbol();
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
-      declaration.PROCEDURE_KEYWORD().getSymbol(),
+      startOfMethod,
       declaration.subName().getStart(),
       declaration.paramList(),
       false,
@@ -154,6 +154,27 @@ public final class MethodSymbolComputer
     methods.add(methodSymbol);
 
     return ctx;
+  }
+
+  /**
+   * Выбирает токен начала символа метода в соответствии с грамматикой
+   * {@code (preprocessor | compilerDirective | annotation)* ASYNC_KEYWORD? PROCEDURE_KEYWORD|FUNCTION_KEYWORD}.
+   * Приоритет (от самой ранней позиции к самой поздней):
+   * первая аннотация → {@code Асинх} → ключевое слово {@code Процедура}/{@code Функция}.
+   * Препроцессоры и compiler-directive исторически не входят в range символа.
+   */
+  private static TerminalNode selectStartNode(
+    List<? extends BSLParser.AnnotationContext> annotations,
+    @Nullable TerminalNode asyncKeyword,
+    TerminalNode keywordNode
+  ) {
+    if (!annotations.isEmpty()) {
+      return annotations.getFirst().AMPERSAND();
+    }
+    if (asyncKeyword != null) {
+      return asyncKeyword;
+    }
+    return keywordNode;
   }
 
   // есть определенные предпочтения при использовании &НаКлиентеНаСервереБезКонтекста в модуле упр.формы
