@@ -100,14 +100,21 @@ public final class MethodSymbolComputer
       return ctx;
     }
 
+    TerminalNode asyncKeyword = declaration.ASYNC_KEYWORD();
+    Token startOfMethod = asyncKeyword != null
+      ? asyncKeyword.getSymbol()
+      : declaration.FUNCTION_KEYWORD().getSymbol();
+
     if (!declaration.annotation().isEmpty()) {
       startNode = declaration.annotation().getFirst().AMPERSAND();
+    } else if (asyncKeyword != null) {
+      startNode = asyncKeyword;
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
-      declaration.FUNCTION_KEYWORD().getSymbol(),
+      startOfMethod,
       declaration.subName().getStart(),
       declaration.paramList(),
       true,
@@ -135,14 +142,21 @@ public final class MethodSymbolComputer
       return ctx;
     }
 
+    TerminalNode asyncKeyword = declaration.ASYNC_KEYWORD();
+    Token startOfMethod = asyncKeyword != null
+      ? asyncKeyword.getSymbol()
+      : declaration.PROCEDURE_KEYWORD().getSymbol();
+
     if (!declaration.annotation().isEmpty()) {
       startNode = declaration.annotation().getFirst().AMPERSAND();
+    } else if (asyncKeyword != null) {
+      startNode = asyncKeyword;
     }
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
-      declaration.PROCEDURE_KEYWORD().getSymbol(),
+      startOfMethod,
       declaration.subName().getStart(),
       declaration.paramList(),
       false,
