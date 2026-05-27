@@ -74,7 +74,7 @@ public class PlatformContextProviderFactory {
       LOGGER.debug("Platform context loader is disabled via app.platform-context.enabled=false");
       return Optional.empty();
     }
-    var platformOptions = configuration.getPlatformOptions();
+    var platformOptions = configuration.getV8PlatformOptions();
     if (!platformOptions.isEnabled()) {
       LOGGER.debug("Platform context loader is disabled via configuration");
       return Optional.empty();

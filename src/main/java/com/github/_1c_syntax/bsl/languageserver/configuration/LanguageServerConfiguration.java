@@ -123,9 +123,9 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private OScriptOptions oscriptOptions = new OScriptOptions();
 
-  @JsonProperty("platform")
+  @JsonProperty("v8platform")
   @Setter(value = AccessLevel.NONE)
-  private V8PlatformOptions platformOptions = new V8PlatformOptions();
+  private V8PlatformOptions v8PlatformOptions = new V8PlatformOptions();
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
@@ -324,5 +324,7 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
     PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
+    PropertyUtils.copyProperties(this.oscriptOptions, configuration.oscriptOptions);
+    PropertyUtils.copyProperties(this.v8PlatformOptions, configuration.v8PlatformOptions);
   }
 }
