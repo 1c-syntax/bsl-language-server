@@ -196,6 +196,136 @@
       "deprecatedSinceVersion": "8.3.17",
       "recommendedReplacements": ["ОбработкаОшибок.ПоказатьИнформациюОбОшибке"],
       "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "НайтиНедопустимыеСимволыXML",
+      "aliases": ["FindDisallowedXMLCharacters"],
+      "deprecatedSinceVersion": "8.3.20",
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "УстановитьВнешнююКомпоненту",
+      "aliases": ["InstallAddIn"],
+      "deprecatedSinceVersion": "8.3.16",
+      "recommendedReplacements": ["НачатьУстановкуВнешнейКомпоненты"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ОчиститьЖурналРегистрации",
+      "aliases": ["ClearEventLog"],
+      "deprecatedSinceVersion": "8.3.12",
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПодключитьРасширениеРаботыСКриптографией",
+      "aliases": ["AttachCryptoExtension"],
+      "deprecatedSinceVersion": "8.3.16",
+      "recommendedReplacements": ["НачатьПодключениеРасширенияРаботыСКриптографией"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "УстановитьРасширениеРаботыСКриптографией",
+      "aliases": ["InstallCryptoExtension"],
+      "deprecatedSinceVersion": "8.3.16",
+      "recommendedReplacements": ["НачатьУстановкуРасширенияРаботыСКриптографией"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПользователиWindows",
+      "aliases": ["WindowsUsers"],
+      "deprecatedSinceVersion": "8.2",
+      "recommendedReplacements": ["ПользователиОС"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПолучитьСоответствиеОбъектаИРеквизитаФормы",
+      "aliases": ["GetObjectAndFormAttributeConformity"],
+      "deprecatedSinceVersion": "8.2",
+      "recommendedReplacements": ["ПолучитьСоответствиеОбъектаИФормы"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "УстановитьСоответствиеОбъектаИРеквизитаФормы",
+      "aliases": ["SetObjectAndFormAttributeConformity"],
+      "deprecatedSinceVersion": "8.2",
+      "recommendedReplacements": ["УстановитьСоответствиеОбъектаИФормы"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ЗапроситьРазрешениеПользователя",
+      "aliases": ["RequestUserPermission"],
+      "deprecatedSinceVersion": "8.3.15",
+      "recommendedReplacements": ["НачатьЗапросРазрешенияПользователя"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "НачатьПолучениеФайлов",
+      "aliases": ["BeginGettingFiles"],
+      "deprecatedSinceVersion": "8.3.15",
+      "recommendedReplacements": ["НачатьПолучениеФайловССервера"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "НачатьПомещениеФайла",
+      "aliases": ["BeginPutFile"],
+      "deprecatedSinceVersion": "8.3.15",
+      "recommendedReplacements": ["НачатьПомещениеФайлаНаСервер"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "НачатьПомещениеФайлов",
+      "aliases": ["BeginPuttingFiles"],
+      "deprecatedSinceVersion": "8.3.15",
+      "recommendedReplacements": ["НачатьПомещениеФайлаНаСервер", "НачатьПомещениеФайловНаСервер"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПодключитьРасширениеРаботыСФайлами",
+      "aliases": ["AttachFileSystemExtension"],
+      "deprecatedSinceVersion": "8.3.16",
+      "recommendedReplacements": ["НачатьПодключениеРасширенияРаботыСФайлами"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПолучитьФайл",
+      "aliases": ["GetFile"],
+      "deprecatedSinceVersion": "8.3.15",
+      "recommendedReplacements": ["НачатьПолучениеФайлаССервера"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПолучитьФайлы",
+      "aliases": ["GetFiles"],
+      "deprecatedSinceVersion": "8.3.13",
+      "recommendedReplacements": ["НачатьПолучениеФайловССервера"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПоместитьФайл",
+      "aliases": ["PutFile"],
+      "deprecatedSinceVersion": "8.3.13",
+      "recommendedReplacements": ["НачатьПомещениеФайлаНаСервер"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПоместитьФайлы",
+      "aliases": ["PutFiles"],
+      "deprecatedSinceVersion": "8.3.13",
+      "recommendedReplacements": ["НачатьПомещениеФайловНаСервер"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "УстановитьРасширениеРаботыСФайлами",
+      "aliases": ["InstallFileSystemExtension"],
+      "deprecatedSinceVersion": "8.3.16",
+      "recommendedReplacements": ["НачатьУстановкуРасширенияРаботыСФайлами"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ВыполнитьОбработкуЗаданий",
+      "aliases": ["ProcessJobs"],
+      "deprecatedSinceVersion": "8.3.2",
+      "signatures": [{"parameters": []}]
     }
   ],
   "classes": [
