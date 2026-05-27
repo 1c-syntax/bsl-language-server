@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.misc.Interval;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.util.Collections;
@@ -80,8 +81,7 @@ public class Annotations {
       .orElse("");
     var value = Optional.ofNullable(annotationParam.annotationParamValue())
       .map(BSLParser.AnnotationParamValueContext::constValue)
-      .map(ParserRuleContext::getText)
-      .map(Annotations::excludeTrailingQuotes)
+      .map(Annotations::constValueText)
       .map(Either::<String, Annotation>forLeft)
       .or(
         () -> Optional.ofNullable(annotationParam.annotationParamValue())
@@ -95,14 +95,38 @@ public class Annotations {
     return new AnnotationParameterDefinition(name, value, optional);
   }
 
-  private static String excludeTrailingQuotes(String text) {
-    if (text.length() >= QUOTED_LITERAL_MIN_LENGTH
-      && text.charAt(0) == '"'
-      && text.charAt(text.length() - 1) == '"') {
-      // Снимаем обрамляющие кавычки и разэкранируем удвоённые кавычки внутри
-      // строкового литерала ("" -> ").
-      return text.substring(1, text.length() - 1).replace("\"\"", "\"");
+  /**
+   * Логическое значение литерала-параметра аннотации.
+   * <p>
+   * Берётся исходный текст из потока символов (а не {@code getText()}, который
+   * склеивает токены, теряя переводы строк), чтобы корректно собрать
+   * многострочные строковые литералы.
+   */
+  private static String constValueText(BSLParser.ConstValueContext constValue) {
+    return unwrapStringLiteral(rawText(constValue));
+  }
+
+  /** Исходный текст узла из потока символов — с сохранением переводов строк. */
+  private static String rawText(ParserRuleContext ctx) {
+    var start = ctx.getStart();
+    var stop = ctx.getStop();
+    if (start == null || stop == null || start.getStartIndex() > stop.getStopIndex()) {
+      return ctx.getText();
     }
-    return text;
+    return start.getInputStream().getText(Interval.of(start.getStartIndex(), stop.getStopIndex()));
+  }
+
+  private static String unwrapStringLiteral(String text) {
+    if (text.length() < QUOTED_LITERAL_MIN_LENGTH
+      || text.charAt(0) != '"'
+      || text.charAt(text.length() - 1) != '"') {
+      return text;
+    }
+    // Снимаем обрамляющие кавычки. Для многострочного литерала строки-продолжения
+    // начинаются с | (после необязательных отступов) — убираем маркер, сохраняя
+    // сам перевод строки. В конце разэкранируем удвоённые кавычки ("" -> ").
+    return text.substring(1, text.length() - 1)
+      .replaceAll("(\\r?\\n)[ \\t]*\\|", "$1")
+      .replace("\"\"", "\"");
   }
 }

@@ -80,6 +80,43 @@ class AnnotationsTest {
   }
 
   @Test
+  void reconstructsMultilineStringLiteral() {
+    // given: многострочный строковый литерал — строки-продолжения через |
+    var code = """
+      &Многострочная("строка1
+      |строка2
+      |строка3")
+      Процедура Тест() Экспорт
+      КонецПроцедуры
+      """;
+
+    // when
+    var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
+    var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
+
+    // then: маркеры | сняты, переводы строк сохранены
+    assertThat(value.getLeft()).isEqualTo("строка1\nстрока2\nстрока3");
+  }
+
+  @Test
+  void reconstructsMultilineStringLiteralWithIndentedContinuations() {
+    // given: строки-продолжения с отступами перед | и удвоённой кавычкой внутри
+    var code = """
+      &Многострочная("первая
+              |""вторая""\")
+      Процедура Тест() Экспорт
+      КонецПроцедуры
+      """;
+
+    // when
+    var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
+    var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
+
+    // then: отступ перед | снят, "" разэкранированы
+    assertThat(value.getLeft()).isEqualTo("первая\n\"вторая\"");
+  }
+
+  @Test
   void stripsQuotesFromEmptyStringLiteral() {
     // given: пустая строковая константа в параметре аннотации
     var code = """
