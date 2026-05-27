@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -35,6 +36,7 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -127,18 +129,32 @@ public class AutumnMetaAnnotationResolver {
   }
 
   /**
-   * Сброс кэша развёрнутых ролей при изменении состава зарегистрированных
-   * аннотаций (наполнение контекста, правка или удаление документа). Сам индекс
-   * аннотаций поддерживает {@link AnnotationRepository}; пересчёт ролей —
-   * ленивый, при следующем обращении.
+   * Сброс кэша развёрнутых ролей. Замыкания зависят только от {@code .os}-классов
+   * с {@code &Аннотация} ({@link AnnotationRepository} наполняется лишь из них),
+   * поэтому на правку/удаление {@code .bsl}-документа кэш не реагирует. Пересчёт
+   * ролей ленивый, при следующем обращении.
    */
-  @EventListener({
-    ServerContextPopulatedEvent.class,
-    DocumentContextContentChangedEvent.class,
-    ServerContextDocumentRemovedEvent.class
-  })
-  public void invalidate() {
+  @EventListener(ServerContextPopulatedEvent.class)
+  public void invalidateOnContextPopulated() {
     roleClosureCache.clear();
+  }
+
+  @EventListener
+  public void invalidateOnDocumentChange(DocumentContextContentChangedEvent event) {
+    if (event.getSource().getFileType() == FileType.OS) {
+      roleClosureCache.clear();
+    }
+  }
+
+  @EventListener
+  public void invalidateOnDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    if (isOScriptFile(event.getUri())) {
+      roleClosureCache.clear();
+    }
+  }
+
+  private static boolean isOScriptFile(URI uri) {
+    return uri.toString().toLowerCase(Locale.ROOT).endsWith(".os");
   }
 
   private Set<String> roleClosure(String annotationName) {
