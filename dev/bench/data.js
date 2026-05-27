@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779918399167,
+  "lastUpdate": 1779925852839,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35712,6 +35712,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.407151322312643",
             "extra": "mean: 375.6676715215047 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "926aeb714d177292e5db216378bcadc760b865d8",
+          "message": "Merge pull request #3962 from 1c-syntax/feature/v8platform-oscript-config-read\n\nfeat(configuration): rename platform→v8platform и чтение секций v8platform/oscript из конфига",
+          "timestamp": "2026-05-27T22:55:31+02:00",
+          "tree_id": "f282dbec5715a094a2d3fd7a104c38d5f0eb2879",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/926aeb714d177292e5db216378bcadc760b865d8"
+        },
+        "date": 1779925845288,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 371.92689935366315,
+            "unit": "sec",
+            "range": "stddev: 6.239920041470924",
+            "extra": "mean: 371.92689935366315 sec\nrounds: 3"
           }
         ]
       }
