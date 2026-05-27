@@ -223,13 +223,22 @@ public class ConfigurationTypesProvider {
       count++;
     }
 
+    int collections = registerCollectionNamespaces(collectionMembersByType);
+    LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
+  }
+
+  /**
+   * Коллекции-namespace (Справочники/Catalogs, Документы/Documents): глобальное
+   * свойство с членами-MD и платформенными методами коллекции-менеджера.
+   *
+   * @return число зарегистрированных коллекций.
+   */
+  private int registerCollectionNamespaces(Map<MDOType, List<MemberDescriptor>> collectionMembersByType) {
     int collections = 0;
     for (var entry : collectionMembersByType.entrySet()) {
       var mdoType = entry.getKey();
       var members = entry.getValue();
-      // "Справочники", "Документы", ...
       var collectionRu = mdoType.fullGroupName().getRu();
-      // "Catalogs", "Documents", ...
       var collectionEn = mdoType.fullGroupName().getEn();
       var ref = typeRegistry.registerConfigurationType(collectionRu);
       if (!collectionEn.equals(collectionRu)) {
@@ -239,15 +248,13 @@ public class ConfigurationTypesProvider {
       typeRegistry.registerMemberSource(ref, () -> members, LanguageScope.BSL);
       typeRegistry.registerAsGlobalProperty(ref);
 
-      // Подмешиваем платформенные методы коллекции-менеджера (СправочникиМенеджер,
-      // ДокументыМенеджер и т.п.) — это методы уровня всех справочников/документов,
-      // например `ТипВсеСсылки()`. Имя фиксированное (без generic-плейсхолдера).
+      // Платформенные методы коллекции-менеджера (СправочникиМенеджер,
+      // ДокументыМенеджер) — уровня всех справочников/документов, например
+      // `ТипВсеСсылки()`. Имя фиксированное (без generic-плейсхолдера).
       registerInheritedMembers(ref, collectionRu + "Менеджер");
-
       collections++;
     }
-
-    LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
+    return collections;
   }
 
   /** MDOType'ы, у которых есть «объектная» обёртка (СправочникОбъект.X / ДокументОбъект.X / ...). */

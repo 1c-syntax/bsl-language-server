@@ -514,7 +514,7 @@ public class TypeRegistry {
     if (placeholders.isEmpty()) {
       return name;
     }
-    var bindings = new HashMap<String, String>(placeholders.size());
+    var bindings = HashMap.<String, String>newHashMap(placeholders.size());
     for (var placeholder : placeholders) {
       bindings.put(placeholder.name(), value);
     }
@@ -566,7 +566,7 @@ public class TypeRegistry {
    * для них в EN отдаёт ru-написание qualifiedName.
    */
   public void registerDisplayName(TypeRef ref, BilingualString name) {
-    if (ref == null || name == null || name.isEmpty()) {
+    if (name.isEmpty()) {
       return;
     }
     displayNames.putIfAbsent(ref, name);

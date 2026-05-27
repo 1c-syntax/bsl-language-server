@@ -1,6 +1,20 @@
 {
   "functions": [
     {
+      "name": "ВопросАсинх",
+      "aliases": ["DoQueryBoxAsync"],
+      "async": true,
+      "description": "Асинхронная функция. Выводит вопрос пользователю и возвращает выбранную кнопку.",
+      "signatures": [
+        {
+          "parameters": [
+            {"name": "ТекстВопроса"},
+            {"name": "Кнопки"}
+          ]
+        }
+      ]
+    },
+    {
       "name": "Сообщить",
       "aliases": ["Message"],
       "description": "Выводит сообщение пользователю.",

@@ -1217,6 +1217,9 @@ public class GlobalScopeProvider {
       if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
         descriptor = descriptor.withLocalizedNames(nameRu, nameEn);
       }
+      if (Boolean.TRUE.equals(entry.get("async"))) {
+        descriptor = descriptor.withAsync(true);
+      }
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
       var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
       for (var alias : aliases) {
