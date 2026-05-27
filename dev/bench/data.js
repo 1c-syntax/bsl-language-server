@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779903303219,
+  "lastUpdate": 1779918399167,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35681,6 +35681,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.459480831468381",
             "extra": "mean: 364.3585361639659 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1595514af453635da471fac3bb9d4bc211a2b58e",
+          "message": "Merge pull request #3951 from 1c-syntax/feature/autumn-di-type-inference\n\nfeat(types): вывод типов внедряемых зависимостей фреймворка ОСень (Autumn)",
+          "timestamp": "2026-05-27T21:34:30+02:00",
+          "tree_id": "6eb97bfaa6ea9ea0e86b5a5e552a9291be59bc79",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1595514af453635da471fac3bb9d4bc211a2b58e"
+        },
+        "date": 1779918390312,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 375.6676715215047,
+            "unit": "sec",
+            "range": "stddev: 3.407151322312643",
+            "extra": "mean: 375.6676715215047 sec\nrounds: 3"
           }
         ]
       }
