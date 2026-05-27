@@ -234,7 +234,7 @@ public class ExpressionTypeInferencer {
       return resolved;
     }
     var text = terminal.getText();
-    if (text == null || text.isBlank()) {
+    if (text.isBlank()) {
       return TypeSet.EMPTY;
     }
     // Глобальная область: платформенные глобалы, library-модули,

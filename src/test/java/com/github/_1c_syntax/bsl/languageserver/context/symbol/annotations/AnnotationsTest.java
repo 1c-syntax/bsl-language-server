@@ -23,9 +23,15 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.stream.Stream;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 /**
  * Разбор параметров аннотаций: позиционные/именованные значения, числовые
@@ -62,74 +68,46 @@ class AnnotationsTest {
     assertThat(nestedParam.value().getRight().getName()).isEqualTo("Внутренняя");
   }
 
-  @Test
-  void unescapesDoubledQuotesInStringLiteral() {
-    // given: строковая константа с экранированными кавычками ("" -> ")
-    var code = """
-      &Строковая("С ""кавычками"" внутри")
-      Процедура Тест() Экспорт
-      КонецПроцедуры
-      """;
-
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("stringLiteralValues")
+  void resolvesStringLiteralParameterValue(String description, String code, String expected) {
     // when
     var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
     var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
 
     // then
-    assertThat(value.getLeft()).isEqualTo("С \"кавычками\" внутри");
+    assertThat(value.getLeft()).isEqualTo(expected);
   }
 
-  @Test
-  void reconstructsMultilineStringLiteral() {
-    // given: многострочный строковый литерал — строки-продолжения через |
-    var code = """
-      &Многострочная("строка1
-      |строка2
-      |строка3")
-      Процедура Тест() Экспорт
-      КонецПроцедуры
-      """;
-
-    // when
-    var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
-    var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
-
-    // then: маркеры | сняты, переводы строк сохранены
-    assertThat(value.getLeft()).isEqualTo("строка1\nстрока2\nстрока3");
-  }
-
-  @Test
-  void reconstructsMultilineStringLiteralWithIndentedContinuations() {
-    // given: строки-продолжения с отступами перед | и удвоённой кавычкой внутри
-    var code = """
-      &Многострочная("первая
-              |""вторая""\")
-      Процедура Тест() Экспорт
-      КонецПроцедуры
-      """;
-
-    // when
-    var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
-    var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
-
-    // then: отступ перед | снят, "" разэкранированы
-    assertThat(value.getLeft()).isEqualTo("первая\n\"вторая\"");
-  }
-
-  @Test
-  void stripsQuotesFromEmptyStringLiteral() {
-    // given: пустая строковая константа в параметре аннотации
-    var code = """
-      &Пустая("")
-      Процедура Тест() Экспорт
-      КонецПроцедуры
-      """;
-
-    // when
-    var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
-    var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
-
-    // then: кавычки сняты, значение пустое (а не "\"\"")
-    assertThat(value.getLeft()).isEmpty();
+  private static Stream<Arguments> stringLiteralValues() {
+    return Stream.of(
+      // экранированные кавычки ("" -> ")
+      arguments("экранированные кавычки", """
+        &Строковая("С ""кавычками"" внутри")
+        Процедура Тест() Экспорт
+        КонецПроцедуры
+        """, "С \"кавычками\" внутри"),
+      // пустая строка: кавычки сняты, значение пустое (а не "\"\"")
+      arguments("пустая строка", """
+        &Пустая("")
+        Процедура Тест() Экспорт
+        КонецПроцедуры
+        """, ""),
+      // многострочная: маркеры | сняты, переводы строк сохранены
+      arguments("многострочная", """
+        &Многострочная("строка1
+        |строка2
+        |строка3")
+        Процедура Тест() Экспорт
+        КонецПроцедуры
+        """, "строка1\nстрока2\nстрока3"),
+      // многострочная с отступами перед | и удвоённой кавычкой внутри
+      arguments("многострочная с отступами и кавычками", """
+        &Многострочная("первая
+                |""вторая""\")
+        Процедура Тест() Экспорт
+        КонецПроцедуры
+        """, "первая\n\"вторая\"")
+    );
   }
 }

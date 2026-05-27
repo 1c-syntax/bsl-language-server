@@ -142,7 +142,7 @@ public class AutumnMetaAnnotationResolver {
   }
 
   private Set<String> roleClosure(String annotationName) {
-    return roleClosureCache.computeIfAbsent(annotationName.toLowerCase(Locale.ROOT), key -> {
+    return roleClosureCache.computeIfAbsent(annotationName.toLowerCase(Locale.ROOT), (String key) -> {
       var roles = new HashSet<String>();
       collectRoles(annotationName, roles);
       return roles;
@@ -157,7 +157,7 @@ public class AutumnMetaAnnotationResolver {
       .flatMap(AnnotationSymbol::getParent)
       .filter(MethodSymbol.class::isInstance)
       .map(MethodSymbol.class::cast)
-      .ifPresent(constructor -> {
+      .ifPresent((MethodSymbol constructor) -> {
         for (var meta : constructor.getAnnotations()) {
           if (!AutumnAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
             collectRoles(meta.getName(), accumulator);
