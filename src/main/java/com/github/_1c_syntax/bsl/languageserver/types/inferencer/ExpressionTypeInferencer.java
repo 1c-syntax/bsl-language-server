@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -71,7 +70,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -785,31 +783,16 @@ public class ExpressionTypeInferencer {
 
   /**
    * Тип внедряемой через {@code &Пластилин} зависимости фреймворка «ОСень».
-   * Аннотации поля модуля хранятся на самом символе, аннотации параметра
-   * конструктора/завязи — на {@link ParameterDefinition} метода-скоупа.
+   * Аннотации несёт сам символ — и поле модуля, и параметр конструктора/завязи
+   * (см. {@code VariableSymbolComputer}).
    */
   private TypeSet autumnInjectedType(VariableSymbol variable) {
-    var fileType = variable.getOwner().getFileType();
-    return switch (variable.getKind()) {
-      case MODULE -> autumnComponentInferencer.inferInjectedType(
-        variable.getAnnotations(), variable.getName(), fileType);
-      case PARAMETER -> autumnComponentInferencer.inferInjectedType(
-        parameterAnnotations(variable), variable.getName(), fileType);
-      default -> TypeSet.EMPTY;
-    };
-  }
-
-  private static List<Annotation> parameterAnnotations(VariableSymbol variable) {
-    if (!(variable.getScope() instanceof MethodSymbol method)) {
-      return List.of();
+    var kind = variable.getKind();
+    if (kind != VariableKind.MODULE && kind != VariableKind.PARAMETER) {
+      return TypeSet.EMPTY;
     }
-    var name = variable.getName();
-    for (var parameter : method.getParameters()) {
-      if (parameter.getName().equalsIgnoreCase(name)) {
-        return parameter.getAnnotations();
-      }
-    }
-    return List.of();
+    return autumnComponentInferencer.inferInjectedType(
+      variable.getAnnotations(), variable.getName(), variable.getOwner().getFileType());
   }
 
   /**

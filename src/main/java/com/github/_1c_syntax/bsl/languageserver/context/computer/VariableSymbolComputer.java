@@ -153,6 +153,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .export(false)
       .kind(VariableKind.PARAMETER)
       .description(Optional.empty())
+      .annotations(Annotations.from(ctx.annotation()))
       .build();
     variables.add(variable);
 
