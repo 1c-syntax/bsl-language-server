@@ -35,6 +35,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Резолв платформенных членов в сайтах вызовов и сравнение версий — общая
@@ -68,6 +69,13 @@ final class PlatformMemberCalls {
    */
   private static final CompatibilityMode NEWEST = new CompatibilityMode(99, 99);
 
+  /**
+   * Строка версии вида {@code 8.3.10} — минимум три числовых компонента через
+   * {@code .} или {@code _} (этого достаточно для {@link CompatibilityMode}).
+   * Двухкомпонентные ({@code 8.3}) и прочие — невалидны.
+   */
+  private static final Pattern VERSION_PATTERN = Pattern.compile("^\\d+[._]\\d+[._]\\d+");
+
   private PlatformMemberCalls() {
   }
 
@@ -80,9 +88,6 @@ final class PlatformMemberCalls {
                                    TypeService typeService,
                                    TypeRegistry typeRegistry) {
     var ast = documentContext.getAst();
-    if (ast == null) {
-      return List.of();
-    }
     var result = new ArrayList<TypedMember>();
     collectGlobalCalls(ast, documentContext, typeService, result);
     collectVersionedMembers(ast, documentContext, typeService, typeRegistry, result);
@@ -176,19 +181,14 @@ final class PlatformMemberCalls {
 
   /**
    * Парсит строку версии вида {@code 8.3.10} в {@link CompatibilityMode}.
-   * Двухкомпонентные ({@code 8.3}) и иные неразборчивые строки → {@code null}
-   * (проверку версии для такого члена пропускаем).
+   * Пустые, двухкомпонентные ({@code 8.3}) и иные неразборчивые строки →
+   * {@code null} (проверку версии для такого члена пропускаем).
    */
   @Nullable
   private static CompatibilityMode parse(@Nullable String version) {
-    if (version == null || version.isBlank()) {
+    if (version == null || !VERSION_PATTERN.matcher(version).find()) {
       return null;
     }
-    try {
-      return new CompatibilityMode(version);
-    } catch (RuntimeException e) {
-      // Неразборчивая строка версии — проверку версии для члена пропускаем.
-      return null;
-    }
+    return new CompatibilityMode(version);
   }
 }

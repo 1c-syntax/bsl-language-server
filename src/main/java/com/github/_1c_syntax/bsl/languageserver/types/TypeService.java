@@ -294,18 +294,15 @@ public class TypeService {
    * Терминал-идентификатор в позиции курсора, либо empty, если AST недоступен
    * или под курсором не идентификатор.
    */
-  private Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
-    BSLParser.FileContext ast;
+  private static Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
     try {
-      ast = documentContext.getAst();
+      var ast = documentContext.getAst();
+      return Trees.findTerminalNodeContainsPosition(ast, position)
+        .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
     } catch (NullPointerException e) {
+      // AST ещё не построен (getAst может вернуть null или бросить NPE) — членов нет.
       return Optional.empty();
     }
-    if (ast == null) {
-      return Optional.empty();
-    }
-    return Trees.findTerminalNodeContainsPosition(ast, position)
-      .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
   }
 
   /**
@@ -331,7 +328,7 @@ public class TypeService {
       .map(SyntheticSymbol.class::cast)
       .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
       .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN))
-      .map(sym -> {
+      .map((SyntheticSymbol sym) -> {
         var ref = sym.getValueType();
         var desc = sym.getDescription();
         if (desc == null || desc.isBlank()) {
@@ -358,13 +355,21 @@ public class TypeService {
     if (dereference == null) {
       return List.of();
     }
-    var right = dereference.getRight();
-    var expectedKind = (right instanceof MethodCallNode) ? MemberKind.METHOD : MemberKind.PROPERTY;
-    var memberName = terminal.getText();
     var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
     if (leftTypes.isEmpty()) {
       return List.of();
     }
+    return matchMembers(terminal, documentContext, dereference.getRight(), leftTypes);
+  }
+
+  /**
+   * Собирает члены с именем {@code terminal} по всем кандидатам-владельцам из
+   * {@code leftTypes} (union), сопоставляя по виду (метод/свойство).
+   */
+  private List<TypedMember> matchMembers(TerminalNode terminal, DocumentContext documentContext,
+                                         BslExpression right, TypeSet leftTypes) {
+    var expectedKind = (right instanceof MethodCallNode) ? MemberKind.METHOD : MemberKind.PROPERTY;
+    var memberName = terminal.getText();
     int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
     var argTypes = (right instanceof MethodCallNode call)
       ? inferArgTypes(call, documentContext)

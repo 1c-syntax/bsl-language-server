@@ -49,7 +49,7 @@ public record PlatformMetadata(
   String deprecatedSinceVersion,
   List<String> recommendedReplacements,
   Set<Availability> availabilities,
-  AccessMode accessMode,
+  @Nullable AccessMode accessMode,
   BilingualString returnValueDescription,
   BilingualString notes,
   List<BilingualString> examples,
