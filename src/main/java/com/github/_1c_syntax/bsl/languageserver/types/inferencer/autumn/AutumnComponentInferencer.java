@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -80,8 +79,10 @@ public class AutumnComponentInferencer {
     }
 
     var collectionType = collectionType(injection);
-    if (collectionType != null) {
-      // Тип-коллекция: внедряется коллекция желудей — типом становится коллекция.
+    if (!AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionType)) {
+      // Внедряется прилепляемая коллекция желудей. ВНИМАНИЕ: collectionType — это
+      // ИМЯ прилепляемой коллекции (autumn-collections), а не имя типа; прямой
+      // резолв через TypeRegistry — временное приближение, см. issue #3959.
       return typeRegistry.resolve(collectionType, fileType)
         .map(TypeSet::of)
         .orElse(TypeSet.EMPTY);
@@ -99,11 +100,17 @@ public class AutumnComponentInferencer {
     return beanIndex.resolve(beanName);
   }
 
-  private static @Nullable String collectionType(Annotation injection) {
-    // Параметр Тип задаётся только по имени (позиционно можно лишь Значение).
+  /**
+   * Имя прилепляемой коллекции из параметра {@code Тип}; {@link AutumnAnnotations#BEAN_TYPE}
+   * (значение по умолчанию), если параметр не задан или равен {@code Желудь} —
+   * это означает обычное внедрение по имени, а не коллекцию.
+   * <p>
+   * Параметр {@code Тип} задаётся только по имени (позиционно можно лишь {@code Значение}).
+   */
+  private static String collectionType(Annotation injection) {
     return AutumnAnnotations.stringParameter(injection, AutumnAnnotations.TYPE_PARAMETER)
-      .filter(type -> !type.isBlank() && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(type))
-      .orElse(null);
+      .filter(type -> !type.isBlank())
+      .orElse(AutumnAnnotations.BEAN_TYPE);
   }
 
   private static String beanName(Annotation injection, String fallbackName) {
