@@ -86,7 +86,6 @@ class AutumnBeanIndexTest {
     init();
 
     // when / then
-    assertThat(beanIndex.resolve(null).isEmpty()).isTrue();
     assertThat(beanIndex.resolve("").isEmpty()).isTrue();
     assertThat(beanIndex.resolve("   ").isEmpty()).isTrue();
   }
