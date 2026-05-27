@@ -25,7 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
@@ -179,31 +181,52 @@ class AutumnMetaAnnotationResolverTest {
 
     // when: репозиторий изменился, но прилетела правка .bsl-документа
     repository.clear();
-    resolver.invalidateOnDocumentChange(documentChange(FileType.BSL));
+    resolver.invalidateOnDocumentChange(documentChange(FileType.BSL, false));
 
     // then: кэш не сброшен — правка .bsl не влияет на определения аннотаций
     assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
   }
 
   @Test
-  void clearsCacheOnOsDocumentChange() {
+  void retainsCacheOnNonDefinitionOsChange() {
     // given
     register("Внедряемое", plainAnnotation("Пластилин"));
     assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
 
-    // when: изменён .os-документ — кэш сбрасывается
+    // when: изменён .os-документ, который НЕ является классом-определением аннотации
     repository.clear();
-    resolver.invalidateOnDocumentChange(documentChange(FileType.OS));
+    resolver.invalidateOnDocumentChange(documentChange(FileType.OS, false));
 
-    // then: пересчёт по пустому репозиторию
+    // then: кэш не сброшен — замыкания зависят только от классов-определений
+    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
+  }
+
+  @Test
+  void clearsCacheOnAnnotationDefinitionChange() {
+    // given
+    register("Внедряемое", plainAnnotation("Пластилин"));
+    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
+
+    // when: изменён .os-класс-определения аннотации (&Аннотация на конструкторе)
+    repository.clear();
+    resolver.invalidateOnDocumentChange(documentChange(FileType.OS, true));
+
+    // then: кэш сброшен, пересчёт по пустому репозиторию
     assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isFalse();
   }
 
   // --- helpers ---------------------------------------------------------------
 
-  private static DocumentContextContentChangedEvent documentChange(FileType fileType) {
+  private static DocumentContextContentChangedEvent documentChange(FileType fileType, boolean annotationDefinition) {
     var document = mock(DocumentContext.class);
     when(document.getFileType()).thenReturn(fileType);
+    if (fileType == FileType.OS) {
+      var symbolTree = mock(SymbolTree.class);
+      var constructor = mock(ConstructorSymbol.class);
+      when(constructor.getAnnotations()).thenReturn(annotationDefinition ? List.of(marker("Любая")) : List.of());
+      when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
+      when(document.getSymbolTree()).thenReturn(symbolTree);
+    }
     var event = mock(DocumentContextContentChangedEvent.class);
     when(event.getSource()).thenReturn(document);
     return event;

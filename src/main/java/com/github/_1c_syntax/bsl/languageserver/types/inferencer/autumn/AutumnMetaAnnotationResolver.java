@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
@@ -129,9 +130,10 @@ public class AutumnMetaAnnotationResolver {
   }
 
   /**
-   * Сброс кэша развёрнутых ролей. Замыкания зависят только от {@code .os}-классов
-   * с {@code &Аннотация} ({@link AnnotationRepository} наполняется лишь из них),
-   * поэтому на правку/удаление {@code .bsl}-документа кэш не реагирует. Пересчёт
+   * Сброс кэша развёрнутых ролей. Замыкания зависят только от классов-определений
+   * аннотаций (конструктор с {@code &Аннотация}), поэтому кэш сбрасывается лишь
+   * когда меняется именно такой класс — как в {@code AutumnBeanIndex}; правки
+   * прочих {@code .os}- и любых {@code .bsl}-документов кэш не трогают. Пересчёт
    * ролей ленивый, при следующем обращении.
    */
   @EventListener(ServerContextPopulatedEvent.class)
@@ -141,16 +143,30 @@ public class AutumnMetaAnnotationResolver {
 
   @EventListener
   public void invalidateOnDocumentChange(DocumentContextContentChangedEvent event) {
-    if (event.getSource().getFileType() == FileType.OS) {
+    var document = event.getSource();
+    if (document.getFileType() == FileType.OS && isAnnotationDefinition(document)) {
       roleClosureCache.clear();
     }
   }
 
+  /**
+   * Удаление документа: вклад в {@link AnnotationRepository} уже снят, поэтому
+   * сбрасываем кэш на удаление любого {@code .os} (определением аннотации он мог
+   * быть, а интроспектировать удалённый документ уже нельзя). Удаление — событие
+   * редкое, лишний ленивый пересчёт некритичен.
+   */
   @EventListener
   public void invalidateOnDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     if (isOScriptFile(event.getUri())) {
       roleClosureCache.clear();
     }
+  }
+
+  private static boolean isAnnotationDefinition(DocumentContext document) {
+    return document.getSymbolTree().getConstructor()
+      .map(constructor ->
+        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
+      .orElse(false);
   }
 
   private static boolean isOScriptFile(URI uri) {
