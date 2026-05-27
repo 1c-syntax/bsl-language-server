@@ -73,11 +73,12 @@ public class AutumnComponentInferencer {
    *         внедрения либо тип не разрешился
    */
   public TypeSet inferInjectedType(List<Annotation> annotations, String fallbackName, FileType fileType) {
-    var injection = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION).orElse(null);
-    if (injection == null) {
-      return TypeSet.EMPTY;
-    }
+    return metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION)
+      .map(injection -> injectedType(injection, fallbackName, fileType))
+      .orElse(TypeSet.EMPTY);
+  }
 
+  private TypeSet injectedType(Annotation injection, String fallbackName, FileType fileType) {
     var collectionType = collectionType(injection);
     if (!AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionType)) {
       // Внедряется прилепляемая коллекция желудей. ВНИМАНИЕ: collectionType — это
@@ -114,12 +115,11 @@ public class AutumnComponentInferencer {
   }
 
   private String beanName(Annotation injection, String fallbackName) {
-    // Имя желудя, зашитое в мета-определении алиаса (например, &Лог = &Пластилин(Значение="Лог")),
-    // важнее Значения самой аннотации-использования (у &Лог там префикс лога);
-    // иначе — Значение использования, иначе — имя переменной/параметра.
-    return metaAnnotationResolver.roleValueFromDefinition(injection.getName(), AutumnAnnotations.INJECTION)
-      .or(() -> AutumnAnnotations.stringParameter(injection, AutumnAnnotations.VALUE_PARAMETER)
-        .filter(name -> !name.isBlank()))
+    // Имя желудя с учётом разворачивания мета-аннотаций: зашитое в мете
+    // (&Лог = &Пластилин(Значение="Лог")) → проброшенное/прямое Значение
+    // использования (&Внедряемое("X")/&Пластилин("X")) → иначе имя переменной.
+    return metaAnnotationResolver.roleValues(injection, AutumnAnnotations.INJECTION).stream()
+      .findFirst()
       .orElse(fallbackName);
   }
 }

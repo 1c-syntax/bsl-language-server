@@ -173,6 +173,44 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void infersControllerBeanByClassName() {
+    // given
+    // МойКонтроллер помечен &Контроллер("/users") (= &Желудь + &Прозвище("Контроллер")).
+    // У &Контроллер нет обработчика разворачивания, поэтому имя желудя — имя класса,
+    // а "/users" это маршрут, не имя желудя.
+
+    // when
+    var types = typeService.findTypes(variable("КонтроллерПоИмени"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("МойКонтроллер");
+  }
+
+  @Test
+  void infersControllerBeanByQualifier() {
+    // given
+    // прозвище "Контроллер" зашито в определении &Контроллер через &Прозвище("Контроллер")
+
+    // when
+    var types = typeService.findTypes(variable("КонтроллерПоПрозвищу"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("МойКонтроллер");
+  }
+
+  @Test
+  void doesNotRegisterControllerUnderItsRoute() {
+    // given
+    // "/users" — маршрут (&Контроллер.Значение), а не имя желудя
+
+    // when
+    var types = typeService.findTypes(variable("КонтроллерПоМаршруту"));
+
+    // then
+    assertThat(types.isEmpty()).isTrue();
+  }
+
+  @Test
   void injectedParameterResolvesAtUsageAndFlowsIntoField() {
     // given: потребитель внедряет желудь через параметр конструктора и присваивает его полю.
     // Документ грузится со ссылками (как при открытии в редакторе) — без ручного рефилла.

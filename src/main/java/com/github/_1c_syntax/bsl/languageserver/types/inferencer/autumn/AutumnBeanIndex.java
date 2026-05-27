@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
@@ -82,6 +83,9 @@ import java.util.concurrent.atomic.AtomicReference;
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class AutumnBeanIndex {
+
+  /** Роли, под которыми класс является желудём (имя берётся с этой роль-аннотации). */
+  private static final List<String> COMPONENT_ROLES = List.of(AutumnAnnotations.COMPONENT, AutumnAnnotations.OAK);
 
   private final OScriptLibraryIndex libraryIndex;
   private final ServerContextProvider serverContextProvider;
@@ -206,7 +210,7 @@ public class AutumnBeanIndex {
     beansByName.clear();
     namesByUri.clear();
     libraryIndex.findEntries(EntryKind.CLASS).stream()
-      .map(OScriptLibraryIndex.LibraryEntry::uri)
+      .map(LibraryEntry::uri)
       .distinct()
       .forEach(this::indexDocument);
   }
@@ -241,70 +245,59 @@ public class AutumnBeanIndex {
     if (classEntries.isEmpty()) {
       return;
     }
-    var serverContext = serverContextProvider.getServerContext(uri).orElse(null);
-    if (serverContext == null) {
-      return;
-    }
-    DocumentContext document = serverContext.getDocument(uri);
-    if (document == null) {
-      return;
-    }
+    serverContextProvider.getServerContext(uri)
+      .map(serverContext -> serverContext.getDocument(uri))
+      .ifPresent(document -> indexClass(document, classEntries, uri));
+  }
+
+  private void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
     var symbolTree = document.getSymbolTree();
-    // Аннотации компонента (&Желудь/&Дуб) размещаются исключительно над
-    // конструктором — берём его напрямую, не сканируя все методы.
-    var constructor = symbolTree.getConstructor().orElse(null);
-    if (constructor == null) {
-      return;
-    }
-    var constructorAnnotations = constructor.getAnnotations();
-
-    // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не желудь:
-    // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
-    if (AutumnAnnotations.find(constructorAnnotations, AutumnAnnotations.ANNOTATION_MARKER).isPresent()) {
-      return;
-    }
-
-    for (var entry : classEntries) {
-      var ownerType = typeRegistry.resolve(entry.qualifiedName()).orElse(null);
-      if (ownerType != null) {
-        registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri);
+    // Аннотации компонента (&Желудь/&Дуб) размещаются исключительно над конструктором.
+    symbolTree.getConstructor().ifPresent(constructor -> {
+      var constructorAnnotations = constructor.getAnnotations();
+      // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не желудь:
+      // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
+      if (AutumnAnnotations.find(constructorAnnotations, AutumnAnnotations.ANNOTATION_MARKER).isPresent()) {
+        return;
       }
-    }
-
-    // &Завязь размещается над методом и допустима только в классе-дубе —
-    // иначе методы как фабрики не трактуем.
-    if (metaAnnotationResolver.hasRole(constructorAnnotations, AutumnAnnotations.OAK)) {
-      for (var method : symbolTree.getMethods()) {
-        registerFactory(method, uri);
+      for (var entry : classEntries) {
+        typeRegistry.resolve(entry.qualifiedName()).ifPresent(ownerType ->
+          registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri));
       }
-    }
+      // &Завязь размещается над методом и допустима только в классе-дубе.
+      if (metaAnnotationResolver.hasRole(constructorAnnotations, AutumnAnnotations.OAK)) {
+        for (var method : symbolTree.getMethods()) {
+          registerFactory(method, uri);
+        }
+      }
+    });
   }
 
   private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri) {
     // &Желудь либо &Дуб: класс является желудём (дуб сам по себе тоже желудь).
-    var component = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.COMPONENT)
-      .or(() -> metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.OAK))
-      .orElse(null);
-    if (component == null) {
-      return;
-    }
-    var name = AutumnAnnotations.stringParameter(component, AutumnAnnotations.VALUE_PARAMETER)
-      .filter(value -> !value.isBlank())
-      .orElse(defaultName);
-    register(annotations, name, ownerType, uri);
+    COMPONENT_ROLES.stream()
+      .flatMap(role -> metaAnnotationResolver.findByRole(annotations, role).stream()
+        .map(component -> Map.entry(role, component)))
+      .findFirst()
+      .ifPresent(match -> {
+        // Имя желудя берётся с аннотации роли (&Желудь/&Дуб) в развёрнутой цепочке,
+        // а не с алиаса: &Контроллер("/") — это &Желудь без имени → имя класса, "/" маршрут.
+        var name = metaAnnotationResolver.roleValues(match.getValue(), match.getKey()).stream()
+          .findFirst()
+          .orElse(defaultName);
+        register(annotations, name, ownerType, uri);
+      });
   }
 
   private void registerFactory(MethodSymbol method, URI uri) {
     var annotations = method.getAnnotations();
-    var factory = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.FACTORY).orElse(null);
-    if (factory == null) {
-      return;
-    }
-    var name = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.VALUE_PARAMETER)
-      .filter(value -> !value.isBlank())
-      .orElse(method.getName());
-    factoryBeanType(factory, name)
-      .ifPresent(beanType -> register(annotations, name, beanType, uri));
+    metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.FACTORY).ifPresent(factory -> {
+      var name = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.VALUE_PARAMETER)
+        .filter(value -> !value.isBlank())
+        .orElse(method.getName());
+      factoryBeanType(factory, name)
+        .ifPresent(beanType -> register(annotations, name, beanType, uri));
+    });
   }
 
   private Optional<TypeRef> factoryBeanType(Annotation factory, String beanName) {
