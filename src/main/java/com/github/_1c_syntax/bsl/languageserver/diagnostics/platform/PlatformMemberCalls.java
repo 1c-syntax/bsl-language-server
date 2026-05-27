@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.platform;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -50,14 +50,14 @@ import java.util.regex.Pattern;
  * однофамилец с другого типа).
  * <p>
  * Сравнение версий ведётся относительно режима совместимости проекта. Если он
- * не задан, {@link CompatibilityMode} = «самая свежая платформа», поэтому любое
- * устаревание срабатывает, а недоступность — никогда.
+ * не задан, считается «самая свежая платформа», поэтому любое устаревание
+ * срабатывает, а недоступность — никогда.
  */
-final class PlatformMemberCalls {
+public final class PlatformMemberCalls {
 
   /**
    * Режим совместимости конфигурации «не задан» ({@code DontUse}) —
-   * {@link CompatibilityMode} по умолчанию = {@code (3, 99)}.
+   * {@link CompatibilityMode} по умолчанию.
    */
   private static final CompatibilityMode UNSET = new CompatibilityMode();
 
@@ -65,7 +65,8 @@ final class PlatformMemberCalls {
    * «Самая свежая платформа» — сентинел, доминирующий над любым реальным
    * режимом совместимости. Берём заведомо больший {@code minor}, чтобы
    * перекрывать и семейство 8.5+, а не только 8.3.x (значение по умолчанию
-   * {@code DontUse} = {@code (3, 99)} семейство 8.5 НЕ перекрывает).
+   * {@code DontUse} в bsl-common-library 0.10.0 семейство 8.5 НЕ перекрывает;
+   * после релиза исправленного DontUse сентинел можно будет убрать).
    */
   private static final CompatibilityMode NEWEST = new CompatibilityMode(99, 99);
 
@@ -84,9 +85,9 @@ final class PlatformMemberCalls {
    * модуля. Для union-типа ресивера возвращаются все кандидаты-владельцы (по
    * одному {@link TypedMember} на тип) с одинаковым диапазоном.
    */
-  static List<TypedMember> collect(DocumentContext documentContext,
-                                   TypeService typeService,
-                                   TypeRegistry typeRegistry) {
+  public static List<TypedMember> collect(DocumentContext documentContext,
+                                          TypeService typeService,
+                                          TypeRegistry typeRegistry) {
     var ast = documentContext.getAst();
     var result = new ArrayList<TypedMember>();
     collectGlobalCalls(ast, documentContext, typeService, result);
@@ -148,8 +149,8 @@ final class PlatformMemberCalls {
    * конфигурации → «самая свежая платформа» (если режим совместимости не задан
    * / {@code DontUse}).
    */
-  static CompatibilityMode targetCompatibilityMode(DocumentContext documentContext,
-                                                   LanguageServerConfiguration configuration) {
+  public static CompatibilityMode targetCompatibilityMode(DocumentContext documentContext,
+                                                          LanguageServerConfiguration configuration) {
     var explicit = parse(configuration.getPlatformOptions().getTargetVersion());
     if (explicit != null) {
       return explicit;
@@ -165,7 +166,7 @@ final class PlatformMemberCalls {
    * Член устарел для целевой платформы: {@code target >= deprecatedSinceVersion}.
    * Пустая или неразборчивая строка версии → {@code false}.
    */
-  static boolean firesDeprecated(String deprecatedSinceVersion, CompatibilityMode target) {
+  public static boolean firesDeprecated(String deprecatedSinceVersion, CompatibilityMode target) {
     var version = parse(deprecatedSinceVersion);
     return version != null && CompatibilityMode.compareTo(version, target) >= 0;
   }
@@ -174,7 +175,7 @@ final class PlatformMemberCalls {
    * Член недоступен в целевой платформе: {@code target < sinceVersion}.
    * Пустая или неразборчивая строка версии → {@code false}.
    */
-  static boolean firesUnavailable(String sinceVersion, CompatibilityMode target) {
+  public static boolean firesUnavailable(String sinceVersion, CompatibilityMode target) {
     var version = parse(sinceVersion);
     return version != null && CompatibilityMode.compareTo(version, target) < 0;
   }

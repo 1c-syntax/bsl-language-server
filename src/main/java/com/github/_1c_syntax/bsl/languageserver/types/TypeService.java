@@ -295,14 +295,19 @@ public class TypeService {
    * или под курсором не идентификатор.
    */
   private static Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
+    BSLParser.FileContext ast;
     try {
-      var ast = documentContext.getAst();
-      return Trees.findTerminalNodeContainsPosition(ast, position)
-        .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
+      // getAst() бросает NPE, если документ ещё не токенизирован (например,
+      // hover на worker-потоке до populate) — это сигнал «AST недоступен».
+      ast = documentContext.getAst();
     } catch (NullPointerException e) {
-      // AST ещё не построен (getAst может вернуть null или бросить NPE) — членов нет.
       return Optional.empty();
     }
+    if (ast == null) {
+      return Optional.empty();
+    }
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
   }
 
   /**
