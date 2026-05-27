@@ -142,9 +142,25 @@ public class AutumnBeanIndex {
     if (document.getFileType() != FileType.OS || !built) {
       return;
     }
+    // Правка класса-определения аннотации (&Аннотация) может изменить роль любой
+    // аннотации, разворачивающейся через него, а значит — состав желудей в любом
+    // использующем её классе. Точечного обновления здесь мало: сбрасываем индекс
+    // целиком (определения аннотаций правят редко, ребилд ленивый).
+    if (isAnnotationDefinition(document)) {
+      invalidate();
+      return;
+    }
     var uri = document.getUri();
     removeDocument(uri);
     indexDocument(uri);
+  }
+
+  /** Несёт ли конструктор класса маркер {@code &Аннотация} (класс-определение пользовательской аннотации). */
+  private static boolean isAnnotationDefinition(DocumentContext document) {
+    return document.getSymbolTree().getConstructor()
+      .map(constructor ->
+        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
+      .orElse(false);
   }
 
   private void ensureBuilt() {

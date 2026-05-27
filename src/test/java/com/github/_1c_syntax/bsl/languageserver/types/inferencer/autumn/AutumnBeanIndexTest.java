@@ -299,6 +299,52 @@ class AutumnBeanIndexTest {
   }
 
   @Test
+  void rebuildsEntireIndexWhenAnnotationDefinitionChanges() {
+    // given: индекс построен, желудь Логгер зарегистрирован
+    var oldType = new TypeRef(TypeKind.USER, "Логгер");
+    registerClass("Логгер", oldType, method(component(null)));
+    init();
+    assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(oldType);
+
+    // when: изменён .os-класс-определения аннотации (конструктор несёт &Аннотация).
+    // Это может изменить роль аннотации в любом классе, поэтому ожидаем полный ребилд.
+    var newType = new TypeRef(TypeKind.USER, "ЛоггерV2");
+    when(typeRegistry.resolve("Логгер")).thenReturn(Optional.of(newType));
+    var definitionDoc = mock(DocumentContext.class);
+    var definitionTree = mock(SymbolTree.class);
+    var definitionCtor = mock(ConstructorSymbol.class);
+    when(definitionCtor.getAnnotations()).thenReturn(List.of(marker("Компонент")));
+    when(definitionTree.getConstructor()).thenReturn(Optional.of(definitionCtor));
+    when(definitionDoc.getFileType()).thenReturn(FileType.OS);
+    when(definitionDoc.getSymbolTree()).thenReturn(definitionTree);
+    var event = mock(DocumentContextContentChangedEvent.class);
+    when(event.getSource()).thenReturn(definitionDoc);
+    beanIndex.handleDocumentChange(event);
+
+    // then: индекс пересобран целиком — Логгер резолвится в новый тип
+    assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(newType);
+  }
+
+  @Test
+  void ignoresBslDocumentChange() {
+    // given
+    var type = new TypeRef(TypeKind.USER, "Логгер");
+    registerClass("Логгер", type, method(component(null)));
+    init();
+    assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
+
+    // when: изменён .bsl-документ — к желудям отношения не имеет
+    var document = mock(DocumentContext.class);
+    when(document.getFileType()).thenReturn(FileType.BSL);
+    var event = mock(DocumentContextContentChangedEvent.class);
+    when(event.getSource()).thenReturn(document);
+    beanIndex.handleDocumentChange(event);
+
+    // then: индекс не тронут
+    assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
+  }
+
+  @Test
   void ignoresChangeOfNonClassDocument() {
     // given: индекс построен по классу-желудю
     var type = new TypeRef(TypeKind.USER, "Логгер");
@@ -313,6 +359,9 @@ class AutumnBeanIndexTest {
     var document = mock(DocumentContext.class);
     when(document.getFileType()).thenReturn(FileType.OS);
     when(document.getUri()).thenReturn(moduleUri);
+    var symbolTree = mock(SymbolTree.class);
+    when(symbolTree.getConstructor()).thenReturn(Optional.empty());
+    when(document.getSymbolTree()).thenReturn(symbolTree);
     var event = mock(DocumentContextContentChangedEvent.class);
     when(event.getSource()).thenReturn(document);
     beanIndex.handleDocumentChange(event);
