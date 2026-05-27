@@ -215,6 +215,51 @@ class AutumnMetaAnnotationResolverTest {
     assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isFalse();
   }
 
+  @Test
+  void roleValuesUsesValueFixedInMetaAnnotation() {
+    // given: &Лог = &Аннотация("Лог") &Пластилин("Лог"), без обработчика
+    register("Лог", withValue(AutumnAnnotations.INJECTION, "Лог"));
+
+    // when: имя желудя для использования &Лог("Префикс")
+    var values = resolver.roleValues(withValue("Лог", "Префикс"), AutumnAnnotations.INJECTION);
+
+    // then: берётся зашитое в мете имя "Лог", префикс использования как имя желудя не идёт
+    assertThat(values).containsExactly("Лог");
+  }
+
+  @Test
+  void roleValuesForwardsUsageValueWhenHandlerPresent() {
+    // given: killjoy &Внедряемое = &Аннотация + &Пластилин + ПриРазворачиванииАннотации
+    registerForwarding("Внедряемое", plainAnnotation(AutumnAnnotations.INJECTION));
+
+    // when
+    var values = resolver.roleValues(withValue("Внедряемое", "ИмяЖелудя"), AutumnAnnotations.INJECTION);
+
+    // then: значение использования проброшено в &Пластилин
+    assertThat(values).containsExactly("ИмяЖелудя");
+  }
+
+  @Test
+  void roleValuesIgnoresAliasOwnValueWithoutHandler() {
+    // given: &Контроллер = &Аннотация + &Желудь + &Прозвище("Контроллер"), без обработчика
+    register("Контроллер",
+      plainAnnotation(AutumnAnnotations.COMPONENT),
+      withValue(AutumnAnnotations.QUALIFIER, "Контроллер"));
+
+    // when / then: "/users" не идёт в имя компонента (нет форвардинга)...
+    assertThat(resolver.roleValues(withValue("Контроллер", "/users"), AutumnAnnotations.COMPONENT)).isEmpty();
+    // ...а прозвище берётся из зашитого &Прозвище("Контроллер")
+    assertThat(resolver.roleValues(withValue("Контроллер", "/users"), AutumnAnnotations.QUALIFIER))
+      .containsExactly("Контроллер");
+  }
+
+  @Test
+  void roleValuesReadsDirectRoleValue() {
+    // when / then: прямая &Желудь("X") — значение с самой аннотации
+    assertThat(resolver.roleValues(withValue(AutumnAnnotations.COMPONENT, "X"), AutumnAnnotations.COMPONENT))
+      .containsExactly("X");
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   private static DocumentContextContentChangedEvent documentChange(FileType fileType, boolean annotationDefinition) {
@@ -234,17 +279,38 @@ class AutumnMetaAnnotationResolverTest {
 
   /** Зарегистрировать пользовательскую аннотацию: конструктор с указанными мета-аннотациями. */
   private void register(String customName, Annotation... metaAnnotations) {
+    register(customName, false, metaAnnotations);
+  }
+
+  /** То же, но с обработчиком ПриРазворачиванииАннотации (алиас пробрасывает Значение в мету). */
+  private void registerForwarding(String customName, Annotation... metaAnnotations) {
+    register(customName, true, metaAnnotations);
+  }
+
+  private void register(String customName, boolean forwarding, Annotation... metaAnnotations) {
     var constructor = mock(MethodSymbol.class);
     var annotations = new ArrayList<Annotation>();
     annotations.add(marker(customName));
     annotations.addAll(List.of(metaAnnotations));
     when(constructor.getAnnotations()).thenReturn(annotations);
 
-    var symbol = AnnotationSymbol.builder()
+    var methods = new ArrayList<MethodSymbol>();
+    methods.add(constructor);
+    if (forwarding) {
+      var handler = mock(MethodSymbol.class);
+      when(handler.getName()).thenReturn("ПриРазворачиванииАннотации");
+      methods.add(handler);
+    }
+    var symbolTree = mock(SymbolTree.class);
+    when(symbolTree.getMethods()).thenReturn(methods);
+    var owner = mock(DocumentContext.class);
+    when(owner.getSymbolTree()).thenReturn(symbolTree);
+
+    repository.register(AnnotationSymbol.builder()
       .name(customName)
+      .owner(owner)
       .parent(Optional.of(constructor))
-      .build();
-    repository.register(symbol);
+      .build());
   }
 
   private static Annotation marker(String customName) {
