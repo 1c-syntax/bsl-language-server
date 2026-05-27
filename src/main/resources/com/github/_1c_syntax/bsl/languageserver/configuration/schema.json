@@ -1219,6 +1219,24 @@
                     ]
                 }
             }
+        },
+        "v8platform": {
+            "$id": "#/properties/v8platform",
+            "type": "object",
+            "title": "1C:Enterprise platform types configuration.",
+            "properties": {
+                "binPath": {
+                    "$id": "#/properties/v8platform/binPath",
+                    "type": "string",
+                    "title": "Path to the 'bin' directory of an installed 1C:Enterprise platform (where syntax-helper files shcntx_*.hbk, shlang_*.hbk are located). If not set, the most recent installation on the machine is autodetected."
+                },
+                "enabled": {
+                    "$id": "#/properties/v8platform/enabled",
+                    "type": "boolean",
+                    "title": "Allow loading platform context from the syntax-helper of an installed 1C:Enterprise.",
+                    "default": true
+                }
+            }
         }
     }
 }

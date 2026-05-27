@@ -68,14 +68,14 @@ class PlatformContextProviderFactoryTest {
     Optional<ContextProvider> result = factory.create();
 
     assertThat(result).isEmpty();
-    verify(configuration, never()).getPlatformOptions();
+    verify(configuration, never()).getV8PlatformOptions();
   }
 
   @Test
   void create_returnsEmpty_whenPropertyEnabledButPlatformOptionsDisabled() throws IOException {
     var configuration = mock(LanguageServerConfiguration.class);
     var options = mock(V8PlatformOptions.class);
-    when(configuration.getPlatformOptions()).thenReturn(options);
+    when(configuration.getV8PlatformOptions()).thenReturn(options);
     when(options.isEnabled()).thenReturn(false);
 
     try (MockedStatic<PlatformContextGrabber> grabbers = mockStatic(PlatformContextGrabber.class)) {
@@ -96,7 +96,7 @@ class PlatformContextProviderFactoryTest {
   void create_runsAutoDetect_whenBinPathNotConfigured() throws IOException {
     var configuration = mock(LanguageServerConfiguration.class);
     var options = mock(V8PlatformOptions.class);
-    when(configuration.getPlatformOptions()).thenReturn(options);
+    when(configuration.getV8PlatformOptions()).thenReturn(options);
     when(options.isEnabled()).thenReturn(true);
     when(options.getBinPath()).thenReturn(null);
 
@@ -126,7 +126,7 @@ class PlatformContextProviderFactoryTest {
     var configuration = mock(LanguageServerConfiguration.class);
     var options = mock(V8PlatformOptions.class);
     Path binPath = Paths.get("/opt/1cv8/bin");
-    when(configuration.getPlatformOptions()).thenReturn(options);
+    when(configuration.getV8PlatformOptions()).thenReturn(options);
     when(options.isEnabled()).thenReturn(true);
     when(options.getBinPath()).thenReturn(binPath);
 
@@ -154,7 +154,7 @@ class PlatformContextProviderFactoryTest {
   void create_returnsEmpty_whenGrabberProviderIsNull() throws IOException {
     var configuration = mock(LanguageServerConfiguration.class);
     var options = mock(V8PlatformOptions.class);
-    when(configuration.getPlatformOptions()).thenReturn(options);
+    when(configuration.getV8PlatformOptions()).thenReturn(options);
     when(options.isEnabled()).thenReturn(true);
     when(options.getBinPath()).thenReturn(null);
 
