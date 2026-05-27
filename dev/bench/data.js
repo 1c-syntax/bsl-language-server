@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779815751058,
+  "lastUpdate": 1779866453357,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35557,6 +35557,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 10.707026283817868",
             "extra": "mean: 376.15972367922467 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "00b62a7b3420cdbc1b58f5f03f07ffdcacd53776",
+          "message": "Merge pull request #3950 from 1c-syntax/feature/platform-member-method-semantic-tokens\n\nfeat(semantictokens): подсветка платформенных member-методов через accessCall",
+          "timestamp": "2026-05-27T08:01:09+02:00",
+          "tree_id": "98cce98926c361ff284beb4e1222c6046f0d0c5d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/00b62a7b3420cdbc1b58f5f03f07ffdcacd53776"
+        },
+        "date": 1779866445438,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 371.08803486824036,
+            "unit": "sec",
+            "range": "stddev: 8.170883750235038",
+            "extra": "mean: 371.08803486824036 sec\nrounds: 3"
           }
         ]
       }
