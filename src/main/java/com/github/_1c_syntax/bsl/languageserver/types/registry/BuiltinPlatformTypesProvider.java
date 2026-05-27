@@ -318,7 +318,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       ru.sourceSymbol(),
       ru.generic(),
       ru.metadata(),
-      ru.async()
+      ru.async() || en.async()
     );
   }
 
