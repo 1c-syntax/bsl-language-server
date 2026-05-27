@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779868500191,
+  "lastUpdate": 1779873619464,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35619,6 +35619,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0664354225407287",
             "extra": "mean: 370.6717054049174 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e6f8c14e9f25547c9b3e53ea1e522bdb58f71004",
+          "message": "Merge pull request #3953 from 1c-syntax/feature/async-modifier-platform-methods\n\nfeat(semantictokens): async-модификатор для платформенных member-методов",
+          "timestamp": "2026-05-27T08:49:51+02:00",
+          "tree_id": "9254403ada6c370b04e8f55096ae3aeeb3e998e9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e6f8c14e9f25547c9b3e53ea1e522bdb58f71004"
+        },
+        "date": 1779873611343,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 380.86817836761475,
+            "unit": "sec",
+            "range": "stddev: 11.848205499082907",
+            "extra": "mean: 380.86817836761475 sec\nrounds: 3"
           }
         ]
       }
