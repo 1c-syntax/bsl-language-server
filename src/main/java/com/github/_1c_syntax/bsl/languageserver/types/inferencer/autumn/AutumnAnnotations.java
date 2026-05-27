@@ -37,7 +37,9 @@ public class AutumnAnnotations {
 
   /** Объявление компонента-желудя над конструктором. */
   public static final String COMPONENT = "Желудь";
-  /** Фабричный метод, создающий желудь. */
+  /** Класс-фабрика желудей (дуб); сам по себе тоже желудь. Размещается над конструктором. */
+  public static final String OAK = "Дуб";
+  /** Фабричный метод, создающий желудь; допустим только в классе-дубе. */
   public static final String FACTORY = "Завязь";
   /** Точка внедрения зависимости. */
   public static final String INJECTION = "Пластилин";

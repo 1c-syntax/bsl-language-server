@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
@@ -202,7 +203,7 @@ class AutumnBeanIndexTest {
     when(typeRegistry.resolve("СоединениеСБазой")).thenReturn(Optional.of(type));
     // &Завязь без имени и с Тип="Желудь" -> имя = имя метода, тип резолвится по имени
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
-      namedMethod("СоединениеСБазой", factory(null, "Желудь")));
+      method(oak()), namedMethod("СоединениеСБазой", factory(null, "Желудь")));
     init();
 
     // when / then
@@ -215,7 +216,7 @@ class AutumnBeanIndexTest {
     var array = new TypeRef(TypeKind.PLATFORM, "Массив");
     when(typeRegistry.resolve("Массив")).thenReturn(Optional.of(array));
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
-      namedMethod("СписокЖелудей", factory("СписокЖелудей", "Массив")));
+      method(oak()), namedMethod("СписокЖелудей", factory("СписокЖелудей", "Массив")));
     init();
 
     // when / then
@@ -228,7 +229,7 @@ class AutumnBeanIndexTest {
     var type = new TypeRef(TypeKind.USER, "Хлеб");
     when(typeRegistry.resolve("Хлеб")).thenReturn(Optional.of(type));
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
-      namedMethod("СоздатьХлеб", factory("Хлеб", "")));
+      method(oak()), namedMethod("СоздатьХлеб", factory("Хлеб", "")));
     init();
 
     // when / then
@@ -240,7 +241,7 @@ class AutumnBeanIndexTest {
     // given
     when(typeRegistry.resolve("Неизвестный")).thenReturn(Optional.empty());
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
-      namedMethod("Неизвестный", factory(null, null)));
+      method(oak()), namedMethod("Неизвестный", factory(null, null)));
     init();
 
     // when / then
@@ -264,14 +265,17 @@ class AutumnBeanIndexTest {
     var newType = new TypeRef(TypeKind.USER, "НовыйТип");
     when(typeRegistry.resolve("Старый")).thenReturn(Optional.of(oldType));
     when(typeRegistry.resolve("Новый")).thenReturn(Optional.of(newType));
+    // класс-дуб: завязи сканируются только внутри него
+    var constructor = method(oak());
+    when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
     var oldMethod = namedMethod("Создать", factory("Старый", null));
-    when(symbolTree.getMethods()).thenReturn(List.of(oldMethod));
+    when(symbolTree.getMethods()).thenReturn(List.of(constructor, oldMethod));
     init();
     assertThat(beanIndex.resolve("Старый").refs()).containsExactly(oldType);
 
     // when: документ отредактирован — желудь переименован в "Новый"
     var newMethod = namedMethod("Создать", factory("Новый", null));
-    when(symbolTree.getMethods()).thenReturn(List.of(newMethod));
+    when(symbolTree.getMethods()).thenReturn(List.of(constructor, newMethod));
     when(document.getFileType()).thenReturn(FileType.OS);
     when(document.getUri()).thenReturn(uri);
     var event = mock(DocumentContextContentChangedEvent.class);
@@ -316,7 +320,12 @@ class AutumnBeanIndexTest {
     return uri;
   }
 
-  private void registerClass(String qualifiedName, TypeRef ownerType, MethodSymbol... methods) {
+  /**
+   * Зарегистрировать .os-класс: аннотации компонента берутся с конструктора,
+   * а методы (например, {@code &Завязь}-фабрики) сканируются дополнительно.
+   */
+  private void registerClass(String qualifiedName, TypeRef ownerType,
+                             ConstructorSymbol constructor, MethodSymbol... methods) {
     var uri = registerEntry(qualifiedName);
     var serverContext = mock(ServerContext.class);
     var document = mock(DocumentContext.class);
@@ -324,12 +333,21 @@ class AutumnBeanIndexTest {
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
     when(serverContext.getDocument(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
-    when(symbolTree.getMethods()).thenReturn(List.of(methods));
+    when(symbolTree.getConstructor()).thenReturn(Optional.ofNullable(constructor));
+    var allMethods = new ArrayList<MethodSymbol>();
+    if (constructor != null) {
+      allMethods.add(constructor);
+    }
+    allMethods.addAll(List.of(methods));
+    when(symbolTree.getMethods()).thenReturn(allMethods);
     when(typeRegistry.resolve(qualifiedName)).thenReturn(Optional.ofNullable(ownerType));
   }
 
-  private static MethodSymbol method(Annotation... annotations) {
-    return namedMethod("ПриСозданииОбъекта", annotations);
+  /** Конструктор класса — носитель аннотаций компонента (&Желудь/&Дуб/&Прозвище/&Верховный). */
+  private static ConstructorSymbol method(Annotation... annotations) {
+    var constructor = mock(ConstructorSymbol.class);
+    lenient().when(constructor.getAnnotations()).thenReturn(List.of(annotations));
+    return constructor;
   }
 
   private static MethodSymbol namedMethod(String name, Annotation... annotations) {
@@ -341,6 +359,10 @@ class AutumnBeanIndexTest {
 
   private static Annotation component(String name) {
     return annotation(AutumnAnnotations.COMPONENT, name);
+  }
+
+  private static Annotation oak() {
+    return annotation(AutumnAnnotations.OAK, null);
   }
 
   private static Annotation qualifier(String alias) {

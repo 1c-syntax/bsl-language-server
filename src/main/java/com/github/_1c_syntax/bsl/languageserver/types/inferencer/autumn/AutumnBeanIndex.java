@@ -56,10 +56,14 @@ import java.util.Optional;
  * Покрывает случаи, которые нельзя разрешить прямым резолвом имени типа:
  * <ul>
  *   <li>переименованный компонент — {@code &Желудь("ДругоеИмя")};</li>
- *   <li>фабричный метод — {@code &Завязь};</li>
+ *   <li>класс-фабрика — {@code &Дуб} (сам тоже желудь);</li>
+ *   <li>фабричный метод — {@code &Завязь} (только внутри {@code &Дуб});</li>
  *   <li>прозвища — {@code &Прозвище("Алиас")} (повторяемая);</li>
  *   <li>приоритет при конфликте имён/прозвищ — {@code &Верховный}.</li>
  * </ul>
+ * Аннотации компонента ({@code &Желудь}/{@code &Дуб}) размещаются только над
+ * конструктором, поэтому он берётся из дерева символов напрямую; методы
+ * сканируются на {@code &Завязь} лишь когда класс — дуб.
  * Строится лениво из {@link OScriptLibraryIndex} (классы-желуди) и сбрасывается
  * при переиндексации библиотек.
  */
@@ -183,20 +187,36 @@ public class AutumnBeanIndex {
     if (document == null) {
       return;
     }
-    var methods = document.getSymbolTree().getMethods();
+    var symbolTree = document.getSymbolTree();
+    // Аннотации компонента (&Желудь/&Дуб) размещаются исключительно над
+    // конструктором — берём его напрямую, не сканируя все методы.
+    var constructor = symbolTree.getConstructor().orElse(null);
+    if (constructor == null) {
+      return;
+    }
+    var constructorAnnotations = constructor.getAnnotations();
+
     for (var entry : classEntries) {
       var ownerType = typeRegistry.resolve(entry.qualifiedName()).orElse(null);
-      for (var method : methods) {
-        registerComponent(method, entry.qualifiedName(), ownerType, uri);
+      if (ownerType != null) {
+        registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri);
+      }
+    }
+
+    // &Завязь допустима только в классе-дубе — иначе методы как фабрики не трактуем.
+    if (metaAnnotationResolver.hasRole(constructorAnnotations, AutumnAnnotations.OAK)) {
+      for (var method : symbolTree.getMethods()) {
         registerFactory(method, uri);
       }
     }
   }
 
-  private void registerComponent(MethodSymbol method, String defaultName, @Nullable TypeRef ownerType, URI uri) {
-    var annotations = method.getAnnotations();
-    var component = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.COMPONENT).orElse(null);
-    if (component == null || ownerType == null) {
+  private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri) {
+    // &Желудь либо &Дуб: класс является желудём (дуб сам по себе тоже желудь).
+    var component = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.COMPONENT)
+      .or(() -> metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.OAK))
+      .orElse(null);
+    if (component == null) {
       return;
     }
     var name = AutumnAnnotations.stringParameter(component, AutumnAnnotations.VALUE_PARAMETER)
