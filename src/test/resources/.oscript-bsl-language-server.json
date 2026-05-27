@@ -1,0 +1,11 @@
+{
+  "$schema": "../../main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
+  "oscript": {
+    "libRoots": [
+      "./libs",
+      "/opt/oscript-lib"
+    ],
+    "useEnvLibLocation": true,
+    "showImplicitLibraryEntriesInCompletion": true
+  }
+}

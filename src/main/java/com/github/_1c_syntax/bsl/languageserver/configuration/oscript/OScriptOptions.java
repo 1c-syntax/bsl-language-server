@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.oscript;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -44,7 +43,6 @@ public class OScriptOptions {
    * в подпапках которого ищется {@code lib.config}.
    */
   @JsonProperty("libRoots")
-  @Setter(AccessLevel.NONE)
   private List<String> libRoots = new ArrayList<>();
 
   /**
