@@ -96,7 +96,12 @@ public class ConfigurationTypesProvider {
     MDOType.DATA_PROCESSOR,
     MDOType.EXCHANGE_PLAN,
     MDOType.CONSTANT,
-    MDOType.SEQUENCE
+    MDOType.SEQUENCE,
+    MDOType.FILTER_CRITERION,
+    MDOType.SETTINGS_STORAGE,
+    MDOType.WS_REFERENCE,
+    MDOType.INTEGRATION_SERVICE,
+    MDOType.INTEGRATION_SERVICE_CHANNEL
   );
 
   private final TypeRegistry typeRegistry;
@@ -187,11 +192,15 @@ public class ConfigurationTypesProvider {
       typeRegistry.registerDisplayName(ref,
         BilingualString.of(managerRu, managerEn == null ? managerRu : managerEn));
 
-      // Подмешивание платформенных методов менеджера-семейства, ссылки,
-      // объекта, выборки и т.п. для конкретного MD-имени делается единым
-      // вызовом ниже через registerFamilySpecializations(fullRu, name)
-      // в registerObjectAndRefTypes.
+      // Объектный/ссылочный типы и табличные части — только для объектных MD
+      // (registerObjectAndRefTypes отсеивает прочие по OBJECT_TYPES).
       registerObjectAndRefTypes(md, mdoType, name, fullName, commonAttributes);
+
+      // Платформенные members generic-семейства (Менеджер/Ссылка/Объект/Выборка/
+      // Список/НаборЗаписей/КлючЗаписи/…) для конкретного MD-имени. Резолв ленивый.
+      if (!fullName.getRu().isBlank()) {
+        registerFamilySpecializations(fullName.getRu(), name);
+      }
 
       // Дополнительные алиасы «коллекция.Имя» для совместимости и для случаев,
       // когда пользователь обращается напрямую (например, Hover на `Справочники.Контрагенты`).
@@ -336,16 +345,6 @@ public class ConfigurationTypesProvider {
     };
     typeRegistry.registerMemberSource(objectRef, objectSource, LanguageScope.BSL);
     typeRegistry.registerMemberSource(refRef, refSource, LanguageScope.BSL);
-
-    // Подмешиваем members generic-платформенного семейства для конкретного
-    // MD-имени. Покрывает все дженерики, чьё qualifiedName начинается с
-    // {fullRu}: {fullRu}Ссылка.<...>, {fullRu}Объект.<...>,
-    // {fullRu}Менеджер.<...>, {fullRu}Выборка.<...>, {fullRu}Список.<...>
-    // и т.п. Для уже зарегистрированных типов (refRef/objectRef/managerRef)
-    // добавляется только MemberSource; для новых (Выборка/Список/…) ещё и
-    // интернируется TypeRef. Резолв ленивый — не зависит от порядка
-    // инициализации платформенных провайдеров.
-    registerFamilySpecializations(fullRu, name);
 
     // Табличные части: регистрируем пару типов <prefix>ТабличнаяЧасть(Строка)?.<MD>.<TS>
     // и добавляем member <TS-name> на объектный тип.

@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +92,40 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     var collectionRef = typeRegistry.resolve("Справочники").orElseThrow();
     assertThat(typeService.displayName(collectionRef, Language.RU)).isEqualTo("Справочники");
     assertThat(typeService.displayName(collectionRef, Language.EN)).isEqualTo("Catalogs");
+  }
+
+  @Test
+  void informationRegisterManagerInheritsPlatformMembers() {
+    // Менеджер регистра сведений специализируется платформенным generic'ом
+    // РегистрСведенийМенеджер.<Имя> и наследует его методы.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var managerRef = typeRegistry.resolve("РегистрСведенийМенеджер.РегистрСведений1").orElseThrow();
+    var memberNames = typeRegistry.getMembers(managerRef).stream().map(m -> m.name()).toList();
+    assertThat(memberNames)
+      .as("менеджер регистра сведений должен наследовать платформенные методы из generic'а")
+      .contains("СоздатьНаборЗаписей", "Выбрать");
+
+    // Цепочка РегистрыСведений.РегистрСведений1 ведёт на тот же менеджер.
+    var viaCollection = typeRegistry.resolve("РегистрыСведений.РегистрСведений1").orElseThrow();
+    assertThat(viaCollection).isEqualTo(managerRef);
+  }
+
+  @Test
+  void filterCriterionManagerInheritsPlatformMembers() {
+    // Менеджер критерия отбора специализируется платформенным generic'ом
+    // КритерийОтбораМенеджер.<Имя> и наследует его методы.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var managerRef = typeRegistry.resolve("КритерийОтбораМенеджер.КритерийОтбора1").orElseThrow();
+    var memberNames = typeRegistry.getMembers(managerRef).stream().map(MemberDescriptor::name).toList();
+    assertThat(memberNames)
+      .as("менеджер критерия отбора должен наследовать платформенные методы из generic'а")
+      .contains("Выбрать", "ПолучитьФорму");
   }
 
   @Test
