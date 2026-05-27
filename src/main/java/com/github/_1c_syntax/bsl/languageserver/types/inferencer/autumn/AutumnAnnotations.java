@@ -47,6 +47,8 @@ public class AutumnAnnotations {
   public static final String PRIMARY = "Верховный";
   /** Дополнительное имя (алиас) желудя; повторяемая. */
   public static final String QUALIFIER = "Прозвище";
+  /** Маркер класса-определения пользовательской аннотации ({@code &Аннотация("Имя")}). */
+  public static final String ANNOTATION_MARKER = "Аннотация";
 
   /** Первый параметр большинства аннотаций — имя желудя/значение. */
   public static final String VALUE_PARAMETER = "Значение";

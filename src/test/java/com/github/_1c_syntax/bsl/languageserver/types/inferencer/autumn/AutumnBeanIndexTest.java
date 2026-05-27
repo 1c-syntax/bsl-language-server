@@ -149,6 +149,18 @@ class AutumnBeanIndexTest {
   }
 
   @Test
+  void skipsAnnotationDefinitionClass() {
+    // given: класс-определение аннотации — &Аннотация("Компонент") &Желудь
+    var type = new TypeRef(TypeKind.USER, "АннотацияКомпонент");
+    registerClass("АннотацияКомпонент", type, method(marker("Компонент"), component(null)));
+    init();
+
+    // when / then: класс-определение аннотации желудём не является
+    assertThat(beanIndex.resolve("АннотацияКомпонент").isEmpty()).isTrue();
+    assertThat(beanIndex.resolve("Компонент").isEmpty()).isTrue();
+  }
+
+  @Test
   void registersComponentByExplicitName() {
     // given
     var type = new TypeRef(TypeKind.USER, "РеальныйКласс");
@@ -363,6 +375,10 @@ class AutumnBeanIndexTest {
 
   private static Annotation oak() {
     return annotation(AutumnAnnotations.OAK, null);
+  }
+
+  private static Annotation marker(String customName) {
+    return annotation(AutumnAnnotations.ANNOTATION_MARKER, customName);
   }
 
   private static Annotation qualifier(String alias) {

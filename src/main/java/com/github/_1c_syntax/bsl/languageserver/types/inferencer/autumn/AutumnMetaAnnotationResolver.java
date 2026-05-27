@@ -70,9 +70,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AutumnMetaAnnotationResolver {
 
-  /** Базовая мета-аннотация, регистрирующая пользовательскую аннотацию. */
-  private static final String ANNOTATION_MARKER = "Аннотация";
-
   private final AnnotationRepository annotationRepository;
 
   /**
@@ -162,7 +159,7 @@ public class AutumnMetaAnnotationResolver {
       .map(MethodSymbol.class::cast)
       .ifPresent(constructor -> {
         for (var meta : constructor.getAnnotations()) {
-          if (!ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
+          if (!AutumnAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
             collectRoles(meta.getName(), accumulator);
           }
         }

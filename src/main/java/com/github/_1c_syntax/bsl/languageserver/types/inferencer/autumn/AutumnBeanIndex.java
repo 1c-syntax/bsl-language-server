@@ -196,6 +196,12 @@ public class AutumnBeanIndex {
     }
     var constructorAnnotations = constructor.getAnnotations();
 
+    // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не желудь:
+    // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
+    if (AutumnAnnotations.find(constructorAnnotations, AutumnAnnotations.ANNOTATION_MARKER).isPresent()) {
+      return;
+    }
+
     for (var entry : classEntries) {
       var ownerType = typeRegistry.resolve(entry.qualifiedName()).orElse(null);
       if (ownerType != null) {
