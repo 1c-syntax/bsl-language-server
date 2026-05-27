@@ -113,9 +113,13 @@ public class AutumnComponentInferencer {
       .orElse(AutumnAnnotations.BEAN_TYPE);
   }
 
-  private static String beanName(Annotation injection, String fallbackName) {
-    return AutumnAnnotations.stringParameter(injection, AutumnAnnotations.VALUE_PARAMETER)
-      .filter(name -> !name.isBlank())
+  private String beanName(Annotation injection, String fallbackName) {
+    // Имя желудя, зашитое в мета-определении алиаса (например, &Лог = &Пластилин(Значение="Лог")),
+    // важнее Значения самой аннотации-использования (у &Лог там префикс лога);
+    // иначе — Значение использования, иначе — имя переменной/параметра.
+    return metaAnnotationResolver.roleValueFromDefinition(injection.getName(), AutumnAnnotations.INJECTION)
+      .or(() -> AutumnAnnotations.stringParameter(injection, AutumnAnnotations.VALUE_PARAMETER)
+        .filter(name -> !name.isBlank()))
       .orElse(fallbackName);
   }
 }

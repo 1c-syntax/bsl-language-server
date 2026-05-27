@@ -130,6 +130,54 @@ public class AutumnMetaAnnotationResolver {
   }
 
   /**
+   * Значение параметра {@link AutumnAnnotations#VALUE_PARAMETER}, зафиксированное в
+   * <i>определении</i> пользовательской аннотации на аннотации роли {@code baseRole}.
+   * <p>
+   * Например, {@code &Лог} определена как {@code &Аннотация("Лог") &Пластилин(Значение = "Лог")},
+   * поэтому для имени {@code "Лог"} и роли {@link AutumnAnnotations#INJECTION} вернёт
+   * {@code "Лог"} — имя желудя, зашитое в алиас, в отличие от {@code Значение}
+   * самой аннотации-использования. Возвращает первое непустое значение по цепочке.
+   * <p>
+   * Берётся статически зафиксированное в мета-аннотации значение; динамическую
+   * установку имени в {@code ПриРазворачиванииАннотации} статика не исполняет —
+   * пограничный случай, см. issue #3960.
+   */
+  public Optional<String> roleValueFromDefinition(String annotationName, String baseRole) {
+    return roleValueFromDefinition(annotationName, baseRole, new HashSet<>());
+  }
+
+  private Optional<String> roleValueFromDefinition(String annotationName, String baseRole, Set<String> visited) {
+    if (!visited.add(annotationName.toLowerCase(Locale.ROOT))) {
+      return Optional.empty();
+    }
+    var definition = annotationRepository.findByName(annotationName)
+      .flatMap(AnnotationSymbol::getParent)
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .orElse(null);
+    if (definition == null) {
+      return Optional.empty();
+    }
+    for (var meta : definition.getAnnotations()) {
+      if (AutumnAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
+        continue;
+      }
+      if (isRole(meta.getName(), baseRole)) {
+        var fixedValue = AutumnAnnotations.stringParameter(meta, AutumnAnnotations.VALUE_PARAMETER)
+          .filter(value -> !value.isBlank());
+        if (fixedValue.isPresent()) {
+          return fixedValue;
+        }
+      }
+      var deeper = roleValueFromDefinition(meta.getName(), baseRole, visited);
+      if (deeper.isPresent()) {
+        return deeper;
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
    * Сброс кэша развёрнутых ролей. Замыкания зависят только от классов-определений
    * аннотаций (конструктор с {@code &Аннотация}), поэтому кэш сбрасывается лишь
    * когда меняется именно такой класс — как в {@code AutumnBeanIndex}; правки

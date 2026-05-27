@@ -158,6 +158,21 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void infersLogBeanTypeForFieldMarkedWithLog() {
+    // given
+    // поле помечено &Лог("Префикс") (= &Пластилин(Значение="Лог") через &Аннотация);
+    // имя желудя зашито в мета-аннотации ("Лог"), а Значение самой &Лог ("Префикс") —
+    // это префикс лога, а не имя желудя. Желудь "Лог" даёт фабрика Лог() в дубе
+    // ФабрикаЛогов, его тип — класс Лог.
+
+    // when
+    var types = typeService.findTypes(variable("ЧерезЛог"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Лог");
+  }
+
+  @Test
   void injectedParameterResolvesAtUsageAndFlowsIntoField() {
     // given: потребитель внедряет желудь через параметр конструктора и присваивает его полю.
     // Документ грузится со ссылками (как при открытии в редакторе) — без ручного рефилла.
