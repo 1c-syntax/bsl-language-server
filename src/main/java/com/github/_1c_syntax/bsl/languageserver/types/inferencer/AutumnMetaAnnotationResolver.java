@@ -127,7 +127,7 @@ public class AutumnMetaAnnotationResolver {
   }
 
   private boolean resolvesTo(String annotationName, String baseRole, Set<String> visited) {
-    if (baseRole.equals(annotationName)) {
+    if (baseRole.equalsIgnoreCase(annotationName)) {
       return true;
     }
     if (!visited.add(annotationName.toLowerCase(Locale.ROOT))) {
@@ -223,7 +223,7 @@ public class AutumnMetaAnnotationResolver {
     }
     var metas = new ArrayList<String>();
     for (var annotation : annotations) {
-      if (!ANNOTATION_MARKER.equals(annotation.getName())) {
+      if (!ANNOTATION_MARKER.equalsIgnoreCase(annotation.getName())) {
         metas.add(annotation.getName());
       }
     }

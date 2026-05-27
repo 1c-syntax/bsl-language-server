@@ -99,7 +99,9 @@ public class Annotations {
     if (text.length() >= QUOTED_LITERAL_MIN_LENGTH
       && text.charAt(0) == '"'
       && text.charAt(text.length() - 1) == '"') {
-      return text.substring(1, text.length() - 1);
+      // Снимаем обрамляющие кавычки и разэкранируем удвоённые кавычки внутри
+      // строкового литерала ("" -> ").
+      return text.substring(1, text.length() - 1).replace("\"\"", "\"");
     }
     return text;
   }

@@ -56,9 +56,27 @@ class AnnotationsTest {
 
     var nested = annotations.stream().filter(a -> "Вложенная".equals(a.getName())).findFirst().orElseThrow();
     assertThat(nested.getParameters()).hasSize(1);
-    var nestedValue = nested.getParameters().getFirst().value();
-    assertThat(nestedValue.isRight()).isTrue();
-    assertThat(nestedValue.getRight().getName()).isEqualTo("Внутренняя");
+    var nestedParam = nested.getParameters().getFirst();
+    assertThat(nestedParam.name()).isEqualTo("Поле");
+    assertThat(nestedParam.value().isRight()).isTrue();
+    assertThat(nestedParam.value().getRight().getName()).isEqualTo("Внутренняя");
+  }
+
+  @Test
+  void unescapesDoubledQuotesInStringLiteral() {
+    // given: строковая константа с экранированными кавычками ("" -> ")
+    var code = """
+      &Строковая("С ""кавычками"" внутри")
+      Процедура Тест() Экспорт
+      КонецПроцедуры
+      """;
+
+    // when
+    var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
+    var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
+
+    // then
+    assertThat(value.getLeft()).isEqualTo("С \"кавычками\" внутри");
   }
 
   @Test

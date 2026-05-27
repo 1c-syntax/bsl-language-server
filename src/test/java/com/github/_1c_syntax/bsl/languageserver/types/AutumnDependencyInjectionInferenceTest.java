@@ -170,6 +170,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
         usageLine = i;
       }
     }
+    assertThat(usageLine).as("строка с использованием параметра найдена").isNotNegative();
     var usagePosition = new Position(usageLine, lines[usageLine].indexOf("_Логгер") + 1);
 
     // when

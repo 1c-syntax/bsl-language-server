@@ -144,6 +144,27 @@ class AutumnMetaAnnotationResolverTest {
   }
 
   @Test
+  void baseRoleMatchIsCaseInsensitive() {
+    // given
+    init();
+
+    // when / then: имена аннотаций в BSL регистронезависимы
+    assertThat(resolver.isRole("пластилин", AutumnAnnotations.INJECTION)).isTrue();
+    assertThat(resolver.isRole("ЖЕЛУДЬ", AutumnAnnotations.COMPONENT)).isTrue();
+  }
+
+  @Test
+  void resolvesCustomAnnotationWithDifferentCaseMarker() {
+    // given: маркер &Аннотация и мета записаны в нестандартном регистре
+    registerAnnotationClass("АннотацияВнедряемое",
+      lowercaseMarker("Внедряемое"), plainAnnotation("пластилин"));
+    init();
+
+    // when / then
+    assertThat(resolver.isRole("ВНЕДРЯЕМОЕ", AutumnAnnotations.INJECTION)).isTrue();
+  }
+
+  @Test
   void skipsDefinitionWithoutMarker() {
     // given
     registerAnnotationClass("ПростоКласс", plainAnnotation("Пластилин"));
@@ -279,8 +300,16 @@ class AutumnMetaAnnotationResolverTest {
   }
 
   private static Annotation marker(String customName) {
+    return markerNamed("Аннотация", customName);
+  }
+
+  private static Annotation lowercaseMarker(String customName) {
+    return markerNamed("аннотация", customName);
+  }
+
+  private static Annotation markerNamed(String markerName, String customName) {
     return Annotation.builder()
-      .name("Аннотация")
+      .name(markerName)
       .kind(AnnotationKind.CUSTOM)
       .parameters(List.of(new AnnotationParameterDefinition("", Either.forLeft(customName), true)))
       .build();

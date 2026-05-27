@@ -59,7 +59,7 @@ public class AutumnAnnotations {
    */
   public static @Nullable Annotation find(Iterable<Annotation> annotations, String name) {
     for (var annotation : annotations) {
-      if (name.equals(annotation.getName())) {
+      if (name.equalsIgnoreCase(annotation.getName())) {
         return annotation;
       }
     }
