@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.jspecify.annotations.Nullable;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -111,7 +112,7 @@ public class BracketDocumentHighlightSupplier implements DocumentHighlightSuppli
     return highlights;
   }
 
-  private Token findMatchingBracket(Token token, List<Token> allTokens, int openType, int closeType, boolean isOpening) {
+  private @Nullable Token findMatchingBracket(Token token, List<Token> allTokens, int openType, int closeType, boolean isOpening) {
     int tokenIndex = token.getTokenIndex();
     int depth = 1;
 
