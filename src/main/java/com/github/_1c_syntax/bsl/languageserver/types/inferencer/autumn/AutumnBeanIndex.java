@@ -36,7 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
@@ -304,20 +303,16 @@ public class AutumnBeanIndex {
     var name = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.VALUE_PARAMETER)
       .filter(value -> !value.isBlank())
       .orElse(method.getName());
-    var beanType = factoryBeanType(factory, name);
-    if (beanType == null) {
-      return;
-    }
-    register(annotations, name, beanType, uri);
+    factoryBeanType(factory, name)
+      .ifPresent(beanType -> register(annotations, name, beanType, uri));
   }
 
-  private @Nullable TypeRef factoryBeanType(Annotation factory, String beanName) {
+  private Optional<TypeRef> factoryBeanType(Annotation factory, String beanName) {
     // Параметр Тип задаётся только по имени (позиционно можно лишь Значение).
     return AutumnAnnotations.stringParameter(factory, AutumnAnnotations.TYPE_PARAMETER)
       .filter(type -> !type.isBlank() && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(type))
       .or(() -> Optional.of(beanName))
-      .flatMap(typeRegistry::resolve)
-      .orElse(null);
+      .flatMap(typeRegistry::resolve);
   }
 
   private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri) {
