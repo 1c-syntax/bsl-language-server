@@ -57,7 +57,7 @@ public class AutumnAnnotations {
   /**
    * @return первая аннотация с указанным именем или {@code null}.
    */
-  public static @Nullable Annotation find(List<Annotation> annotations, String name) {
+  public static @Nullable Annotation find(Iterable<Annotation> annotations, String name) {
     for (var annotation : annotations) {
       if (name.equals(annotation.getName())) {
         return annotation;
@@ -67,27 +67,24 @@ public class AutumnAnnotations {
   }
 
   /**
-   * Значение строкового параметра аннотации: сначала по имени, затем по позиции
-   * среди безымянных (позиционных) параметров.
+   * Значение строкового параметра аннотации: приоритет у параметра с заданным
+   * именем; если такого нет — берётся безымянный (позиционный) параметр под
+   * указанным индексом.
    */
   public static @Nullable String stringParameter(Annotation annotation, String name, int positionalIndex) {
-    var parameters = annotation.getParameters();
-    for (var parameter : parameters) {
+    String positionalValue = null;
+    var position = 0;
+    for (var parameter : annotation.getParameters()) {
       if (name.equalsIgnoreCase(parameter.name()) && parameter.value().isLeft()) {
         return parameter.value().getLeft();
       }
-    }
-
-    int position = 0;
-    for (var parameter : parameters) {
-      if (!parameter.name().isEmpty()) {
-        continue;
+      if (parameter.name().isEmpty()) {
+        if (position == positionalIndex && parameter.value().isLeft()) {
+          positionalValue = parameter.value().getLeft();
+        }
+        position++;
       }
-      if (position == positionalIndex && parameter.value().isLeft()) {
-        return parameter.value().getLeft();
-      }
-      position++;
     }
-    return null;
+    return positionalValue;
   }
 }

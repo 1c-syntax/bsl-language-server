@@ -91,7 +91,7 @@ public class AutumnBeanIndex {
    *         {@code &Верховный}, иначе объединяются все кандидаты. Пусто, если
    *         желудь с таким именем не найден.
    */
-  public synchronized TypeSet resolve(String name) {
+  public synchronized TypeSet resolve(@Nullable String name) {
     if (name == null || name.isBlank()) {
       return TypeSet.EMPTY;
     }

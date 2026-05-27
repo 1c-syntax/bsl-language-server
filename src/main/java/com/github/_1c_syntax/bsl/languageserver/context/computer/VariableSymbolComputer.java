@@ -214,7 +214,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
    * охватывающем {@code moduleVar} (общем для всех переменных в одном
    * {@code Перем А, Б;}), поэтому поднимаемся к нему от объявления.
    */
-  private List<Annotation> moduleVarAnnotations(BSLParser.ModuleVarDeclarationContext ctx) {
+  private static List<Annotation> moduleVarAnnotations(BSLParser.ModuleVarDeclarationContext ctx) {
     var moduleVar = (BSLParser.ModuleVarContext) Trees.getRootParent(ctx, BSLParser.RULE_moduleVar);
     if (moduleVar == null) {
       return Collections.emptyList();

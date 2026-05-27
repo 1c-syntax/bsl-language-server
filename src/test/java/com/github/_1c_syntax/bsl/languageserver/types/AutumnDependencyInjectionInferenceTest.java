@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -196,6 +197,6 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   private static List<String> qualifiedNames(TypeSet types) {
-    return types.refs().stream().map(r -> r.qualifiedName()).toList();
+    return types.refs().stream().map(TypeRef::qualifiedName).toList();
   }
 }

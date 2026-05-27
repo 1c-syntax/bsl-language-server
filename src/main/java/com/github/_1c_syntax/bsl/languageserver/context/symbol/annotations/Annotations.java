@@ -39,6 +39,9 @@ import java.util.Optional;
 @UtilityClass
 public class Annotations {
 
+  /** Минимальная длина строкового литерала в кавычках ({@code ""}). */
+  private static final int QUOTED_LITERAL_MIN_LENGTH = 2;
+
   /**
    * Построить список аннотаций из соответствующих узлов AST.
    */
@@ -93,7 +96,7 @@ public class Annotations {
   }
 
   private static String excludeTrailingQuotes(String text) {
-    if (text.length() > 2 && text.charAt(0) == '"') {
+    if (text.length() > QUOTED_LITERAL_MIN_LENGTH && text.charAt(0) == '"') {
       return text.substring(1, text.length() - 1);
     }
     return text;

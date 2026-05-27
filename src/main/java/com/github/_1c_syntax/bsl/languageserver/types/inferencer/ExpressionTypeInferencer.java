@@ -51,7 +51,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
@@ -67,9 +66,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -801,7 +798,7 @@ public class ExpressionTypeInferencer {
     };
   }
 
-  private List<Annotation> parameterAnnotations(VariableSymbol variable) {
+  private static List<Annotation> parameterAnnotations(VariableSymbol variable) {
     if (!(variable.getScope() instanceof MethodSymbol method)) {
       return List.of();
     }

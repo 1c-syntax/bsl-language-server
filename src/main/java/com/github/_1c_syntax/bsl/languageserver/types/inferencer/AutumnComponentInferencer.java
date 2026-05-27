@@ -88,7 +88,7 @@ public class AutumnComponentInferencer {
     }
 
     var beanName = beanName(injection, fallbackName);
-    if (beanName == null || beanName.isBlank()) {
+    if (beanName.isBlank()) {
       return TypeSet.EMPTY;
     }
 
@@ -108,7 +108,7 @@ public class AutumnComponentInferencer {
     return null;
   }
 
-  private static @Nullable String beanName(Annotation injection, String fallbackName) {
+  private static String beanName(Annotation injection, String fallbackName) {
     var name = AutumnAnnotations.stringParameter(injection, AutumnAnnotations.VALUE_PARAMETER, 0);
     if (name != null && !name.isBlank()) {
       return name;

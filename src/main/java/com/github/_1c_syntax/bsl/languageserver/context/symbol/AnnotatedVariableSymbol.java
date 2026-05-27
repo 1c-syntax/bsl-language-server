@@ -50,7 +50,6 @@ public class AnnotatedVariableSymbol extends IntBasedVariableSymbol {
   @Getter
   List<Annotation> annotations;
 
-  @SuppressWarnings("java:S107")
   public AnnotatedVariableSymbol(
     String name,
     SourceDefinedSymbol scope,

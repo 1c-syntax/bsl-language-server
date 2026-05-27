@@ -92,7 +92,7 @@ public class AutumnMetaAnnotationResolver {
   /**
    * Первая аннотация из списка, разворачивающаяся в указанную базовую роль.
    */
-  public Optional<Annotation> findByRole(List<Annotation> annotations, String baseRole) {
+  public Optional<Annotation> findByRole(Iterable<Annotation> annotations, String baseRole) {
     for (var annotation : annotations) {
       if (isRole(annotation.getName(), baseRole)) {
         return Optional.of(annotation);
@@ -104,7 +104,7 @@ public class AutumnMetaAnnotationResolver {
   /**
    * @return {@code true}, если среди аннотаций есть разворачивающаяся в роль.
    */
-  public boolean hasRole(List<Annotation> annotations, String baseRole) {
+  public boolean hasRole(Iterable<Annotation> annotations, String baseRole) {
     return findByRole(annotations, baseRole).isPresent();
   }
 
@@ -112,7 +112,7 @@ public class AutumnMetaAnnotationResolver {
    * Значения параметра {@link AutumnAnnotations#VALUE_PARAMETER} всех аннотаций,
    * разворачивающихся в указанную роль (например, все прозвища желудя).
    */
-  public List<String> valuesByRole(List<Annotation> annotations, String baseRole) {
+  public List<String> valuesByRole(Iterable<Annotation> annotations, String baseRole) {
     var result = new ArrayList<String>();
     for (var annotation : annotations) {
       if (!isRole(annotation.getName(), baseRole)) {
