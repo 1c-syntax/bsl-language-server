@@ -79,7 +79,8 @@ public class AutumnBeanIndex {
 
   /** Имя/прозвище желудя (lowercase) → кандидаты. Доступ под {@code synchronized(this)}. */
   private final Map<String, List<BeanCandidate>> beansByName = new HashMap<>();
-  private boolean built;
+  /** volatile — чтобы быстрый путь листенера читал его без блокировки (см. {@link #handleDocumentChange}). */
+  private volatile boolean built;
 
   /**
    * Кандидат-желудь: тип компонента, признак приоритетного ({@code &Верховный})
@@ -137,9 +138,21 @@ public class AutumnBeanIndex {
    * целиком при первом обращении.
    */
   @EventListener
-  public synchronized void handleDocumentChange(DocumentContextContentChangedEvent event) {
+  public void handleDocumentChange(DocumentContextContentChangedEvent event) {
     var document = event.getSource();
+    // Быстрый путь без блокировки. Во время ServerContext#populateContext события
+    // сыплются из многих потоков, а индекс ещё не построен (built == false) —
+    // synchronized-листенер линеаризовал бы populateContext на мониторе индекса.
+    // Изменения .os-документов до построения захватит ленивый ensureBuilt, .bsl
+    // на желуди не влияют. Лок берём, только когда реально есть что обновлять.
     if (document.getFileType() != FileType.OS || !built) {
+      return;
+    }
+    applyDocumentChange(document);
+  }
+
+  private synchronized void applyDocumentChange(DocumentContext document) {
+    if (!built) {
       return;
     }
     // Правка класса-определения аннотации (&Аннотация) может изменить роль любой
