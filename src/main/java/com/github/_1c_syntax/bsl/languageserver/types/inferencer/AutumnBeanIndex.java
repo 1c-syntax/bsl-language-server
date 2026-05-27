@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
@@ -68,7 +69,8 @@ public class AutumnBeanIndex {
   private final TypeRegistry typeRegistry;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
-  private volatile Map<String, List<BeanCandidate>> beansByName;
+  @Nullable
+  private Map<String, List<BeanCandidate>> beansByName;
 
   /**
    * Кандидат-желудь: тип компонента и признак приоритетного ({@code &Верховный}).
@@ -110,20 +112,15 @@ public class AutumnBeanIndex {
    * Сбросить индекс — будет перестроен при следующем обращении.
    */
   @EventListener(OScriptLibraryIndexedEvent.class)
-  public void invalidate() {
+  public synchronized void invalidate() {
     beansByName = null;
   }
 
-  private Map<String, List<BeanCandidate>> index() {
+  private synchronized Map<String, List<BeanCandidate>> index() {
     var local = beansByName;
     if (local == null) {
-      synchronized (this) {
-        local = beansByName;
-        if (local == null) {
-          local = build();
-          beansByName = local;
-        }
-      }
+      local = build();
+      beansByName = local;
     }
     return local;
   }
@@ -183,7 +180,7 @@ public class AutumnBeanIndex {
     register(map, annotations, name, beanType);
   }
 
-  private TypeRef factoryBeanType(Annotation factory, String beanName) {
+  private @Nullable TypeRef factoryBeanType(Annotation factory, String beanName) {
     var explicitType = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.TYPE_PARAMETER, 1);
     if (explicitType != null && !explicitType.isBlank() && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(explicitType)) {
       return typeRegistry.resolve(explicitType).orElse(null);

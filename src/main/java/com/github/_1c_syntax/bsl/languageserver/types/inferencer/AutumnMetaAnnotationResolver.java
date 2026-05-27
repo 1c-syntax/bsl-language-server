@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
@@ -70,7 +71,8 @@ public class AutumnMetaAnnotationResolver {
   private final ServerContextProvider serverContextProvider;
 
   /** Имя пользовательской аннотации (lowercase) → имена её мета-аннотаций. */
-  private volatile Map<String, List<String>> metaByAnnotation;
+  @Nullable
+  private Map<String, List<String>> metaByAnnotation;
 
   /**
    * Является ли аннотация {@code annotationName} базовой ролью {@code baseRole}
@@ -136,20 +138,15 @@ public class AutumnMetaAnnotationResolver {
   }
 
   @EventListener(OScriptLibraryIndexedEvent.class)
-  public void invalidate() {
+  public synchronized void invalidate() {
     metaByAnnotation = null;
   }
 
-  private Map<String, List<String>> index() {
+  private synchronized Map<String, List<String>> index() {
     var local = metaByAnnotation;
     if (local == null) {
-      synchronized (this) {
-        local = metaByAnnotation;
-        if (local == null) {
-          local = build();
-          metaByAnnotation = local;
-        }
-      }
+      local = build();
+      metaByAnnotation = local;
     }
     return local;
   }
