@@ -50,6 +50,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticTokensSupplier {
 
+  private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
+  private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS =
+    {SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async};
+
   private final GlobalScopeProvider globalScopeProvider;
   private final SemanticTokensHelper helper;
 
@@ -77,17 +81,20 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
       if (symbolTree != null && symbolTree.getMethodSymbol(name).isPresent()) {
         continue;
       }
-      if (globalScopeProvider.findFunction(name, fileType).isEmpty()) {
-        continue;
-      }
-      helper.addRange(
-        entries,
-        Ranges.create(methodNameCtx),
-        SemanticTokenTypes.Function,
-        SemanticTokenModifiers.DefaultLibrary
+      globalScopeProvider.findFunction(name, fileType).ifPresent(function ->
+        helper.addRange(
+          entries,
+          Ranges.create(methodNameCtx),
+          SemanticTokenTypes.Function,
+          modifiers(function.async())
+        )
       );
     }
 
     return entries;
+  }
+
+  private static String[] modifiers(boolean async) {
+    return async ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
   }
 }

@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -100,6 +102,24 @@ class TypeRegistrySpecializationTest {
       .findFirst().orElseThrow();
     assertThat(getObject.returnType().qualifiedName())
       .isEqualTo("СправочникОбъект.МойТестовый");
+  }
+
+  @Test
+  void specializedTypeDisplayNameIsBilingualFromGenericDisplay() {
+    // Двуязычное display-имя специализации: ru — из qualifiedName, en —
+    // структурная подстановка MD-имени в en-написание display-имени generic'а
+    // (placeholder'ы из bsl-context, без парсинга скобок на стороне LS).
+    var generic = typeRegistry.registerConfigurationType("ТестДженерик.<Имя>");
+    typeRegistry.registerDisplayName(generic,
+      BilingualString.of("ТестДженерик.<Имя>", "TestGeneric.<Name>"));
+
+    var specRef = typeRegistry.registerSpecialization(
+      "ТестДженерик.Контрагенты", generic,
+      Map.of("Имя", "Контрагенты"),
+      LanguageScope.BSL);
+
+    assertThat(typeRegistry.displayName(specRef, Language.RU)).isEqualTo("ТестДженерик.Контрагенты");
+    assertThat(typeRegistry.displayName(specRef, Language.EN)).isEqualTo("TestGeneric.Контрагенты");
   }
 
   // === read-only members ===

@@ -54,6 +54,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.LinkedHashSet;
@@ -448,6 +449,7 @@ public class TypeRegistry {
       return;
     }
     var safeBindings = Map.copyOf(bindings);
+    registerSpecializedDisplayName(specializedRef, genericRef, safeBindings);
     var effectiveScope = scope;
     MemberSource source = () -> {
       var raw = getMembers(genericRef);
@@ -472,6 +474,51 @@ public class TypeRegistry {
       return result;
     };
     registerMemberSource(specializedRef, source, effectiveScope);
+  }
+
+  /**
+   * Двуязычное отображаемое имя специализированного типа: ru-сторона — уже
+   * структурно специализированный {@code specializedRef.qualifiedName()}
+   * ({@code СправочникСсылка.Контрагенты}), en-сторона — подстановка того же
+   * MD-имени в en-написание display-имени generic'а
+   * ({@code CatalogRef.<Catalog name>} → {@code CatalogRef.Контрагенты}).
+   * Так конфигурационный тип в hover показывается на языке интерфейса.
+   * Если у generic'а нет en-стороны display-имени — регистрация пропускается
+   * (fallback {@link #displayName(TypeRef, Language)} на qualifiedName и так ru).
+   */
+  private void registerSpecializedDisplayName(TypeRef specializedRef, TypeRef genericRef,
+                                              Map<String, String> bindings) {
+    if (bindings.size() != 1) {
+      return;
+    }
+    var genericName = displayNames.get(genericRef);
+    if (genericName == null || genericName.en().isEmpty()) {
+      return;
+    }
+    var value = bindings.values().iterator().next();
+    var en = specializeName(genericRef.kind(), genericName.en(), value);
+    displayNames.putIfAbsent(specializedRef,
+      BilingualString.of(specializedRef.qualifiedName(), en));
+  }
+
+  /**
+   * Подставляет {@code value} вместо placeholder'ов в имени, используя их
+   * структурные позиции из bsl-context ({@link TypeRef#placeholders()} →
+   * {@code ContextNames.placeholders}). Парсинга угловых скобок на стороне LS
+   * нет. Имя placeholder'а в en-написании отличается от ru, поэтому bindings
+   * строятся по фактическим именам, а не по ключам исходного binding'а.
+   */
+  private static String specializeName(TypeKind kind, String name, String value) {
+    var ref = new TypeRef(kind, name);
+    var placeholders = ref.placeholders();
+    if (placeholders.isEmpty()) {
+      return name;
+    }
+    var bindings = HashMap.<String, String>newHashMap(placeholders.size());
+    for (var placeholder : placeholders) {
+      bindings.put(placeholder.name(), value);
+    }
+    return TypeRef.specialize(ref, bindings).qualifiedName();
   }
 
   /**
@@ -510,6 +557,19 @@ public class TypeRegistry {
    */
   public void registerConfigurationTypeAlias(String alias, TypeRef ref) {
     addAlias(alias, ref);
+  }
+
+  /**
+   * Явно задать двуязычное отображаемое имя типа. Нужно конфигурационным
+   * типам, которые регистрируются императивно (без {@link TypePackProvider.TypeDecl}
+   * с готовым bilingual-именем): иначе {@link #displayName(TypeRef, Language)}
+   * для них в EN отдаёт ru-написание qualifiedName.
+   */
+  public void registerDisplayName(TypeRef ref, BilingualString name) {
+    if (name.isEmpty()) {
+      return;
+    }
+    displayNames.putIfAbsent(ref, name);
   }
 
   /**

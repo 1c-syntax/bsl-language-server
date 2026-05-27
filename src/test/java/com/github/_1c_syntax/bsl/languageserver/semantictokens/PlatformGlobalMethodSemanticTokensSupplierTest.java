@@ -32,6 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,6 +61,24 @@ class PlatformGlobalMethodSemanticTokensSupplierTest {
     var expected = List.of(
       new ExpectedToken(1, 2, 8, SemanticTokenTypes.Function,
         SemanticTokenModifiers.DefaultLibrary, "Сообщить")
+    );
+    helper.assertTokensMatch(decoded, expected);
+  }
+
+  @Test
+  void emitsAsyncModifierForAsyncGlobal() {
+    // ВопросАсинх — асинхронная глобальная функция → Method+DefaultLibrary+Async.
+    String bsl = """
+      Процедура Тест()
+        ВопросАсинх("?", Ложь);
+      КонецПроцедуры
+      """;
+
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    var expected = List.of(
+      new ExpectedToken(1, 2, 11, SemanticTokenTypes.Function,
+        Set.of(SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async), "ВопросАсинх")
     );
     helper.assertTokensMatch(decoded, expected);
   }

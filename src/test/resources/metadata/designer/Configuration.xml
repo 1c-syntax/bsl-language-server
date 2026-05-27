@@ -205,6 +205,7 @@
 			<Catalog>Справочник1</Catalog>
 			<Catalog>СправочникСМенеджером</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>
+			<FilterCriterion>КритерийОтбора1</FilterCriterion>
 			<Document>Документ1</Document>
 			<ScheduledJob>РегламентноеЗадание1</ScheduledJob>
 			<ScheduledJob>РегламентноеЗадание2</ScheduledJob>

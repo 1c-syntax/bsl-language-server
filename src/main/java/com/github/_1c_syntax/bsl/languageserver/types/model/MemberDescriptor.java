@@ -48,6 +48,7 @@ import java.util.Optional;
  * @param sourceSymbol         опциональный символ-источник
  * @param generic              признак «слотового» члена generic-типа платформы
  * @param metadata             платформенные метаданные
+ * @param async                асинхронный метод (await-стиль, суффикс Асинх/Async)
  */
 public record MemberDescriptor(
   BilingualString bilingualName,
@@ -57,7 +58,8 @@ public record MemberDescriptor(
   List<SignatureDescriptor> signatures,
   Symbol sourceSymbol,
   boolean generic,
-  PlatformMetadata metadata
+  PlatformMetadata metadata,
+  boolean async
 ) {
 
   public MemberDescriptor {
@@ -74,6 +76,14 @@ public record MemberDescriptor(
     if (bilingualDescription == null) {
       bilingualDescription = BilingualString.EMPTY;
     }
+  }
+
+  /** Compat-конструктор без {@code async} (async = false). */
+  public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
+                          TypeSet returnTypes, List<SignatureDescriptor> signatures, Symbol sourceSymbol,
+                          boolean generic, PlatformMetadata metadata) {
+    this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
+      generic, metadata, false);
   }
 
   /** Compat-конструктор: одноязычные {@code name}/{@code description}. */
@@ -156,25 +166,31 @@ public record MemberDescriptor(
   /** Копия дескриптора с прикреплённым символом-источником. */
   public MemberDescriptor withSourceSymbol(Symbol symbol) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      signatures, symbol, generic, metadata);
+      signatures, symbol, generic, metadata, async);
   }
 
   /** Копия дескриптора с заменёнными метаданными платформы. */
   public MemberDescriptor withMetadata(PlatformMetadata newMetadata) {
     return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
-      signatures, sourceSymbol, generic, newMetadata);
+      signatures, sourceSymbol, generic, newMetadata, async);
   }
 
   /** Копия дескриптора с заполненным двуязычным именем (ru + en). */
   public MemberDescriptor withBilingualName(BilingualString newName) {
     return new MemberDescriptor(newName,
-      kind, bilingualDescription, returnTypes, signatures, sourceSymbol, generic, metadata);
+      kind, bilingualDescription, returnTypes, signatures, sourceSymbol, generic, metadata, async);
   }
 
   /** Копия дескриптора с заполненным двуязычным описанием (ru + en). */
   public MemberDescriptor withBilingualDescription(BilingualString newDescription) {
     return new MemberDescriptor(bilingualName, kind, newDescription,
-      returnTypes, signatures, sourceSymbol, generic, metadata);
+      returnTypes, signatures, sourceSymbol, generic, metadata, async);
+  }
+
+  /** Копия дескриптора с признаком асинхронности. */
+  public MemberDescriptor withAsync(boolean newAsync) {
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
+      signatures, sourceSymbol, generic, metadata, newAsync);
   }
 
   /** Compat shortcut для двуязычных имён ru/en строками. */
@@ -213,7 +229,7 @@ public record MemberDescriptor(
       return this;
     }
     return new MemberDescriptor(bilingualName, kind, bilingualDescription,
-      newReturnTypes, newSignatures, sourceSymbol, generic, metadata);
+      newReturnTypes, newSignatures, sourceSymbol, generic, metadata, async);
   }
 
   public static MemberDescriptor method(String name) {

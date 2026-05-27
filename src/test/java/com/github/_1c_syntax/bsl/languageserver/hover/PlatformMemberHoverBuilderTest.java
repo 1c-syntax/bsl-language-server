@@ -170,6 +170,30 @@ class PlatformMemberHoverBuilderTest {
   }
 
   @Test
+  void asyncMethodRendersAsyncLabel() {
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("ИнициализироватьАсинх"), MemberKind.METHOD, BilingualString.EMPTY,
+      TypeSet.EMPTY, List.of(), null, false, PlatformMetadata.EMPTY
+    ).withAsync(true);
+
+    var value = builder.build(null, descriptor, -1).getValue();
+
+    assertThat(value).contains("[asyncMethod]");
+  }
+
+  @Test
+  void nonAsyncMethodHasNoAsyncLabel() {
+    var descriptor = new MemberDescriptor(
+      BilingualString.of("Инициализировать"), MemberKind.METHOD, BilingualString.EMPTY,
+      TypeSet.EMPTY, List.of(), null, false, PlatformMetadata.EMPTY
+    );
+
+    var value = builder.build(null, descriptor, -1).getValue();
+
+    assertThat(value).doesNotContain("[asyncMethod]");
+  }
+
+  @Test
   void appendMetadataReadWriteAccessMode() {
     // given
     var meta = new PlatformMetadata(

@@ -67,6 +67,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier {
 
+  private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
+  private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS =
+    {SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async};
+
   private final GlobalScopeProvider globalScopeProvider;
   private final TypeRegistry typeRegistry;
   private final SemanticTokensHelper helper;
@@ -206,8 +210,8 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     // Source-defined методы (общий модуль, модуль менеджера) красит
     // MethodCallSemanticTokensSupplier как Method+Static — не дублируем.
     if (!(member.sourceSymbol() instanceof SourceDefinedSymbol)) {
-      helper.addRange(entries, Ranges.create(methodName),
-        SemanticTokenTypes.Method, SemanticTokenModifiers.DefaultLibrary);
+      var modifiers = member.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
+      helper.addRange(entries, Ranges.create(methodName), SemanticTokenTypes.Method, modifiers);
     }
     return member.returnType();
   }
