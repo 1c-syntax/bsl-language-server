@@ -237,6 +237,29 @@ class AutumnMetaAnnotationResolverTest {
     assertThat(resolver.isRole("Впрыск", AutumnAnnotations.INJECTION)).isTrue();
   }
 
+  @Test
+  void ignoresChangeOfNonClassDocument() {
+    // given: индекс построен по классу-определению аннотации
+    registerAnnotationClass("АннотацияВнедряемое",
+      marker("Внедряемое"), plainAnnotation("Пластилин"));
+    init();
+    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
+
+    // when: изменён .os-документ, зарегистрированный только как МОДУЛЬ (не класс)
+    var moduleUri = URI.create("file:///ann/Модуль.os");
+    when(libraryIndex.findEntriesByUri(moduleUri))
+      .thenReturn(List.of(new LibraryEntry(moduleUri, "Модуль", EntryKind.MODULE, "lib", false)));
+    var document = mock(DocumentContext.class);
+    when(document.getFileType()).thenReturn(FileType.OS);
+    when(document.getUri()).thenReturn(moduleUri);
+    var event = mock(DocumentContextContentChangedEvent.class);
+    when(event.getSource()).thenReturn(document);
+    resolver.handleDocumentChange(event);
+
+    // then: индекс не изменился
+    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   private void registerAnnotationClass(String qualifiedName, Annotation... constructorAnnotations) {

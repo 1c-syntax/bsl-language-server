@@ -282,6 +282,29 @@ class AutumnBeanIndexTest {
     assertThat(beanIndex.resolve("Новый").refs()).containsExactly(newType);
   }
 
+  @Test
+  void ignoresChangeOfNonClassDocument() {
+    // given: индекс построен по классу-желудю
+    var type = new TypeRef(TypeKind.USER, "Логгер");
+    registerClass("Логгер", type, method(component(null)));
+    init();
+    assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
+
+    // when: изменён .os-документ, который зарегистрирован только как МОДУЛЬ (не класс)
+    var moduleUri = URI.create("file:///beans/Модуль.os");
+    when(libraryIndex.findEntriesByUri(moduleUri))
+      .thenReturn(List.of(new LibraryEntry(moduleUri, "Модуль", EntryKind.MODULE, "lib", false)));
+    var document = mock(DocumentContext.class);
+    when(document.getFileType()).thenReturn(FileType.OS);
+    when(document.getUri()).thenReturn(moduleUri);
+    var event = mock(DocumentContextContentChangedEvent.class);
+    when(event.getSource()).thenReturn(document);
+    beanIndex.handleDocumentChange(event);
+
+    // then: индекс не изменился (модульный документ желудей не даёт)
+    assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   private URI registerEntry(String qualifiedName) {
