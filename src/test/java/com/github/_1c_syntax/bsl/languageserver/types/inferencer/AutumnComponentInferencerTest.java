@@ -76,8 +76,7 @@ class AutumnComponentInferencerTest {
   void resolvesBeanByPositionalName() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
-    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
-    when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(beanRef));
     var annotations = List.of(plasticine(positional("ИмяЖелудя")));
 
     // when
@@ -91,8 +90,7 @@ class AutumnComponentInferencerTest {
   void resolvesBeanByNamedValueParameter() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
-    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
-    when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(beanRef));
     var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя")));
 
     // when
@@ -106,8 +104,7 @@ class AutumnComponentInferencerTest {
   void fallsBackToVariableNameWhenAnnotationHasNoValue() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "Логин");
-    when(beanIndex.resolve("Логин")).thenReturn(TypeSet.EMPTY);
-    when(typeRegistry.resolve("Логин", FILE_TYPE)).thenReturn(Optional.of(beanRef));
+    when(beanIndex.resolve("Логин")).thenReturn(TypeSet.of(beanRef));
     var annotations = List.of(plasticine());
 
     // when
@@ -135,8 +132,7 @@ class AutumnComponentInferencerTest {
   void fallsBackToBeanNameWhenTypeIsBlank() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
-    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
-    when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(beanRef));
     var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "")));
 
     // when
@@ -150,8 +146,7 @@ class AutumnComponentInferencerTest {
   void resolvesByBeanNameWhenTypeIsBeanLiteral() {
     // given
     var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
-    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
-    when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.of(beanRef));
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(beanRef));
     var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "Желудь")));
 
     // when
@@ -162,17 +157,18 @@ class AutumnComponentInferencerTest {
   }
 
   @Test
-  void prefersBeanIndexOverDirectTypeResolution() {
-    // given
-    var renamedRef = new TypeRef(TypeKind.USER, "ПереименованныйКласс");
-    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(renamedRef));
+  void resolvesBeanNameOnlyViaBeanIndexNotByType() {
+    // given: имя желудя резолвится через реестр желудей, а не как имя типа —
+    // TypeRegistry для имени желудя не должен дёргаться вовсе.
+    var beanRef = new TypeRef(TypeKind.USER, "ПереименованныйКласс");
+    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(beanRef));
     var annotations = List.of(plasticine(positional("ИмяЖелудя")));
 
     // when
     var types = inferencer.inferInjectedType(annotations, "Поле", FILE_TYPE);
 
     // then
-    assertThat(types.refs()).containsExactly(renamedRef);
+    assertThat(types.refs()).containsExactly(beanRef);
     verifyNoInteractions(typeRegistry);
   }
 
@@ -204,10 +200,9 @@ class AutumnComponentInferencerTest {
   }
 
   @Test
-  void returnsEmptyWhenTypeUnresolved() {
-    // given
+  void returnsEmptyWhenBeanNotInIndex() {
+    // given: желудя с таким именем нет в реестре желудей
     when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.EMPTY);
-    when(typeRegistry.resolve("ИмяЖелудя", FILE_TYPE)).thenReturn(Optional.empty());
     var annotations = List.of(plasticine(positional("ИмяЖелудя")));
 
     // when
@@ -215,6 +210,7 @@ class AutumnComponentInferencerTest {
 
     // then
     assertThat(types.isEmpty()).isTrue();
+    verifyNoInteractions(typeRegistry);
   }
 
   private static Annotation plasticine(AnnotationParameterDefinition... parameters) {

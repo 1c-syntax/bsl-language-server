@@ -92,13 +92,11 @@ public class AutumnComponentInferencer {
       return TypeSet.EMPTY;
     }
 
-    var fromIndex = beanIndex.resolve(beanName);
-    if (!fromIndex.isEmpty()) {
-      return fromIndex;
-    }
-    return typeRegistry.resolve(beanName, fileType)
-      .map(TypeSet::of)
-      .orElse(TypeSet.EMPTY);
+    // Имя желудя резолвится ТОЛЬКО через реестр желудей. В ОСени внедрение идёт
+    // по имени желудя (&Желудь/&Завязь/&Прозвище), а не по имени типа, поэтому
+    // fallback на TypeRegistry.resolve(имя) недопустим — он бы выдавал тип для
+    // любого одноимённого класса, даже если желудя с таким именем нет.
+    return beanIndex.resolve(beanName);
   }
 
   private static @Nullable String collectionType(Annotation injection) {
