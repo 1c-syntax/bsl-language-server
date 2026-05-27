@@ -390,6 +390,62 @@ public class TypeService {
     return result;
   }
 
+  /**
+   * Обращение к члену ({@code ресивер.член}), у которого тип ресивера выведен и
+   * конкретен, но члена с таким именем нет ни на одном из типов-владельцев —
+   * вероятная опечатка/несуществующий член. Возвращает {@code false}, если это
+   * не обращение к члену, тип ресивера не выведен либо среди кандидатов есть
+   * неопределённый/произвольный тип (тогда судить нельзя).
+   */
+  public boolean isUnknownMemberAt(DocumentContext documentContext, Position position) {
+    var terminal = identifierTerminalAt(documentContext, position).orElse(null);
+    if (terminal == null || !isAccessorIdentifier(terminal)) {
+      return false;
+    }
+    var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
+    if (expression == null) {
+      return false;
+    }
+    var dereference = findDereferenceForTerminal(expression, terminal);
+    if (dereference == null) {
+      return false;
+    }
+    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
+    var refs = leftTypes.refs();
+    if (refs.isEmpty()
+      || refs.stream().anyMatch(ref -> ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN))) {
+      return false;
+    }
+    var memberName = terminal.getText();
+    for (var owner : refs) {
+      for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
+        if (member.matches(memberName)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Голый вызов {@code Имя(...)}, который не резолвится ни в глобальную функцию/
+   * свойство/перечисление платформы или конфигурации, ни в source-defined символ
+   * (метод/переменная текущего модуля). Вероятный вызов несуществующего метода.
+   */
+  public boolean isUnknownGlobalAt(DocumentContext documentContext, Position position) {
+    var terminal = identifierTerminalAt(documentContext, position).orElse(null);
+    if (terminal == null || isAccessorIdentifier(terminal)) {
+      return false;
+    }
+    var name = terminal.getText();
+    var fileType = documentContext.getFileType();
+    typeRegistry.resolve(name);
+    if (globalScopeProvider.findGlobal(name, fileType).isPresent()) {
+      return false;
+    }
+    return referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
+  }
+
   private static int countMeaningfulArgs(MethodCallNode call) {
     var args = call.arguments();
     int n = args.size();

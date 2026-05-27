@@ -2019,13 +2019,13 @@
             "$id": "#/definitions/UnaryPlusInConcatenation"
         },
         "UnavailableMemberCall": {
-            "description": "Use of a member unavailable in the target platform version",
+            "description": "Use of a method\\attribute unavailable in the target platform version",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Use of a member unavailable in the target platform version",
+            "title": "Use of a method\\attribute unavailable in the target platform version",
             "$id": "#/definitions/UnavailableMemberCall"
         },
         "UnionAll": {
@@ -2037,6 +2037,16 @@
             ],
             "title": "Using keyword \"UNION\" in queries",
             "$id": "#/definitions/UnionAll"
+        },
+        "UnknownMember": {
+            "description": "Reference to an unknown method or property",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Reference to an unknown method or property",
+            "$id": "#/definitions/UnknownMember"
         },
         "UnknownPreprocessorSymbol": {
             "description": "Unknown preprocessor symbol",

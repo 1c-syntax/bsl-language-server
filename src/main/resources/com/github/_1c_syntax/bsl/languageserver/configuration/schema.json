@@ -470,6 +470,9 @@
                 "UnionAll": {
                     "$ref": "parameters-schema.json#/definitions/UnionAll"
                 },
+                "UnknownMember": {
+                    "$ref": "parameters-schema.json#/definitions/UnknownMember"
+                },
                 "UnknownPreprocessorSymbol": {
                     "$ref": "parameters-schema.json#/definitions/UnknownPreprocessorSymbol"
                 },
