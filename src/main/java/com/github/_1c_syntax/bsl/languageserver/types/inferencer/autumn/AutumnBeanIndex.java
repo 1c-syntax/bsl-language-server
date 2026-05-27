@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс желудей фреймворка «ОСень»: отображение «имя/прозвище желудя → тип».
@@ -64,8 +66,13 @@ import java.util.Optional;
  * Аннотации компонента ({@code &Желудь}/{@code &Дуб}) размещаются только над
  * конструктором, поэтому он берётся из дерева символов напрямую; методы
  * сканируются на {@code &Завязь} лишь когда класс — дуб.
- * Строится лениво из {@link OScriptLibraryIndex} (классы-желуди) и сбрасывается
- * при переиндексации библиотек.
+ * <p>
+ * Индекс хранится как неизменяемый {@link Snapshot} за атомарной ссылкой, поэтому
+ * чтение ({@link #resolve}) полностью lock-free и параллельно — это важно, т.к.
+ * вывод типов вызывается из диагностик в parallel-стримах. Сборка ленивая и
+ * выполняется ровно один раз: гонка читателей разрешается через общий
+ * {@link CompletableFuture} (остальные ждут тот же результат, без дублирующих
+ * сканов). Правки/удаления применяются copy-on-write через CAS.
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -77,17 +84,22 @@ public class AutumnBeanIndex {
   private final TypeRegistry typeRegistry;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
-  /** Имя/прозвище желудя (lowercase) → кандидаты. Доступ под {@code synchronized(this)}. */
-  private final Map<String, List<BeanCandidate>> beansByName = new HashMap<>();
-  /** volatile — чтобы быстрый путь листенера читал его без блокировки (см. {@link #handleDocumentChange}). */
-  private volatile boolean built;
+  /**
+   * Future с текущим неизменяемым снимком индекса; {@code null} — индекс не
+   * построен (соберётся лениво при первом обращении).
+   */
+  private final AtomicReference<CompletableFuture<Snapshot>> snapshotRef = new AtomicReference<>();
 
   /**
    * Кандидат-желудь: тип компонента, признак приоритетного ({@code &Верховный})
-   * и URI .os-файла, из которого он зарегистрирован (для инкрементального
-   * пере-сканирования при правке файла).
+   * и URI .os-файла, из которого он зарегистрирован (для пере-сканирования при
+   * правке файла).
    */
   private record BeanCandidate(TypeRef type, boolean primary, URI sourceUri) {
+  }
+
+  /** Неизменяемый снимок индекса: имя/прозвище желудя (lowercase) → кандидаты. */
+  private record Snapshot(Map<String, List<BeanCandidate>> beansByName) {
   }
 
   /**
@@ -97,12 +109,11 @@ public class AutumnBeanIndex {
    *         {@code &Верховный}, иначе объединяются все кандидаты. Пусто, если
    *         желудь с таким именем не найден.
    */
-  public synchronized TypeSet resolve(String name) {
+  public TypeSet resolve(String name) {
     if (name.isBlank()) {
       return TypeSet.EMPTY;
     }
-    ensureBuilt();
-    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
+    var candidates = current().beansByName().get(name.toLowerCase(Locale.ROOT));
     if (candidates == null || candidates.isEmpty()) {
       return TypeSet.EMPTY;
     }
@@ -126,46 +137,108 @@ public class AutumnBeanIndex {
    * Реакция на переиндексацию библиотек (мог измениться состав классов).
    */
   @EventListener(OScriptLibraryIndexedEvent.class)
-  public synchronized void invalidate() {
-    beansByName.clear();
-    built = false;
+  public void invalidate() {
+    snapshotRef.set(null);
   }
 
   /**
-   * Инкрементально пере-сканировать изменённый .os-документ: правка желудя
-   * (имя, прозвища, {@code &Завязь}) меняет только его вклад в индекс — остальное
-   * не трогаем. Если индекс ещё не построен, ничего не делаем: он соберётся
-   * целиком при первом обращении.
+   * Пере-сканировать изменённый .os-документ. Правка класса-определения
+   * аннотации ({@code &Аннотация}) меняет роль аннотации во всех использующих её
+   * классах — такой случай сбрасывает индекс целиком; обычный класс обновляется
+   * точечно (copy-on-write). Если индекс ещё не построен — ничего не делаем, он
+   * соберётся целиком при первом обращении.
    */
   @EventListener
   public void handleDocumentChange(DocumentContextContentChangedEvent event) {
     var document = event.getSource();
-    // Быстрый путь без блокировки. Во время ServerContext#populateContext события
-    // сыплются из многих потоков, а индекс ещё не построен (built == false) —
-    // synchronized-листенер линеаризовал бы populateContext на мониторе индекса.
-    // Изменения .os-документов до построения захватит ленивый ensureBuilt, .bsl
-    // на желуди не влияют. Лок берём, только когда реально есть что обновлять.
-    if (document.getFileType() != FileType.OS || !built) {
+    // Lock-free быстрый путь: во время ServerContext#populateContext события
+    // сыплются из многих потоков, а индекс ещё не построен (snapshotRef == null).
+    // .bsl на желуди не влияют; правки .os до построения захватит ленивая сборка.
+    if (document.getFileType() != FileType.OS || snapshotRef.get() == null) {
       return;
     }
-    applyDocumentChange(document);
+    if (isAnnotationDefinition(document)) {
+      snapshotRef.set(null);
+      return;
+    }
+    reindexDocument(document.getUri());
   }
 
-  private synchronized void applyDocumentChange(DocumentContext document) {
-    if (!built) {
-      return;
+  /** Текущий снимок; строит лениво ровно один раз — гонщики ждут общий future. */
+  private Snapshot current() {
+    while (true) {
+      var pending = snapshotRef.get();
+      if (pending != null) {
+        return pending.join();
+      }
+      var fresh = new CompletableFuture<Snapshot>();
+      if (snapshotRef.compareAndSet(null, fresh)) {
+        try {
+          var snapshot = build();
+          fresh.complete(snapshot);
+          return snapshot;
+        } catch (RuntimeException e) {
+          // Дать возможность пересобрать при следующем обращении.
+          snapshotRef.compareAndSet(fresh, null);
+          fresh.completeExceptionally(e);
+          throw e;
+        }
+      }
+      // Другой поток уже устанавливает future — повторим и присоединимся к нему.
     }
-    // Правка класса-определения аннотации (&Аннотация) может изменить роль любой
-    // аннотации, разворачивающейся через него, а значит — состав желудей в любом
-    // использующем её классе. Точечного обновления здесь мало: сбрасываем индекс
-    // целиком (определения аннотаций правят редко, ребилд ленивый).
-    if (isAnnotationDefinition(document)) {
-      invalidate();
-      return;
+  }
+
+  /** Точечно переиндексировать один .os-документ поверх текущего снимка (CAS-retry). */
+  private void reindexDocument(URI uri) {
+    while (true) {
+      var pending = snapshotRef.get();
+      if (pending == null) {
+        return;
+      }
+      Snapshot base;
+      try {
+        base = pending.join();
+      } catch (RuntimeException e) {
+        return;
+      }
+      var beans = mutableCopyWithout(base, uri);
+      indexDocument(uri, beans);
+      if (snapshotRef.compareAndSet(pending, CompletableFuture.completedFuture(freeze(beans)))) {
+        return;
+      }
     }
-    var uri = document.getUri();
-    removeDocument(uri);
-    indexDocument(uri);
+  }
+
+  private Snapshot build() {
+    var beans = new HashMap<String, List<BeanCandidate>>();
+    libraryIndex.findEntries(EntryKind.CLASS).stream()
+      .map(OScriptLibraryIndex.LibraryEntry::uri)
+      .distinct()
+      .forEach(uri -> indexDocument(uri, beans));
+    return freeze(beans);
+  }
+
+  /** Изменяемая копия снимка без кандидатов, зарегистрированных из указанного .os-файла. */
+  private static Map<String, List<BeanCandidate>> mutableCopyWithout(Snapshot base, URI uri) {
+    var beans = new HashMap<String, List<BeanCandidate>>();
+    base.beansByName().forEach((name, candidates) -> {
+      var retained = new ArrayList<BeanCandidate>();
+      for (var candidate : candidates) {
+        if (!uri.equals(candidate.sourceUri())) {
+          retained.add(candidate);
+        }
+      }
+      if (!retained.isEmpty()) {
+        beans.put(name, retained);
+      }
+    });
+    return beans;
+  }
+
+  private static Snapshot freeze(Map<String, List<BeanCandidate>> beans) {
+    var frozen = new HashMap<String, List<BeanCandidate>>(beans.size());
+    beans.forEach((name, candidates) -> frozen.put(name, List.copyOf(candidates)));
+    return new Snapshot(Map.copyOf(frozen));
   }
 
   /** Несёт ли конструктор класса маркер {@code &Аннотация} (класс-определение пользовательской аннотации). */
@@ -176,32 +249,8 @@ public class AutumnBeanIndex {
       .orElse(false);
   }
 
-  private void ensureBuilt() {
-    if (built) {
-      return;
-    }
-    beansByName.clear();
-    libraryIndex.findEntries(EntryKind.CLASS).stream()
-      .map(OScriptLibraryIndex.LibraryEntry::uri)
-      .distinct()
-      .forEach(this::indexDocument);
-    built = true;
-  }
-
-  /** Удалить из индекса все кандидаты, зарегистрированные из указанного .os-файла. */
-  private void removeDocument(URI uri) {
-    var iterator = beansByName.values().iterator();
-    while (iterator.hasNext()) {
-      var candidates = iterator.next();
-      candidates.removeIf(candidate -> uri.equals(candidate.sourceUri()));
-      if (candidates.isEmpty()) {
-        iterator.remove();
-      }
-    }
-  }
-
-  /** Проиндексировать желуди и фабрики, объявленные в .os-классе по указанному URI. */
-  private void indexDocument(URI uri) {
+  /** Проиндексировать желуди и фабрики .os-класса по URI в переданную (локальную) мапу. */
+  private void indexDocument(URI uri, Map<String, List<BeanCandidate>> beans) {
     var classEntries = libraryIndex.findEntriesByUri(uri).stream()
       .filter(entry -> entry.kind() == EntryKind.CLASS)
       .toList();
@@ -234,7 +283,7 @@ public class AutumnBeanIndex {
     for (var entry : classEntries) {
       var ownerType = typeRegistry.resolve(entry.qualifiedName()).orElse(null);
       if (ownerType != null) {
-        registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri);
+        registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri, beans);
       }
     }
 
@@ -242,12 +291,13 @@ public class AutumnBeanIndex {
     // иначе методы как фабрики не трактуем.
     if (metaAnnotationResolver.hasRole(constructorAnnotations, AutumnAnnotations.OAK)) {
       for (var method : symbolTree.getMethods()) {
-        registerFactory(method, uri);
+        registerFactory(method, uri, beans);
       }
     }
   }
 
-  private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri) {
+  private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri,
+                                 Map<String, List<BeanCandidate>> beans) {
     // &Желудь либо &Дуб: класс является желудём (дуб сам по себе тоже желудь).
     var component = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.COMPONENT)
       .or(() -> metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.OAK))
@@ -258,10 +308,10 @@ public class AutumnBeanIndex {
     var name = AutumnAnnotations.stringParameter(component, AutumnAnnotations.VALUE_PARAMETER)
       .filter(value -> !value.isBlank())
       .orElse(defaultName);
-    register(annotations, name, ownerType, uri);
+    register(annotations, name, ownerType, uri, beans);
   }
 
-  private void registerFactory(MethodSymbol method, URI uri) {
+  private void registerFactory(MethodSymbol method, URI uri, Map<String, List<BeanCandidate>> beans) {
     var annotations = method.getAnnotations();
     var factory = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.FACTORY).orElse(null);
     if (factory == null) {
@@ -274,7 +324,7 @@ public class AutumnBeanIndex {
     if (beanType == null) {
       return;
     }
-    register(annotations, name, beanType, uri);
+    register(annotations, name, beanType, uri, beans);
   }
 
   private @Nullable TypeRef factoryBeanType(Annotation factory, String beanName) {
@@ -286,17 +336,18 @@ public class AutumnBeanIndex {
       .orElse(null);
   }
 
-  private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri) {
+  private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri,
+                        Map<String, List<BeanCandidate>> beans) {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
     var candidate = new BeanCandidate(type, primary, uri);
 
-    addCandidate(primaryName, candidate);
+    addCandidate(primaryName, candidate, beans);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {
-      addCandidate(alias, candidate);
+      addCandidate(alias, candidate, beans);
     }
   }
 
-  private void addCandidate(String name, BeanCandidate candidate) {
-    beansByName.computeIfAbsent(name.toLowerCase(Locale.ROOT), key -> new ArrayList<>()).add(candidate);
+  private static void addCandidate(String name, BeanCandidate candidate, Map<String, List<BeanCandidate>> beans) {
+    beans.computeIfAbsent(name.toLowerCase(Locale.ROOT), key -> new ArrayList<>()).add(candidate);
   }
 }
