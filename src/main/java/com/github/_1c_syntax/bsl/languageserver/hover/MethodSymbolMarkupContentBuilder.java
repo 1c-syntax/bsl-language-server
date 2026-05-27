@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.StringJoiner;
@@ -84,10 +83,6 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }
 
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Method;
-  }
 
   @Override
   public Class<? extends Symbol> getSymbolClass() {

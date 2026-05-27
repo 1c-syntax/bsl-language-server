@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.ConstructorCallSymb
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 /**
@@ -60,10 +59,6 @@ public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder
     return constructorHoverBuilder.build(symbol.getTypeName(), symbol.getTypeRef(), chosen, ctors, disclaim, symbol.getClassDescription());
   }
 
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Constructor;
-  }
 
   @Override
   public Class<? extends Symbol> getSymbolClass() {

@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -67,18 +66,5 @@ class AnnotationSymbolMarkupContentBuilderTest {
     // then
     assertThat(content.getValue()).isEmpty();
     assertThat(content.getKind()).isEqualTo(MarkupKind.MARKDOWN);
-  }
-
-  @Test
-  void testGetSymbolKind() {
-    // given
-    var descriptionFormatter = Mockito.mock(DescriptionFormatter.class);
-    var builder = new AnnotationSymbolMarkupContentBuilder(descriptionFormatter);
-
-    // when
-    SymbolKind symbolKind = builder.getSymbolKind();
-
-    // then
-    assertThat(symbolKind).isEqualTo(SymbolKind.Interface);
   }
 }

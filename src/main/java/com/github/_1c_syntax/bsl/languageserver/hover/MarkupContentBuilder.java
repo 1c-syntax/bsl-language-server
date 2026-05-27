@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import org.eclipse.lsp4j.MarkupContent;
-import org.eclipse.lsp4j.SymbolKind;
 
 /**
  * Интерфейс построителя контента для всплывающего окна на основе символа.
@@ -40,17 +39,12 @@ public interface MarkupContentBuilder<T extends Symbol> {
   MarkupContent getContent(T symbol);
 
   /**
-   * Тип символа, на основе которого работает данный построитель.
-   *
-   * @return тип символа.
-   */
-  SymbolKind getSymbolKind();
-
-  /**
    * Конкретный класс символа, который умеет обрабатывать данный построитель.
-   * Используется HoverProvider'ом для выбора подходящего билдера —
-   * это позволяет разделять рендеринг {@link com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol}
-   * и synthetic-символов с {@link SymbolKind#Method}, и т.п.
+   * Используется HoverProvider'ом для выбора подходящего билдера — выбор по
+   * классу (а не по {@code SymbolKind}) позволяет иметь несколько построителей
+   * для символов одного и того же вида (например,
+   * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol}
+   * и synthetic-метод).
    *
    * @return класс символа.
    */

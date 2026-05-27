@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 /**
@@ -80,10 +79,6 @@ public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
   }
 
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Property;
-  }
 
   @Override
   public Class<? extends Symbol> getSymbolClass() {
