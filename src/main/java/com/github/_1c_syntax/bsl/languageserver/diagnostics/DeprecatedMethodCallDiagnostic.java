@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -29,10 +30,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.util.HashSet;
 import java.util.Optional;
 
 @DiagnosticMetadata(
@@ -47,9 +52,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   private final ReferenceIndex referenceIndex;
+  private final TypeService typeService;
+  private final TypeRegistry typeRegistry;
+  private final LanguageServerConfiguration configuration;
 
   @Override
   public void check() {
+    checkUserDefinedMethods();
+    checkPlatformMembers();
+  }
+
+  /**
+   * Вызовы пользовательских методов, помеченных «Устарела.» в doc-комментарии.
+   */
+  private void checkUserDefinedMethods() {
     var uri = documentContext.getUri();
 
     referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
@@ -61,6 +77,31 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
         var message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
         diagnosticStorage.addDiagnostic(reference.selectionRange(), message);
       });
+  }
+
+  /**
+   * Вызовы платформенных членов, устаревших для целевой версии платформы
+   * ({@code target >= deprecatedSinceVersion}). Срабатывает, если хотя бы один
+   * из возможных типов-владельцев ресивера делает член устаревшим.
+   */
+  private void checkPlatformMembers() {
+    var target = PlatformMemberCalls.targetCompatibilityMode(documentContext, configuration);
+    var reported = new HashSet<Range>();
+    for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
+      var metadata = member.descriptor().metadata();
+      if (!PlatformMemberCalls.firesDeprecated(metadata.deprecatedSinceVersion(), target)) {
+        continue;
+      }
+      if (!reported.add(member.range())) {
+        continue;
+      }
+      var replacements = metadata.recommendedReplacements();
+      var hint = replacements.isEmpty()
+        ? ""
+        : info.getResourceString("recommendedReplacementsHint", String.join(", ", replacements));
+      diagnosticStorage.addDiagnostic(member.range(),
+        info.getMessage(member.descriptor().name(), hint));
+    }
   }
 
   private static String getDeprecationInfo(Symbol deprecatedSymbol) {

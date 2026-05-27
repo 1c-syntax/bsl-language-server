@@ -107,6 +107,10 @@ class LanguageServerConfigurationTest {
     assertThat(annotations)
       .hasSize(2)
       .contains("Test", "Test2");
+
+    var platformOptions = configuration.getPlatformOptions();
+    assertThat(platformOptions.isEnabled()).isFalse();
+    assertThat(platformOptions.getTargetVersion()).isEqualTo("8.3.21");
   }
 
   @Test

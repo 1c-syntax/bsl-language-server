@@ -4,6 +4,7 @@
       "name": "ВопросАсинх",
       "aliases": ["DoQueryBoxAsync"],
       "async": true,
+      "sinceVersion": "8.3.18",
       "description": "Асинхронная функция. Выводит вопрос пользователю и возвращает выбранную кнопку.",
       "signatures": [
         {
@@ -123,6 +124,78 @@
           "returnType": "Булево"
         }
       ]
+    },
+    {
+      "name": "УстановитьКраткийЗаголовокПриложения",
+      "aliases": ["SetShortApplicationCaption"],
+      "description": "Устанавливает краткий заголовок приложения.",
+      "deprecatedSinceVersion": "8.3.10",
+      "recommendedReplacements": ["КлиентскоеПриложение.УстановитьКраткийЗаголовок"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПолучитьКраткийЗаголовокПриложения",
+      "aliases": ["GetShortApplicationCaption"],
+      "description": "Возвращает краткий заголовок приложения.",
+      "deprecatedSinceVersion": "8.3.10",
+      "recommendedReplacements": ["КлиентскоеПриложение.ПолучитьКраткийЗаголовок"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "УстановитьЗаголовокКлиентскогоПриложения",
+      "aliases": ["SetClientApplicationCaption"],
+      "description": "Устанавливает заголовок клиентского приложения.",
+      "deprecatedSinceVersion": "8.3.10",
+      "recommendedReplacements": ["КлиентскоеПриложение.УстановитьЗаголовок"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПолучитьЗаголовокКлиентскогоПриложения",
+      "aliases": ["GetClientApplicationCaption"],
+      "description": "Возвращает заголовок клиентского приложения.",
+      "deprecatedSinceVersion": "8.3.10",
+      "recommendedReplacements": ["КлиентскоеПриложение.ПолучитьЗаголовок"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ТекущийВариантОсновногоШрифтаКлиентскогоПриложения",
+      "aliases": ["ClientApplicationBaseFontCurrentVariant"],
+      "description": "Возвращает текущий вариант основного шрифта клиентского приложения.",
+      "deprecatedSinceVersion": "8.3.10",
+      "recommendedReplacements": ["КлиентскоеПриложение.ТекущийВариантОсновногоШрифта"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ТекущийВариантИнтерфейсаКлиентскогоПриложения",
+      "aliases": ["ClientApplicationInterfaceCurrentVariant"],
+      "description": "Возвращает текущий вариант интерфейса клиентского приложения.",
+      "deprecatedSinceVersion": "8.3.10",
+      "recommendedReplacements": ["КлиентскоеПриложение.ТекущийВариантИнтерфейса"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "КраткоеПредставлениеОшибки",
+      "aliases": ["BriefErrorDescription"],
+      "description": "Возвращает краткое представление ошибки.",
+      "deprecatedSinceVersion": "8.3.17",
+      "recommendedReplacements": ["ОбработкаОшибок.КраткоеПредставлениеОшибки"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПодробноеПредставлениеОшибки",
+      "aliases": ["DetailErrorDescription"],
+      "description": "Возвращает подробное представление ошибки.",
+      "deprecatedSinceVersion": "8.3.17",
+      "recommendedReplacements": ["ОбработкаОшибок.ПодробноеПредставлениеОшибки"],
+      "signatures": [{"parameters": []}]
+    },
+    {
+      "name": "ПоказатьИнформациюОбОшибке",
+      "aliases": ["ShowErrorInfo"],
+      "description": "Показывает информацию об ошибке.",
+      "deprecatedSinceVersion": "8.3.17",
+      "recommendedReplacements": ["ОбработкаОшибок.ПоказатьИнформациюОбОшибке"],
+      "signatures": [{"parameters": []}]
     }
   ],
   "classes": [

@@ -324,5 +324,7 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
     PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
+    PropertyUtils.copyProperties(this.platformOptions, configuration.platformOptions);
+    PropertyUtils.copyProperties(this.oscriptOptions, configuration.oscriptOptions);
   }
 }

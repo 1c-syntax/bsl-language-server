@@ -59,4 +59,35 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
     ;
 
   }
+
+  @Test
+  void platformDeprecatedGlobalMethods() {
+
+    // given — целевая платформа выше версий устаревания всех методов фикстуры,
+    // данные об устаревании берутся из builtin-globals.json (без HBK).
+    configuration.getPlatformOptions().setTargetVersion("8.3.24");
+    try {
+      // when
+      List<Diagnostic> diagnostics = getDiagnostics("DeprecatedMethodCallPlatform");
+
+      // then — устаревшие глобальные методы платформы (6 с 8.3.10, 3 с 8.3.17).
+      assertThat(diagnostics).hasSize(9);
+    } finally {
+      configuration.getPlatformOptions().setTargetVersion(null);
+    }
+  }
+
+  @Test
+  void platformDeprecatedNotReportedForOlderTarget() {
+
+    // given — целевая платформа ниже версии устаревания методов 8.3.17,
+    // но не ниже 8.3.10: срабатывают только 6 методов клиентского приложения.
+    configuration.getPlatformOptions().setTargetVersion("8.3.10");
+    try {
+      List<Diagnostic> diagnostics = getDiagnostics("DeprecatedMethodCallPlatform");
+      assertThat(diagnostics).hasSize(6);
+    } finally {
+      configuration.getPlatformOptions().setTargetVersion(null);
+    }
+  }
 }

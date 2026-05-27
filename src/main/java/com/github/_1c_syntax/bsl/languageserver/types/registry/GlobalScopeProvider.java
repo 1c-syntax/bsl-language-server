@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -1220,6 +1221,10 @@ public class GlobalScopeProvider {
       if (Boolean.TRUE.equals(entry.get("async"))) {
         descriptor = descriptor.withAsync(true);
       }
+      var metadata = readGlobalMetadata(entry);
+      if (!metadata.isEmpty()) {
+        descriptor = descriptor.withMetadata(metadata);
+      }
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
       var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
       for (var alias : aliases) {
@@ -1232,6 +1237,25 @@ public class GlobalScopeProvider {
   private static String stringEntry(Map<String, Object> raw, String key) {
     var v = raw.get(key);
     return v instanceof String s ? s : "";
+  }
+
+  /**
+   * Читает опциональные версионные метаданные глобальной функции из JSON:
+   * {@code sinceVersion}, {@code deprecatedSinceVersion},
+   * {@code recommendedReplacements}. Нужны диагностикам устаревания и
+   * недоступности-по-версии, чтобы они работали без установленного HBK.
+   * Отсутствие всех полей → {@link PlatformMetadata#EMPTY}.
+   */
+  @SuppressWarnings("unchecked")
+  private static PlatformMetadata readGlobalMetadata(Map<String, Object> raw) {
+    var sinceVersion = stringEntry(raw, "sinceVersion");
+    var deprecatedSinceVersion = stringEntry(raw, "deprecatedSinceVersion");
+    var recommended = (List<String>) raw.getOrDefault("recommendedReplacements", Collections.emptyList());
+    if (sinceVersion.isEmpty() && deprecatedSinceVersion.isEmpty() && recommended.isEmpty()) {
+      return PlatformMetadata.EMPTY;
+    }
+    return new PlatformMetadata(sinceVersion, deprecatedSinceVersion, recommended,
+      null, null, "", "", List.of(), List.of());
   }
 
   @SuppressWarnings("unchecked")

@@ -136,6 +136,13 @@ public class TypeRegistry {
    */
   private final Set<String> readOnlyMemberNames = ConcurrentHashMap.newKeySet();
   /**
+   * Дешёвый набор имён членов (lowercased), у которых задана версия появления
+   * или устаревания ({@code sinceVersion} / {@code deprecatedSinceVersion}) —
+   * pre-filter для диагностик устаревания и доступности-по-версии: если имя
+   * вызываемого члена не входит в набор, инференс типа ресивера не нужен.
+   */
+  private final Set<String> versionedMemberNames = ConcurrentHashMap.newKeySet();
+  /**
    * Тип ↔ имена generic-плейсхолдеров (без угловых скобок). Заполняется
    * платформенным провайдером из {@link TypePackProvider.TypeDecl#typeParameters()}.
    * Источник истины — {@code Context.typeParameters()} в bsl-context.
@@ -432,8 +439,8 @@ public class TypeRegistry {
    * Источник лениво пересобирается на каждый getMembers, чтобы реагировать
    * на смену языка интерфейса (имена members generic-типа меняются) и не
    * зависеть от порядка инициализации платформенных провайдеров.
-   * Также индексируются read-only members специализированного типа
-   * (см. {@link #indexReadOnlyMembers}).
+   * Также индексируются read-only и версионные members специализированного типа
+   * (см. {@link #indexMemberMetadata}).
    *
    * @param specializedRef  целевой TypeRef, который должен «наследовать»
    *                        members generic-типа
@@ -463,8 +470,11 @@ public class TypeRegistry {
         }
         var specialized = member.specialize(safeBindings);
         result.add(specialized);
+        var lc = specialized.name().toLowerCase(Locale.ROOT);
+        if (specialized.metadata().hasVersionInfo()) {
+          versionedMemberNames.add(lc);
+        }
         if (specialized.metadata().accessMode() == AccessMode.READ) {
-          var lc = specialized.name().toLowerCase(Locale.ROOT);
           readOnlyMemberNames.add(lc);
           readOnlyMembersByType
             .computeIfAbsent(specializedRef, k -> ConcurrentHashMap.newKeySet())
@@ -818,7 +828,7 @@ public class TypeRegistry {
     }
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members, scope);
-      indexReadOnlyMembers(ref, decl.members());
+      indexMemberMetadata(ref, decl.members());
     }
     if (decl.exposedAsGlobal()) {
       var syntheticKind = decl.isEnum()
@@ -960,6 +970,25 @@ public class TypeRegistry {
   }
 
   /**
+   * @return {@code true}, если в реестре есть хотя бы один член с заданной
+   *         версией появления/устаревания. Дешёвый early-exit для диагностик
+   *         устаревания и доступности-по-версии.
+   */
+  public boolean hasAnyVersionedMember() {
+    return !versionedMemberNames.isEmpty();
+  }
+
+  /**
+   * Дешёвый pre-filter: входит ли {@code name} в число имён, у которых хотя бы
+   * на одном типе задана версия появления/устаревания. Сам по себе ничего не
+   * решает — после него обязателен точный резолв члена на конкретном
+   * типе-владельце (иначе сработает однофамилец с другого типа).
+   */
+  public boolean isVersionedMemberName(String name) {
+    return name != null && versionedMemberNames.contains(name.toLowerCase(Locale.ROOT));
+  }
+
+  /**
    * Дешёвая проверка имени присваиваемого свойства: входит ли оно в число
    * имён, у которых ХОТЯ БЫ НА ОДНОМ платформенном типе режим доступа =
    * {@link AccessMode#READ}. Используется как pre-filter — отрицательный
@@ -984,19 +1013,22 @@ public class TypeRegistry {
   }
 
   /**
-   * Регистрирует read-only члены типа {@code ref} в индексе. Имена
-   * сохраняются в lowercased виде для регистронезависимого поиска.
+   * Индексирует метаданные членов типа {@code ref} для дешёвых pre-filter'ов
+   * диагностик: read-only свойства и версионные (sinceVersion/deprecated) члены.
+   * Имена сохраняются в lowercased виде для регистронезависимого поиска.
    */
-  private void indexReadOnlyMembers(TypeRef ref, Collection<MemberDescriptor> members) {
+  private void indexMemberMetadata(TypeRef ref, Collection<MemberDescriptor> members) {
     for (var member : members) {
-      if (member.metadata().accessMode() != AccessMode.READ) {
-        continue;
-      }
       var lc = member.name().toLowerCase(Locale.ROOT);
-      readOnlyMemberNames.add(lc);
-      readOnlyMembersByType
-        .computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet())
-        .add(lc);
+      if (member.metadata().hasVersionInfo()) {
+        versionedMemberNames.add(lc);
+      }
+      if (member.metadata().accessMode() == AccessMode.READ) {
+        readOnlyMemberNames.add(lc);
+        readOnlyMembersByType
+          .computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet())
+          .add(lc);
+      }
     }
   }
 

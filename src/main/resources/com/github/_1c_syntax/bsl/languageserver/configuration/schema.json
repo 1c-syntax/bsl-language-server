@@ -29,6 +29,9 @@
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
+                "AssignToReadOnlyProperty": {
+                    "$ref": "parameters-schema.json#/definitions/AssignToReadOnlyProperty"
+                },
                 "BadWords": {
                     "$ref": "parameters-schema.json#/definitions/BadWords"
                 },
@@ -136,12 +139,6 @@
                 },
                 "DeprecatedMethodCall": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMethodCall"
-                },
-                "DeprecatedMethods8310": {
-                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8310"
-                },
-                "DeprecatedMethods8317": {
-                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8317"
                 },
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
@@ -466,6 +463,9 @@
                 },
                 "UnaryPlusInConcatenation": {
                     "$ref": "parameters-schema.json#/definitions/UnaryPlusInConcatenation"
+                },
+                "UnavailableMemberCall": {
+                    "$ref": "parameters-schema.json#/definitions/UnavailableMemberCall"
                 },
                 "UnionAll": {
                     "$ref": "parameters-schema.json#/definitions/UnionAll"
@@ -1039,7 +1039,9 @@
                         "type": "string",
                         "description": "Author email address as recorded in git blame."
                     },
-                    "default": []
+                    "default": [
+                        
+                    ]
                 }
             }
         },
@@ -1149,7 +1151,9 @@
             "items": {
                 "type": "string"
             },
-            "default": []
+            "default": [
+                
+            ]
         },
         "sendErrors": {
             "$id": "#/properties/sendErrors",
@@ -1217,6 +1221,29 @@
                         "\u0421\u0442\u0440\u043e\u043a\u043e\u0432\u044b\u0435\u0424\u0443\u043d\u043a\u0446\u0438\u0438\u041a\u043b\u0438\u0435\u043d\u0442\u0421\u0435\u0440\u0432\u0435\u0440.\u041f\u043e\u0434\u0441\u0442\u0430\u0432\u0438\u0442\u044c\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b\u0412\u0421\u0442\u0440\u043e\u043a\u0443",
                         "StringFunctionsClientServer.SubstituteParametersToString"
                     ]
+                }
+            }
+        },
+        "platform": {
+            "$id": "#/properties/platform",
+            "type": "object",
+            "title": "Platform types subsystem configuration.",
+            "properties": {
+                "enabled": {
+                    "$id": "#/properties/platform/enabled",
+                    "type": "boolean",
+                    "title": "Enable loading the platform context from the installed 1C syntax assistant (HBK). Disable to skip autodetection and HBK parsing.",
+                    "default": true
+                },
+                "binPath": {
+                    "$id": "#/properties/platform/binPath",
+                    "type": "string",
+                    "title": "Path to the 'bin' directory of the installed 1C platform with syntax assistant files (shcntx_*.hbk, shlang_*.hbk). Autodetected when empty."
+                },
+                "targetVersion": {
+                    "$id": "#/properties/platform/targetVersion",
+                    "type": "string",
+                    "title": "Target 1C platform version for compatibility diagnostics (deprecation, member availability). Takes priority over the configuration compatibility mode. When empty, the configuration compatibility mode is used, and if that is unset the newest platform is assumed. Format: 8.3.21."
                 }
             }
         }

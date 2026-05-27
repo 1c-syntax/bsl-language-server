@@ -261,22 +261,36 @@ public class TypeService {
    * @return описание найденного члена + тип-владелец и диапазон под курсором.
    */
   public Optional<TypedMember> findMemberAt(DocumentContext documentContext, Position position) {
+    return findMembersAt(documentContext, position).stream().findFirst();
+  }
+
+  /**
+   * То же, что {@link #findMemberAt(DocumentContext, Position)}, но возвращает
+   * <b>все</b> члены-кандидаты, когда тип ресивера выведен как union из
+   * нескольких типов (например, переменная присваивается значениями разных
+   * типов в разных ветках). Потребителям, проверяющим метаданные члена
+   * (устаревание, доступность по версии платформы), важен каждый возможный
+   * тип-владелец: вызов небезопасен, если хотя бы один из них делает член
+   * устаревшим/недоступным. Для глобальных функций/свойств список из одного
+   * элемента. Порядок совпадает с {@link #findMemberAt} (первый элемент тот же).
+   */
+  public List<TypedMember> findMembersAt(DocumentContext documentContext, Position position) {
     BSLParser.FileContext ast;
     try {
       ast = documentContext.getAst();
     } catch (NullPointerException e) {
-      return Optional.empty();
+      return List.of();
     }
     if (ast == null) {
-      return Optional.empty();
+      return List.of();
     }
     var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, position);
     if (terminalOpt.isEmpty()) {
-      return Optional.empty();
+      return List.of();
     }
     var terminal = terminalOpt.get();
     if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
-      return Optional.empty();
+      return List.of();
     }
 
     // Случай глобального свойства или library-модуля (например, КодировкаТекста, ФС).
@@ -290,7 +304,7 @@ public class TypeService {
       var fileType = documentContext.getFileType();
       var globalFn = globalScopeProvider.findFunction(bareName, fileType);
       if (globalFn.isPresent()) {
-        return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
+        return List.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
       }
 
       var fromScope = globalScopeProvider.findGlobalEntry(bareName, fileType)
@@ -307,7 +321,7 @@ public class TypeService {
         if (desc == null || desc.isBlank()) {
           desc = typeRegistry.getDescription(ref);
         }
-        return Optional.of(new TypedMember(ref,
+        return List.of(new TypedMember(ref,
           MemberDescriptor.property(ref.qualifiedName(), ref, desc),
           Ranges.create(terminal)));
       }
@@ -315,11 +329,11 @@ public class TypeService {
 
     var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
     if (expression == null) {
-      return Optional.empty();
+      return List.of();
     }
     var dereference = findDereferenceForTerminal(expression, terminal);
     if (dereference == null) {
-      return Optional.empty();
+      return List.of();
     }
 
     var right = dereference.getRight();
@@ -332,20 +346,21 @@ public class TypeService {
     var memberName = terminal.getText();
     var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
     if (leftTypes.isEmpty()) {
-      return Optional.empty();
+      return List.of();
     }
+    int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
+    var argTypes = (right instanceof MethodCallNode call)
+      ? inferArgTypes(call, documentContext)
+      : List.<TypeSet>of();
+    var result = new ArrayList<TypedMember>();
     for (var owner : leftTypes.refs()) {
       for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
         if (member.kind() == expectedKind && member.matches(memberName)) {
-          int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
-          var argTypes = (right instanceof MethodCallNode call)
-            ? inferArgTypes(call, documentContext)
-            : List.<TypeSet>of();
-          return Optional.of(new TypedMember(owner, member, Ranges.create(terminal), argCount, argTypes));
+          result.add(new TypedMember(owner, member, Ranges.create(terminal), argCount, argTypes));
         }
       }
     }
-    return Optional.empty();
+    return result;
   }
 
   private static int countMeaningfulArgs(MethodCallNode call) {
