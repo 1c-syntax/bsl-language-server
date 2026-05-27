@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779866453357,
+  "lastUpdate": 1779868500191,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35588,6 +35588,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 8.170883750235038",
             "extra": "mean: 371.08803486824036 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5d31e554f2b3a96b01fab4d6f44aba949c758f24",
+          "message": "Merge pull request #3952 from 1c-syntax/fix/bilingual-mixed-script-names\n\nfeat(types): билингва-классификация, двуязычное отображение типов, специализация менеджеров, async-флаг",
+          "timestamp": "2026-05-27T08:16:29+02:00",
+          "tree_id": "a7b4a2aa46c82a301b3dc7cb61b263c8435e2ed8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5d31e554f2b3a96b01fab4d6f44aba949c758f24"
+        },
+        "date": 1779868493462,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 370.6717054049174,
+            "unit": "sec",
+            "range": "stddev: 1.0664354225407287",
+            "extra": "mean: 370.6717054049174 sec\nrounds: 3"
           }
         ]
       }
