@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
@@ -74,7 +75,7 @@ class AutumnBeanIndexTest {
 
   private void init() {
     when(libraryIndex.findEntries(EntryKind.CLASS)).thenReturn(entries);
-    var metaResolver = new AutumnMetaAnnotationResolver(libraryIndex, serverContextProvider);
+    var metaResolver = new AutumnMetaAnnotationResolver(new AnnotationRepository());
     beanIndex = new AutumnBeanIndex(libraryIndex, serverContextProvider, typeRegistry, metaResolver);
   }
 

@@ -23,9 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import lombok.experimental.UtilityClass;
-import org.jspecify.annotations.Nullable;
 
-import java.util.List;
+import java.util.Optional;
 
 /**
  * Имена аннотаций фреймворка «ОСень» (Autumn) и помощники чтения их параметров.
@@ -55,36 +54,34 @@ public class AutumnAnnotations {
   public static final String BEAN_TYPE = "Желудь";
 
   /**
-   * @return первая аннотация с указанным именем или {@code null}.
+   * @return первая аннотация с указанным именем (регистронезависимо).
    */
-  public static @Nullable Annotation find(Iterable<Annotation> annotations, String name) {
+  public static Optional<Annotation> find(Iterable<Annotation> annotations, String name) {
     for (var annotation : annotations) {
       if (name.equalsIgnoreCase(annotation.getName())) {
-        return annotation;
+        return Optional.of(annotation);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   /**
-   * Значение строкового параметра аннотации: приоритет у параметра с заданным
-   * именем; если такого нет — берётся безымянный (позиционный) параметр под
-   * указанным индексом.
+   * Значение строкового параметра аннotaции по имени.
+   * <p>
+   * Безымянный (позиционный) параметр трактуется как параметр {@code Значение} —
+   * именно так его разрешает движок аннотаций ОСени (autumn-library/annotations,
+   * {@code ОпределениеАннотации.ПривестиИменаПараметров}). Поэтому позиционно
+   * можно задать только {@code Значение}; {@code Тип} и прочие — лишь по имени.
+   *
+   * @return значение первого подходящего параметра, если это строковый литерал.
    */
-  public static @Nullable String stringParameter(Annotation annotation, String name, int positionalIndex) {
-    String positionalValue = null;
-    var position = 0;
+  public static Optional<String> stringParameter(Annotation annotation, String parameterName) {
     for (var parameter : annotation.getParameters()) {
-      if (name.equalsIgnoreCase(parameter.name()) && parameter.value().isLeft()) {
-        return parameter.value().getLeft();
-      }
-      if (parameter.name().isEmpty()) {
-        if (position == positionalIndex && parameter.value().isLeft()) {
-          positionalValue = parameter.value().getLeft();
-        }
-        position++;
+      var effectiveName = parameter.name().isEmpty() ? VALUE_PARAMETER : parameter.name();
+      if (parameterName.equalsIgnoreCase(effectiveName) && parameter.value().isLeft()) {
+        return Optional.of(parameter.value().getLeft());
       }
     }
-    return positionalValue;
+    return Optional.empty();
   }
 }

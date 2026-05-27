@@ -21,30 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
+import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Разрешение пользовательских аннотаций фреймворка «ОСень» через мета-аннотации.
@@ -57,9 +55,15 @@ import java.util.Set;
  *   &amp;Пластилин
  *   Процедура ПриСозданииОбъекта(Значение = "", Тип = "")
  * </pre>
- * то есть {@code &Внедряемое} — это {@code &Пластилин}. Резолвер строит индекс
- * «имя аннотации → её мета-аннотации» и отвечает, разворачивается ли аннотация
- * (транзитивно) в базовую роль фреймворка.
+ * то есть {@code &Внедряемое} — это {@code &Пластилин}.
+ * <p>
+ * Индекс «имя аннотации → определение» уже строит {@link AnnotationRepository}
+ * (через {@code AnnotationReferenceFinder}): он регистрирует конструкторы с
+ * {@code &Аннотация} и инкрементально обновляется при правке/удалении документов.
+ * Резолвер переиспользует его и разворачивает мета-аннотации транзитивно — по
+ * образцу {@code РазворачивательАннотаций} из autumn-library/annotations, —
+ * кэшируя получившийся плоский набор ролей на каждую аннотацию, чтобы не
+ * пересчитывать цепочку на каждый запрос.
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -69,14 +73,14 @@ public class AutumnMetaAnnotationResolver {
   /** Базовая мета-аннотация, регистрирующая пользовательскую аннотацию. */
   private static final String ANNOTATION_MARKER = "Аннотация";
 
-  private final OScriptLibraryIndex libraryIndex;
-  private final ServerContextProvider serverContextProvider;
+  private final AnnotationRepository annotationRepository;
 
-  /** Имя пользовательской аннотации (lowercase) → имена её мета-аннотаций. Доступ под {@code synchronized(this)}. */
-  private final Map<String, List<String>> metaByAnnotation = new HashMap<>();
-  /** URI .os-файла → имена объявленных в нём пользовательских аннотаций (для инкрементального обновления). */
-  private final Map<URI, List<String>> namesByUri = new HashMap<>();
-  private boolean built;
+  /**
+   * Кэш развёрнутых ролей: имя аннотации (lowercase) → транзитивный набор имён
+   * (lowercase), в которые она разворачивается, включая её саму. Сбрасывается
+   * при изменении состава зарегистрированных аннотаций.
+   */
+  private final Map<String, Set<String>> roleClosureCache = new ConcurrentHashMap<>();
 
   /**
    * Является ли аннотация {@code annotationName} базовой ролью {@code baseRole}
@@ -85,8 +89,8 @@ public class AutumnMetaAnnotationResolver {
    * @param annotationName имя проверяемой аннотации (как в коде)
    * @param baseRole       базовое имя роли (например, {@link AutumnAnnotations#INJECTION})
    */
-  public synchronized boolean isRole(String annotationName, String baseRole) {
-    return resolvesTo(annotationName, baseRole, new HashSet<>());
+  public boolean isRole(String annotationName, String baseRole) {
+    return roleClosure(annotationName).contains(baseRole.toLowerCase(Locale.ROOT));
   }
 
   /**
@@ -118,117 +122,50 @@ public class AutumnMetaAnnotationResolver {
       if (!isRole(annotation.getName(), baseRole)) {
         continue;
       }
-      var value = AutumnAnnotations.stringParameter(annotation, AutumnAnnotations.VALUE_PARAMETER, 0);
-      if (value != null && !value.isBlank()) {
-        result.add(value);
-      }
+      AutumnAnnotations.stringParameter(annotation, AutumnAnnotations.VALUE_PARAMETER)
+        .filter(value -> !value.isBlank())
+        .ifPresent(result::add);
     }
     return result;
   }
 
-  private boolean resolvesTo(String annotationName, String baseRole, Set<String> visited) {
-    if (baseRole.equalsIgnoreCase(annotationName)) {
-      return true;
-    }
-    if (!visited.add(annotationName.toLowerCase(Locale.ROOT))) {
-      return false;
-    }
-    ensureBuilt();
-    for (var meta : metaByAnnotation.getOrDefault(annotationName.toLowerCase(Locale.ROOT), List.of())) {
-      if (resolvesTo(meta, baseRole, visited)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
-   * Полный сброс индекса — будет перестроен при следующем обращении.
-   * Реакция на переиндексацию библиотек.
+   * Сброс кэша развёрнутых ролей при изменении состава зарегистрированных
+   * аннотаций (наполнение контекста, правка или удаление документа). Сам индекс
+   * аннотаций поддерживает {@link AnnotationRepository}; пересчёт ролей —
+   * ленивый, при следующем обращении.
    */
-  @EventListener(OScriptLibraryIndexedEvent.class)
-  public synchronized void invalidate() {
-    metaByAnnotation.clear();
-    namesByUri.clear();
-    built = false;
+  @EventListener({
+    ServerContextPopulatedEvent.class,
+    DocumentContextContentChangedEvent.class,
+    ServerContextDocumentRemovedEvent.class
+  })
+  public void invalidate() {
+    roleClosureCache.clear();
   }
 
-  /**
-   * Инкрементально пере-сканировать изменённый .os-документ: правка
-   * класса-определения аннотации ({@code &Аннотация}) меняет только его вклад
-   * в цепочки мета-аннотаций. Если индекс ещё не построен — соберётся целиком
-   * при первом обращении.
-   */
-  @EventListener
-  public synchronized void handleDocumentChange(DocumentContextContentChangedEvent event) {
-    var document = event.getSource();
-    if (document.getFileType() != FileType.OS || !built) {
-      return;
-    }
-    var uri = document.getUri();
-    removeDocument(uri);
-    indexDocument(uri);
+  private Set<String> roleClosure(String annotationName) {
+    return roleClosureCache.computeIfAbsent(annotationName.toLowerCase(Locale.ROOT), key -> {
+      var roles = new HashSet<String>();
+      collectRoles(annotationName, roles);
+      return roles;
+    });
   }
 
-  private void ensureBuilt() {
-    if (built) {
+  private void collectRoles(String annotationName, Set<String> accumulator) {
+    if (!accumulator.add(annotationName.toLowerCase(Locale.ROOT))) {
       return;
     }
-    metaByAnnotation.clear();
-    namesByUri.clear();
-    libraryIndex.findEntries(EntryKind.CLASS).stream()
-      .map(OScriptLibraryIndex.LibraryEntry::uri)
-      .distinct()
-      .forEach(this::indexDocument);
-    built = true;
-  }
-
-  /** Удалить из индекса пользовательские аннотации, объявленные в указанном .os-файле. */
-  private void removeDocument(URI uri) {
-    var names = namesByUri.remove(uri);
-    if (names != null) {
-      names.forEach(metaByAnnotation::remove);
-    }
-  }
-
-  /** Проиндексировать определения аннотаций ({@code &Аннотация}) в .os-классе по указанному URI. */
-  private void indexDocument(URI uri) {
-    var isClass = libraryIndex.findEntriesByUri(uri).stream()
-      .anyMatch(entry -> entry.kind() == EntryKind.CLASS);
-    if (!isClass) {
-      return;
-    }
-    var serverContext = serverContextProvider.getServerContext(uri).orElse(null);
-    if (serverContext == null) {
-      return;
-    }
-    var document = serverContext.getDocument(uri);
-    if (document == null) {
-      return;
-    }
-    for (var method : document.getSymbolTree().getMethods()) {
-      registerDefinition(method, uri);
-    }
-  }
-
-  private void registerDefinition(MethodSymbol method, URI uri) {
-    var annotations = method.getAnnotations();
-    var marker = AutumnAnnotations.find(annotations, ANNOTATION_MARKER);
-    if (marker == null) {
-      return;
-    }
-    var customName = AutumnAnnotations.stringParameter(marker, AutumnAnnotations.VALUE_PARAMETER, 0);
-    if (customName == null || customName.isBlank()) {
-      return;
-    }
-    var metas = new ArrayList<String>();
-    for (var annotation : annotations) {
-      if (!ANNOTATION_MARKER.equalsIgnoreCase(annotation.getName())) {
-        metas.add(annotation.getName());
-      }
-    }
-    var key = customName.toLowerCase(Locale.ROOT);
-    metaByAnnotation.put(key, metas);
-    namesByUri.computeIfAbsent(uri, u -> new ArrayList<>()).add(key);
+    annotationRepository.findByName(annotationName)
+      .flatMap(AnnotationSymbol::getParent)
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .ifPresent(constructor -> {
+        for (var meta : constructor.getAnnotations()) {
+          if (!ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
+            collectRoles(meta.getName(), accumulator);
+          }
+        }
+      });
   }
 }

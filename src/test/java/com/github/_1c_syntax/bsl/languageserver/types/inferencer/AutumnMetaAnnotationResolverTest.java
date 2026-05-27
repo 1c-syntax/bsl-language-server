@@ -21,28 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
+import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -53,41 +40,25 @@ import static org.mockito.Mockito.when;
 
 /**
  * Юнит-тесты резолвера мета-аннотаций фреймворка «ОСень».
+ * <p>
+ * Резолвер опирается на {@link AnnotationRepository} (индекс зарегистрированных
+ * пользовательских аннотаций) — здесь используется его реальная реализация, что
+ * заодно проверяет регистронезависимость лукапа.
  */
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class AutumnMetaAnnotationResolverTest {
 
-  @Mock
-  private OScriptLibraryIndex libraryIndex;
-
-  @Mock
-  private ServerContextProvider serverContextProvider;
-
-  private final List<LibraryEntry> entries = new ArrayList<>();
-
-  private AutumnMetaAnnotationResolver resolver;
-
-  private void init() {
-    when(libraryIndex.findEntries(EntryKind.CLASS)).thenReturn(entries);
-    resolver = new AutumnMetaAnnotationResolver(libraryIndex, serverContextProvider);
-  }
+  private final AnnotationRepository repository = new AnnotationRepository();
+  private final AutumnMetaAnnotationResolver resolver = new AutumnMetaAnnotationResolver(repository);
 
   @Test
   void baseAnnotationMatchesItsRole() {
-    // given
-    init();
-
-    // when / then
+    // when / then: базовая аннотация фреймворка разворачивается сама в себя
     assertThat(resolver.isRole("Пластилин", AutumnAnnotations.INJECTION)).isTrue();
     assertThat(resolver.isRole("Желудь", AutumnAnnotations.COMPONENT)).isTrue();
   }
 
   @Test
   void unknownAnnotationDoesNotMatchRole() {
-    // given
-    init();
-
     // when / then
     assertThat(resolver.isRole("Желудь", AutumnAnnotations.INJECTION)).isFalse();
   }
@@ -95,7 +66,6 @@ class AutumnMetaAnnotationResolverTest {
   @Test
   void findsAnnotationByRole() {
     // given
-    init();
     var annotations = List.of(plainAnnotation("Прочее"), injection("ИмяЖелудя"));
 
     // when
@@ -109,7 +79,6 @@ class AutumnMetaAnnotationResolverTest {
   @Test
   void hasRoleReportsAbsence() {
     // given
-    init();
     var annotations = List.of(plainAnnotation("Прочее"));
 
     // when / then
@@ -119,7 +88,6 @@ class AutumnMetaAnnotationResolverTest {
   @Test
   void collectsValuesByRole() {
     // given
-    init();
     var annotations = List.of(qualifier("Васян"), qualifier("Панк"), plainAnnotation("Прочее"));
 
     // when
@@ -131,12 +99,8 @@ class AutumnMetaAnnotationResolverTest {
 
   @Test
   void resolvesCustomAnnotationThroughMetaAnnotation() {
-    // given
-    // АннотацияВнедряемое: &Аннотация("Внедряемое") &Пластилин
-    registerAnnotationClass("АннотацияВнедряемое",
-      marker("Внедряемое"),
-      plainAnnotation("Пластилин"));
-    init();
+    // given: АннотацияВнедряемое: &Аннотация("Внедряемое") &Пластилин
+    register("Внедряемое", plainAnnotation("Пластилин"));
 
     // when / then
     assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
@@ -144,172 +108,86 @@ class AutumnMetaAnnotationResolverTest {
   }
 
   @Test
-  void baseRoleMatchIsCaseInsensitive() {
-    // given
-    init();
+  void resolvesTransitiveMetaAnnotationChain() {
+    // given: СуперВнедряемое -> Внедряемое -> &Пластилин
+    register("СуперВнедряемое", plainAnnotation("Внедряемое"));
+    register("Внедряемое", plainAnnotation("Пластилин"));
 
+    // when / then
+    assertThat(resolver.isRole("СуперВнедряемое", AutumnAnnotations.INJECTION)).isTrue();
+  }
+
+  @Test
+  void excludesAnnotationMarkerFromRoles() {
+    // given
+    register("Внедряемое", plainAnnotation("Пластилин"));
+
+    // when / then: сам маркер &Аннотация не считается ролью
+    assertThat(resolver.isRole("Внедряемое", "Аннотация")).isFalse();
+  }
+
+  @Test
+  void baseRoleMatchIsCaseInsensitive() {
     // when / then: имена аннотаций в BSL регистронезависимы
     assertThat(resolver.isRole("пластилин", AutumnAnnotations.INJECTION)).isTrue();
     assertThat(resolver.isRole("ЖЕЛУДЬ", AutumnAnnotations.COMPONENT)).isTrue();
   }
 
   @Test
-  void resolvesCustomAnnotationWithDifferentCaseMarker() {
-    // given: маркер &Аннотация и мета записаны в нестандартном регистре
-    registerAnnotationClass("АннотацияВнедряемое",
-      lowercaseMarker("Внедряемое"), plainAnnotation("пластилин"));
-    init();
+  void resolvesCustomAnnotationCaseInsensitively() {
+    // given: имя зарегистрировано в одном регистре, мета — в другом
+    register("Внедряемое", plainAnnotation("пластилин"));
 
-    // when / then
+    // when / then: запрос в произвольном регистре всё равно разворачивается
     assertThat(resolver.isRole("ВНЕДРЯЕМОЕ", AutumnAnnotations.INJECTION)).isTrue();
   }
 
   @Test
-  void skipsDefinitionWithoutMarker() {
-    // given
-    registerAnnotationClass("ПростоКласс", plainAnnotation("Пластилин"));
-    init();
-
-    // when / then
-    assertThat(resolver.isRole("ПростоКласс", AutumnAnnotations.INJECTION)).isFalse();
-  }
-
-  @Test
-  void skipsDefinitionWithBlankCustomName() {
-    // given
-    registerAnnotationClass("АннотацияПустая", marker(""), plainAnnotation("Пластилин"));
-    init();
-
-    // when / then
-    assertThat(resolver.isRole("", AutumnAnnotations.INJECTION)).isFalse();
-  }
-
-  @Test
-  void skipsEntryWithoutServerContext() {
-    // given
-    var uri = URI.create("file:///ann/Нет.os");
-    var entry = new LibraryEntry(uri, "Нет", EntryKind.CLASS, "lib", false);
-    entries.add(entry);
-    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
-    when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.empty());
-    init();
-
-    // when / then
-    assertThat(resolver.isRole("ЧтоУгодно", AutumnAnnotations.INJECTION)).isFalse();
-  }
-
-  @Test
-  void skipsEntryWithoutDocument() {
-    // given
-    var uri = URI.create("file:///ann/Нет.os");
-    var entry = new LibraryEntry(uri, "Нет", EntryKind.CLASS, "lib", false);
-    entries.add(entry);
-    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
-    var serverContext = mock(ServerContext.class);
-    when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(null);
-    init();
-
-    // when / then
-    assertThat(resolver.isRole("ЧтоУгодно", AutumnAnnotations.INJECTION)).isFalse();
-  }
-
-  @Test
   void breaksMetaAnnotationCycle() {
-    // given
-    // А ссылается на Б, Б ссылается на А — цикл не должен зациклить резолвер
-    registerAnnotationClass("АннотацияА", marker("А"), plainAnnotation("Б"));
-    registerAnnotationClass("АннотацияБ", marker("Б"), plainAnnotation("А"));
-    init();
+    // given: А ссылается на Б, Б ссылается на А — цикл не должен зациклить резолвер
+    register("А", plainAnnotation("Б"));
+    register("Б", plainAnnotation("А"));
 
     // when / then
     assertThat(resolver.isRole("А", AutumnAnnotations.INJECTION)).isFalse();
   }
 
   @Test
-  void rebuildsContributionOfChangedDocument() {
-    // given: класс-определение объявляет аннотацию "Внедряемое" = &Пластилин
-    var uri = URI.create("file:///ann/АннотацияВнедряемое.os");
-    var entry = new LibraryEntry(uri, "АннотацияВнедряемое", EntryKind.CLASS, "lib", false);
-    entries.add(entry);
-    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
-    var serverContext = mock(ServerContext.class);
-    var document = mock(DocumentContext.class);
-    var symbolTree = mock(SymbolTree.class);
-    var method = mock(MethodSymbol.class);
-    when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
-    when(document.getSymbolTree()).thenReturn(symbolTree);
-    when(symbolTree.getMethods()).thenReturn(List.of(method));
-    when(method.getAnnotations()).thenReturn(List.of(marker("Внедряемое"), plainAnnotation("Пластилин")));
-    init();
+  void invalidateRefreshesCacheAfterRepositoryChange() {
+    // given: "Внедряемое" = &Пластилин, результат закэширован
+    register("Внедряемое", plainAnnotation("Пластилин"));
     assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
 
-    // when: класс-определение отредактирован — аннотация переименована в "Впрыск"
-    when(method.getAnnotations()).thenReturn(List.of(marker("Впрыск"), plainAnnotation("Пластилин")));
-    when(document.getFileType()).thenReturn(FileType.OS);
-    when(document.getUri()).thenReturn(uri);
-    var event = mock(DocumentContextContentChangedEvent.class);
-    when(event.getSource()).thenReturn(document);
-    resolver.handleDocumentChange(event);
+    // when: состав аннотаций изменился — "Внедряемое" больше нет, появилось "Впрыск"
+    repository.clear();
+    register("Впрыск", plainAnnotation("Пластилин"));
+    resolver.invalidate();
 
-    // then: старое имя больше не разворачивается в роль, новое — разворачивается
+    // then: старое имя больше не разворачивается, новое — разворачивается
     assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isFalse();
     assertThat(resolver.isRole("Впрыск", AutumnAnnotations.INJECTION)).isTrue();
   }
 
-  @Test
-  void ignoresChangeOfNonClassDocument() {
-    // given: индекс построен по классу-определению аннотации
-    registerAnnotationClass("АннотацияВнедряемое",
-      marker("Внедряемое"), plainAnnotation("Пластилин"));
-    init();
-    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
-
-    // when: изменён .os-документ, зарегистрированный только как МОДУЛЬ (не класс)
-    var moduleUri = URI.create("file:///ann/Модуль.os");
-    when(libraryIndex.findEntriesByUri(moduleUri))
-      .thenReturn(List.of(new LibraryEntry(moduleUri, "Модуль", EntryKind.MODULE, "lib", false)));
-    var document = mock(DocumentContext.class);
-    when(document.getFileType()).thenReturn(FileType.OS);
-    when(document.getUri()).thenReturn(moduleUri);
-    var event = mock(DocumentContextContentChangedEvent.class);
-    when(event.getSource()).thenReturn(document);
-    resolver.handleDocumentChange(event);
-
-    // then: индекс не изменился
-    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
-  }
-
   // --- helpers ---------------------------------------------------------------
 
-  private void registerAnnotationClass(String qualifiedName, Annotation... constructorAnnotations) {
-    var uri = URI.create("file:///ann/" + qualifiedName + ".os");
-    var entry = new LibraryEntry(uri, qualifiedName, EntryKind.CLASS, "lib", false);
-    entries.add(entry);
-    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
-    var serverContext = mock(ServerContext.class);
-    var document = mock(DocumentContext.class);
-    var symbolTree = mock(SymbolTree.class);
-    var method = mock(MethodSymbol.class);
-    when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
-    when(document.getSymbolTree()).thenReturn(symbolTree);
-    when(symbolTree.getMethods()).thenReturn(List.of(method));
-    when(method.getAnnotations()).thenReturn(List.of(constructorAnnotations));
+  /** Зарегистрировать пользовательскую аннотацию: конструктор с указанными мета-аннотациями. */
+  private void register(String customName, Annotation... metaAnnotations) {
+    var constructor = mock(MethodSymbol.class);
+    var annotations = new ArrayList<Annotation>();
+    annotations.add(marker(customName));
+    annotations.addAll(List.of(metaAnnotations));
+    when(constructor.getAnnotations()).thenReturn(annotations);
+
+    var symbol = AnnotationSymbol.builder()
+      .name(customName)
+      .parent(Optional.of(constructor))
+      .build();
+    repository.register(symbol);
   }
 
   private static Annotation marker(String customName) {
-    return markerNamed("Аннотация", customName);
-  }
-
-  private static Annotation lowercaseMarker(String customName) {
-    return markerNamed("аннотация", customName);
-  }
-
-  private static Annotation markerNamed(String markerName, String customName) {
     return Annotation.builder()
-      .name(markerName)
+      .name("Аннотация")
       .kind(AnnotationKind.CUSTOM)
       .parameters(List.of(new AnnotationParameterDefinition("", Either.forLeft(customName), true)))
       .build();

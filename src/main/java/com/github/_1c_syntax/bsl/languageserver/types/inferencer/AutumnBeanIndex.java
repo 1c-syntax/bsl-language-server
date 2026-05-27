@@ -48,6 +48,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Индекс желудей фреймворка «ОСень»: отображение «имя/прозвище желудя → тип».
@@ -198,10 +199,9 @@ public class AutumnBeanIndex {
     if (component == null || ownerType == null) {
       return;
     }
-    var name = AutumnAnnotations.stringParameter(component, AutumnAnnotations.VALUE_PARAMETER, 0);
-    if (name == null || name.isBlank()) {
-      name = defaultName;
-    }
+    var name = AutumnAnnotations.stringParameter(component, AutumnAnnotations.VALUE_PARAMETER)
+      .filter(value -> !value.isBlank())
+      .orElse(defaultName);
     register(annotations, name, ownerType, uri);
   }
 
@@ -211,10 +211,9 @@ public class AutumnBeanIndex {
     if (factory == null) {
       return;
     }
-    var name = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.VALUE_PARAMETER, 0);
-    if (name == null || name.isBlank()) {
-      name = method.getName();
-    }
+    var name = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.VALUE_PARAMETER)
+      .filter(value -> !value.isBlank())
+      .orElse(method.getName());
     var beanType = factoryBeanType(factory, name);
     if (beanType == null) {
       return;
@@ -223,11 +222,12 @@ public class AutumnBeanIndex {
   }
 
   private @Nullable TypeRef factoryBeanType(Annotation factory, String beanName) {
-    var explicitType = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.TYPE_PARAMETER, 1);
-    if (explicitType != null && !explicitType.isBlank() && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(explicitType)) {
-      return typeRegistry.resolve(explicitType).orElse(null);
-    }
-    return typeRegistry.resolve(beanName).orElse(null);
+    // Параметр Тип задаётся только по имени (позиционно можно лишь Значение).
+    return AutumnAnnotations.stringParameter(factory, AutumnAnnotations.TYPE_PARAMETER)
+      .filter(type -> !type.isBlank() && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(type))
+      .or(() -> Optional.of(beanName))
+      .flatMap(typeRegistry::resolve)
+      .orElse(null);
   }
 
   private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri) {

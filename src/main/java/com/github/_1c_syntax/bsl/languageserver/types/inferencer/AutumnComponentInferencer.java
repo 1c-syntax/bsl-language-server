@@ -100,19 +100,15 @@ public class AutumnComponentInferencer {
   }
 
   private static @Nullable String collectionType(Annotation injection) {
-    var explicitType = AutumnAnnotations.stringParameter(injection, AutumnAnnotations.TYPE_PARAMETER, 1);
-    if (explicitType != null && !explicitType.isBlank()
-      && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(explicitType)) {
-      return explicitType;
-    }
-    return null;
+    // Параметр Тип задаётся только по имени (позиционно можно лишь Значение).
+    return AutumnAnnotations.stringParameter(injection, AutumnAnnotations.TYPE_PARAMETER)
+      .filter(type -> !type.isBlank() && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(type))
+      .orElse(null);
   }
 
   private static String beanName(Annotation injection, String fallbackName) {
-    var name = AutumnAnnotations.stringParameter(injection, AutumnAnnotations.VALUE_PARAMETER, 0);
-    if (name != null && !name.isBlank()) {
-      return name;
-    }
-    return fallbackName;
+    return AutumnAnnotations.stringParameter(injection, AutumnAnnotations.VALUE_PARAMETER)
+      .filter(name -> !name.isBlank())
+      .orElse(fallbackName);
   }
 }
