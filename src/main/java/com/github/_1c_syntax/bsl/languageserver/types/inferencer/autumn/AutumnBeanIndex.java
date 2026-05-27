@@ -48,9 +48,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -89,10 +89,10 @@ public class AutumnBeanIndex {
   private final TypeRegistry typeRegistry;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
-  /** Имя/прозвище желудя (lowercase) → кандидаты. Списки — copy-on-write (крошечные). */
-  private final Map<String, List<BeanCandidate>> beansByName = new ConcurrentHashMap<>();
+  /** Имя/прозвище желудя (lowercase) → кандидаты. Значения — конкурентные множества (как в Repository). */
+  private final Map<String, Set<BeanCandidate>> beansByName = new ConcurrentHashMap<>();
   /** URI .os-файла → имена, под которыми он зарегистрировал кандидатов (для точечного удаления). */
-  private final Map<URI, List<String>> namesByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
   /**
    * Барьер первичной сборки: завершённый future — индекс построен; {@code null} —
    * не построен (соберётся лениво). Сборка ленивая и происходит после полной
@@ -221,7 +221,7 @@ public class AutumnBeanIndex {
     for (var name : names) {
       beansByName.computeIfPresent(name, (key, candidates) -> {
         candidates.removeIf(candidate -> uri.equals(candidate.sourceUri()));
-        return candidates.isEmpty() ? null : candidates;
+        return candidates.isEmpty() ? null : candidates; // null => удалить ключ
       });
     }
   }
@@ -332,7 +332,7 @@ public class AutumnBeanIndex {
 
   private void addCandidate(URI uri, String name, BeanCandidate candidate) {
     var key = name.toLowerCase(Locale.ROOT);
-    beansByName.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>()).add(candidate);
-    namesByUri.computeIfAbsent(uri, u -> new CopyOnWriteArrayList<>()).add(key);
+    beansByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(candidate);
+    namesByUri.computeIfAbsent(uri, u -> ConcurrentHashMap.newKeySet()).add(key);
   }
 }
