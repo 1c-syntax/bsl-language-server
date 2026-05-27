@@ -1219,6 +1219,52 @@
                     ]
                 }
             }
+        },
+        "oscript": {
+            "$id": "#/properties/oscript",
+            "type": "object",
+            "title": "OneScript libraries configuration.",
+            "properties": {
+                "libRoots": {
+                    "$id": "#/properties/oscript/libRoots",
+                    "type": "array",
+                    "title": "Additional root directories to search for OneScript libraries (each subdirectory is scanned for lib.config).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "useEnvLibLocation": {
+                    "$id": "#/properties/oscript/useEnvLibLocation",
+                    "type": "boolean",
+                    "title": "Also use paths from the OSCRIPT_LIB_LOCATION environment variable in addition to libRoots.",
+                    "default": false
+                },
+                "showImplicitLibraryEntriesInCompletion": {
+                    "$id": "#/properties/oscript/showImplicitLibraryEntriesInCompletion",
+                    "type": "boolean",
+                    "title": "Suggest implicit library entries (.os files not declared in lib.config) in no-dot completion.",
+                    "default": false
+                }
+            }
+        },
+        "v8platform": {
+            "$id": "#/properties/v8platform",
+            "type": "object",
+            "title": "1C:Enterprise platform types configuration.",
+            "properties": {
+                "binPath": {
+                    "$id": "#/properties/v8platform/binPath",
+                    "type": "string",
+                    "title": "Path to the 'bin' directory of an installed 1C:Enterprise platform (where syntax-helper files shcntx_*.hbk, shlang_*.hbk are located). If not set, the most recent installation on the machine is autodetected."
+                },
+                "enabled": {
+                    "$id": "#/properties/v8platform/enabled",
+                    "type": "boolean",
+                    "title": "Allow loading platform context from the syntax-helper of an installed 1C:Enterprise.",
+                    "default": true
+                }
+            }
         }
     }
 }
