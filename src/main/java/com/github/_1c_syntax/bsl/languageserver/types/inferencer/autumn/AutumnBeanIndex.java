@@ -203,7 +203,8 @@ public class AutumnBeanIndex {
       }
     }
 
-    // &Завязь допустима только в классе-дубе — иначе методы как фабрики не трактуем.
+    // &Завязь размещается над методом и допустима только в классе-дубе —
+    // иначе методы как фабрики не трактуем.
     if (metaAnnotationResolver.hasRole(constructorAnnotations, AutumnAnnotations.OAK)) {
       for (var method : symbolTree.getMethods()) {
         registerFactory(method, uri);
