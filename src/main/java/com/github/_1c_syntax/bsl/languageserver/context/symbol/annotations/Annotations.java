@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Построение моделей {@link Annotation} из узлов AST.
@@ -42,6 +43,9 @@ public class Annotations {
 
   /** Минимальная длина строкового литерала в кавычках ({@code ""}). */
   private static final int QUOTED_LITERAL_MIN_LENGTH = 2;
+
+  /** Маркер строки-продолжения многострочного литерала: перевод строки + отступ + {@code |}. */
+  private static final Pattern CONTINUATION_MARKER = Pattern.compile("(\\r?\\n)[ \\t]*\\|");
 
   /**
    * Построить список аннотаций из соответствующих узлов AST.
@@ -110,7 +114,7 @@ public class Annotations {
   private static String rawText(ParserRuleContext ctx) {
     var start = ctx.getStart();
     var stop = ctx.getStop();
-    if (start == null || stop == null || start.getStartIndex() > stop.getStopIndex()) {
+    if (start.getStartIndex() > stop.getStopIndex()) {
       return ctx.getText();
     }
     return start.getInputStream().getText(Interval.of(start.getStartIndex(), stop.getStopIndex()));
@@ -125,8 +129,8 @@ public class Annotations {
     // Снимаем обрамляющие кавычки. Для многострочного литерала строки-продолжения
     // начинаются с | (после необязательных отступов) — убираем маркер, сохраняя
     // сам перевод строки. В конце разэкранируем удвоённые кавычки ("" -> ").
-    return text.substring(1, text.length() - 1)
-      .replaceAll("(\\r?\\n)[ \\t]*\\|", "$1")
+    var inner = text.substring(1, text.length() - 1);
+    return CONTINUATION_MARKER.matcher(inner).replaceAll("$1")
       .replace("\"\"", "\"");
   }
 }
