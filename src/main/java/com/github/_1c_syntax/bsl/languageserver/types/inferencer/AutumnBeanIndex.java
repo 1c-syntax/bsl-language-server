@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -39,8 +41,9 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -69,13 +72,16 @@ public class AutumnBeanIndex {
   private final TypeRegistry typeRegistry;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
-  @Nullable
-  private Map<String, List<BeanCandidate>> beansByName;
+  /** Имя/прозвище желудя (lowercase) → кандидаты. Доступ под {@code synchronized(this)}. */
+  private final Map<String, List<BeanCandidate>> beansByName = new HashMap<>();
+  private boolean built;
 
   /**
-   * Кандидат-желудь: тип компонента и признак приоритетного ({@code &Верховный}).
+   * Кандидат-желудь: тип компонента, признак приоритетного ({@code &Верховный})
+   * и URI .os-файла, из которого он зарегистрирован (для инкрементального
+   * пере-сканирования при правке файла).
    */
-  private record BeanCandidate(TypeRef type, boolean primary) {
+  private record BeanCandidate(TypeRef type, boolean primary, URI sourceUri) {
   }
 
   /**
@@ -85,11 +91,12 @@ public class AutumnBeanIndex {
    *         {@code &Верховный}, иначе объединяются все кандидаты. Пусто, если
    *         желудь с таким именем не найден.
    */
-  public TypeSet resolve(String name) {
+  public synchronized TypeSet resolve(String name) {
     if (name == null || name.isBlank()) {
       return TypeSet.EMPTY;
     }
-    var candidates = index().get(name.toLowerCase(Locale.ROOT));
+    ensureBuilt();
+    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
     if (candidates == null || candidates.isEmpty()) {
       return TypeSet.EMPTY;
     }
@@ -109,48 +116,83 @@ public class AutumnBeanIndex {
   }
 
   /**
-   * Сбросить индекс — будет перестроен при следующем обращении.
+   * Полный сброс индекса — будет перестроен при следующем обращении.
+   * Реакция на переиндексацию библиотек (мог измениться состав классов).
    */
   @EventListener(OScriptLibraryIndexedEvent.class)
   public synchronized void invalidate() {
-    beansByName = null;
+    beansByName.clear();
+    built = false;
   }
 
-  private synchronized Map<String, List<BeanCandidate>> index() {
-    var local = beansByName;
-    if (local == null) {
-      local = build();
-      beansByName = local;
+  /**
+   * Инкрементально пере-сканировать изменённый .os-документ: правка желудя
+   * (имя, прозвища, {@code &Завязь}) меняет только его вклад в индекс — остальное
+   * не трогаем. Если индекс ещё не построен, ничего не делаем: он соберётся
+   * целиком при первом обращении.
+   */
+  @EventListener
+  public synchronized void handleDocumentChange(DocumentContextContentChangedEvent event) {
+    var document = event.getSource();
+    if (document.getFileType() != FileType.OS || !built) {
+      return;
     }
-    return local;
+    var uri = document.getUri();
+    removeDocument(uri);
+    indexDocument(uri);
   }
 
-  private Map<String, List<BeanCandidate>> build() {
-    Map<String, List<BeanCandidate>> map = new LinkedHashMap<>();
-    for (var entry : libraryIndex.findEntries(EntryKind.CLASS)) {
-      var serverContext = serverContextProvider.getServerContext(entry.uri()).orElse(null);
-      if (serverContext == null) {
-        continue;
+  private void ensureBuilt() {
+    if (built) {
+      return;
+    }
+    beansByName.clear();
+    libraryIndex.findEntries(EntryKind.CLASS).stream()
+      .map(OScriptLibraryIndex.LibraryEntry::uri)
+      .distinct()
+      .forEach(this::indexDocument);
+    built = true;
+  }
+
+  /** Удалить из индекса все кандидаты, зарегистрированные из указанного .os-файла. */
+  private void removeDocument(URI uri) {
+    var iterator = beansByName.values().iterator();
+    while (iterator.hasNext()) {
+      var candidates = iterator.next();
+      candidates.removeIf(candidate -> uri.equals(candidate.sourceUri()));
+      if (candidates.isEmpty()) {
+        iterator.remove();
       }
-      DocumentContext document = serverContext.getDocument(entry.uri());
-      if (document == null) {
-        continue;
-      }
+    }
+  }
+
+  /** Проиндексировать желуди и фабрики, объявленные в .os-классе по указанному URI. */
+  private void indexDocument(URI uri) {
+    var classEntries = libraryIndex.findEntriesByUri(uri).stream()
+      .filter(entry -> entry.kind() == EntryKind.CLASS)
+      .toList();
+    if (classEntries.isEmpty()) {
+      return;
+    }
+    var serverContext = serverContextProvider.getServerContext(uri).orElse(null);
+    if (serverContext == null) {
+      return;
+    }
+    DocumentContext document = serverContext.getDocument(uri);
+    if (document == null) {
+      return;
+    }
+    var methods = document.getSymbolTree().getMethods();
+    for (var entry : classEntries) {
       var ownerType = typeRegistry.resolve(entry.qualifiedName()).orElse(null);
-      for (var method : document.getSymbolTree().getMethods()) {
-        registerComponent(map, method, entry.qualifiedName(), ownerType);
-        registerFactory(map, method);
+      for (var method : methods) {
+        registerComponent(method, entry.qualifiedName(), ownerType, uri);
+        registerFactory(method, uri);
       }
     }
-    return map;
   }
 
-  private void registerComponent(
-    Map<String, List<BeanCandidate>> map,
-    MethodSymbol method,
-    String defaultName,
-    TypeRef ownerType
-  ) {
+  private void registerComponent(MethodSymbol method, String defaultName, @Nullable TypeRef ownerType, URI uri) {
     var annotations = method.getAnnotations();
     var component = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.COMPONENT).orElse(null);
     if (component == null || ownerType == null) {
@@ -160,10 +202,10 @@ public class AutumnBeanIndex {
     if (name == null || name.isBlank()) {
       name = defaultName;
     }
-    register(map, annotations, name, ownerType);
+    register(annotations, name, ownerType, uri);
   }
 
-  private void registerFactory(Map<String, List<BeanCandidate>> map, MethodSymbol method) {
+  private void registerFactory(MethodSymbol method, URI uri) {
     var annotations = method.getAnnotations();
     var factory = metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.FACTORY).orElse(null);
     if (factory == null) {
@@ -177,7 +219,7 @@ public class AutumnBeanIndex {
     if (beanType == null) {
       return;
     }
-    register(map, annotations, name, beanType);
+    register(annotations, name, beanType, uri);
   }
 
   private @Nullable TypeRef factoryBeanType(Annotation factory, String beanName) {
@@ -188,26 +230,17 @@ public class AutumnBeanIndex {
     return typeRegistry.resolve(beanName).orElse(null);
   }
 
-  private void register(
-    Map<String, List<BeanCandidate>> map,
-    List<Annotation> annotations,
-    String primaryName,
-    TypeRef type
-  ) {
+  private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri) {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
-    var candidate = new BeanCandidate(type, primary);
+    var candidate = new BeanCandidate(type, primary, uri);
 
-    addCandidate(map, primaryName, candidate);
+    addCandidate(primaryName, candidate);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {
-      addCandidate(map, alias, candidate);
+      addCandidate(alias, candidate);
     }
   }
 
-  private static void addCandidate(
-    Map<String, List<BeanCandidate>> map,
-    String name,
-    BeanCandidate candidate
-  ) {
-    map.computeIfAbsent(name.toLowerCase(Locale.ROOT), key -> new ArrayList<>()).add(candidate);
+  private void addCandidate(String name, BeanCandidate candidate) {
+    beansByName.computeIfAbsent(name.toLowerCase(Locale.ROOT), key -> new ArrayList<>()).add(candidate);
   }
 }

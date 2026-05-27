@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -29,15 +31,15 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -70,9 +72,11 @@ public class AutumnMetaAnnotationResolver {
   private final OScriptLibraryIndex libraryIndex;
   private final ServerContextProvider serverContextProvider;
 
-  /** Имя пользовательской аннотации (lowercase) → имена её мета-аннотаций. */
-  @Nullable
-  private Map<String, List<String>> metaByAnnotation;
+  /** Имя пользовательской аннотации (lowercase) → имена её мета-аннотаций. Доступ под {@code synchronized(this)}. */
+  private final Map<String, List<String>> metaByAnnotation = new HashMap<>();
+  /** URI .os-файла → имена объявленных в нём пользовательских аннотаций (для инкрементального обновления). */
+  private final Map<URI, List<String>> namesByUri = new HashMap<>();
+  private boolean built;
 
   /**
    * Является ли аннотация {@code annotationName} базовой ролью {@code baseRole}
@@ -81,7 +85,7 @@ public class AutumnMetaAnnotationResolver {
    * @param annotationName имя проверяемой аннотации (как в коде)
    * @param baseRole       базовое имя роли (например, {@link AutumnAnnotations#INJECTION})
    */
-  public boolean isRole(String annotationName, String baseRole) {
+  public synchronized boolean isRole(String annotationName, String baseRole) {
     return resolvesTo(annotationName, baseRole, new HashSet<>());
   }
 
@@ -129,7 +133,8 @@ public class AutumnMetaAnnotationResolver {
     if (!visited.add(annotationName.toLowerCase(Locale.ROOT))) {
       return false;
     }
-    for (var meta : index().getOrDefault(annotationName.toLowerCase(Locale.ROOT), List.of())) {
+    ensureBuilt();
+    for (var meta : metaByAnnotation.getOrDefault(annotationName.toLowerCase(Locale.ROOT), List.of())) {
       if (resolvesTo(meta, baseRole, visited)) {
         return true;
       }
@@ -137,39 +142,76 @@ public class AutumnMetaAnnotationResolver {
     return false;
   }
 
+  /**
+   * Полный сброс индекса — будет перестроен при следующем обращении.
+   * Реакция на переиндексацию библиотек.
+   */
   @EventListener(OScriptLibraryIndexedEvent.class)
   public synchronized void invalidate() {
-    metaByAnnotation = null;
+    metaByAnnotation.clear();
+    namesByUri.clear();
+    built = false;
   }
 
-  private synchronized Map<String, List<String>> index() {
-    var local = metaByAnnotation;
-    if (local == null) {
-      local = build();
-      metaByAnnotation = local;
+  /**
+   * Инкрементально пере-сканировать изменённый .os-документ: правка
+   * класса-определения аннотации ({@code &Аннотация}) меняет только его вклад
+   * в цепочки мета-аннотаций. Если индекс ещё не построен — соберётся целиком
+   * при первом обращении.
+   */
+  @EventListener
+  public synchronized void handleDocumentChange(DocumentContextContentChangedEvent event) {
+    var document = event.getSource();
+    if (document.getFileType() != FileType.OS || !built) {
+      return;
     }
-    return local;
+    var uri = document.getUri();
+    removeDocument(uri);
+    indexDocument(uri);
   }
 
-  private Map<String, List<String>> build() {
-    Map<String, List<String>> map = new LinkedHashMap<>();
-    for (var entry : libraryIndex.findEntries(EntryKind.CLASS)) {
-      var serverContext = serverContextProvider.getServerContext(entry.uri()).orElse(null);
-      if (serverContext == null) {
-        continue;
-      }
-      var document = serverContext.getDocument(entry.uri());
-      if (document == null) {
-        continue;
-      }
-      for (var method : document.getSymbolTree().getMethods()) {
-        registerDefinition(map, method);
-      }
+  private void ensureBuilt() {
+    if (built) {
+      return;
     }
-    return map;
+    metaByAnnotation.clear();
+    namesByUri.clear();
+    libraryIndex.findEntries(EntryKind.CLASS).stream()
+      .map(OScriptLibraryIndex.LibraryEntry::uri)
+      .distinct()
+      .forEach(this::indexDocument);
+    built = true;
   }
 
-  private static void registerDefinition(Map<String, List<String>> map, MethodSymbol method) {
+  /** Удалить из индекса пользовательские аннотации, объявленные в указанном .os-файле. */
+  private void removeDocument(URI uri) {
+    var names = namesByUri.remove(uri);
+    if (names != null) {
+      names.forEach(metaByAnnotation::remove);
+    }
+  }
+
+  /** Проиндексировать определения аннотаций ({@code &Аннотация}) в .os-классе по указанному URI. */
+  private void indexDocument(URI uri) {
+    var isClass = libraryIndex.findEntriesByUri(uri).stream()
+      .anyMatch(entry -> entry.kind() == EntryKind.CLASS);
+    if (!isClass) {
+      return;
+    }
+    var serverContext = serverContextProvider.getServerContext(uri).orElse(null);
+    if (serverContext == null) {
+      return;
+    }
+    var document = serverContext.getDocument(uri);
+    if (document == null) {
+      return;
+    }
+    for (var method : document.getSymbolTree().getMethods()) {
+      registerDefinition(method, uri);
+    }
+  }
+
+  private void registerDefinition(MethodSymbol method, URI uri) {
     var annotations = method.getAnnotations();
     var marker = AutumnAnnotations.find(annotations, ANNOTATION_MARKER);
     if (marker == null) {
@@ -185,6 +227,8 @@ public class AutumnMetaAnnotationResolver {
         metas.add(annotation.getName());
       }
     }
-    map.put(customName.toLowerCase(Locale.ROOT), metas);
+    var key = customName.toLowerCase(Locale.ROOT);
+    metaByAnnotation.put(key, metas);
+    namesByUri.computeIfAbsent(uri, u -> new ArrayList<>()).add(key);
   }
 }

@@ -22,8 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
@@ -165,7 +167,9 @@ class AutumnMetaAnnotationResolverTest {
   void skipsEntryWithoutServerContext() {
     // given
     var uri = URI.create("file:///ann/Нет.os");
-    entries.add(new LibraryEntry(uri, "Нет", EntryKind.CLASS, "lib", false));
+    var entry = new LibraryEntry(uri, "Нет", EntryKind.CLASS, "lib", false);
+    entries.add(entry);
+    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.empty());
     init();
 
@@ -177,7 +181,9 @@ class AutumnMetaAnnotationResolverTest {
   void skipsEntryWithoutDocument() {
     // given
     var uri = URI.create("file:///ann/Нет.os");
-    entries.add(new LibraryEntry(uri, "Нет", EntryKind.CLASS, "lib", false));
+    var entry = new LibraryEntry(uri, "Нет", EntryKind.CLASS, "lib", false);
+    entries.add(entry);
+    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
     var serverContext = mock(ServerContext.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
     when(serverContext.getDocument(uri)).thenReturn(null);
@@ -199,11 +205,45 @@ class AutumnMetaAnnotationResolverTest {
     assertThat(resolver.isRole("А", AutumnAnnotations.INJECTION)).isFalse();
   }
 
+  @Test
+  void rebuildsContributionOfChangedDocument() {
+    // given: класс-определение объявляет аннотацию "Внедряемое" = &Пластилин
+    var uri = URI.create("file:///ann/АннотацияВнедряемое.os");
+    var entry = new LibraryEntry(uri, "АннотацияВнедряемое", EntryKind.CLASS, "lib", false);
+    entries.add(entry);
+    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
+    var serverContext = mock(ServerContext.class);
+    var document = mock(DocumentContext.class);
+    var symbolTree = mock(SymbolTree.class);
+    var method = mock(MethodSymbol.class);
+    when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
+    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(document.getSymbolTree()).thenReturn(symbolTree);
+    when(symbolTree.getMethods()).thenReturn(List.of(method));
+    when(method.getAnnotations()).thenReturn(List.of(marker("Внедряемое"), plainAnnotation("Пластилин")));
+    init();
+    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isTrue();
+
+    // when: класс-определение отредактирован — аннотация переименована в "Впрыск"
+    when(method.getAnnotations()).thenReturn(List.of(marker("Впрыск"), plainAnnotation("Пластилин")));
+    when(document.getFileType()).thenReturn(FileType.OS);
+    when(document.getUri()).thenReturn(uri);
+    var event = mock(DocumentContextContentChangedEvent.class);
+    when(event.getSource()).thenReturn(document);
+    resolver.handleDocumentChange(event);
+
+    // then: старое имя больше не разворачивается в роль, новое — разворачивается
+    assertThat(resolver.isRole("Внедряемое", AutumnAnnotations.INJECTION)).isFalse();
+    assertThat(resolver.isRole("Впрыск", AutumnAnnotations.INJECTION)).isTrue();
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   private void registerAnnotationClass(String qualifiedName, Annotation... constructorAnnotations) {
     var uri = URI.create("file:///ann/" + qualifiedName + ".os");
-    entries.add(new LibraryEntry(uri, qualifiedName, EntryKind.CLASS, "lib", false));
+    var entry = new LibraryEntry(uri, qualifiedName, EntryKind.CLASS, "lib", false);
+    entries.add(entry);
+    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
     var serverContext = mock(ServerContext.class);
     var document = mock(DocumentContext.class);
     var symbolTree = mock(SymbolTree.class);

@@ -22,8 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
@@ -244,11 +246,49 @@ class AutumnBeanIndexTest {
     assertThat(beanIndex.resolve("Неизвестный").isEmpty()).isTrue();
   }
 
+  @Test
+  void rebuildsContributionOfChangedDocument() {
+    // given: фабрика регистрирует желудь "Старый"
+    var uri = URI.create("file:///beans/Фабрика.os");
+    var entry = new LibraryEntry(uri, "Фабрика", EntryKind.CLASS, "lib", false);
+    entries.add(entry);
+    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
+    var serverContext = mock(ServerContext.class);
+    var document = mock(DocumentContext.class);
+    var symbolTree = mock(SymbolTree.class);
+    when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
+    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(document.getSymbolTree()).thenReturn(symbolTree);
+    var oldType = new TypeRef(TypeKind.USER, "СтарыйТип");
+    var newType = new TypeRef(TypeKind.USER, "НовыйТип");
+    when(typeRegistry.resolve("Старый")).thenReturn(Optional.of(oldType));
+    when(typeRegistry.resolve("Новый")).thenReturn(Optional.of(newType));
+    var oldMethod = namedMethod("Создать", factory("Старый", null));
+    when(symbolTree.getMethods()).thenReturn(List.of(oldMethod));
+    init();
+    assertThat(beanIndex.resolve("Старый").refs()).containsExactly(oldType);
+
+    // when: документ отредактирован — желудь переименован в "Новый"
+    var newMethod = namedMethod("Создать", factory("Новый", null));
+    when(symbolTree.getMethods()).thenReturn(List.of(newMethod));
+    when(document.getFileType()).thenReturn(FileType.OS);
+    when(document.getUri()).thenReturn(uri);
+    var event = mock(DocumentContextContentChangedEvent.class);
+    when(event.getSource()).thenReturn(document);
+    beanIndex.handleDocumentChange(event);
+
+    // then: старое имя больше не резолвится, новое — резолвится
+    assertThat(beanIndex.resolve("Старый").isEmpty()).isTrue();
+    assertThat(beanIndex.resolve("Новый").refs()).containsExactly(newType);
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   private URI registerEntry(String qualifiedName) {
     var uri = URI.create("file:///beans/" + qualifiedName + ".os");
-    entries.add(new LibraryEntry(uri, qualifiedName, EntryKind.CLASS, "lib", false));
+    var entry = new LibraryEntry(uri, qualifiedName, EntryKind.CLASS, "lib", false);
+    entries.add(entry);
+    when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
     return uri;
   }
 
