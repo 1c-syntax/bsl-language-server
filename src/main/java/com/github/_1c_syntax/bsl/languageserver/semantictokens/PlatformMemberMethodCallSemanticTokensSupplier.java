@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -50,7 +51,9 @@ import java.util.Set;
  * <p>
  * Метод резолвится через {@link TypeService#findMemberAt(DocumentContext, Position)}.
  * Если найден member с {@link MemberKind#METHOD} — имя метода получает
- * {@link SemanticTokenTypes#Method} + {@link SemanticTokenModifiers#DefaultLibrary}.
+ * {@link SemanticTokenTypes#Method} + {@link SemanticTokenModifiers#DefaultLibrary},
+ * а для async-методов платформы (флаг {@link MemberDescriptor#async()}) добавляется
+ * ещё и {@link SemanticTokenModifiers#Async}.
  * <p>
  * Source-defined вызовы (методы общих модулей, локальные методы, OScript-library)
  * подсвечиваются через {@link MethodCallSemanticTokensSupplier} по ReferenceIndex —
@@ -61,6 +64,10 @@ import java.util.Set;
 public class PlatformMemberMethodCallSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
+  private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS = {
+    SemanticTokenModifiers.DefaultLibrary,
+    SemanticTokenModifiers.Async
+  };
 
   private final TypeService typeService;
   private final ReferenceIndex referenceIndex;
@@ -78,8 +85,10 @@ public class PlatformMemberMethodCallSemanticTokensSupplier implements SemanticT
     for (var accessCall : Trees.<BSLParser.AccessCallContext>findAllRuleNodes(ast, BSLParser.RULE_accessCall)) {
       methodNameRange(accessCall)
         .filter(range -> !sourceDefinedCallSites.contains(range.getStart()))
-        .filter(range -> isPlatformMethodAt(documentContext, range.getStart()))
-        .ifPresent(range -> helper.addRange(entries, range, SemanticTokenTypes.Method, DEFAULT_LIBRARY_MODIFIERS));
+        .flatMap(range -> platformMethodAt(documentContext, range.getStart())
+          .map(descriptor -> new Resolved(range, descriptor)))
+        .ifPresent(resolved -> helper.addRange(
+          entries, resolved.range(), SemanticTokenTypes.Method, modifiers(resolved.descriptor())));
     }
 
     return entries;
@@ -92,11 +101,17 @@ public class PlatformMemberMethodCallSemanticTokensSupplier implements SemanticT
       .map(Ranges::create);
   }
 
-  private boolean isPlatformMethodAt(DocumentContext documentContext, Position position) {
+  private Optional<MemberDescriptor> platformMethodAt(DocumentContext documentContext, Position position) {
     return typeService.findMemberAt(documentContext, position)
       .map(TypeService.TypedMember::descriptor)
-      .map(descriptor -> descriptor.kind() == MemberKind.METHOD)
-      .orElse(false);
+      .filter(descriptor -> descriptor.kind() == MemberKind.METHOD);
+  }
+
+  static String[] modifiers(MemberDescriptor descriptor) {
+    return descriptor.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
+  }
+
+  private record Resolved(Range range, MemberDescriptor descriptor) {
   }
 
   private Set<Position> collectSourceDefinedCallSites(DocumentContext documentContext) {

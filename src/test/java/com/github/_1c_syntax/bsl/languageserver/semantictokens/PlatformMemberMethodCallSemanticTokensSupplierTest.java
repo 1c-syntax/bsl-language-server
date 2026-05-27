@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -101,6 +102,30 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
 
     // then — никаких токенов для accessProperty.
     assertThat(decoded).isEmpty();
+  }
+
+  @Test
+  void testModifiersForAsyncDescriptor() {
+    // given
+    var asyncMethod = MemberDescriptor.method("ИнициализироватьАсинх").withAsync(true);
+
+    // when
+    var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(asyncMethod);
+
+    // then — async-метод платформы получает DefaultLibrary + Async.
+    assertThat(mods).containsExactly(SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async);
+  }
+
+  @Test
+  void testModifiersForRegularDescriptor() {
+    // given
+    var regularMethod = MemberDescriptor.method("Добавить");
+
+    // when
+    var mods = PlatformMemberMethodCallSemanticTokensSupplier.modifiers(regularMethod);
+
+    // then — обычный метод платформы получает только DefaultLibrary.
+    assertThat(mods).containsExactly(SemanticTokenModifiers.DefaultLibrary);
   }
 
   @Test
