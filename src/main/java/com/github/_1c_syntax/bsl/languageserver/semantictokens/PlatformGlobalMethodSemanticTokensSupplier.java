@@ -77,17 +77,24 @@ public class PlatformGlobalMethodSemanticTokensSupplier implements SemanticToken
       if (symbolTree != null && symbolTree.getMethodSymbol(name).isPresent()) {
         continue;
       }
-      if (globalScopeProvider.findFunction(name, fileType).isEmpty()) {
+      var function = globalScopeProvider.findFunction(name, fileType);
+      if (function.isEmpty()) {
         continue;
       }
       helper.addRange(
         entries,
         Ranges.create(methodNameCtx),
         SemanticTokenTypes.Function,
-        SemanticTokenModifiers.DefaultLibrary
+        modifiers(function.get().async())
       );
     }
 
     return entries;
+  }
+
+  private static String[] modifiers(boolean async) {
+    return async
+      ? new String[]{SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async}
+      : new String[]{SemanticTokenModifiers.DefaultLibrary};
   }
 }

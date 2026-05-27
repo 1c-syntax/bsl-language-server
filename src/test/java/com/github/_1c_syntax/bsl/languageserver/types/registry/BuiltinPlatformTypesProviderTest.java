@@ -214,6 +214,26 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   @Test
+  void asyncFlagIsReadFromJsonForMethods() {
+    var types = BuiltinPlatformTypesProvider.loadFromResource(
+      "com/github/_1c_syntax/bsl/languageserver/types/registry/async-method.json");
+    var typeDecl = types.stream()
+      .filter(td -> "ТипСАсинхМетодом".equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+
+    var asyncMethod = typeDecl.members().stream()
+      .filter(m -> m.matches("ИнициализироватьАсинх"))
+      .findFirst().orElseThrow();
+    assertThat(asyncMethod.async()).as("метод с \"async\": true помечается асинхронным").isTrue();
+
+    var plainMethod = typeDecl.members().stream()
+      .filter(m -> m.matches("Инициализировать"))
+      .findFirst().orElseThrow();
+    assertThat(plainMethod.async()).as("обычный метод не асинхронный").isFalse();
+  }
+
+  @Test
   void primitiveTypesHaveNoConstructors() {
     // given
     when(holder.get()).thenReturn(Optional.empty());

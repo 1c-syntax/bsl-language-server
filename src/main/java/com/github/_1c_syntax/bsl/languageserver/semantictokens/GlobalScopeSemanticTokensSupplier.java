@@ -206,8 +206,10 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     // Source-defined методы (общий модуль, модуль менеджера) красит
     // MethodCallSemanticTokensSupplier как Method+Static — не дублируем.
     if (!(member.sourceSymbol() instanceof SourceDefinedSymbol)) {
-      helper.addRange(entries, Ranges.create(methodName),
-        SemanticTokenTypes.Method, SemanticTokenModifiers.DefaultLibrary);
+      var modifiers = member.async()
+        ? new String[]{SemanticTokenModifiers.DefaultLibrary, SemanticTokenModifiers.Async}
+        : new String[]{SemanticTokenModifiers.DefaultLibrary};
+      helper.addRange(entries, Ranges.create(methodName), SemanticTokenTypes.Method, modifiers);
     }
     return member.returnType();
   }

@@ -325,7 +325,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       signatures,
       null,
       false,
-      metadataOf(method, enLookup)
+      metadataOf(method, enLookup),
+      method.isAsync()
     );
   }
 

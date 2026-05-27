@@ -240,6 +240,9 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var ru = descriptionRu.isEmpty() ? description : descriptionRu;
         descriptor = descriptor.withBilingualDescription(BilingualString.of(ru, descriptionEn));
       }
+      if (kind == MemberKind.METHOD && Boolean.TRUE.equals(m.get("async"))) {
+        descriptor = descriptor.withAsync(true);
+      }
       members.add(descriptor);
     }
     return mergeBilingualPairs(members);
@@ -314,7 +317,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       mergeSignatures(ru.signatures(), en.signatures()),
       ru.sourceSymbol(),
       ru.generic(),
-      ru.metadata()
+      ru.metadata(),
+      ru.async()
     );
   }
 

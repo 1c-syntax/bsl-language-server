@@ -156,6 +156,9 @@ public class PlatformMemberHoverBuilder {
     } else {
       sb.append("\n_").append(tr("globalProperty")).append('_');
     }
+    if (descriptor.async()) {
+      sb.append("\n\n_").append(tr("asyncMethod")).append('_');
+    }
     var symDesc = descriptor.getSymbolDescription();
     if (symDesc.isDeprecated()) {
       sb.append("\n\n**").append(tr("deprecatedFlag")).append("**");
