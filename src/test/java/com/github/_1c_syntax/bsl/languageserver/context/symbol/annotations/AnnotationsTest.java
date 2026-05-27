@@ -60,4 +60,21 @@ class AnnotationsTest {
     assertThat(nestedValue.isRight()).isTrue();
     assertThat(nestedValue.getRight().getName()).isEqualTo("Внутренняя");
   }
+
+  @Test
+  void stripsQuotesFromEmptyStringLiteral() {
+    // given: пустая строковая константа в параметре аннотации
+    var code = """
+      &Пустая("")
+      Процедура Тест() Экспорт
+      КонецПроцедуры
+      """;
+
+    // when
+    var method = TestUtils.getDocumentContext(code).getSymbolTree().getMethods().getFirst();
+    var value = method.getAnnotations().getFirst().getParameters().getFirst().value();
+
+    // then: кавычки сняты, значение пустое (а не "\"\"")
+    assertThat(value.getLeft()).isEmpty();
+  }
 }
