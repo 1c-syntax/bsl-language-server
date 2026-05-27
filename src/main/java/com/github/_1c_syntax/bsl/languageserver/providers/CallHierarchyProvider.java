@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
@@ -35,7 +36,6 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -169,6 +169,8 @@ public class CallHierarchyProvider {
   }
 
   private static boolean isSymbolSupported(Symbol symbol) {
-    return symbol.getSymbolKind() == SymbolKind.Method;
+    // И обычные методы, и конструкторы OneScript-классов (ПриСозданииОбъекта)
+    // являются MethodSymbol, но имеют разные SymbolKind (Method и Constructor).
+    return symbol instanceof MethodSymbol;
   }
 }

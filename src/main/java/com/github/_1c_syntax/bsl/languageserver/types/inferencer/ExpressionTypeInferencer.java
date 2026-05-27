@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -50,7 +51,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOpera
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
@@ -66,9 +66,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -107,6 +105,7 @@ public class ExpressionTypeInferencer {
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final AutumnComponentInferencer autumnComponentInferencer;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -233,7 +232,7 @@ public class ExpressionTypeInferencer {
       return resolved;
     }
     var text = terminal.getText();
-    if (text == null || text.isBlank()) {
+    if (text.isBlank()) {
       return TypeSet.EMPTY;
     }
     // Глобальная область: платформенные глобалы, library-модули,
@@ -775,10 +774,25 @@ public class ExpressionTypeInferencer {
         acc = acc.union(inferFromDefinitionPosition(owner, start, ctx));
       }
     }
+    acc = acc.union(autumnInjectedType(variable));
     acc = attachDefaultElementTypes(acc);
     acc = accumulateStructureInsertFields(variable, acc, ctx);
     acc = accumulateValueTableColumnFields(variable, acc, ctx);
     return acc;
+  }
+
+  /**
+   * Тип внедряемой через {@code &Пластилин} зависимости фреймворка «ОСень».
+   * Аннотации несёт сам символ — и поле модуля, и параметр конструктора/завязи
+   * (см. {@code VariableSymbolComputer}).
+   */
+  private TypeSet autumnInjectedType(VariableSymbol variable) {
+    var kind = variable.getKind();
+    if (kind != VariableKind.MODULE && kind != VariableKind.PARAMETER) {
+      return TypeSet.EMPTY;
+    }
+    return autumnComponentInferencer.inferInjectedType(
+      variable.getAnnotations(), variable.getName(), variable.getOwner().getFileType());
   }
 
   /**

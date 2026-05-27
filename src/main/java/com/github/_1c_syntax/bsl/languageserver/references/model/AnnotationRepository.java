@@ -28,12 +28,16 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Хранилище зарегистрированных аннотаций для одного workspace.
+ * <p>
+ * Имена аннотаций в BSL регистронезависимы, поэтому ключи хранятся в нижнем
+ * регистре, а поиск ведётся регистронезависимо.
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -47,17 +51,21 @@ public class AnnotationRepository {
    * @param annotationSymbol символ аннотации
    */
   public void register(AnnotationSymbol annotationSymbol) {
-    annotations.put(annotationSymbol.getName(), annotationSymbol);
+    annotations.put(key(annotationSymbol.getName()), annotationSymbol);
   }
 
   /**
-   * Найти аннотацию по имени.
+   * Найти аннотацию по имени (регистронезависимо).
    *
    * @param name имя аннотации
    * @return символ аннотации, если найден
    */
   public Optional<AnnotationSymbol> findByName(String name) {
-    return Optional.ofNullable(annotations.get(name));
+    return Optional.ofNullable(annotations.get(key(name)));
+  }
+
+  private static String key(String name) {
+    return name.toLowerCase(Locale.ROOT);
   }
 
   /**

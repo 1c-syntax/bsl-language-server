@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -163,7 +162,7 @@ public class DescriptionFormatter {
     var startPosition = symbol.getSelectionRange().getStart();
     var mdoRef = documentContext.getMdoRef();
 
-    var parentPostfix = symbol.getRootParent(SymbolKind.Method)
+    var parentPostfix = symbol.getRootParent(MethodSymbol.class)
       .map(sourceDefinedSymbol -> "." + sourceDefinedSymbol.getName())
       .orElse("");
     mdoRef += parentPostfix;
