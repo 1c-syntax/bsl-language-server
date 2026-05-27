@@ -60,6 +60,7 @@ com.github._1c_syntax.bsl.languageserver.semantictokens.strings
 com.github._1c_syntax.bsl.languageserver.types
 com.github._1c_syntax.bsl.languageserver.types.index
 com.github._1c_syntax.bsl.languageserver.types.inferencer
+com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn
 com.github._1c_syntax.bsl.languageserver.types.model
 com.github._1c_syntax.bsl.languageserver.types.oscript
 com.github._1c_syntax.bsl.languageserver.types.registry
