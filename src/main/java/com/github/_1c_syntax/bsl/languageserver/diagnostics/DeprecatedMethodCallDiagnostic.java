@@ -89,18 +89,15 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
     var reported = new HashSet<Range>();
     for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
       var metadata = member.descriptor().metadata();
-      if (!PlatformMemberCalls.firesDeprecated(metadata.deprecatedSinceVersion(), target)) {
-        continue;
+      if (PlatformMemberCalls.firesDeprecated(metadata.deprecatedSinceVersion(), target)
+        && reported.add(member.range())) {
+        var replacements = metadata.recommendedReplacements();
+        var hint = replacements.isEmpty()
+          ? ""
+          : info.getResourceString("recommendedReplacementsHint", String.join(", ", replacements));
+        diagnosticStorage.addDiagnostic(member.range(),
+          info.getMessage(member.descriptor().name(), hint));
       }
-      if (!reported.add(member.range())) {
-        continue;
-      }
-      var replacements = metadata.recommendedReplacements();
-      var hint = replacements.isEmpty()
-        ? ""
-        : info.getResourceString("recommendedReplacementsHint", String.join(", ", replacements));
-      diagnosticStorage.addDiagnostic(member.range(),
-        info.getMessage(member.descriptor().name(), hint));
     }
   }
 

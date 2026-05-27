@@ -275,58 +275,81 @@ public class TypeService {
    * элемента. Порядок совпадает с {@link #findMemberAt} (первый элемент тот же).
    */
   public List<TypedMember> findMembersAt(DocumentContext documentContext, Position position) {
+    var terminal = identifierTerminalAt(documentContext, position).orElse(null);
+    if (terminal == null) {
+      return List.of();
+    }
+    // Случай глобальной функции / свойства / library-модуля (например,
+    // КодировкаТекста, ФС) — резолвится напрямую, без инференса ресивера.
+    if (!isAccessorIdentifier(terminal)) {
+      var bare = resolveBareName(terminal, documentContext);
+      if (bare.isPresent()) {
+        return List.of(bare.get());
+      }
+    }
+    return resolveDereferenceMembers(terminal, documentContext, position);
+  }
+
+  /**
+   * Терминал-идентификатор в позиции курсора, либо empty, если AST недоступен
+   * или под курсором не идентификатор.
+   */
+  private Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
     BSLParser.FileContext ast;
     try {
       ast = documentContext.getAst();
     } catch (NullPointerException e) {
-      return List.of();
+      return Optional.empty();
     }
     if (ast == null) {
-      return List.of();
+      return Optional.empty();
     }
-    var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, position);
-    if (terminalOpt.isEmpty()) {
-      return List.of();
-    }
-    var terminal = terminalOpt.get();
-    if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
-      return List.of();
-    }
+    return Trees.findTerminalNodeContainsPosition(ast, position)
+      .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
+  }
 
-    // Случай глобального свойства или library-модуля (например, КодировкаТекста, ФС).
+  /**
+   * Резолв голого имени (не аксессора): глобальная функция (владелец = null)
+   * либо глобальное свойство / library-модуль. Empty, если имя так не резолвится.
+   */
+  private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
     var bareName = terminal.getText();
-    if (!isAccessorIdentifier(terminal)) {
-      // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
-      // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
-      typeRegistry.resolve(bareName);
+    // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
+    // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
+    typeRegistry.resolve(bareName);
 
-      // Глобальная функция: возвращаем реальный MemberDescriptor с владельцем=null.
-      var fileType = documentContext.getFileType();
-      var globalFn = globalScopeProvider.findFunction(bareName, fileType);
-      if (globalFn.isPresent()) {
-        return List.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
-      }
+    var fileType = documentContext.getFileType();
+    var globalFn = globalScopeProvider.findFunction(bareName, fileType);
+    if (globalFn.isPresent()) {
+      return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
+    }
 
-      var fromScope = globalScopeProvider.findGlobalEntry(bareName, fileType)
-        .filter(e -> e.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
-        .map(com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Entry::symbol)
-        .filter(SyntheticSymbol.class::isInstance)
-        .map(SyntheticSymbol.class::cast)
-        .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
-        .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN));
-      if (fromScope.isPresent()) {
-        var sym = fromScope.get();
+    return globalScopeProvider.findGlobalEntry(bareName, fileType)
+      .filter(e -> e.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
+      .map(com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Entry::symbol)
+      .filter(SyntheticSymbol.class::isInstance)
+      .map(SyntheticSymbol.class::cast)
+      .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
+      .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN))
+      .map(sym -> {
         var ref = sym.getValueType();
         var desc = sym.getDescription();
         if (desc == null || desc.isBlank()) {
           desc = typeRegistry.getDescription(ref);
         }
-        return List.of(new TypedMember(ref,
+        return new TypedMember(ref,
           MemberDescriptor.property(ref.qualifiedName(), ref, desc),
-          Ranges.create(terminal)));
-      }
-    }
+          Ranges.create(terminal));
+      });
+  }
 
+  /**
+   * Резолв члена через dereference (выражение {@code ресивер.член}): инферит
+   * типы ресивера и собирает совпавшие члены по всем кандидатам-владельцам
+   * (union). Пустой список, если выражение/тип не резолвятся.
+   */
+  private List<TypedMember> resolveDereferenceMembers(TerminalNode terminal,
+                                                      DocumentContext documentContext, Position position) {
     var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
     if (expression == null) {
       return List.of();
@@ -335,14 +358,8 @@ public class TypeService {
     if (dereference == null) {
       return List.of();
     }
-
     var right = dereference.getRight();
-    MemberKind expectedKind;
-    if (right instanceof MethodCallNode) {
-      expectedKind = MemberKind.METHOD;
-    } else {
-      expectedKind = MemberKind.PROPERTY;
-    }
+    var expectedKind = (right instanceof MethodCallNode) ? MemberKind.METHOD : MemberKind.PROPERTY;
     var memberName = terminal.getText();
     var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
     if (leftTypes.isEmpty()) {

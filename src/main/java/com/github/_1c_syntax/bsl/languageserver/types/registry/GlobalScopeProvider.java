@@ -1246,16 +1246,29 @@ public class GlobalScopeProvider {
    * недоступности-по-версии, чтобы они работали без установленного HBK.
    * Отсутствие всех полей → {@link PlatformMetadata#EMPTY}.
    */
-  @SuppressWarnings("unchecked")
   private static PlatformMetadata readGlobalMetadata(Map<String, Object> raw) {
     var sinceVersion = stringEntry(raw, "sinceVersion");
     var deprecatedSinceVersion = stringEntry(raw, "deprecatedSinceVersion");
-    var recommended = (List<String>) raw.getOrDefault("recommendedReplacements", Collections.emptyList());
+    var recommended = stringListEntry(raw, "recommendedReplacements");
     if (sinceVersion.isEmpty() && deprecatedSinceVersion.isEmpty() && recommended.isEmpty()) {
       return PlatformMetadata.EMPTY;
     }
     return new PlatformMetadata(sinceVersion, deprecatedSinceVersion, recommended,
-      null, null, "", "", List.of(), List.of());
+      Set.of(), null, "", "", List.of(), List.of());
+  }
+
+  /** Читает JSON-поле как список строк (нестроковые элементы пропускаются). */
+  private static List<String> stringListEntry(Map<String, Object> raw, String key) {
+    if (!(raw.get(key) instanceof List<?> list)) {
+      return List.of();
+    }
+    var result = new ArrayList<String>(list.size());
+    for (var item : list) {
+      if (item instanceof String s) {
+        result.add(s);
+      }
+    }
+    return result;
   }
 
   @SuppressWarnings("unchecked")

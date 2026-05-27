@@ -58,7 +58,7 @@ class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<Unavail
     configuration.getPlatformOptions().setTargetVersion("8.3.18");
     try {
       List<Diagnostic> diagnostics = getDiagnostics();
-      assertThat(diagnostics).hasSize(0);
+      assertThat(diagnostics).isEmpty();
     } finally {
       configuration.getPlatformOptions().setTargetVersion(null);
     }
@@ -71,7 +71,7 @@ class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<Unavail
     configuration.getPlatformOptions().setTargetVersion("8.3.24");
     try {
       List<Diagnostic> diagnostics = getDiagnostics();
-      assertThat(diagnostics).hasSize(0);
+      assertThat(diagnostics).isEmpty();
     } finally {
       configuration.getPlatformOptions().setTargetVersion(null);
     }

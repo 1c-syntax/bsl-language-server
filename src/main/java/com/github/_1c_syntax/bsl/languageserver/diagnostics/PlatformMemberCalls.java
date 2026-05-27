@@ -54,6 +54,20 @@ import java.util.List;
  */
 final class PlatformMemberCalls {
 
+  /**
+   * Режим совместимости конфигурации «не задан» ({@code DontUse}) —
+   * {@link CompatibilityMode} по умолчанию = {@code (3, 99)}.
+   */
+  private static final CompatibilityMode UNSET = new CompatibilityMode();
+
+  /**
+   * «Самая свежая платформа» — сентинел, доминирующий над любым реальным
+   * режимом совместимости. Берём заведомо больший {@code minor}, чтобы
+   * перекрывать и семейство 8.5+, а не только 8.3.x (значение по умолчанию
+   * {@code DontUse} = {@code (3, 99)} семейство 8.5 НЕ перекрывает).
+   */
+  private static final CompatibilityMode NEWEST = new CompatibilityMode(99, 99);
+
   private PlatformMemberCalls() {
   }
 
@@ -70,37 +84,46 @@ final class PlatformMemberCalls {
       return List.of();
     }
     var result = new ArrayList<TypedMember>();
-
-    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_globalMethodCall)) {
-      var ctx = (BSLParser.GlobalMethodCallContext) node;
-      if (ctx.methodName() != null) {
-        resolveInto(result, documentContext, typeService, ctx.methodName().getStart());
-      }
-    }
-
-    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_methodCall)) {
-      var ctx = (BSLParser.MethodCallContext) node;
-      if (ctx.methodName() == null) {
-        continue;
-      }
-      var token = ctx.methodName().getStart();
-      if (token != null && typeRegistry.isVersionedMemberName(token.getText())) {
-        resolveInto(result, documentContext, typeService, token);
-      }
-    }
-
-    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
-      var ctx = (BSLParser.AccessPropertyContext) node;
-      if (ctx.IDENTIFIER() == null) {
-        continue;
-      }
-      var token = ctx.IDENTIFIER().getSymbol();
-      if (typeRegistry.isVersionedMemberName(token.getText())) {
-        resolveInto(result, documentContext, typeService, token);
-      }
-    }
-
+    collectGlobalCalls(ast, documentContext, typeService, result);
+    collectVersionedMembers(ast, documentContext, typeService, typeRegistry, result);
     return result;
+  }
+
+  /** Глобальные вызовы — резолв дёшев (без инференса), без pre-filter'а по имени. */
+  private static void collectGlobalCalls(BSLParser.FileContext ast, DocumentContext documentContext,
+                                         TypeService typeService, List<TypedMember> sink) {
+    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_globalMethodCall)) {
+      var methodName = ((BSLParser.GlobalMethodCallContext) node).methodName();
+      if (methodName != null) {
+        resolveInto(sink, documentContext, typeService, methodName.getStart());
+      }
+    }
+  }
+
+  /** Члены типов (метод/свойство) — с pre-filter'ом по версионному имени. */
+  private static void collectVersionedMembers(BSLParser.FileContext ast, DocumentContext documentContext,
+                                              TypeService typeService, TypeRegistry typeRegistry,
+                                              List<TypedMember> sink) {
+    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_methodCall)) {
+      var methodName = ((BSLParser.MethodCallContext) node).methodName();
+      if (methodName != null) {
+        resolveVersioned(methodName.getStart(), documentContext, typeService, typeRegistry, sink);
+      }
+    }
+    for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
+      var identifier = ((BSLParser.AccessPropertyContext) node).IDENTIFIER();
+      if (identifier != null) {
+        resolveVersioned(identifier.getSymbol(), documentContext, typeService, typeRegistry, sink);
+      }
+    }
+  }
+
+  private static void resolveVersioned(@Nullable Token token, DocumentContext documentContext,
+                                       TypeService typeService, TypeRegistry typeRegistry,
+                                       List<TypedMember> sink) {
+    if (token != null && typeRegistry.isVersionedMemberName(token.getText())) {
+      resolveInto(sink, documentContext, typeService, token);
+    }
   }
 
   private static void resolveInto(List<TypedMember> sink, DocumentContext documentContext,
@@ -108,25 +131,11 @@ final class PlatformMemberCalls {
     if (token == null) {
       return;
     }
-    var position = new Position(
-      token.getLine() - 1,
-      token.getCharPositionInLine() + Math.max(0, token.getText().length() / 2));
+    // Позиция начала идентификатора входит в его токен (start-inclusive),
+    // этого достаточно для findMembersAt.
+    var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
     sink.addAll(typeService.findMembersAt(documentContext, position));
   }
-
-  /**
-   * Режим совместимости конфигурации «не задан» ({@code DontUse}) —
-   * {@link CompatibilityMode} по умолчанию = {@code (3, 99)}.
-   */
-  private static final CompatibilityMode UNSET = new CompatibilityMode();
-
-  /**
-   * «Самая свежая платформа» — сентинел, доминирующий над любым реальным
-   * режимом совместимости. Берём заведомо больший {@code minor}, чтобы
-   * перекрывать и семейство 8.5+, а не только 8.3.x (значение по умолчанию
-   * {@code DontUse} = {@code (3, 99)} семейство 8.5 НЕ перекрывает).
-   */
-  private static final CompatibilityMode NEWEST = new CompatibilityMode(99, 99);
 
   /**
    * Целевая версия платформы для сравнения. Приоритет: явная настройка
@@ -171,13 +180,14 @@ final class PlatformMemberCalls {
    * (проверку версии для такого члена пропускаем).
    */
   @Nullable
-  private static CompatibilityMode parse(String version) {
+  private static CompatibilityMode parse(@Nullable String version) {
     if (version == null || version.isBlank()) {
       return null;
     }
     try {
       return new CompatibilityMode(version);
     } catch (RuntimeException e) {
+      // Неразборчивая строка версии — проверку версии для члена пропускаем.
       return null;
     }
   }
