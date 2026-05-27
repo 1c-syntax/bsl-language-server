@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -440,7 +441,7 @@ public class ReferenceIndexFiller {
         if (notVariableInitialization(ctx, s)) {
 
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.var_name().getText(),
             Ranges.create(ctx.var_name()),
             false
@@ -566,7 +567,7 @@ public class ReferenceIndexFiller {
       findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.IDENTIFIER().getText(),
             Ranges.create(ctx.IDENTIFIER()),
             ctx.acceptor() != null
@@ -612,7 +613,7 @@ public class ReferenceIndexFiller {
 
       findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(
-            s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
+            s.getRootParent(MethodSymbol.class), variableName, Ranges.create(ctx.IDENTIFIER()), true
           )
         );
       return super.visitCallStatement(ctx);
@@ -649,7 +650,7 @@ public class ReferenceIndexFiller {
 
       findVariableSymbol(variableName)
         .ifPresent(s -> addVariableUsage(
-            s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true
+            s.getRootParent(MethodSymbol.class), variableName, Ranges.create(ctx.IDENTIFIER()), true
           )
         );
       return super.visitComplexIdentifier(ctx);
@@ -664,7 +665,7 @@ public class ReferenceIndexFiller {
       findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.IDENTIFIER().getText(),
             Ranges.create(ctx.IDENTIFIER()),
             false
@@ -684,7 +685,7 @@ public class ReferenceIndexFiller {
       findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.IDENTIFIER().getText(),
             Ranges.create(ctx.IDENTIFIER()),
             false

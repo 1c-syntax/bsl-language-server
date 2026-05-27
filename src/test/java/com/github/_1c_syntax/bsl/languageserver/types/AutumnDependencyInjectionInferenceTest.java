@@ -27,7 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,6 +153,39 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("СовременныйЛоггер");
+  }
+
+  @Test
+  void injectedParameterResolvesAtUsageAndFlowsIntoField() {
+    // given: потребитель внедряет желудь через параметр конструктора и присваивает его полю.
+    // Документ грузится со ссылками (как при открытии в редакторе) — без ручного рефилла.
+    var path = FIXTURE_ROOT.resolve("src/ПотребительВКонструкторе.os").toString();
+    var doc = TestUtils.getDocumentContextFromFile(path, context);
+    var lines = doc.getContentList();
+
+    int usageLine = -1;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].contains("= _Логгер")) {
+        usageLine = i;
+      }
+    }
+    var usagePosition = new Position(usageLine, lines[usageLine].indexOf("_Логгер") + 1);
+
+    // when
+    var atUsage = typeService.inferAtPosition(doc, usagePosition);
+    var field = doc.getSymbolTree().getVariables().stream()
+      .filter(v -> "Сохранённый".equals(v.getName()))
+      .findFirst()
+      .orElseThrow();
+    var fieldTypes = typeService.findTypes(field);
+
+    // then
+    assertThat(qualifiedNames(atUsage))
+      .as("использование параметра-желудя в теле конструктора резолвится в тип")
+      .containsExactly("Логгер");
+    assertThat(qualifiedNames(fieldTypes))
+      .as("тип внедряемого желудя протекает в поле через присваивание")
+      .containsExactly("Логгер");
   }
 
   private VariableSymbol variable(String name) {

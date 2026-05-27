@@ -88,4 +88,30 @@ public interface SourceDefinedSymbol extends Symbol {
 
     return Optional.ofNullable(rootParent);
   }
+
+  /**
+   * Получить наиболее близкий к корню символ-предок указанного типа.
+   * <p>
+   * В отличие от {@link #getRootParent(SymbolKind)}, поиск ведётся по классу
+   * символа, а не по {@link SymbolKind}. Это важно для области метода: и
+   * обычный метод, и конструктор OneScript-класса ({@code ПриСозданииОбъекта})
+   * являются {@link MethodSymbol}, но имеют разные {@link SymbolKind}
+   * ({@code Method} и {@code Constructor} соответственно).
+   *
+   * @param type класс искомого символа-предка
+   * @return найденный символ-предок.
+   */
+  default Optional<SourceDefinedSymbol> getRootParent(Class<? extends SourceDefinedSymbol> type) {
+    SourceDefinedSymbol rootParent = null;
+    Optional<SourceDefinedSymbol> currentParent = getParent();
+    while (currentParent.isPresent()) {
+      var symbol = currentParent.get();
+      if (type.isInstance(symbol)) {
+        rootParent = symbol;
+      }
+      currentParent = symbol.getParent();
+    }
+
+    return Optional.ofNullable(rootParent);
+  }
 }

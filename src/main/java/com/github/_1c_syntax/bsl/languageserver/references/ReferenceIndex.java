@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -78,7 +79,7 @@ public class ReferenceIndex {
     var scopeName = "";
 
     if (symbol.getSymbolKind() == SymbolKind.Variable) {
-      scopeName = symbol.getRootParent(SymbolKind.Method)
+      scopeName = symbol.getRootParent(MethodSymbol.class)
         .map(SourceDefinedSymbol::getName)
         .map(name -> name.toLowerCase(Locale.ENGLISH))
         .orElse("");
