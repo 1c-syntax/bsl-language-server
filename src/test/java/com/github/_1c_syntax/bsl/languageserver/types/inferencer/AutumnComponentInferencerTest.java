@@ -177,6 +177,20 @@ class AutumnComponentInferencerTest {
   }
 
   @Test
+  void returnsEmptyWhenBeanNameIsBlank() {
+    // given
+    // у &Пластилин нет имени, и имя переменной тоже пустое -> имя желудя пустое
+    var annotations = List.of(plasticine());
+
+    // when
+    var types = inferencer.inferInjectedType(annotations, "", FILE_TYPE);
+
+    // then
+    assertThat(types.isEmpty()).isTrue();
+    verifyNoInteractions(beanIndex, typeRegistry);
+  }
+
+  @Test
   void returnsEmptyWhenNoInjectionAnnotation() {
     // given
     var annotations = List.of(annotation("Желудь"));
