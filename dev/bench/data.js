@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779988975216,
+  "lastUpdate": 1780005501985,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35805,6 +35805,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.961570207865797",
             "extra": "mean: 410.655029296875 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "be49fcbf45d082a1db15504b51a551f6a55183c0",
+          "message": "Merge pull request #3964 from 1c-syntax/feature/autumn-collection-type-inference\n\nfeat(types): резолв типа прилепляемой коллекции из autumn-collections",
+          "timestamp": "2026-05-28T08:54:33+02:00",
+          "tree_id": "1980b56136e443c8c779c0a825e02d86619577f5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/be49fcbf45d082a1db15504b51a551f6a55183c0"
+        },
+        "date": 1780005493344,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 387.79813663164776,
+            "unit": "sec",
+            "range": "stddev: 12.076646542932846",
+            "extra": "mean: 387.79813663164776 sec\nrounds: 3"
           }
         ]
       }
