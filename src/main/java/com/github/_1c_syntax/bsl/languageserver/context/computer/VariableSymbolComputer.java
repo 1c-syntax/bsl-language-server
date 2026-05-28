@@ -41,7 +41,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,7 +88,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
-    if (hasInvalidName(ctx.var_name()) || moduleVariables.containsKey(ctx.var_name().getText())) {
+    if (hasMissingName(ctx.var_name()) || moduleVariables.containsKey(ctx.var_name().getText())) {
       return ctx;
     }
 
@@ -120,7 +119,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitSubVarDeclaration(BSLParser.SubVarDeclarationContext ctx) {
-    if (hasInvalidName(ctx.var_name())) {
+    if (hasMissingName(ctx.var_name())) {
       return ctx;
     }
 
@@ -230,22 +229,26 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   /**
-   * Проверяет, что имя переменной не было разобрано корректно.
+   * Проверяет, что имя переменной отсутствует в исходном коде.
    * <p>
    * При незавершённом объявлении (например, {@code Перем} без имени) парсер
-   * выполняет восстановление и подставляет фиктивный токен-ошибку. Такой токен
-   * получает позицию следующей значимой лексемы, из-за чего диапазон объявления
-   * становится «вывернутым» (начало после конца), а {@code selectionRange}
-   * перестаёт содержаться в {@code range}. Подобный символ ломает весь ответ
-   * на запрос {@code textDocument/documentSymbol}, поэтому его нужно пропустить.
+   * выполняет восстановление и подставляет на место идентификатора фиктивный
+   * токен ({@link ErrorNode}). Такой токен получает позицию следующей значимой
+   * лексемы, из-за чего диапазон объявления становится «вывернутым» (начало
+   * после конца), а {@code selectionRange} перестаёт содержаться в {@code range}.
+   * Подобный символ ломает весь ответ на запрос {@code textDocument/documentSymbol},
+   * поэтому его нужно пропустить.
+   * <p>
+   * {@link Trees#nodeContainsErrors} здесь не подходит: он проверяет только
+   * {@link org.antlr.v4.runtime.ParserRuleContext#exception}, но не подставленные
+   * при восстановлении узлы-ошибки.
    *
    * @param varName Контекст имени переменной
-   * @return {@code true}, если имя отсутствует или содержит узел-ошибку
+   * @return {@code true}, если идентификатор имени отсутствует или является узлом-ошибкой
    */
-  private static boolean hasInvalidName(BSLParser.@Nullable Var_nameContext varName) {
-    return varName == null
-      || varName.getChildCount() == 0
-      || varName.getChildren().stream().anyMatch(ErrorNode.class::isInstance);
+  private static boolean hasMissingName(BSLParser.Var_nameContext varName) {
+    var identifier = varName.IDENTIFIER();
+    return identifier == null || identifier instanceof ErrorNode;
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubVarDeclarationContext ctx) {
