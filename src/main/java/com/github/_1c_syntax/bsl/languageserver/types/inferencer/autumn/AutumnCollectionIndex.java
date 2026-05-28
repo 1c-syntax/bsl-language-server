@@ -108,8 +108,7 @@ public class AutumnCollectionIndex {
       return TypeSet.EMPTY;
     }
     ensureBuilt();
-    var types = typesByName.get(collectionName.toLowerCase(Locale.ROOT));
-    return types == null ? TypeSet.EMPTY : types;
+    return typesByName.getOrDefault(collectionName.toLowerCase(Locale.ROOT), TypeSet.EMPTY);
   }
 
   /**
