@@ -78,13 +78,15 @@ class TypeServiceDelegationTest {
   private ReferenceResolver referenceResolver;
   @Mock
   private GlobalScopeProvider globalScopeProvider;
+  @Mock
+  private DereferenceMemberMatcher dereferenceMatcher;
 
   private TypeService typeService;
 
   @BeforeEach
   void setUp() {
     typeService = new TypeService(typeRegistry, symbolTypeIndex, inferencer,
-      referenceResolver, globalScopeProvider);
+      referenceResolver, globalScopeProvider, dereferenceMatcher);
   }
 
   @Test

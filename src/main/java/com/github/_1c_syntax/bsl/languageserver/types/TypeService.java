@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -42,13 +41,6 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbo
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -81,6 +73,7 @@ public class TypeService {
   private final ExpressionTypeInferencer inferencer;
   private final ReferenceResolver referenceResolver;
   private final GlobalScopeProvider globalScopeProvider;
+  private final DereferenceMemberMatcher dereferenceMatcher;
 
   /**
    * Получить набор типов на позиции (точка входа для hover/completion).
@@ -287,7 +280,7 @@ public class TypeService {
         return List.of(bare.get());
       }
     }
-    return resolveDereferenceMembers(terminal, documentContext, position);
+    return dereferenceMatcher.matchAt(terminal, documentContext, position);
   }
 
   /**
@@ -335,177 +328,49 @@ public class TypeService {
   }
 
   /**
-   * Резолв члена через dereference (выражение {@code ресивер.член}): инферит
-   * типы ресивера и собирает совпавшие члены по всем кандидатам-владельцам
-   * (union). Пустой список, если выражение/тип не резолвятся.
-   */
-  private List<TypedMember> resolveDereferenceMembers(TerminalNode terminal,
-                                                      DocumentContext documentContext, Position position) {
-    var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
-    if (expression == null) {
-      return List.of();
-    }
-    var dereference = findDereferenceForTerminal(expression, terminal);
-    if (dereference == null) {
-      return List.of();
-    }
-    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
-    if (leftTypes.isEmpty()) {
-      return List.of();
-    }
-    return matchMembers(terminal, documentContext, dereference.getRight(), leftTypes);
-  }
-
-  /**
-   * Собирает члены с именем {@code terminal} по всем кандидатам-владельцам из
-   * {@code leftTypes} (union), сопоставляя по виду (метод/свойство).
-   */
-  private List<TypedMember> matchMembers(TerminalNode terminal, DocumentContext documentContext,
-                                         BslExpression right, TypeSet leftTypes) {
-    var ctx = new MatchContext(
-      (right instanceof MethodCallNode) ? MemberKind.METHOD : MemberKind.PROPERTY,
-      terminal.getText(),
-      Ranges.create(terminal),
-      (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1,
-      (right instanceof MethodCallNode call) ? inferArgTypes(call, documentContext) : List.of(),
-      documentContext.getFileType()
-    );
-    var result = new ArrayList<TypedMember>();
-    for (var owner : leftTypes.refs()) {
-      collectCanonicalMembers(owner, ctx, result);
-      if (ctx.expectedKind() == MemberKind.PROPERTY) {
-        collectLocalFieldMembers(owner, leftTypes, ctx, result);
-      }
-    }
-    return result;
-  }
-
-  /** Контекст матчинга члена в позиции: общие параметры для per-owner проходов. */
-  private record MatchContext(MemberKind expectedKind, String memberName, Range range,
-                              int argCount, List<TypeSet> argTypes, FileType fileType) {
-  }
-
-  /** Канонические члены типа из {@link TypeRegistry}. */
-  private void collectCanonicalMembers(TypeRef owner, MatchContext ctx, List<TypedMember> sink) {
-    for (var member : typeRegistry.getMembers(owner, ctx.fileType())) {
-      if (member.kind() == ctx.expectedKind() && member.matches(ctx.memberName())) {
-        sink.add(new TypedMember(owner, member, ctx.range(), ctx.argCount(), ctx.argTypes()));
-      }
-    }
-  }
-
-  /**
-   * Динамические поля, прикреплённые инференсом к ресиверу: ключи литеральной
-   * {@code Новый Структура("К1,К2")}, колонки ТЗ из JsDoc и т.п. Тот же источник,
-   * что у dot-completion ({@code CompletionProvider#dotCompletion}).
-   */
-  private static void collectLocalFieldMembers(TypeRef owner, TypeSet leftTypes,
-                                               MatchContext ctx, List<TypedMember> sink) {
-    for (var entry : leftTypes.getLocalFields(owner).entrySet()) {
-      if (!entry.getKey().equalsIgnoreCase(ctx.memberName())) {
-        continue;
-      }
-      var fieldRef = entry.getValue().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-      sink.add(new TypedMember(owner,
-        MemberDescriptor.property(entry.getKey(), fieldRef, ""),
-        ctx.range(), ctx.argCount(), ctx.argTypes()));
-    }
-  }
-
-  /**
    * Обращение к члену ({@code ресивер.член}), у которого тип ресивера выведен и
    * конкретен, но члена с таким именем нет ни на одном из типов-владельцев —
    * вероятная опечатка/несуществующий член. Возвращает {@code TypeSet}
-   * ресивера (для подстановки имени типа в сообщение), либо empty, если это
-   * не обращение к члену, тип ресивера не выведен / содержит UNKNOWN/ANY,
-   * либо член найден.
+   * ресивера (для подстановки имени типа в сообщение), либо empty, если в
+   * позиции член найден, либо тип ресивера не выведен / содержит UNKNOWN/ANY.
+   * <p>
+   * Предполагает, что позиция указывает на аксессор члена — это контракт
+   * вызывающего ({@code visitAccessProperty} / {@code visitMethodCall}).
    */
   public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, Position position) {
-    return concreteReceiverTypesAt(documentContext, position)
-      .filter(types -> findMembersAt(documentContext, position).isEmpty());
-  }
-
-  /**
-   * Типы ресивера в позиции — только если все они конкретны (нет
-   * {@link TypeRef#UNKNOWN} / {@link TypeRef#ANY}). Иначе empty: судить о
-   * «несуществующем члене» нельзя — мог быть валидный член неизвестного
-   * подтипа union'а.
-   */
-  private Optional<TypeSet> concreteReceiverTypesAt(DocumentContext documentContext, Position position) {
-    var terminal = identifierTerminalAt(documentContext, position).orElse(null);
-    if (terminal == null || !isAccessorIdentifier(terminal)) {
+    if (!findMembersAt(documentContext, position).isEmpty()) {
       return Optional.empty();
     }
-    var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
-    if (expression == null) {
-      return Optional.empty();
-    }
-    var dereference = findDereferenceForTerminal(expression, terminal);
-    if (dereference == null) {
-      return Optional.empty();
-    }
-    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
-    var refs = leftTypes.refs();
-    if (refs.isEmpty()
-      || refs.stream().anyMatch(ref -> ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN))) {
-      return Optional.empty();
-    }
-    return Optional.of(leftTypes);
+    return receiverTypesAt(documentContext, position).filter(TypeService::allConcrete);
   }
 
   /**
    * Голый вызов {@code Имя(...)}, который не резолвится ни в глобальную функцию/
    * свойство/перечисление платформы или конфигурации, ни в source-defined символ
    * (метод/переменная текущего модуля). Вероятный вызов несуществующего метода.
+   * <p>
+   * Предполагает, что позиция указывает на имя голого вызова — это контракт
+   * вызывающего ({@code visitGlobalMethodCall}).
    */
   public boolean isUnknownGlobalAt(DocumentContext documentContext, Position position) {
-    var terminal = identifierTerminalAt(documentContext, position).orElse(null);
-    if (terminal == null || isAccessorIdentifier(terminal)) {
-      return false;
-    }
-    if (!findMembersAt(documentContext, position).isEmpty()) {
-      return false;
-    }
-    return referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
-  }
-
-  private static int countMeaningfulArgs(MethodCallNode call) {
-    var args = call.arguments();
-    int n = args.size();
-    // Trim trailing skipped argument (e.g. `Foo(a, )` — 2 ноды, но «значимый» только 1).
-    while (n > 0 && args.get(n - 1) instanceof SkippedCallArgumentNode) {
-      n--;
-    }
-    return n;
+    return findMembersAt(documentContext, position).isEmpty()
+      && referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
   }
 
   /**
-   * Извлекает типы фактических аргументов вызова через
-   * {@link ExpressionTypeInferencer#infer}. Используется для type-aware
-   * подбора перегруженной сигнатуры (см.
-   * {@link com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection#pickIndexByTypes}).
-   * Trailing skipped argument'ы пропускаются (как и в {@link #countMeaningfulArgs}),
-   * чтобы число типов соответствовало callArgCount.
+   * Типы ресивера для выражения {@code ресивер.член} в позиции. Empty, если в
+   * позиции нет dereference-выражения.
    */
-  private List<TypeSet> inferArgTypes(MethodCallNode call, DocumentContext documentContext) {
-    var args = call.arguments();
-    int n = args.size();
-    while (n > 0 && args.get(n - 1) instanceof SkippedCallArgumentNode) {
-      n--;
-    }
-    if (n == 0) {
-      return List.of();
-    }
-    var result = new ArrayList<TypeSet>(n);
-    for (int i = 0; i < n; i++) {
-      var arg = args.get(i);
-      if (arg instanceof SkippedCallArgumentNode) {
-        result.add(TypeSet.EMPTY);
-        continue;
-      }
-      result.add(inferencer.infer(arg, documentContext));
-    }
-    return result;
+  public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, Position position) {
+    return identifierTerminalAt(documentContext, position)
+      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, position, terminal));
+  }
+
+  /** Все типы из набора конкретны (без {@link TypeRef#ANY} / {@link TypeRef#UNKNOWN}). */
+  private static boolean allConcrete(TypeSet types) {
+    var refs = types.refs();
+    return !refs.isEmpty()
+      && refs.stream().noneMatch(ref -> ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN));
   }
 
   private static boolean isAccessorIdentifier(TerminalNode terminal) {
@@ -517,43 +382,6 @@ public class TypeService {
       && parent.getParent() instanceof BSLParser.MethodCallContext mc
       && mc.getParent() instanceof BSLParser.AccessCallContext) {
       return true;
-    }
-    return false;
-  }
-
-  @Nullable
-  private static BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {
-    if (root instanceof BinaryOperationNode binary
-      && binary.getOperator() == BslOperator.DEREFERENCE
-      && rightMatchesTerminal(binary.getRight(), terminal)) {
-      return binary;
-    }
-    if (root instanceof BinaryOperationNode binary) {
-      var leftHit = findDereferenceForTerminal(binary.getLeft(), terminal);
-      if (leftHit != null) {
-        return leftHit;
-      }
-      return findDereferenceForTerminal(binary.getRight(), terminal);
-    }
-    if (root instanceof MethodCallNode call) {
-      for (var arg : call.arguments()) {
-        var hit = findDereferenceForTerminal(arg, terminal);
-        if (hit != null) {
-          return hit;
-        }
-      }
-    }
-    return null;
-  }
-
-  private static boolean rightMatchesTerminal(BslExpression right, TerminalNode terminal) {
-    if (right instanceof TerminalSymbolNode terminalNode
-      && terminalNode.getNodeType() == ExpressionNodeType.IDENTIFIER) {
-      var ast = terminalNode.getRepresentingAst();
-      return ast == terminal;
-    }
-    if (right instanceof MethodCallNode call) {
-      return call.getName() == terminal;
     }
     return false;
   }
