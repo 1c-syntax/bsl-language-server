@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  * чтобы не давать ложных срабатываний. Выключена по умолчанию — требует обкатки
  * на реальных конфигурациях.
  *
- * @see TypeService#isUnknownMemberAt
+ * @see TypeService#unknownMemberReceiverAt
  * @see TypeService#isUnknownGlobalAt
  */
 @DiagnosticMetadata(
