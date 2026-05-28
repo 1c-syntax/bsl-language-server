@@ -295,7 +295,20 @@ public class TypeService {
    * или под курсором не идентификатор.
    */
   private static Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
-    return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), position)
+    BSLParser.FileContext ast;
+    try {
+      ast = documentContext.getAst();
+    } catch (NullPointerException e) {
+      // FIXME: cross-document резолв через инференсер иногда приходит на
+      // DocumentContext с пустым tokenizer'ом (типичное место — резолв
+      // ManagerModule/ObjectModule в тестовых фикстурах без полной
+      // токенизации workspace). По-хорошему надо чинить в инициализации
+      // контекстов; до тех пор — защита от падения, чтобы не валить
+      // диагностики, которые на ровном месте уходят в NPE при работе
+      // с кросс-документными ссылками (AssignToReadOnly и т.п.).
+      return Optional.empty();
+    }
+    return Trees.findTerminalNodeContainsPosition(ast, position)
       .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
   }
 
