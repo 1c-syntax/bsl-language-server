@@ -56,21 +56,6 @@ import java.util.regex.Pattern;
 public final class PlatformMemberCalls {
 
   /**
-   * Режим совместимости конфигурации «не задан» ({@code DontUse}) —
-   * {@link CompatibilityMode} по умолчанию.
-   */
-  private static final CompatibilityMode UNSET = new CompatibilityMode();
-
-  /**
-   * «Самая свежая платформа» — сентинел, доминирующий над любым реальным
-   * режимом совместимости. Берём заведомо больший {@code minor}, чтобы
-   * перекрывать и семейство 8.5+, а не только 8.3.x (значение по умолчанию
-   * {@code DontUse} в bsl-common-library 0.10.0 семейство 8.5 НЕ перекрывает;
-   * после релиза исправленного DontUse сентинел можно будет убрать).
-   */
-  private static final CompatibilityMode NEWEST = new CompatibilityMode(99, 99);
-
-  /**
    * Строка версии вида {@code 8.3.10} — минимум три числовых компонента через
    * {@code .} или {@code _} (этого достаточно для {@link CompatibilityMode}).
    * Двухкомпонентные ({@code 8.3}) и прочие — невалидны.
@@ -146,8 +131,9 @@ public final class PlatformMemberCalls {
   /**
    * Целевая версия платформы для сравнения. Приоритет: явная настройка
    * {@code platform.targetVersion} в конфиге LS → режим совместимости
-   * конфигурации → «самая свежая платформа» (если режим совместимости не задан
-   * / {@code DontUse}).
+   * конфигурации. Если режим совместимости не задан ({@code DontUse}),
+   * {@link CompatibilityMode} трактует его как самую свежую платформу
+   * (доминирует в {@code compareTo}), поэтому отдельной обработки не требуется.
    */
   public static CompatibilityMode targetCompatibilityMode(DocumentContext documentContext,
                                                           LanguageServerConfiguration configuration) {
@@ -155,11 +141,7 @@ public final class PlatformMemberCalls {
     if (explicit != null) {
       return explicit;
     }
-    var configMode = documentContext.getServerContext().getConfiguration().getCompatibilityMode();
-    if (configMode == null || configMode.equals(UNSET)) {
-      return NEWEST;
-    }
-    return configMode;
+    return documentContext.getServerContext().getConfiguration().getCompatibilityMode();
   }
 
   /**

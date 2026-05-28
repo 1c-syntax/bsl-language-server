@@ -1,4 +1,4 @@
-# Use of a method\attribute unavailable in the target platform version (UnavailableMemberCall)
+# Use of a method/attribute unavailable in the target platform version (UnavailableMemberCall)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
