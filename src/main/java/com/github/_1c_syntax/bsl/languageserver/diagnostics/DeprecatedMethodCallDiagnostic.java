@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMem
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   public void check() {
     checkUserDefinedMethods();
     checkPlatformMembers();
+    checkDeletedPrefixMembers();
   }
 
   /**
@@ -98,6 +100,27 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
           : info.getResourceString("recommendedReplacementsHint", String.join(", ", replacements));
         diagnosticStorage.addDiagnostic(member.range(),
           info.getMessage(member.descriptor().name(), hint));
+      }
+    }
+  }
+
+  /**
+   * Обращения к конфигурационным свойствам с префиксом «Удалить»/«Delete» —
+   * стандартная 1С-конвенция пометки устаревших реквизитов, значений
+   * перечислений, объектов конфигурации. Срабатывает независимо от целевой
+   * версии платформы и наличия HBK-меты. Только {@link MemberKind#PROPERTY} —
+   * action-методы вроде {@code УдалитьФайл()} (METHOD) сюда не попадают.
+   */
+  private void checkDeletedPrefixMembers() {
+    var reported = new HashSet<Range>();
+    for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
+      if (member.descriptor().kind() != MemberKind.PROPERTY) {
+        continue;
+      }
+      var name = member.descriptor().name();
+      if (PlatformMemberCalls.hasDeletedPrefix(name) && reported.add(member.range())) {
+        var hint = info.getResourceString("deletedPrefixHint");
+        diagnosticStorage.addDiagnostic(member.range(), info.getMessage(name, hint));
       }
     }
   }

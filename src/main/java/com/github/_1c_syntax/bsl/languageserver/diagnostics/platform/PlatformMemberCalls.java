@@ -91,28 +91,63 @@ public final class PlatformMemberCalls {
     }
   }
 
-  /** Члены типов (метод/свойство) — с pre-filter'ом по версионному имени. */
+  /**
+   * 1С-конвенция пометки устаревших реквизитов / значений перечислений /
+   * объектов конфигурации — префиксы {@code "Удалить"} (ru-mode) и
+   * {@code "Delete"} (en-mode).
+   */
+  private static final String[] DELETED_PREFIXES = {"Удалить", "Delete"};
+
+  /**
+   * Имя следует 1С-конвенции «устарело» — начинается с одного из префиксов
+   * {@link #DELETED_PREFIXES} (без учёта регистра, с хотя бы одним символом
+   * после префикса). Используется в паре с {@code MemberKind.PROPERTY},
+   * чтобы не захватывать одноимённые action-методы вроде {@code УдалитьФайл}.
+   */
+  public static boolean hasDeletedPrefix(@Nullable String name) {
+    if (name == null) {
+      return false;
+    }
+    for (var prefix : DELETED_PREFIXES) {
+      if (name.length() > prefix.length()
+        && name.regionMatches(true, 0, prefix, 0, prefix.length())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Члены типов (метод/свойство) — с pre-filter'ом по имени.
+   * Включает версионные ({@link TypeRegistry#isVersionedMemberName}) и
+   * следующие 1С-конвенции «устарело» (префикс «Удалить»). Остальные
+   * имена не резолвятся, чтобы не тратить инференс на каждый узел.
+   */
   private static void collectVersionedMembers(BSLParser.FileContext ast, DocumentContext documentContext,
                                               TypeService typeService, TypeRegistry typeRegistry,
                                               List<TypedMember> sink) {
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_methodCall)) {
       var methodName = ((BSLParser.MethodCallContext) node).methodName();
       if (methodName != null) {
-        resolveVersioned(methodName.getStart(), documentContext, typeService, typeRegistry, sink);
+        resolveCandidate(methodName.getStart(), documentContext, typeService, typeRegistry, sink);
       }
     }
     for (var node : Trees.findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
       var identifier = ((BSLParser.AccessPropertyContext) node).IDENTIFIER();
       if (identifier != null) {
-        resolveVersioned(identifier.getSymbol(), documentContext, typeService, typeRegistry, sink);
+        resolveCandidate(identifier.getSymbol(), documentContext, typeService, typeRegistry, sink);
       }
     }
   }
 
-  private static void resolveVersioned(@Nullable Token token, DocumentContext documentContext,
+  private static void resolveCandidate(@Nullable Token token, DocumentContext documentContext,
                                        TypeService typeService, TypeRegistry typeRegistry,
                                        List<TypedMember> sink) {
-    if (token != null && typeRegistry.isVersionedMemberName(token.getText())) {
+    if (token == null) {
+      return;
+    }
+    var text = token.getText();
+    if (typeRegistry.isVersionedMemberName(text) || hasDeletedPrefix(text)) {
       resolveInto(sink, documentContext, typeService, token);
     }
   }
