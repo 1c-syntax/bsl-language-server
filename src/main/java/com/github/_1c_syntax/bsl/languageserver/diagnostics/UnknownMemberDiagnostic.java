@@ -27,11 +27,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
+
+import java.util.stream.Collectors;
 
 /**
  * Подсвечивает обращение к методу или свойству, которое не является известным
@@ -83,9 +87,8 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
     var methodName = ctx.methodName();
     if (methodName != null) {
       var token = methodName.getStart();
-      if (typeService.isUnknownMemberAt(documentContext, positionOf(token))) {
-        diagnosticStorage.addDiagnostic(methodName, info.getMessage(token.getText()));
-      }
+      typeService.unknownMemberReceiverAt(documentContext, positionOf(token))
+        .ifPresent(types -> diagnosticStorage.addDiagnostic(methodName, memberMessage(token.getText(), types)));
     }
     return super.visitMethodCall(ctx);
   }
@@ -95,11 +98,22 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
     var identifier = ctx.IDENTIFIER();
     if (identifier != null) {
       var token = identifier.getSymbol();
-      if (typeService.isUnknownMemberAt(documentContext, positionOf(token))) {
-        diagnosticStorage.addDiagnostic(identifier, info.getMessage(token.getText()));
-      }
+      typeService.unknownMemberReceiverAt(documentContext, positionOf(token))
+        .ifPresent(types -> diagnosticStorage.addDiagnostic(identifier, memberMessage(token.getText(), types)));
     }
     return super.visitAccessProperty(ctx);
+  }
+
+  /**
+   * Сообщение с именем(-ами) типа ресивера для подсказки, на каком типе члена
+   * не нашлось. Несколько кандидатов union'а склеиваются через запятую.
+   */
+  private String memberMessage(String memberName, TypeSet ownerTypes) {
+    var typeNames = ownerTypes.refs().stream()
+      .map(TypeRef::qualifiedName)
+      .distinct()
+      .collect(Collectors.joining(", "));
+    return info.getResourceString("memberMessage", memberName, typeNames);
   }
 
   private static Position positionOf(Token token) {

@@ -49,7 +49,9 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
       .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
       .toList();
     org.assertj.core.api.Assertions.assertThat(messages)
-      .anyMatch(m -> m.contains("Добвить"))
+      // У типа "Массив" нет метода или свойства "Добвить" — подставлено имя
+      // типа ресивера в сообщение (отдельный memberMessage от глобального).
+      .anyMatch(m -> m.contains("Добвить") && m.contains("Массив"))
       .anyMatch(m -> m.contains("НесуществующийГлобальныйМетод"))
       .noneMatch(m -> m.contains("ИмяОбъекта") || m.contains("Успешно"));
   }

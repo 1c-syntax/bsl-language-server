@@ -368,42 +368,59 @@ public class TypeService {
     var argTypes = (right instanceof MethodCallNode call)
       ? inferArgTypes(call, documentContext)
       : List.<TypeSet>of();
+    var range = Ranges.create(terminal);
     var fileType = documentContext.getFileType();
     var result = new ArrayList<TypedMember>();
     for (var owner : leftTypes.refs()) {
-      for (var member : typeRegistry.getMembers(owner, fileType)) {
-        if (member.kind() == expectedKind && member.matches(memberName)) {
-          result.add(new TypedMember(owner, member, Ranges.create(terminal), argCount, argTypes));
-        }
-      }
-      // Динамические поля, прикреплённые инференсом к ресиверу: ключи литеральной
-      // «Новый Структура("К1,К2")», колонки ТЗ из JsDoc и т.п. Тот же источник,
-      // что у dot-completion (CompletionProvider#dotCompletion).
+      collectCanonicalMembers(owner, expectedKind, memberName, fileType, range, argCount, argTypes, result);
       if (expectedKind == MemberKind.PROPERTY) {
-        var localFields = leftTypes.getLocalFields(owner);
-        for (var entry : localFields.entrySet()) {
-          if (entry.getKey().equalsIgnoreCase(memberName)) {
-            var fieldRef = entry.getValue().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-            result.add(new TypedMember(owner,
-              MemberDescriptor.property(entry.getKey(), fieldRef, ""),
-              Ranges.create(terminal), argCount, argTypes));
-          }
-        }
+        collectLocalFieldMembers(owner, leftTypes, memberName, range, argCount, argTypes, result);
       }
     }
     return result;
   }
 
+  /** Канонические члены типа из {@link TypeRegistry}. */
+  private void collectCanonicalMembers(TypeRef owner, MemberKind expectedKind, String memberName,
+                                       FileType fileType, Range range, int argCount,
+                                       List<TypeSet> argTypes, List<TypedMember> sink) {
+    for (var member : typeRegistry.getMembers(owner, fileType)) {
+      if (member.kind() == expectedKind && member.matches(memberName)) {
+        sink.add(new TypedMember(owner, member, range, argCount, argTypes));
+      }
+    }
+  }
+
+  /**
+   * Динамические поля, прикреплённые инференсом к ресиверу: ключи литеральной
+   * {@code Новый Структура("К1,К2")}, колонки ТЗ из JsDoc и т.п. Тот же источник,
+   * что у dot-completion ({@code CompletionProvider#dotCompletion}).
+   */
+  private static void collectLocalFieldMembers(TypeRef owner, TypeSet leftTypes, String memberName,
+                                               Range range, int argCount, List<TypeSet> argTypes,
+                                               List<TypedMember> sink) {
+    for (var entry : leftTypes.getLocalFields(owner).entrySet()) {
+      if (!entry.getKey().equalsIgnoreCase(memberName)) {
+        continue;
+      }
+      var fieldRef = entry.getValue().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+      sink.add(new TypedMember(owner,
+        MemberDescriptor.property(entry.getKey(), fieldRef, ""),
+        range, argCount, argTypes));
+    }
+  }
+
   /**
    * Обращение к члену ({@code ресивер.член}), у которого тип ресивера выведен и
    * конкретен, но члена с таким именем нет ни на одном из типов-владельцев —
-   * вероятная опечатка/несуществующий член. Возвращает {@code false}, если это
-   * не обращение к члену, тип ресивера не выведен либо среди кандидатов есть
-   * неопределённый/произвольный тип (тогда судить нельзя).
+   * вероятная опечатка/несуществующий член. Возвращает {@code TypeSet}
+   * ресивера (для подстановки имени типа в сообщение), либо empty, если это
+   * не обращение к члену, тип ресивера не выведен / содержит UNKNOWN/ANY,
+   * либо член найден.
    */
-  public boolean isUnknownMemberAt(DocumentContext documentContext, Position position) {
-    return concreteReceiverTypesAt(documentContext, position).isPresent()
-      && findMembersAt(documentContext, position).isEmpty();
+  public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, Position position) {
+    return concreteReceiverTypesAt(documentContext, position)
+      .filter(types -> findMembersAt(documentContext, position).isEmpty());
   }
 
   /**
