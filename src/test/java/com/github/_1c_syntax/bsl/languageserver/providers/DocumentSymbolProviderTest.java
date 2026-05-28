@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +40,48 @@ class DocumentSymbolProviderTest {
 
   @Autowired
   private DocumentSymbolProvider documentSymbolProvider;
+
+  @Test
+  void testIncompleteVariableDeclarationDoesNotBreakSelectionRange() {
+    // given - незавершённое объявление переменной без имени (Перем без идентификатора).
+    // Парсер восстанавливается, подставляя токен-ошибку, из-за чего диапазон объявления
+    // становится «вывернутым» и selectionRange перестаёт содержаться в range, что ломало
+    // весь ответ на запрос textDocument/documentSymbol.
+    var documentContext = TestUtils.getDocumentContext(
+      "Функция ЗначениеПеременной(ИмяПеременной) Экспорт\n"
+        + "\tПерем\n"
+        + "КонецФункции"
+    );
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    var allSymbols = flatten(documentSymbols);
+
+    // then - метод по-прежнему отдаётся в структуре документа
+    assertThat(allSymbols)
+      .anyMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method);
+
+    // каждый symbol (включая вложенные) имеет selectionRange внутри range
+    assertThat(allSymbols)
+      .allMatch(documentSymbol ->
+        Ranges.containsRange(documentSymbol.getRange(), documentSymbol.getSelectionRange())
+      );
+
+    // сломанный символ переменной без имени не попадает в структуру документа
+    assertThat(allSymbols)
+      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Variable)
+      .isEmpty();
+  }
+
+  private static List<DocumentSymbol> flatten(List<DocumentSymbol> documentSymbols) {
+    List<DocumentSymbol> result = new ArrayList<>();
+    documentSymbols.forEach(documentSymbol -> {
+      result.add(documentSymbol);
+      result.addAll(flatten(documentSymbol.getChildren()));
+    });
+    return result;
+  }
 
   @Test
   void testDocumentSymbol() {

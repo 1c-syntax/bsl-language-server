@@ -36,10 +36,12 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,7 +89,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
-    if (moduleVariables.containsKey(ctx.var_name().getText())) {
+    if (hasInvalidName(ctx.var_name()) || moduleVariables.containsKey(ctx.var_name().getText())) {
       return ctx;
     }
 
@@ -118,6 +120,10 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitSubVarDeclaration(BSLParser.SubVarDeclarationContext ctx) {
+    if (hasInvalidName(ctx.var_name())) {
+      return ctx;
+    }
+
     var symbol = VariableSymbol.builder()
       .name(ctx.var_name().getText())
       .owner(documentContext)
@@ -221,6 +227,25 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return Collections.emptyList();
     }
     return Annotations.from(moduleVar.annotation());
+  }
+
+  /**
+   * Проверяет, что имя переменной не было разобрано корректно.
+   * <p>
+   * При незавершённом объявлении (например, {@code Перем} без имени) парсер
+   * выполняет восстановление и подставляет фиктивный токен-ошибку. Такой токен
+   * получает позицию следующей значимой лексемы, из-за чего диапазон объявления
+   * становится «вывернутым» (начало после конца), а {@code selectionRange}
+   * перестаёт содержаться в {@code range}. Подобный символ ломает весь ответ
+   * на запрос {@code textDocument/documentSymbol}, поэтому его нужно пропустить.
+   *
+   * @param varName Контекст имени переменной
+   * @return {@code true}, если имя отсутствует или содержит узел-ошибку
+   */
+  private static boolean hasInvalidName(BSLParser.@Nullable Var_nameContext varName) {
+    return varName == null
+      || varName.getChildCount() == 0
+      || varName.getChildren().stream().anyMatch(ErrorNode.class::isInstance);
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubVarDeclarationContext ctx) {
