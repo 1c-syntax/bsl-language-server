@@ -88,7 +88,7 @@ dependencies {
     api("io.github.1c-syntax:bsl-parser:0.34.1")
     api("io.github.1c-syntax:utils:0.7.0")
     api("io.github.1c-syntax:mdclasses:0.18.0")
-    api("io.github.1c-syntax:bsl-common-library:0.10.0")
+    api("io.github.1c-syntax:bsl-common-library:0.10.1")
     api("io.github.1c-syntax:supportconf:0.16.0")
     api("io.github.1c-syntax:bsl-context:0.5.1")
 
