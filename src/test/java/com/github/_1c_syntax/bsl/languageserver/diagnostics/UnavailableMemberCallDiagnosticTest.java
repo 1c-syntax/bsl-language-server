@@ -39,7 +39,7 @@ class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<Unavail
   void unavailableForOlderTarget() {
 
     // given — целевая платформа 8.3.10 ниже версии появления ВопросАсинх (8.3.18).
-    configuration.getPlatformOptions().setTargetVersion("8.3.10");
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.10");
     try {
       // when
       List<Diagnostic> diagnostics = getDiagnostics();
@@ -47,7 +47,7 @@ class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<Unavail
       // then
       assertThat(diagnostics).hasSize(1);
     } finally {
-      configuration.getPlatformOptions().setTargetVersion(null);
+      configuration.getV8PlatformOptions().setTargetVersion(null);
     }
   }
 
@@ -55,12 +55,12 @@ class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<Unavail
   void availableForTargetAtSinceVersion() {
 
     // given — целевая платформа равна версии появления члена: член доступен.
-    configuration.getPlatformOptions().setTargetVersion("8.3.18");
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.18");
     try {
       List<Diagnostic> diagnostics = getDiagnostics();
       assertThat(diagnostics).isEmpty();
     } finally {
-      configuration.getPlatformOptions().setTargetVersion(null);
+      configuration.getV8PlatformOptions().setTargetVersion(null);
     }
   }
 
@@ -68,12 +68,12 @@ class UnavailableMemberCallDiagnosticTest extends AbstractDiagnosticTest<Unavail
   void availableForNewerTarget() {
 
     // given — целевая платформа выше версии появления члена: член доступен.
-    configuration.getPlatformOptions().setTargetVersion("8.3.24");
+    configuration.getV8PlatformOptions().setTargetVersion("8.3.24");
     try {
       List<Diagnostic> diagnostics = getDiagnostics();
       assertThat(diagnostics).isEmpty();
     } finally {
-      configuration.getPlatformOptions().setTargetVersion(null);
+      configuration.getV8PlatformOptions().setTargetVersion(null);
     }
   }
 }

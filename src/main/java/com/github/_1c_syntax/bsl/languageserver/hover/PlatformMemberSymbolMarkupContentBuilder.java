@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 /**
@@ -45,10 +44,6 @@ public class PlatformMemberSymbolMarkupContentBuilder implements MarkupContentBu
       symbol.getOwner(), symbol.getDescriptor(), symbol.getCallArgCount(), symbol.getArgTypes());
   }
 
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Method;
-  }
 
   @Override
   public Class<? extends Symbol> getSymbolClass() {

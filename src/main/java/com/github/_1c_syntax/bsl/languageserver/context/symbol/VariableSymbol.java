@@ -21,10 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import org.eclipse.lsp4j.Range;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,6 +38,17 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
    * @return Вид переменной
    */
   VariableKind getKind();
+
+  /**
+   * Аннотации, навешанные на объявление переменной (например, {@code &Пластилин}
+   * фреймворка ОСень). Для подавляющего большинства переменных список пуст,
+   * поэтому он не хранится в объекте символа — см. {@link AnnotatedVariableSymbol}.
+   *
+   * @return список аннотаций; пустой, если их нет.
+   */
+  default List<Annotation> getAnnotations() {
+    return Collections.emptyList();
+  }
 
   /**
    * @return Диапазон, в котором определено имя переменной.

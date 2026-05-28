@@ -26,6 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Diagno
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.inlayhints.InlayHintOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.oscript.OScriptOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
@@ -55,6 +57,10 @@ class LanguageServerConfigurationTest {
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
   private static final String PATH_TO_PARTIAL_CONFIGURATION_FILE
     = "./src/test/resources/.partial-bsl-language-server.json";
+  private static final String PATH_TO_V8PLATFORM_CONFIGURATION_FILE
+    = "./src/test/resources/.v8platform-bsl-language-server.json";
+  private static final String PATH_TO_OSCRIPT_CONFIGURATION_FILE
+    = "./src/test/resources/.oscript-bsl-language-server.json";
 
   @Autowired
   private LanguageServerConfiguration configuration;
@@ -107,10 +113,6 @@ class LanguageServerConfigurationTest {
     assertThat(annotations)
       .hasSize(2)
       .contains("Test", "Test2");
-
-    var platformOptions = configuration.getPlatformOptions();
-    assertThat(platformOptions.isEnabled()).isFalse();
-    assertThat(platformOptions.getTargetVersion()).isEqualTo("8.3.21");
   }
 
   @Test
@@ -189,6 +191,37 @@ class LanguageServerConfigurationTest {
     assertThat(semanticTokensOptions.getParsedStrTemplateMethods().moduleMethodPairs())
       .containsKey("custommodule");
 
+  }
+
+  @Test
+  void testV8PlatformOptions() {
+    // given
+    File configurationFile = new File(PATH_TO_V8PLATFORM_CONFIGURATION_FILE);
+
+    // when
+    configuration.update(configurationFile);
+
+    // then
+    V8PlatformOptions v8PlatformOptions = configuration.getV8PlatformOptions();
+    assertThat(v8PlatformOptions.isEnabled()).isFalse();
+    assertThat(v8PlatformOptions.getBinPath()).isEqualTo(Path.of("/opt/1cv8/8.3.27.1786/bin"));
+    assertThat(v8PlatformOptions.getTargetVersion()).isEqualTo("8.3.21");
+  }
+
+  @Test
+  void testOScriptOptions() {
+    // given
+    File configurationFile = new File(PATH_TO_OSCRIPT_CONFIGURATION_FILE);
+
+    // when
+    configuration.update(configurationFile);
+
+    // then
+    OScriptOptions oscriptOptions = configuration.getOscriptOptions();
+    assertThat(oscriptOptions.getLibRoots())
+      .containsExactly("./libs", "/opt/oscript-lib");
+    assertThat(oscriptOptions.isUseEnvLibLocation()).isTrue();
+    assertThat(oscriptOptions.isShowImplicitLibraryEntriesInCompletion()).isTrue();
   }
 
 }

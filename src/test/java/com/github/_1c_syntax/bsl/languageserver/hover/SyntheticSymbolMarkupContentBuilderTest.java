@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -117,15 +116,6 @@ class SyntheticSymbolMarkupContentBuilderTest {
     // then
     var lines = content.getValue().split("\n");
     assertThat(lines.length).isLessThan(10);
-  }
-
-  @Test
-  void getSymbolKindReturnsProperty() {
-    // given / when
-    var kind = builder.getSymbolKind();
-
-    // then
-    assertThat(kind).isEqualTo(SymbolKind.Property);
   }
 
   @Test

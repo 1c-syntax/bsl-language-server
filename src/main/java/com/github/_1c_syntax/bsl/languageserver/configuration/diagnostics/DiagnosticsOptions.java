@@ -76,7 +76,7 @@ public class DiagnosticsOptions {
   private Set<String> ignoredAuthors = new HashSet<>();
 
   @JsonSetter("ignoredAuthors")
-  public void setIgnoredAuthors(Set<String> authors) {
+  public void setIgnoredAuthors(@Nullable Set<String> authors) {
     this.ignoredAuthors = authors == null
       ? new HashSet<>()
       : authors.stream()

@@ -31,9 +31,5 @@
   },
   "useDevSite": true,
   "traceLog": "build/.trace.log",
-  "configurationRoot": "src/test/resources/metadata/designer",
-  "platform": {
-    "enabled": false,
-    "targetVersion": "8.3.21"
-  }
+  "configurationRoot": "src/test/resources/metadata/designer"
 }

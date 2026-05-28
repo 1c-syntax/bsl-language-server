@@ -92,10 +92,6 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }
 
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Variable;
-  }
 
   @Override
   public Class<? extends Symbol> getSymbolClass() {

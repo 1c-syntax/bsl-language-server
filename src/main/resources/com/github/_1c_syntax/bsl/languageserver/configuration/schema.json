@@ -1227,24 +1227,54 @@
                 }
             }
         },
-        "platform": {
-            "$id": "#/properties/platform",
+        "oscript": {
+            "$id": "#/properties/oscript",
             "type": "object",
-            "title": "Platform types subsystem configuration.",
+            "title": "OneScript libraries configuration.",
             "properties": {
-                "enabled": {
-                    "$id": "#/properties/platform/enabled",
+                "libRoots": {
+                    "$id": "#/properties/oscript/libRoots",
+                    "type": "array",
+                    "title": "Additional root directories to search for OneScript libraries (each subdirectory is scanned for lib.config).",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        
+                    ]
+                },
+                "useEnvLibLocation": {
+                    "$id": "#/properties/oscript/useEnvLibLocation",
                     "type": "boolean",
-                    "title": "Enable loading the platform context from the installed 1C syntax assistant (HBK). Disable to skip autodetection and HBK parsing.",
+                    "title": "Also use paths from the OSCRIPT_LIB_LOCATION environment variable in addition to libRoots.",
+                    "default": false
+                },
+                "showImplicitLibraryEntriesInCompletion": {
+                    "$id": "#/properties/oscript/showImplicitLibraryEntriesInCompletion",
+                    "type": "boolean",
+                    "title": "Suggest implicit library entries (.os files not declared in lib.config) in no-dot completion.",
+                    "default": false
+                }
+            }
+        },
+        "v8platform": {
+            "$id": "#/properties/v8platform",
+            "type": "object",
+            "title": "1C:Enterprise platform types configuration.",
+            "properties": {
+                "binPath": {
+                    "$id": "#/properties/v8platform/binPath",
+                    "type": "string",
+                    "title": "Path to the 'bin' directory of an installed 1C:Enterprise platform (where syntax-helper files shcntx_*.hbk, shlang_*.hbk are located). If not set, the most recent installation on the machine is autodetected."
+                },
+                "enabled": {
+                    "$id": "#/properties/v8platform/enabled",
+                    "type": "boolean",
+                    "title": "Allow loading platform context from the syntax-helper of an installed 1C:Enterprise.",
                     "default": true
                 },
-                "binPath": {
-                    "$id": "#/properties/platform/binPath",
-                    "type": "string",
-                    "title": "Path to the 'bin' directory of the installed 1C platform with syntax assistant files (shcntx_*.hbk, shlang_*.hbk). Autodetected when empty."
-                },
                 "targetVersion": {
-                    "$id": "#/properties/platform/targetVersion",
+                    "$id": "#/properties/v8platform/targetVersion",
                     "type": "string",
                     "title": "Target 1C platform version for compatibility diagnostics (deprecation, member availability). Takes priority over the configuration compatibility mode. When empty, the configuration compatibility mode is used, and if that is unset the newest platform is assumed. Format: 8.3.21."
                 }

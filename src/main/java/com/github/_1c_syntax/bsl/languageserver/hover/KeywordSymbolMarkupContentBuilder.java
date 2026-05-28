@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 /**
@@ -61,10 +60,6 @@ public class KeywordSymbolMarkupContentBuilder implements MarkupContentBuilder<K
     return new MarkupContent(MarkupKind.MARKDOWN, markdown);
   }
 
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Operator;
-  }
 
   @Override
   public Class<? extends Symbol> getSymbolClass() {

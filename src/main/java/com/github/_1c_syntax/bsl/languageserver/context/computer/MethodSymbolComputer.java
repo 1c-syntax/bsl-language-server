@@ -28,8 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition.ParameterType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotations;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -39,13 +38,11 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -114,7 +111,7 @@ public final class MethodSymbolComputer
       declaration.EXPORT_KEYWORD() != null,
       asyncKeyword != null,
       getCompilerDirective(declaration.compilerDirective()),
-      createAnnotations(declaration.annotation()));
+      Annotations.from(declaration.annotation()));
 
     methods.add(methodSymbol);
 
@@ -150,7 +147,7 @@ public final class MethodSymbolComputer
       declaration.EXPORT_KEYWORD() != null,
       asyncKeyword != null,
       getCompilerDirective(declaration.compilerDirective()),
-      createAnnotations(declaration.annotation())
+      Annotations.from(declaration.annotation())
     );
 
     methods.add(methodSymbol);
@@ -319,7 +316,7 @@ public final class MethodSymbolComputer
           .name(parameterName)
           .byValue(param.VAL_KEYWORD() != null)
           .defaultValue(getDefaultValue(param))
-          .annotations(createAnnotations(param.annotation()))
+          .annotations(Annotations.from(param.annotation()))
           .range(getParameterRange(param))
           .description(getParameterDescription(parameterName, description))
           .build();
@@ -397,58 +394,4 @@ public final class MethodSymbolComputer
 
   }
 
-  private static List<Annotation> createAnnotations(List<? extends BSLParser.AnnotationContext> annotationContexts) {
-    return annotationContexts.stream()
-      .map(MethodSymbolComputer::createAnnotation)
-      .toList();
-  }
-
-  private static Annotation createAnnotation(BSLParser.AnnotationContext annotation) {
-    return Annotation.builder()
-      .name(annotation.annotationName().getText().intern())
-      .kind(AnnotationKind.of(annotation.annotationName().getStop().getType()))
-      .parameters(getAnnotationParameter(annotation.annotationParams()))
-      .build();
-  }
-
-  private static List<AnnotationParameterDefinition> getAnnotationParameter(
-    BSLParser.AnnotationParamsContext annotationParamsContext
-  ) {
-
-    if (annotationParamsContext == null) {
-      return Collections.emptyList();
-    }
-
-    return annotationParamsContext.annotationParam().stream()
-      .map(MethodSymbolComputer::getAnnotationParam)
-      .toList();
-  }
-
-  private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext annotationParam) {
-    var name = Optional.ofNullable(annotationParam.annotationParamName())
-      .map(ParserRuleContext::getText)
-      .orElse("");
-    var value = Optional.ofNullable(annotationParam.annotationParamValue())
-      .map(BSLParser.AnnotationParamValueContext::constValue)
-      .map(ParserRuleContext::getText)
-      .map(MethodSymbolComputer::excludeTrailingQuotes)
-      .map(Either::<String, Annotation>forLeft)
-      .or(
-        () -> Optional.ofNullable(annotationParam.annotationParamValue())
-          .map(BSLParser.AnnotationParamValueContext::annotation)
-          .map(MethodSymbolComputer::createAnnotation)
-          .map(Either::<String, Annotation>forRight)
-      )
-      .orElse(Either.forLeft(""));
-    var optional = annotationParam.annotationParamValue() != null;
-
-    return new AnnotationParameterDefinition(name, value, optional);
-  }
-
-  private static String excludeTrailingQuotes(String text) {
-    if (text.length() > 2 && text.charAt(0) == '\"') {
-      return text.substring(1, text.length() - 1);
-    }
-    return text;
-  }
 }

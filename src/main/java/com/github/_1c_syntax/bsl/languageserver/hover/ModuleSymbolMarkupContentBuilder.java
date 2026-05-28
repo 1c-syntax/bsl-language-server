@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -72,10 +71,6 @@ public class ModuleSymbolMarkupContentBuilder implements MarkupContentBuilder<Mo
     return new MarkupContent(MarkupKind.MARKDOWN, content);
   }
 
-  @Override
-  public SymbolKind getSymbolKind() {
-    return SymbolKind.Module;
-  }
 
   @Override
   public Class<? extends Symbol> getSymbolClass() {

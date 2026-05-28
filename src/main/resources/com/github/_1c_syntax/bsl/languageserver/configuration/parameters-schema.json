@@ -2019,13 +2019,13 @@
             "$id": "#/definitions/UnaryPlusInConcatenation"
         },
         "UnavailableMemberCall": {
-            "description": "Use of a method/attribute unavailable in the target platform version",
+            "description": "Use of a method/property unavailable in the target platform version",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Use of a method/attribute unavailable in the target platform version",
+            "title": "Use of a method/property unavailable in the target platform version",
             "$id": "#/definitions/UnavailableMemberCall"
         },
         "UnionAll": {

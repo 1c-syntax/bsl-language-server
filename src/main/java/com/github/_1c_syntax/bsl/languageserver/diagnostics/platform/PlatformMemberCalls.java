@@ -130,14 +130,14 @@ public final class PlatformMemberCalls {
 
   /**
    * Целевая версия платформы для сравнения. Приоритет: явная настройка
-   * {@code platform.targetVersion} в конфиге LS → режим совместимости
+   * {@code v8platform.targetVersion} в конфиге LS → режим совместимости
    * конфигурации. Если режим совместимости не задан ({@code DontUse}),
    * {@link CompatibilityMode} трактует его как самую свежую платформу
    * (доминирует в {@code compareTo}), поэтому отдельной обработки не требуется.
    */
   public static CompatibilityMode targetCompatibilityMode(DocumentContext documentContext,
                                                           LanguageServerConfiguration configuration) {
-    var explicit = parse(configuration.getPlatformOptions().getTargetVersion());
+    var explicit = parse(configuration.getV8PlatformOptions().getTargetVersion());
     if (explicit != null) {
       return explicit;
     }
