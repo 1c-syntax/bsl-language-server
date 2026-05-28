@@ -79,6 +79,14 @@ public class TypeRegistry {
   private final List<PlatformTypesProvider> platformProviders;
   /** Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы. */
   private final GlobalScopeProvider globalScopeProvider;
+  /**
+   * Индекс метаданных членов (read-only свойства + версионные члены) для
+   * дешёвых pre-filter'ов диагностик. Workspace-scoped Spring-компонент;
+   * заполняется при регистрации {@link TypePackProvider.TypeDecl} провайдерами
+   * платформенных типов (bsl-context / JSON-fallback); конфигурационные MD-типы
+   * сюда не попадают (у них нет accessMode/версий).
+   */
+  private final MemberMetadataIndex memberMetadataIndex;
 
   /** Интернированные TypeRef по канонической форме (kind + lowercased name). */
   private final Map<TypeRef, TypeRef> internedRefs = new ConcurrentHashMap<>();
@@ -114,15 +122,6 @@ public class TypeRegistry {
   private final Map<TypeRef, BilingualString> forEachDescriptions = new ConcurrentHashMap<>();
   /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника. */
   private final Map<TypeRef, BilingualString> indexAccessDescriptions = new ConcurrentHashMap<>();
-  /**
-   * Индекс метаданных членов (read-only свойства + версионные члены) для
-   * дешёвых pre-filter'ов диагностик. Заполняется при регистрации
-   * {@link TypePackProvider.TypeDecl} провайдерами платформенных типов
-   * (bsl-context / JSON-fallback); конфигурационные MD-типы сюда не попадают.
-   * Источник истины без обращения к {@link MemberSource} лямбдам и без захвата
-   * RWLock на {@code ServerContext}. См. {@link MemberMetadataIndex}.
-   */
-  private final MemberMetadataIndex memberMetadataIndex = new MemberMetadataIndex();
   /**
    * Тип ↔ имена generic-плейсхолдеров (без угловых скобок). Заполняется
    * платформенным провайдером из {@link TypePackProvider.TypeDecl#typeParameters()}.

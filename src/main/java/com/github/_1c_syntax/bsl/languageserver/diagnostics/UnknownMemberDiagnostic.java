@@ -55,7 +55,7 @@ import org.eclipse.lsp4j.Position;
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 2,
-  scope = DiagnosticScope.BSL,
+  scope = DiagnosticScope.ALL,
   activatedByDefault = false,
   tags = {
     DiagnosticTag.SUSPICIOUS

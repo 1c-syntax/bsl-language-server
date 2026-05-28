@@ -368,11 +368,26 @@ public class TypeService {
     var argTypes = (right instanceof MethodCallNode call)
       ? inferArgTypes(call, documentContext)
       : List.<TypeSet>of();
+    var fileType = documentContext.getFileType();
     var result = new ArrayList<TypedMember>();
     for (var owner : leftTypes.refs()) {
-      for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
+      for (var member : typeRegistry.getMembers(owner, fileType)) {
         if (member.kind() == expectedKind && member.matches(memberName)) {
           result.add(new TypedMember(owner, member, Ranges.create(terminal), argCount, argTypes));
+        }
+      }
+      // Динамические поля, прикреплённые инференсом к ресиверу: ключи литеральной
+      // «Новый Структура("К1,К2")», колонки ТЗ из JsDoc и т.п. Тот же источник,
+      // что у dot-completion (CompletionProvider#dotCompletion).
+      if (expectedKind == MemberKind.PROPERTY) {
+        var localFields = leftTypes.getLocalFields(owner);
+        for (var entry : localFields.entrySet()) {
+          if (entry.getKey().equalsIgnoreCase(memberName)) {
+            var fieldRef = entry.getValue().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+            result.add(new TypedMember(owner,
+              MemberDescriptor.property(entry.getKey(), fieldRef, ""),
+              Ranges.create(terminal), argCount, argTypes));
+          }
         }
       }
     }
@@ -387,47 +402,36 @@ public class TypeService {
    * неопределённый/произвольный тип (тогда судить нельзя).
    */
   public boolean isUnknownMemberAt(DocumentContext documentContext, Position position) {
+    return concreteReceiverTypesAt(documentContext, position).isPresent()
+      && findMembersAt(documentContext, position).isEmpty();
+  }
+
+  /**
+   * Типы ресивера в позиции — только если все они конкретны (нет
+   * {@link TypeRef#UNKNOWN} / {@link TypeRef#ANY}). Иначе empty: судить о
+   * «несуществующем члене» нельзя — мог быть валидный член неизвестного
+   * подтипа union'а.
+   */
+  private Optional<TypeSet> concreteReceiverTypesAt(DocumentContext documentContext, Position position) {
     var terminal = identifierTerminalAt(documentContext, position).orElse(null);
     if (terminal == null || !isAccessorIdentifier(terminal)) {
-      return false;
+      return Optional.empty();
     }
     var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
     if (expression == null) {
-      return false;
+      return Optional.empty();
     }
     var dereference = findDereferenceForTerminal(expression, terminal);
     if (dereference == null) {
-      return false;
+      return Optional.empty();
     }
     var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
     var refs = leftTypes.refs();
     if (refs.isEmpty()
       || refs.stream().anyMatch(ref -> ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN))) {
-      return false;
+      return Optional.empty();
     }
-    var memberName = terminal.getText();
-    var fileType = documentContext.getFileType();
-    return refs.stream().noneMatch(owner -> memberKnownOnOwner(owner, leftTypes, memberName, fileType));
-  }
-
-  /**
-   * Член {@code name} считается известным на {@code owner}, если:
-   * <ul>
-   *   <li>в {@link TypeRegistry#getMembers(TypeRef, FileType)} есть совпадение
-   *       по имени (включая алиасы / ru-en пары);</li>
-   *   <li>имя присутствует среди «локальных полей», прикреплённых инференсом
-   *       к ресиверу: ключи литеральной {@code Новый Структура("К1,К2")},
-   *       колонки ТЗ из JsDoc и т.п. (источник тот же, что у dot-completion,
-   *       см. {@code CompletionProvider#dotCompletion}).</li>
-   * </ul>
-   */
-  private boolean memberKnownOnOwner(TypeRef owner, TypeSet leftTypes, String name, FileType fileType) {
-    for (var member : typeRegistry.getMembers(owner, fileType)) {
-      if (member.matches(name)) {
-        return true;
-      }
-    }
-    return leftTypes.getLocalFields(owner).keySet().stream().anyMatch(k -> k.equalsIgnoreCase(name));
+    return Optional.of(leftTypes);
   }
 
   /**

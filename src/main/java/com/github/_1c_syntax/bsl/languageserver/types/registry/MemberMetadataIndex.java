@@ -21,9 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 import java.util.Map;
@@ -41,13 +45,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * платформенных типов (bsl-context / JSON-fallback); конфигурационные MD-типы
  * сюда не попадают (у них нет accessMode/версий).
  */
-final class MemberMetadataIndex {
+@Component
+@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class MemberMetadataIndex {
 
   private final Map<TypeRef, Set<String>> readOnlyByType = new ConcurrentHashMap<>();
   private final Set<String> readOnlyNames = ConcurrentHashMap.newKeySet();
   private final Set<String> versionedNames = ConcurrentHashMap.newKeySet();
 
-  void index(TypeRef ref, MemberDescriptor member) {
+  public void index(TypeRef ref, MemberDescriptor member) {
     var lc = member.name().toLowerCase(Locale.ROOT);
     if (member.metadata().hasVersionInfo()) {
       versionedNames.add(lc);
@@ -58,20 +64,20 @@ final class MemberMetadataIndex {
     }
   }
 
-  boolean hasAnyReadOnly() {
+  public boolean hasAnyReadOnly() {
     return !readOnlyNames.isEmpty();
   }
 
-  boolean isReadOnlyName(String name) {
+  public boolean isReadOnlyName(String name) {
     return readOnlyNames.contains(name.toLowerCase(Locale.ROOT));
   }
 
-  boolean isReadOnly(TypeRef typeRef, String name) {
+  public boolean isReadOnly(TypeRef typeRef, String name) {
     var names = readOnlyByType.get(typeRef);
     return names != null && names.contains(name.toLowerCase(Locale.ROOT));
   }
 
-  boolean isVersionedName(String name) {
+  public boolean isVersionedName(String name) {
     return versionedNames.contains(name.toLowerCase(Locale.ROOT));
   }
 }
