@@ -69,6 +69,13 @@ public final class PlatformMemberCalls {
    */
   private static final String[] DELETED_PREFIXES = {"Удалить", "Delete"};
 
+  /**
+   * Sentinel-значение поля {@code deprecatedSinceVersion} — «устарел всегда»,
+   * безотносительно версии платформы. Используется для oscript-конвенции
+   * (там нет версионирования, но есть API, помеченные устаревшими).
+   */
+  public static final String DEPRECATED_ALWAYS = "*";
+
   private PlatformMemberCalls() {
   }
 
@@ -178,13 +185,6 @@ public final class PlatformMemberCalls {
     }
     return documentContext.getServerContext().getConfiguration().getCompatibilityMode();
   }
-
-  /**
-   * Sentinel-значение поля {@code deprecatedSinceVersion} — «устарел всегда»,
-   * безотносительно версии платформы. Используется для oscript-конвенции
-   * (там нет версионирования, но есть API, помеченные устаревшими).
-   */
-  public static final String DEPRECATED_ALWAYS = "*";
 
   /**
    * Член устарел для целевой платформы: {@code target >= deprecatedSinceVersion}.

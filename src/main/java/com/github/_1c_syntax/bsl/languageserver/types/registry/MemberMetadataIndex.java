@@ -54,22 +54,23 @@ public class MemberMetadataIndex {
   private final Set<String> versionedNames = ConcurrentHashMap.newKeySet();
 
   public void index(TypeRef ref, MemberDescriptor member) {
-    var bn = member.bilingualName();
     var versioned = member.metadata().hasVersionInfo();
     var readOnly = member.metadata().accessMode() == AccessMode.READ;
     if (!versioned && !readOnly) {
       return;
     }
-    Set<String> readOnlyOfType = readOnly
+    var readOnlyOfType = readOnly
       ? readOnlyByType.computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet())
-      : null;
+      : Set.<String>of();
+    var bn = member.bilingualName();
     indexLocale(bn.ru(), versioned, readOnly, readOnlyOfType);
     indexLocale(bn.en(), versioned, readOnly, readOnlyOfType);
   }
 
+  /** Регистрирует одно из двух написаний имени (ru/en) во всех релевантных индексах. */
   private void indexLocale(String name, boolean versioned, boolean readOnly,
-                           @org.jspecify.annotations.Nullable Set<String> readOnlyOfType) {
-    if (name == null || name.isEmpty()) {
+                           Set<String> readOnlyOfType) {
+    if (name.isEmpty()) {
       return;
     }
     var lc = name.toLowerCase(Locale.ROOT);
@@ -78,9 +79,7 @@ public class MemberMetadataIndex {
     }
     if (readOnly) {
       readOnlyNames.add(lc);
-      if (readOnlyOfType != null) {
-        readOnlyOfType.add(lc);
-      }
+      readOnlyOfType.add(lc);
     }
   }
 
