@@ -21,10 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.platform;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Чисто-функциональные ветви {@link PlatformMemberCalls}: парсинг версий,
@@ -103,5 +110,45 @@ class PlatformMemberCallsTest {
     assertThat(PlatformMemberCalls.hasDeletedPrefix("Поле")).isFalse();
     assertThat(PlatformMemberCalls.hasDeletedPrefix(null)).isFalse();
     assertThat(PlatformMemberCalls.hasDeletedPrefix("")).isFalse();
+  }
+
+  @Test
+  void targetCompatibilityModePrefersExplicitOption() {
+
+    // given — задана явная настройка v8platform.targetVersion=8.3.20.
+    var doc = mock(DocumentContext.class);
+    var config = mock(LanguageServerConfiguration.class);
+    var v8opts = mock(V8PlatformOptions.class);
+    when(config.getV8PlatformOptions()).thenReturn(v8opts);
+    when(v8opts.getTargetVersion()).thenReturn("8.3.20");
+
+    // when
+    var mode = PlatformMemberCalls.targetCompatibilityMode(doc, config);
+
+    // then — конфиг-режим не запрашивается, отдан explicit.
+    assertThat(CompatibilityMode.compareTo(mode, new CompatibilityMode("8.3.20"))).isZero();
+  }
+
+  @Test
+  void targetCompatibilityModeFallsBackToConfigurationMode() {
+
+    // given — explicit не задан / невалиден; CompatibilityMode берётся из конфигурации.
+    var doc = mock(DocumentContext.class);
+    var config = mock(LanguageServerConfiguration.class);
+    var v8opts = mock(V8PlatformOptions.class);
+    when(config.getV8PlatformOptions()).thenReturn(v8opts);
+    when(v8opts.getTargetVersion()).thenReturn("");
+    var serverContext = mock(ServerContext.class);
+    var mdConfig = mock(CF.class);
+    when(doc.getServerContext()).thenReturn(serverContext);
+    when(serverContext.getConfiguration()).thenReturn(mdConfig);
+    var configMode = new CompatibilityMode("8.3.14");
+    when(mdConfig.getCompatibilityMode()).thenReturn(configMode);
+
+    // when
+    var mode = PlatformMemberCalls.targetCompatibilityMode(doc, config);
+
+    // then
+    assertThat(mode).isSameAs(configMode);
   }
 }
