@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779972930682,
+  "lastUpdate": 1779988975216,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35774,6 +35774,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 15.675801859081552",
             "extra": "mean: 385.43366320927936 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "efc0bdb20eb1be7b3eb51bc0a952c396d37139ba",
+          "message": "Merge pull request #3961 from 1c-syntax/feature/autumn-log-type-inference\n\nfeat(types): вывод типов для компонент-/инъекционных алиасов ОСени (&Лог, &Контроллер, killjoy)",
+          "timestamp": "2026-05-28T00:00:37+02:00",
+          "tree_id": "bc92fa89586f4481cb8222197aa35be4da12fb46",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/efc0bdb20eb1be7b3eb51bc0a952c396d37139ba"
+        },
+        "date": 1779988968016,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 410.655029296875,
+            "unit": "sec",
+            "range": "stddev: 7.961570207865797",
+            "extra": "mean: 410.655029296875 sec\nrounds: 3"
           }
         ]
       }
