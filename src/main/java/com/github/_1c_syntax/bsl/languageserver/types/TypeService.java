@@ -414,14 +414,11 @@ public class TypeService {
       return false;
     }
     var memberName = terminal.getText();
-    for (var owner : refs) {
-      for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
-        if (member.matches(memberName)) {
-          return false;
-        }
-      }
-    }
-    return true;
+    var fileType = documentContext.getFileType();
+    var known = refs.stream()
+      .flatMap(owner -> typeRegistry.getMembers(owner, fileType).stream())
+      .anyMatch(member -> member.matches(memberName));
+    return !known;
   }
 
   /**

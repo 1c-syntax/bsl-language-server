@@ -68,10 +68,11 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (ctx.methodName() != null) {
-      var token = ctx.methodName().getStart();
-      if (token != null && typeService.isUnknownGlobalAt(documentContext, positionOf(token))) {
-        diagnosticStorage.addDiagnostic(ctx.methodName(), info.getMessage(token.getText()));
+    var methodName = ctx.methodName();
+    if (methodName != null) {
+      var token = methodName.getStart();
+      if (typeService.isUnknownGlobalAt(documentContext, positionOf(token))) {
+        diagnosticStorage.addDiagnostic(methodName, info.getMessage(token.getText()));
       }
     }
     return super.visitGlobalMethodCall(ctx);
@@ -79,10 +80,11 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    if (ctx.methodName() != null) {
-      var token = ctx.methodName().getStart();
-      if (token != null && typeService.isUnknownMemberAt(documentContext, positionOf(token))) {
-        diagnosticStorage.addDiagnostic(ctx.methodName(), info.getMessage(token.getText()));
+    var methodName = ctx.methodName();
+    if (methodName != null) {
+      var token = methodName.getStart();
+      if (typeService.isUnknownMemberAt(documentContext, positionOf(token))) {
+        diagnosticStorage.addDiagnostic(methodName, info.getMessage(token.getText()));
       }
     }
     return super.visitMethodCall(ctx);
@@ -90,10 +92,11 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
-    if (ctx.IDENTIFIER() != null) {
-      var token = ctx.IDENTIFIER().getSymbol();
+    var identifier = ctx.IDENTIFIER();
+    if (identifier != null) {
+      var token = identifier.getSymbol();
       if (typeService.isUnknownMemberAt(documentContext, positionOf(token))) {
-        diagnosticStorage.addDiagnostic(ctx.IDENTIFIER(), info.getMessage(token.getText()));
+        diagnosticStorage.addDiagnostic(identifier, info.getMessage(token.getText()));
       }
     }
     return super.visitAccessProperty(ctx);
