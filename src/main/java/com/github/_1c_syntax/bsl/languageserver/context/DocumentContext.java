@@ -175,6 +175,19 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return tokenizer.getAst();
   }
 
+  /**
+   * Документ уже токенизирован (есть валидный {@link #getAst()})?
+   * Используется потребителями для cross-document резолва, где
+   * {@link DocumentContext} может быть зарегистрирован в {@code ServerContext},
+   * но ещё не пройти полную инициализацию (например, lazy-загрузка модуля,
+   * на который вышла ссылка из соседнего файла) — тогда вызов
+   * {@link #getAst()} упадёт в NPE на {@code requireNonNull(tokenizer)}.
+   */
+  @Locked("computeLock")
+  public boolean isTokenized() {
+    return tokenizer != null;
+  }
+
   @Locked("computeLock")
   public List<Token> getTokens() {
     requireNonNull(tokenizer);
