@@ -28,14 +28,20 @@ import java.util.List;
 /**
  * Дескриптор одной сигнатуры (варианта синтаксиса) метода/конструктора.
  *
- * @param parameters           упорядоченный список параметров
- * @param returnTypes          union возвращаемых типов
- * @param bilingualDescription краткое описание варианта (ru + en)
+ * @param parameters             упорядоченный список параметров
+ * @param returnTypes            union возвращаемых типов
+ * @param bilingualDescription   краткое описание варианта (ru + en)
+ * @param syntheticReturnTypeOnly признак синтетической сигнатуры, созданной лишь для
+ *                               переноса {@code returnType} метода, у которого в источнике
+ *                               не описаны параметры. Пустой {@link #parameters} у такой
+ *                               сигнатуры означает «параметры неизвестны», а не «их нет», —
+ *                               сигнал для completion не считать метод беспараметровым.
  */
 public record SignatureDescriptor(
   List<ParameterDescriptor> parameters,
   TypeSet returnTypes,
-  BilingualString bilingualDescription
+  BilingualString bilingualDescription,
+  boolean syntheticReturnTypeOnly
 ) {
 
   public static final SignatureDescriptor EMPTY = new SignatureDescriptor(
@@ -51,6 +57,12 @@ public record SignatureDescriptor(
     }
   }
 
+  /** Канонический набор полей без флага синтетичности (обычная сигнатура). */
+  public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeSet returnTypes,
+                             BilingualString bilingualDescription) {
+    this(parameters, returnTypes, bilingualDescription, false);
+  }
+
   /** Compat-конструктор: одноязычное {@code description} строкой. */
   public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeSet returnTypes,
                              String description) {
@@ -61,6 +73,16 @@ public record SignatureDescriptor(
   public SignatureDescriptor(List<ParameterDescriptor> parameters, TypeRef returnType,
                              String description) {
     this(parameters, wrapSingle(returnType), BilingualString.of(description));
+  }
+
+  /**
+   * Синтетическая сигнатура «только returnType»: пустой список параметров не означает,
+   * что метод беспараметровый, — параметры в источнике просто не описаны.
+   *
+   * @see #syntheticReturnTypeOnly()
+   */
+  public static SignatureDescriptor syntheticReturnType(TypeRef returnType) {
+    return new SignatureDescriptor(List.of(), wrapSingle(returnType), BilingualString.EMPTY, true);
   }
 
   /** Compat-аксессор: primary описание. */

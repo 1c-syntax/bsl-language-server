@@ -217,7 +217,8 @@ public record MemberDescriptor(
         if (specializedReturn == sig.returnTypes()) {
           rebuilt.add(sig);
         } else {
-          rebuilt.add(new SignatureDescriptor(sig.parameters(), specializedReturn, sig.description()));
+          rebuilt.add(new SignatureDescriptor(sig.parameters(), specializedReturn,
+            sig.bilingualDescription(), sig.syntheticReturnTypeOnly()));
           signaturesChanged = true;
         }
       }

@@ -207,7 +207,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       if (kind == MemberKind.METHOD && signatures.isEmpty() && returnType != TypeRef.UNKNOWN) {
         // JSON указал returnType метода без signatures — синтезируем безпараметровую сигнатуру,
         // чтобы returnType метода был доступен инференсеру через MemberDescriptor.returnTypes.
-        signatures = List.of(new SignatureDescriptor(List.of(), returnType, ""));
+        // Помечаем её синтетической: пустой список параметров здесь — «неизвестны», а не «их нет».
+        signatures = List.of(SignatureDescriptor.syntheticReturnType(returnType));
       }
       var generic = Boolean.TRUE.equals(m.get("generic"));
       MemberDescriptor descriptor;
@@ -353,7 +354,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
           .withVariadic(ruParam.variadic()));
       }
       result.add(new SignatureDescriptor(params, ruSig.returnTypes(),
-        BilingualString.of(ruSig.description(), enSig.description())));
+        BilingualString.of(ruSig.description(), enSig.description()),
+        ruSig.syntheticReturnTypeOnly()));
     }
     return result;
   }

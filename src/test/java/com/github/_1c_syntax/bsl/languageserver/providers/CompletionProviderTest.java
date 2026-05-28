@@ -712,6 +712,52 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void methodWithoutParametersInsertsClosedParensWithSnippetSupport() {
+    // Метод без параметров: даже при snippetSupport вставляем готовые `()` и оставляем
+    // курсор после них — между скобок вводить нечего, signatureHelp поднимать незачем.
+    enableSnippetSupport(true);
+
+    var content = "ТекущаяДат";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var currentDate = items.stream()
+      .filter(it -> "ТекущаяДата".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(currentDate.getInsertText()).isEqualTo("ТекущаяДата()");
+    assertThat(currentDate.getInsertTextFormat()).isNull();
+    assertThat(currentDate.getCommand()).isNull();
+  }
+
+  @Test
+  void methodWithoutParametersInsertsClosedParensWithoutSnippetSupport() {
+    // Без snippetSupport метод без параметров тоже вставляется с закрытой скобкой `()`,
+    // а не одиночной `(`: дописывать пользователю нечего.
+    var content = "ТекущаяДат";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+    var currentDate = items.stream()
+      .filter(it -> "ТекущаяДата".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(currentDate.getInsertText()).isEqualTo("ТекущаяДата()");
+    assertThat(currentDate.getInsertTextFormat()).isNull();
+    assertThat(currentDate.getCommand()).isNull();
+  }
+
+  @Test
   void dotCompletionMethodDetailHoldsSignatureNotDescription() {
     // Регрессия: раньше purposeDescription дублировался в detail и в documentation
     // → VS Code показывал одну и ту же фразу дважды в подсказке. Теперь detail для
@@ -1224,6 +1270,58 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .filter(it -> it.getLabel().startsWith("Мо")).toList();
     assertThat(labels).anySatisfy(it -> assertThat(it.getLabel()).isEqualTo("МояФун"));
     assertThat(labels).anySatisfy(it -> assertThat(it.getLabel()).isEqualTo("МояПроц"));
+  }
+
+  @Test
+  void localMethodWithoutParametersInsertsClosedParens() {
+    // Локальный метод без параметров: курсор ставим после скобок, а не между ними —
+    // для обоих режимов клиента (snippet и фолбэк) вставляется `()`.
+    enableSnippetSupport(true);
+
+    var content =
+      "Процедура БезПараметров() Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "БезПар";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, 6));
+
+    var item = completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> "БезПараметров".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(item.getInsertText()).isEqualTo("БезПараметров()");
+    assertThat(item.getInsertTextFormat()).isNull();
+    assertThat(item.getCommand()).isNull();
+  }
+
+  @Test
+  void localMethodWithParametersStaysSnippetWithCursorBetweenParens() {
+    // Регрессия: метод с параметрами по-прежнему получает `($0)` и triggerParameterHints.
+    enableSnippetSupport(true);
+
+    var content =
+      "Процедура СПараметром(Знач П) Экспорт\n"
+        + "КонецПроцедуры\n"
+        + "\n"
+        + "СПара";
+    var documentContext = TestUtils.getDocumentContext(content);
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(3, 5));
+
+    var item = completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> "СПараметром".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(item.getInsertText()).isEqualTo("СПараметром($0)");
+    assertThat(item.getInsertTextFormat()).isEqualTo(InsertTextFormat.Snippet);
+    assertThat(item.getCommand()).isNotNull();
+    assertThat(item.getCommand().getCommand()).isEqualTo("editor.action.triggerParameterHints");
   }
 
   @Test

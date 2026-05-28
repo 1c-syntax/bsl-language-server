@@ -313,10 +313,15 @@ public final class CompletionProvider {
         if (matches(className, prefix)) {
           var item = new CompletionItem(className);
           item.setKind(CompletionItemKind.Class);
-          typeService.resolve(className, fileType).ifPresent(ref -> {
+          // Без данных о конструкторе сохраняем поведение с курсором между скобок.
+          var ctorHasParameters = true;
+          var refOpt = typeService.resolve(className, fileType);
+          if (refOpt.isPresent()) {
+            var ref = refOpt.get();
             var ctors = typeService.getConstructors(ref, fileType);
             if (!ctors.isEmpty()) {
               var first = ctors.get(0);
+              ctorHasParameters = !first.parameters().isEmpty();
               var paramList = first.parameters().stream()
                 .map(p -> p.displayName(scriptVariant))
                 .collect(java.util.stream.Collectors.joining(", "));
@@ -326,8 +331,8 @@ public final class CompletionProvider {
             if (!desc.isEmpty()) {
               item.setDocumentation(desc);
             }
-          });
-          applyCallableInsertText(item, className);
+          }
+          applyCallableInsertText(item, className, ctorHasParameters);
           items.add(item);
         }
       }
@@ -338,7 +343,8 @@ public final class CompletionProvider {
         if (matches(libClassName, prefix)) {
           var item = new CompletionItem(libClassName);
           item.setKind(CompletionItemKind.Class);
-          applyCallableInsertText(item, libClassName);
+          // Данных о конструкторе библиотечного класса здесь нет — сохраняем курсор между скобок.
+          applyCallableInsertText(item, libClassName, true);
           items.add(item);
         }
       }
@@ -394,7 +400,7 @@ public final class CompletionProvider {
       if (matches(method.getName(), prefix)) {
         var item = new CompletionItem(method.getName());
         item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
-        applyCallableInsertText(item, method.getName());
+        applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
         items.add(item);
       }
     }
@@ -522,7 +528,7 @@ public final class CompletionProvider {
     var item = new CompletionItem(displayName);
     if (member.kind() == MemberKind.METHOD) {
       item.setKind(methodKind);
-      applyCallableInsertText(item, displayName);
+      applyCallableInsertText(item, displayName, memberHasParameters(member));
       var detail = methodDetail(member, scriptVariant);
       if (!detail.isBlank()) {
         item.setDetail(detail);
@@ -541,16 +547,27 @@ public final class CompletionProvider {
   /**
    * Поведение по конвенции LSP-серверов (TypeScript LS, gopls, rust-analyzer, Pyright):
    * <ul>
-   *   <li>Если клиент поддерживает {@code completionItem.snippetSupport} —
+   *   <li>Метод без параметров — вставляем готовые скобки «{@code Метод()}» и оставляем
+   *       курсор сразу после них: вводить нечего, а signatureHelp поднимать незачем.</li>
+   *   <li>Метод с параметрами и клиент поддерживает {@code completionItem.snippetSupport} —
    *       вставляем «{@code Метод($0)}» как сниппет: курсор окажется между скобок,
    *       и сразу даём {@code editor.action.triggerParameterHints}, чтобы клиент
    *       поднял signatureHelp без дополнительного нажатия.</li>
-   *   <li>Без {@code snippetSupport} — фолбэк «{@code Метод(}»: символ {@code (} тоже
-   *       trigger character для signatureHelp ({@link com.github._1c_syntax.bsl.languageserver.BSLLanguageServer}),
+   *   <li>Метод с параметрами без {@code snippetSupport} — фолбэк «{@code Метод(}»: символ
+   *       {@code (} тоже trigger character для signatureHelp
+   *       ({@link com.github._1c_syntax.bsl.languageserver.BSLLanguageServer}),
    *       но закрывающую скобку пользователь поставит сам.</li>
    * </ul>
+   *
+   * @param hasParameters есть ли у вызываемого хотя бы один параметр. Когда данных о
+   *                      сигнатуре нет либо перегрузок несколько — передаётся {@code true},
+   *                      чтобы сохранить поведение с курсором между скобок.
    */
-  private void applyCallableInsertText(CompletionItem item, String name) {
+  private void applyCallableInsertText(CompletionItem item, String name, boolean hasParameters) {
+    if (!hasParameters) {
+      item.setInsertText(name + "()");
+      return;
+    }
     if (snippetSupport) {
       item.setInsertText(name + "($0)");
       item.setInsertTextFormat(InsertTextFormat.Snippet);
@@ -558,6 +575,26 @@ public final class CompletionProvider {
     } else {
       item.setInsertText(name + "(");
     }
+  }
+
+  /**
+   * Есть ли у метода/функции хотя бы один параметр. Возвращает {@code true} (консервативно,
+   * с курсором между скобок) во всех случаях, кроме одного: ровно одна сигнатура с пустым
+   * списком параметров, явно описанная в источнике. Несколько перегрузок, отсутствие
+   * сигнатур или синтетическая сигнатура «только returnType» (параметры в источнике не
+   * описаны — см. {@link SignatureDescriptor#syntheticReturnTypeOnly()}) трактуются как
+   * «параметры есть/неизвестны».
+   */
+  private static boolean memberHasParameters(MemberDescriptor member) {
+    var signatures = member.signatures();
+    if (signatures.size() != 1) {
+      return true;
+    }
+    var signature = signatures.get(0);
+    if (signature.syntheticReturnTypeOnly()) {
+      return true;
+    }
+    return !signature.parameters().isEmpty();
   }
 
   private String methodDetail(MemberDescriptor member, Language scriptVariant) {

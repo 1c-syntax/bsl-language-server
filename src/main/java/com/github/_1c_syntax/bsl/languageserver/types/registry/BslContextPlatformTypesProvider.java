@@ -315,7 +315,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     var primaryReturnType = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
     var signatures = toSignatures(method.signatures(), primaryReturnType, enLookup);
     if (signatures.isEmpty() && primaryReturnType != TypeRef.UNKNOWN) {
-      signatures = List.of(new SignatureDescriptor(List.of(), primaryReturnType, ""));
+      // Синтетическая сигнатура «только returnType»: параметры в источнике не описаны.
+      signatures = List.of(SignatureDescriptor.syntheticReturnType(primaryReturnType));
     }
     return new MemberDescriptor(
       bilingualName(method.name()),
