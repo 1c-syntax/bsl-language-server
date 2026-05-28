@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779925852839,
+  "lastUpdate": 1779972930682,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35743,6 +35743,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.239920041470924",
             "extra": "mean: 371.92689935366315 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a6474e9c92725edf0df2cfe69d0ff0f98f5423af",
+          "message": "Merge pull request #3963 from 1c-syntax/fix/sonar-reliability-gate\n\nfix: устранение ложных reliability-замечаний Sonar (S2583/S2637)",
+          "timestamp": "2026-05-27T23:22:45+02:00",
+          "tree_id": "50a4e474225ceda5f4ca89c8fd4cac54519c908e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a6474e9c92725edf0df2cfe69d0ff0f98f5423af"
+        },
+        "date": 1779972922704,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 385.43366320927936,
+            "unit": "sec",
+            "range": "stddev: 15.675801859081552",
+            "extra": "mean: 385.43366320927936 sec\nrounds: 3"
           }
         ]
       }
