@@ -180,10 +180,21 @@ public final class PlatformMemberCalls {
   }
 
   /**
+   * Sentinel-значение поля {@code deprecatedSinceVersion} — «устарел всегда»,
+   * безотносительно версии платформы. Используется для oscript-конвенции
+   * (там нет версионирования, но есть API, помеченные устаревшими).
+   */
+  public static final String DEPRECATED_ALWAYS = "*";
+
+  /**
    * Член устарел для целевой платформы: {@code target >= deprecatedSinceVersion}.
+   * Sentinel {@link #DEPRECATED_ALWAYS} срабатывает всегда (oscript-конвенция).
    * Пустая или неразборчивая строка версии → {@code false}.
    */
   public static boolean firesDeprecated(String deprecatedSinceVersion, CompatibilityMode target) {
+    if (DEPRECATED_ALWAYS.equals(deprecatedSinceVersion)) {
+      return true;
+    }
     var version = parse(deprecatedSinceVersion);
     return version != null && CompatibilityMode.compareTo(version, target) >= 0;
   }

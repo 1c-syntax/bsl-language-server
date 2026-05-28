@@ -54,13 +54,33 @@ public class MemberMetadataIndex {
   private final Set<String> versionedNames = ConcurrentHashMap.newKeySet();
 
   public void index(TypeRef ref, MemberDescriptor member) {
-    var lc = member.name().toLowerCase(Locale.ROOT);
-    if (member.metadata().hasVersionInfo()) {
+    var bn = member.bilingualName();
+    var versioned = member.metadata().hasVersionInfo();
+    var readOnly = member.metadata().accessMode() == AccessMode.READ;
+    if (!versioned && !readOnly) {
+      return;
+    }
+    Set<String> readOnlyOfType = readOnly
+      ? readOnlyByType.computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet())
+      : null;
+    indexLocale(bn.ru(), versioned, readOnly, readOnlyOfType);
+    indexLocale(bn.en(), versioned, readOnly, readOnlyOfType);
+  }
+
+  private void indexLocale(String name, boolean versioned, boolean readOnly,
+                           @org.jspecify.annotations.Nullable Set<String> readOnlyOfType) {
+    if (name == null || name.isEmpty()) {
+      return;
+    }
+    var lc = name.toLowerCase(Locale.ROOT);
+    if (versioned) {
       versionedNames.add(lc);
     }
-    if (member.metadata().accessMode() == AccessMode.READ) {
+    if (readOnly) {
       readOnlyNames.add(lc);
-      readOnlyByType.computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet()).add(lc);
+      if (readOnlyOfType != null) {
+        readOnlyOfType.add(lc);
+      }
     }
   }
 

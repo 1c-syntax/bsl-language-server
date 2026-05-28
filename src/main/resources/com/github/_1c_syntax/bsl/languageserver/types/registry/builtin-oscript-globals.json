@@ -351,7 +351,7 @@
     {
       "name": "СоединитьДвоичныеДанные",
       "aliases": [
-        "ConcatenateBinaryData"
+        "ConcatBinaryData"
       ],
       "description": "Объединяет несколько объектов типа ДвоичныеДанные в один.\n\nВозвращаемое значение: Тип: ДвоичныеДанные.",
       "returnType": "ДвоичныеДанные",
@@ -362,6 +362,24 @@
               "name": "array",
               "type": "Массив",
               "description": "Массив объектов типа ДвоичныеДанные."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ]
+    },
+    {
+      "name": "ConcatenateBinaryData",
+      "description": "Устаревший алиас СоединитьДвоичныеДанные/ConcatBinaryData.",
+      "deprecatedSinceVersion": "*",
+      "recommendedReplacements": ["СоединитьДвоичныеДанные"],
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "array",
+              "type": "Массив"
             }
           ],
           "returnType": "ДвоичныеДанные"
@@ -1556,9 +1574,22 @@
     {
       "name": "КаталогПрограммы",
       "aliases": [
-        "ProgramDirectory"
+        "BinDir"
       ],
       "description": "Каталог исполняемых файлов OneScript",
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Строка"
+        }
+      ]
+    },
+    {
+      "name": "ProgramDirectory",
+      "description": "Устаревший алиас КаталогПрограммы/BinDir.",
+      "deprecatedSinceVersion": "*",
+      "recommendedReplacements": ["КаталогПрограммы"],
       "returnType": "Строка",
       "signatures": [
         {

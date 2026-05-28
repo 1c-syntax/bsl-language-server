@@ -1111,12 +1111,8 @@
         ]
       }
     ],
-    "description": "Класс представляет собой инструмент доступа к системной консоли. Предназначен для низкоуровнего манипулирования выводом в консоль.",
-    "constructors": [
-      {
-        "parameters": []
-      }
-    ]
+    "description": "Класс представляет собой инструмент доступа к системной консоли. Предназначен для низкоуровнего манипулирования выводом в консоль. Конструктор удалён — обращайтесь к статическому глобалу `Консоль`.",
+    "constructors": []
   },
   {
     "kind": "TYPE",
@@ -1200,9 +1196,22 @@
         ]
       },
       {
+        "name": "Exists",
+        "kind": "METHOD",
+        "returnType": "Булево",
+        "signatures": [
+          {
+            "parameters": [],
+            "returnType": "Булево"
+          }
+        ]
+      },
+      {
         "name": "Exist",
         "kind": "METHOD",
         "returnType": "Булево",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["Существует"],
         "signatures": [
           {
             "parameters": [],
@@ -3031,6 +3040,8 @@
         "kind": "METHOD",
         "description": "Возвращает соответствие переменных среды. Ключом является имя переменной, а значением - значение переменной",
         "returnType": "Соответствие",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["ПеременныеСреды"],
         "signatures": [
           {
             "parameters": [],
@@ -3043,6 +3054,8 @@
         "kind": "METHOD",
         "description": "Возвращает соответствие переменных среды. Ключом является имя переменной, а значением - значение переменной",
         "returnType": "Соответствие",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["EnvironmentVariables"],
         "signatures": [
           {
             "parameters": [],
@@ -3054,6 +3067,8 @@
         "name": "УстановитьПеременнуюСреды",
         "kind": "METHOD",
         "description": "Позволяет установить переменную среды.  Переменная устанавливается в области видимости процесса и очищается после его завершения.",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["УстановитьПеременнуюСреды"],
         "signatures": [
           {
             "parameters": [
@@ -3075,6 +3090,8 @@
         "name": "SetEnvironmentVariable",
         "kind": "METHOD",
         "description": "Позволяет установить переменную среды.  Переменная устанавливается в области видимости процесса и очищается после его завершения.",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["SetEnvironmentVariable"],
         "signatures": [
           {
             "parameters": [
@@ -3097,6 +3114,8 @@
         "kind": "METHOD",
         "description": "Получить значение переменной среды.",
         "returnType": "Произвольный",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["ПолучитьПеременнуюСреды"],
         "signatures": [
           {
             "parameters": [
@@ -3115,6 +3134,8 @@
         "kind": "METHOD",
         "description": "Получить значение переменной среды.",
         "returnType": "Произвольный",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["GetEnvironmentVariable"],
         "signatures": [
           {
             "parameters": [
@@ -20015,9 +20036,26 @@
         ]
       },
       {
+        "name": "SetBodyFromBinaryData",
+        "kind": "METHOD",
+        "description": "Установить тело запроса из объекта ДвоичныеДанные",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "data",
+                "type": "ДвоичныеДанные"
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "SetBodyFromBinary",
         "kind": "METHOD",
         "description": "Установить тело запроса из объекта ДвоичныеДанные",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["УстановитьТелоИзДвоичныхДанных"],
         "signatures": [
           {
             "parameters": [
@@ -20041,9 +20079,22 @@
         ]
       },
       {
+        "name": "GetBodyAsBinaryData",
+        "kind": "METHOD",
+        "returnType": "Произвольный",
+        "signatures": [
+          {
+            "parameters": [],
+            "returnType": "Произвольный"
+          }
+        ]
+      },
+      {
         "name": "GetBodyAsBinary",
         "kind": "METHOD",
         "returnType": "Произвольный",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": ["ПолучитьТелоКакДвоичныеДанные"],
         "signatures": [
           {
             "parameters": [],

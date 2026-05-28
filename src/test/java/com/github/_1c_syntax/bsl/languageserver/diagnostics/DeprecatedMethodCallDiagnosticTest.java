@@ -90,4 +90,17 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
       configuration.getV8PlatformOptions().setTargetVersion(null);
     }
   }
+
+  @Test
+  void deletedPrefixOnConfigurationProperty() {
+
+    // given — у Справочник1 в фикстуре designer есть атрибут «УдалитьЛегаси».
+    initServerContext(TestUtils.PATH_TO_METADATA);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics("DeprecatedMethodCallDeletedPrefix");
+
+    // then — оба обращения к УдалитьЛегаси (присваивание и чтение) подсвечены.
+    assertThat(diagnostics).hasSize(2);
+  }
 }
