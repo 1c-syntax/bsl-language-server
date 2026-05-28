@@ -192,7 +192,7 @@ public class DereferenceMemberMatcher {
       return List.of();
     }
     var result = new ArrayList<TypeSet>(n);
-    for (int i = 0; i < n; i++) {
+    for (var i = 0; i < n; i++) {
       var arg = args.get(i);
       if (arg instanceof SkippedCallArgumentNode) {
         result.add(TypeSet.EMPTY);
