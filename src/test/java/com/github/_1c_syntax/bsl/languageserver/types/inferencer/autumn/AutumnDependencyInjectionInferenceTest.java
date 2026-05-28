@@ -211,6 +211,44 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void infersCollectionTypeFromGetterDescription() {
+    // given: ПрилепляемаяКоллекцияМойСписок объявлена как &ПрилепляемаяКоллекция("МойСписок"),
+    // её Получить() в bsldoc возвращает ФиксированныйМассив. &Пластилин(Тип = "МойСписок")
+    // должен дать именно ФиксированныйМассив (а не «МойСписок» как имя типа).
+
+    // when
+    var types = typeService.findTypes(variable("КоллекцияИзОписания"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("ФиксированныйМассив");
+  }
+
+  @Test
+  void fallsBackToTypeRegistryWhenCollectionIsNotInIndex() {
+    // given: реализации прилепляемой коллекции «Массив» в фикстуре нет — индекс
+    // её не знает. Имя коллекции совпадает с именем платформенного типа Массив,
+    // поэтому срабатывает фоллбэк через TypeRegistry (поведение из issue #3959).
+
+    // when
+    var types = typeService.findTypes(variable("КоллекцияФоллбэкомПоИмени"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Массив");
+  }
+
+  @Test
+  void returnsEmptyForUnknownCollectionName() {
+    // given: имя коллекции не встречается ни как зарегистрированная реализация,
+    // ни как имя типа.
+
+    // when
+    var types = typeService.findTypes(variable("НеизвестнаяКоллекция"));
+
+    // then
+    assertThat(types.isEmpty()).isTrue();
+  }
+
+  @Test
   void injectedParameterResolvesAtUsageAndFlowsIntoField() {
     // given: потребитель внедряет желудь через параметр конструктора и присваивает его полю.
     // Документ грузится со ссылками (как при открытии в редакторе) — без ручного рефилла.
