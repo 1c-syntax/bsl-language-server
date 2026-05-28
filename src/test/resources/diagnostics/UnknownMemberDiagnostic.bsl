@@ -11,4 +11,12 @@
     Стр.ИмяОбъекта = "X";
     Стр.СтароеИмяОбъекта = "Y";
     Стр.Успешно = Ложь;
+
+    // Method-call варианты для прохода matchMembers / inferArgTypes в DereferenceMemberMatcher:
+    // — пустые скобки (n==0 после trim),
+    // — trailing skipped argument (n уменьшается в while-loop),
+    // — dereference внутри аргумента (рекурсия findDereferenceForTerminal по MethodCallNode).
+    Массив.ВГраница();
+    Массив.Найти("a", , );
+    Сообщить(Массив.Количество());
 КонецПроцедуры
