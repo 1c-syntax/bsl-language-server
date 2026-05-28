@@ -1,0 +1,241 @@
+{
+  "source": "OneScript LanguageDef.cs + RegionDirectiveHandler.cs (master)",
+  "count": 47,
+  "keywords": [
+    {
+      "name": "Асинх",
+      "alias": "Async",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "Знач",
+      "alias": "Val",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "КонецПроцедуры",
+      "alias": "EndProcedure",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "КонецФункции",
+      "alias": "EndFunction",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "Перем",
+      "alias": "Var",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "Процедура",
+      "alias": "Procedure",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "Функция",
+      "alias": "Function",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "Экспорт",
+      "alias": "Export",
+      "category": "DECLARATION"
+    },
+    {
+      "name": "Истина",
+      "alias": "True",
+      "category": "LITERAL"
+    },
+    {
+      "name": "Ложь",
+      "alias": "False",
+      "category": "LITERAL"
+    },
+    {
+      "name": "Неопределено",
+      "alias": "Undefined",
+      "category": "LITERAL"
+    },
+    {
+      "name": "Выполнить",
+      "alias": "Execute",
+      "category": "OPERATOR"
+    },
+    {
+      "name": "Ждать",
+      "alias": "Await",
+      "category": "OPERATOR"
+    },
+    {
+      "name": "И",
+      "alias": "And",
+      "category": "OPERATOR"
+    },
+    {
+      "name": "Или",
+      "alias": "Or",
+      "category": "OPERATOR"
+    },
+    {
+      "name": "Не",
+      "alias": "Not",
+      "category": "OPERATOR"
+    },
+    {
+      "name": "Новый",
+      "alias": "New",
+      "category": "OPERATOR"
+    },
+    {
+      "name": "Если",
+      "alias": "If",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "Иначе",
+      "alias": "Else",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "ИначеЕсли",
+      "alias": "ElsIf",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "Использовать",
+      "alias": "Use",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "КонецЕсли",
+      "alias": "EndIf",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "КонецОбласти",
+      "alias": "EndRegion",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "Область",
+      "alias": "Region",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "Тогда",
+      "alias": "Then",
+      "category": "PREPROCESSOR_INSTRUCTION"
+    },
+    {
+      "name": "Возврат",
+      "alias": "Return",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "ВызватьИсключение",
+      "alias": "Raise",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Для",
+      "alias": "For",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "ДобавитьОбработчик",
+      "alias": "AddHandler",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Если",
+      "alias": "If",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Из",
+      "alias": "In",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Иначе",
+      "alias": "Else",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "ИначеЕсли",
+      "alias": "ElsIf",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Исключение",
+      "alias": "Except",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Каждого",
+      "alias": "Each",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "КонецЕсли",
+      "alias": "EndIf",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "КонецПопытки",
+      "alias": "EndTry",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "КонецЦикла",
+      "alias": "EndDo",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Перейти",
+      "alias": "Goto",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "По",
+      "alias": "To",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Пока",
+      "alias": "While",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Попытка",
+      "alias": "Try",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Прервать",
+      "alias": "Break",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Продолжить",
+      "alias": "Continue",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Тогда",
+      "alias": "Then",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "УдалитьОбработчик",
+      "alias": "RemoveHandler",
+      "category": "STATEMENT"
+    },
+    {
+      "name": "Цикл",
+      "alias": "Do",
+      "category": "STATEMENT"
+    }
+  ]
+}

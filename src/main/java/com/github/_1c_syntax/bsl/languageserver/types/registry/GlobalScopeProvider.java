@@ -93,6 +93,10 @@ public class GlobalScopeProvider {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
   private static final String OSCRIPT_RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-globals.json";
+  private static final String KEYWORDS_RESOURCE_PATH =
+    "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-keywords.json";
+  private static final String OSCRIPT_KEYWORDS_RESOURCE_PATH =
+    "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-keywords.json";
 
   private final Map<String, MemberDescriptor> functions;
   private final List<String> classes;
@@ -1145,7 +1149,8 @@ public class GlobalScopeProvider {
       @SuppressWarnings("unchecked")
       var classes = (List<String>) root.getOrDefault("classes", Collections.emptyList());
       @SuppressWarnings("unchecked")
-      var keywords = (List<String>) root.getOrDefault("keywords", Collections.emptyList());
+      var keywords = new ArrayList<>(
+        (List<String>) root.getOrDefault("keywords", Collections.emptyList()));
       var variables = readVariables(root);
       var fnScopes = new HashMap<String, LanguageScope>();
       functions.keySet().forEach(k -> fnScopes.put(k, scope));
@@ -1158,15 +1163,145 @@ public class GlobalScopeProvider {
         varScopes.put(v.name().toLowerCase(Locale.ROOT), scope);
         v.aliases().forEach(a -> varScopes.put(a.toLowerCase(Locale.ROOT), scope));
       }
+      // Догружаем структурированные keywords (category/description/snippet)
+      // из соседнего ресурса builtin-keywords.json — это JSON-fallback к
+      // ContextLanguageKeyword из bsl-context, когда HBK не подключён.
+      var keywordMeta = loadKeywordMetadata(keywordsResourceFor(resourcePath), scope);
+      var seenKeywords = new HashSet<String>();
+      keywords.forEach(k -> seenKeywords.add(k.toLowerCase(Locale.ROOT)));
+      for (var k : keywordMeta.keywords) {
+        if (seenKeywords.add(k.toLowerCase(Locale.ROOT))) {
+          keywords.add(k);
+        }
+      }
+      kwScopes.putAll(keywordMeta.scopes);
       return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables,
         List.of(),
-        fnScopes, clsScopes, kwScopes, varScopes, Map.of(), Map.of());
+        fnScopes, clsScopes, kwScopes, varScopes,
+        Map.copyOf(keywordMeta.snippets), Map.copyOf(keywordMeta.descriptions));
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
       return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of(),
         List.of(),
         Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
     }
+  }
+
+  /** Имя соседнего keywords-ресурса для globals-ресурса. */
+  private static String keywordsResourceFor(String globalsResourcePath) {
+    if (OSCRIPT_RESOURCE_PATH.equals(globalsResourcePath)) {
+      return OSCRIPT_KEYWORDS_RESOURCE_PATH;
+    }
+    return KEYWORDS_RESOURCE_PATH;
+  }
+
+  /** Результат чтения builtin-keywords.json — keywords + scopes + snippets + descriptions. */
+  private record KeywordMetadata(List<String> keywords, Map<String, LanguageScope> scopes,
+                                 Map<String, LanguageKeywordSnippet> snippets,
+                                 Map<String, KeywordDescription> descriptions) {
+    static final KeywordMetadata EMPTY = new KeywordMetadata(List.of(), Map.of(), Map.of(), Map.of());
+  }
+
+  /**
+   * Парсит JSON-fallback keywords. Поле {@code keywords} — список объектов
+   * с обязательным {@code name} и опциональными {@code alias}, {@code category},
+   * {@code description}, {@code descriptionEn}, {@code snippet.ru/en},
+   * {@code descriptionByParent.<parent>.{ru,en}}.
+   * <p>
+   * Фильтр совпадает с {@link #KEYWORD_CATEGORIES} из bsl-context (no-dot
+   * completion для LITERAL/STATEMENT/OPERATOR/DECLARATION); PRAGMA / ANNOTATION /
+   * PREPROCESSOR_INSTRUCTION в плоский список keywords не попадают, но
+   * описание/сниппет для них всё равно индексируются (используются hover'ом
+   * в соответствующих синтаксических контекстах).
+   */
+  @SuppressWarnings("unchecked")
+  private static KeywordMetadata loadKeywordMetadata(String resourcePath, LanguageScope scope) {
+    var mapper = JsonMapper.builder().build();
+    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+      Map<String, Object> root = mapper.readValue(stream, Map.class);
+      var raw = (List<Map<String, Object>>) root.getOrDefault("keywords", Collections.emptyList());
+      var seen = new HashSet<String>();
+      var keywords = new ArrayList<String>();
+      var scopes = new HashMap<String, LanguageScope>();
+      var snippets = new HashMap<String, LanguageKeywordSnippet>();
+      var descriptions = new HashMap<String, KeywordDescription>();
+      for (var entry : raw) {
+        var name = (String) entry.get("name");
+        if (name == null || name.isBlank()) {
+          continue;
+        }
+        var alias = (String) entry.get("alias");
+        var categoryStr = (String) entry.getOrDefault("category", "");
+        var includeInCompletion = KEYWORD_CATEGORIES.stream()
+          .anyMatch(c -> c.name().equals(categoryStr));
+        if (includeInCompletion) {
+          if (seen.add(name.toLowerCase(Locale.ROOT))) {
+            keywords.add(name);
+            scopes.put(name.toLowerCase(Locale.ROOT), scope);
+          }
+          if (alias != null && !alias.isBlank()
+            && seen.add(alias.toLowerCase(Locale.ROOT))) {
+            keywords.add(alias);
+            scopes.put(alias.toLowerCase(Locale.ROOT), scope);
+          }
+        }
+        var snippet = readSnippet(entry);
+        if (!snippet.isEmpty()) {
+          snippets.put(name.toLowerCase(Locale.ROOT), snippet);
+          if (alias != null && !alias.isBlank()) {
+            snippets.put(alias.toLowerCase(Locale.ROOT), snippet);
+          }
+        }
+        var description = readKeywordDescription(entry);
+        if (!description.isEmpty()) {
+          descriptions.put(name.toLowerCase(Locale.ROOT), description);
+          if (alias != null && !alias.isBlank()) {
+            descriptions.put(alias.toLowerCase(Locale.ROOT), description);
+          }
+        }
+      }
+      return new KeywordMetadata(List.copyOf(keywords), Map.copyOf(scopes),
+        Map.copyOf(snippets), Map.copyOf(descriptions));
+    } catch (IOException e) {
+      LOGGER.warn("Builtin keywords resource not found or unreadable: {}", resourcePath);
+      return KeywordMetadata.EMPTY;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static LanguageKeywordSnippet readSnippet(Map<String, Object> entry) {
+    var raw = (Map<String, Object>) entry.get("snippet");
+    if (raw == null) {
+      return LanguageKeywordSnippet.EMPTY;
+    }
+    var ru = (String) raw.getOrDefault("ru", "");
+    var en = (String) raw.getOrDefault("en", "");
+    if ((ru == null || ru.isEmpty()) && (en == null || en.isEmpty())) {
+      return LanguageKeywordSnippet.EMPTY;
+    }
+    return new LanguageKeywordSnippet(ru == null ? "" : ru, en == null ? "" : en);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static KeywordDescription readKeywordDescription(Map<String, Object> entry) {
+    var ru = (String) entry.getOrDefault("description", "");
+    var en = (String) entry.getOrDefault("descriptionEn", "");
+    var primary = BilingualString.of(ru == null ? "" : ru, en == null ? "" : en);
+    var byParentRaw = (Map<String, Map<String, String>>) entry.get("descriptionByParent");
+    if (byParentRaw == null || byParentRaw.isEmpty()) {
+      return primary.isEmpty() ? KeywordDescription.EMPTY : new KeywordDescription(primary, Map.of());
+    }
+    var byParent = new LinkedHashMap<String, BilingualString>();
+    for (var e : byParentRaw.entrySet()) {
+      var pair = e.getValue();
+      var pru = pair.getOrDefault("ru", "");
+      var pen = pair.getOrDefault("en", "");
+      var bi = BilingualString.of(pru == null ? "" : pru, pen == null ? "" : pen);
+      if (!bi.isEmpty()) {
+        byParent.put(e.getKey(), bi);
+      }
+    }
+    return new KeywordDescription(primary, byParent);
   }
 
   @SuppressWarnings("unchecked")

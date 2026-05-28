@@ -292,11 +292,21 @@ class GlobalScopeProviderRegistrationTest {
 
   @Test
   void findKeywordSnippetEmptyForUnknownKeyword() {
-    // given — bsl-context недоступен в этом тесте, поэтому любой keyword
-    // вернёт пустой Optional.
+    // given — builtin-keywords.json несёт сниппеты только для конкретных
+    // конструкций; для произвольного имени — пусто.
 
     // when / then
-    assertThat(scope.findKeywordSnippet("Если")).isEmpty();
+    assertThat(scope.findKeywordSnippet("НеизвестноеКлючевоеСлово")).isEmpty();
+    assertThat(scope.findKeywordSnippet("")).isEmpty();
+  }
+
+  @Test
+  void findKeywordSnippetFromJsonFallback() {
+    // given — bsl-context недоступен в этом тесте, источник — builtin-keywords.json.
+
+    // when / then — сниппеты доступны по обоим написаниям (ru + en).
+    assertThat(scope.findKeywordSnippet("Если")).isPresent();
+    assertThat(scope.findKeywordSnippet("If")).isPresent();
   }
 
   @Test

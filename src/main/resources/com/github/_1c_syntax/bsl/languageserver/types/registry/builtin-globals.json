@@ -2,35 +2,50 @@
   "functions": [
     {
       "name": "ВопросАсинх",
-      "aliases": ["DoQueryBoxAsync"],
+      "aliases": [
+        "DoQueryBoxAsync"
+      ],
       "async": true,
       "sinceVersion": "8.3.18",
       "description": "Асинхронная функция. Выводит вопрос пользователю и возвращает выбранную кнопку.",
       "signatures": [
         {
           "parameters": [
-            {"name": "ТекстВопроса"},
-            {"name": "Кнопки"}
+            {
+              "name": "ТекстВопроса"
+            },
+            {
+              "name": "Кнопки"
+            }
           ]
         }
       ]
     },
     {
       "name": "Сообщить",
-      "aliases": ["Message"],
+      "aliases": [
+        "Message"
+      ],
       "description": "Выводит сообщение пользователю.",
       "signatures": [
         {
           "parameters": [
-            {"name": "ТекстСообщения"},
-            {"name": "Статус", "optional": true}
+            {
+              "name": "ТекстСообщения"
+            },
+            {
+              "name": "Статус",
+              "optional": true
+            }
           ]
         }
       ]
     },
     {
       "name": "ТекущаяДата",
-      "aliases": ["CurrentDate"],
+      "aliases": [
+        "CurrentDate"
+      ],
       "description": "Определяет текущую (системную) дату на компьютере.\n\nВозвращаемое значение: Тип: Дата. Текущая (системная) дата.",
       "returnType": "Дата",
       "signatures": [
@@ -42,14 +57,21 @@
     },
     {
       "name": "СтрСоединить",
-      "aliases": ["StrConcat"],
+      "aliases": [
+        "StrConcat"
+      ],
       "description": "Объединяет строки массива через разделитель.",
       "returnType": "Строка",
       "signatures": [
         {
           "parameters": [
-            {"name": "Массив"},
-            {"name": "Разделитель", "optional": true}
+            {
+              "name": "Массив"
+            },
+            {
+              "name": "Разделитель",
+              "optional": true
+            }
           ],
           "returnType": "Строка"
         }
@@ -57,15 +79,24 @@
     },
     {
       "name": "СтрРазделить",
-      "aliases": ["StrSplit"],
+      "aliases": [
+        "StrSplit"
+      ],
       "description": "Разделяет строку на массив строк по разделителю.",
       "returnType": "Массив",
       "signatures": [
         {
           "parameters": [
-            {"name": "Строка"},
-            {"name": "Разделитель"},
-            {"name": "ВключатьПустые", "optional": true}
+            {
+              "name": "Строка"
+            },
+            {
+              "name": "Разделитель"
+            },
+            {
+              "name": "ВключатьПустые",
+              "optional": true
+            }
           ],
           "returnType": "Массив"
         }
@@ -73,53 +104,87 @@
     },
     {
       "name": "ТипЗнч",
-      "aliases": ["TypeOf"],
+      "aliases": [
+        "TypeOf"
+      ],
       "description": "Возвращает тип значения.",
       "returnType": "Тип",
       "signatures": [
         {
-          "parameters": [{"name": "Значение"}],
+          "parameters": [
+            {
+              "name": "Значение"
+            }
+          ],
           "returnType": "Тип"
         }
       ]
     },
     {
       "name": "Тип",
-      "aliases": ["Type"],
+      "aliases": [
+        "Type"
+      ],
       "description": "Возвращает тип по строковому имени.",
       "returnType": "Тип",
       "signatures": [
         {
-          "parameters": [{"name": "ИмяТипа"}],
+          "parameters": [
+            {
+              "name": "ИмяТипа"
+            }
+          ],
           "returnType": "Тип"
         }
       ]
     },
     {
       "name": "СтрДлина",
-      "aliases": ["StrLen"],
+      "aliases": [
+        "StrLen"
+      ],
       "description": "Возвращает длину строки.",
       "returnType": "Число",
       "signatures": [
         {
-          "parameters": [{"name": "Строка"}],
+          "parameters": [
+            {
+              "name": "Строка"
+            }
+          ],
           "returnType": "Число"
         }
       ]
     },
     {
       "name": "ВвестиЧисло",
-      "aliases": ["InputNumber"],
+      "aliases": [
+        "InputNumber"
+      ],
       "description": "Открывает диалог ввода числа.",
       "returnType": "Булево",
       "signatures": [
         {
           "parameters": [
-            {"name": "Число"},
-            {"name": "Подсказка", "optional": true},
-            {"name": "Длина", "optional": true},
-            {"name": "Точность", "optional": true},
-            {"name": "Таймаут", "optional": true}
+            {
+              "name": "Число"
+            },
+            {
+              "name": "Подсказка",
+              "optional": true
+            },
+            {
+              "name": "Длина",
+              "optional": true
+            },
+            {
+              "name": "Точность",
+              "optional": true
+            },
+            {
+              "name": "Таймаут",
+              "optional": true
+            }
           ],
           "returnType": "Булево"
         }
@@ -127,237 +192,459 @@
     },
     {
       "name": "УстановитьКраткийЗаголовокПриложения",
-      "aliases": ["SetShortApplicationCaption"],
+      "aliases": [
+        "SetShortApplicationCaption"
+      ],
       "description": "Устанавливает краткий заголовок приложения.",
       "deprecatedSinceVersion": "8.3.10",
-      "recommendedReplacements": ["КлиентскоеПриложение.УстановитьКраткийЗаголовок"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "КлиентскоеПриложение.УстановитьКраткийЗаголовок"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПолучитьКраткийЗаголовокПриложения",
-      "aliases": ["GetShortApplicationCaption"],
+      "aliases": [
+        "GetShortApplicationCaption"
+      ],
       "description": "Возвращает краткий заголовок приложения.",
       "deprecatedSinceVersion": "8.3.10",
-      "recommendedReplacements": ["КлиентскоеПриложение.ПолучитьКраткийЗаголовок"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "КлиентскоеПриложение.ПолучитьКраткийЗаголовок"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "УстановитьЗаголовокКлиентскогоПриложения",
-      "aliases": ["SetClientApplicationCaption"],
+      "aliases": [
+        "SetClientApplicationCaption"
+      ],
       "description": "Устанавливает заголовок клиентского приложения.",
       "deprecatedSinceVersion": "8.3.10",
-      "recommendedReplacements": ["КлиентскоеПриложение.УстановитьЗаголовок"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "КлиентскоеПриложение.УстановитьЗаголовок"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПолучитьЗаголовокКлиентскогоПриложения",
-      "aliases": ["GetClientApplicationCaption"],
+      "aliases": [
+        "GetClientApplicationCaption"
+      ],
       "description": "Возвращает заголовок клиентского приложения.",
       "deprecatedSinceVersion": "8.3.10",
-      "recommendedReplacements": ["КлиентскоеПриложение.ПолучитьЗаголовок"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "КлиентскоеПриложение.ПолучитьЗаголовок"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ТекущийВариантОсновногоШрифтаКлиентскогоПриложения",
-      "aliases": ["ClientApplicationBaseFontCurrentVariant"],
+      "aliases": [
+        "ClientApplicationBaseFontCurrentVariant"
+      ],
       "description": "Возвращает текущий вариант основного шрифта клиентского приложения.",
       "deprecatedSinceVersion": "8.3.10",
-      "recommendedReplacements": ["КлиентскоеПриложение.ТекущийВариантОсновногоШрифта"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "КлиентскоеПриложение.ТекущийВариантОсновногоШрифта"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ТекущийВариантИнтерфейсаКлиентскогоПриложения",
-      "aliases": ["ClientApplicationInterfaceCurrentVariant"],
+      "aliases": [
+        "ClientApplicationInterfaceCurrentVariant"
+      ],
       "description": "Возвращает текущий вариант интерфейса клиентского приложения.",
       "deprecatedSinceVersion": "8.3.10",
-      "recommendedReplacements": ["КлиентскоеПриложение.ТекущийВариантИнтерфейса"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "КлиентскоеПриложение.ТекущийВариантИнтерфейса"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "КраткоеПредставлениеОшибки",
-      "aliases": ["BriefErrorDescription"],
+      "aliases": [
+        "BriefErrorDescription"
+      ],
       "description": "Возвращает краткое представление ошибки.",
       "deprecatedSinceVersion": "8.3.17",
-      "recommendedReplacements": ["ОбработкаОшибок.КраткоеПредставлениеОшибки"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "ОбработкаОшибок.КраткоеПредставлениеОшибки"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПодробноеПредставлениеОшибки",
-      "aliases": ["DetailErrorDescription"],
+      "aliases": [
+        "DetailErrorDescription"
+      ],
       "description": "Возвращает подробное представление ошибки.",
       "deprecatedSinceVersion": "8.3.17",
-      "recommendedReplacements": ["ОбработкаОшибок.ПодробноеПредставлениеОшибки"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "ОбработкаОшибок.ПодробноеПредставлениеОшибки"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПоказатьИнформациюОбОшибке",
-      "aliases": ["ShowErrorInfo"],
+      "aliases": [
+        "ShowErrorInfo"
+      ],
       "description": "Показывает информацию об ошибке.",
       "deprecatedSinceVersion": "8.3.17",
-      "recommendedReplacements": ["ОбработкаОшибок.ПоказатьИнформациюОбОшибке"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "ОбработкаОшибок.ПоказатьИнформациюОбОшибке"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "НайтиНедопустимыеСимволыXML",
-      "aliases": ["FindDisallowedXMLCharacters"],
+      "aliases": [
+        "FindDisallowedXMLCharacters"
+      ],
       "deprecatedSinceVersion": "8.3.20",
-      "signatures": [{"parameters": []}]
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "УстановитьВнешнююКомпоненту",
-      "aliases": ["InstallAddIn"],
+      "aliases": [
+        "InstallAddIn"
+      ],
       "deprecatedSinceVersion": "8.3.16",
-      "recommendedReplacements": ["НачатьУстановкуВнешнейКомпоненты"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьУстановкуВнешнейКомпоненты"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ОчиститьЖурналРегистрации",
-      "aliases": ["ClearEventLog"],
+      "aliases": [
+        "ClearEventLog"
+      ],
       "deprecatedSinceVersion": "8.3.12",
-      "signatures": [{"parameters": []}]
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПодключитьРасширениеРаботыСКриптографией",
-      "aliases": ["AttachCryptoExtension"],
+      "aliases": [
+        "AttachCryptoExtension"
+      ],
       "deprecatedSinceVersion": "8.3.16",
-      "recommendedReplacements": ["НачатьПодключениеРасширенияРаботыСКриптографией"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПодключениеРасширенияРаботыСКриптографией"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "УстановитьРасширениеРаботыСКриптографией",
-      "aliases": ["InstallCryptoExtension"],
+      "aliases": [
+        "InstallCryptoExtension"
+      ],
       "deprecatedSinceVersion": "8.3.16",
-      "recommendedReplacements": ["НачатьУстановкуРасширенияРаботыСКриптографией"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьУстановкуРасширенияРаботыСКриптографией"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПользователиWindows",
-      "aliases": ["WindowsUsers"],
+      "aliases": [
+        "WindowsUsers"
+      ],
       "deprecatedSinceVersion": "8.2",
-      "recommendedReplacements": ["ПользователиОС"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "ПользователиОС"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПолучитьСоответствиеОбъектаИРеквизитаФормы",
-      "aliases": ["GetObjectAndFormAttributeConformity"],
+      "aliases": [
+        "GetObjectAndFormAttributeConformity"
+      ],
       "deprecatedSinceVersion": "8.2",
-      "recommendedReplacements": ["ПолучитьСоответствиеОбъектаИФормы"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "ПолучитьСоответствиеОбъектаИФормы"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "УстановитьСоответствиеОбъектаИРеквизитаФормы",
-      "aliases": ["SetObjectAndFormAttributeConformity"],
+      "aliases": [
+        "SetObjectAndFormAttributeConformity"
+      ],
       "deprecatedSinceVersion": "8.2",
-      "recommendedReplacements": ["УстановитьСоответствиеОбъектаИФормы"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "УстановитьСоответствиеОбъектаИФормы"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ЗапроситьРазрешениеПользователя",
-      "aliases": ["RequestUserPermission"],
+      "aliases": [
+        "RequestUserPermission"
+      ],
       "deprecatedSinceVersion": "8.3.15",
-      "recommendedReplacements": ["НачатьЗапросРазрешенияПользователя"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьЗапросРазрешенияПользователя"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "НачатьПолучениеФайлов",
-      "aliases": ["BeginGettingFiles"],
+      "aliases": [
+        "BeginGettingFiles"
+      ],
       "deprecatedSinceVersion": "8.3.15",
-      "recommendedReplacements": ["НачатьПолучениеФайловССервера"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПолучениеФайловССервера"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "НачатьПомещениеФайла",
-      "aliases": ["BeginPutFile"],
+      "aliases": [
+        "BeginPutFile"
+      ],
       "deprecatedSinceVersion": "8.3.15",
-      "recommendedReplacements": ["НачатьПомещениеФайлаНаСервер"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПомещениеФайлаНаСервер"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "НачатьПомещениеФайлов",
-      "aliases": ["BeginPuttingFiles"],
+      "aliases": [
+        "BeginPuttingFiles"
+      ],
       "deprecatedSinceVersion": "8.3.15",
-      "recommendedReplacements": ["НачатьПомещениеФайлаНаСервер", "НачатьПомещениеФайловНаСервер"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПомещениеФайлаНаСервер",
+        "НачатьПомещениеФайловНаСервер"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПодключитьРасширениеРаботыСФайлами",
-      "aliases": ["AttachFileSystemExtension"],
+      "aliases": [
+        "AttachFileSystemExtension"
+      ],
       "deprecatedSinceVersion": "8.3.16",
-      "recommendedReplacements": ["НачатьПодключениеРасширенияРаботыСФайлами"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПодключениеРасширенияРаботыСФайлами"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПолучитьФайл",
-      "aliases": ["GetFile"],
+      "aliases": [
+        "GetFile"
+      ],
       "deprecatedSinceVersion": "8.3.15",
-      "recommendedReplacements": ["НачатьПолучениеФайлаССервера"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПолучениеФайлаССервера"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПолучитьФайлы",
-      "aliases": ["GetFiles"],
+      "aliases": [
+        "GetFiles"
+      ],
       "deprecatedSinceVersion": "8.3.13",
-      "recommendedReplacements": ["НачатьПолучениеФайловССервера"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПолучениеФайловССервера"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПоместитьФайл",
-      "aliases": ["PutFile"],
+      "aliases": [
+        "PutFile"
+      ],
       "deprecatedSinceVersion": "8.3.13",
-      "recommendedReplacements": ["НачатьПомещениеФайлаНаСервер"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПомещениеФайлаНаСервер"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ПоместитьФайлы",
-      "aliases": ["PutFiles"],
+      "aliases": [
+        "PutFiles"
+      ],
       "deprecatedSinceVersion": "8.3.13",
-      "recommendedReplacements": ["НачатьПомещениеФайловНаСервер"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьПомещениеФайловНаСервер"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "УстановитьРасширениеРаботыСФайлами",
-      "aliases": ["InstallFileSystemExtension"],
+      "aliases": [
+        "InstallFileSystemExtension"
+      ],
       "deprecatedSinceVersion": "8.3.16",
-      "recommendedReplacements": ["НачатьУстановкуРасширенияРаботыСФайлами"],
-      "signatures": [{"parameters": []}]
+      "recommendedReplacements": [
+        "НачатьУстановкуРасширенияРаботыСФайлами"
+      ],
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     },
     {
       "name": "ВыполнитьОбработкуЗаданий",
-      "aliases": ["ProcessJobs"],
+      "aliases": [
+        "ProcessJobs"
+      ],
       "deprecatedSinceVersion": "8.3.2",
-      "signatures": [{"parameters": []}]
+      "signatures": [
+        {
+          "parameters": []
+        }
+      ]
     }
   ],
   "classes": [
-    "Массив", "Структура", "Соответствие", "ТаблицаЗначений", "СписокЗначений",
-    "Запрос", "ОписаниеТипов", "ХранилищеЗначения", "Дата"
-  ],
-  "keywords": [
-    "Если", "Тогда", "ИначеЕсли", "Иначе", "КонецЕсли",
-    "Для", "Каждого", "Из", "По", "Цикл", "КонецЦикла",
-    "Пока", "Прервать", "Продолжить",
-    "Процедура", "Функция", "КонецПроцедуры", "КонецФункции",
-    "Возврат", "Перем", "Экспорт", "Новый",
-    "Истина", "Ложь", "Неопределено", "NULL",
-    "И", "Или", "Не",
-    "Попытка", "Исключение", "КонецПопытки", "ВызватьИсключение"
+    "Массив",
+    "Структура",
+    "Соответствие",
+    "ТаблицаЗначений",
+    "СписокЗначений",
+    "Запрос",
+    "ОписаниеТипов",
+    "ХранилищеЗначения",
+    "Дата"
   ],
   "variables": [
     {
       "name": "БиблиотекаКартинок",
-      "aliases": ["PictureLib"],
+      "aliases": [
+        "PictureLib"
+      ],
       "description": "Глобальная коллекция картинок конфигурации.",
       "type": "БиблиотекаКартинок"
     },
     {
       "name": "БиблиотекаСтилей",
-      "aliases": ["StyleLib"],
+      "aliases": [
+        "StyleLib"
+      ],
       "description": "Глобальная коллекция стилей конфигурации.",
       "type": "БиблиотекаСтилей"
     },
     {
       "name": "ПараметрыСеанса",
-      "aliases": ["SessionParameters"],
+      "aliases": [
+        "SessionParameters"
+      ],
       "description": "Параметры текущего сеанса.",
       "type": "ПараметрыСеанса"
     }
