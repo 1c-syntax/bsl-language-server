@@ -463,10 +463,7 @@ public class TypeService {
     if (terminal == null || isAccessorIdentifier(terminal)) {
       return false;
     }
-    var name = terminal.getText();
-    var fileType = documentContext.getFileType();
-    typeRegistry.resolve(name);
-    if (globalScopeProvider.findGlobal(name, fileType).isPresent()) {
+    if (!findMembersAt(documentContext, position).isEmpty()) {
       return false;
     }
     return referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
