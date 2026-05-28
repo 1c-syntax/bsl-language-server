@@ -258,25 +258,25 @@ class TypeServiceDelegationTest {
   }
 
   @Test
-  void findMemberAtWithNullAstReturnsEmpty() {
-    // given — DocumentContext.getAst() возвращает null.
+  void findMemberAtWithUnavailableAstReturnsEmpty() {
+    // given — документ ещё не токенизирован: getAst() бросает NPE.
     var dc = org.mockito.Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
-    when(dc.getAst()).thenReturn(null);
+    when(dc.getAst()).thenThrow(new NullPointerException());
 
     // when
     var result = typeService.findMemberAt(dc, new org.eclipse.lsp4j.Position(0, 0));
 
-    // then — L269 return Optional.empty().
+    // then
     assertThat(result).isEmpty();
   }
 
   @Test
-  void inferAtPositionWithNullAstReturnsEmpty() {
-    // given — DocumentContext без AST.
+  void inferAtPositionWithUnavailableAstReturnsEmpty() {
+    // given — документ без AST: getAst() бросает NPE.
     var dc = org.mockito.Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
-    when(dc.getAst()).thenReturn(null);
+    when(dc.getAst()).thenThrow(new NullPointerException());
 
     // when
     var result = typeService.inferAtPosition(dc, new org.eclipse.lsp4j.Position(0, 0));

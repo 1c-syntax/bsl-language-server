@@ -303,9 +303,6 @@ public class TypeService {
     } catch (NullPointerException e) {
       return Optional.empty();
     }
-    if (ast == null) {
-      return Optional.empty();
-    }
     return Trees.findTerminalNodeContainsPosition(ast, position)
       .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
   }
