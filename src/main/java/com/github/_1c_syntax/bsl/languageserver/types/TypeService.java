@@ -362,31 +362,34 @@ public class TypeService {
    */
   private List<TypedMember> matchMembers(TerminalNode terminal, DocumentContext documentContext,
                                          BslExpression right, TypeSet leftTypes) {
-    var expectedKind = (right instanceof MethodCallNode) ? MemberKind.METHOD : MemberKind.PROPERTY;
-    var memberName = terminal.getText();
-    int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
-    var argTypes = (right instanceof MethodCallNode call)
-      ? inferArgTypes(call, documentContext)
-      : List.<TypeSet>of();
-    var range = Ranges.create(terminal);
-    var fileType = documentContext.getFileType();
+    var ctx = new MatchContext(
+      (right instanceof MethodCallNode) ? MemberKind.METHOD : MemberKind.PROPERTY,
+      terminal.getText(),
+      Ranges.create(terminal),
+      (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1,
+      (right instanceof MethodCallNode call) ? inferArgTypes(call, documentContext) : List.of(),
+      documentContext.getFileType()
+    );
     var result = new ArrayList<TypedMember>();
     for (var owner : leftTypes.refs()) {
-      collectCanonicalMembers(owner, expectedKind, memberName, fileType, range, argCount, argTypes, result);
-      if (expectedKind == MemberKind.PROPERTY) {
-        collectLocalFieldMembers(owner, leftTypes, memberName, range, argCount, argTypes, result);
+      collectCanonicalMembers(owner, ctx, result);
+      if (ctx.expectedKind() == MemberKind.PROPERTY) {
+        collectLocalFieldMembers(owner, leftTypes, ctx, result);
       }
     }
     return result;
   }
 
+  /** Контекст матчинга члена в позиции: общие параметры для per-owner проходов. */
+  private record MatchContext(MemberKind expectedKind, String memberName, Range range,
+                              int argCount, List<TypeSet> argTypes, FileType fileType) {
+  }
+
   /** Канонические члены типа из {@link TypeRegistry}. */
-  private void collectCanonicalMembers(TypeRef owner, MemberKind expectedKind, String memberName,
-                                       FileType fileType, Range range, int argCount,
-                                       List<TypeSet> argTypes, List<TypedMember> sink) {
-    for (var member : typeRegistry.getMembers(owner, fileType)) {
-      if (member.kind() == expectedKind && member.matches(memberName)) {
-        sink.add(new TypedMember(owner, member, range, argCount, argTypes));
+  private void collectCanonicalMembers(TypeRef owner, MatchContext ctx, List<TypedMember> sink) {
+    for (var member : typeRegistry.getMembers(owner, ctx.fileType())) {
+      if (member.kind() == ctx.expectedKind() && member.matches(ctx.memberName())) {
+        sink.add(new TypedMember(owner, member, ctx.range(), ctx.argCount(), ctx.argTypes()));
       }
     }
   }
@@ -396,17 +399,16 @@ public class TypeService {
    * {@code Новый Структура("К1,К2")}, колонки ТЗ из JsDoc и т.п. Тот же источник,
    * что у dot-completion ({@code CompletionProvider#dotCompletion}).
    */
-  private static void collectLocalFieldMembers(TypeRef owner, TypeSet leftTypes, String memberName,
-                                               Range range, int argCount, List<TypeSet> argTypes,
-                                               List<TypedMember> sink) {
+  private static void collectLocalFieldMembers(TypeRef owner, TypeSet leftTypes,
+                                               MatchContext ctx, List<TypedMember> sink) {
     for (var entry : leftTypes.getLocalFields(owner).entrySet()) {
-      if (!entry.getKey().equalsIgnoreCase(memberName)) {
+      if (!entry.getKey().equalsIgnoreCase(ctx.memberName())) {
         continue;
       }
       var fieldRef = entry.getValue().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
       sink.add(new TypedMember(owner,
         MemberDescriptor.property(entry.getKey(), fieldRef, ""),
-        range, argCount, argTypes));
+        ctx.range(), ctx.argCount(), ctx.argTypes()));
     }
   }
 
