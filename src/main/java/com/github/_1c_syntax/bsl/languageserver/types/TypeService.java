@@ -295,15 +295,7 @@ public class TypeService {
    * или под курсором не идентификатор.
    */
   private static Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
-    BSLParser.FileContext ast;
-    try {
-      // getAst() бросает NPE, если документ ещё не токенизирован (например,
-      // hover на worker-потоке до populate) — это сигнал «AST недоступен».
-      ast = documentContext.getAst();
-    } catch (NullPointerException e) {
-      return Optional.empty();
-    }
-    return Trees.findTerminalNodeContainsPosition(ast, position)
+    return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), position)
       .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
   }
 

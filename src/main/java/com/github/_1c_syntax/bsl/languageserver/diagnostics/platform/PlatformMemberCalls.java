@@ -62,6 +62,13 @@ public final class PlatformMemberCalls {
    */
   private static final Pattern VERSION_PATTERN = Pattern.compile("^\\d+[._]\\d+[._]\\d+");
 
+  /**
+   * 1С-конвенция пометки устаревших реквизитов / значений перечислений /
+   * объектов конфигурации — префиксы {@code "Удалить"} (ru-mode) и
+   * {@code "Delete"} (en-mode).
+   */
+  private static final String[] DELETED_PREFIXES = {"Удалить", "Delete"};
+
   private PlatformMemberCalls() {
   }
 
@@ -90,13 +97,6 @@ public final class PlatformMemberCalls {
       }
     }
   }
-
-  /**
-   * 1С-конвенция пометки устаревших реквизитов / значений перечислений /
-   * объектов конфигурации — префиксы {@code "Удалить"} (ru-mode) и
-   * {@code "Delete"} (en-mode).
-   */
-  private static final String[] DELETED_PREFIXES = {"Удалить", "Delete"};
 
   /**
    * Имя следует 1С-конвенции «устарело» — начинается с одного из префиксов

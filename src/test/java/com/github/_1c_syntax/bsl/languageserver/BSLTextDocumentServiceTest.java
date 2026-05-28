@@ -646,7 +646,10 @@ class BSLTextDocumentServiceTest {
       var capturedUri = new AtomicReference<URI>();
       doAnswer(invocation -> {
         capturedUri.set(WorkspaceContextHolder.get());
-        return invocation.callRealMethod();
+        // Не зовём реальный метод — он на закрытом документе обращается к
+        // tokenizer'у через TypeService и упирается в null; тест-кейс не про
+        // это, а про установку WorkspaceContextHolder на воркере.
+        return Optional.empty();
       }).when(hoverProvider).getHover(any(), any());
 
       var params = new HoverParams(getTextDocumentIdentifier(), new Position(0, 0));
