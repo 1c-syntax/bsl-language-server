@@ -415,10 +415,27 @@ public class TypeService {
     }
     var memberName = terminal.getText();
     var fileType = documentContext.getFileType();
-    var known = refs.stream()
-      .flatMap(owner -> typeRegistry.getMembers(owner, fileType).stream())
-      .anyMatch(member -> member.matches(memberName));
-    return !known;
+    return refs.stream().noneMatch(owner -> memberKnownOnOwner(owner, leftTypes, memberName, fileType));
+  }
+
+  /**
+   * Член {@code name} считается известным на {@code owner}, если:
+   * <ul>
+   *   <li>в {@link TypeRegistry#getMembers(TypeRef, FileType)} есть совпадение
+   *       по имени (включая алиасы / ru-en пары);</li>
+   *   <li>имя присутствует среди «локальных полей», прикреплённых инференсом
+   *       к ресиверу: ключи литеральной {@code Новый Структура("К1,К2")},
+   *       колонки ТЗ из JsDoc и т.п. (источник тот же, что у dot-completion,
+   *       см. {@code CompletionProvider#dotCompletion}).</li>
+   * </ul>
+   */
+  private boolean memberKnownOnOwner(TypeRef owner, TypeSet leftTypes, String name, FileType fileType) {
+    for (var member : typeRegistry.getMembers(owner, fileType)) {
+      if (member.matches(name)) {
+        return true;
+      }
+    }
+    return leftTypes.getLocalFields(owner).keySet().stream().anyMatch(k -> k.equalsIgnoreCase(name));
   }
 
   /**

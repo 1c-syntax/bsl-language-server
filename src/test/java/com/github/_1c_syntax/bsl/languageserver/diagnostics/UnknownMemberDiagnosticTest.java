@@ -41,7 +41,8 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // Срабатывания: опечатка в члене типа Массив (Добвить) и неизвестный
-    // голый вызов. Существующий Массив.Добавить и глобальный Сообщить — нет.
+    // голый вызов. Существующий Массив.Добавить, глобальный Сообщить и
+    // литеральные ключи Структуры (ИмяОбъекта/СтароеИмяОбъекта/Успешно) — нет.
     assertThat(diagnostics).hasSize(2);
 
     var messages = diagnostics.stream()
@@ -49,6 +50,7 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
       .toList();
     org.assertj.core.api.Assertions.assertThat(messages)
       .anyMatch(m -> m.contains("Добвить"))
-      .anyMatch(m -> m.contains("НесуществующийГлобальныйМетод"));
+      .anyMatch(m -> m.contains("НесуществующийГлобальныйМетод"))
+      .noneMatch(m -> m.contains("ИмяОбъекта") || m.contains("Успешно"));
   }
 }
