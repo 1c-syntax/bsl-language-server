@@ -52,8 +52,8 @@ import org.eclipse.lsp4j.Position;
  * @see TypeService#isUnknownGlobalAt
  */
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR,
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 2,
   scope = DiagnosticScope.BSL,
   activatedByDefault = false,
