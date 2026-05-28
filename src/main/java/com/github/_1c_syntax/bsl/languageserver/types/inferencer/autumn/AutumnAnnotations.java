@@ -49,6 +49,12 @@ public class AutumnAnnotations {
   public static final String QUALIFIER = "Прозвище";
   /** Маркер класса-определения пользовательской аннотации ({@code &Аннотация("Имя")}). */
   public static final String ANNOTATION_MARKER = "Аннотация";
+  /**
+   * Аннотация прилепляемой коллекции желудей (autumn-collections). Размещается над
+   * конструктором класса-реализации коллекции; в параметре {@link #VALUE_PARAMETER}
+   * задано имя коллекции (например, «Массив», «Соответствие»).
+   */
+  public static final String ATTACHABLE_COLLECTION = "ПрилепляемаяКоллекция";
 
   /** Первый параметр большинства аннотаций — имя желудя/значение. */
   public static final String VALUE_PARAMETER = "Значение";
@@ -56,6 +62,11 @@ public class AutumnAnnotations {
   public static final String TYPE_PARAMETER = "Тип";
   /** Значение {@code Тип}, означающее «желудь как таковой». */
   public static final String BEAN_TYPE = "Желудь";
+  /**
+   * Имя экспортируемой функции прилепляемой коллекции — точка получения значения
+   * для внедрения. Возвращаемый тип берётся из её bsldoc-описания.
+   */
+  public static final String ATTACHABLE_COLLECTION_GETTER = "Получить";
 
   /**
    * @return первая аннотация с указанным именем (регистронезависимо).

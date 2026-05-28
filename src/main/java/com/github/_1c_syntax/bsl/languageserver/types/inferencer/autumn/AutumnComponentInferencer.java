@@ -44,14 +44,19 @@ import java.util.List;
  *   Перем ВнедренныйЖелудь;   // тип = желудь "ИмяЖелудя"
  * </pre>
  * Имя желудя берётся из параметра {@code Значение} (или первого позиционного),
- * иначе — из имени самой переменной/параметра. Параметр {@code Тип} с
- * коллекцией ({@code Массив}, {@code ТаблицаЗначений} и т.п.) означает внедрение
- * коллекции желудей — тогда типом становится сама коллекция.
+ * иначе — из имени самой переменной/параметра. Параметр {@code Тип} с именем
+ * прилепляемой коллекции (autumn-collections: {@code Массив}, {@code ТаблицаЗначений}
+ * и т.п.) означает внедрение коллекции желудей — тогда типом становится тип,
+ * который возвращает метод {@code Получить()} соответствующей прилепляемой
+ * коллекции.
  * <p>
  * Имя желудя резолвится сначала через {@link AutumnBeanIndex} (переименованные
  * желуди, прозвища, {@code &Верховный}), затем — прямым резолвом имени типа
  * через {@link TypeRegistry} (поведение по умолчанию «имя желудя == имя
- * .os-класса»).
+ * .os-класса»). Имя коллекции резолвится через {@link AutumnCollectionIndex},
+ * а если у её {@code Получить()} нет описания возвращаемого значения — фоллбэк
+ * на прямой резолв этого имени через {@link TypeRegistry} (для совпадающих имён
+ * вроде {@code Массив}/{@code ТаблицаЗначений} это даёт корректный платформенный тип).
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -60,6 +65,7 @@ public class AutumnComponentInferencer {
 
   private final TypeRegistry typeRegistry;
   private final AutumnBeanIndex beanIndex;
+  private final AutumnCollectionIndex collectionIndex;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   /**
@@ -79,12 +85,19 @@ public class AutumnComponentInferencer {
   }
 
   private TypeSet injectedType(Annotation injection, String fallbackName, FileType fileType) {
-    var collectionType = collectionType(injection);
-    if (!AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionType)) {
-      // Внедряется прилепляемая коллекция желудей. ВНИМАНИЕ: collectionType — это
-      // ИМЯ прилепляемой коллекции (autumn-collections), а не имя типа; прямой
-      // резолв через TypeRegistry — временное приближение, см. issue #3959.
-      return typeRegistry.resolve(collectionType, fileType)
+    var collectionName = collectionType(injection);
+    if (!AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionName)) {
+      // collectionName — имя прилепляемой коллекции (autumn-collections), а не
+      // имя типа. Источник истины — AutumnCollectionIndex: тип возвращаемого
+      // значения метода Получить() (из bsldoc). Если описания нет (или коллекция
+      // не найдена), фоллбэк — прямой резолв имени через TypeRegistry: для
+      // штатных коллекций имя совпадает с именем платформенного типа
+      // (Массив, Соответствие, ТаблицаЗначений и т.п.).
+      var fromCollection = collectionIndex.resolve(collectionName);
+      if (!fromCollection.isEmpty()) {
+        return fromCollection;
+      }
+      return typeRegistry.resolve(collectionName, fileType)
         .map(TypeSet::of)
         .orElse(TypeSet.EMPTY);
     }

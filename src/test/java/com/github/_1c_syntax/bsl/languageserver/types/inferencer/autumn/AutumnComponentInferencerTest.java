@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -55,6 +57,9 @@ class AutumnComponentInferencerTest {
   @Mock
   private AutumnBeanIndex beanIndex;
 
+  @Mock
+  private AutumnCollectionIndex collectionIndex;
+
   private AutumnComponentInferencer inferencer;
 
   @BeforeEach
@@ -62,7 +67,10 @@ class AutumnComponentInferencerTest {
     // Реальный резолвер мета-аннотаций поверх пустого репозитория: для базовых
     // имён (Пластилин) он короткозамыкается, пользовательских аннотаций здесь нет.
     var metaResolver = new AutumnMetaAnnotationResolver(new AnnotationRepository());
-    inferencer = new AutumnComponentInferencer(typeRegistry, beanIndex, metaResolver);
+    inferencer = new AutumnComponentInferencer(typeRegistry, beanIndex, collectionIndex, metaResolver);
+    // Дефолт: коллекция не известна индексу — возвращается пустой TypeSet, а не
+    // null. Конкретные тесты переопределяют ответ при необходимости.
+    lenient().when(collectionIndex.resolve(anyString())).thenReturn(TypeSet.EMPTY);
   }
 
   @Test
@@ -108,9 +116,29 @@ class AutumnComponentInferencerTest {
   }
 
   @Test
-  void resolvesCollectionTypeWhenTypeParameterGiven() {
-    // given
+  void resolvesCollectionTypeFromCollectionIndex() {
+    // given: индекс прилепляемых коллекций знает «Массив» — у его Получить()
+    // описано возвращаемое значение ФиксированныйМассив. TypeRegistry-фоллбэк
+    // в этом случае не должен использоваться.
+    var fixedArrayRef = new TypeRef(TypeKind.PLATFORM, "ФиксированныйМассив");
+    when(collectionIndex.resolve("Массив")).thenReturn(TypeSet.of(fixedArrayRef));
+    var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "Массив")));
+
+    // when
+    var types = inferencer.inferInjectedType(annotations, "ВнедренныйЖелудь", FILE_TYPE);
+
+    // then
+    assertThat(types.refs()).containsExactly(fixedArrayRef);
+    verifyNoInteractions(typeRegistry, beanIndex);
+  }
+
+  @Test
+  void fallsBackToTypeRegistryWhenCollectionIndexHasNoDescription() {
+    // given: индекс не знает коллекцию (нет описания возвращаемого значения у
+    // Получить()) — это и есть кейс из issue #3959. Имя коллекции совпадает с
+    // именем платформенного типа, поэтому фоллбэк через TypeRegistry даёт «Массив».
     var arrayRef = new TypeRef(TypeKind.PLATFORM, "Массив");
+    when(collectionIndex.resolve("Массив")).thenReturn(TypeSet.EMPTY);
     when(typeRegistry.resolve("Массив", FILE_TYPE)).thenReturn(Optional.of(arrayRef));
     var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "Массив")));
 
@@ -119,6 +147,21 @@ class AutumnComponentInferencerTest {
 
     // then
     assertThat(types.refs()).containsExactly(arrayRef);
+  }
+
+  @Test
+  void returnsEmptyWhenNeitherCollectionIndexNorTypeRegistryResolves() {
+    // given: пользовательская коллекция «МояКоллекция» — индекс её не знает,
+    // и одноимённого типа в реестре тоже нет.
+    when(collectionIndex.resolve("МояКоллекция")).thenReturn(TypeSet.EMPTY);
+    when(typeRegistry.resolve("МояКоллекция", FILE_TYPE)).thenReturn(Optional.empty());
+    var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "МояКоллекция")));
+
+    // when
+    var types = inferencer.inferInjectedType(annotations, "ВнедренныйЖелудь", FILE_TYPE);
+
+    // then
+    assertThat(types.isEmpty()).isTrue();
   }
 
   @Test
@@ -176,7 +219,7 @@ class AutumnComponentInferencerTest {
 
     // then
     assertThat(types.isEmpty()).isTrue();
-    verifyNoInteractions(beanIndex, typeRegistry);
+    verifyNoInteractions(beanIndex, typeRegistry, collectionIndex);
   }
 
   @Test
@@ -189,7 +232,7 @@ class AutumnComponentInferencerTest {
 
     // then
     assertThat(types.isEmpty()).isTrue();
-    verifyNoInteractions(typeRegistry, beanIndex);
+    verifyNoInteractions(typeRegistry, beanIndex, collectionIndex);
   }
 
   @Test
