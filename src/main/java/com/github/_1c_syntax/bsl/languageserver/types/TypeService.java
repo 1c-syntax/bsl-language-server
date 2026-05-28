@@ -295,13 +295,6 @@ public class TypeService {
    * или под курсором не идентификатор.
    */
   private static Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
-    // Cross-document резолв (PlatformMemberReferenceFinder и т.п.) приходит
-    // сюда с DocumentContext соседнего модуля, который может быть зарегистрирован
-    // в ServerContext, но ещё не токенизирован. Явный гейт безопаснее, чем
-    // catch(NPE) на requireNonNull(tokenizer) внутри getAst().
-    if (!documentContext.isTokenized()) {
-      return Optional.empty();
-    }
     return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), position)
       .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
   }
