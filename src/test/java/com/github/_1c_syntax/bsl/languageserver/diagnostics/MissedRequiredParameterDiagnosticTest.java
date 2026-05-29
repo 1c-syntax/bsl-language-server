@@ -21,11 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -33,6 +37,10 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<MissedRequiredParameterDiagnostic> {
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
+  private static final String OSCRIPT_LIBRARY_FIXTURE = "src/test/resources/oscript-libraries/internal-classes-test";
+
+  @Autowired
+  private OScriptLibraryIndex oScriptLibraryIndex;
 
   MissedRequiredParameterDiagnosticTest() {
     super(MissedRequiredParameterDiagnostic.class);
@@ -71,6 +79,26 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
       .hasRange(25, 22, 25, 50)
       .hasRange(26, 22, 26, 48)
       .hasRange(27, 31, 27, 57)
+    ;
+  }
+
+  @Test
+  void testConstructorCall() {
+
+    initServerContext(Path.of(OSCRIPT_LIBRARY_FIXTURE).toAbsolutePath(), false);
+    oScriptLibraryIndex.reindex(context);
+
+    var content = """
+      #Использовать internal-classes-lib
+      Х = Новый EntityWithRequiredCtorParam();
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(1, 4, 1, 39)
     ;
   }
 }

@@ -83,13 +83,27 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
     return super.visitMethodCall(ctx);
   }
 
-  private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, ParserRuleContext node) {
-    var parameters = doCallContext.callParamList().callParam();
-    var methodCall = new MethodCall();
-    methodCall.parameters = new Boolean[parameters.size()];
+  @Override
+  public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
+    var typeName = ctx.typeName();
+    if (typeName != null && typeName.IDENTIFIER() != null) {
+      appendMethodCall(typeName.IDENTIFIER().getSymbol(), ctx.doCall(), ctx);
+    }
+    return super.visitNewExpression(ctx);
+  }
 
-    for (var i = 0; i < methodCall.parameters.length; i++) {
-      methodCall.parameters[i] = parameters.get(i).expression() != null;
+  private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, ParserRuleContext node) {
+    var methodCall = new MethodCall();
+
+    if (doCallContext == null) {
+      methodCall.parameters = new Boolean[0];
+    } else {
+      var parameters = doCallContext.callParamList().callParam();
+      methodCall.parameters = new Boolean[parameters.size()];
+
+      for (var i = 0; i < methodCall.parameters.length; i++) {
+        methodCall.parameters[i] = parameters.get(i).expression() != null;
+      }
     }
 
     methodCall.range = Ranges.create(node);
