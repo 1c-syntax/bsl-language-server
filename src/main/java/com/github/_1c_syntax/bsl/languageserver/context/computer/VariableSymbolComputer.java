@@ -241,7 +241,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
    * <p>
    * {@link Trees#nodeContainsErrors} здесь не подходит: он проверяет только
    * {@link org.antlr.v4.runtime.ParserRuleContext#exception}, но не подставленные
-   * при восстановлении узлы-ошибки.
+   * при восстановлении узлы-ошибки (см.
+   * <a href="https://github.com/1c-syntax/bsl-language-server/issues/3968">#3968</a>).
    *
    * @param varName Контекст имени переменной
    * @return {@code true}, если идентификатор имени отсутствует или является узлом-ошибкой

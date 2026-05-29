@@ -41,6 +41,11 @@ class DocumentSymbolProviderTest {
   @Autowired
   private DocumentSymbolProvider documentSymbolProvider;
 
+  /**
+   * Регрессионный тест: незавершённое объявление переменной ({@code Перем} без имени)
+   * не должно порождать символ с «вывернутым» диапазоном и ломать весь ответ на
+   * запрос {@code textDocument/documentSymbol}.
+   */
   @Test
   void testIncompleteVariableDeclarationDoesNotBreakSelectionRange() {
     // given - незавершённое объявление переменной без имени (Перем без идентификатора).
@@ -74,11 +79,21 @@ class DocumentSymbolProviderTest {
       .isEmpty();
   }
 
+  /**
+   * Рекурсивно разворачивает иерархию символов документа в плоский список,
+   * включая всех вложенных потомков.
+   *
+   * @param documentSymbols Символы (как правило, верхнего уровня документа)
+   * @return Плоский список символов вместе со всеми вложенными
+   */
   private static List<DocumentSymbol> flatten(List<DocumentSymbol> documentSymbols) {
     List<DocumentSymbol> result = new ArrayList<>();
     documentSymbols.forEach(documentSymbol -> {
       result.add(documentSymbol);
-      result.addAll(flatten(documentSymbol.getChildren()));
+      var children = documentSymbol.getChildren();
+      if (children != null) {
+        result.addAll(flatten(children));
+      }
     });
     return result;
   }
