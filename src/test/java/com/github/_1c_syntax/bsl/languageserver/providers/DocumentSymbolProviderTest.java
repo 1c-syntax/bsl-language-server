@@ -52,31 +52,26 @@ class DocumentSymbolProviderTest {
     // Парсер восстанавливается, подставляя токен-ошибку, из-за чего диапазон объявления
     // становится «вывернутым» и selectionRange перестаёт содержаться в range, что ломало
     // весь ответ на запрос textDocument/documentSymbol.
-    var documentContext = TestUtils.getDocumentContext(
-      "Функция ЗначениеПеременной(ИмяПеременной) Экспорт\n"
-        + "\tПерем\n"
-        + "КонецФункции"
-    );
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция ЗначениеПеременной(ИмяПеременной) Экспорт
+      	Перем
+      КонецФункции""");
 
     // when
     List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
 
     var allSymbols = flatten(documentSymbols);
 
-    // then - метод по-прежнему отдаётся в структуре документа
+    // then
     assertThat(allSymbols)
-      .anyMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method);
-
-    // каждый symbol (включая вложенные) имеет selectionRange внутри range
-    assertThat(allSymbols)
+      // метод по-прежнему отдаётся в структуре документа
+      .anyMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      // каждый symbol (включая вложенные) имеет selectionRange внутри range
       .allMatch(documentSymbol ->
         Ranges.containsRange(documentSymbol.getRange(), documentSymbol.getSelectionRange())
-      );
-
-    // сломанный символ переменной без имени не попадает в структуру документа
-    assertThat(allSymbols)
-      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Variable)
-      .isEmpty();
+      )
+      // сломанный символ переменной без имени не попадает в структуру документа
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Variable);
   }
 
   /**
