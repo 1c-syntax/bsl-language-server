@@ -1,0 +1,42 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import com.github._1c_syntax.bsl.context.api.LanguageKeywordSnippet;
+import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider.KeywordDescription;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Результат разбора {@code builtin-keywords.json}/{@code builtin-oscript-keywords.json}
+ * через {@link KeywordMetadataLoader}: плоский список имён keyword'ов
+ * (canonical + alias по обоим написаниям), их language-scope, сниппеты
+ * автодополнения и описания (с поддержкой {@code descriptionByParent}).
+ */
+record KeywordMetadata(List<String> keywords, Map<String, LanguageScope> scopes,
+                       Map<String, LanguageKeywordSnippet> snippets,
+                       Map<String, KeywordDescription> descriptions) {
+
+  static final KeywordMetadata EMPTY = new KeywordMetadata(List.of(), Map.of(), Map.of(), Map.of());
+}
