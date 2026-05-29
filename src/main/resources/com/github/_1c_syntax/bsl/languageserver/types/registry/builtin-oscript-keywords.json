@@ -1,6 +1,6 @@
 {
   "source": "OneScript LanguageDef.cs + RegionDirectiveHandler.cs (master)",
-  "count": 47,
+  "count": 48,
   "keywords": [
     {
       "name": "Асинх",
@@ -172,6 +172,12 @@
       "category": "PREPROCESSOR_INSTRUCTION",
       "description": "Инструкция препроцессора OneScript для подключения внешних библиотек и скриптов. Позволяет загрузить внешний код, указав путь к файлу или каталогу, либо имя установленной библиотеки.",
       "descriptionEn": "OneScript preprocessor instruction for connecting external libraries and scripts. It loads external code by a file or directory path, or by the name of an installed library."
+    },
+    {
+      "name": "native",
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Аннотация модуля OneScript. Включает компиляцию модуля нативным компилятором платформы .NET вместо стандартного интерпретатора, что ускоряет выполнение кода. Размещается в начале модуля отдельной строкой инструкцией препроцессора (#native).",
+      "descriptionEn": "OneScript module annotation. Enables compiling the module with the native .NET compiler instead of the standard interpreter, which speeds up code execution. It is placed on a separate line at the beginning of the module as a preprocessor instruction (#native)."
     },
     {
       "name": "КонецЕсли",
