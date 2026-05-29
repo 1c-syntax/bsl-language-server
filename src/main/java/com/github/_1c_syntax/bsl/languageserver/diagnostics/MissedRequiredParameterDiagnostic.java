@@ -132,7 +132,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   }
 
   private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {
-    var signature = parameterSignatures(methodDefinition).get(0);
+    var signature = signature(methodDefinition);
     var missedParameters = missedParameters(signature, callInfo.arguments);
     if (!missedParameters.isEmpty()) {
       addDiagnostic(callInfo.range, missedParameters);
@@ -160,10 +160,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   private static List<List<Parameter>> parameterSignatures(Symbol symbol) {
     if (symbol instanceof MethodSymbol methodSymbol) {
-      var signature = methodSymbol.getParameters().stream()
-        .map(parameter -> new Parameter(parameter.getName(), parameter.isOptional()))
-        .toList();
-      return List.of(signature);
+      return List.of(signature(methodSymbol));
     }
     if (symbol instanceof ConstructorCallSymbol constructorCall) {
       return constructorCall.getConstructors().stream()
@@ -173,6 +170,12 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
         .toList();
     }
     return List.of();
+  }
+
+  private static List<Parameter> signature(MethodSymbol methodSymbol) {
+    return methodSymbol.getParameters().stream()
+      .map(parameter -> new Parameter(parameter.getName(), parameter.isOptional()))
+      .toList();
   }
 
   private static Boolean[] arguments(BSLParser.DoCallContext doCallContext) {
