@@ -1202,6 +1202,10 @@ public class GlobalScopeProvider {
     static final KeywordMetadata EMPTY = new KeywordMetadata(List.of(), Map.of(), Map.of(), Map.of());
   }
 
+  private static final String JSON_FIELD_DESCRIPTION = "description";
+  private static final String JSON_FIELD_RU = "ru";
+  private static final String JSON_FIELD_EN = "en";
+
   /**
    * Парсит JSON-fallback keywords. Поле {@code keywords} — список объектов
    * с обязательным {@code name} и опциональными {@code alias}, {@code category},
@@ -1218,90 +1222,145 @@ public class GlobalScopeProvider {
   private static KeywordMetadata loadKeywordMetadata(String resourcePath, LanguageScope scope) {
     var mapper = JsonMapper.builder().build();
     try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
-      Map<String, Object> root = mapper.readValue(stream, Map.class);
+      var root = (Map<String, Object>) mapper.readValue(stream, Map.class);
       var raw = (List<Map<String, Object>>) root.getOrDefault("keywords", Collections.emptyList());
-      var seen = new HashSet<String>();
-      var keywords = new ArrayList<String>();
-      var scopes = new HashMap<String, LanguageScope>();
-      var snippets = new HashMap<String, LanguageKeywordSnippet>();
-      var descriptions = new HashMap<String, KeywordDescription>();
+      var builder = new KeywordMetadataBuilder(scope);
       for (var entry : raw) {
-        var name = (String) entry.get("name");
-        if (name == null || name.isBlank()) {
-          continue;
-        }
-        var alias = (String) entry.get("alias");
-        var categoryStr = (String) entry.getOrDefault("category", "");
-        var includeInCompletion = KEYWORD_CATEGORIES.stream()
-          .anyMatch(c -> c.name().equals(categoryStr));
-        if (includeInCompletion) {
-          if (seen.add(name.toLowerCase(Locale.ROOT))) {
-            keywords.add(name);
-            scopes.put(name.toLowerCase(Locale.ROOT), scope);
-          }
-          if (alias != null && !alias.isBlank()
-            && seen.add(alias.toLowerCase(Locale.ROOT))) {
-            keywords.add(alias);
-            scopes.put(alias.toLowerCase(Locale.ROOT), scope);
-          }
-        }
-        var snippet = readSnippet(entry);
-        if (!snippet.isEmpty()) {
-          snippets.put(name.toLowerCase(Locale.ROOT), snippet);
-          if (alias != null && !alias.isBlank()) {
-            snippets.put(alias.toLowerCase(Locale.ROOT), snippet);
-          }
-        }
-        var description = readKeywordDescription(entry);
-        if (!description.isEmpty()) {
-          descriptions.put(name.toLowerCase(Locale.ROOT), description);
-          if (alias != null && !alias.isBlank()) {
-            descriptions.put(alias.toLowerCase(Locale.ROOT), description);
-          }
-        }
+        builder.add(entry);
       }
-      return new KeywordMetadata(List.copyOf(keywords), Map.copyOf(scopes),
-        Map.copyOf(snippets), Map.copyOf(descriptions));
+      return builder.build();
     } catch (IOException e) {
-      LOGGER.warn("Builtin keywords resource not found or unreadable: {}", resourcePath);
+      LOGGER.warn("Builtin keywords resource not found or unreadable: {}", resourcePath, e);
       return KeywordMetadata.EMPTY;
     }
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * Аккумулирует разбор {@code builtin-keywords.json} в {@link KeywordMetadata}:
+   * плоский список имён для completion, scopes по локали, snippet'ы и
+   * описания (включая {@code descriptionByParent}).
+   */
+  private static final class KeywordMetadataBuilder {
+    private final LanguageScope scope;
+    private final Set<String> seen = new HashSet<>();
+    private final List<String> keywords = new ArrayList<>();
+    private final Map<String, LanguageScope> scopes = new HashMap<>();
+    private final Map<String, LanguageKeywordSnippet> snippets = new HashMap<>();
+    private final Map<String, KeywordDescription> descriptions = new HashMap<>();
+
+    KeywordMetadataBuilder(LanguageScope scope) {
+      this.scope = scope;
+    }
+
+    void add(Map<String, Object> entry) {
+      var name = stringField(entry, "name");
+      if (name.isBlank()) {
+        return;
+      }
+      var alias = stringField(entry, "alias");
+      if (isCompletionCategory(stringField(entry, "category"))) {
+        register(name);
+        if (!alias.isBlank()) {
+          register(alias);
+        }
+      }
+      indexSnippet(entry, name, alias);
+      indexDescription(entry, name, alias);
+    }
+
+    KeywordMetadata build() {
+      return new KeywordMetadata(List.copyOf(keywords), Map.copyOf(scopes),
+        Map.copyOf(snippets), Map.copyOf(descriptions));
+    }
+
+    private void register(String written) {
+      if (seen.add(written.toLowerCase(Locale.ROOT))) {
+        keywords.add(written);
+        scopes.put(written.toLowerCase(Locale.ROOT), scope);
+      }
+    }
+
+    private void indexSnippet(Map<String, Object> entry, String name, String alias) {
+      var snippet = readSnippet(entry);
+      if (snippet.isEmpty()) {
+        return;
+      }
+      snippets.put(name.toLowerCase(Locale.ROOT), snippet);
+      if (!alias.isBlank()) {
+        snippets.put(alias.toLowerCase(Locale.ROOT), snippet);
+      }
+    }
+
+    private void indexDescription(Map<String, Object> entry, String name, String alias) {
+      var description = readKeywordDescription(entry);
+      if (description.isEmpty()) {
+        return;
+      }
+      descriptions.put(name.toLowerCase(Locale.ROOT), description);
+      if (!alias.isBlank()) {
+        descriptions.put(alias.toLowerCase(Locale.ROOT), description);
+      }
+    }
+  }
+
+  private static boolean isCompletionCategory(String categoryStr) {
+    return KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
+  }
+
   private static LanguageKeywordSnippet readSnippet(Map<String, Object> entry) {
-    var raw = (Map<String, Object>) entry.get("snippet");
+    var raw = asStringMap(entry.get("snippet"));
     if (raw == null) {
       return LanguageKeywordSnippet.EMPTY;
     }
-    var ru = (String) raw.getOrDefault("ru", "");
-    var en = (String) raw.getOrDefault("en", "");
-    if ((ru == null || ru.isEmpty()) && (en == null || en.isEmpty())) {
+    var ru = raw.getOrDefault(JSON_FIELD_RU, "");
+    var en = raw.getOrDefault(JSON_FIELD_EN, "");
+    if (ru.isEmpty() && en.isEmpty()) {
       return LanguageKeywordSnippet.EMPTY;
     }
-    return new LanguageKeywordSnippet(ru == null ? "" : ru, en == null ? "" : en);
+    return new LanguageKeywordSnippet(ru, en);
+  }
+
+  private static KeywordDescription readKeywordDescription(Map<String, Object> entry) {
+    var primary = BilingualString.of(
+      stringField(entry, JSON_FIELD_DESCRIPTION),
+      stringField(entry, "descriptionEn"));
+    var byParent = readDescriptionByParent(entry.get("descriptionByParent"));
+    if (primary.isEmpty() && byParent.isEmpty()) {
+      return KeywordDescription.EMPTY;
+    }
+    return new KeywordDescription(primary, byParent);
   }
 
   @SuppressWarnings("unchecked")
-  private static KeywordDescription readKeywordDescription(Map<String, Object> entry) {
-    var ru = (String) entry.getOrDefault("description", "");
-    var en = (String) entry.getOrDefault("descriptionEn", "");
-    var primary = BilingualString.of(ru == null ? "" : ru, en == null ? "" : en);
-    var byParentRaw = (Map<String, Map<String, String>>) entry.get("descriptionByParent");
-    if (byParentRaw == null || byParentRaw.isEmpty()) {
-      return primary.isEmpty() ? KeywordDescription.EMPTY : new KeywordDescription(primary, Map.of());
+  private static Map<String, BilingualString> readDescriptionByParent(@Nullable Object raw) {
+    if (!(raw instanceof Map<?, ?> rawMap) || rawMap.isEmpty()) {
+      return Map.of();
     }
-    var byParent = new LinkedHashMap<String, BilingualString>();
-    for (var e : byParentRaw.entrySet()) {
+    var result = new LinkedHashMap<String, BilingualString>();
+    for (var e : ((Map<String, Map<String, String>>) raw).entrySet()) {
       var pair = e.getValue();
-      var pru = pair.getOrDefault("ru", "");
-      var pen = pair.getOrDefault("en", "");
-      var bi = BilingualString.of(pru == null ? "" : pru, pen == null ? "" : pen);
+      if (pair == null) {
+        continue;
+      }
+      var bi = BilingualString.of(
+        pair.getOrDefault(JSON_FIELD_RU, ""),
+        pair.getOrDefault(JSON_FIELD_EN, ""));
       if (!bi.isEmpty()) {
-        byParent.put(e.getKey(), bi);
+        result.put(e.getKey(), bi);
       }
     }
-    return new KeywordDescription(primary, byParent);
+    return result;
+  }
+
+  private static String stringField(Map<String, Object> entry, String key) {
+    var value = entry.get(key);
+    return value instanceof String s ? s : "";
+  }
+
+  @SuppressWarnings("unchecked")
+  @Nullable
+  private static Map<String, String> asStringMap(@Nullable Object raw) {
+    return raw instanceof Map<?, ?> ? (Map<String, String>) raw : null;
   }
 
   @SuppressWarnings("unchecked")

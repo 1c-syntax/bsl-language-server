@@ -310,6 +310,47 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void findKeywordDescriptionFromJsonFallbackByLocale() {
+    // given — bsl-context недоступен, источник — builtin-keywords.json
+    // (HBK-дамп с двуязычными описаниями).
+
+    // when / then — описание доступно по ru- и en-имени, в обеих локалях.
+    assertThat(scope.findKeywordDescription("Истина",
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU))
+      .isPresent();
+    assertThat(scope.findKeywordDescription("True",
+      com.github._1c_syntax.bsl.languageserver.configuration.Language.EN))
+      .isPresent();
+  }
+
+  @Test
+  void findKeywordDescriptionForPragmaCategoryIndexedButNotInCompletion() {
+    // given — PRAGMA/ANNOTATION не попадают в плоский список keywords
+    // (KEYWORD_CATEGORIES — только LITERAL/STATEMENT/OPERATOR/DECLARATION),
+    // но описания/сниппеты для них индексируются и видны hover'у.
+
+    // when / then
+    assertThat(scope.findKeywordDescription("НаКлиенте")).isPresent();
+    assertThat(scope.findKeywordDescription("AtServer")).isPresent();
+  }
+
+  @Test
+  void findKeywordDescriptionContextAware() {
+    // given — descriptionByParent у Возврат/Знач/Async/etc. отдаёт описание,
+    // привязанное к Процедура vs Функция (СП имеет разные тексты).
+    var ru = com.github._1c_syntax.bsl.languageserver.configuration.Language.RU;
+
+    // when
+    var inProcedure = scope.findKeywordDescription("Возврат", ru, "Процедура");
+    var inFunction = scope.findKeywordDescription("Возврат", ru, "Функция");
+
+    // then — оба контекста дают непустые описания, причём разные.
+    assertThat(inProcedure).isPresent();
+    assertThat(inFunction).isPresent();
+    assertThat(inProcedure).isNotEqualTo(inFunction);
+  }
+
+  @Test
   void findGlobalCaseInsensitiveOnRegisteredSymbol() {
     // given
     scope.registerGlobalProperty(new TypeRef(TypeKind.PLATFORM, "ТипC"),
