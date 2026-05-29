@@ -192,6 +192,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   private static Position typeNamePosition(BSLParser.TypeNameContext typeName) {
     var token = typeName.IDENTIFIER().getSymbol();
+    // Старт токена достаточно: резолвер ищет позицию внутри идентификатора.
     return new Position(token.getLine() - 1, token.getCharPositionInLine());
   }
 
