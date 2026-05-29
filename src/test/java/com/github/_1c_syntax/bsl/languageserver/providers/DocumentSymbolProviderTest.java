@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +40,58 @@ class DocumentSymbolProviderTest {
 
   @Autowired
   private DocumentSymbolProvider documentSymbolProvider;
+
+  /**
+   * Регрессионный тест: незавершённое объявление переменной ({@code Перем} без имени)
+   * не должно порождать символ с «вывернутым» диапазоном и ломать весь ответ на
+   * запрос {@code textDocument/documentSymbol}.
+   */
+  @Test
+  void testIncompleteVariableDeclarationDoesNotBreakSelectionRange() {
+    // given - незавершённое объявление переменной без имени (Перем без идентификатора).
+    // Парсер восстанавливается, подставляя токен-ошибку, из-за чего диапазон объявления
+    // становится «вывернутым» и selectionRange перестаёт содержаться в range, что ломало
+    // весь ответ на запрос textDocument/documentSymbol.
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция ЗначениеПеременной(ИмяПеременной) Экспорт
+      	Перем
+      КонецФункции""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    var allSymbols = flatten(documentSymbols);
+
+    // then
+    assertThat(allSymbols)
+      // метод по-прежнему отдаётся в структуре документа
+      .anyMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      // каждый symbol (включая вложенные) имеет selectionRange внутри range
+      .allMatch(documentSymbol ->
+        Ranges.containsRange(documentSymbol.getRange(), documentSymbol.getSelectionRange())
+      )
+      // сломанный символ переменной без имени не попадает в структуру документа
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Variable);
+  }
+
+  /**
+   * Рекурсивно разворачивает иерархию символов документа в плоский список,
+   * включая всех вложенных потомков.
+   *
+   * @param documentSymbols Символы (как правило, верхнего уровня документа)
+   * @return Плоский список символов вместе со всеми вложенными
+   */
+  private static List<DocumentSymbol> flatten(List<DocumentSymbol> documentSymbols) {
+    List<DocumentSymbol> result = new ArrayList<>();
+    documentSymbols.forEach(documentSymbol -> {
+      result.add(documentSymbol);
+      var children = documentSymbol.getChildren();
+      if (children != null) {
+        result.addAll(flatten(children));
+      }
+    });
+    return result;
+  }
 
   @Test
   void testDocumentSymbol() {
