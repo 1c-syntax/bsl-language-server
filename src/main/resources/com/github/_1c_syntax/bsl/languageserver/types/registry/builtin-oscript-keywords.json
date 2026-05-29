@@ -5,237 +5,407 @@
     {
       "name": "Асинх",
       "alias": "Async",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Часть конструкции «Процедура»",
+      "descriptionEn": "Part of \"Procedure\" construct",
+      "descriptionByParent": {
+        "Процедура": { "ru": "Модификатор применим только к процедуре, выполняемой на клиенте. Позволяет указать, что процедура является асинхронной. Асинхронная процедура выполняется синхронно до первого оператора Ждать или до своего нормального завершения. После первого встретившегося Ждать управление возвращается вызывающей стороне. Дальнейшее исполнение текущей процедуры происходит асинхронно. Параметры асинхронных процедур передаются только по значению (неявно подставляется Знач).", "en": "The modifier is applicable only to a procedure executed on the client. It shows whether a procedure is asynchronous. An asynchronous procedure runs synchronously until the first Await operator or until its normal completion. After first Await, the caller resumes control. Then the current procedure runs asynchronously. Asynchronous procedure parameters are passed as values only (Val is added implicitly)." },
+        "Функция": { "ru": "Модификатор применим только к функции, выполняемой на клиенте. Позволяет указать, что функция является асинхронной. Асинхронная функция всегда возвращает объект типа Обещание. Асинхронная функция выполняется синхронно до первого оператора Ждать. После этого функция возвращает значение типа Обещание, и управление передается вызывающей стороне. Дальнейшее исполнение текущей функции происходит асинхронно. Когда результат получен, Обещание наполняется полученным значением. Если функция выбрасывает исключение, оно может быть перехвачено вызывающей стороной. Параметры асинхронных функций передаются только по значению (неявно подставляется Знач).", "en": "The modifier is applicable only to a function executed on the client. It shows whether a function is asynchronous. An asynchronous function always returns an object of the Promise type. An asynchronous function runs synchronously until the first Await operator. Then the function returns a value of the Promise type and the caller resumes control. Then the current function runs asynchronously. When the result is received, Promise is filled with the received value. If the function throws an exception, it can be caught by the caller. Asynchronous function parameters are passed as values only (Val is added implicitly)." }
+      }
     },
     {
       "name": "Знач",
       "alias": "Val",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Часть конструкции «Процедура»",
+      "descriptionEn": "Part of \"Procedure\" construct",
+      "descriptionByParent": {
+        "Процедура": { "ru": "Необязательное ключевое слово, которое указывает на то, что следующий за ним параметр передается по значению, т.е. изменение значения формального параметра при выполнении процедуры никак не повлияет на фактический параметр, переданный при вызове процедуры. Если это ключевое слово не указано, то параметр процедуры передается по ссылке, то есть изменение внутри процедуры значения формального параметра приведет к изменению значения соответствующего фактического параметра.", "en": "An optional keyword. The parameter that follows the keyword is passed as a value (changing the value of the formal parameter during the procedure execution does not affect the actual parameter that is passed at the procedure call). If this keyword is not specified, the procedure parameter is passed as a reference (changing the formal parameter value inside the procedure changes the actual parameter value)." },
+        "Функция": { "ru": "Необязательное ключевое слово, которое указывает на то, что следующий за ним параметр передается по значению, т.е. изменение значения формального параметра при выполнении функции никак не повлияет на фактический параметр, переданный при вызове функции. Если это ключевое слово не указано, то параметр функции передается по ссылке, то есть изменение внутри функции значения формального параметра приведет к изменению значения соответствующего фактического параметра.", "en": "An optional keyword. The parameter that follows the keyword is passed as a value (changing the value of the formal parameter during the function execution does not affect the actual parameter that is passed at the function call). If this keyword is not specified, the function parameter is passed as a reference (changing the formal parameter value inside the function changes the actual parameter value)." }
+      }
     },
     {
       "name": "КонецПроцедуры",
       "alias": "EndProcedure",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Часть конструкции «Процедура»",
+      "descriptionEn": "Part of \"Procedure\" construct",
+      "descriptionByParent": {
+        "Процедура": { "ru": "Обязательное ключевое слово, обозначающее конец исходного текста процедуры, завершение выполнения процедуры. Возврат в точку, из которой было обращение к процедуре.", "en": "A mandatory keyword that identifies the end of procedure. Returns to the code point where the procedure was called." }
+      }
     },
     {
       "name": "КонецФункции",
       "alias": "EndFunction",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Часть конструкции «Функция»",
+      "descriptionEn": "Part of \"Function\" construct",
+      "descriptionByParent": {
+        "Функция": { "ru": "Обязательное ключевое слово, обозначающее конец исходного текста функции.", "en": "A mandatory keyword that denotes the end of the function." }
+      }
     },
     {
       "name": "Перем",
       "alias": "Var",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Позволяет в явном виде объявить переменную.",
+      "descriptionEn": "This operator is used for explicit variable declaration.",
+      "snippet": { "ru": "Перем <?>;", "en": "Var <?>;" }
     },
     {
       "name": "Процедура",
       "alias": "Procedure",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Ключевое слово Процедура начинает секцию исходного текста, выполнение которого можно инициировать из любой точки программного модуля, просто указав Имя_процедуры со списком параметров (если параметры не передаются, то круглые скобки, тем не менее, обязательны). Если в модуле обычного приложения, модуле приложения или общем программном модуле в теле описания процедуры использовано ключевое слово Экспорт, то это означает, что данная процедура является доступной из всех других программных модулей конфигурации.",
+      "descriptionEn": "The Procedure keyword denotes the beginning of code fragment that can be called from any point of the module using the <Procedure_name> operator with a list of parameters (parentheses are mandatory, even if no parameters are passed). If an ordinary application module, application module, or common program module contains the Export keyword in the procedure declaration, it means that the procedure is accessible from all other configuration modules.",
+      "snippet": { "ru": "Процедура <?>()\r\nКонецПроцедуры ", "en": "Procedure <?>()\r\nEndProcedure" }
     },
     {
       "name": "Функция",
       "alias": "Function",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Ключевое слово Функция начинает секцию исходного текста функции, выполнение которой можно инициировать из любой точки программного модуля, просто указав <Имя_функции> со списком параметров (если параметры не передаются, то круглые скобки, тем не менее, обязательны). Если в модуле обычного, управляемого приложения, внешнего соединения, сеанса или общем программном модуле в теле описания функции использовано ключевое слово Экспорт, то это означает, что данная функция является доступной из всех других программных модулей конфигурации.",
+      "descriptionEn": "The Function keyword denotes the beginning of code fragment that can be called from any point of the module using the <Function name> operator with a list of parameters (parentheses are mandatory even if no parameters are passed). If an ordinary application module, managed application module, external connection module, session module, or common module contains the Export keyword in the function declaration, it means that the function is accessible from all other configuration modules.",
+      "snippet": { "ru": "Функция <?>()\r\nВозврат ;\r\nКонецФункции ", "en": "Function <?>()\r\nReturn ;\r\nEndFunction" }
     },
     {
       "name": "Экспорт",
       "alias": "Export",
-      "category": "DECLARATION"
+      "category": "DECLARATION",
+      "description": "Часть конструкции «Процедура»",
+      "descriptionEn": "Part of \"Procedure\" construct",
+      "descriptionByParent": {
+        "Процедура": { "ru": "Необязательное ключевое слово, которое указывает на то, что данная процедура является доступной из других программных модулей.", "en": "An optional keyword that specifies that this procedure is accessible from other modules." },
+        "Перем": { "ru": "Необязательное ключевое слово. Указывает, что данная переменная доступна при обращении к контексту этого модуля из других модулей. Не имеет смысла при объявлении переменных отдельных процедур или функций.", "en": "An optional keyword. Specifies that the variable is available when the module context is accessed from other modules. Does not make sense in declarations of procedure or function variables." },
+        "Функция": { "ru": "Необязательное ключевое слово, которое указывает на то, что данная функция является доступной из других программных модулей.", "en": "An optional keyword that specifies that this function is accessible from other modules." }
+      }
     },
     {
       "name": "Истина",
       "alias": "True",
-      "category": "LITERAL"
+      "category": "LITERAL",
+      "description": "Литерал для указания значения типа Булево.",
+      "descriptionEn": "Literal to specify a value of type Boolean.",
+      "snippet": { "ru": "Истина", "en": "True" }
     },
     {
       "name": "Ложь",
       "alias": "False",
-      "category": "LITERAL"
+      "category": "LITERAL",
+      "description": "Литерал для указания значения типа Булево.",
+      "descriptionEn": "Literal to specify a value of type Boolean.",
+      "snippet": { "ru": "Ложь", "en": "False" }
     },
     {
       "name": "Неопределено",
       "alias": "Undefined",
-      "category": "LITERAL"
+      "category": "LITERAL",
+      "description": "Литерал для указания значения типа Неопределено. Используется как пустое, неустановленное значение, в том числе как значение по умолчанию для неинициализированных переменных.",
+      "descriptionEn": "Literal to specify a value of type Undefined. It is used as an empty, unset value, including the default value for uninitialized variables.",
+      "snippet": { "ru": "Неопределено", "en": "Undefined" }
     },
     {
       "name": "Выполнить",
       "alias": "Execute",
-      "category": "OPERATOR"
+      "category": "OPERATOR",
+      "descriptionEn": "Allows you to execute a code snippet that is passed to the parameter as a string value.",
+      "snippet": { "ru": "Выполнить <?>;", "en": "Execute <?>;" }
     },
     {
       "name": "Ждать",
       "alias": "Await",
-      "category": "OPERATOR"
+      "category": "OPERATOR",
+      "description": "Условно-ключевое слово. Является ключевым только в процедурах и функциях, отмеченных как Асинх. Оператор Ждать используется для ожидания окончания Обещания. Возвращает полученное из Ожидания значение. Если применить этот оператор к значению, которое не является Обещанием, то оно будет неявно преобразовано в Обещание, наполненное этим значением. Ждать останавливает исполнение кода процедуры или функции, частью тела которой он является, до момента, когда Обещание будет наполнено значением.",
+      "descriptionEn": "A conditional keyword. It is a keyword only in procedures and functions marked as Async. The Await operator is used to wait for Promise to complete. It returns a value received from Wait. If you apply this operator to a value that is not Promise, it will be implicitly converted to Promise filled with this value. Await stops code execution of a procedure or function that it is a body part of until Promise is filled with the value.",
+      "snippet": { "ru": "Ждать <?>; ", "en": "Await <?>;" }
     },
     {
       "name": "И",
       "alias": "And",
-      "category": "OPERATOR"
+      "category": "OPERATOR",
+      "description": "Логическая операция",
+      "descriptionEn": "Logical operation"
     },
     {
       "name": "Или",
       "alias": "Or",
-      "category": "OPERATOR"
+      "category": "OPERATOR",
+      "description": "Логическая операция",
+      "descriptionEn": "Logical operation"
     },
     {
       "name": "Не",
       "alias": "Not",
-      "category": "OPERATOR"
+      "category": "OPERATOR",
+      "description": "Логическая операция",
+      "descriptionEn": "Logical operation"
     },
     {
       "name": "Новый",
       "alias": "New",
-      "category": "OPERATOR"
+      "category": "OPERATOR",
+      "description": "Оператор позволяет создать значение указанного типа. Допустим только для тех типов, для которых разрешено создание с помощью данного оператора (подробнее см. описание объектов языка). Для прикладных объектов необходимо использовать функциональную форму оператора Новый (вариант 2), так как при проверке модулей в конфигураторе не определены типы для прикладных объектов. Если в качестве второго параметра указано значение, отличное от массива, то параметр полностью игнорируется.",
+      "descriptionEn": "The operator allows you to create a value of the specified type. You can use the operator only for types for which values can be created using this operator. For more information, see the language object description. For applied objects, use the functional form of the New operator (option 2) as types are not specified for applied objects when checking modules in Designer. If a value different from an array is specified as the second parameter, the parameter is completely ignored.",
+      "snippet": { "ru": "Новый <?>;", "en": "New <?>;" }
     },
     {
       "name": "Если",
       "alias": "If",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Для указания разрешения использования процедур и функций общих модулей и модулей объектов используют инструкции препроцессора."
     },
     {
       "name": "Иначе",
       "alias": "Else",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Для указания разрешения использования процедур и функций общих модулей и модулей объектов используют инструкции препроцессора."
     },
     {
       "name": "ИначеЕсли",
       "alias": "ElsIf",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Для указания разрешения использования процедур и функций общих модулей и модулей объектов используют инструкции препроцессора."
     },
     {
       "name": "Использовать",
       "alias": "Use",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Инструкция препроцессора OneScript для подключения внешних библиотек и скриптов. Позволяет загрузить внешний код, указав путь к файлу или каталогу, либо имя установленной библиотеки.",
+      "descriptionEn": "OneScript preprocessor instruction for connecting external libraries and scripts. It loads external code by a file or directory path, or by the name of an installed library."
     },
     {
       "name": "КонецЕсли",
       "alias": "EndIf",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Для указания разрешения использования процедур и функций общих модулей и модулей объектов используют инструкции препроцессора."
     },
     {
       "name": "КонецОбласти",
       "alias": "EndRegion",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Для указания разрешения использования процедур и функций общих модулей и модулей объектов используют инструкции препроцессора."
     },
     {
       "name": "Область",
       "alias": "Region",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Для указания разрешения использования процедур и функций общих модулей и модулей объектов используют инструкции препроцессора."
     },
     {
       "name": "Тогда",
       "alias": "Then",
-      "category": "PREPROCESSOR_INSTRUCTION"
+      "category": "PREPROCESSOR_INSTRUCTION",
+      "description": "Для указания разрешения использования процедур и функций общих модулей и модулей объектов используют инструкции препроцессора."
     },
     {
       "name": "Возврат",
       "alias": "Return",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Процедура»",
+      "descriptionEn": "Part of \"Procedure\" construct",
+      "descriptionByParent": {
+        "Процедура": { "ru": "Необязательное ключевое слово, которое завершает выполнение процедуры и осуществляет возврат в точку программы, из которой было обращение к процедуре.", "en": "An optional keyword that ends the procedure and returns to the code point where the procedure was called." },
+        "Функция": { "ru": "Ключевое слово, которое завершает выполнение функции и возвращает указанное значение в выражение, в котором используется функция. В качестве возвращаемого значения может выступать выражение или переменная, значение которого содержит результат обращения к функции.", "en": "A keyword that ends the function and returns the specified value to the expression where the function is used. A return value can be an expression or a variable whose value contains the function call result." }
+      }
     },
     {
       "name": "ВызватьИсключение",
       "alias": "Raise",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Попытка»",
+      "descriptionEn": "Part of \"Try\" construct",
+      "descriptionByParent": {
+        "Попытка": { "ru": "Оператор позволяет вызвать исключение в тех случаях, когда несмотря на отработку исключительной ситуации операторами исключения необходимо прервать выполнение модуля с ошибкой времени выполнения. Оператор допустим только внутри операторных скобок Исключение – КонецПопытки.", "en": "The operator that generates an exception in cases when, even though the exception is handled by the exception operators, it is necessary to stop the module execution and generate a runtime error. This operator is valid only inside the Except – EndTry keyword pair." }
+      }
     },
     {
       "name": "Для",
       "alias": "For",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Оператор цикла Для предназначен для циклического повторения операторов, находящихся внутри конструкции Цикл – КонецЦикла. Перед началом выполнения цикла значение <Выражение 1> присваивается переменной <Имя переменной>. Значение <Имя переменной> автоматически увеличивается при каждом проходе цикла. Величина приращения счетчика при каждом выполнении цикла равна 1. Цикл выполняется, пока значение переменной <Имя_переменной> меньше или равно значению <Выражение 2>. Условие выполнения цикла всегда проверяется в начале, перед выполнением цикла.",
+      "descriptionEn": "The For loop operator repeats operators located within the Do – EndDo structure in cycles. Before the loop starts, the <Expression 1> value is assigned to the <Variable name> variable. The <Variable name> value is automatically increased upon every loop iteration. The counter increment value upon every loop iteration is equal to one. The loop is executed while the <Variable_name> variable value is less than or equal to the <Expression 2> value. The loop execution condition is always checked before the loop is executed.",
+      "snippet": { "ru": "Для <?> =  По Цикл\r\nКонецЦикла; ", "en": "For <?> =  To Do\r\nEndDo;" }
     },
     {
       "name": "ДобавитьОбработчик",
       "alias": "AddHandler",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Добавляет обработчик события. При добавлении обработчика события производится проверка соответствия числа параметров события числу параметров метода, назначаемого в качестве обработчика.",
+      "descriptionEn": "Adds an event handler. When an event handler is added, the application checks whether the number of event parameters matches the number of parameters of the method that is set as a handler.",
+      "snippet": { "ru": "ДобавитьОбработчик", "en": "AddHandler" }
     },
     {
       "name": "Если",
       "alias": "If",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Оператор Если управляет выполнением программы, основываясь на результате одного или более логических выражений. Оператор может содержать любое количество групп операторов, возглавляемых конструкциями ИначеЕсли — Тогда.",
+      "descriptionEn": "The If operator allows or denies script execution based on the result of one or several logical expressions. The operator can contain any number of operator groups provided in ElseIf ... Then pairs.",
+      "snippet": { "ru": "Если <?> Тогда\r\nИначеЕсли\r\nКонецЕсли;", "en": "If <?> Then\r\nElsIf\r\nEndIf;" }
     },
     {
       "name": "Из",
       "alias": "In",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Для Каждого»",
+      "descriptionEn": "Part of \"For Each\" construct",
+      "descriptionByParent": {
+        "Для Каждого": { "ru": "Синтаксическая связка для параметра <Имя переменной 2>.", "en": "A syntactic link for the <Variable name 2> parameter." }
+      }
     },
     {
       "name": "Иначе",
       "alias": "Else",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Если»",
+      "descriptionEn": "Part of \"If\" construct",
+      "descriptionByParent": {
+        "Если": { "ru": "Операторы, следующие за ключевым словом Иначе, выполняются, если результаты логических выражений в конструкции Если и всех предшествующих конструкциях ИначеЕсли оказались равны Ложь.", "en": "Operators that follow Else are executed when all of the conditions in the If clause and all preceding ElseIf clauses are False." }
+      }
     },
     {
       "name": "ИначеЕсли",
       "alias": "ElsIf",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Если»",
+      "descriptionEn": "Part of \"If\" construct",
+      "descriptionByParent": {
+        "Если": { "ru": "Логическое выражение, следующее за ключевым словом ИначеЕсли, вычисляется только тогда, когда условия в Если и всех предшествующих ИначеЕсли оказались равны Ложь. Операторы, следующие за конструкцией ИначеЕсли — Тогда, выполняются, если результат логического выражения в данном ИначеЕсли равен Истина.", "en": "A logical expression that follows ElseIf is only calculated when all of the conditions in the If clause and all preceding ElseIf clauses are False. Operators that follow ElseIf –Then are only executed when the result of the logical expression in this ElseIf is True." }
+      }
     },
     {
       "name": "Исключение",
       "alias": "Except",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Попытка»",
+      "descriptionEn": "Part of \"Try\" construct",
+      "descriptionByParent": {
+        "Попытка": { "ru": "Операторы, следующие за ключевым словом Исключение выполняются, если при выполнении последовательности операторов произошла ошибка времени выполнения.", "en": "Operators following the Except keyword are executed if a runtime error occurs during the execution of the operator sequence." }
+      }
     },
     {
       "name": "Каждого",
       "alias": "Each",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Для Каждого»",
+      "descriptionEn": "Part of \"For Each\" construct",
+      "descriptionByParent": {
+        "Для": { "ru": "Синтаксическая связка, которая вместе с ключевым словом Для образует оператор обхода коллекции значений Для Каждого … Из … Цикл.", "en": "A syntactic link that, together with the For keyword, forms the For Each … In … Do operator that iterates over a collection of values." }
+      }
     },
     {
       "name": "КонецЕсли",
       "alias": "EndIf",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Если»",
+      "descriptionEn": "Part of \"If\" construct",
+      "descriptionByParent": {
+        "Если": { "ru": "Ключевое слово, которое завершает структуру оператора условного выполнения.", "en": "Denotes the end of the conditional execution structure." }
+      }
     },
     {
       "name": "КонецПопытки",
       "alias": "EndTry",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Попытка»",
+      "descriptionEn": "Part of \"Try\" construct",
+      "descriptionByParent": {
+        "Попытка": { "ru": "Ключевое слово, которое завершает структуру оператора обработки исключительных ситуаций.", "en": "A keyword that ends the exception handling operator structure." }
+      }
     },
     {
       "name": "КонецЦикла",
       "alias": "EndDo",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Для Каждого»",
+      "descriptionEn": "Part of \"For Each\" construct",
+      "descriptionByParent": {
+        "Для Каждого": { "ru": "Ключевое слово, которое завершает структуру оператора цикла.", "en": "A keyword that ends the loop operator structure." },
+        "Для": { "ru": "Ключевое слово, которое завершает структуру оператора цикла.", "en": "A keyword that ends the loop operator structure." }
+      }
     },
     {
       "name": "Перейти",
       "alias": "Goto",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Безусловная передача управления на другой оператор программы. Передает управление от одного оператора к другому. Область действия оператора ограничивается программным модулем, процедурой или функцией; он не может передать управление за пределы программного модуля, процедуры или функции.",
+      "descriptionEn": "Unconditional transfer of the control to another operator. It transfers the control from one operator to another. The operator scope is limited to a module, a procedure, or a function. It cannot transfer the control beyond its scope.",
+      "snippet": { "ru": "Перейти <?>;", "en": "Goto <?>;" }
     },
     {
       "name": "По",
       "alias": "To",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Для»",
+      "descriptionEn": "Part of \"For\" construct",
+      "descriptionByParent": {
+        "Для": { "ru": "Синтаксическая связка для параметра <Выражение 2>.", "en": "A syntax connective for the <Expression 2> parameter." }
+      }
     },
     {
       "name": "Пока",
       "alias": "While",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "descriptionEn": "The While loop operator repeats operators located in the Do – EndDo structure in cycles. The loop is executed while the logical expression is True. The loop execution condition is always checked before the loop is executed.",
+      "snippet": { "ru": "Пока <?> Цикл\r\nКонецЦикла; ", "en": "While <?> Do\r\nEndDo;" }
     },
     {
       "name": "Попытка",
       "alias": "Try",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Оператор Попытка управляет выполнением программы, основываясь на возникающих при выполнении модуля ошибочных (исключительных) ситуациях, и определяет обработку этих ситуаций. В качестве ошибочных (исключительных) ситуаций воспринимаются ошибки времени выполнения модуля. Не предусмотрено определяемых пользователем исключений.",
+      "descriptionEn": "The Try operator manages the code execution based on errors (exceptions) that arise during module execution, and defines how these exceptions are handled. Errors (exceptions) originate from module runtime errors. User-defined exceptions are not supported.",
+      "snippet": { "ru": "Попытка\r\n<?>\r\nИсключение\r\nКонецПопытки; ", "en": "Try\r\n<?>\r\nExcept\r\nEndTry;" }
     },
     {
       "name": "Прервать",
       "alias": "Break",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Для Каждого»",
+      "descriptionEn": "Part of \"For Each\" construct",
+      "descriptionByParent": {
+        "Для Каждого": { "ru": "Позволяет прервать выполнение цикла в любой точке. После выполнение этого оператора управление передается оператору, следующему за ключевым словом КонецЦикла.", "en": "Stops the loop at any point. Once this operator is executed, control is passed to the operator after the EndDo keyword." },
+        "Для": { "ru": "Позволяет прервать выполнение цикла в любой точке. После выполнение этого оператора управление передается оператору, следующему за ключевым словом КонецЦикла.", "en": "Stops the loop at any point. Once this operator is executed, control is passed to the operator after the EndDo keyword." }
+      }
     },
     {
       "name": "Продолжить",
       "alias": "Continue",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Для Каждого»",
+      "descriptionEn": "Part of \"For Each\" construct",
+      "descriptionByParent": {
+        "Для Каждого": { "ru": "Немедленно передает управление в начало цикла, где производится вычисление и проверка условий выполнения цикла. Операторы, следующие в теле цикла за ним, на данной итерации обхода не выполняются.", "en": "Transfers execution immediately to the beginning of the loop where loop conditions are evaluated and checked. Operators that follow it in the loop body are not executed at this iteration." },
+        "Для": { "ru": "Немедленно передает управление в начало цикла, где производится вычисление и проверка условий выполнения цикла. Операторы, следующие в теле цикла за ним, на данной итерации обхода не выполняются.", "en": "Transfers execution immediately to the beginning of the loop where loop conditions are evaluated and checked. Operators that follow it in the loop body are not executed at this iteration." }
+      }
     },
     {
       "name": "Тогда",
       "alias": "Then",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Если»",
+      "descriptionEn": "Part of \"If\" construct",
+      "descriptionByParent": {
+        "Если": { "ru": "Операторы, следующие за Тогда выполняются, если результатом логического выражения является значение Истина.", "en": "Operators that follow Then are executed if the result of the logical expression is True." }
+      }
     },
     {
       "name": "УдалитьОбработчик",
       "alias": "RemoveHandler",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Удаляет обработчик события. При удалении обработчика события производится проверка соответствия числа параметров события числу параметров метода, назначенного в качестве обработчика.",
+      "descriptionEn": "Removes an event handler. When the event handler is removed, the application checks whether the number of event parameters matches the number of parameters of the method that is set as a handler.",
+      "snippet": { "ru": "УдалитьОбработчик", "en": "RemoveHandler" }
     },
     {
       "name": "Цикл",
       "alias": "Do",
-      "category": "STATEMENT"
+      "category": "STATEMENT",
+      "description": "Часть конструкции «Для Каждого»",
+      "descriptionEn": "Part of \"For Each\" construct",
+      "descriptionByParent": {
+        "Для Каждого": { "ru": "Операторы, следующие за ключевым словом Цикл выполняются для каждого элемента коллекции.", "en": "Operators that follow the Do keyword are executed for each collection item." },
+        "Для": { "ru": "Операторы, следующие за ключевым словом Цикл выполняются, пока значение переменной <Имя переменной> меньше или равно значения <Выражение 2>.", "en": "Operators that follow the Do keyword are executed while the <Variable name> variable value is less than or equal to the <Expression 2> value." }
+      }
     }
   ]
 }
