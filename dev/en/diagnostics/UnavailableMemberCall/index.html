@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DeprecatedMethods8310/">
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UnavailableMemberCall/">
       
       
       
@@ -25,7 +25,7 @@
     
     
       
-        <title>Deprecated client application method. (DeprecatedMethods8310) - BSL Language Server Dev</title>
+        <title>Use of a method/property unavailable in the target platform version (UnavailableMemberCall) - BSL Language Server Dev</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#Deprecated-client-application-method-DeprecatedMethods8310" class="md-skip">
+        <a href="#Use-of-a-methodproperty-unavailable-in-the-target-platform-version-UnavailableMemberCall" class="md-skip">
           Skip to content
         </a>
       
@@ -111,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Deprecated client application method. (DeprecatedMethods8310)
+              Use of a method/property unavailable in the target platform version (UnavailableMemberCall)
             
           </span>
         </div>
@@ -1450,7 +1450,7 @@
   
 
 
-<h1 id="Deprecated-client-application-method-DeprecatedMethods8310">Deprecated client application method. (DeprecatedMethods8310)<a class="headerlink" href="#Deprecated-client-application-method-DeprecatedMethods8310" title="Permanent link">&para;</a></h1>
+<h1 id="Use-of-a-methodproperty-unavailable-in-the-target-platform-version-UnavailableMemberCall">Use of a method/property unavailable in the target platform version (UnavailableMemberCall)<a class="headerlink" href="#Use-of-a-methodproperty-unavailable-in-the-target-platform-version-UnavailableMemberCall" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -1464,39 +1464,45 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;"><code>Code smell</code></td>
+<td style="text-align: center;"><code>Error</code></td>
 <td style="text-align: center;"><code>BSL</code></td>
-<td style="text-align: center;"><code>Info</code></td>
+<td style="text-align: center;"><code>Major</code></td>
 <td style="text-align: center;"><code>Yes</code></td>
-<td style="text-align: center;"><code>1</code></td>
-<td style="text-align: center;"><code>deprecated</code></td>
+<td style="text-align: center;"><code>5</code></td>
+<td style="text-align: center;"><code>suspicious</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+<p>The diagnostic triggers on a method call or property access of a platform type that is available only since a platform version newer than the project compatibility mode. Using such a member will fail in the environment matching the selected compatibility mode.</p>
+<p>The version a member becomes available in is taken from the syntax assistant of the installed 1C platform (via <code>bsl-context</code>) or from the bundled reference. Triggering respects the target platform version: a member is treated as unavailable when the target version is lower than the version the member was introduced in. The target version is resolved by priority: the <code>v8platform.targetVersion</code> setting, then the configuration compatibility mode, and if neither is set the newest platform is assumed and the check does not trigger.</p>
+<p>When the object type may be inferred as one of several types (for example, a variable assigned values of different types in different code branches), the diagnostic triggers if the member is unavailable for at least one of the possible types.</p>
+<h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>The following global context methods are deprecated and are not recommended since platform version 8.3.10:</p>
-<div class="highlight"><pre><span></span><code><span class="nf">SetShortApplicationCaption</span><span class="p">();</span>
-<span class="nf">GetShortApplicationCaption</span><span class="p">();</span>
-<span class="nf">SetClientApplicationCaption</span><span class="p">();</span>
-<span class="nf">GetClientApplicationCaption</span><span class="p">();</span>
-<span class="nf">ClientApplicationBaseFontCurrentVariant</span><span class="p">();</span>
-<span class="nf">ClientApplicationInterfaceCurrentVariant</span><span class="p">()</span><span class="o">.</span>
+<p>The target platform version is <code>8.3.10</code> (<code>v8platform.targetVersion</code> or the compatibility mode), while the <code>ВопросАсинх</code> (<code>DoQueryBoxAsync</code>) method is available only since <code>8.3.18</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Triggers: the method is available only since version 8.3.18</span>
+<span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВопроса&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
+<span class="nb">ВопросАсинх</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
+</code></pre></div>
+<p>Fix it by raising the target platform version to a supported one, or by using a member available in the target version (for example, the synchronous <code>Вопрос</code> / <code>DoQueryBox</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Ответ</span> <span class="o">=</span> <span class="nb">Вопрос</span><span class="p">(</span><span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-<p>Source: <a href="https://dl03.1c.ru/content/Platform/8_3_10_2699/1cv8upd.htm">Version 8.3.10 changelog (RU)</a></p>
+<ul>
+<li>Source: 1C:Enterprise 8 platform syntax assistant</li>
+</ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:DeprecatedMethods8310-off</span>
-<span class="c1">// BSLLS:DeprecatedMethods8310-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:UnavailableMemberCall-off</span>
+<span class="c1">// BSLLS:UnavailableMemberCall-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;DeprecatedMethods8310&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UnavailableMemberCall&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

@@ -1523,8 +1523,8 @@
 <ul>
 <li>Security Hotspot: <strong>8</strong></li>
 <li>Vulnerability: <strong>7</strong></li>
-<li>Error: <strong>57</strong></li>
-<li>Code smell: <strong>109</strong></li>
+<li>Error: <strong>59</strong></li>
+<li>Code smell: <strong>107</strong></li>
 </ul>
 <table>
 <thead>
@@ -1849,22 +1849,6 @@
 <td>Minor</td>
 <td>Code smell</td>
 <td><code>deprecated</code><br><code>design</code></td>
-</tr>
-<tr>
-<td><a href="DeprecatedMethods8310/">DeprecatedMethods8310</a></td>
-<td>Deprecated client application method.</td>
-<td style="text-align: center;">Yes</td>
-<td>Info</td>
-<td>Code smell</td>
-<td><code>deprecated</code></td>
-</tr>
-<tr>
-<td><a href="DeprecatedMethods8317/">DeprecatedMethods8317</a></td>
-<td>Using of deprecated platform 8.3.17 global methods</td>
-<td style="text-align: center;">Yes</td>
-<td>Info</td>
-<td>Code smell</td>
-<td><code>deprecated</code></td>
 </tr>
 <tr>
 <td><a href="DeprecatedTypeManagedForm/">DeprecatedTypeManagedForm</a></td>
@@ -2731,12 +2715,28 @@
 <td><code>suspicious</code><br><code>brainoverload</code></td>
 </tr>
 <tr>
+<td><a href="UnavailableMemberCall/">UnavailableMemberCall</a></td>
+<td>Use of a method/property unavailable in the target platform version</td>
+<td style="text-align: center;">Yes</td>
+<td>Major</td>
+<td>Error</td>
+<td><code>suspicious</code></td>
+</tr>
+<tr>
 <td><a href="UnionAll/">UnionAll</a></td>
 <td>Using keyword "UNION" in queries</td>
 <td style="text-align: center;">Yes</td>
 <td>Minor</td>
 <td>Code smell</td>
 <td><code>standard</code><br><code>sql</code><br><code>performance</code></td>
+</tr>
+<tr>
+<td><a href="UnknownMember/">UnknownMember</a></td>
+<td>Reference to an unknown method or property</td>
+<td style="text-align: center;">No</td>
+<td>Major</td>
+<td>Error</td>
+<td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="UnknownPreprocessorSymbol/">UnknownPreprocessorSymbol</a></td>

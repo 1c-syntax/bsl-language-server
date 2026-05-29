@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DeprecatedMethods8317/">
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UnavailableMemberCall/">
       
       
       
@@ -25,7 +25,7 @@
     
     
       
-        <title>Использование устаревших глобальных методов платформы 8.3.17 (DeprecatedMethods8317) - BSL Language Server Dev</title>
+        <title>Использование метода/свойства, недоступного в целевой версии платформы (UnavailableMemberCall) - BSL Language Server Dev</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#Использование-устаревших-глобальных-методов-платформы-8317-DeprecatedMethods8317" class="md-skip">
+        <a href="#Использование-методасвойства-недоступного-в-целевой-версии-платформы-UnavailableMemberCall" class="md-skip">
           Перейти к содержанию
         </a>
       
@@ -111,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Использование устаревших глобальных методов платформы 8.3.17 (DeprecatedMethods8317)
+              Использование метода/свойства, недоступного в целевой версии платформы (UnavailableMemberCall)
             
           </span>
         </div>
@@ -1450,7 +1450,7 @@
   
 
 
-<h1 id="Использование-устаревших-глобальных-методов-платформы-8317-DeprecatedMethods8317">Использование устаревших глобальных методов платформы 8.3.17 (DeprecatedMethods8317)<a class="headerlink" href="#Использование-устаревших-глобальных-методов-платформы-8317-DeprecatedMethods8317" title="Permanent link">&para;</a></h1>
+<h1 id="Использование-методасвойства-недоступного-в-целевой-версии-платформы-UnavailableMemberCall">Использование метода/свойства, недоступного в целевой версии платформы (UnavailableMemberCall)<a class="headerlink" href="#Использование-методасвойства-недоступного-в-целевой-версии-платформы-UnavailableMemberCall" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -1464,41 +1464,47 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;"><code>Дефект кода</code></td>
+<td style="text-align: center;"><code>Ошибка</code></td>
 <td style="text-align: center;"><code>BSL</code></td>
-<td style="text-align: center;"><code>Информационный</code></td>
+<td style="text-align: center;"><code>Важный</code></td>
 <td style="text-align: center;"><code>Да</code></td>
 <td style="text-align: center;"><code>5</code></td>
-<td style="text-align: center;"><code>deprecated</code></td>
+<td style="text-align: center;"><code>suspicious</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-<p>В платформе <code>8.3.17</code> было реализовано свойство глобального контекста <code>ОбработкаОшибок</code> и 
-стандартная функция <code>Управление настройками обработки ошибок</code>, позволяющая настроить тексты ошибок.</p>
-<p>Методы глобального контекста считаются устаревшими:</p>
-<ul>
-<li><code>КраткоеПредставлениеОшибки()</code></li>
-<li><code>ПодробноеПредставлениеОшибки()</code> </li>
-<li><code>ПоказатьИнформациюОбОшибке()</code></li>
-</ul>
-<p>Необходимо использовать одноименные методы объекта <code>ОбработкаОшибок</code>.</p>
+
+<p>Диагностика срабатывает на вызов метода или обращение к свойству платформенного типа, которое доступно только начиная с версии платформы новее, чем режим совместимости проекта. Использование такого члена приведёт к ошибке в среде, соответствующей выбранному режиму совместимости.</p>
+<p>Сведения о версии, начиная с которой доступен член, берутся из синтакс-помощника установленной платформы 1С (через <code>bsl-context</code>) либо из встроенного справочника. Срабатывание учитывает целевую версию платформы: член считается недоступным, если целевая версия ниже версии появления члена. Целевая версия определяется по приоритету: настройка <code>v8platform.targetVersion</code>, затем режим совместимости конфигурации, а если ничего не задано - считается, что используется самая свежая платформа, и проверка не срабатывает.</p>
+<p>Если тип объекта может быть выведен как один из нескольких (например, переменная присваивается значениями разных типов в разных ветках кода), диагностика срабатывает, если член недоступен хотя бы для одного из возможных типов.</p>
+<h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+<p>Целевая версия платформы — <code>8.3.10</code> (<code>v8platform.targetVersion</code> или режим совместимости), а метод <code>ВопросАсинх</code> доступен только начиная с <code>8.3.18</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Срабатывание: метод доступен только с версии 8.3.18</span>
+<span class="nv">Оповещение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nc">ОписаниеОповещения</span><span class="p">(</span><span class="s">&quot;ПослеВопроса&quot;</span><span class="p">,</span> <span class="nv">ЭтотОбъект</span><span class="p">);</span>
+<span class="nb">ВопросАсинх</span><span class="p">(</span><span class="nv">Оповещение</span><span class="p">,</span> <span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
+</code></pre></div>
+<p>Исправление — поднять целевую версию платформы до поддерживаемой либо использовать член, доступный в целевой версии (например, синхронный <code>Вопрос</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="nv">Ответ</span> <span class="o">=</span> <span class="nb">Вопрос</span><span class="p">(</span><span class="s">&quot;Продолжить?&quot;</span><span class="p">,</span> <span class="nv">РежимДиалогаВопрос</span><span class="o">.</span><span class="nv">ДаНет</span><span class="p">);</span>
+</code></pre></div>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <ul>
-<li>Источник: <a href="https://dl03.1c.ru/content/Platform/8_3_17_1386/1cv8upd_8_3_17_1386.htm#27f2dc70-f0cf-11e9-8371-0050569f678a">Описание изменений платформы 8.3.17</a></li>
+<li>Источник: синтакс-помощник платформы 1С:Предприятие 8</li>
 </ul>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:DeprecatedMethods8317-off</span>
-<span class="c1">// BSLLS:DeprecatedMethods8317-on</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// BSLLS:UnavailableMemberCall-off</span>
+<span class="c1">// BSLLS:UnavailableMemberCall-on</span>
 </code></pre></div>
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;DeprecatedMethods8317&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UnavailableMemberCall&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 

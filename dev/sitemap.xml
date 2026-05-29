@@ -225,14 +225,6 @@
          <lastmod>2026-05-29</lastmod>
     </url>
     <url>
-         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DeprecatedMethods8310/</loc>
-         <lastmod>2026-05-29</lastmod>
-    </url>
-    <url>
-         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DeprecatedMethods8317/</loc>
-         <lastmod>2026-05-29</lastmod>
-    </url>
-    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/DeprecatedTypeManagedForm/</loc>
          <lastmod>2026-05-29</lastmod>
     </url>
@@ -665,7 +657,15 @@
          <lastmod>2026-05-29</lastmod>
     </url>
     <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UnavailableMemberCall/</loc>
+         <lastmod>2026-05-29</lastmod>
+    </url>
+    <url>
          <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UnionAll/</loc>
+         <lastmod>2026-05-29</lastmod>
+    </url>
+    <url>
+         <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UnknownMember/</loc>
          <lastmod>2026-05-29</lastmod>
     </url>
     <url>
