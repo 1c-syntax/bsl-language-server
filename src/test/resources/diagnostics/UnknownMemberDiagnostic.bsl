@@ -15,8 +15,10 @@
     // Method-call варианты для прохода matchMembers / inferArgTypes в DereferenceMemberMatcher:
     // — пустые скобки (n==0 после trim),
     // — trailing skipped argument (n уменьшается в while-loop),
+    // — middle skipped argument (SkippedCallArgumentNode внутри цикла),
     // — dereference внутри аргумента (рекурсия findDereferenceForTerminal по MethodCallNode).
     Массив.ВГраница();
     Массив.Найти("a", , );
+    Массив.Найти("a", , Истина);
     Сообщить(Массив.Количество());
 КонецПроцедуры
