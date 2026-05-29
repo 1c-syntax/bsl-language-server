@@ -78,13 +78,15 @@ class TypeServiceDelegationTest {
   private ReferenceResolver referenceResolver;
   @Mock
   private GlobalScopeProvider globalScopeProvider;
+  @Mock
+  private DereferenceMemberMatcher dereferenceMatcher;
 
   private TypeService typeService;
 
   @BeforeEach
   void setUp() {
     typeService = new TypeService(typeRegistry, symbolTypeIndex, inferencer,
-      referenceResolver, globalScopeProvider);
+      referenceResolver, globalScopeProvider, dereferenceMatcher);
   }
 
   @Test
@@ -258,34 +260,6 @@ class TypeServiceDelegationTest {
   }
 
   @Test
-  void findMemberAtWithNullAstReturnsEmpty() {
-    // given — DocumentContext.getAst() возвращает null.
-    var dc = org.mockito.Mockito.mock(
-      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
-    when(dc.getAst()).thenReturn(null);
-
-    // when
-    var result = typeService.findMemberAt(dc, new org.eclipse.lsp4j.Position(0, 0));
-
-    // then — L269 return Optional.empty().
-    assertThat(result).isEmpty();
-  }
-
-  @Test
-  void inferAtPositionWithNullAstReturnsEmpty() {
-    // given — DocumentContext без AST.
-    var dc = org.mockito.Mockito.mock(
-      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
-    when(dc.getAst()).thenReturn(null);
-
-    // when
-    var result = typeService.inferAtPosition(dc, new org.eclipse.lsp4j.Position(0, 0));
-
-    // then
-    assertThat(result).isSameAs(TypeSet.EMPTY);
-  }
-
-  @Test
   void findGlobalContextNoArgUsesNullFileType() {
     // given
     when(globalScopeProvider.findGlobalContext(eq("X"), eq((FileType) null)))
@@ -294,5 +268,81 @@ class TypeServiceDelegationTest {
 
     // when / then
     assertThat(typeService.findGlobalContext("X")).contains(ARRAY);
+  }
+
+  @Test
+  void findTypesByUriReturnsEmptyWhenNoReferenceResolves() {
+    // given
+    var uri = java.net.URI.create("file:///fake.bsl");
+    var pos = new org.eclipse.lsp4j.Position(0, 0);
+    when(referenceResolver.findReference(uri, pos)).thenReturn(Optional.empty());
+
+    // when / then
+    assertThat(typeService.findTypes(uri, pos)).isSameAs(TypeSet.EMPTY);
+  }
+
+  @Test
+  void findTypesByUriDelegatesToReferenceFindTypes() {
+    // given — резолвер находит ссылку на synthetic символ с valueType=NUMBER.
+    var uri = java.net.URI.create("file:///fake.bsl");
+    var pos = new org.eclipse.lsp4j.Position(1, 5);
+    var synthetic = new SyntheticSymbol("Y", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", NUMBER);
+    var location = new Location("file:///fake.bsl", new Range());
+    var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
+    when(referenceResolver.findReference(uri, pos)).thenReturn(Optional.of(ref));
+
+    // when / then
+    assertThat(typeService.findTypes(uri, pos).refs()).containsExactly(NUMBER);
+  }
+
+  @Test
+  void isUnknownGlobalAtTrueWhenNoMembersAndNoReference() {
+    // given — пустой документ-мок: findMembersAt вернёт empty, findReference — empty.
+    var docMock = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(docMock.getAst()).thenReturn(emptyAst());
+    var uri = java.net.URI.create("file:///fake.bsl");
+    when(docMock.getUri()).thenReturn(uri);
+    var pos = new org.eclipse.lsp4j.Position(0, 0);
+    when(referenceResolver.findReference(uri, pos)).thenReturn(Optional.empty());
+
+    // when / then — оба условия истинны → голый вызов считается неизвестным.
+    assertThat(typeService.isUnknownGlobalAt(docMock, pos)).isTrue();
+  }
+
+  @Test
+  void isUnknownGlobalAtFalseWhenReferenceResolves() {
+    // given — findMembersAt пуст, но reference резолвится → не считаем неизвестным.
+    var docMock = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(docMock.getAst()).thenReturn(emptyAst());
+    var uri = java.net.URI.create("file:///fake.bsl");
+    when(docMock.getUri()).thenReturn(uri);
+    var pos = new org.eclipse.lsp4j.Position(0, 0);
+    var synthetic = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
+    var location = new Location("file:///fake.bsl", new Range());
+    var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
+    when(referenceResolver.findReference(uri, pos)).thenReturn(Optional.of(ref));
+
+    // when / then
+    assertThat(typeService.isUnknownGlobalAt(docMock, pos)).isFalse();
+  }
+
+  @Test
+  void unknownMemberReceiverAtEmptyForBlankDocument() {
+    // given — пустой AST: findMembersAt empty (terminal не найден),
+    // dereferenceMatcher.receiverTypesAt не вызывается (нет terminal).
+    var docMock = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(docMock.getAst()).thenReturn(emptyAst());
+    var pos = new org.eclipse.lsp4j.Position(0, 0);
+
+    // when / then — нет идентификатора в позиции → empty.
+    assertThat(typeService.unknownMemberReceiverAt(docMock, pos)).isEmpty();
+  }
+
+  /** Пустой AST без токенов — Trees.findTerminalNodeContainsPosition не вернёт нодов. */
+  private static com.github._1c_syntax.bsl.parser.BSLParser.FileContext emptyAst() {
+    return org.mockito.Mockito.mock(com.github._1c_syntax.bsl.parser.BSLParser.FileContext.class);
   }
 }

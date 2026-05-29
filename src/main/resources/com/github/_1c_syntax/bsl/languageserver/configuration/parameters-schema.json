@@ -38,6 +38,16 @@
             "title": "Assigning aliases to selected fields in a query",
             "$id": "#/definitions/AssignAliasFieldsInQuery"
         },
+        "AssignToReadOnlyProperty": {
+            "description": "Assignment to a read-only property",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Assignment to a read-only property",
+            "$id": "#/definitions/AssignToReadOnlyProperty"
+        },
         "BadWords": {
             "description": "Prohibited words",
             "default": false,
@@ -485,26 +495,6 @@
             ],
             "title": "Deprecated methods should not be used",
             "$id": "#/definitions/DeprecatedMethodCall"
-        },
-        "DeprecatedMethods8310": {
-            "description": "Deprecated client application method.",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Deprecated client application method.",
-            "$id": "#/definitions/DeprecatedMethods8310"
-        },
-        "DeprecatedMethods8317": {
-            "description": "Using of deprecated platform 8.3.17 global methods",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using of deprecated platform 8.3.17 global methods",
-            "$id": "#/definitions/DeprecatedMethods8317"
         },
         "DeprecatedTypeManagedForm": {
             "description": "Deprecated ManagedForm type",
@@ -2028,6 +2018,16 @@
             "title": "Unary Plus sign in string concatenation",
             "$id": "#/definitions/UnaryPlusInConcatenation"
         },
+        "UnavailableMemberCall": {
+            "description": "Use of a method/property unavailable in the target platform version",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Use of a method/property unavailable in the target platform version",
+            "$id": "#/definitions/UnavailableMemberCall"
+        },
         "UnionAll": {
             "description": "Using keyword \"UNION\" in queries",
             "default": true,
@@ -2037,6 +2037,16 @@
             ],
             "title": "Using keyword \"UNION\" in queries",
             "$id": "#/definitions/UnionAll"
+        },
+        "UnknownMember": {
+            "description": "Reference to an unknown method or property",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Reference to an unknown method or property",
+            "$id": "#/definitions/UnknownMember"
         },
         "UnknownPreprocessorSymbol": {
             "description": "Unknown preprocessor symbol",

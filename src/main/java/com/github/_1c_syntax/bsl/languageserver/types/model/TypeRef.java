@@ -44,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @param qualifiedName каноническое полное имя (например, {@code "Массив"},
  *                      {@code "Справочники.Контрагенты"}, mdoRef для общего модуля)
  */
-public record TypeRef(TypeKind kind, String qualifiedName) {
+public record TypeRef(TypeKind kind, String qualifiedName) implements Comparable<TypeRef> {
 
   public static final TypeRef UNKNOWN = new TypeRef(TypeKind.UNKNOWN, "Unknown");
   public static final TypeRef ANY = new TypeRef(TypeKind.ANY, "Any");
@@ -169,5 +169,16 @@ public record TypeRef(TypeKind kind, String qualifiedName) {
       }
     }
     return null;
+  }
+
+  /**
+   * Порядок по {@code qualifiedName}, затем по {@code kind} — детерминированный
+   * и согласованный с {@link #equals}. Нужен для использования {@link TypeRef}
+   * как ключа в упорядоченных структурах.
+   */
+  @Override
+  public int compareTo(TypeRef other) {
+    var byName = qualifiedName.compareTo(other.qualifiedName);
+    return byName != 0 ? byName : kind.compareTo(other.kind);
   }
 }

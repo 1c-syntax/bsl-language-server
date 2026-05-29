@@ -47,7 +47,7 @@ import java.util.Optional;
  * Источник информации о режиме доступа — синтакс-помощник платформы 1С
  * (через {@code bsl-context}) или JSON-fallback. Метаданные пробрасываются
  * платформенным провайдером в {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor#metadata()}
- * и индексируются {@link TypeRegistry#indexReadOnlyMembers} как пары
+ * и индексируются {@link TypeRegistry#indexMemberMetadata} как пары
  * (тип-владелец, имя свойства), что позволяет быстро отфильтровать
  * безопасные присваивания.
  * <p>

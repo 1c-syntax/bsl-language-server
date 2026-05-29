@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.model;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public record PlatformMetadata(
   String deprecatedSinceVersion,
   List<String> recommendedReplacements,
   Set<Availability> availabilities,
-  AccessMode accessMode,
+  @Nullable AccessMode accessMode,
   BilingualString returnValueDescription,
   BilingualString notes,
   List<BilingualString> examples,
@@ -85,7 +86,7 @@ public record PlatformMetadata(
     String deprecatedSinceVersion,
     List<String> recommendedReplacements,
     Set<Availability> availabilities,
-    AccessMode accessMode,
+    @Nullable AccessMode accessMode,
     String returnValueDescription,
     String notes,
     List<String> ruExamples,

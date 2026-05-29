@@ -29,6 +29,9 @@
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
+                "AssignToReadOnlyProperty": {
+                    "$ref": "parameters-schema.json#/definitions/AssignToReadOnlyProperty"
+                },
                 "BadWords": {
                     "$ref": "parameters-schema.json#/definitions/BadWords"
                 },
@@ -136,12 +139,6 @@
                 },
                 "DeprecatedMethodCall": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMethodCall"
-                },
-                "DeprecatedMethods8310": {
-                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8310"
-                },
-                "DeprecatedMethods8317": {
-                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8317"
                 },
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
@@ -467,8 +464,14 @@
                 "UnaryPlusInConcatenation": {
                     "$ref": "parameters-schema.json#/definitions/UnaryPlusInConcatenation"
                 },
+                "UnavailableMemberCall": {
+                    "$ref": "parameters-schema.json#/definitions/UnavailableMemberCall"
+                },
                 "UnionAll": {
                     "$ref": "parameters-schema.json#/definitions/UnionAll"
+                },
+                "UnknownMember": {
+                    "$ref": "parameters-schema.json#/definitions/UnknownMember"
                 },
                 "UnknownPreprocessorSymbol": {
                     "$ref": "parameters-schema.json#/definitions/UnknownPreprocessorSymbol"
@@ -1039,7 +1042,9 @@
                         "type": "string",
                         "description": "Author email address as recorded in git blame."
                     },
-                    "default": []
+                    "default": [
+                        
+                    ]
                 }
             }
         },
@@ -1149,7 +1154,9 @@
             "items": {
                 "type": "string"
             },
-            "default": []
+            "default": [
+                
+            ]
         },
         "sendErrors": {
             "$id": "#/properties/sendErrors",
@@ -1232,7 +1239,9 @@
                     "items": {
                         "type": "string"
                     },
-                    "default": []
+                    "default": [
+                        
+                    ]
                 },
                 "useEnvLibLocation": {
                     "$id": "#/properties/oscript/useEnvLibLocation",
@@ -1263,6 +1272,11 @@
                     "type": "boolean",
                     "title": "Allow loading platform context from the syntax-helper of an installed 1C:Enterprise.",
                     "default": true
+                },
+                "targetVersion": {
+                    "$id": "#/properties/v8platform/targetVersion",
+                    "type": "string",
+                    "title": "Target 1C platform version for compatibility diagnostics (deprecation, member availability). Takes priority over the configuration compatibility mode. When empty, the configuration compatibility mode is used, and if that is unset the newest platform is assumed. Format: 8.3.21."
                 }
             }
         }

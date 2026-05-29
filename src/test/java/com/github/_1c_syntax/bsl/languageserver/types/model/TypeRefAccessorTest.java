@@ -86,4 +86,20 @@ class TypeRefAccessorTest {
     // then
     assertThat(placeholders).isNotEmpty();
   }
+
+  @Test
+  void compareToOrdersByNameThenKind() {
+
+    // given — три TypeRef'а: одинаковое имя/разный kind, разные имена.
+    var arrayPlatform = new TypeRef(TypeKind.PLATFORM, "Массив");
+    var arrayUser = new TypeRef(TypeKind.USER, "Массив");
+    var book = new TypeRef(TypeKind.PLATFORM, "Книга");
+
+    // when / then — одинаковое имя сравнивается по kind (PLATFORM < USER
+    // в enum-порядке), разные имена — по алфавиту, равные TypeRef'ы — 0.
+    assertThat(arrayPlatform).isLessThan(arrayUser);
+    assertThat(arrayUser).isGreaterThan(arrayPlatform);
+    assertThat(book).isLessThan(arrayPlatform);   // К < М в Unicode-порядке
+    assertThat(arrayPlatform).isEqualByComparingTo(new TypeRef(TypeKind.PLATFORM, "Массив"));
+  }
 }

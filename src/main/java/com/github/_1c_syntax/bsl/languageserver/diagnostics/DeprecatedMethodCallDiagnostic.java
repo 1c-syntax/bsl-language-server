@@ -21,18 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.util.HashSet;
 import java.util.Optional;
 
 @DiagnosticMetadata(
@@ -47,9 +54,21 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
   private final ReferenceIndex referenceIndex;
+  private final TypeService typeService;
+  private final TypeRegistry typeRegistry;
+  private final LanguageServerConfiguration configuration;
 
   @Override
   public void check() {
+    checkUserDefinedMethods();
+    checkPlatformMembers();
+    checkDeletedPrefixMembers();
+  }
+
+  /**
+   * Вызовы пользовательских методов, помеченных «Устарела.» в doc-комментарии.
+   */
+  private void checkUserDefinedMethods() {
     var uri = documentContext.getUri();
 
     referenceIndex.getReferencesFrom(uri, SymbolKind.Method).stream()
@@ -61,6 +80,49 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
         var message = info.getMessage(deprecatedSymbol.getName(), deprecationInfo);
         diagnosticStorage.addDiagnostic(reference.selectionRange(), message);
       });
+  }
+
+  /**
+   * Вызовы платформенных членов, устаревших для целевой версии платформы
+   * ({@code target >= deprecatedSinceVersion}). Срабатывает, если хотя бы один
+   * из возможных типов-владельцев ресивера делает член устаревшим.
+   */
+  private void checkPlatformMembers() {
+    var target = PlatformMemberCalls.targetCompatibilityMode(documentContext, configuration);
+    var reported = new HashSet<Range>();
+    for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
+      var metadata = member.descriptor().metadata();
+      if (PlatformMemberCalls.firesDeprecated(metadata.deprecatedSinceVersion(), target)
+        && reported.add(member.range())) {
+        var replacements = metadata.recommendedReplacements();
+        var hint = replacements.isEmpty()
+          ? ""
+          : info.getResourceString("recommendedReplacementsHint", String.join(", ", replacements));
+        diagnosticStorage.addDiagnostic(member.range(),
+          info.getMessage(member.descriptor().name(), hint));
+      }
+    }
+  }
+
+  /**
+   * Обращения к конфигурационным свойствам с префиксом «Удалить»/«Delete» —
+   * стандартная 1С-конвенция пометки устаревших реквизитов, значений
+   * перечислений, объектов конфигурации. Срабатывает независимо от целевой
+   * версии платформы и наличия HBK-меты. Только {@link MemberKind#PROPERTY} —
+   * action-методы вроде {@code УдалитьФайл()} (METHOD) сюда не попадают.
+   */
+  private void checkDeletedPrefixMembers() {
+    var reported = new HashSet<Range>();
+    for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
+      if (member.descriptor().kind() != MemberKind.PROPERTY) {
+        continue;
+      }
+      var name = member.descriptor().name();
+      if (PlatformMemberCalls.hasDeletedPrefix(name) && reported.add(member.range())) {
+        var hint = info.getResourceString("deletedPrefixHint");
+        diagnosticStorage.addDiagnostic(member.range(), info.getMessage(name, hint));
+      }
+    }
   }
 
   private static String getDeprecationInfo(Symbol deprecatedSymbol) {

@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -92,6 +93,10 @@ public class GlobalScopeProvider {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
   private static final String OSCRIPT_RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-globals.json";
+  private static final String KEYWORDS_RESOURCE_PATH =
+    "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-keywords.json";
+  private static final String OSCRIPT_KEYWORDS_RESOURCE_PATH =
+    "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-keywords.json";
 
   private final Map<String, MemberDescriptor> functions;
   private final List<String> classes;
@@ -1144,7 +1149,8 @@ public class GlobalScopeProvider {
       @SuppressWarnings("unchecked")
       var classes = (List<String>) root.getOrDefault("classes", Collections.emptyList());
       @SuppressWarnings("unchecked")
-      var keywords = (List<String>) root.getOrDefault("keywords", Collections.emptyList());
+      var keywords = new ArrayList<>(
+        (List<String>) root.getOrDefault("keywords", Collections.emptyList()));
       var variables = readVariables(root);
       var fnScopes = new HashMap<String, LanguageScope>();
       functions.keySet().forEach(k -> fnScopes.put(k, scope));
@@ -1157,15 +1163,45 @@ public class GlobalScopeProvider {
         varScopes.put(v.name().toLowerCase(Locale.ROOT), scope);
         v.aliases().forEach(a -> varScopes.put(a.toLowerCase(Locale.ROOT), scope));
       }
+      // Догружаем структурированные keywords (category/description/snippet)
+      // из соседнего ресурса builtin-keywords.json — это JSON-fallback к
+      // ContextLanguageKeyword из bsl-context, когда HBK не подключён.
+      var keywordMeta = loadKeywordMetadata(keywordsResourceFor(resourcePath), scope);
+      var seenKeywords = new HashSet<String>();
+      keywords.forEach(k -> seenKeywords.add(k.toLowerCase(Locale.ROOT)));
+      for (var k : keywordMeta.keywords()) {
+        if (seenKeywords.add(k.toLowerCase(Locale.ROOT))) {
+          keywords.add(k);
+        }
+      }
+      kwScopes.putAll(keywordMeta.scopes());
       return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables,
         List.of(),
-        fnScopes, clsScopes, kwScopes, varScopes, Map.of(), Map.of());
+        fnScopes, clsScopes, kwScopes, varScopes,
+        Map.copyOf(keywordMeta.snippets()), Map.copyOf(keywordMeta.descriptions()));
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
       return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of(),
         List.of(),
         Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
     }
+  }
+
+  /** Имя соседнего keywords-ресурса для globals-ресурса. */
+  private static String keywordsResourceFor(String globalsResourcePath) {
+    if (OSCRIPT_RESOURCE_PATH.equals(globalsResourcePath)) {
+      return OSCRIPT_KEYWORDS_RESOURCE_PATH;
+    }
+    return KEYWORDS_RESOURCE_PATH;
+  }
+
+  private static KeywordMetadata loadKeywordMetadata(String resourcePath, LanguageScope scope) {
+    return KeywordMetadataLoader.load(resourcePath, scope, GlobalScopeProvider::isCompletionCategory);
+  }
+
+  /** Категория из JSON-fallback'a, попадающая в плоский completion-список. */
+  private static boolean isCompletionCategory(String categoryStr) {
+    return KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
   }
 
   @SuppressWarnings("unchecked")
@@ -1220,6 +1256,10 @@ public class GlobalScopeProvider {
       if (Boolean.TRUE.equals(entry.get("async"))) {
         descriptor = descriptor.withAsync(true);
       }
+      var metadata = readGlobalMetadata(entry);
+      if (!metadata.isEmpty()) {
+        descriptor = descriptor.withMetadata(metadata);
+      }
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
       var aliases = (List<String>) entry.getOrDefault("aliases", Collections.emptyList());
       for (var alias : aliases) {
@@ -1232,6 +1272,38 @@ public class GlobalScopeProvider {
   private static String stringEntry(Map<String, Object> raw, String key) {
     var v = raw.get(key);
     return v instanceof String s ? s : "";
+  }
+
+  /**
+   * Читает опциональные версионные метаданные глобальной функции из JSON:
+   * {@code sinceVersion}, {@code deprecatedSinceVersion},
+   * {@code recommendedReplacements}. Нужны диагностикам устаревания и
+   * недоступности-по-версии, чтобы они работали без установленного HBK.
+   * Отсутствие всех полей → {@link PlatformMetadata#EMPTY}.
+   */
+  private static PlatformMetadata readGlobalMetadata(Map<String, Object> raw) {
+    var sinceVersion = stringEntry(raw, "sinceVersion");
+    var deprecatedSinceVersion = stringEntry(raw, "deprecatedSinceVersion");
+    var recommended = stringListEntry(raw, "recommendedReplacements");
+    if (sinceVersion.isEmpty() && deprecatedSinceVersion.isEmpty() && recommended.isEmpty()) {
+      return PlatformMetadata.EMPTY;
+    }
+    return new PlatformMetadata(sinceVersion, deprecatedSinceVersion, recommended,
+      Set.of(), null, "", "", List.of(), List.of());
+  }
+
+  /** Читает JSON-поле как список строк (нестроковые элементы пропускаются). */
+  private static List<String> stringListEntry(Map<String, Object> raw, String key) {
+    if (!(raw.get(key) instanceof List<?> list)) {
+      return List.of();
+    }
+    var result = new ArrayList<String>(list.size());
+    for (var item : list) {
+      if (item instanceof String s) {
+        result.add(s);
+      }
+    }
+    return result;
   }
 
   @SuppressWarnings("unchecked")

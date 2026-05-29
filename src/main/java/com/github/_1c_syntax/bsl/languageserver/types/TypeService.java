@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -42,13 +41,6 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbo
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -61,7 +53,6 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import jakarta.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -81,6 +72,7 @@ public class TypeService {
   private final ExpressionTypeInferencer inferencer;
   private final ReferenceResolver referenceResolver;
   private final GlobalScopeProvider globalScopeProvider;
+  private final DereferenceMemberMatcher dereferenceMatcher;
 
   /**
    * Получить набор типов на позиции (точка входа для hover/completion).
@@ -261,130 +253,123 @@ public class TypeService {
    * @return описание найденного члена + тип-владелец и диапазон под курсором.
    */
   public Optional<TypedMember> findMemberAt(DocumentContext documentContext, Position position) {
-    BSLParser.FileContext ast;
-    try {
-      ast = documentContext.getAst();
-    } catch (NullPointerException e) {
-      return Optional.empty();
-    }
-    if (ast == null) {
-      return Optional.empty();
-    }
-    var terminalOpt = Trees.findTerminalNodeContainsPosition(ast, position);
-    if (terminalOpt.isEmpty()) {
-      return Optional.empty();
-    }
-    var terminal = terminalOpt.get();
-    if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
-      return Optional.empty();
-    }
+    return findMembersAt(documentContext, position).stream().findFirst();
+  }
 
-    // Случай глобального свойства или library-модуля (например, КодировкаТекста, ФС).
-    var bareName = terminal.getText();
+  /**
+   * То же, что {@link #findMemberAt(DocumentContext, Position)}, но возвращает
+   * <b>все</b> члены-кандидаты, когда тип ресивера выведен как union из
+   * нескольких типов (например, переменная присваивается значениями разных
+   * типов в разных ветках). Потребителям, проверяющим метаданные члена
+   * (устаревание, доступность по версии платформы), важен каждый возможный
+   * тип-владелец: вызов небезопасен, если хотя бы один из них делает член
+   * устаревшим/недоступным. Для глобальных функций/свойств список из одного
+   * элемента. Порядок совпадает с {@link #findMemberAt} (первый элемент тот же).
+   */
+  public List<TypedMember> findMembersAt(DocumentContext documentContext, Position position) {
+    var terminal = identifierTerminalAt(documentContext, position).orElse(null);
+    if (terminal == null) {
+      return List.of();
+    }
+    // Случай глобальной функции / свойства / library-модуля (например,
+    // КодировкаТекста, ФС) — резолвится напрямую, без инференса ресивера.
     if (!isAccessorIdentifier(terminal)) {
-      // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
-      // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
-      typeRegistry.resolve(bareName);
-
-      // Глобальная функция: возвращаем реальный MemberDescriptor с владельцем=null.
-      var fileType = documentContext.getFileType();
-      var globalFn = globalScopeProvider.findFunction(bareName, fileType);
-      if (globalFn.isPresent()) {
-        return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
+      var bare = resolveBareName(terminal, documentContext);
+      if (bare.isPresent()) {
+        return List.of(bare.get());
       }
+    }
+    return dereferenceMatcher.matchAt(terminal, documentContext, position);
+  }
 
-      var fromScope = globalScopeProvider.findGlobalEntry(bareName, fileType)
-        .filter(e -> e.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
-        .map(com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Entry::symbol)
-        .filter(SyntheticSymbol.class::isInstance)
-        .map(SyntheticSymbol.class::cast)
-        .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
-        .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN));
-      if (fromScope.isPresent()) {
-        var sym = fromScope.get();
+  /**
+   * Терминал-идентификатор в позиции курсора, либо empty, если AST недоступен
+   * или под курсором не идентификатор.
+   */
+  private static Optional<TerminalNode> identifierTerminalAt(DocumentContext documentContext, Position position) {
+    return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), position)
+      .filter(t -> t.getSymbol().getType() == BSLParser.IDENTIFIER);
+  }
+
+  /**
+   * Резолв голого имени (не аксессора): глобальная функция (владелец = null)
+   * либо глобальное свойство / library-модуль. Empty, если имя так не резолвится.
+   */
+  private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
+    var bareName = terminal.getText();
+    // Триггерим bootstrap TypeRegistry в текущем workspace scope, чтобы
+    // exposedAsGlobal-типы (system enums и пр.) попали в GlobalSymbolScope.
+    typeRegistry.resolve(bareName);
+
+    var fileType = documentContext.getFileType();
+    var globalFn = globalScopeProvider.findFunction(bareName, fileType);
+    if (globalFn.isPresent()) {
+      return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
+    }
+
+    return globalScopeProvider.findGlobalEntry(bareName, fileType)
+      .filter(e -> e.role() != com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Role.TYPE_NAME)
+      .map(com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope.Entry::symbol)
+      .filter(SyntheticSymbol.class::isInstance)
+      .map(SyntheticSymbol.class::cast)
+      .filter(s -> s.getSyntheticKind() != com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind.PLATFORM_GLOBAL_METHOD)
+      .filter(s -> !s.getValueType().equals(TypeRef.UNKNOWN))
+      .map((SyntheticSymbol sym) -> {
         var ref = sym.getValueType();
         var desc = sym.getDescription();
         if (desc == null || desc.isBlank()) {
           desc = typeRegistry.getDescription(ref);
         }
-        return Optional.of(new TypedMember(ref,
+        return new TypedMember(ref,
           MemberDescriptor.property(ref.qualifiedName(), ref, desc),
-          Ranges.create(terminal)));
-      }
-    }
-
-    var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
-    if (expression == null) {
-      return Optional.empty();
-    }
-    var dereference = findDereferenceForTerminal(expression, terminal);
-    if (dereference == null) {
-      return Optional.empty();
-    }
-
-    var right = dereference.getRight();
-    MemberKind expectedKind;
-    if (right instanceof MethodCallNode) {
-      expectedKind = MemberKind.METHOD;
-    } else {
-      expectedKind = MemberKind.PROPERTY;
-    }
-    var memberName = terminal.getText();
-    var leftTypes = inferencer.infer(dereference.getLeft(), documentContext);
-    if (leftTypes.isEmpty()) {
-      return Optional.empty();
-    }
-    for (var owner : leftTypes.refs()) {
-      for (var member : typeRegistry.getMembers(owner, documentContext.getFileType())) {
-        if (member.kind() == expectedKind && member.matches(memberName)) {
-          int argCount = (right instanceof MethodCallNode call) ? countMeaningfulArgs(call) : -1;
-          var argTypes = (right instanceof MethodCallNode call)
-            ? inferArgTypes(call, documentContext)
-            : List.<TypeSet>of();
-          return Optional.of(new TypedMember(owner, member, Ranges.create(terminal), argCount, argTypes));
-        }
-      }
-    }
-    return Optional.empty();
-  }
-
-  private static int countMeaningfulArgs(MethodCallNode call) {
-    var args = call.arguments();
-    int n = args.size();
-    // Trim trailing skipped argument (e.g. `Foo(a, )` — 2 ноды, но «значимый» только 1).
-    while (n > 0 && args.get(n - 1) instanceof SkippedCallArgumentNode) {
-      n--;
-    }
-    return n;
+          Ranges.create(terminal));
+      });
   }
 
   /**
-   * Извлекает типы фактических аргументов вызова через
-   * {@link ExpressionTypeInferencer#infer}. Используется для type-aware
-   * подбора перегруженной сигнатуры (см.
-   * {@link com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection#pickIndexByTypes}).
-   * Trailing skipped argument'ы пропускаются (как и в {@link #countMeaningfulArgs}),
-   * чтобы число типов соответствовало callArgCount.
+   * Обращение к члену ({@code ресивер.член}), у которого тип ресивера выведен и
+   * конкретен, но члена с таким именем нет ни на одном из типов-владельцев —
+   * вероятная опечатка/несуществующий член. Возвращает {@code TypeSet}
+   * ресивера (для подстановки имени типа в сообщение), либо empty, если в
+   * позиции член найден, либо тип ресивера не выведен / содержит UNKNOWN/ANY.
+   * <p>
+   * Предполагает, что позиция указывает на аксессор члена — это контракт
+   * вызывающего ({@code visitAccessProperty} / {@code visitMethodCall}).
    */
-  private List<TypeSet> inferArgTypes(MethodCallNode call, DocumentContext documentContext) {
-    var args = call.arguments();
-    int n = args.size();
-    while (n > 0 && args.get(n - 1) instanceof SkippedCallArgumentNode) {
-      n--;
+  public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, Position position) {
+    if (!findMembersAt(documentContext, position).isEmpty()) {
+      return Optional.empty();
     }
-    if (n == 0) {
-      return List.of();
-    }
-    var result = new ArrayList<TypeSet>(n);
-    for (int i = 0; i < n; i++) {
-      var arg = args.get(i);
-      if (arg instanceof SkippedCallArgumentNode) {
-        result.add(TypeSet.EMPTY);
-        continue;
-      }
-      result.add(inferencer.infer(arg, documentContext));
-    }
-    return result;
+    return receiverTypesAt(documentContext, position).filter(TypeService::allConcrete);
+  }
+
+  /**
+   * Голый вызов {@code Имя(...)}, который не резолвится ни в глобальную функцию/
+   * свойство/перечисление платформы или конфигурации, ни в source-defined символ
+   * (метод/переменная текущего модуля). Вероятный вызов несуществующего метода.
+   * <p>
+   * Предполагает, что позиция указывает на имя голого вызова — это контракт
+   * вызывающего ({@code visitGlobalMethodCall}).
+   */
+  public boolean isUnknownGlobalAt(DocumentContext documentContext, Position position) {
+    return findMembersAt(documentContext, position).isEmpty()
+      && referenceResolver.findReference(documentContext.getUri(), position).isEmpty();
+  }
+
+  /**
+   * Типы ресивера для выражения {@code ресивер.член} в позиции. Empty, если в
+   * позиции нет dereference-выражения.
+   */
+  public Optional<TypeSet> receiverTypesAt(DocumentContext documentContext, Position position) {
+    return identifierTerminalAt(documentContext, position)
+      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, position, terminal));
+  }
+
+  /** Все типы из набора конкретны (без {@link TypeRef#ANY} / {@link TypeRef#UNKNOWN}). */
+  private static boolean allConcrete(TypeSet types) {
+    var refs = types.refs();
+    return !refs.isEmpty()
+      && refs.stream().noneMatch(ref -> ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN));
   }
 
   private static boolean isAccessorIdentifier(TerminalNode terminal) {
@@ -396,43 +381,6 @@ public class TypeService {
       && parent.getParent() instanceof BSLParser.MethodCallContext mc
       && mc.getParent() instanceof BSLParser.AccessCallContext) {
       return true;
-    }
-    return false;
-  }
-
-  @Nullable
-  private static BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {
-    if (root instanceof BinaryOperationNode binary
-      && binary.getOperator() == BslOperator.DEREFERENCE
-      && rightMatchesTerminal(binary.getRight(), terminal)) {
-      return binary;
-    }
-    if (root instanceof BinaryOperationNode binary) {
-      var leftHit = findDereferenceForTerminal(binary.getLeft(), terminal);
-      if (leftHit != null) {
-        return leftHit;
-      }
-      return findDereferenceForTerminal(binary.getRight(), terminal);
-    }
-    if (root instanceof MethodCallNode call) {
-      for (var arg : call.arguments()) {
-        var hit = findDereferenceForTerminal(arg, terminal);
-        if (hit != null) {
-          return hit;
-        }
-      }
-    }
-    return null;
-  }
-
-  private static boolean rightMatchesTerminal(BslExpression right, TerminalNode terminal) {
-    if (right instanceof TerminalSymbolNode terminalNode
-      && terminalNode.getNodeType() == ExpressionNodeType.IDENTIFIER) {
-      var ast = terminalNode.getRepresentingAst();
-      return ast == terminal;
-    }
-    if (right instanceof MethodCallNode call) {
-      return call.getName() == terminal;
     }
     return false;
   }

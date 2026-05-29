@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +34,6 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 /**
  * Тесты диагностики «присваивание read-only-свойству».
@@ -52,10 +51,9 @@ import static org.mockito.Mockito.when;
 class AssignToReadOnlyPropertyDiagnosticTest extends AbstractDiagnosticTest<AssignToReadOnlyPropertyDiagnostic> {
 
   /**
-   * URI документа подменяется через {@link org.mockito.Mockito#spy} на путь
-   * внутри тестовой конфигурации — чтобы reference-finder'ы и TypeService
-   * находили правильный workspace через
-   * {@link com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider#getDocumentNoLock}.
+   * Тестовый контент регистрируется под этим URI в workspace тестовой
+   * конфигурации — чтобы reference-finder'ы и TypeService находили правильный
+   * workspace через {@link com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider#getDocumentNoLock}.
    * Без этого global properties ({@code Документы}, {@code Справочники}) не
    * резолвятся, и инференсер не вытягивает тип из цепочки вида
    * {@code Документы.Документ1.НайтиПоНомеру(...).Ссылка}.
@@ -113,8 +111,13 @@ class AssignToReadOnlyPropertyDiagnosticTest extends AbstractDiagnosticTest<Assi
   private List<Diagnostic> getDiagnosticsAsCommonModule() {
     Path moduleFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
     initServerContext(PATH_TO_METADATA);
-    var documentContext = spy(getDocumentContext(diagnosticInstance.getClass().getSimpleName()));
-    when(documentContext.getUri()).thenReturn(moduleFile.toUri());
+    // Регистрируем тестовый контент под РЕАЛЬНЫМ URI Module.bsl в workspace
+    // и токенизируем — cross-document резолв (PlatformMemberReferenceFinder →
+    // typeService.findMemberAt) находит этот же DocumentContext с валидным AST,
+    // никакого спая с подменой только getUri() (которая ломала инвариант
+    // «URI и AST принадлежат одному файлу») не нужно.
+    var fileContent = getText(diagnosticInstance.getClass().getSimpleName());
+    var documentContext = TestUtils.getDocumentContext(moduleFile.toUri(), fileContent, context);
     return getDiagnostics(documentContext);
   }
 }

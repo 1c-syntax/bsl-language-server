@@ -205,6 +205,7 @@ class LanguageServerConfigurationTest {
     V8PlatformOptions v8PlatformOptions = configuration.getV8PlatformOptions();
     assertThat(v8PlatformOptions.isEnabled()).isFalse();
     assertThat(v8PlatformOptions.getBinPath()).isEqualTo(Path.of("/opt/1cv8/8.3.27.1786/bin"));
+    assertThat(v8PlatformOptions.getTargetVersion()).isEqualTo("8.3.21");
   }
 
   @Test

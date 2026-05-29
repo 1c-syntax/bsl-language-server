@@ -59,7 +59,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -80,6 +79,14 @@ public class TypeRegistry {
   private final List<PlatformTypesProvider> platformProviders;
   /** Параллельный Symbol-фронт: глобальные свойства и прочие глобальные символы. */
   private final GlobalScopeProvider globalScopeProvider;
+  /**
+   * Индекс метаданных членов (read-only свойства + версионные члены) для
+   * дешёвых pre-filter'ов диагностик. Workspace-scoped Spring-компонент;
+   * заполняется при регистрации {@link TypePackProvider.TypeDecl} провайдерами
+   * платформенных типов (bsl-context / JSON-fallback); конфигурационные MD-типы
+   * сюда не попадают (у них нет accessMode/версий).
+   */
+  private final MemberMetadataIndex memberMetadataIndex;
 
   /** Интернированные TypeRef по канонической форме (kind + lowercased name). */
   private final Map<TypeRef, TypeRef> internedRefs = new ConcurrentHashMap<>();
@@ -115,26 +122,6 @@ public class TypeRegistry {
   private final Map<TypeRef, BilingualString> forEachDescriptions = new ConcurrentHashMap<>();
   /** Тип ↔ текстовое описание индексатора {@code [...]} из синтакс-помощника. */
   private final Map<TypeRef, BilingualString> indexAccessDescriptions = new ConcurrentHashMap<>();
-  /**
-   * Индекс read-only свойств: тип → набор имён свойств (lowercased), у
-   * которых {@link AccessMode#READ}. Заполняется при регистрации
-   * {@link TypePackProvider.TypeDecl} провайдерами платформенных типов
-   * (bsl-context / JSON-fallback). Используется как дешёвый источник истины
-   * для диагностики присваивания в read-only свойство, без обращения к
-   * {@link MemberSource} лямбдам и без захвата RWLock на {@code ServerContext}.
-   * <p>
-   * Конфигурационные типы (MD-объекты) сюда не попадают: у них нет
-   * {@code accessMode} в метаданных, и они регистрируются через
-   * {@code registerMemberSource} лениво.
-   */
-  private final Map<TypeRef, Set<String>> readOnlyMembersByType = new ConcurrentHashMap<>();
-  /**
-   * Дешёвый набор всех имён read-only свойств (lowercased) — для быстрого
-   * pre-filter'а в диагностике: если имя присваиваемого свойства не входит
-   * в этот набор, дальше идти не нужно. Заполняется параллельно с
-   * {@link #readOnlyMembersByType}.
-   */
-  private final Set<String> readOnlyMemberNames = ConcurrentHashMap.newKeySet();
   /**
    * Тип ↔ имена generic-плейсхолдеров (без угловых скобок). Заполняется
    * платформенным провайдером из {@link TypePackProvider.TypeDecl#typeParameters()}.
@@ -432,8 +419,8 @@ public class TypeRegistry {
    * Источник лениво пересобирается на каждый getMembers, чтобы реагировать
    * на смену языка интерфейса (имена members generic-типа меняются) и не
    * зависеть от порядка инициализации платформенных провайдеров.
-   * Также индексируются read-only members специализированного типа
-   * (см. {@link #indexReadOnlyMembers}).
+   * Также индексируются read-only и версионные members специализированного типа
+   * (см. {@link #indexMemberMetadata}).
    *
    * @param specializedRef  целевой TypeRef, который должен «наследовать»
    *                        members generic-типа
@@ -463,13 +450,7 @@ public class TypeRegistry {
         }
         var specialized = member.specialize(safeBindings);
         result.add(specialized);
-        if (specialized.metadata().accessMode() == AccessMode.READ) {
-          var lc = specialized.name().toLowerCase(Locale.ROOT);
-          readOnlyMemberNames.add(lc);
-          readOnlyMembersByType
-            .computeIfAbsent(specializedRef, k -> ConcurrentHashMap.newKeySet())
-            .add(lc);
-        }
+        memberMetadataIndex.index(specializedRef, specialized);
       }
       return result;
     };
@@ -818,7 +799,7 @@ public class TypeRegistry {
     }
     if (!decl.members().isEmpty()) {
       registerMemberSource(ref, decl::members, scope);
-      indexReadOnlyMembers(ref, decl.members());
+      indexMemberMetadata(ref, decl.members());
     }
     if (decl.exposedAsGlobal()) {
       var syntheticKind = decl.isEnum()
@@ -956,7 +937,17 @@ public class TypeRegistry {
    *         (например, для JSON-fallback без accessMode).
    */
   public boolean hasAnyReadOnlyMember() {
-    return !readOnlyMemberNames.isEmpty();
+    return memberMetadataIndex.hasAnyReadOnly();
+  }
+
+  /**
+   * Дешёвый pre-filter: входит ли {@code name} в число имён, у которых хотя бы
+   * на одном типе задана версия появления/устаревания. Сам по себе ничего не
+   * решает — после него обязателен точный резолв члена на конкретном
+   * типе-владельце (иначе сработает однофамилец с другого типа).
+   */
+  public boolean isVersionedMemberName(@Nullable String name) {
+    return name != null && memberMetadataIndex.isVersionedName(name);
   }
 
   /**
@@ -965,8 +956,8 @@ public class TypeRegistry {
    * {@link AccessMode#READ}. Используется как pre-filter — отрицательный
    * ответ гарантирует, что присваивание точно не нарушает read-only.
    */
-  public boolean isReadOnlyMemberName(String name) {
-    return name != null && readOnlyMemberNames.contains(name.toLowerCase(Locale.ROOT));
+  public boolean isReadOnlyMemberName(@Nullable String name) {
+    return name != null && memberMetadataIndex.isReadOnlyName(name);
   }
 
   /**
@@ -975,28 +966,17 @@ public class TypeRegistry {
    * {@code false}, если тип не зарегистрирован или member на нём
    * не read-only.
    */
-  public boolean isReadOnlyMember(TypeRef typeRef, String name) {
-    if (typeRef == null || name == null) {
-      return false;
-    }
-    var names = readOnlyMembersByType.get(typeRef);
-    return names != null && names.contains(name.toLowerCase(Locale.ROOT));
+  public boolean isReadOnlyMember(@Nullable TypeRef typeRef, @Nullable String name) {
+    return typeRef != null && name != null && memberMetadataIndex.isReadOnly(typeRef, name);
   }
 
   /**
-   * Регистрирует read-only члены типа {@code ref} в индексе. Имена
-   * сохраняются в lowercased виде для регистронезависимого поиска.
+   * Индексирует метаданные членов типа {@code ref} для дешёвых pre-filter'ов
+   * диагностик: read-only свойства и версионные (sinceVersion/deprecated) члены.
    */
-  private void indexReadOnlyMembers(TypeRef ref, Collection<MemberDescriptor> members) {
+  private void indexMemberMetadata(TypeRef ref, Collection<MemberDescriptor> members) {
     for (var member : members) {
-      if (member.metadata().accessMode() != AccessMode.READ) {
-        continue;
-      }
-      var lc = member.name().toLowerCase(Locale.ROOT);
-      readOnlyMemberNames.add(lc);
-      readOnlyMembersByType
-        .computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet())
-        .add(lc);
+      memberMetadataIndex.index(ref, member);
     }
   }
 

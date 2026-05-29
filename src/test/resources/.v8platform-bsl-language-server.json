@@ -2,6 +2,7 @@
   "$schema": "../../main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
   "v8platform": {
     "binPath": "/opt/1cv8/8.3.27.1786/bin",
-    "enabled": false
+    "enabled": false,
+    "targetVersion": "8.3.21"
   }
 }
