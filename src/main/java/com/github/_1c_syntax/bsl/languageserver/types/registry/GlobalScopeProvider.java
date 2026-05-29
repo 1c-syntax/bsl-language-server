@@ -1023,6 +1023,10 @@ public class GlobalScopeProvider {
       LanguageKeywordCategory.DECLARATION
     );
 
+  /** Фильтр категорий из JSON-fallback'a, попадающих в плоский completion-список. */
+  private static final Predicate<String> INCLUDE_IN_COMPLETION =
+    categoryStr -> KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
+
   /**
    * Добавляет ru-имя и en-алиас в общий список с дедупликацией по lowercase.
    * @return {@code true}, если хотя бы одно из имён было добавлено впервые
@@ -1195,9 +1199,6 @@ public class GlobalScopeProvider {
     }
     return KEYWORDS_RESOURCE_PATH;
   }
-
-  private static final Predicate<String> INCLUDE_IN_COMPLETION =
-    categoryStr -> KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
 
   private static KeywordMetadata loadKeywordMetadata(String resourcePath, LanguageScope scope) {
     return KeywordMetadataLoader.load(resourcePath, scope, INCLUDE_IN_COMPLETION);
