@@ -108,6 +108,7 @@
       "name": "Выполнить",
       "alias": "Execute",
       "category": "OPERATOR",
+      "description": "Позволяет выполнить фрагмент кода, переданный в параметр в виде строкового значения.",
       "descriptionEn": "Allows you to execute a code snippet that is passed to the parameter as a string value.",
       "snippet": { "ru": "Выполнить <?>;", "en": "Execute <?>;" }
     },
@@ -351,6 +352,7 @@
       "name": "Пока",
       "alias": "While",
       "category": "STATEMENT",
+      "description": "Оператор цикла Пока предназначен для циклического повторения операторов, находящихся внутри конструкции Цикл – КонецЦикла. Цикл выполняется, пока логическое выражение равно Истина. Условие выполнения цикла всегда проверяется в начале, перед выполнением цикла.",
       "descriptionEn": "The While loop operator repeats operators located in the Do – EndDo structure in cycles. The loop is executed while the logical expression is True. The loop execution condition is always checked before the loop is executed.",
       "snippet": { "ru": "Пока <?> Цикл\r\nКонецЦикла; ", "en": "While <?> Do\r\nEndDo;" }
     },
