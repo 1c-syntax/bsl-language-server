@@ -166,4 +166,50 @@ class KeywordMetadataBuilderTest {
 
     assertThat(builder.build().keywords()).containsExactly("Если", "If");
   }
+
+  @Test
+  void snippetAsNonMapTreatedAsAbsent() {
+
+    // given — поле "snippet" не Map, а строка → snippet не индексируется.
+    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+
+    builder.add(Map.of(
+      "name", "Если",
+      "category", "STATEMENT",
+      "snippet", "не-Map"));
+
+    assertThat(builder.build().snippets()).isEmpty();
+  }
+
+  @Test
+  void snippetMapWithNonStringValuesIgnored() {
+
+    // given — внутри "snippet" значения — числа, а не строки. asStringMap
+    // отфильтрует их, итог — пустая мапа, snippet считается отсутствующим.
+    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+
+    Map<String, Object> snippet = new LinkedHashMap<>();
+    snippet.put("ru", 42);
+    snippet.put("en", true);
+    builder.add(Map.of("name", "Если", "category", "STATEMENT", "snippet", snippet));
+
+    assertThat(builder.build().snippets()).isEmpty();
+  }
+
+  @Test
+  void descriptionByParentNotAMapIgnored() {
+
+    // given — поле "descriptionByParent" — строка, не Map → пропускается.
+    var builder = new KeywordMetadataBuilder(LanguageScope.BSL, ALLOW_ALL);
+
+    builder.add(Map.of(
+      "name", "Возврат",
+      "category", "STATEMENT",
+      "description", "primary",
+      "descriptionByParent", "не-Map"));
+
+    var description = builder.build().descriptions().get("возврат");
+    assertThat(description).isNotNull();
+    assertThat(description.byParent()).isEmpty();
+  }
 }

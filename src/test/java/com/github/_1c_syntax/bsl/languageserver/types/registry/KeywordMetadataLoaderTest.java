@@ -43,4 +43,27 @@ class KeywordMetadataLoaderTest {
 
     assertThat(result).isSameAs(KeywordMetadata.EMPTY);
   }
+
+  @Test
+  void keywordsFieldNotAListIgnored() {
+
+    // given — поле "keywords" в JSON — строка, а не массив.
+    var result = KeywordMetadataLoader.load(
+      "keyword-fallback/keywords-not-a-list.json", LanguageScope.BSL, ALLOW_ALL);
+
+    assertThat(result.keywords()).isEmpty();
+    assertThat(result.snippets()).isEmpty();
+  }
+
+  @Test
+  void mixedEntriesFilterOutNonMaps() {
+
+    // given — массив "keywords" содержит строку, число, null и одну валидную
+    // запись-Map: должна остаться только последняя.
+    var result = KeywordMetadataLoader.load(
+      "keyword-fallback/keywords-mixed-entries.json", LanguageScope.BSL, ALLOW_ALL);
+
+    assertThat(result.keywords()).containsExactly("Если", "If");
+    assertThat(result.snippets()).containsOnlyKeys("если", "if");
+  }
 }
