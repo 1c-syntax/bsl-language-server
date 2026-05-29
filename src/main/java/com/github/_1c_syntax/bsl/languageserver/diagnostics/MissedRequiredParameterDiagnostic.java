@@ -22,22 +22,27 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.ConstructorCallSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @DiagnosticMetadata(
@@ -53,6 +58,7 @@ import java.util.Map;
 public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   private final ReferenceIndex referenceIndex;
+  private final ReferenceResolver referenceResolver;
   private final Map<Range, MethodCall> calls = new HashMap<>();
 
   @Override
@@ -85,53 +91,123 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    var typeName = ctx.typeName();
-    if (typeName != null && typeName.IDENTIFIER() != null) {
-      appendMethodCall(typeName.IDENTIFIER().getSymbol(), ctx.doCall(), ctx);
-    }
+    checkConstructorCall(ctx);
     return super.visitNewExpression(ctx);
   }
 
   private void appendMethodCall(Token methodName, BSLParser.DoCallContext doCallContext, ParserRuleContext node) {
     var methodCall = new MethodCall();
-
-    if (doCallContext == null) {
-      methodCall.parameters = new Boolean[0];
-    } else {
-      var parameters = doCallContext.callParamList().callParam();
-      methodCall.parameters = new Boolean[parameters.size()];
-
-      for (var i = 0; i < methodCall.parameters.length; i++) {
-        methodCall.parameters[i] = parameters.get(i).expression() != null;
-      }
-    }
-
+    methodCall.arguments = arguments(doCallContext);
     methodCall.range = Ranges.create(node);
     calls.put(Ranges.create(methodName), methodCall);
   }
 
-  private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {
-    var callParametersCount = callInfo.parameters.length;
+  /**
+   * Проверка вызова конструктора {@code Новый <Класс>(...)}.
+   * <p>
+   * Нужный символ конструктора ищется через {@link ReferenceResolver}, который
+   * умеет резолвить {@code typeName} в один из вариантов: OneScript-метод-конструктор
+   * ({@link MethodSymbol}), OneScript-модуль (если явного конструктора нет — тогда
+   * проверять нечего) или синтетический {@link ConstructorCallSymbol} для
+   * платформенных типов с известными сигнатурами конструкторов.
+   */
+  private void checkConstructorCall(BSLParser.NewExpressionContext ctx) {
+    var typeName = ctx.typeName();
+    if (typeName == null || typeName.IDENTIFIER() == null) {
+      return;
+    }
 
-    var missedParameters = new ArrayList<String>();
-    for (var i = 0; i < methodDefinition.getParameters().size(); i++) {
-      var methodParameter = methodDefinition.getParameters().get(i);
-      if (methodParameter.isOptional()) {
-        continue;
+    var signatures = referenceResolver.findReference(documentContext.getUri(), typeNamePosition(typeName))
+      .map(reference -> parameterSignatures(reference.symbol()))
+      .orElseGet(List::of);
+    if (signatures.isEmpty()) {
+      return;
+    }
+
+    var arguments = arguments(ctx.doCall());
+
+    List<String> bestMissedParameters = null;
+    for (var signature : signatures) {
+      var missedParameters = missedParameters(signature, arguments);
+      if (missedParameters.isEmpty()) {
+        return;
       }
-
-      if (callParametersCount <= i || !callInfo.parameters[i]) {
-        missedParameters.add(methodParameter.getName());
+      if (bestMissedParameters == null || missedParameters.size() < bestMissedParameters.size()) {
+        bestMissedParameters = missedParameters;
       }
     }
+
+    addDiagnostic(Ranges.create(ctx), bestMissedParameters);
+  }
+
+  private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {
+    var signature = methodDefinition.getParameters().stream()
+      .map(parameter -> new Parameter(parameter.getName(), parameter.isOptional()))
+      .toList();
+    var missedParameters = missedParameters(signature, callInfo.arguments);
     if (!missedParameters.isEmpty()) {
-      var message = info.getMessage("'%s'".formatted(String.join("', '", missedParameters)));
-      diagnosticStorage.addDiagnostic(callInfo.range, message);
+      addDiagnostic(callInfo.range, missedParameters);
     }
   }
 
+  private void addDiagnostic(Range range, List<String> missedParameters) {
+    var message = info.getMessage("'%s'".formatted(String.join("', '", missedParameters)));
+    diagnosticStorage.addDiagnostic(range, message);
+  }
+
+  private static List<String> missedParameters(List<Parameter> signature, Boolean[] arguments) {
+    var missedParameters = new ArrayList<String>();
+    for (var i = 0; i < signature.size(); i++) {
+      var parameter = signature.get(i);
+      if (parameter.optional()) {
+        continue;
+      }
+      if (arguments.length <= i || !arguments[i]) {
+        missedParameters.add(parameter.name());
+      }
+    }
+    return missedParameters;
+  }
+
+  private static List<List<Parameter>> parameterSignatures(Symbol symbol) {
+    if (symbol instanceof MethodSymbol methodSymbol) {
+      var signature = methodSymbol.getParameters().stream()
+        .map(parameter -> new Parameter(parameter.getName(), parameter.isOptional()))
+        .toList();
+      return List.of(signature);
+    }
+    if (symbol instanceof ConstructorCallSymbol constructorCall) {
+      return constructorCall.getConstructors().stream()
+        .map(constructor -> constructor.parameters().stream()
+          .map(parameter -> new Parameter(parameter.name(), parameter.optional()))
+          .toList())
+        .toList();
+    }
+    return List.of();
+  }
+
+  private static Boolean[] arguments(BSLParser.DoCallContext doCallContext) {
+    if (doCallContext == null) {
+      return new Boolean[0];
+    }
+    var parameters = doCallContext.callParamList().callParam();
+    var arguments = new Boolean[parameters.size()];
+    for (var i = 0; i < arguments.length; i++) {
+      arguments[i] = parameters.get(i).expression() != null;
+    }
+    return arguments;
+  }
+
+  private static Position typeNamePosition(BSLParser.TypeNameContext typeName) {
+    var token = typeName.IDENTIFIER().getSymbol();
+    return new Position(token.getLine() - 1, token.getCharPositionInLine() + token.getText().length() / 2);
+  }
+
   private static class MethodCall {
-    Boolean[] parameters;
+    Boolean[] arguments;
     Range range;
+  }
+
+  private record Parameter(String name, boolean optional) {
   }
 }

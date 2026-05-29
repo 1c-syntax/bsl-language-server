@@ -82,8 +82,13 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
     ;
   }
 
+  /**
+   * Сценарий 1: конструктор резолвится в OneScript-метод ({@code ConstructorSymbol}).
+   * У класса есть явный {@code ПриСозданииОбъекта(ОбязательныйПараметр)},
+   * вызов без аргументов должен подсвечиваться.
+   */
   @Test
-  void testConstructorCall() {
+  void testConstructorCallResolvedToOScriptMethod() {
 
     initServerContext(Path.of(OSCRIPT_LIBRARY_FIXTURE).toAbsolutePath(), false);
     oScriptLibraryIndex.reindex(context);
@@ -100,5 +105,70 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
     assertThat(diagnostics, true)
       .hasRange(1, 4, 1, 39)
     ;
+  }
+
+  /**
+   * Сценарий 2: конструктор резолвится в OneScript-модуль ({@code ModuleSymbol}),
+   * потому что явного конструктора в исходнике нет. Проверять нечего —
+   * диагностика не должна срабатывать.
+   */
+  @Test
+  void testConstructorCallResolvedToOScriptModule() {
+
+    initServerContext(Path.of(OSCRIPT_LIBRARY_FIXTURE).toAbsolutePath(), false);
+    oScriptLibraryIndex.reindex(context);
+
+    var content = """
+      #Использовать internal-classes-lib
+      Х = Новый ClassWithoutCtor();
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  /**
+   * Сценарий 3: конструктор резолвится в синтетический {@code ConstructorCallSymbol}
+   * платформенного типа. У {@code РегулярноеВыражение} единственный конструктор с
+   * обязательным параметром {@code pattern}, вызов без аргументов должен подсвечиваться.
+   */
+  @Test
+  void testConstructorCallResolvedToSyntheticSymbol() {
+
+    initServerContext();
+
+    var content = """
+      Х = Новый РегулярноеВыражение();
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(0, 4, 0, 31)
+    ;
+  }
+
+  /**
+   * Платформенный тип с конструктором без аргументов в одном из вариантов
+   * ({@code Новый Соответствие()} / {@code Новый Массив()}) — ложного срабатывания быть не должно.
+   */
+  @Test
+  void testConstructorCallWithOptionalConstructorVariant() {
+
+    initServerContext();
+
+    var content = """
+      Соотв = Новый Соответствие();
+      Мас = Новый Массив();
+      """;
+    var documentContext = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
   }
 }
