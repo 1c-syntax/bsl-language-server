@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780018453512,
+  "lastUpdate": 1780069563547,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35867,6 +35867,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.560286934159311",
             "extra": "mean: 372.41944710413617 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7fd4ce357b5e7ababf5f3f13e4236c56839f2967",
+          "message": "Merge pull request #3967 from 1c-syntax/claude/document-symbol-range-error-oNdFj\n\nfix: skip variable declarations with missing names in document symbols",
+          "timestamp": "2026-05-29T13:24:15+02:00",
+          "tree_id": "c0016029367cb6029f2629d4b758854563051078",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7fd4ce357b5e7ababf5f3f13e4236c56839f2967"
+        },
+        "date": 1780069555274,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 392.43607664108276,
+            "unit": "sec",
+            "range": "stddev: 25.073962020973433",
+            "extra": "mean: 392.43607664108276 sec\nrounds: 3"
           }
         ]
       }
