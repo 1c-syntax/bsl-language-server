@@ -74,7 +74,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -1023,10 +1022,6 @@ public class GlobalScopeProvider {
       LanguageKeywordCategory.DECLARATION
     );
 
-  /** Фильтр категорий из JSON-fallback'a, попадающих в плоский completion-список. */
-  private static final Predicate<String> INCLUDE_IN_COMPLETION =
-    categoryStr -> KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
-
   /**
    * Добавляет ru-имя и en-алиас в общий список с дедупликацией по lowercase.
    * @return {@code true}, если хотя бы одно из имён было добавлено впервые
@@ -1201,7 +1196,12 @@ public class GlobalScopeProvider {
   }
 
   private static KeywordMetadata loadKeywordMetadata(String resourcePath, LanguageScope scope) {
-    return KeywordMetadataLoader.load(resourcePath, scope, INCLUDE_IN_COMPLETION);
+    return KeywordMetadataLoader.load(resourcePath, scope, GlobalScopeProvider::isCompletionCategory);
+  }
+
+  /** Категория из JSON-fallback'a, попадающая в плоский completion-список. */
+  private static boolean isCompletionCategory(String categoryStr) {
+    return KEYWORD_CATEGORIES.stream().anyMatch(c -> c.name().equals(categoryStr));
   }
 
   @SuppressWarnings("unchecked")

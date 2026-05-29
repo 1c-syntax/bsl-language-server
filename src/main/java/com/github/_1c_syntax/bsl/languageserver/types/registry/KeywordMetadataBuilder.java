@@ -178,7 +178,7 @@ final class KeywordMetadataBuilder {
     if (!(raw instanceof Map<?, ?> rawMap) || rawMap.isEmpty()) {
       return Map.of();
     }
-    var result = new LinkedHashMap<String, String>(rawMap.size());
+    var result = LinkedHashMap.<String, String>newLinkedHashMap(rawMap.size());
     for (var e : rawMap.entrySet()) {
       if (e.getKey() instanceof String key && e.getValue() instanceof String value) {
         result.put(key, value);

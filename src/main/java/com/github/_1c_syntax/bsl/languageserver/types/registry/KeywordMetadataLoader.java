@@ -28,7 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -86,28 +88,33 @@ final class KeywordMetadataLoader {
   }
 
   /**
-   * Возвращает узел {@code keywords} как список Map'ов; не-Map записи
-   * отсеиваются (downstream получает только корректные объекты).
+   * Возвращает узел {@code keywords} как список Map'ов. Для каждой записи
+   * строится новый {@code Map<String,Object>} проходом по {@code entrySet()}
+   * со строгой {@code instanceof String}-проверкой ключа — без unchecked-cast'a
+   * raw-мапы Jackson'a; не-Map'ы и записи без string-ключей отсеиваются.
    */
   private static List<Map<String, Object>> keywordEntries(Map<String, Object> root) {
     var raw = root.getOrDefault(FIELD_KEYWORDS, Collections.emptyList());
     if (!(raw instanceof List<?> rawList)) {
       return List.of();
     }
-    return rawList.stream()
-      .filter(Map.class::isInstance)
-      .<Map<String, Object>>map(KeywordMetadataLoader::asEntryMap)
-      .toList();
+    var result = new ArrayList<Map<String, Object>>(rawList.size());
+    for (var item : rawList) {
+      if (item instanceof Map<?, ?> rawMap) {
+        result.add(asEntryMap(rawMap));
+      }
+    }
+    return result;
   }
 
-  /**
-   * Узкая helper-обёртка над {@code Map.class}-cast: каждая запись JSON-массива
-   * {@code keywords} приходит как {@code Map<String,Object>} с string-ключами
-   * (определено Jackson'ом для JSON-объекта); здесь только сужение типа без
-   * проверок (фильтр {@code Map.class::isInstance} стоит выше).
-   */
-  @SuppressWarnings("unchecked")
-  private static Map<String, Object> asEntryMap(Object raw) {
-    return (Map<String, Object>) raw;
+  /** Узкая helper-обёртка: новый Map со строковыми ключами, без cast'a. */
+  private static Map<String, Object> asEntryMap(Map<?, ?> rawMap) {
+    var result = HashMap.<String, Object>newHashMap(rawMap.size());
+    for (var e : rawMap.entrySet()) {
+      if (e.getKey() instanceof String key) {
+        result.put(key, e.getValue());
+      }
+    }
+    return result;
   }
 }
