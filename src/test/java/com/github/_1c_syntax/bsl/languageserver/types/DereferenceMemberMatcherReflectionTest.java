@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types;
 
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -47,19 +50,43 @@ class DereferenceMemberMatcherReflectionTest {
     assertThat(n).isZero();
   }
 
+  @Test
+  void inferArgTypesEmptyForEmptyCall() {
+
+    // given — MethodCallNode без аргументов: ветвь n==0 в inferArgTypes
+    // (integration-тесты диагностик передают только не-пустые вызовы).
+    var matcher = new DereferenceMemberMatcher(
+      Mockito.mock(TypeRegistry.class),
+      Mockito.mock(ExpressionTypeInferencer.class));
+    var call = Mockito.mock(MethodCallNode.class);
+    Mockito.when(call.arguments()).thenReturn(List.of());
+
+    List<TypeSet> result = invokeInferArgTypes(matcher, call);
+
+    assertThat(result).isEmpty();
+  }
+
   @SneakyThrows
   private static int invokeCountMeaningfulArgs(MethodCallNode call) {
-    Method method = null;
+    var method = findMethod("countMeaningfulArgs");
+    return (int) method.invoke(null, call);
+  }
+
+  @SneakyThrows
+  @SuppressWarnings("unchecked")
+  private static List<TypeSet> invokeInferArgTypes(DereferenceMemberMatcher matcher,
+                                                   MethodCallNode call) {
+    var method = findMethod("inferArgTypes");
+    return (List<TypeSet>) method.invoke(matcher, call, null);
+  }
+
+  private static Method findMethod(String name) {
     for (var m : DereferenceMemberMatcher.class.getDeclaredMethods()) {
-      if (m.getName().equals("countMeaningfulArgs")) {
-        method = m;
-        break;
+      if (m.getName().equals(name)) {
+        m.setAccessible(true);
+        return m;
       }
     }
-    if (method == null) {
-      throw new IllegalStateException("countMeaningfulArgs not found");
-    }
-    method.setAccessible(true);
-    return (int) method.invoke(null, call);
+    throw new IllegalStateException(name + " not found");
   }
 }
