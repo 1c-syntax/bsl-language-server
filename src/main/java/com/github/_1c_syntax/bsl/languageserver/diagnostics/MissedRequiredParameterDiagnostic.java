@@ -102,15 +102,6 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
     calls.put(Ranges.create(methodName), methodCall);
   }
 
-  /**
-   * Проверка вызова конструктора {@code Новый <Класс>(...)}.
-   * <p>
-   * Нужный символ конструктора ищется через {@link ReferenceResolver}, который
-   * умеет резолвить {@code typeName} в один из вариантов: OneScript-метод-конструктор
-   * ({@link MethodSymbol}), OneScript-модуль (если явного конструктора нет — тогда
-   * проверять нечего) или синтетический {@link ConstructorCallSymbol} для
-   * платформенных типов с известными сигнатурами конструкторов.
-   */
   private void checkConstructorCall(BSLParser.NewExpressionContext ctx) {
     var typeName = ctx.typeName();
     if (typeName == null || typeName.IDENTIFIER() == null) {
@@ -141,9 +132,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
   }
 
   private void checkMethod(MethodSymbol methodDefinition, MethodCall callInfo) {
-    var signature = methodDefinition.getParameters().stream()
-      .map(parameter -> new Parameter(parameter.getName(), parameter.isOptional()))
-      .toList();
+    var signature = parameterSignatures(methodDefinition).get(0);
     var missedParameters = missedParameters(signature, callInfo.arguments);
     if (!missedParameters.isEmpty()) {
       addDiagnostic(callInfo.range, missedParameters);
@@ -200,7 +189,7 @@ public class MissedRequiredParameterDiagnostic extends AbstractVisitorDiagnostic
 
   private static Position typeNamePosition(BSLParser.TypeNameContext typeName) {
     var token = typeName.IDENTIFIER().getSymbol();
-    return new Position(token.getLine() - 1, token.getCharPositionInLine() + token.getText().length() / 2);
+    return new Position(token.getLine() - 1, token.getCharPositionInLine());
   }
 
   private static class MethodCall {
