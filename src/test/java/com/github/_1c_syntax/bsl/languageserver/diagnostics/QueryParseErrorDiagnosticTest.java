@@ -38,6 +38,7 @@ class QueryParseErrorDiagnosticTest extends AbstractDiagnosticTest<QueryParseErr
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    // запрос с функцией СТРОКА в условии соединения и полями-параметрами не должен давать ложное срабатывание (issue #3169)
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
       .hasRange(9, 1, 10, 59)
