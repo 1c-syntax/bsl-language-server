@@ -159,7 +159,8 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var description = (String) entry.getOrDefault("description", "");
         var classRef = new TypeRef(kind, qualifiedName);
         var rawCtors = (List<Map<String, Object>>) entry.get("constructors");
-        var constructors = readSignatures(rawCtors, classRef);
+        // Тип возврата конструктора — сам тип; используется как fallback для сигнатур.
+        var constructors = readSignatures(rawCtors, TypeSet.of(classRef));
         var elementTypeNames = (List<String>) entry.getOrDefault("elementTypes", Collections.emptyList());
         var defaultElementTypes = new ArrayList<TypeRef>(elementTypeNames.size());
         for (var name : elementTypeNames) {
@@ -201,7 +202,9 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var returnType = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
 
       var rawSignatures = (List<Map<String, Object>>) m.get("signatures");
-      var signatures = readSignatures(rawSignatures, returnType);
+      // В fallback сигнатуре передаём весь union возврата метода, а не первый тип,
+      // чтобы SignatureDescriptor.returnTypes() не терял варианты.
+      var signatures = readSignatures(rawSignatures, returnTypes);
       var kind = MemberKind.valueOf(kindStr);
       var generic = Boolean.TRUE.equals(m.get("generic"));
       MemberDescriptor descriptor;
@@ -473,7 +476,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
   @SuppressWarnings("unchecked")
   private static List<SignatureDescriptor> readSignatures(
     List<Map<String, Object>> raw,
-    TypeRef fallbackReturnType
+    TypeSet fallbackReturnTypes
   ) {
     if (raw == null || raw.isEmpty()) {
       return Collections.emptyList();
@@ -484,10 +487,10 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var sigDescription = bilingualOrMono(description,
         stringField(sig, "descriptionRu"), stringField(sig, "descriptionEn"));
       // Тип(ы) возврата сигнатуры: union `returnTypes` / одиночный `returnType` /
-      // fallback на тип возврата метода.
+      // fallback на полный union типов возврата метода (или сам тип — для конструктора).
       var returnTypes = readTypeSet(sig, "returnTypes", "returnType");
-      if (returnTypes.refs().isEmpty() && !fallbackReturnType.equals(TypeRef.UNKNOWN)) {
-        returnTypes = TypeSet.of(fallbackReturnType);
+      if (returnTypes.isEmpty() && !fallbackReturnTypes.isEmpty()) {
+        returnTypes = fallbackReturnTypes;
       }
       var rawParams = (List<Map<String, Object>>) sig.getOrDefault("parameters", Collections.emptyList());
       var params = new ArrayList<ParameterDescriptor>(rawParams.size());

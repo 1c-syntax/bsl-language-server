@@ -215,7 +215,7 @@ public final class SignatureSelection {
       return true;
     }
     var name = ref.qualifiedName();
-    return name.equalsIgnoreCase("Произвольный") || name.equalsIgnoreCase("Arbitrary");
+    return "Произвольный".equalsIgnoreCase(name) || "Arbitrary".equalsIgnoreCase(name);
   }
 
   /**

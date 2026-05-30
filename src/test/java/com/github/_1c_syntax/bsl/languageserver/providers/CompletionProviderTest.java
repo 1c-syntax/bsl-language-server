@@ -712,6 +712,52 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void classWithSingleParameterlessConstructorInsertsClosedParens() {
+    // ТаблицаЗначений имеет ровно один беспараметровый конструктор (из builtin-данных) —
+    // вставляем готовые `()` и оставляем курсор после них.
+    enableSnippetSupport(true);
+
+    var content = "А = Новый ТаблицаЗнач";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    var item = completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> "ТаблицаЗначений".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(item.getInsertText()).isEqualTo("ТаблицаЗначений()");
+    assertThat(item.getInsertTextFormat()).isNull();
+    assertThat(item.getCommand()).isNull();
+  }
+
+  @Test
+  void classWithMultipleConstructorOverloadsStaysSnippet() {
+    // Структура объявляет несколько перегрузок конструктора — даже если первая
+    // могла бы оказаться беспараметровой, консервативно оставляем курсор между скобок.
+    enableSnippetSupport(true);
+
+    var content = "А = Новый Структ";
+    var documentContext = TestUtils.getDocumentContext(content);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    var item = completionProvider.getCompletion(documentContext, params).getItems().stream()
+      .filter(it -> "Структура".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(item.getInsertText()).isEqualTo("Структура($0)");
+    assertThat(item.getInsertTextFormat()).isEqualTo(InsertTextFormat.Snippet);
+    assertThat(item.getCommand()).isNotNull();
+  }
+
+  @Test
   void methodWithoutParametersInsertsClosedParensWithSnippetSupport() {
     // Метод без параметров: даже при snippetSupport вставляем готовые `()` и оставляем
     // курсор после них — между скобок вводить нечего, signatureHelp поднимать незачем.
@@ -1278,11 +1324,11 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // для обоих режимов клиента (snippet и фолбэк) вставляется `()`.
     enableSnippetSupport(true);
 
-    var content =
-      "Процедура БезПараметров() Экспорт\n"
-        + "КонецПроцедуры\n"
-        + "\n"
-        + "БезПар";
+    var content = """
+      Процедура БезПараметров() Экспорт
+      КонецПроцедуры
+
+      БезПар""";
     var documentContext = TestUtils.getDocumentContext(content);
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -1303,11 +1349,11 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     // Регрессия: метод с параметрами по-прежнему получает `($0)` и triggerParameterHints.
     enableSnippetSupport(true);
 
-    var content =
-      "Процедура СПараметром(Знач П) Экспорт\n"
-        + "КонецПроцедуры\n"
-        + "\n"
-        + "СПара";
+    var content = """
+      Процедура СПараметром(Знач П) Экспорт
+      КонецПроцедуры
+
+      СПара""";
     var documentContext = TestUtils.getDocumentContext(content);
     var params = new CompletionParams();
     params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));

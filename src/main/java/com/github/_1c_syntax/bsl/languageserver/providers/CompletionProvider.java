@@ -311,29 +311,7 @@ public final class CompletionProvider {
           continue;
         }
         if (matches(className, prefix)) {
-          var item = new CompletionItem(className);
-          item.setKind(CompletionItemKind.Class);
-          // Без данных о конструкторе сохраняем поведение с курсором между скобок.
-          var ctorHasParameters = true;
-          var refOpt = typeService.resolve(className, fileType);
-          if (refOpt.isPresent()) {
-            var ref = refOpt.get();
-            var ctors = typeService.getConstructors(ref, fileType);
-            if (!ctors.isEmpty()) {
-              var first = ctors.get(0);
-              ctorHasParameters = !first.parameters().isEmpty();
-              var paramList = first.parameters().stream()
-                .map(p -> p.displayName(scriptVariant))
-                .collect(java.util.stream.Collectors.joining(", "));
-              item.setDetail("(" + paramList + ")");
-            }
-            var desc = typeService.getDescription(ref, scriptVariant);
-            if (!desc.isEmpty()) {
-              item.setDocumentation(desc);
-            }
-          }
-          applyCallableInsertText(item, className, ctorHasParameters);
-          items.add(item);
+          items.add(buildPlatformClassCompletionItem(className, fileType, scriptVariant));
         }
       }
       for (var libClassName : libraryEntryNames(OScriptLibraryIndex.EntryKind.CLASS)) {
@@ -563,6 +541,41 @@ public final class CompletionProvider {
    *                      сигнатуре нет либо перегрузок несколько — передаётся {@code true},
    *                      чтобы сохранить поведение с курсором между скобок.
    */
+  /**
+   * Строит completion-item платформенного класса в позиции после {@code Новый}.
+   * Курсор оставляем между скобок, если у конструктора есть параметры либо
+   * перегрузок несколько; для единственного беспараметрового конструктора —
+   * после закрытой скобки {@code ()}.
+   */
+  private CompletionItem buildPlatformClassCompletionItem(String className, FileType fileType,
+                                                          Language scriptVariant) {
+    var item = new CompletionItem(className);
+    item.setKind(CompletionItemKind.Class);
+    // Без данных о конструкторе сохраняем поведение с курсором между скобок.
+    var ctorHasParameters = true;
+    var refOpt = typeService.resolve(className, fileType);
+    if (refOpt.isPresent()) {
+      var ref = refOpt.get();
+      var ctors = typeService.getConstructors(ref, fileType);
+      if (!ctors.isEmpty()) {
+        // Несколько перегрузок конструктора → консервативно оставляем курсор между скобок:
+        // первый вариант может быть беспараметровым, а следующий — принимать аргументы
+        // (например, Новый HTTPЗапрос() и (Адрес, Заголовки)).
+        ctorHasParameters = ctors.size() > 1 || !ctors.get(0).parameters().isEmpty();
+        var paramList = ctors.get(0).parameters().stream()
+          .map(p -> p.displayName(scriptVariant))
+          .collect(java.util.stream.Collectors.joining(", "));
+        item.setDetail("(" + paramList + ")");
+      }
+      var desc = typeService.getDescription(ref, scriptVariant);
+      if (!desc.isEmpty()) {
+        item.setDocumentation(desc);
+      }
+    }
+    applyCallableInsertText(item, className, ctorHasParameters);
+    return item;
+  }
+
   private void applyCallableInsertText(CompletionItem item, String name, boolean hasParameters) {
     if (!hasParameters) {
       item.setInsertText(name + "()");
