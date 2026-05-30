@@ -208,13 +208,12 @@ class AutumnBeanIndexTest {
   }
 
   @Test
-  void registersFactoryByMethodNameWithBeanLiteralType() {
-    // given
+  void registersFactoryByMethodNameWhenNameAndTypeAbsent() {
+    // given: &Завязь без параметров -> имя желудя и тип берутся из имени метода (как autumn)
     var type = new TypeRef(TypeKind.USER, "СоединениеСБазой");
     when(typeRegistry.resolve("СоединениеСБазой")).thenReturn(Optional.of(type));
-    // &Завязь без имени и с Тип="Желудь" -> имя = имя метода, тип резолвится по имени
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
-      method(oak()), namedMethod("СоединениеСБазой", factory(null, "Желудь")));
+      method(oak()), namedMethod("СоединениеСБазой", factory(null, null)));
     init();
 
     // when / then
@@ -235,16 +234,17 @@ class AutumnBeanIndexTest {
   }
 
   @Test
-  void registersFactoryWithBlankTypeByName() {
-    // given
-    var type = new TypeRef(TypeKind.USER, "Хлеб");
-    when(typeRegistry.resolve("Хлеб")).thenReturn(Optional.of(type));
+  void skipsFactoryWhenTypeIsExplicitlyBlank() {
+    // given: явный Тип="" — в autumn Тип("") это ошибка, валидного типа нет. Резолв имени
+    // метода застаблен в тип: если бы код ошибочно фолбэчил пустой Тип на имя метода,
+    // желудь бы зарегистрировался — тест это поймает.
+    when(typeRegistry.resolve("СоздатьХлеб")).thenReturn(Optional.of(new TypeRef(TypeKind.USER, "Хлеб")));
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
       method(oak()), namedMethod("СоздатьХлеб", factory("Хлеб", "")));
     init();
 
-    // when / then
-    assertThat(beanIndex.resolve("Хлеб").refs()).containsExactly(type);
+    // when / then: желудь не регистрируется (пустой Тип не резолвится в тип)
+    assertThat(beanIndex.resolve("Хлеб").isEmpty()).isTrue();
   }
 
   @Test
@@ -272,20 +272,18 @@ class AutumnBeanIndexTest {
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
     when(serverContext.getDocument(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
-    var oldType = new TypeRef(TypeKind.USER, "СтарыйТип");
-    var newType = new TypeRef(TypeKind.USER, "НовыйТип");
-    when(typeRegistry.resolve("Старый")).thenReturn(Optional.of(oldType));
-    when(typeRegistry.resolve("Новый")).thenReturn(Optional.of(newType));
+    var beanType = new TypeRef(TypeKind.USER, "ТипЖелудя");
+    when(typeRegistry.resolve("ТипЖелудя")).thenReturn(Optional.of(beanType));
     // класс-дуб: завязи сканируются только внутри него
     var constructor = method(oak());
     when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
-    var oldMethod = namedMethod("Создать", factory("Старый", null));
+    var oldMethod = namedMethod("Создать", factory("Старый", "ТипЖелудя"));
     when(symbolTree.getMethods()).thenReturn(List.of(constructor, oldMethod));
     init();
-    assertThat(beanIndex.resolve("Старый").refs()).containsExactly(oldType);
+    assertThat(beanIndex.resolve("Старый").refs()).containsExactly(beanType);
 
     // when: документ отредактирован — желудь переименован в "Новый"
-    var newMethod = namedMethod("Создать", factory("Новый", null));
+    var newMethod = namedMethod("Создать", factory("Новый", "ТипЖелудя"));
     when(symbolTree.getMethods()).thenReturn(List.of(constructor, newMethod));
     when(document.getFileType()).thenReturn(FileType.OS);
     when(document.getUri()).thenReturn(uri);
@@ -295,7 +293,7 @@ class AutumnBeanIndexTest {
 
     // then: старое имя больше не резолвится, новое — резолвится
     assertThat(beanIndex.resolve("Старый").isEmpty()).isTrue();
-    assertThat(beanIndex.resolve("Новый").refs()).containsExactly(newType);
+    assertThat(beanIndex.resolve("Новый").refs()).containsExactly(beanType);
   }
 
   @Test

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
@@ -72,9 +73,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @RequiredArgsConstructor
 public class AutumnMetaAnnotationResolver {
-
-  /** Метод-обработчик разворачивания аннотации (killjoy-алиасы пробрасывают в нём значение в мету). */
-  private static final String EXPANSION_HANDLER = "ПриРазворачиванииАннотации";
 
   private final AnnotationRepository annotationRepository;
 
@@ -131,36 +129,112 @@ public class AutumnMetaAnnotationResolver {
 
   /**
    * Эффективные значения параметра {@link AutumnAnnotations#VALUE_PARAMETER} роли
-   * {@code baseRole} для аннотации-использования с учётом разворачивания мета-аннotaций.
+   * {@code baseRole} с учётом разворачивания мета-аннотаций. Удобная обёртка над
+   * {@link #roleParameterValues(Annotation, String, String)}.
+   */
+  public List<String> roleValues(Annotation usage, String baseRole) {
+    return roleParameterValues(usage, baseRole, AutumnAnnotations.VALUE_PARAMETER);
+  }
+
+  /**
+   * Эффективные значения параметра {@code parameterName} аннотации роли {@code baseRole}
+   * для аннотации-использования с учётом разворачивания мета-аннотаций. Механизм единый
+   * для любого параметра любой роли (имя желудя — {@code Значение}, тип коллекции —
+   * {@code Тип}, прозвища и т.д.).
    * <p>
-   * Источники (по порядку):
+   * Источники:
    * <ol>
    *   <li>значения, статически зафиксированные на аннотации роли в определении алиаса
    *       (например, {@code &Лог} = {@code &Пластилин(Значение = "Лог")} → «Лог»;
    *       {@code &Контроллер} = {@code … &Прозвище("Контроллер")} → «Контроллер»);</li>
    *   <li>значение самой аннотации-использования, если она <i>прямо</i> является ролью
-   *       ({@code &Желудь("X")}, {@code &Пластилин("X")}) либо это алиас с обработчиком
-   *       {@code ПриРазворачиванииАннотации}, который пробрасывает своё значение в
-   *       мета-аннотацию (killjoy {@code &Внедряемое("X")}/{@code &Компонент("X")}).</li>
+   *       ({@code &Желудь("X")}, {@code &Пластилин(Тип = "Массив")});</li>
+   *   <li>декларативный перенос через {@code &ПсевдонимДля} (аналог Spring {@code @AliasFor}):
+   *       параметр конструктора алиаса, помеченный
+   *       {@code &ПсевдонимДля(Аннотация = «роль», Параметр = «parameterName»)}, переносит своё
+   *       переданное значение (а при {@code ПереноситьЗначениеПоУмолчанию = Истина} — и значение
+   *       по умолчанию) в этот параметр роли. Так разворачиваются killjoy-алиасы
+   *       {@code &Внедряемое("X", Тип = "Массив")}/{@code &Компонент("X")}.</li>
    * </ol>
    * Для {@code &Контроллер("/маршрут")} значение «/маршрут» в имя желудя НЕ попадает —
-   * у неё нет обработчика разворачивания, поэтому имя берётся из мета {@code &Желудь}
-   * (отсутствует → имя класса). Динамическое вычисление имени в обработчике статика не
-   * исполняет (берётся статически зафиксированное значение), см. issue #3960.
+   * параметр не помечен {@code &ПсевдонимДля}, поэтому имя берётся из мета {@code &Желудь}
+   * (отсутствует → имя класса). Имена, вычисляемые алиасом динамически, статика не
+   * выводит — берётся статически объявленное значение, см. issue #3960.
    */
-  public List<String> roleValues(Annotation usage, String baseRole) {
+  public List<String> roleParameterValues(Annotation usage, String baseRole, String parameterName) {
     var values = new ArrayList<String>();
-    collectFixedRoleValues(usage.getName(), baseRole, new HashSet<>(), values);
-    if (baseRole.equalsIgnoreCase(usage.getName()) || forwardsValue(usage.getName())) {
-      AutumnAnnotations.stringParameter(usage, AutumnAnnotations.VALUE_PARAMETER)
-        .filter(value -> !value.isBlank())
-        .ifPresent(values::add);
+    collectFixedParameterValues(usage.getName(), baseRole, parameterName, new HashSet<>(), values);
+    if (baseRole.equalsIgnoreCase(usage.getName())) {
+      // Дословно, как движок annotations (ПолучитьЗначениеПараметраАннотации): переданный
+      // параметр переносится как есть, в т.ч. пустым. Различие «передан/не передан»
+      // (а не «пуст/не пуст») потребитель отражает через findFirst().orElse(fallback).
+      AutumnAnnotations.stringParameter(usage, parameterName).ifPresent(values::add);
     }
+    collectAliasedParameterValues(usage, baseRole, parameterName, values);
     return values;
   }
 
-  /** Статически зафиксированные на аннотациях роли значения в цепочке определения алиаса. */
-  private void collectFixedRoleValues(String annotationName, String baseRole, Set<String> visited, List<String> out) {
+  /** Значения, проброшенные в параметр роли декларативно через {@code &ПсевдонимДля}. */
+  private void collectAliasedParameterValues(Annotation usage, String baseRole, String parameterName,
+                                             List<String> out) {
+    definitionConstructor(usage.getName()).ifPresent(definition -> {
+      for (var parameter : definition.getParameters()) {
+        AutumnAnnotations.find(parameter.getAnnotations(), AutumnAnnotations.ALIAS_FOR)
+          .filter(alias -> aliasTargets(alias, baseRole, parameterName))
+          .flatMap(alias -> aliasedValue(usage, parameter, alias))
+          .ifPresent(out::add);
+      }
+    });
+  }
+
+  /** Нацелен ли {@code &ПсевдонимДля} на параметр {@code parameterName} аннотации, разворачивающейся в роль. */
+  private boolean aliasTargets(Annotation alias, String baseRole, String parameterName) {
+    var targetParameter = AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TARGET_PARAMETER);
+    if (!targetParameter.filter(parameterName::equalsIgnoreCase).isPresent()) {
+      return false;
+    }
+    return AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TARGET_ANNOTATION)
+      .filter(target -> isRole(target, baseRole))
+      .isPresent();
+  }
+
+  /** Переносимое значение параметра-псевдонима: переданное явно либо значение по умолчанию (при опт-ин). */
+  private static Optional<String> aliasedValue(Annotation usage, ParameterDefinition parameter, Annotation alias) {
+    var passed = AutumnAnnotations.stringParameter(usage, parameter.getName());
+    if (passed.isPresent()) {
+      // Параметр передан явно — движок переносит его значение дословно, даже пустым;
+      // значение по умолчанию при этом НЕ берётся.
+      return passed;
+    }
+    // Параметр не передан — значение по умолчанию переносится только при опт-ине.
+    if (transfersDefault(alias)) {
+      return defaultStringValue(parameter);
+    }
+    return Optional.empty();
+  }
+
+  private static boolean transfersDefault(Annotation alias) {
+    return AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TRANSFER_DEFAULT)
+      .filter(AutumnAnnotations.TRUE_LITERAL::equalsIgnoreCase)
+      .isPresent();
+  }
+
+  /** Строковое значение по умолчанию параметра (со снятием обрамляющих кавычек), если оно строковое. */
+  private static Optional<String> defaultStringValue(ParameterDefinition parameter) {
+    var defaultValue = parameter.getDefaultValue();
+    if (defaultValue.type() != ParameterDefinition.ParameterType.STRING) {
+      return Optional.empty();
+    }
+    var text = defaultValue.value();
+    if (text.length() >= 2 && text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') {
+      text = text.substring(1, text.length() - 1).replace("\"\"", "\"");
+    }
+    return Optional.of(text);
+  }
+
+  /** Статически зафиксированные на аннотациях роли значения параметра в цепочке определения алиаса. */
+  private void collectFixedParameterValues(String annotationName, String baseRole, String parameterName,
+                                           Set<String> visited, List<String> out) {
     if (!visited.add(annotationName.toLowerCase(Locale.ROOT))) {
       return;
     }
@@ -170,30 +244,11 @@ public class AutumnMetaAnnotationResolver {
           continue;
         }
         if (baseRole.equalsIgnoreCase(meta.getName())) {
-          AutumnAnnotations.stringParameter(meta, AutumnAnnotations.VALUE_PARAMETER)
-            .filter(value -> !value.isBlank())
-            .ifPresent(out::add);
+          AutumnAnnotations.stringParameter(meta, parameterName).ifPresent(out::add);
         }
-        collectFixedRoleValues(meta.getName(), baseRole, visited, out);
+        collectFixedParameterValues(meta.getName(), baseRole, parameterName, visited, out);
       }
     });
-  }
-
-  /**
-   * Пробрасывает ли алиас своё значение в мета-аннотацию через
-   * {@code ПриРазворачиванииАннотации} (как killjoy {@code &Внедряемое}/{@code &Компонент}).
-   * Статический признак — наличие у класса-определения такого метода-обработчика.
-   */
-  private boolean forwardsValue(String annotationName) {
-    return annotationRepository.findByName(annotationName)
-      .map(AnnotationSymbol::getOwner)
-      .map(AutumnMetaAnnotationResolver::hasExpansionHandler)
-      .orElse(false);
-  }
-
-  private static boolean hasExpansionHandler(DocumentContext document) {
-    return document.getSymbolTree().getMethods().stream()
-      .anyMatch(method -> EXPANSION_HANDLER.equalsIgnoreCase(method.getName()));
   }
 
   private Optional<MethodSymbol> definitionConstructor(String annotationName) {

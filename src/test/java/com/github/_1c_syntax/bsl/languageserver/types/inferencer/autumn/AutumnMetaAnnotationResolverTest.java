@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition.DefaultValue;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition.ParameterType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
@@ -228,25 +231,13 @@ class AutumnMetaAnnotationResolverTest {
   }
 
   @Test
-  void roleValuesForwardsUsageValueWhenHandlerPresent() {
-    // given: killjoy &Внедряемое = &Аннотация + &Пластилин + ПриРазворачиванииАннотации
-    registerForwarding("Внедряемое", plainAnnotation(AutumnAnnotations.INJECTION));
-
-    // when
-    var values = resolver.roleValues(withValue("Внедряемое", "ИмяЖелудя"), AutumnAnnotations.INJECTION);
-
-    // then: значение использования проброшено в &Пластилин
-    assertThat(values).containsExactly("ИмяЖелудя");
-  }
-
-  @Test
-  void roleValuesIgnoresAliasOwnValueWithoutHandler() {
-    // given: &Контроллер = &Аннотация + &Желудь + &Прозвище("Контроллер"), без обработчика
+  void roleValuesIgnoresAliasOwnValueWithoutAliasFor() {
+    // given: &Контроллер = &Аннотация + &Желудь + &Прозвище("Контроллер"), без &ПсевдонимДля
     register("Контроллер",
       plainAnnotation(AutumnAnnotations.COMPONENT),
       withValue(AutumnAnnotations.QUALIFIER, "Контроллер"));
 
-    // when / then: "/users" не идёт в имя компонента (нет форвардинга)...
+    // when / then: "/users" не идёт в имя компонента (параметр не помечен &ПсевдонимДля)...
     assertThat(resolver.roleValues(withValue("Контроллер", "/users"), AutumnAnnotations.COMPONENT)).isEmpty();
     // ...а прозвище берётся из зашитого &Прозвище("Контроллер")
     assertThat(resolver.roleValues(withValue("Контроллер", "/users"), AutumnAnnotations.QUALIFIER))
@@ -260,7 +251,123 @@ class AutumnMetaAnnotationResolverTest {
       .containsExactly("X");
   }
 
+  @Test
+  void roleValuesForwardsAliasedExplicitValue() {
+    // given: &Композит — параметр Значение помечен &ПсевдонимДля(Пластилин, Значение)
+    registerComposite("Композит", aliasParameter("Значение", "Пластилин", "Значение", false, null));
+
+    // when: &Композит("ИмяЖелудя")
+    var values = resolver.roleValues(withValue("Композит", "ИмяЖелудя"), AutumnAnnotations.INJECTION);
+
+    // then: переданное значение декларативно перенесено в имя желудя
+    assertThat(values).containsExactly("ИмяЖелудя");
+  }
+
+  @Test
+  void roleValuesTransfersAliasedDefaultWhenOptIn() {
+    // given: псевдоним с ПереноситьЗначениеПоУмолчанию = Истина, значение по умолчанию "Логгер"
+    registerComposite("КомпозитПоУмолчанию",
+      aliasParameter("Значение", "Пластилин", "Значение", true, "\"Логгер\""));
+
+    // when: использование без значения
+    var values = resolver.roleValues(plainAnnotation("КомпозитПоУмолчанию"), AutumnAnnotations.INJECTION);
+
+    // then: перенесено значение по умолчанию (кавычки сняты)
+    assertThat(values).containsExactly("Логгер");
+  }
+
+  @Test
+  void roleValuesExplicitEmptyValueSuppressesAliasedDefault() {
+    // given: опт-ин на перенос значения по умолчанию ("Логгер"), но значение передано явно пустым
+    registerComposite("КомпозитПоУмолчанию",
+      aliasParameter("Значение", "Пластилин", "Значение", true, "\"Логгер\""));
+
+    // when: &КомпозитПоУмолчанию("") — параметр передан (пустым)
+    var values = resolver.roleValues(withValue("КомпозитПоУмолчанию", ""), AutumnAnnotations.INJECTION);
+
+    // then: дословно переносится пустое значение (как движок), значение по умолчанию подавлено;
+    // «пусто → по имени члена» применит уже потребитель (beanName)
+    assertThat(values).containsExactly("");
+  }
+
+  @Test
+  void roleValuesIgnoresAliasedDefaultWithoutOptIn() {
+    // given: псевдоним без переноса значения по умолчанию, значение по умолчанию "Логгер"
+    registerComposite("КомпозитБезПереноса",
+      aliasParameter("Значение", "Пластилин", "Значение", false, "\"Логгер\""));
+
+    // when / then: без явного значения ничего не переносится
+    assertThat(resolver.roleValues(plainAnnotation("КомпозитБезПереноса"), AutumnAnnotations.INJECTION)).isEmpty();
+  }
+
+  @Test
+  void roleValuesIgnoresAliasTargetingNonValueParameter() {
+    // given: псевдоним нацелен на параметр Тип (не Значение)
+    registerComposite("КомпозитТип", aliasParameter("Тип", "Пластилин", "Тип", false, null));
+
+    // when / then: запрос значения роли (Значение) псевдоним на Тип не подхватывает
+    assertThat(resolver.roleValues(withValue("КомпозитТип", "Массив"), AutumnAnnotations.INJECTION)).isEmpty();
+  }
+
+  @Test
+  void roleParameterValuesForwardsAliasedNonValueParameter() {
+    // given: параметр ТипКоллекции помечен &ПсевдонимДля(Пластилин, Тип) — имя отличается от Тип
+    registerComposite("КомпозитКолл", aliasParameter("ТипКоллекции", "Пластилин", "Тип", false, null));
+    var usage = namedAnnotation("КомпозитКолл", "ТипКоллекции", "Массив");
+
+    // when / then: запрос параметра Тип роли подхватывает проброшенное значение...
+    assertThat(resolver.roleParameterValues(usage, AutumnAnnotations.INJECTION, AutumnAnnotations.TYPE_PARAMETER))
+      .containsExactly("Массив");
+    // ...а в Значение оно не попадает
+    assertThat(resolver.roleValues(usage, AutumnAnnotations.INJECTION)).isEmpty();
+  }
+
   // --- helpers ---------------------------------------------------------------
+
+  /** Аннотация-использование с одним именованным параметром. */
+  private static Annotation namedAnnotation(String name, String parameterName, String value) {
+    return Annotation.builder()
+      .name(name)
+      .kind(AnnotationKind.CUSTOM)
+      .parameters(List.of(new AnnotationParameterDefinition(parameterName, Either.forLeft(value), true)))
+      .build();
+  }
+
+  /** Зарегистрировать композитную аннотацию с параметрами конструктора (для &ПсевдонимДля). */
+  private void registerComposite(String customName, ParameterDefinition... parameters) {
+    var constructor = mock(MethodSymbol.class);
+    when(constructor.getAnnotations()).thenReturn(List.of(marker(customName)));
+    when(constructor.getParameters()).thenReturn(List.of(parameters));
+    repository.register(AnnotationSymbol.builder()
+      .name(customName)
+      .parent(Optional.of(constructor))
+      .build());
+  }
+
+  private static ParameterDefinition aliasParameter(String paramName, String targetAnnotation,
+                                                    String targetParameter, boolean transferDefault,
+                                                    String defaultLiteral) {
+    var aliasParams = new ArrayList<AnnotationParameterDefinition>();
+    aliasParams.add(new AnnotationParameterDefinition("Аннотация", Either.forLeft(targetAnnotation), true));
+    aliasParams.add(new AnnotationParameterDefinition("Параметр", Either.forLeft(targetParameter), true));
+    if (transferDefault) {
+      aliasParams.add(
+        new AnnotationParameterDefinition("ПереноситьЗначениеПоУмолчанию", Either.forLeft("Истина"), true));
+    }
+    var aliasAnnotation = Annotation.builder()
+      .name(AutumnAnnotations.ALIAS_FOR)
+      .kind(AnnotationKind.CUSTOM)
+      .parameters(aliasParams)
+      .build();
+    var defaultValue = defaultLiteral == null
+      ? DefaultValue.EMPTY
+      : new DefaultValue(ParameterType.STRING, defaultLiteral);
+    return ParameterDefinition.builder()
+      .name(paramName)
+      .annotations(List.of(aliasAnnotation))
+      .defaultValue(defaultValue)
+      .build();
+  }
 
   private static DocumentContextContentChangedEvent documentChange(FileType fileType, boolean annotationDefinition) {
     var document = mock(DocumentContext.class);
@@ -279,36 +386,14 @@ class AutumnMetaAnnotationResolverTest {
 
   /** Зарегистрировать пользовательскую аннотацию: конструктор с указанными мета-аннотациями. */
   private void register(String customName, Annotation... metaAnnotations) {
-    register(customName, false, metaAnnotations);
-  }
-
-  /** То же, но с обработчиком ПриРазворачиванииАннотации (алиас пробрасывает Значение в мету). */
-  private void registerForwarding(String customName, Annotation... metaAnnotations) {
-    register(customName, true, metaAnnotations);
-  }
-
-  private void register(String customName, boolean forwarding, Annotation... metaAnnotations) {
     var constructor = mock(MethodSymbol.class);
     var annotations = new ArrayList<Annotation>();
     annotations.add(marker(customName));
     annotations.addAll(List.of(metaAnnotations));
     when(constructor.getAnnotations()).thenReturn(annotations);
 
-    var methods = new ArrayList<MethodSymbol>();
-    methods.add(constructor);
-    if (forwarding) {
-      var handler = mock(MethodSymbol.class);
-      when(handler.getName()).thenReturn("ПриРазворачиванииАннотации");
-      methods.add(handler);
-    }
-    var symbolTree = mock(SymbolTree.class);
-    when(symbolTree.getMethods()).thenReturn(methods);
-    var owner = mock(DocumentContext.class);
-    when(owner.getSymbolTree()).thenReturn(symbolTree);
-
     repository.register(AnnotationSymbol.builder()
       .name(customName)
-      .owner(owner)
       .parent(Optional.of(constructor))
       .build());
   }
