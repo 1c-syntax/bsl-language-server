@@ -969,8 +969,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .as("документация члена — на русском при language=RU")
         .contains("Добавляет значение");
       assertThat(add.getDetail())
-        .as("имя параметра в сигнатуре — на русском")
-        .isEqualTo("(Значение)");
+        .as("имя параметра в сигнатуре — на русском; необязательный → в квадратных скобках")
+        .isEqualTo("([Значение])");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -988,8 +988,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .contains("Adds a value")
         .doesNotContain("Добавляет");
       assertThat(add.getDetail())
-        .as("имя параметра в сигнатуре — на английском")
-        .isEqualTo("(Value)");
+        .as("имя параметра в сигнатуре — на английском; необязательный → в квадратных скобках")
+        .isEqualTo("([Value])");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }

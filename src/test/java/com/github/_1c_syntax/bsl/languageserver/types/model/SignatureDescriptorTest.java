@@ -142,26 +142,6 @@ class SignatureDescriptorTest {
   }
 
   @Test
-  void syntheticReturnTypeFactoryMarksSignature() {
-    // given / when
-    var sig = SignatureDescriptor.syntheticReturnType(NUMBER);
-
-    // then — пустые параметры здесь означают «неизвестны», а не «их нет».
-    assertThat(sig.syntheticReturnTypeOnly()).isTrue();
-    assertThat(sig.parameters()).isEmpty();
-    assertThat(sig.returnType()).isEqualTo(NUMBER);
-  }
-
-  @Test
-  void ordinaryConstructorsAreNotSynthetic() {
-    // given / when
-    var sig = new SignatureDescriptor(List.of(), TypeSet.of(NUMBER), "описание");
-
-    // then
-    assertThat(sig.syntheticReturnTypeOnly()).isFalse();
-  }
-
-  @Test
   void parametersAreUnmodifiableCopy() {
     // given
     var mutable = new java.util.ArrayList<ParameterDescriptor>();

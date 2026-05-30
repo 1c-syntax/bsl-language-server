@@ -218,7 +218,7 @@ public record MemberDescriptor(
           rebuilt.add(sig);
         } else {
           rebuilt.add(new SignatureDescriptor(sig.parameters(), specializedReturn,
-            sig.bilingualDescription(), sig.syntheticReturnTypeOnly()));
+            sig.bilingualDescription()));
           signaturesChanged = true;
         }
       }

@@ -196,24 +196,20 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var name = (String) m.get("name");
       var kindStr = (String) m.getOrDefault("kind", "METHOD");
       var description = (String) m.getOrDefault("description", "");
-      var returnTypeName = (String) m.get("returnType");
-      var returnType = returnTypeName == null
-        ? TypeRef.UNKNOWN
-        : new TypeRef(TypeKind.PLATFORM, returnTypeName);
+      // Тип(ы) возврата: union из массива `returnTypes` либо одиночный `returnType`.
+      var returnTypes = readTypeSet(m, "returnTypes", "returnType");
+      var returnType = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
 
       var rawSignatures = (List<Map<String, Object>>) m.get("signatures");
       var signatures = readSignatures(rawSignatures, returnType);
       var kind = MemberKind.valueOf(kindStr);
-      if (kind == MemberKind.METHOD && signatures.isEmpty() && returnType != TypeRef.UNKNOWN) {
-        // JSON указал returnType метода без signatures — синтезируем безпараметровую сигнатуру,
-        // чтобы returnType метода был доступен инференсеру через MemberDescriptor.returnTypes.
-        // Помечаем её синтетической: пустой список параметров здесь — «неизвестны», а не «их нет».
-        signatures = List.of(SignatureDescriptor.syntheticReturnType(returnType));
-      }
       var generic = Boolean.TRUE.equals(m.get("generic"));
       MemberDescriptor descriptor;
       if (kind == MemberKind.METHOD) {
-        descriptor = MemberDescriptor.method(name, description, signatures);
+        // returnTypes берём из JSON явно (в т.ч. union), а не выводим из сигнатур —
+        // чтобы тип возврата сохранялся и у методов без описанных параметров.
+        descriptor = new MemberDescriptor(name, MemberKind.METHOD, description, returnTypes,
+          signatures, null, false, PlatformMetadata.EMPTY);
       } else if (generic) {
         descriptor = MemberDescriptor.genericProperty(name, returnType, description);
       } else {
@@ -354,8 +350,7 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
           .withVariadic(ruParam.variadic()));
       }
       result.add(new SignatureDescriptor(params, ruSig.returnTypes(),
-        BilingualString.of(ruSig.description(), enSig.description()),
-        ruSig.syntheticReturnTypeOnly()));
+        BilingualString.of(ruSig.description(), enSig.description())));
     }
     return result;
   }
@@ -447,6 +442,34 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
     return value instanceof String s ? s : "";
   }
 
+  /**
+   * Читает набор типов из JSON: сперва массив {@code listKey} ({@code ["Число","Строка"]}),
+   * иначе одиночное строковое поле {@code singleKey}. Пустые/отсутствующие → {@link TypeSet#EMPTY}.
+   * Все имена трактуются как платформенные ({@link TypeKind#PLATFORM}); специализация
+   * generic-плейсхолдеров происходит ниже по конвейеру.
+   */
+  private static TypeSet readTypeSet(Map<String, Object> raw, String listKey, String singleKey) {
+    var names = new ArrayList<String>();
+    if (raw.get(listKey) instanceof List<?> list) {
+      for (var item : list) {
+        if (item instanceof String s && !s.isBlank()) {
+          names.add(s);
+        }
+      }
+    }
+    if (names.isEmpty() && raw.get(singleKey) instanceof String s && !s.isBlank()) {
+      names.add(s);
+    }
+    if (names.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var refs = new ArrayList<TypeRef>(names.size());
+    for (var name : names) {
+      refs.add(new TypeRef(TypeKind.PLATFORM, name));
+    }
+    return TypeSet.of(refs);
+  }
+
   @SuppressWarnings("unchecked")
   private static List<SignatureDescriptor> readSignatures(
     List<Map<String, Object>> raw,
@@ -460,10 +483,12 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
       var description = (String) sig.getOrDefault("description", "");
       var sigDescription = bilingualOrMono(description,
         stringField(sig, "descriptionRu"), stringField(sig, "descriptionEn"));
-      var returnTypeName = (String) sig.get("returnType");
-      var returnType = returnTypeName == null
-        ? fallbackReturnType
-        : new TypeRef(TypeKind.PLATFORM, returnTypeName);
+      // Тип(ы) возврата сигнатуры: union `returnTypes` / одиночный `returnType` /
+      // fallback на тип возврата метода.
+      var returnTypes = readTypeSet(sig, "returnTypes", "returnType");
+      if (returnTypes.refs().isEmpty() && !fallbackReturnType.equals(TypeRef.UNKNOWN)) {
+        returnTypes = TypeSet.of(fallbackReturnType);
+      }
       var rawParams = (List<Map<String, Object>>) sig.getOrDefault("parameters", Collections.emptyList());
       var params = new ArrayList<ParameterDescriptor>(rawParams.size());
       for (var p : rawParams) {
@@ -474,10 +499,11 @@ public class BuiltinPlatformTypesProvider implements PlatformTypesProvider {
         var pNameRu = stringField(p, "nameRu");
         var pNameEn = stringField(p, "nameEn");
         var variadic = Boolean.TRUE.equals(p.get("variadic"));
-        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, pdefault,
+        // Типы параметра: union `types` либо одиночный `type` (как в oscript-дампе).
+        var paramTypes = readTypeSet(p, "types", "type");
+        params.add(new ParameterDescriptor(pname, paramTypes, optional, pdesc, pdefault,
           BilingualString.of(pNameRu, pNameEn)).withVariadic(variadic));
       }
-      var returnTypes = returnType.equals(TypeRef.UNKNOWN) ? TypeSet.EMPTY : TypeSet.of(returnType);
       result.add(new SignatureDescriptor(params, returnTypes, sigDescription));
     }
     return result;

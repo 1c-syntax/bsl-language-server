@@ -578,23 +578,17 @@ public final class CompletionProvider {
   }
 
   /**
-   * Есть ли у метода/функции хотя бы один параметр. Возвращает {@code true} (консервативно,
-   * с курсором между скобок) во всех случаях, кроме одного: ровно одна сигнатура с пустым
-   * списком параметров, явно описанная в источнике. Несколько перегрузок, отсутствие
-   * сигнатур или синтетическая сигнатура «только returnType» (параметры в источнике не
-   * описаны — см. {@link SignatureDescriptor#syntheticReturnTypeOnly()}) трактуются как
-   * «параметры есть/неизвестны».
+   * Есть ли у метода/функции хотя бы один параметр. Решение принимается строго по данным:
+   * беспараметровым считается метод ровно с одной сигнатурой и пустым списком параметров.
+   * Несколько перегрузок или отсутствие сигнатур (параметры неизвестны) трактуются
+   * консервативно как «параметры есть» — курсор останется между скобок.
    */
   private static boolean memberHasParameters(MemberDescriptor member) {
     var signatures = member.signatures();
     if (signatures.size() != 1) {
       return true;
     }
-    var signature = signatures.get(0);
-    if (signature.syntheticReturnTypeOnly()) {
-      return true;
-    }
-    return !signature.parameters().isEmpty();
+    return !signatures.get(0).parameters().isEmpty();
   }
 
   private String methodDetail(MemberDescriptor member, Language scriptVariant) {
