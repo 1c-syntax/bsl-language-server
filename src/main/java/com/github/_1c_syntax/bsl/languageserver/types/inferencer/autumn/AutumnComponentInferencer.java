@@ -124,8 +124,12 @@ public class AutumnComponentInferencer {
    * задаётся только по имени (позиционно можно лишь {@code Значение}).
    */
   private String collectionType(Annotation injection) {
+    // Пустой Тип трактуем как обычное внедрение (BEAN_TYPE), а не коллекцию. В autumn
+    // явный Тип="" — ошибка (не «Желудь» и не коллекция), корректного поведения нет,
+    // поэтому выбран мягкий вариант: пустое (как и отсутствие) Тип → внедрение по имени.
     return metaAnnotationResolver
       .roleParameterValues(injection, AutumnAnnotations.INJECTION, AutumnAnnotations.TYPE_PARAMETER).stream()
+      .filter(type -> !type.isBlank())
       .findFirst()
       .orElse(AutumnAnnotations.BEAN_TYPE);
   }
@@ -134,6 +138,8 @@ public class AutumnComponentInferencer {
     // Имя желудя с учётом разворачивания мета-аннотаций: зашитое в мете
     // (&Лог = &Пластилин(Значение="Лог")) → проброшенное/прямое Значение
     // использования (&Внедряемое("X")/&Пластилин("X")) → иначе имя переменной.
+    // Как в autumn (ПолучитьЗначениеПараметраАннотации): фоллбэк на имя члена — только
+    // когда Значение НЕ передано; явно переданное "" остаётся "" (желудь "" не найдётся).
     return metaAnnotationResolver.roleValues(injection, AutumnAnnotations.INJECTION).stream()
       .findFirst()
       .orElse(fallbackName);

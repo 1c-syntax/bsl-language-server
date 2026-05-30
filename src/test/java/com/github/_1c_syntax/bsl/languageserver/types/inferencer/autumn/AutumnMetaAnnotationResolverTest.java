@@ -285,8 +285,9 @@ class AutumnMetaAnnotationResolverTest {
     // when: &КомпозитПоУмолчанию("") — параметр передан (пустым)
     var values = resolver.roleValues(withValue("КомпозитПоУмолчанию", ""), AutumnAnnotations.INJECTION);
 
-    // then: явная передача подавляет значение по умолчанию (как в движке); пустое — по имени члена
-    assertThat(values).isEmpty();
+    // then: дословно переносится пустое значение (как движок), значение по умолчанию подавлено;
+    // «пусто → по имени члена» применит уже потребитель (beanName)
+    assertThat(values).containsExactly("");
   }
 
   @Test

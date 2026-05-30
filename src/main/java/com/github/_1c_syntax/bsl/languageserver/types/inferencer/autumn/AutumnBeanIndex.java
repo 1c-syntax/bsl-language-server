@@ -282,6 +282,7 @@ public class AutumnBeanIndex {
       .ifPresent(match -> {
         // Имя желудя берётся с аннотации роли (&Желудь/&Дуб) в развёрнутой цепочке,
         // а не с алиаса: &Контроллер("/") — это &Желудь без имени → имя класса, "/" маршрут.
+        // Фоллбэк на имя класса — когда имя НЕ задано (список пуст), как в autumn.
         var name = metaAnnotationResolver.roleValues(match.getValue(), match.getKey()).stream()
           .findFirst()
           .orElse(defaultName);

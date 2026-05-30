@@ -165,9 +165,10 @@ public class AutumnMetaAnnotationResolver {
     var values = new ArrayList<String>();
     collectFixedParameterValues(usage.getName(), baseRole, parameterName, new HashSet<>(), values);
     if (baseRole.equalsIgnoreCase(usage.getName())) {
-      AutumnAnnotations.stringParameter(usage, parameterName)
-        .filter(value -> !value.isBlank())
-        .ifPresent(values::add);
+      // Дословно, как движок annotations (ПолучитьЗначениеПараметраАннотации): переданный
+      // параметр переносится как есть, в т.ч. пустым. Различие «передан/не передан»
+      // (а не «пуст/не пуст») потребитель отражает через findFirst().orElse(fallback).
+      AutumnAnnotations.stringParameter(usage, parameterName).ifPresent(values::add);
     }
     collectAliasedParameterValues(usage, baseRole, parameterName, values);
     return values;
@@ -201,14 +202,13 @@ public class AutumnMetaAnnotationResolver {
   private static Optional<String> aliasedValue(Annotation usage, ParameterDefinition parameter, Annotation alias) {
     var passed = AutumnAnnotations.stringParameter(usage, parameter.getName());
     if (passed.isPresent()) {
-      // Параметр передан явно — движок переносит его значение даже пустым, поэтому
-      // значение по умолчанию НЕ берётся. Пустое же значение означает «по имени
-      // члена» — как и в прямой ветке роли, пустые в кандидаты не добавляем.
-      return passed.filter(value -> !value.isBlank());
+      // Параметр передан явно — движок переносит его значение дословно, даже пустым;
+      // значение по умолчанию при этом НЕ берётся.
+      return passed;
     }
     // Параметр не передан — значение по умолчанию переносится только при опт-ине.
     if (transfersDefault(alias)) {
-      return defaultStringValue(parameter).filter(value -> !value.isBlank());
+      return defaultStringValue(parameter);
     }
     return Optional.empty();
   }
@@ -244,9 +244,7 @@ public class AutumnMetaAnnotationResolver {
           continue;
         }
         if (baseRole.equalsIgnoreCase(meta.getName())) {
-          AutumnAnnotations.stringParameter(meta, parameterName)
-            .filter(value -> !value.isBlank())
-            .ifPresent(out::add);
+          AutumnAnnotations.stringParameter(meta, parameterName).ifPresent(out::add);
         }
         collectFixedParameterValues(meta.getName(), baseRole, parameterName, visited, out);
       }
