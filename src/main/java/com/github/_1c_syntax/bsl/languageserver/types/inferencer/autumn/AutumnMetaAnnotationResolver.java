@@ -74,9 +74,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AutumnMetaAnnotationResolver {
 
-  /** Метод-обработчик разворачивания аннотации (killjoy-алиасы пробрасывают в нём значение в мету). */
-  private static final String EXPANSION_HANDLER = "ПриРазворачиванииАннотации";
-
   private final AnnotationRepository annotationRepository;
 
   /**
@@ -134,31 +131,29 @@ public class AutumnMetaAnnotationResolver {
    * Эффективные значения параметра {@link AutumnAnnotations#VALUE_PARAMETER} роли
    * {@code baseRole} для аннотации-использования с учётом разворачивания мета-аннotaций.
    * <p>
-   * Источники (по порядку):
+   * Источники:
    * <ol>
    *   <li>значения, статически зафиксированные на аннотации роли в определении алиаса
    *       (например, {@code &Лог} = {@code &Пластилин(Значение = "Лог")} → «Лог»;
    *       {@code &Контроллер} = {@code … &Прозвище("Контроллер")} → «Контроллер»);</li>
    *   <li>значение самой аннотации-использования, если она <i>прямо</i> является ролью
-   *       ({@code &Желудь("X")}, {@code &Пластилин("X")}) либо это алиас с обработчиком
-   *       {@code ПриРазворачиванииАннотации}, который пробрасывает своё значение в
-   *       мета-аннотацию (killjoy {@code &Внедряемое("X")}/{@code &Компонент("X")}).</li>
+   *       ({@code &Желудь("X")}, {@code &Пластилин("X")});</li>
+   *   <li>декларативный перенос через {@code &ПсевдонимДля} (аналог Spring {@code @AliasFor}):
+   *       если параметр конструктора алиаса помечен
+   *       {@code &ПсевдонимДля(Аннотация = «роль», Параметр = «Значение»)}, его переданное
+   *       значение переносится в значение роли (а при {@code ПереноситьЗначениеПоУмолчанию = Истина}
+   *       — и значение по умолчанию параметра). Так разворачиваются killjoy-алиасы
+   *       {@code &Внедряемое("X")}/{@code &Компонент("X")}.</li>
    * </ol>
    * Для {@code &Контроллер("/маршрут")} значение «/маршрут» в имя желудя НЕ попадает —
-   * у неё нет обработчика разворачивания, поэтому имя берётся из мета {@code &Желудь}
-   * (отсутствует → имя класса). Динамическое вычисление имени в обработчике статика не
-   * исполняет (берётся статически зафиксированное значение), см. issue #3960.
-   * <p>
-   * Дополнительно учитывается декларативный перенос через {@code &ПсевдонимДля} (аналог
-   * Spring {@code @AliasFor}): если параметр конструктора алиаса помечен
-   * {@code &ПсевдонимДля(Аннотация = «роль», Параметр = «Значение»)}, его переданное
-   * значение переносится в значение роли (а при {@code ПереноситьЗначениеПоУмолчанию = Истина} —
-   * и значение по умолчанию параметра).
+   * параметр не помечен {@code &ПсевдонимДля}, поэтому имя берётся из мета {@code &Желудь}
+   * (отсутствует → имя класса). Динамическое вычисление имени в {@code ПриРазворачиванииАннотации}
+   * статика не исполняет (берётся статически зафиксированное значение), см. issue #3960.
    */
   public List<String> roleValues(Annotation usage, String baseRole) {
     var values = new ArrayList<String>();
     collectFixedRoleValues(usage.getName(), baseRole, new HashSet<>(), values);
-    if (baseRole.equalsIgnoreCase(usage.getName()) || forwardsValue(usage.getName())) {
+    if (baseRole.equalsIgnoreCase(usage.getName())) {
       AutumnAnnotations.stringParameter(usage, AutumnAnnotations.VALUE_PARAMETER)
         .filter(value -> !value.isBlank())
         .ifPresent(values::add);
@@ -240,23 +235,6 @@ public class AutumnMetaAnnotationResolver {
         collectFixedRoleValues(meta.getName(), baseRole, visited, out);
       }
     });
-  }
-
-  /**
-   * Пробрасывает ли алиас своё значение в мета-аннотацию через
-   * {@code ПриРазворачиванииАннотации} (как killjoy {@code &Внедряемое}/{@code &Компонент}).
-   * Статический признак — наличие у класса-определения такого метода-обработчика.
-   */
-  private boolean forwardsValue(String annotationName) {
-    return annotationRepository.findByName(annotationName)
-      .map(AnnotationSymbol::getOwner)
-      .map(AutumnMetaAnnotationResolver::hasExpansionHandler)
-      .orElse(false);
-  }
-
-  private static boolean hasExpansionHandler(DocumentContext document) {
-    return document.getSymbolTree().getMethods().stream()
-      .anyMatch(method -> EXPANSION_HANDLER.equalsIgnoreCase(method.getName()));
   }
 
   private Optional<MethodSymbol> definitionConstructor(String annotationName) {
