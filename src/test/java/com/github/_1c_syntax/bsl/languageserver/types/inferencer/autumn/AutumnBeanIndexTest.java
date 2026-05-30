@@ -235,12 +235,15 @@ class AutumnBeanIndexTest {
 
   @Test
   void skipsFactoryWhenTypeIsExplicitlyBlank() {
-    // given: явный Тип="" — в autumn Тип("") это ошибка, валидного типа нет
+    // given: явный Тип="" — в autumn Тип("") это ошибка, валидного типа нет. Резолв имени
+    // метода застаблен в тип: если бы код ошибочно фолбэчил пустой Тип на имя метода,
+    // желудь бы зарегистрировался — тест это поймает.
+    when(typeRegistry.resolve("СоздатьХлеб")).thenReturn(Optional.of(new TypeRef(TypeKind.USER, "Хлеб")));
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
       method(oak()), namedMethod("СоздатьХлеб", factory("Хлеб", "")));
     init();
 
-    // when / then: желудь не регистрируется (пустой тип не резолвится)
+    // when / then: желудь не регистрируется (пустой Тип не резолвится в тип)
     assertThat(beanIndex.resolve("Хлеб").isEmpty()).isTrue();
   }
 
