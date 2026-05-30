@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
@@ -147,6 +148,12 @@ public class AutumnMetaAnnotationResolver {
    * у неё нет обработчика разворачивания, поэтому имя берётся из мета {@code &Желудь}
    * (отсутствует → имя класса). Динамическое вычисление имени в обработчике статика не
    * исполняет (берётся статически зафиксированное значение), см. issue #3960.
+   * <p>
+   * Дополнительно учитывается декларативный перенос через {@code &ПсевдонимДля} (аналог
+   * Spring {@code @AliasFor}): если параметр конструктора алиаса помечен
+   * {@code &ПсевдонимДля(Аннотация = «роль», Параметр = «Значение»)}, его переданное
+   * значение переносится в значение роли (а при {@code ПереноситьЗначениеПоУмолчанию = Истина} —
+   * и значение по умолчанию параметра).
    */
   public List<String> roleValues(Annotation usage, String baseRole) {
     var values = new ArrayList<String>();
@@ -156,7 +163,63 @@ public class AutumnMetaAnnotationResolver {
         .filter(value -> !value.isBlank())
         .ifPresent(values::add);
     }
+    collectAliasedRoleValues(usage, baseRole, values);
     return values;
+  }
+
+  /** Значения, проброшенные в значение роли декларативно через {@code &ПсевдонимДля}. */
+  private void collectAliasedRoleValues(Annotation usage, String baseRole, List<String> out) {
+    definitionConstructor(usage.getName()).ifPresent(definition -> {
+      for (var parameter : definition.getParameters()) {
+        AutumnAnnotations.find(parameter.getAnnotations(), AutumnAnnotations.ALIAS_FOR)
+          .filter(alias -> aliasTargetsRoleValue(alias, baseRole))
+          .flatMap(alias -> aliasedValue(usage, parameter, alias))
+          .ifPresent(out::add);
+      }
+    });
+  }
+
+  /** Нацелен ли {@code &ПсевдонимДля} на параметр {@code Значение} аннотации, разворачивающейся в роль. */
+  private boolean aliasTargetsRoleValue(Annotation alias, String baseRole) {
+    var targetParameter = AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TARGET_PARAMETER);
+    if (!targetParameter.filter(AutumnAnnotations.VALUE_PARAMETER::equalsIgnoreCase).isPresent()) {
+      return false;
+    }
+    return AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TARGET_ANNOTATION)
+      .filter(target -> isRole(target, baseRole))
+      .isPresent();
+  }
+
+  /** Переносимое значение параметра-псевдонима: переданное явно либо значение по умолчанию (при опт-ин). */
+  private static Optional<String> aliasedValue(Annotation usage, ParameterDefinition parameter, Annotation alias) {
+    var passed = AutumnAnnotations.stringParameter(usage, parameter.getName())
+      .filter(value -> !value.isBlank());
+    if (passed.isPresent()) {
+      return passed;
+    }
+    if (transfersDefault(alias)) {
+      return defaultStringValue(parameter).filter(value -> !value.isBlank());
+    }
+    return Optional.empty();
+  }
+
+  private static boolean transfersDefault(Annotation alias) {
+    return AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TRANSFER_DEFAULT)
+      .filter(AutumnAnnotations.TRUE_LITERAL::equalsIgnoreCase)
+      .isPresent();
+  }
+
+  /** Строковое значение по умолчанию параметра (со снятием обрамляющих кавычек), если оно строковое. */
+  private static Optional<String> defaultStringValue(ParameterDefinition parameter) {
+    var defaultValue = parameter.getDefaultValue();
+    if (defaultValue.type() != ParameterDefinition.ParameterType.STRING) {
+      return Optional.empty();
+    }
+    var text = defaultValue.value();
+    if (text.length() >= 2 && text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') {
+      text = text.substring(1, text.length() - 1).replace("\"\"", "\"");
+    }
+    return Optional.of(text);
   }
 
   /** Статически зафиксированные на аннотациях роли значения в цепочке определения алиаса. */

@@ -249,6 +249,44 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void infersBeanTypeForCompositeAliasWithExplicitValue() {
+    // given: &ВнедрениеКомпозит("Логгер") — композит-алиас &Пластилин, чей параметр
+    // помечен &ПсевдонимДля(Аннотация="Пластилин", Параметр="Значение"). Переданное
+    // "Логгер" декларативно переносится в имя желудя.
+
+    // when
+    var types = typeService.findTypes(variable("КомпозитПоИмени"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Логгер");
+  }
+
+  @Test
+  void infersBeanTypeForCompositeAliasTransferringDefaultValue() {
+    // given: &ВнедрениеПоУмолчанию без значения; псевдоним помечен
+    // ПереноситьЗначениеПоУмолчанию = Истина, значение по умолчанию "Логгер".
+
+    // when
+    var types = typeService.findTypes(variable("КомпозитПоУмолчанию"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Логгер");
+  }
+
+  @Test
+  void doesNotTransferAliasDefaultValueWithoutOptIn() {
+    // given: &ВнедрениеБезПереноса без значения; ПереноситьЗначениеПоУмолчанию не задан
+    // (Ложь), значение по умолчанию "Логгер" в &Пластилин НЕ переносится — имя желудя
+    // падает на имя переменной "КомпозитБезПереноса", желудя с таким именем нет.
+
+    // when
+    var types = typeService.findTypes(variable("КомпозитБезПереноса"));
+
+    // then
+    assertThat(types.isEmpty()).isTrue();
+  }
+
+  @Test
   void injectedParameterResolvesAtUsageAndFlowsIntoField() {
     // given: потребитель внедряет желудь через параметр конструктора и присваивает его полю.
     // Документ грузится со ссылками (как при открытии в редакторе) — без ручного рефилла.
