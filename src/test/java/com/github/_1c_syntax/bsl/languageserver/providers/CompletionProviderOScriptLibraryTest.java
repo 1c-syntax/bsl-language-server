@@ -261,6 +261,83 @@ class CompletionProviderOScriptLibraryTest extends AbstractServerContextAwareTes
       .contains("ПолучитьСтроку", "СтатусМодуля");
   }
 
+  @Test
+  void noDotCompletionAfterNovyiSurfacesSamePackageClassWithoutUseDirective() {
+    // given
+    initLib();
+    // редактируется файл, который сам принадлежит библиотеке mylib; #Использовать нет
+    var moduleUri = Path.of("src/test/resources/oscript-libraries/mylib/src/MyModule.os")
+      .toAbsolutePath().toUri();
+    var content = "А = Новый MyCl";
+    var dc = TestUtils.getDocumentContext(moduleUri, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var items = completionProvider.getCompletion(dc, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("класс-сосед по тому же корню библиотеки виден после `Новый` без #Использовать")
+      .filteredOn(it -> "MyClass".equals(it.getLabel()))
+      .singleElement()
+      .extracting(CompletionItem::getKind)
+      .isEqualTo(CompletionItemKind.Class);
+  }
+
+  @Test
+  void noDotCompletionSurfacesSamePackageModuleWithoutUseDirective() {
+    // given
+    initLib();
+    var classUri = Path.of("src/test/resources/oscript-libraries/mylib/src/MyClass.os")
+      .toAbsolutePath().toUri();
+    var content = "MyMod";
+    var dc = TestUtils.getDocumentContext(classUri, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var items = completionProvider.getCompletion(dc, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("модуль-сосед по тому же корню библиотеки виден без #Использовать")
+      .filteredOn(it -> "MyModule".equals(it.getLabel()))
+      .singleElement()
+      .extracting(CompletionItem::getKind)
+      .isEqualTo(CompletionItemKind.Module);
+  }
+
+  @Test
+  void noDotCompletionAfterNovyiSurfacesImplicitSamePackageClassWithoutUseDirective() {
+    // given
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/implicit-test").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+    // редактируется публичный класс библиотеки; AutoFound — implicit-сосед,
+    // флаг показа implicit выключен (default) — но из своего пакета он виден
+    var publicUri = fixtureRoot.resolve("src/PublicHello.os").toUri();
+    var content = "А = Новый AutoF";
+    var dc = TestUtils.getDocumentContext(publicUri, content, context);
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(dc.getUri().toString()));
+    params.setPosition(new Position(0, content.length()));
+
+    // when
+    var items = completionProvider.getCompletion(dc, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("implicit-класс-сосед виден после `Новый` из своего пакета даже при выключенном флаге")
+      .extracting(CompletionItem::getLabel)
+      .contains("AutoFound");
+  }
+
   private void initLib() {
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
     initServerContext(fixtureRoot, false);
