@@ -124,12 +124,11 @@ public class AutumnComponentInferencer {
    * задаётся только по имени (позиционно можно лишь {@code Значение}).
    */
   private String collectionType(Annotation injection) {
-    // Пустой Тип трактуем как обычное внедрение (BEAN_TYPE), а не коллекцию. В autumn
-    // явный Тип="" — ошибка (не «Желудь» и не коллекция), корректного поведения нет,
-    // поэтому выбран мягкий вариант: пустое (как и отсутствие) Тип → внедрение по имени.
+    // Как в autumn: Тип НЕ передан → «Желудь» (обычное внедрение, BEAN_TYPE); переданное
+    // значение — как есть. Явный Тип="" в autumn — ошибка (не «Желудь» и не коллекция),
+    // поэтому тип не выводится: пустое имя коллекции не резолвится → TypeSet.EMPTY.
     return metaAnnotationResolver
       .roleParameterValues(injection, AutumnAnnotations.INJECTION, AutumnAnnotations.TYPE_PARAMETER).stream()
-      .filter(type -> !type.isBlank())
       .findFirst()
       .orElse(AutumnAnnotations.BEAN_TYPE);
   }

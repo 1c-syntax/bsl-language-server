@@ -165,17 +165,16 @@ class AutumnComponentInferencerTest {
   }
 
   @Test
-  void fallsBackToBeanNameWhenTypeIsBlank() {
-    // given
-    var beanRef = new TypeRef(TypeKind.USER, "ИмяЖелудя");
-    when(beanIndex.resolve("ИмяЖелудя")).thenReturn(TypeSet.of(beanRef));
+  void returnsEmptyWhenTypeIsExplicitlyBlank() {
+    // given: явный Тип="" — в autumn это ошибка (не «Желудь» и не коллекция), валидного
+    // типа нет, поэтому и bsl-ls тип не выводит
     var annotations = List.of(plasticine(named("Значение", "ИмяЖелудя"), named("Тип", "")));
 
     // when
     var types = inferencer.inferInjectedType(annotations, "Поле", FILE_TYPE);
 
     // then
-    assertThat(types.refs()).containsExactly(beanRef);
+    assertThat(types.isEmpty()).isTrue();
   }
 
   @Test
