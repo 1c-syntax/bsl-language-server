@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.InlayHint;
@@ -32,24 +34,30 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class SourceDefinedMethodCallInlayHintSupplierTest {
+class SourceDefinedMethodCallInlayHintSupplierTest extends AbstractServerContextAwareTest {
 
   private final static String FILE_PATH = "./src/test/resources/inlayhints/SourceDefinedMethodCallInlayHintSupplier.bsl";
+
+  private static final String CONSTRUCTOR_FIXTURE_DIR =
+    "src/test/resources/oscript-libraries/constructor-inlay-test";
+  private static final String CONSTRUCTOR_CALLER_PATH = CONSTRUCTOR_FIXTURE_DIR + "/src/Классы/Caller.os";
 
   @Autowired
   private SourceDefinedMethodCallInlayHintSupplier supplier;
 
   @Autowired
   private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private OScriptLibraryIndex oScriptLibraryIndex;
 
   @Test
   void testDefaultInlayHints() {
@@ -132,6 +140,35 @@ class SourceDefinedMethodCallInlayHintSupplierTest {
         assertThat(inlayHint.getPaddingRight()).isTrue();
         assertThat(inlayHint.getPaddingLeft()).isNull();
         assertThat(inlayHint.getTooltip().getRight().getValue()).isEqualTo("* **Amount**: ");
+      })
+    ;
+  }
+  @Test
+  void testConstructorCallInlayHints() {
+
+    // given
+    initServerContext(Path.of(CONSTRUCTOR_FIXTURE_DIR).toAbsolutePath());
+    oScriptLibraryIndex.reindex(context);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(CONSTRUCTOR_CALLER_PATH, context);
+
+    var textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var range = documentContext.getSymbolTree().getMethods().getFirst().getRange();
+    var params = new InlayHintParams(textDocumentIdentifier, range);
+
+    // when
+    List<InlayHint> inlayHints = supplier.getInlayHints(documentContext, params);
+
+    // then
+    assertThat(inlayHints)
+      .hasSize(2)
+      .anySatisfy(inlayHint -> {
+        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("Имя:"));
+        assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
+      })
+      .anySatisfy(inlayHint -> {
+        assertThat(inlayHint.getLabel()).isEqualTo(Either.forLeft("Значение:"));
+        assertThat(inlayHint.getKind()).isEqualTo(InlayHintKind.Parameter);
       })
     ;
   }

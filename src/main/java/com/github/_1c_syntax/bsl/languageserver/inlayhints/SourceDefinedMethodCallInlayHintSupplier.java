@@ -174,6 +174,11 @@ public class SourceDefinedMethodCallInlayHintSupplier extends AbstractMethodCall
       return selectionRange.equals(Ranges.create(methodCallContext.methodName()));
     } else if (doCallParent instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
       return selectionRange.equals(Ranges.create(globalMethodCallContext.methodName()));
+    } else if (doCallParent instanceof BSLParser.NewExpressionContext newExpressionContext) {
+      var typeName = newExpressionContext.typeName();
+      return typeName != null
+        && typeName.IDENTIFIER() != null
+        && selectionRange.equals(Ranges.create(typeName.IDENTIFIER()));
     } else {
       return false;
     }
