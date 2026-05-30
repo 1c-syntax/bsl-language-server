@@ -2563,6 +2563,24 @@
       ]
     },
     {
+      "name": "НачалоНедели",
+      "aliases": [
+        "BegOfWeek"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
       "name": "НачалоМесяца",
       "aliases": [
         "BegOfMonth"
@@ -2656,6 +2674,24 @@
       "name": "КонецГода",
       "aliases": [
         "EndOfYear"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецНедели",
+      "aliases": [
+        "EndOfWeek"
       ],
       "returnType": "Дата",
       "signatures": [
