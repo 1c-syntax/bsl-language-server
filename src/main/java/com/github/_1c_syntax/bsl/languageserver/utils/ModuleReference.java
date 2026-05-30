@@ -181,9 +181,31 @@ public class ModuleReference {
     String moduleName,
     ParsedAccessors parsedAccessors
   ) {
-    return complexId.modifier().stream()
-      .flatMap(modifier -> extractMethodNameFromModifier(modifier).stream())
-      .anyMatch(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors));
+    return getMatchingTerminalModifier(complexId, moduleName, parsedAccessors).isPresent();
+  }
+
+  /**
+   * Возвращает модификатор с вызовом метода-аксессора (например, {@code .ОбщийМодуль("Имя")}),
+   * только если он является последним в цепочке.
+   * <p>
+   * Если после вызова аксессора есть другие обращения (например,
+   * {@code ОбщегоНазначения.ОбщийМодуль("Имя").Метод()}), то результатом выражения является
+   * значение, возвращённое методом {@code Метод()}, а не сам общий модуль, поэтому такое
+   * выражение не считается ссылкой на общий модуль.
+   */
+  private static Optional<BSLParser.ModifierContext> getMatchingTerminalModifier(
+    BSLParser.ComplexIdentifierContext complexId,
+    String moduleName,
+    ParsedAccessors parsedAccessors
+  ) {
+    var modifiers = complexId.modifier();
+    if (modifiers.isEmpty()) {
+      return Optional.empty();
+    }
+    var lastModifier = modifiers.get(modifiers.size() - 1);
+    return extractMethodNameFromModifier(lastModifier)
+      .filter(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors))
+      .map(methodName -> lastModifier);
   }
 
   private static Optional<String> extractMethodNameFromModifier(BSLParser.ModifierContext modifier) {
@@ -228,11 +250,7 @@ public class ModuleReference {
     String moduleName,
     ParsedAccessors parsedAccessors
   ) {
-    return complexId.modifier().stream()
-      .filter(modifier -> extractMethodNameFromModifier(modifier)
-        .filter(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors))
-        .isPresent())
-      .findFirst()
+    return getMatchingTerminalModifier(complexId, moduleName, parsedAccessors)
       .flatMap(modifier -> Optional.ofNullable(modifier.accessCall())
         .map(BSLParser.AccessCallContext::methodCall)
         .map(BSLParser.MethodCallContext::doCall)
@@ -243,6 +261,12 @@ public class ModuleReference {
     BSLParser.ComplexIdentifierContext complexId,
     ParsedAccessors parsedAccessors
   ) {
+    // Если после вызова глобального метода есть обращения (например, ОбщийМодуль("Имя").Метод()),
+    // то результатом выражения является значение метода, а не сам общий модуль.
+    if (!complexId.modifier().isEmpty()) {
+      return Optional.empty();
+    }
+
     var globalMethodCall = complexId.globalMethodCall();
     if (globalMethodCall == null || globalMethodCall.methodName() == null) {
       return Optional.empty();

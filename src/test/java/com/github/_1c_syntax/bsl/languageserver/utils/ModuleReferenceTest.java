@@ -100,6 +100,30 @@ class ModuleReferenceTest {
   }
 
   @Test
+  void testChainedCallAfterCommonModuleAccessorIsNotCommonModuleExpression() {
+    // ОбщегоНазначения.ОбщийМодуль("Имя").Метод() возвращает результат метода общего модуля,
+    // а не сам общий модуль, поэтому такое выражение не должно считаться ссылкой на общий модуль.
+    var code = """
+      Процедура Тест()
+        Значение = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль").НастройкиВитрины(Витрина);
+      КонецПроцедуры""";
+
+    var documentContext = TestUtils.getDocumentContext(code);
+    var ast = documentContext.getAst();
+
+    var assignments = new ArrayList<BSLParser.AssignmentContext>();
+    Trees.findAllRuleNodes(ast, BSLParser.RULE_assignment).forEach(node ->
+      assignments.add((BSLParser.AssignmentContext) node)
+    );
+
+    assertThat(assignments).hasSize(1);
+
+    var expression = assignments.getFirst().expression();
+    assertThat(ModuleReference.isCommonModuleExpression(expression, DEFAULT_ACCESSORS)).isFalse();
+    assertThat(ModuleReference.extractCommonModuleName(expression, DEFAULT_ACCESSORS)).isEmpty();
+  }
+
+  @Test
   void testParseAccessors() {
     var accessors = List.of(
       "ОбщийМодуль",

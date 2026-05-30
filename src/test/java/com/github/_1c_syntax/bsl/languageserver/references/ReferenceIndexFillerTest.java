@@ -329,6 +329,36 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void testChainedCallResultIsNotCommonModule() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleChainedResult.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Переменной присвоен результат метода общего модуля, а не сам модуль,
+    // поэтому вызов через переменную не должен индексироваться как метод общего модуля.
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProcFromTest = referenceIndex.getReferencesTo(procMethod.get()).stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    assertThat(referencesToProcFromTest).isEmpty();
+  }
+
+  @Test
   void testCommonModuleVariableReassignment() throws IOException {
     initServerContext(PATH_TO_METADATA);
 
