@@ -47,7 +47,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -293,20 +292,20 @@ public class AutumnBeanIndex {
   private void registerFactory(MethodSymbol method, URI uri) {
     var annotations = method.getAnnotations();
     metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.FACTORY).ifPresent(factory -> {
-      var name = AutumnAnnotations.stringParameter(factory, AutumnAnnotations.VALUE_PARAMETER)
-        .filter(value -> !value.isBlank())
+      // Как в autumn (ФабрикаЖелудей.ПрочитатьИмяЖелудя/ПрочитатьТипЖелудя): переданные
+      // Значение/Тип берутся как есть, при их отсутствии — имя метода. Тип резолвится по
+      // имени; пустой/неизвестный тип не резолвится → желудь не регистрируется. Спец-обработки
+      // Тип="Желудь" у &Завязь нет (это семантика &Пластилин).
+      var name = metaAnnotationResolver.roleValues(factory, AutumnAnnotations.FACTORY).stream()
+        .findFirst()
         .orElse(method.getName());
-      factoryBeanType(factory, name)
+      var typeName = metaAnnotationResolver
+        .roleParameterValues(factory, AutumnAnnotations.FACTORY, AutumnAnnotations.TYPE_PARAMETER).stream()
+        .findFirst()
+        .orElse(method.getName());
+      typeRegistry.resolve(typeName)
         .ifPresent(beanType -> register(annotations, name, beanType, uri));
     });
-  }
-
-  private Optional<TypeRef> factoryBeanType(Annotation factory, String beanName) {
-    // Параметр Тип задаётся только по имени (позиционно можно лишь Значение).
-    return AutumnAnnotations.stringParameter(factory, AutumnAnnotations.TYPE_PARAMETER)
-      .filter(type -> !type.isBlank() && !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(type))
-      .or(() -> Optional.of(beanName))
-      .flatMap(typeRegistry::resolve);
   }
 
   private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri) {
