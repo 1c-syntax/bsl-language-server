@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolDescription;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,7 @@ public record MemberDescriptor(
   BilingualString bilingualDescription,
   TypeSet returnTypes,
   List<SignatureDescriptor> signatures,
-  Symbol sourceSymbol,
+  @Nullable Symbol sourceSymbol,
   boolean generic,
   PlatformMetadata metadata,
   boolean async
@@ -80,7 +81,7 @@ public record MemberDescriptor(
 
   /** Compat-конструктор без {@code async} (async = false). */
   public MemberDescriptor(BilingualString bilingualName, MemberKind kind, BilingualString bilingualDescription,
-                          TypeSet returnTypes, List<SignatureDescriptor> signatures, Symbol sourceSymbol,
+                          TypeSet returnTypes, List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata) {
     this(bilingualName, kind, bilingualDescription, returnTypes, signatures, sourceSymbol,
       generic, metadata, false);
@@ -88,7 +89,7 @@ public record MemberDescriptor(
 
   /** Compat-конструктор: одноязычные {@code name}/{@code description}. */
   public MemberDescriptor(String name, MemberKind kind, String description, TypeSet returnTypes,
-                          List<SignatureDescriptor> signatures, Symbol sourceSymbol,
+                          List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata) {
     this(BilingualString.of(name), kind, BilingualString.of(description), returnTypes,
       signatures, sourceSymbol, generic, metadata);
@@ -96,7 +97,7 @@ public record MemberDescriptor(
 
   /** Compat-конструктор: одноязычное описание + двуязычное имя. */
   public MemberDescriptor(String name, MemberKind kind, String description, TypeSet returnTypes,
-                          List<SignatureDescriptor> signatures, Symbol sourceSymbol,
+                          List<SignatureDescriptor> signatures, @Nullable Symbol sourceSymbol,
                           boolean generic, PlatformMetadata metadata,
                           BilingualString bilingualName) {
     this(bilingualName == null || bilingualName.isEmpty() ? BilingualString.of(name) : bilingualName,
@@ -217,7 +218,8 @@ public record MemberDescriptor(
         if (specializedReturn == sig.returnTypes()) {
           rebuilt.add(sig);
         } else {
-          rebuilt.add(new SignatureDescriptor(sig.parameters(), specializedReturn, sig.description()));
+          rebuilt.add(new SignatureDescriptor(sig.parameters(), specializedReturn,
+            sig.bilingualDescription()));
           signaturesChanged = true;
         }
       }

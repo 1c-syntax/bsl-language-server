@@ -24,11 +24,15 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -247,5 +251,65 @@ class BuiltinPlatformTypesProviderTest {
 
     // then
     assertThat(numberDecl.constructors()).isEmpty();
+  }
+
+  @Test
+  void parameterTypesAreLoadedFromBuiltinJson() {
+    // given
+    var structure = bslType("Структура");
+
+    // when — у метода Вставить(Ключ, Значение) параметры несут типы из HBK
+    var insert = member(structure, "Вставить");
+    var firstParam = insert.signatures().get(0).parameters().get(0);
+
+    // then
+    assertThat(firstParam.name()).isEqualTo("Ключ");
+    assertThat(typeNames(firstParam.types())).containsExactly("Строка");
+  }
+
+  @Test
+  void unionReturnTypesAreLoadedFromBuiltinJson() {
+    // given
+    var table = bslType("ТаблицаЗначений");
+
+    // when — Найти возвращает СтрокаТаблицыЗначений либо Неопределено
+    var find = member(table, "Найти");
+
+    // then
+    assertThat(typeNames(find.returnTypes()))
+      .containsExactlyInAnyOrder("СтрокаТаблицыЗначений", "Неопределено");
+  }
+
+  @Test
+  void constructorsWithParameterTypesAreEnrichedFromBuiltinJson() {
+    // given
+    var structure = bslType("Структура");
+
+    // when / then — конструкторы дозаполнены из HBK и несут типы параметров
+    assertThat(structure.constructors()).isNotEmpty();
+    var anyParamWithType = structure.constructors().stream()
+      .flatMap(c -> c.parameters().stream())
+      .anyMatch(p -> !p.types().isEmpty());
+    assertThat(anyParamWithType).isTrue();
+  }
+
+  private static TypePackProvider.TypeDecl bslType(String name) {
+    return BuiltinPlatformTypesProvider.loadFromResource(
+        "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json")
+      .stream()
+      .filter(td -> name.equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  private static MemberDescriptor member(TypePackProvider.TypeDecl typeDecl, String name) {
+    return typeDecl.members().stream()
+      .filter(m -> m.matches(name))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  private static List<String> typeNames(TypeSet types) {
+    return types.refs().stream().map(TypeRef::qualifiedName).toList();
   }
 }
