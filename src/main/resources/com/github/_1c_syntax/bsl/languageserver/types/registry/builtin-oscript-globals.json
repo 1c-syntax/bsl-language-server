@@ -3342,6 +3342,7 @@
       "aliases": [
         "GetBinaryDataBufferFromString"
       ],
+      "returnType": "БуферДвоичныхДанных",
       "signatures": [
         {
           "parameters": [
@@ -3360,7 +3361,8 @@
               "type": "Произвольный",
               "description": "Определяет, будет ли добавлена метка порядка байт (BOM) кодировки текста в начало данных."
             }
-          ]
+          ],
+          "returnType": "БуферДвоичныхДанных"
         }
       ],
       "description": "Преобразует строку в буфер двоичных данных с учетом кодировки текста."
@@ -3370,6 +3372,7 @@
       "aliases": [
         "GetStringFromBinaryDataBuffer"
       ],
+      "returnType": "Строка",
       "signatures": [
         {
           "parameters": [
@@ -3383,7 +3386,8 @@
               "type": "Произвольный",
               "description": "Кодировка текста"
             }
-          ]
+          ],
+          "returnType": "Строка"
         }
       ],
       "description": "Преобразует буфер двоичных данных в строку с заданной кодировкой текста."
@@ -3393,6 +3397,7 @@
       "aliases": [
         "GetBinaryDataBufferFromBase64String"
       ],
+      "returnType": "БуферДвоичныхДанных",
       "signatures": [
         {
           "parameters": [
@@ -3401,7 +3406,8 @@
               "type": "Произвольный",
               "description": "Строка в формате Base64."
             }
-          ]
+          ],
+          "returnType": "БуферДвоичныхДанных"
         }
       ],
       "description": "Преобразует строку формата Base64 в буфер двоичных данных."
@@ -3411,6 +3417,7 @@
       "aliases": [
         "GetBase64StringFromBinaryDataBuffer"
       ],
+      "returnType": "Строка",
       "signatures": [
         {
           "parameters": [
@@ -3419,7 +3426,8 @@
               "type": "Произвольный",
               "description": "Буфер двоичных данных."
             }
-          ]
+          ],
+          "returnType": "Строка"
         }
       ],
       "description": "Преобразует буфер двоичных данных в строку формата Base64.\nПолученный текст разбивается на строки длиной 76 символов.\nВ качестве разделителя строк используется сочетание символов CR+LF."
@@ -3429,6 +3437,7 @@
       "aliases": [
         "GetBinaryDataFromBase64BinaryData"
       ],
+      "returnType": "ДвоичныеДанные",
       "signatures": [
         {
           "parameters": [
@@ -3437,7 +3446,8 @@
               "type": "Произвольный",
               "description": "Двоичные данные, закодированные по методу Base64."
             }
-          ]
+          ],
+          "returnType": "ДвоичныеДанные"
         }
       ],
       "description": "Преобразует двоичные данные из формата Base64 в ДвоичныеДанные."
@@ -3447,6 +3457,7 @@
       "aliases": [
         "GetBinaryDataBufferFromBase64BinaryDataBuffer"
       ],
+      "returnType": "БуферДвоичныхДанных",
       "signatures": [
         {
           "parameters": [
@@ -3455,7 +3466,8 @@
               "type": "Произвольный",
               "description": "Буфер двоичных данных."
             }
-          ]
+          ],
+          "returnType": "БуферДвоичныхДанных"
         }
       ],
       "description": "Преобразует буфер двоичных данных из формата Base64 в БуферДвоичныхДанных."
@@ -3465,6 +3477,7 @@
       "aliases": [
         "GetBase64BinaryDataFromBinaryData"
       ],
+      "returnType": "ДвоичныеДанные",
       "signatures": [
         {
           "parameters": [
@@ -3473,7 +3486,8 @@
               "type": "Произвольный",
               "description": "Двоичные данные."
             }
-          ]
+          ],
+          "returnType": "ДвоичныеДанные"
         }
       ],
       "description": "Преобразует двоичные данные в формат Base64.\nПолученный текст разбивается на строки длиной 76 символов.\nВ качестве разделителя строк используется сочетание символов CR+LF."
@@ -3483,6 +3497,7 @@
       "aliases": [
         "GetBase64BinaryDataBufferFromBinaryDataBuffer"
       ],
+      "returnType": "БуферДвоичныхДанных",
       "signatures": [
         {
           "parameters": [
@@ -3491,7 +3506,8 @@
               "type": "Произвольный",
               "description": "Буфер двоичных данных."
             }
-          ]
+          ],
+          "returnType": "БуферДвоичныхДанных"
         }
       ],
       "description": "Преобразует буфер двоичных данных в формат Base64.\nПолученный текст разбивается на строки длиной 76 символов.\nВ качестве разделителя строк используется сочетание символов CR+LF."
@@ -3501,6 +3517,7 @@
       "aliases": [
         "GetBinaryDataFromHexBinaryData"
       ],
+      "returnType": "ДвоичныеДанные",
       "signatures": [
         {
           "parameters": [
@@ -3509,7 +3526,8 @@
               "type": "Произвольный",
               "description": "Двоичные данные в формате Base 16 (Hex)."
             }
-          ]
+          ],
+          "returnType": "ДвоичныеДанные"
         }
       ],
       "description": "Преобразует двоичные данные из формата Base 16 (Hex) в ДвоичныеДанные."
@@ -3519,6 +3537,7 @@
       "aliases": [
         "GetBinaryDataBufferFromHexBinaryDataBuffer"
       ],
+      "returnType": "БуферДвоичныхДанных",
       "signatures": [
         {
           "parameters": [
@@ -3527,7 +3546,8 @@
               "type": "Произвольный",
               "description": "Буфер двоичных данных в формате Base 16 (Hex)."
             }
-          ]
+          ],
+          "returnType": "БуферДвоичныхДанных"
         }
       ],
       "description": "Преобразует буфер двоичных данных из формата Base 16 (Hex) в БуферДвоичныхДанных."
@@ -3537,6 +3557,7 @@
       "aliases": [
         "GetHexBinaryDataFromBinaryData"
       ],
+      "returnType": "ДвоичныеДанные",
       "signatures": [
         {
           "parameters": [
@@ -3545,7 +3566,8 @@
               "type": "Произвольный",
               "description": "Двоичные данные."
             }
-          ]
+          ],
+          "returnType": "ДвоичныеДанные"
         }
       ],
       "description": "Преобразует двоичные данные в формат Base 16 (Hex)."
@@ -3555,6 +3577,7 @@
       "aliases": [
         "GetHexBinaryDataBufferFromBinaryDataBuffer"
       ],
+      "returnType": "БуферДвоичныхДанных",
       "signatures": [
         {
           "parameters": [
@@ -3563,7 +3586,8 @@
               "type": "Произвольный",
               "description": "Буфер двоичных данных."
             }
-          ]
+          ],
+          "returnType": "БуферДвоичныхДанных"
         }
       ],
       "description": "Преобразует буфер двоичных данных в формат Base 16 (Hex)."
@@ -3573,9 +3597,11 @@
       "aliases": [
         "CurrentProcess"
       ],
+      "returnType": "Процесс",
       "signatures": [
         {
-          "parameters": []
+          "parameters": [],
+          "returnType": "Процесс"
         }
       ],
       "description": "Получает текущий процесс"
@@ -3607,7 +3633,8 @@
       "name": "Консоль",
       "aliases": [
         "Console"
-      ]
+      ],
+      "type": "Консоль"
     }
   ],
   "classes": [

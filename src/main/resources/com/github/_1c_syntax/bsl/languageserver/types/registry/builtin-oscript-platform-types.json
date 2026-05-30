@@ -3411,12 +3411,12 @@
       {
         "name": "ИмяЯдра",
         "kind": "PROPERTY",
-        "description": "Имя ядра ОС/"
+        "description": "Имя ядра ОС"
       },
       {
         "name": "KernelName",
         "kind": "PROPERTY",
-        "description": "Имя ядра ОС/"
+        "description": "Имя ядра ОС"
       },
       {
         "name": "ТипПлатформы",
@@ -27448,12 +27448,12 @@
       {
         "name": "Unique",
         "kind": "PROPERTY",
-        "description": "Ограничение идентичности по опредению уникальности"
+        "description": "Ограничение идентичности по определению уникальности"
       },
       {
         "name": "Уникальность",
         "kind": "PROPERTY",
-        "description": "Ограничение идентичности по опредению уникальности"
+        "description": "Ограничение идентичности по определению уникальности"
       }
     ],
     "exposedAsGlobal": true,
@@ -28667,6 +28667,7 @@
     "aliases": [
       "XMLSpace"
     ],
+    "exposedAsGlobal": true,
     "members": [
       {
         "name": "ПоУмолчанию",
@@ -28692,6 +28693,7 @@
     "aliases": [
       "XMLValidationType"
     ],
+    "exposedAsGlobal": true,
     "members": [
       {
         "name": "НетПроверки",
@@ -28725,6 +28727,7 @@
     "aliases": [
       "PlatformType"
     ],
+    "exposedAsGlobal": true,
     "members": [
       {
         "name": "Linux_x86",
