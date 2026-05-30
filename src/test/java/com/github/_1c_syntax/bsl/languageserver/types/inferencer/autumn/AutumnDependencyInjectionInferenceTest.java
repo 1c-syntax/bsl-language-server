@@ -287,6 +287,31 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void infersCollectionTypeFixedInMetaAnnotation() {
+    // given: &КоллекцияМассив = &Пластилин(Тип = "Массив") — параметр Тип зафиксирован в
+    // мета-аннотации (разворачивание работает не только для Значение).
+
+    // when
+    var types = typeService.findTypes(variable("КоллекцияЧерезФиксированныйТип"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Массив");
+  }
+
+  @Test
+  void infersCollectionTypeForwardedViaAliasFor() {
+    // given: &ВнедрениеКоллекции(ТипКоллекции = "Массив") — ТипКоллекции проброшен в
+    // &Пластилин.Тип через &ПсевдонимДля; имя параметра отличается от Тип, поэтому
+    // значение доходит именно через механизм псевдонимов.
+
+    // when
+    var types = typeService.findTypes(variable("КоллекцияЧерезПсевдоним"));
+
+    // then
+    assertThat(qualifiedNames(types)).containsExactly("Массив");
+  }
+
+  @Test
   void injectedParameterResolvesAtUsageAndFlowsIntoField() {
     // given: потребитель внедряет желудь через параметр конструктора и присваивает его полю.
     // Документ грузится со ссылками (как при открытии в редакторе) — без ручного рефилла.

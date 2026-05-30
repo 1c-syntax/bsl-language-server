@@ -277,6 +277,19 @@ class AutumnMetaAnnotationResolverTest {
   }
 
   @Test
+  void roleValuesExplicitEmptyValueSuppressesAliasedDefault() {
+    // given: опт-ин на перенос значения по умолчанию ("Логгер"), но значение передано явно пустым
+    registerComposite("КомпозитПоУмолчанию",
+      aliasParameter("Значение", "Пластилин", "Значение", true, "\"Логгер\""));
+
+    // when: &КомпозитПоУмолчанию("") — параметр передан (пустым)
+    var values = resolver.roleValues(withValue("КомпозитПоУмолчанию", ""), AutumnAnnotations.INJECTION);
+
+    // then: явная передача подавляет значение по умолчанию (как в движке); пустое — по имени члена
+    assertThat(values).isEmpty();
+  }
+
+  @Test
   void roleValuesIgnoresAliasedDefaultWithoutOptIn() {
     // given: псевдоним без переноса значения по умолчанию, значение по умолчанию "Логгер"
     registerComposite("КомпозитБезПереноса",
@@ -291,11 +304,33 @@ class AutumnMetaAnnotationResolverTest {
     // given: псевдоним нацелен на параметр Тип (не Значение)
     registerComposite("КомпозитТип", aliasParameter("Тип", "Пластилин", "Тип", false, null));
 
-    // when / then: в значение роли не переносится
+    // when / then: запрос значения роли (Значение) псевдоним на Тип не подхватывает
     assertThat(resolver.roleValues(withValue("КомпозитТип", "Массив"), AutumnAnnotations.INJECTION)).isEmpty();
   }
 
+  @Test
+  void roleParameterValuesForwardsAliasedNonValueParameter() {
+    // given: параметр ТипКоллекции помечен &ПсевдонимДля(Пластилин, Тип) — имя отличается от Тип
+    registerComposite("КомпозитКолл", aliasParameter("ТипКоллекции", "Пластилин", "Тип", false, null));
+    var usage = namedAnnotation("КомпозитКолл", "ТипКоллекции", "Массив");
+
+    // when / then: запрос параметра Тип роли подхватывает проброшенное значение...
+    assertThat(resolver.roleParameterValues(usage, AutumnAnnotations.INJECTION, AutumnAnnotations.TYPE_PARAMETER))
+      .containsExactly("Массив");
+    // ...а в Значение оно не попадает
+    assertThat(resolver.roleValues(usage, AutumnAnnotations.INJECTION)).isEmpty();
+  }
+
   // --- helpers ---------------------------------------------------------------
+
+  /** Аннотация-использование с одним именованным параметром. */
+  private static Annotation namedAnnotation(String name, String parameterName, String value) {
+    return Annotation.builder()
+      .name(name)
+      .kind(AnnotationKind.CUSTOM)
+      .parameters(List.of(new AnnotationParameterDefinition(parameterName, Either.forLeft(value), true)))
+      .build();
+  }
 
   /** Зарегистрировать композитную аннотацию с параметрами конструктора (для &ПсевдонимДля). */
   private void registerComposite(String customName, ParameterDefinition... parameters) {
