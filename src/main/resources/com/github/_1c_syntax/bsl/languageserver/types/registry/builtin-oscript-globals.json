@@ -372,7 +372,9 @@
       "name": "ConcatenateBinaryData",
       "description": "Устаревший алиас СоединитьДвоичныеДанные/ConcatBinaryData.",
       "deprecatedSinceVersion": "*",
-      "recommendedReplacements": ["СоединитьДвоичныеДанные"],
+      "recommendedReplacements": [
+        "СоединитьДвоичныеДанные"
+      ],
       "returnType": "ДвоичныеДанные",
       "signatures": [
         {
@@ -464,7 +466,8 @@
           ],
           "returnType": "Строка"
         }
-      ]
+      ],
+      "description": "Преобразует двоичные данные в строку с заданной кодировкой текста."
     },
     {
       "name": "ПолучитьДвоичныеДанныеИзBase64Строки",
@@ -502,7 +505,8 @@
           ],
           "returnType": "Строка"
         }
-      ]
+      ],
+      "description": "Преобразует двоичные данные в строку формата Base64.\nПолученный текст разбивается на строки длиной 76 символов.\nВ качестве разделителя строк используется сочетание символов CR+LF."
     },
     {
       "name": "ПолучитьДвоичныеДанныеИзHexСтроки",
@@ -1589,7 +1593,9 @@
       "name": "ProgramDirectory",
       "description": "Устаревший алиас КаталогПрограммы/BinDir.",
       "deprecatedSinceVersion": "*",
-      "recommendedReplacements": ["КаталогПрограммы"],
+      "recommendedReplacements": [
+        "КаталогПрограммы"
+      ],
       "returnType": "Строка",
       "signatures": [
         {
@@ -1757,7 +1763,8 @@
           ],
           "returnType": "Строка"
         }
-      ]
+      ],
+      "description": "Получает XML представление значения для помещения в текст элемента или значение атрибута XML."
     },
     {
       "name": "XMLЗначение",
@@ -1779,7 +1786,8 @@
           ],
           "returnType": "Произвольный"
         }
-      ]
+      ],
+      "description": "Выполняет преобразование из строки, полученной из текста элемента или значения атрибута XML,\nв значение в соответствии с указанным типом. Действие, обратное действию метода XMLСтрока"
     },
     {
       "name": "ЧасовойПояс",
@@ -2555,6 +2563,24 @@
       ]
     },
     {
+      "name": "НачалоНедели",
+      "aliases": [
+        "BegOfWeek"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
       "name": "НачалоМесяца",
       "aliases": [
         "BegOfMonth"
@@ -2648,6 +2674,24 @@
       "name": "КонецГода",
       "aliases": [
         "EndOfYear"
+      ],
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "Дата",
+              "type": "Дата"
+            }
+          ],
+          "returnType": "Дата"
+        }
+      ]
+    },
+    {
+      "name": "КонецНедели",
+      "aliases": [
+        "EndOfWeek"
       ],
       "returnType": "Дата",
       "signatures": [
@@ -3176,7 +3220,8 @@
           ],
           "returnType": "Строка"
         }
-      ]
+      ],
+      "description": "Подставляет параметры в строку по номеру"
     },
     {
       "name": "Булево",
@@ -3291,6 +3336,275 @@
           "returnType": "Тип"
         }
       ]
+    },
+    {
+      "name": "ПолучитьБуферДвоичныхДанныхИзСтроки",
+      "aliases": [
+        "GetBinaryDataBufferFromString"
+      ],
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "str",
+              "type": "Произвольный",
+              "description": "Строка, которую требуется преобразовать в БуферДвоичныхДанных."
+            },
+            {
+              "name": "encoding",
+              "type": "Произвольный",
+              "description": "Кодировка текста"
+            },
+            {
+              "name": "addBOM",
+              "type": "Произвольный",
+              "description": "Определяет, будет ли добавлена метка порядка байт (BOM) кодировки текста в начало данных."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ],
+      "description": "Преобразует строку в буфер двоичных данных с учетом кодировки текста."
+    },
+    {
+      "name": "ПолучитьСтрокуИзБуфераДвоичныхДанных",
+      "aliases": [
+        "GetStringFromBinaryDataBuffer"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "Произвольный",
+              "description": "Буфер двоичных данных, который требуется преобразовать в строку."
+            },
+            {
+              "name": "encoding",
+              "type": "Произвольный",
+              "description": "Кодировка текста"
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ],
+      "description": "Преобразует буфер двоичных данных в строку с заданной кодировкой текста."
+    },
+    {
+      "name": "ПолучитьБуферДвоичныхДанныхИзBase64Строки",
+      "aliases": [
+        "GetBinaryDataBufferFromBase64String"
+      ],
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "str",
+              "type": "Произвольный",
+              "description": "Строка в формате Base64."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ],
+      "description": "Преобразует строку формата Base64 в буфер двоичных данных."
+    },
+    {
+      "name": "ПолучитьBase64СтрокуИзБуфераДвоичныхДанных",
+      "aliases": [
+        "GetBase64StringFromBinaryDataBuffer"
+      ],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "Произвольный",
+              "description": "Буфер двоичных данных."
+            }
+          ],
+          "returnType": "Строка"
+        }
+      ],
+      "description": "Преобразует буфер двоичных данных в строку формата Base64.\nПолученный текст разбивается на строки длиной 76 символов.\nВ качестве разделителя строк используется сочетание символов CR+LF."
+    },
+    {
+      "name": "ПолучитьДвоичныеДанныеИзBase64ДвоичныхДанных",
+      "aliases": [
+        "GetBinaryDataFromBase64BinaryData"
+      ],
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "Произвольный",
+              "description": "Двоичные данные, закодированные по методу Base64."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ],
+      "description": "Преобразует двоичные данные из формата Base64 в ДвоичныеДанные."
+    },
+    {
+      "name": "ПолучитьБуферДвоичныхДанныхИзBase64БуфераДвоичныхДанных",
+      "aliases": [
+        "GetBinaryDataBufferFromBase64BinaryDataBuffer"
+      ],
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "Произвольный",
+              "description": "Буфер двоичных данных."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ],
+      "description": "Преобразует буфер двоичных данных из формата Base64 в БуферДвоичныхДанных."
+    },
+    {
+      "name": "ПолучитьBase64ДвоичныеДанныеИзДвоичныхДанных",
+      "aliases": [
+        "GetBase64BinaryDataFromBinaryData"
+      ],
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "Произвольный",
+              "description": "Двоичные данные."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ],
+      "description": "Преобразует двоичные данные в формат Base64.\nПолученный текст разбивается на строки длиной 76 символов.\nВ качестве разделителя строк используется сочетание символов CR+LF."
+    },
+    {
+      "name": "ПолучитьBase64БуферДвоичныхДанныхИзБуфераДвоичныхДанных",
+      "aliases": [
+        "GetBase64BinaryDataBufferFromBinaryDataBuffer"
+      ],
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "Произвольный",
+              "description": "Буфер двоичных данных."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ],
+      "description": "Преобразует буфер двоичных данных в формат Base64.\nПолученный текст разбивается на строки длиной 76 символов.\nВ качестве разделителя строк используется сочетание символов CR+LF."
+    },
+    {
+      "name": "ПолучитьДвоичныеДанныеИзHexДвоичныхДанных",
+      "aliases": [
+        "GetBinaryDataFromHexBinaryData"
+      ],
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "Произвольный",
+              "description": "Двоичные данные в формате Base 16 (Hex)."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ],
+      "description": "Преобразует двоичные данные из формата Base 16 (Hex) в ДвоичныеДанные."
+    },
+    {
+      "name": "ПолучитьБуферДвоичныхДанныхИзHexБуфераДвоичныхДанных",
+      "aliases": [
+        "GetBinaryDataBufferFromHexBinaryDataBuffer"
+      ],
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "Произвольный",
+              "description": "Буфер двоичных данных в формате Base 16 (Hex)."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ],
+      "description": "Преобразует буфер двоичных данных из формата Base 16 (Hex) в БуферДвоичныхДанных."
+    },
+    {
+      "name": "ПолучитьHexДвоичныеДанныеИзДвоичныхДанных",
+      "aliases": [
+        "GetHexBinaryDataFromBinaryData"
+      ],
+      "returnType": "ДвоичныеДанные",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "data",
+              "type": "Произвольный",
+              "description": "Двоичные данные."
+            }
+          ],
+          "returnType": "ДвоичныеДанные"
+        }
+      ],
+      "description": "Преобразует двоичные данные в формат Base 16 (Hex)."
+    },
+    {
+      "name": "ПолучитьHexБуферДвоичныхДанныхИзБуфераДвоичныхДанных",
+      "aliases": [
+        "GetHexBinaryDataBufferFromBinaryDataBuffer"
+      ],
+      "returnType": "БуферДвоичныхДанных",
+      "signatures": [
+        {
+          "parameters": [
+            {
+              "name": "buffer",
+              "type": "Произвольный",
+              "description": "Буфер двоичных данных."
+            }
+          ],
+          "returnType": "БуферДвоичныхДанных"
+        }
+      ],
+      "description": "Преобразует буфер двоичных данных в формат Base 16 (Hex)."
+    },
+    {
+      "name": "ТекущийПроцесс",
+      "aliases": [
+        "CurrentProcess"
+      ],
+      "returnType": "Процесс",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Процесс"
+        }
+      ],
+      "description": "Получает текущий процесс"
     }
   ],
   "variables": [
@@ -3314,6 +3628,14 @@
         "Chars"
       ],
       "description": "Содержит набор системных символов."
+    },
+    {
+      "name": "Консоль",
+      "aliases": [
+        "Console"
+      ],
+      "type": "Консоль",
+      "description": "Класс представляет собой инструмент доступа к системной консоли.\nПредназначен для низкоуровневого манипулирования выводом в консоль.\nПоддерживается регистрация обработчика для нажатия Ctrl+C.\nОбработчик регистрируется для события с именем CancelKeyPressed. Стоит учитывать, что обработчик вызывается\nв отдельном потоке и необходимо помнить о потокобезопасности общих данных."
     }
   ],
   "classes": [
@@ -3486,7 +3808,15 @@
     "ЧтениеXML",
     "ЧтениеZipФайла",
     "ЧтениеДанных",
-    "ЧтениеТекста"
+    "ЧтениеТекста",
+    "ПараметрыЧтенияXML",
+    "XmlReaderSettings",
+    "ПреобразованиеXSL",
+    "XSLTransform",
+    "ИзвлечениеДанныхJSON",
+    "JSONDataExtractor",
+    "СкомпилированныйФрагмент",
+    "CompiledCodeBlock"
   ],
   "keywords": []
 }

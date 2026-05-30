@@ -539,7 +539,28 @@
     "aliases": [
       "CallStackFramesCollection"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Количество",
+        "kind": "METHOD",
+        "description": "Возвращает количество кадров в стеке вызовов",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "Count",
+        "kind": "METHOD",
+        "description": "Возвращает количество кадров в стеке вызовов",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      }
+    ],
     "description": "Коллекция элементов стека вызовов. Доступен обход с помощью Для Каждого...Из Содержит объекты типа КадрСтекаВызовов"
   },
   {
@@ -592,7 +613,8 @@
             "parameters": [],
             "returnType": "Число"
           }
-        ]
+        ],
+        "description": "Получает количество элементов в массиве"
       },
       {
         "name": "Count",
@@ -603,7 +625,8 @@
             "parameters": [],
             "returnType": "Число"
           }
-        ]
+        ],
+        "description": "Получает количество элементов в массиве"
       },
       {
         "name": "Очистить",
@@ -612,7 +635,8 @@
           {
             "parameters": []
           }
-        ]
+        ],
+        "description": "Удаляет все элементы из массива"
       },
       {
         "name": "Clear",
@@ -621,7 +645,8 @@
           {
             "parameters": []
           }
-        ]
+        ],
+        "description": "Удаляет все элементы из массива"
       },
       {
         "name": "Добавить",
@@ -636,7 +661,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Добавляет элемент в конец массива"
       },
       {
         "name": "Add",
@@ -651,7 +677,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Добавляет элемент в конец массива"
       },
       {
         "name": "Вставить",
@@ -670,7 +697,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Вставляет значение в массив по указанному индексу"
       },
       {
         "name": "Insert",
@@ -689,7 +717,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Вставляет значение в массив по указанному индексу"
       },
       {
         "name": "Найти",
@@ -705,7 +734,8 @@
             ],
             "returnType": "Произвольный"
           }
-        ]
+        ],
+        "description": "Выполняет поиск элемента в массиве"
       },
       {
         "name": "Find",
@@ -721,7 +751,8 @@
             ],
             "returnType": "Произвольный"
           }
-        ]
+        ],
+        "description": "Выполняет поиск элемента в массиве"
       },
       {
         "name": "Удалить",
@@ -735,7 +766,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Удаляет значение из массива"
       },
       {
         "name": "Delete",
@@ -749,7 +781,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Удаляет значение из массива"
       },
       {
         "name": "ВГраница",
@@ -760,7 +793,8 @@
             "parameters": [],
             "returnType": "Число"
           }
-        ]
+        ],
+        "description": "Получает наибольший индекс элемента массива"
       },
       {
         "name": "UBound",
@@ -771,7 +805,8 @@
             "parameters": [],
             "returnType": "Число"
           }
-        ]
+        ],
+        "description": "Получает наибольший индекс элемента массива"
       },
       {
         "name": "Получить",
@@ -787,7 +822,8 @@
             ],
             "returnType": "Произвольный"
           }
-        ]
+        ],
+        "description": "Получает значение из массива по индексу"
       },
       {
         "name": "Get",
@@ -803,7 +839,8 @@
             ],
             "returnType": "Произвольный"
           }
-        ]
+        ],
+        "description": "Получает значение из массива по индексу"
       },
       {
         "name": "Установить",
@@ -821,7 +858,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Устанавливает значение в массиве по индексу"
       },
       {
         "name": "Set",
@@ -839,7 +877,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Устанавливает значение в массиве по индексу"
       }
     ],
     "constructors": [
@@ -1109,6 +1148,160 @@
             "parameters": []
           }
         ]
+      },
+      {
+        "name": "СброситьЦвет",
+        "kind": "METHOD",
+        "description": "Сбрасывает цвета консоли к их исходному состоянию",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ResetColor",
+        "kind": "METHOD",
+        "description": "Сбрасывает цвета консоли к их исходному состоянию",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ОткрытьСтандартныйПотокВвода",
+        "kind": "METHOD",
+        "description": "Получает системный поток ввода stdin",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "OpenStandardInput",
+        "kind": "METHOD",
+        "description": "Получает системный поток ввода stdin",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ОткрытьСтандартныйПотокОшибок",
+        "kind": "METHOD",
+        "description": "Получает системный поток вывода ошибок stderr",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "OpenStandardError",
+        "kind": "METHOD",
+        "description": "Получает системный поток вывода ошибок stderr",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "ОткрытьСтандартныйПотокВывода",
+        "kind": "METHOD",
+        "description": "Получает системный поток вывода stdout",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "OpenStandardOutput",
+        "kind": "METHOD",
+        "description": "Получает системный поток вывода stdout",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "УстановитьПотокВывода",
+        "kind": "METHOD",
+        "description": "Глобально переопределяет стандартный вывод и направляет в другой поток",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "target",
+                "type": "Произвольный",
+                "description": "Поток назначения"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "SetOutput",
+        "kind": "METHOD",
+        "description": "Глобально переопределяет стандартный вывод и направляет в другой поток",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "target",
+                "type": "Произвольный",
+                "description": "Поток назначения"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "УстановитьПотокОшибок",
+        "kind": "METHOD",
+        "description": "Глобально переопределяет стандартный поток ошибок и направляет в другой поток",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "target",
+                "type": "Произвольный",
+                "description": "Поток назначения"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "SetError",
+        "kind": "METHOD",
+        "description": "Глобально переопределяет стандартный поток ошибок и направляет в другой поток",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "target",
+                "type": "Произвольный",
+                "description": "Поток назначения"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "КодировкаВыходногоПотока",
+        "kind": "PROPERTY",
+        "description": "Возвращает или задает кодировку консоли, используемую при выводе данных."
+      },
+      {
+        "name": "OutputEncoding",
+        "kind": "PROPERTY",
+        "description": "Возвращает или задает кодировку консоли, используемую при выводе данных."
       }
     ],
     "description": "Класс представляет собой инструмент доступа к системной консоли. Предназначен для низкоуровнего манипулирования выводом в консоль. Конструктор удалён — обращайтесь к статическому глобалу `Консоль`.",
@@ -1211,7 +1404,9 @@
         "kind": "METHOD",
         "returnType": "Булево",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["Существует"],
+        "recommendedReplacements": [
+          "Существует"
+        ],
         "signatures": [
           {
             "parameters": [],
@@ -2112,7 +2307,8 @@
           {
             "parameters": []
           }
-        ]
+        ],
+        "description": "Завершить процесс и, опционально, все его дочерние процессы."
       },
       {
         "name": "Stop",
@@ -2121,7 +2317,16 @@
           {
             "parameters": []
           }
-        ]
+        ],
+        "description": "Завершить процесс и, опционально, все его дочерние процессы."
+      },
+      {
+        "name": "Имя",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Name",
+        "kind": "PROPERTY"
       }
     ],
     "description": "Позволяет управлять процессом операционной системы. Получать текст из стандартных потоков, проверять активность, pid, завершать процесс и т.п."
@@ -2471,6 +2676,38 @@
                 "name": "value",
                 "type": "Произвольный",
                 "description": "Значение свойства."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ИзвестныеТипы",
+        "kind": "METHOD",
+        "description": "Возвращает все известные типы",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "filter",
+                "type": "Произвольный",
+                "description": "Структура - Условия поиска. Ключ - имя колонки, значение - искомое значение "
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "KnownTypes",
+        "kind": "METHOD",
+        "description": "Возвращает все известные типы",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "filter",
+                "type": "Произвольный",
+                "description": "Структура - Условия поиска. Ключ - имя колонки, значение - искомое значение "
               }
             ]
           }
@@ -3041,7 +3278,9 @@
         "description": "Возвращает соответствие переменных среды. Ключом является имя переменной, а значением - значение переменной",
         "returnType": "Соответствие",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["ПеременныеСреды"],
+        "recommendedReplacements": [
+          "ПеременныеСреды"
+        ],
         "signatures": [
           {
             "parameters": [],
@@ -3055,7 +3294,9 @@
         "description": "Возвращает соответствие переменных среды. Ключом является имя переменной, а значением - значение переменной",
         "returnType": "Соответствие",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["EnvironmentVariables"],
+        "recommendedReplacements": [
+          "EnvironmentVariables"
+        ],
         "signatures": [
           {
             "parameters": [],
@@ -3068,7 +3309,9 @@
         "kind": "METHOD",
         "description": "Позволяет установить переменную среды.  Переменная устанавливается в области видимости процесса и очищается после его завершения.",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["УстановитьПеременнуюСреды"],
+        "recommendedReplacements": [
+          "УстановитьПеременнуюСреды"
+        ],
         "signatures": [
           {
             "parameters": [
@@ -3091,7 +3334,9 @@
         "kind": "METHOD",
         "description": "Позволяет установить переменную среды.  Переменная устанавливается в области видимости процесса и очищается после его завершения.",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["SetEnvironmentVariable"],
+        "recommendedReplacements": [
+          "SetEnvironmentVariable"
+        ],
         "signatures": [
           {
             "parameters": [
@@ -3115,7 +3360,9 @@
         "description": "Получить значение переменной среды.",
         "returnType": "Произвольный",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["ПолучитьПеременнуюСреды"],
+        "recommendedReplacements": [
+          "ПолучитьПеременнуюСреды"
+        ],
         "signatures": [
           {
             "parameters": [
@@ -3135,7 +3382,9 @@
         "description": "Получить значение переменной среды.",
         "returnType": "Произвольный",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["GetEnvironmentVariable"],
+        "recommendedReplacements": [
+          "GetEnvironmentVariable"
+        ],
         "signatures": [
           {
             "parameters": [
@@ -3148,6 +3397,36 @@
             "returnType": "Произвольный"
           }
         ]
+      },
+      {
+        "name": "ПолнаяКоманднаяСтрока",
+        "kind": "PROPERTY",
+        "description": "Полная командная строка выполняемого приложения, включая исполняемый файл и все аргументы командной строки."
+      },
+      {
+        "name": "FullCommandLine",
+        "kind": "PROPERTY",
+        "description": "Полная командная строка выполняемого приложения, включая исполняемый файл и все аргументы командной строки."
+      },
+      {
+        "name": "ИмяЯдра",
+        "kind": "PROPERTY",
+        "description": "Имя ядра ОС"
+      },
+      {
+        "name": "KernelName",
+        "kind": "PROPERTY",
+        "description": "Имя ядра ОС"
+      },
+      {
+        "name": "ТипПлатформы",
+        "kind": "PROPERTY",
+        "description": "Тип операционной системы, на которой выполняется сценарий"
+      },
+      {
+        "name": "PlatformType",
+        "kind": "PROPERTY",
+        "description": "Тип операционной системы, на которой выполняется сценарий"
       }
     ],
     "description": "Класс предоставляет информацию о системе",
@@ -16923,6 +17202,26 @@
             ]
           }
         ]
+      },
+      {
+        "name": "Очистить",
+        "kind": "METHOD",
+        "description": "Удаляет все колонки",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "Clear",
+        "kind": "METHOD",
+        "description": "Удаляет все колонки",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
       }
     ],
     "description": "Коллекция колонок таблицы значений"
@@ -18682,6 +18981,16 @@
             "parameters": []
           }
         ]
+      },
+      {
+        "name": "НеОткладывать",
+        "kind": "PROPERTY",
+        "description": "Флаг ожидания наполнения буфера при приеме/отправке данных. По умолчанию - Ложь"
+      },
+      {
+        "name": "NoDelay",
+        "kind": "PROPERTY",
+        "description": "Флаг ожидания наполнения буфера при приеме/отправке данных. По умолчанию - Ложь"
       }
     ],
     "description": "Соединение по протоколу TCP. Позволяет отправлять и принимать данные с использованием TCP сокета.",
@@ -18989,6 +19298,48 @@
                 "name": "JSONString",
                 "type": "Строка",
                 "description": "Строка, содержащая текст в формате JSON."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ОткрытьПоток",
+        "kind": "METHOD",
+        "description": "Устанавливает поток для чтения JSON данным объектом.\nЕсли перед вызовом данного метода уже производилось чтение JSON из другого файла, строки или потока,\nто чтение прекращается и объект инициализируется для чтения из указанного потока.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "streamContext",
+                "type": "Произвольный",
+                "description": "Поток для чтения текста JSON."
+              },
+              {
+                "name": "encoding",
+                "type": "Произвольный",
+                "description": "Позволяет задать кодировку входного потока."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "OpenStream",
+        "kind": "METHOD",
+        "description": "Устанавливает поток для чтения JSON данным объектом.\nЕсли перед вызовом данного метода уже производилось чтение JSON из другого файла, строки или потока,\nто чтение прекращается и объект инициализируется для чтения из указанного потока.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "streamContext",
+                "type": "Произвольный",
+                "description": "Поток для чтения текста JSON."
+              },
+              {
+                "name": "encoding",
+                "type": "Произвольный",
+                "description": "Позволяет задать кодировку входного потока."
               }
             ]
           }
@@ -20055,7 +20406,9 @@
         "kind": "METHOD",
         "description": "Установить тело запроса из объекта ДвоичныеДанные",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["УстановитьТелоИзДвоичныхДанных"],
+        "recommendedReplacements": [
+          "УстановитьТелоИзДвоичныхДанных"
+        ],
         "signatures": [
           {
             "parameters": [
@@ -20094,7 +20447,9 @@
         "kind": "METHOD",
         "returnType": "Произвольный",
         "deprecatedSinceVersion": "*",
-        "recommendedReplacements": ["ПолучитьТелоКакДвоичныеДанные"],
+        "recommendedReplacements": [
+          "ПолучитьТелоКакДвоичныеДанные"
+        ],
         "signatures": [
           {
             "parameters": [],
@@ -20521,7 +20876,7 @@
         ]
       },
       {
-        "name": "Password",
+        "name": "Port",
         "kind": "METHOD",
         "returnType": "Число",
         "signatures": [
@@ -20639,27 +20994,33 @@
     "members": [
       {
         "name": "ХешФункция",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Вид хеш-функции, определяющий способ вычисления хеш-суммы.\nТолько для чтения"
       },
       {
         "name": "HashFunction",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Вид хеш-функции, определяющий способ вычисления хеш-суммы.\nТолько для чтения"
       },
       {
         "name": "ХешСумма",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Текущее значение хеш-суммы. Только для чтения"
       },
       {
         "name": "HashSum",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Текущее значение хеш-суммы. Только для чтения"
       },
       {
         "name": "ХешСуммаСтрокой",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Нестандартное расширение!\nСтроковое представление текущего значения хеш-суммы. Только для чтения"
       },
       {
         "name": "HashSumOfString",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Нестандартное расширение!\nСтроковое представление текущего значения хеш-суммы. Только для чтения"
       },
       {
         "name": "Добавить",
@@ -20678,7 +21039,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Добавляет данные и  обновляет хеш-сумму"
       },
       {
         "name": "Append",
@@ -20697,7 +21059,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Добавляет данные и  обновляет хеш-сумму"
       },
       {
         "name": "ДобавитьФайл",
@@ -20711,7 +21074,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Добавляет двоичные данные из файла и обновляет хеш-сумму"
       },
       {
         "name": "AppendFile",
@@ -20725,7 +21089,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Добавляет двоичные данные из файла и обновляет хеш-сумму"
       },
       {
         "name": "Очистить",
@@ -21828,7 +22193,8 @@
             "parameters": [],
             "returnType": "Число"
           }
-        ]
+        ],
+        "description": "Размер двоичных данных в байтах."
       },
       {
         "name": "Size",
@@ -21839,7 +22205,8 @@
             "parameters": [],
             "returnType": "Число"
           }
-        ]
+        ],
+        "description": "Размер двоичных данных в байтах."
       },
       {
         "name": "Записать",
@@ -21853,7 +22220,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Сохранить содержимое двоичных данных в файл или другой поток"
       },
       {
         "name": "Write",
@@ -21867,7 +22235,8 @@
               }
             ]
           }
-        ]
+        ],
+        "description": "Сохранить содержимое двоичных данных в файл или другой поток"
       },
       {
         "name": "ОткрытьПотокДляЧтения",
@@ -23504,6 +23873,36 @@
             ]
           }
         ]
+      },
+      {
+        "name": "ДоступенТаймаут",
+        "kind": "PROPERTY",
+        "description": "Признак доступности установки таймаута чтения/записи в потоке."
+      },
+      {
+        "name": "CanTimeout",
+        "kind": "PROPERTY",
+        "description": "Признак доступности установки таймаута чтения/записи в потоке."
+      },
+      {
+        "name": "ТаймаутЧтения",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию чтения."
+      },
+      {
+        "name": "ReadTimeout",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию чтения."
+      },
+      {
+        "name": "ТаймаутЗаписи",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию записи."
+      },
+      {
+        "name": "WriteTimeout",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию записи."
       }
     ],
     "description": "Специализированная версия объекта Поток для работы данными, расположенными в файле на диске. Предоставляет возможность чтения из потока, записи в поток и изменения текущей позиции.  По умолчанию, все операции с файловым потоком являются буферизированными, размер буфера по умолчанию - 8 КБ. Размер буфера можно изменить, в том числе - полностью отключить буферизацию при вызове конструктора.  Следует учитывать, что помимо буферизации существует кэширование чтения и записи файлов в операционной системе, на которое невозможно повлиять программно.",
@@ -24216,6 +24615,36 @@
             ]
           }
         ]
+      },
+      {
+        "name": "ДоступенТаймаут",
+        "kind": "PROPERTY",
+        "description": "Признак доступности установки таймаута чтения/записи в потоке."
+      },
+      {
+        "name": "CanTimeout",
+        "kind": "PROPERTY",
+        "description": "Признак доступности установки таймаута чтения/записи в потоке."
+      },
+      {
+        "name": "ТаймаутЧтения",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию чтения."
+      },
+      {
+        "name": "ReadTimeout",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию чтения."
+      },
+      {
+        "name": "ТаймаутЗаписи",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию записи."
+      },
+      {
+        "name": "WriteTimeout",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию записи."
       }
     ],
     "description": "Представляет собой поток данных, который можно последовательно читать и/или в который можно последовательно писать.  Экземпляры объектов данного типа можно получить с помощью различных методов других объектов."
@@ -24624,6 +25053,36 @@
             "returnType": "ДвоичныеДанные"
           }
         ]
+      },
+      {
+        "name": "ДоступенТаймаут",
+        "kind": "PROPERTY",
+        "description": "Признак доступности установки таймаута чтения/записи в потоке."
+      },
+      {
+        "name": "CanTimeout",
+        "kind": "PROPERTY",
+        "description": "Признак доступности установки таймаута чтения/записи в потоке."
+      },
+      {
+        "name": "ТаймаутЧтения",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию чтения."
+      },
+      {
+        "name": "ReadTimeout",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию чтения."
+      },
+      {
+        "name": "ТаймаутЗаписи",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию записи."
+      },
+      {
+        "name": "WriteTimeout",
+        "kind": "PROPERTY",
+        "description": "Время в миллисекундах, отведенное потоку на операцию записи."
       }
     ],
     "description": "Представляет собой поток данных, который можно последовательно читать и/или в который можно последовательно писать.  Экземпляры объектов данного типа можно получить с помощью различных методов других объектов.",
@@ -24852,6 +25311,62 @@
         "name": "Gray",
         "kind": "PROPERTY",
         "description": "Серый"
+      },
+      {
+        "name": "ТемноСиний",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DarkBlue",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ТемноЗеленый",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DarkGreen",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ТемноБирюзовый",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DarkCyan",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ТемноКрасный",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DarkRed",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ТемноМалиновый",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DarkMagenta",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ТемноЖелтый",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DarkYellow",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ТемноСерый",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DarkGray",
+        "kind": "PROPERTY"
       }
     ],
     "exposedAsGlobal": true,
@@ -25060,6 +25575,10 @@
         "name": "System",
         "kind": "PROPERTY",
         "description": "Кодировка текста, соответствующая системным установкам."
+      },
+      {
+        "name": "UTF8БезBOM",
+        "kind": "PROPERTY"
       }
     ],
     "exposedAsGlobal": true,
@@ -25438,7 +25957,32 @@
     "aliases": [
       "XSComplexFinal"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Все",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "All",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Ограничение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Restriction",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Список",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "List",
+        "kind": "PROPERTY"
+      }
+    ],
     "exposedAsGlobal": true
   },
   {
@@ -25447,7 +25991,40 @@
     "aliases": [
       "XSDisallowedSubstitutions"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Все",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "All",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Ограничение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Restriction",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Подстановка",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Substitution",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Расширение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Extension",
+        "kind": "PROPERTY"
+      }
+    ],
     "exposedAsGlobal": true
   },
   {
@@ -25456,16 +26033,59 @@
     "aliases": [
       "XSForm"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Квалифицированная",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Qualified",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Неквалифицированная",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Unqualified",
+        "kind": "PROPERTY"
+      }
+    ],
     "exposedAsGlobal": true
   },
   {
     "kind": "TYPE",
     "name": "ЗапрещенныеПодстановкиXS",
     "aliases": [
-      "EnumerationXSProhibitedSubstitutions"
+      "EnumerationXSProhibitedSubstitutions",
+      "XSProhibitedSubstitutions"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Все",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "All",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Ограничение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Restriction",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Расширение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Extension",
+        "kind": "PROPERTY"
+      }
+    ],
     "exposedAsGlobal": true
   },
   {
@@ -25474,7 +26094,48 @@
     "aliases": [
       "XSSchemaFinal"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Все",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "All",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Объединение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Union",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Ограничение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Restriction",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Расширение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Extension",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Список",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "List",
+        "kind": "PROPERTY"
+      }
+    ],
     "exposedAsGlobal": true
   },
   {
@@ -25483,7 +26144,40 @@
     "aliases": [
       "XSSimpleFinal"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Все",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "All",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Объединение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Union",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Ограничение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Restriction",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Список",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "List",
+        "kind": "PROPERTY"
+      }
+    ],
     "exposedAsGlobal": true
   },
   {
@@ -25492,7 +26186,32 @@
     "aliases": [
       "XSSubstitutionGroupExclusions"
     ],
-    "members": [],
+    "members": [
+      {
+        "name": "Все",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "All",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Ограничение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Restriction",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Расширение",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Extension",
+        "kind": "PROPERTY"
+      }
+    ],
     "exposedAsGlobal": true
   },
   {
@@ -26222,9 +26941,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XMLTypeAssignment",
+    "name": "НазначениеТипаXML",
     "aliases": [
-      "НазначениеТипаXML"
+      "XMLTypeAssignment"
     ],
     "members": [
       {
@@ -26248,9 +26967,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSAttributeUseCategory",
+    "name": "КатегорияИспользованияАтрибутаXS",
     "aliases": [
-      "КатегорияИспользованияАтрибутаXS"
+      "XSAttributeUseCategory"
     ],
     "members": [
       {
@@ -26290,9 +27009,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSComponentType",
+    "name": "ТипКомпонентыXS",
     "aliases": [
-      "ТипКомпонентыXS"
+      "XSComponentType"
     ],
     "members": [
       {
@@ -26556,34 +27275,40 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSCompositor",
+    "name": "ВидГруппыМоделиXS",
     "aliases": [
-      "ВидГруппыМоделиXS"
+      "XSCompositor"
     ],
     "members": [
       {
         "name": "All",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Требует наличия элементов группы без требования последовательности"
       },
       {
         "name": "Все",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Требует наличия элементов группы без требования последовательности"
       },
       {
         "name": "Choice",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Требует наличия только одного из элементов группы"
       },
       {
         "name": "Выбор",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Требует наличия только одного из элементов группы"
       },
       {
         "name": "Sequence",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Требует чтобы элементы следовали в указанной последовательности"
       },
       {
         "name": "Последовательность",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Требует чтобы элементы следовали в указанной последовательности"
       }
     ],
     "exposedAsGlobal": true,
@@ -26591,26 +27316,30 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSConstraint",
+    "name": "ОграничениеЗначенияXS",
     "aliases": [
-      "ОграничениеЗначенияXS"
+      "XSConstraint"
     ],
     "members": [
       {
         "name": "Default",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется ограничение по умолчанию"
       },
       {
         "name": "ПоУмолчанию",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется ограничение по умолчанию"
       },
       {
         "name": "Fixed",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется фиксированное значение"
       },
       {
         "name": "Фиксированное",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется фиксированное значение"
       }
     ],
     "exposedAsGlobal": true,
@@ -26618,9 +27347,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSContentModel",
+    "name": "МодельСодержимогоXS",
     "aliases": [
-      "МодельСодержимогоXS"
+      "XSContentModel"
     ],
     "members": [
       {
@@ -26633,19 +27362,23 @@
       },
       {
         "name": "Simple",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Простая модель содержания."
       },
       {
         "name": "Простая",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Простая модель содержания."
       },
       {
         "name": "Complex",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Составная модель содержания."
       },
       {
         "name": "Составная",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Составная модель содержания."
       }
     ],
     "exposedAsGlobal": true,
@@ -26653,9 +27386,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSDerivationMethod",
+    "name": "МетодНаследованияXS",
     "aliases": [
-      "МетодНаследованияXS"
+      "XSDerivationMethod"
     ],
     "members": [
       {
@@ -26687,34 +27420,40 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSIdentityConstraintCategory",
+    "name": "КатегорияОграниченияИдентичностиXS",
     "aliases": [
-      "КатегорияОграниченияИдентичностиXS"
+      "XSIdentityConstraintCategory"
     ],
     "members": [
       {
         "name": "Key",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Ограничение идентичности по ключу"
       },
       {
         "name": "Ключ",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Ограничение идентичности по ключу"
       },
       {
         "name": "KeyRef",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Ограничение идентичности по ссылке"
       },
       {
         "name": "СсылкаНаКлюч",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Ограничение идентичности по ссылке"
       },
       {
         "name": "Unique",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Ограничение идентичности по определению уникальности"
       },
       {
         "name": "Уникальность",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Ограничение идентичности по определению уникальности"
       }
     ],
     "exposedAsGlobal": true,
@@ -26722,9 +27461,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSNamespaceConstraintCategory",
+    "name": "КатегорияОграниченияПространствИменXS",
     "aliases": [
-      "КатегорияОграниченияПространствИменXS"
+      "XSNamespaceConstraintCategory"
     ],
     "members": [
       {
@@ -26764,9 +27503,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSProcessContents",
+    "name": "ОбработкаСодержимогоXS",
     "aliases": [
-      "ОбработкаСодержимогоXS"
+      "XSProcessContents"
     ],
     "members": [
       {
@@ -26806,9 +27545,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSSimpleTypeVariety",
+    "name": "ВариантПростогоТипаXS",
     "aliases": [
-      "ВариантПростогоТипаXS"
+      "XSSimpleTypeVariety"
     ],
     "members": [
       {
@@ -26840,9 +27579,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSWhitespaceHandling",
+    "name": "ОбработкаПробельныхСимволовXS",
     "aliases": [
-      "ОбработкаПробельныхСимволовXS"
+      "XSWhitespaceHandling"
     ],
     "members": [
       {
@@ -26874,26 +27613,30 @@
   },
   {
     "kind": "ENUM",
-    "name": "XSXPathVariety",
+    "name": "ВариантXPathXS",
     "aliases": [
-      "ВариантXPathXS"
+      "XSXPathVariety"
     ],
     "members": [
       {
         "name": "Field",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется в качестве поля"
       },
       {
         "name": "Поле",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется в качестве поля"
       },
       {
         "name": "Selector",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется в качестве селектора"
       },
       {
         "name": "Селектор",
-        "kind": "PROPERTY"
+        "kind": "PROPERTY",
+        "description": "Используется в качестве селектора"
       }
     ],
     "exposedAsGlobal": true,
@@ -26901,9 +27644,9 @@
   },
   {
     "kind": "ENUM",
-    "name": "XMLForm",
+    "name": "ФормаXML",
     "aliases": [
-      "ФормаXML"
+      "XMLForm"
     ],
     "members": [
       {
@@ -27109,7 +27852,8 @@
     "kind": "ENUM",
     "name": "ПозицияВПотоке",
     "aliases": [
-      "StreamPosition"
+      "StreamPosition",
+      "PositionInStream"
     ],
     "members": [
       {
@@ -27166,5 +27910,853 @@
     ],
     "exposedAsGlobal": true,
     "description": "Порядок байтов в потоке"
+  },
+  {
+    "kind": "TYPE",
+    "name": "ПараметрыЧтенияXML",
+    "aliases": [
+      "XmlReaderSettings"
+    ],
+    "members": [
+      {
+        "name": "Версия",
+        "kind": "PROPERTY",
+        "description": "Версия XML"
+      },
+      {
+        "name": "Version",
+        "kind": "PROPERTY",
+        "description": "Версия XML"
+      },
+      {
+        "name": "Язык",
+        "kind": "PROPERTY",
+        "description": "Язык"
+      },
+      {
+        "name": "Language",
+        "kind": "PROPERTY",
+        "description": "Язык"
+      },
+      {
+        "name": "ПробельныеСимволы",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Space",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ТипПроверкиПравильности",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ValidationType",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ИгнорироватьОбъявлениеXML",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "IgnoreXMLDeclaration",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ИгнорироватьТипДокумента",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "IgnoreDocumentType",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ИгнорироватьИнструкцииОбработки",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "IgnoreDataProcessorInstructions",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ИгнорироватьКомментарии",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "IgnoreComments",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ИгнорироватьПробельныеСимволы",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "IgnoreWhitespace",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "СекцииCDATAКакТекст",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "CDATASectionAsText",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ИспользоватьИгнорируемыеПробельныеСимволы",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "UseIgnorableWhitespace",
+        "kind": "PROPERTY"
+      }
+    ],
+    "constructors": [
+      {
+        "parameters": []
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ПреобразованиеXSL",
+    "aliases": [
+      "XSLTransform"
+    ],
+    "members": [
+      {
+        "name": "ЗагрузитьТаблицуСтилей",
+        "kind": "METHOD",
+        "description": "Загружает таблицу стилей XSL",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlReader",
+                "type": "Произвольный",
+                "description": "ЧтениеXML. Объект чтения XML, из которого будет загружена таблица стилей XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LoadXSLStylesheet",
+        "kind": "METHOD",
+        "description": "Загружает таблицу стилей XSL",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlReader",
+                "type": "Произвольный",
+                "description": "ЧтениеXML. Объект чтения XML, из которого будет загружена таблица стилей XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ЗагрузитьТаблицуСтилейXSLИзСтроки",
+        "kind": "METHOD",
+        "description": "Загружает таблицу стилей XSL",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlString",
+                "type": "Произвольный",
+                "description": "Строка. Строка, содержащая описание преобразования XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LoadXSLStylesheetFromString",
+        "kind": "METHOD",
+        "description": "Загружает таблицу стилей XSL",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlString",
+                "type": "Произвольный",
+                "description": "Строка. Строка, содержащая описание преобразования XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ЗагрузитьТаблицуСтилейXSLИзУзла",
+        "kind": "METHOD",
+        "description": "Загружает описание преобразования XSL из узла DOM.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlNode",
+                "type": "Произвольный",
+                "description": "УзелDOM. Узел DOM, представляющий собой шаблон XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LoadXSLStylesheetFromNode",
+        "kind": "METHOD",
+        "description": "Загружает описание преобразования XSL из узла DOM.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlNode",
+                "type": "Произвольный",
+                "description": "УзелDOM. Узел DOM, представляющий собой шаблон XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ЗагрузитьТаблицуСтилейXSLИзФайла",
+        "kind": "METHOD",
+        "description": "Загружает описание преобразования XSL из файла.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fileName",
+                "type": "Произвольный",
+                "description": "Строка. Имя файла, из которого должно быть загружено описание преобразования XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "LoadXSLStylesheetFromFile",
+        "kind": "METHOD",
+        "description": "Загружает описание преобразования XSL из файла.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fileName",
+                "type": "Произвольный",
+                "description": "Строка. Имя файла, из которого должно быть загружено описание преобразования XSL."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Очистить",
+        "kind": "METHOD",
+        "description": "Очищает внутреннее состояние.",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "Clear",
+        "kind": "METHOD",
+        "description": "Очищает внутреннее состояние.",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "Преобразовать",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlReader",
+                "type": "Произвольный",
+                "description": "ЧтениеXML. Объект чтения XML, из которого будет прочитан исходный XML документ для преобразования."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Transform",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlReader",
+                "type": "Произвольный",
+                "description": "ЧтениеXML. Объект чтения XML, из которого будет прочитан исходный XML документ для преобразования."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПреобразоватьИзСтроки",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlString",
+                "type": "Произвольный",
+                "description": "Строка. Строка, в которой находится XML-документ."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования.\n            Указание данного параметра имеет смысл, если преобразование выполняется в документ XML.\n            При указании данного параметра результат преобразования будет записываться в объект ЗаписьXML,\n            возвращаемое значение в данном случае будет отсутствовать."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "TransformFromString",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlString",
+                "type": "Произвольный",
+                "description": "Строка. Строка, в которой находится XML-документ."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования.\n            Указание данного параметра имеет смысл, если преобразование выполняется в документ XML.\n            При указании данного параметра результат преобразования будет записываться в объект ЗаписьXML,\n            возвращаемое значение в данном случае будет отсутствовать."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПреобразоватьИзУзла",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlNode",
+                "type": "Произвольный",
+                "description": "УзелDOM. Узел DOM - исходное дерево для преобразования XSL."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования.\n            Указание данного параметра имеет смысл, если преобразование выполняется в документ XML.\n            При указании данного параметра результат преобразования будет записываться в объект ЗаписьXML,\n            возвращаемое значение в данном случае будет отсутствовать."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "TransformFromNode",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "xmlNode",
+                "type": "Произвольный",
+                "description": "УзелDOM. Узел DOM - исходное дерево для преобразования XSL."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования.\n            Указание данного параметра имеет смысл, если преобразование выполняется в документ XML.\n            При указании данного параметра результат преобразования будет записываться в объект ЗаписьXML,\n            возвращаемое значение в данном случае будет отсутствовать."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ПреобразоватьИзФайла",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fileName",
+                "type": "Произвольный",
+                "description": "Строка. Имя файла, в котором находится преобразуемый XML-документ."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования.\n            Указание данного параметра имеет смысл, если преобразование выполняется в документ XML.\n            При указании данного параметра результат преобразования будет записываться в объект ЗаписьXML,\n            возвращаемое значение в данном случае будет отсутствовать."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "TransformFromFile",
+        "kind": "METHOD",
+        "description": "Выполняет преобразование XML-документа.\nИспользуется описание преобразования и значения параметров, ранее установленные в данном объекте.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fileName",
+                "type": "Произвольный",
+                "description": "Строка. Имя файла, в котором находится преобразуемый XML-документ."
+              },
+              {
+                "name": "xmlWriter",
+                "type": "Произвольный",
+                "description": "ЗаписьXML. Объект записи XML, в который будет записан результат преобразования.\n            Указание данного параметра имеет смысл, если преобразование выполняется в документ XML.\n            При указании данного параметра результат преобразования будет записываться в объект ЗаписьXML,\n            возвращаемое значение в данном случае будет отсутствовать."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ДобавитьПараметр",
+        "kind": "METHOD",
+        "description": "Добавляет значение параметра преобразования.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fullName",
+                "type": "Произвольный",
+                "description": "Строка. Полное имя параметра."
+              },
+              {
+                "name": "value",
+                "type": "Произвольный",
+                "description": "Булево, Число, Строка. Значение параметра."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "AddParameter",
+        "kind": "METHOD",
+        "description": "Добавляет значение параметра преобразования.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fullName",
+                "type": "Произвольный",
+                "description": "Строка. Полное имя параметра."
+              },
+              {
+                "name": "value",
+                "type": "Произвольный",
+                "description": "Булево, Число, Строка. Значение параметра."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "УдалитьПараметр",
+        "kind": "METHOD",
+        "description": "Удаляет значение параметра преобразования.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fullName",
+                "type": "Произвольный",
+                "description": "Строка. Полное имя параметра."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "RemoveParameter",
+        "kind": "METHOD",
+        "description": "Удаляет значение параметра преобразования.",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "fullName",
+                "type": "Произвольный",
+                "description": "Строка. Полное имя параметра."
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "constructors": [
+      {
+        "parameters": [],
+        "description": "Создает ПреобразованиеXSL"
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "ИзвлечениеДанныхJSON",
+    "aliases": [
+      "JSONDataExtractor"
+    ],
+    "members": [
+      {
+        "name": "УстановитьСтроку",
+        "kind": "METHOD",
+        "description": "Устанавливает строку JSON для последующей обработки",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "JSONString",
+                "type": "Произвольный",
+                "description": "Строка. Строка JSON."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "SetString",
+        "kind": "METHOD",
+        "description": "Устанавливает строку JSON для последующей обработки",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "JSONString",
+                "type": "Произвольный",
+                "description": "Строка. Строка JSON."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ОткрытьФайл",
+        "kind": "METHOD",
+        "description": "Читает файл, содержащий данные JSON для последующей обработки",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "JSONFileName",
+                "type": "Произвольный",
+                "description": "Строка. Путь к файлу."
+              },
+              {
+                "name": "encoding",
+                "type": "Произвольный",
+                "description": "КодировкаТекста. кодировка файла."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "OpenFile",
+        "kind": "METHOD",
+        "description": "Читает файл, содержащий данные JSON для последующей обработки",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "JSONFileName",
+                "type": "Произвольный",
+                "description": "Строка. Путь к файлу."
+              },
+              {
+                "name": "encoding",
+                "type": "Произвольный",
+                "description": "КодировкаТекста. кодировка файла."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ОткрытьПоток",
+        "kind": "METHOD",
+        "description": "Читает данные из потока JSON для последующей обработки",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "JSONStream",
+                "type": "Произвольный",
+                "description": "Поток. поток с данными JSON."
+              },
+              {
+                "name": "encoding",
+                "type": "Произвольный",
+                "description": "КодировкаТекста. кодировка файла."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "OpenStream",
+        "kind": "METHOD",
+        "description": "Читает данные из потока JSON для последующей обработки",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "JSONStream",
+                "type": "Произвольный",
+                "description": "Поток. поток с данными JSON."
+              },
+              {
+                "name": "encoding",
+                "type": "Произвольный",
+                "description": "КодировкаТекста. кодировка файла."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Выбрать",
+        "kind": "METHOD",
+        "description": "Выполняет выборку из JSON по указанному JSON-path",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "path",
+                "type": "Произвольный",
+                "description": "Строка. JSON-path."
+              },
+              {
+                "name": "extractSingleValue",
+                "type": "Произвольный",
+                "description": "Булево. Если результирующий массив содержит единственное значение, то:\n            Истина -  будет возвращено значение;\n            Ложь - будет возвращен массив."
+              },
+              {
+                "name": "getObjectAsJSON",
+                "type": "Произвольный",
+                "description": "Булево. Истина - объекты будут возвращены в виде строки JSON;\n            Ложь - Объекты будут возвращены в виде соответствия."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Select",
+        "kind": "METHOD",
+        "description": "Выполняет выборку из JSON по указанному JSON-path",
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "path",
+                "type": "Произвольный",
+                "description": "Строка. JSON-path."
+              },
+              {
+                "name": "extractSingleValue",
+                "type": "Произвольный",
+                "description": "Булево. Если результирующий массив содержит единственное значение, то:\n            Истина -  будет возвращено значение;\n            Ложь - будет возвращен массив."
+              },
+              {
+                "name": "getObjectAsJSON",
+                "type": "Произвольный",
+                "description": "Булево. Истина - объекты будут возвращены в виде строки JSON;\n            Ложь - Объекты будут возвращены в виде соответствия."
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "constructors": [
+      {
+        "parameters": [],
+        "description": "Создает ИзвлечениеДанныхJSON"
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "СкомпилированныйФрагмент",
+    "aliases": [
+      "CompiledCodeBlock"
+    ],
+    "members": [
+      {
+        "name": "Скомпилировать",
+        "kind": "METHOD",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "Compile",
+        "kind": "METHOD",
+        "signatures": [
+          {
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "Параметры",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Parameters",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ФрагментКода",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "CodeFragment",
+        "kind": "PROPERTY"
+      }
+    ],
+    "constructors": [
+      {
+        "parameters": []
+      }
+    ]
+  },
+  {
+    "kind": "TYPE",
+    "name": "Сценарий",
+    "aliases": [
+      "Script"
+    ],
+    "members": []
+  },
+  {
+    "kind": "ENUM",
+    "name": "ПробельныеСимволыXML",
+    "aliases": [
+      "XMLSpace"
+    ],
+    "exposedAsGlobal": true,
+    "members": [
+      {
+        "name": "ПоУмолчанию",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Default",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Сохранять",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Preserve",
+        "kind": "PROPERTY"
+      }
+    ]
+  },
+  {
+    "kind": "ENUM",
+    "name": "ТипПроверкиXML",
+    "aliases": [
+      "XMLValidationType"
+    ],
+    "exposedAsGlobal": true,
+    "members": [
+      {
+        "name": "НетПроверки",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "NoValidate",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "ОпределениеТипаДокумента",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "DocumentTypeDefinition",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "СхемаXML",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "XMLSchema",
+        "kind": "PROPERTY"
+      }
+    ]
+  },
+  {
+    "kind": "ENUM",
+    "name": "ТипПлатформы",
+    "aliases": [
+      "PlatformType"
+    ],
+    "exposedAsGlobal": true,
+    "members": [
+      {
+        "name": "Linux_x86",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Linux_x86_64",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "MacOS_x86",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "MacOS_x86_64",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Windows_x86",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Windows_x86_64",
+        "kind": "PROPERTY"
+      },
+      {
+        "name": "Unknown",
+        "kind": "PROPERTY"
+      }
+    ]
   }
 ]
