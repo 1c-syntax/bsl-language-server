@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780155640360,
+  "lastUpdate": 1780222389878,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35929,6 +35929,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 139.04419787733758",
             "extra": "mean: 1254.180348555247 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a67cd1beedbe924e87bfff5552184328c4424c73",
+          "message": "Merge pull request #3976 from 1c-syntax/feature/update-oscript-syntax\n\nfeat(types): обновить данные синтакс-помощника oscript из OneScript 2.1",
+          "timestamp": "2026-05-30T11:50:55+02:00",
+          "tree_id": "e89959267093c0bf538b0031870eebad6543011f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a67cd1beedbe924e87bfff5552184328c4424c73"
+        },
+        "date": 1780222381208,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1206.4864310423534,
+            "unit": "sec",
+            "range": "stddev: 40.11721289838729",
+            "extra": "mean: 1206.4864310423534 sec\nrounds: 3"
           }
         ]
       }
