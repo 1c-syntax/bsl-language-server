@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780222389878,
+  "lastUpdate": 1780235345995,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35960,6 +35960,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 40.11721289838729",
             "extra": "mean: 1206.4864310423534 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6515d309fb25aba43754b78851d3636d807cc266",
+          "message": "Merge pull request #3979 from 1c-syntax/copilot/fix-query-parser-error\n\nРегрессионный тест: QueryParseError больше не даёт FP на запросе с функцией СТРОКА",
+          "timestamp": "2026-05-30T16:44:20+02:00",
+          "tree_id": "1cdad06993ae2a05059cfa31a3821717ac313a6a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6515d309fb25aba43754b78851d3636d807cc266"
+        },
+        "date": 1780235336068,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1154.4313801129658,
+            "unit": "sec",
+            "range": "stddev: 47.3942131169041",
+            "extra": "mean: 1154.4313801129658 sec\nrounds: 3"
           }
         ]
       }
