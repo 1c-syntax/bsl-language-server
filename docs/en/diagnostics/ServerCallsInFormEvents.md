@@ -4,9 +4,9 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Events `OnActivateRow` and `OnStartChoice` should not contain server procedure calls. These events should only execute on the client.
+Events `OnActivateRow` and `OnStartChoice` should not contain contextual server procedure calls. These events should only execute on the client.
 
-Only server calls to methods of this form are diagnosed; calling MyModuleServer.MyServerMethod will not result in an error.
+Only server calls to methods of this form executed within the server context (`&AtServer`) are diagnosed. Calling general modules (e.g., `MyModuleServer.MyServerMethod`) or non-contextual server procedures of the form itself (`&AtServerNoContext`) will not result in an error.
 
 According to the [Infostart article](https://infostart.ru/1c/articles/1225834/), calling server procedures from these events can lead to performance issues and form behavior problems.
 
