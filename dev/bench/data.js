@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780235345995,
+  "lastUpdate": 1780248780873,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -35991,6 +35991,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 47.3942131169041",
             "extra": "mean: 1154.4313801129658 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "68aad86f4f6926ac109ffcfdee84db120fa21771",
+          "message": "Merge pull request #3981 from 1c-syntax/copilot/bsl-language-server-tq-fix-illegal-argument-except\n\nFix IllegalArgumentException in CFG builder on dangling top-level preprocessor before a loop",
+          "timestamp": "2026-05-31T15:40:24+02:00",
+          "tree_id": "dcfc609846c18df5e492a23bd96d3dacc29c96e7",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/68aad86f4f6926ac109ffcfdee84db120fa21771"
+        },
+        "date": 1780248772261,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1219.4265561898549,
+            "unit": "sec",
+            "range": "stddev: 128.24024038496913",
+            "extra": "mean: 1219.4265561898549 sec\nrounds: 3"
           }
         ]
       }
