@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      dependency-graph: write
 
     steps:
       - name: Checkout
