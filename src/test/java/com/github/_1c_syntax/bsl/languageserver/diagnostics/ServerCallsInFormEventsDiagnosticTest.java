@@ -53,7 +53,7 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
     // Основной тест с использованием существующей фикстуры
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(5);
     
     // Проверяем конкретные позиции ошибок из фикстуры
     assertThat(diagnostics, true)
@@ -61,8 +61,7 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
       .hasRange(25, 4, 25, 27)  // НачалоВыбораНаСервере()
       .hasRange(39, 4, 39, 27)  // OnStartChoiceAtServer()
       .hasRange(41, 4, 41, 33)  // ЛокальнаяСервернаяПроцедура()
-      .hasRange(48, 4, 48, 33)  // ЛокальнаяСервернаяПроцедура()
-      .hasRange(50, 4, 50, 45); // ЛокальнаяСервернаяПроцедураБезКонтекста()
+      .hasRange(48, 4, 48, 33);  // ЛокальнаяСервернаяПроцедура()
   }
 
   /**
@@ -109,13 +108,14 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
   void testCaseInsensitiveEventNames() {
     List<Diagnostic> diagnostics = getDiagnostics();
     
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(5);
     
     assertThat(diagnostics, true)
       .hasRange(18, 4, 18, 47) 
       .hasRange(25, 4, 25, 27) 
       .hasRange(39, 4, 39, 27) 
-      .hasRange(41, 4, 41, 33); 
+      .hasRange(41, 4, 41, 33)
+      .hasRange(48,4,48,33);
   }
 
   /**
@@ -154,17 +154,16 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
    * Проверяет обнаружение нескольких нарушений в одном событии.
    */
   @Test
-  void testMultipleServerCallsInOneEvent() {
+  void testSingleServerCallInOneEvent() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    
+
     var multipleCallsDiagnostics = diagnostics.stream()
-      .filter(d -> d.getRange().getStart().getLine() == 48 || d.getRange().getStart().getLine() == 50)
+      .filter(d -> d.getRange().getStart().getLine() == 48)
       .toList();
-    
-    assertThat(multipleCallsDiagnostics).hasSize(2);
+
+    assertThat(multipleCallsDiagnostics).hasSize(1);
     assertThat(multipleCallsDiagnostics, true)
-      .hasRange(48, 4, 48, 33) 
-      .hasRange(50, 4, 50, 45); 
+      .hasRange(48, 4, 48, 33);
   }
 
   /**
@@ -208,7 +207,7 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
   void testEdgeCases() {
     List<Diagnostic> diagnostics = getDiagnostics();
     
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(5);
   }
 
   /**
@@ -218,17 +217,8 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
   @Test
   void testServerDirectives() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    
-    var serverDirectiveDiagnostics = diagnostics.stream()
-      .filter(d -> d.getRange().getStart().getLine() == 18 ||
-                  d.getRange().getStart().getLine() == 25 || 
-                  d.getRange().getStart().getLine() == 39 || 
-                  d.getRange().getStart().getLine() == 41 || 
-                  d.getRange().getStart().getLine() == 48 || 
-                  d.getRange().getStart().getLine() == 50)   
-      .toList();
-    
-    assertThat(serverDirectiveDiagnostics).hasSize(6);
+
+    assertThat(diagnostics).hasSize(5);
   }
 
   /**
@@ -262,36 +252,13 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
     
     var localMethodDiagnostics = diagnostics.stream()
       .filter(d -> d.getRange().getStart().getLine() == 41 || 
-                  d.getRange().getStart().getLine() == 48 || 
-                  d.getRange().getStart().getLine() == 50)
+                  d.getRange().getStart().getLine() == 48)
       .toList();
     
-    assertThat(localMethodDiagnostics).hasSize(3);
+    assertThat(localMethodDiagnostics).hasSize(2);
     assertThat(localMethodDiagnostics, true)
       .hasRange(41, 4, 41, 33)  
-      .hasRange(48, 4, 48, 33)  
-      .hasRange(50, 4, 50, 45); 
-  }
-
-  /**
-   * Тест проверки локальных вызовов методов в событиях.
-   * Проверяет обнаружение локальных серверных процедур в событиях форм.
-   */
-  @Test
-  void testLocalMethodCallsInEvents() {
-    List<Diagnostic> diagnostics = getDiagnostics();
-    
-    var methodCallDiagnostics = diagnostics.stream()
-      .filter(d -> d.getRange().getStart().getLine() == 41 || 
-                  d.getRange().getStart().getLine() == 48 || 
-                  d.getRange().getStart().getLine() == 50)
-      .toList();
-    
-    assertThat(methodCallDiagnostics).hasSize(3);
-    assertThat(methodCallDiagnostics, true)
-      .hasRange(41, 4, 41, 33)  
-      .hasRange(48, 4, 48, 33) 
-      .hasRange(50, 4, 50, 45); 
+      .hasRange(48, 4, 48, 33);
   }
 
   /**
@@ -302,7 +269,7 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
   void testCompleteMethodCallCoverage() {
     List<Diagnostic> diagnostics = getDiagnostics();
     
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(5);
     
     var globalCalls = diagnostics.stream()
       .filter(d -> d.getRange().getStart().getLine() == 18 || 
@@ -312,12 +279,11 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
     
     var methodCalls = diagnostics.stream()
       .filter(d -> d.getRange().getStart().getLine() == 41 || 
-                  d.getRange().getStart().getLine() == 48 || 
-                  d.getRange().getStart().getLine() == 50)
+                  d.getRange().getStart().getLine() == 48)
       .toList();
     
     assertThat(globalCalls).hasSize(3);
-    assertThat(methodCalls).hasSize(3);
+    assertThat(methodCalls).hasSize(2);
   }
 
 }

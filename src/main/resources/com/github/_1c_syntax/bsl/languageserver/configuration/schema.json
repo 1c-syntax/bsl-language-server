@@ -29,6 +29,9 @@
                 "AssignAliasFieldsInQuery": {
                     "$ref": "parameters-schema.json#/definitions/AssignAliasFieldsInQuery"
                 },
+                "AssignToReadOnlyProperty": {
+                    "$ref": "parameters-schema.json#/definitions/AssignToReadOnlyProperty"
+                },
                 "BadWords": {
                     "$ref": "parameters-schema.json#/definitions/BadWords"
                 },
@@ -1039,7 +1042,9 @@
                         "type": "string",
                         "description": "Author email address as recorded in git blame."
                     },
-                    "default": []
+                    "default": [
+                        
+                    ]
                 }
             }
         },
@@ -1149,7 +1154,9 @@
             "items": {
                 "type": "string"
             },
-            "default": []
+            "default": [
+                
+            ]
         },
         "sendErrors": {
             "$id": "#/properties/sendErrors",

@@ -38,6 +38,16 @@
             "title": "Assigning aliases to selected fields in a query",
             "$id": "#/definitions/AssignAliasFieldsInQuery"
         },
+        "AssignToReadOnlyProperty": {
+            "description": "Assignment to a read-only property",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Assignment to a read-only property",
+            "$id": "#/definitions/AssignToReadOnlyProperty"
+        },
         "BadWords": {
             "description": "Prohibited words",
             "default": false,
