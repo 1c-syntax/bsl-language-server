@@ -32,8 +32,15 @@ EndProcedure
 ### Correct
 
 ```bsl
+&AtClient
 Procedure OnActivateRow(Element, SelectedRow, Field, NewValue, StandardProcessing)
-    // Correct: only client-side processing
+    // Correct: only client processing
+    StandardProcessing = False;
+EndProcedure
+
+&AtServerNoContext
+Procedure OnActivateRow(Element, SelectedRow, Field, NewValue, StandardProcessing)
+    // Correct: non-context server form calls are allowed
     StandardProcessing = False;
 EndProcedure
 ```
