@@ -3,7 +3,6 @@ name: Dependency Submission
 on:
   push:
     branches: [ develop ]
-  pull_request:
 
 permissions:
   contents: read
@@ -13,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      dependency-graph: write
 
     steps:
       - name: Checkout
