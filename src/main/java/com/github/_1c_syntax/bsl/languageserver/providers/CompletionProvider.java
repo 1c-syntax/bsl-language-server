@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Command;
@@ -58,6 +59,9 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Провайдер для запросов {@code textDocument/completion}.
@@ -164,13 +168,53 @@ public final class CompletionProvider {
     return Character.isLetter(ch) && Character.UnicodeBlock.of(ch) == Character.UnicodeBlock.BASIC_LATIN;
   }
 
-  private List<String> libraryEntryNames(OScriptLibraryIndex.EntryKind kind) {
-    var showImplicit = configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion();
-    return oScriptLibraryIndex.findEntries(kind).stream()
-      .filter(entry -> showImplicit || !entry.implicit())
-      .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
-      .distinct()
-      .toList();
+  /**
+   * Видна ли library-запись в no-dot completion текущего документа.
+   * <p>
+   * Запись видна, если:
+   * <ul>
+   *   <li>файл — не BSL (в BSL OneScript-library-сущности скрыты целиком);</li>
+   *   <li>её библиотека объявлена в {@code #Использовать} ИЛИ это та же
+   *       библиотека-«пакет» (тот же корень), что и редактируемый файл
+   *       ({@code ownLibOrigin});</li>
+   *   <li>implicit-запись из чужой библиотеки скрывается при выключенном
+   *       {@code oscript.showImplicitLibraryEntriesInCompletion}; из своего
+   *       пакета implicit-запись видна всегда.</li>
+   * </ul>
+   */
+  private boolean libraryEntryVisible(OScriptLibraryIndex.LibraryEntry entry,
+                                      FileType fileType,
+                                      Set<String> usedLibsLower,
+                                      Optional<String> ownLibOrigin) {
+    if (fileType == FileType.BSL) {
+      return false;
+    }
+    var origin = entry.libOrigin();
+    if (origin == null || origin.isBlank()) {
+      return true;
+    }
+    var originLower = origin.toLowerCase(Locale.ROOT);
+    var samePackage = ownLibOrigin.map(originLower::equals).orElse(false);
+    if (entry.implicit()
+      && !configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion()
+      && !samePackage) {
+      return false;
+    }
+    return samePackage || usedLibsLower.contains(originLower);
+  }
+
+  /**
+   * Видно ли имя из global scope с точки зрения library-gating. Если имя не
+   * относится к зарегистрированной library-записи — видно (платформенные и
+   * конфигурационные имена не ограничиваем).
+   */
+  private boolean libraryNameVisible(String name,
+                                     FileType fileType,
+                                     Set<String> usedLibsLower,
+                                     Optional<String> ownLibOrigin) {
+    return oScriptLibraryIndex.findByName(name)
+      .map(entry -> libraryEntryVisible(entry, fileType, usedLibsLower, ownLibOrigin))
+      .orElse(true);
   }
 
   /**
@@ -286,23 +330,20 @@ public final class CompletionProvider {
     var items = new ArrayList<CompletionItem>();
 
     // Per-document #Использовать gating. Строгая семантика OneScript:
-    // library-сущность видна только если она объявлена в директиве
-    // #Использовать <libName>. Без директив — ничего из библиотек не видно.
-    // В BSL-файлах library-сущности скрыты целиком.
+    // сторонняя library-сущность видна только если её библиотека объявлена в
+    // директиве #Использовать <libName>. Без директив сторонние библиотеки не
+    // видны. В BSL-файлах library-сущности скрыты целиком.
     var usedLibs = UseDirectiveScanner.usedLibraries(documentContext);
     var usedLibsLower = usedLibs.isEmpty()
-      ? java.util.Set.<String>of()
-      : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(java.util.stream.Collectors.toUnmodifiableSet());
-    java.util.function.Predicate<String> libVisible = name -> {
-      var origin = oScriptLibraryIndex.findByName(name).map(OScriptLibraryIndex.LibraryEntry::libOrigin);
-      if (origin.isEmpty()) {
-        return true;
-      }
-      if (fileType == FileType.BSL) {
-        return false;
-      }
-      return usedLibsLower.contains(origin.get().toLowerCase(Locale.ROOT));
-    };
+      ? Set.<String>of()
+      : usedLibs.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.toUnmodifiableSet());
+    // Библиотека-«пакет» редактируемого файла: если сам документ является
+    // зарегистрированной library-записью, его соседи по тому же корню видны
+    // в completion без #Использовать (как implicit, так и explicit).
+    var ownLibOrigin = oScriptLibraryIndex.findByUri(Absolute.uri(documentContext.getUri()))
+      .map(OScriptLibraryIndex.LibraryEntry::libOrigin)
+      .filter(o -> o != null && !o.isBlank())
+      .map(o -> o.toLowerCase(Locale.ROOT));
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
@@ -314,10 +355,11 @@ public final class CompletionProvider {
           items.add(buildPlatformClassCompletionItem(className, fileType, scriptVariant));
         }
       }
-      for (var libClassName : libraryEntryNames(OScriptLibraryIndex.EntryKind.CLASS)) {
-        if (!libVisible.test(libClassName)) {
+      for (var classEntry : oScriptLibraryIndex.findEntries(OScriptLibraryIndex.EntryKind.CLASS)) {
+        if (!libraryEntryVisible(classEntry, fileType, usedLibsLower, ownLibOrigin)) {
           continue;
         }
+        var libClassName = classEntry.qualifiedName();
         if (matches(libClassName, prefix)) {
           var item = new CompletionItem(libClassName);
           item.setKind(CompletionItemKind.Class);
@@ -341,17 +383,15 @@ public final class CompletionProvider {
     }
 
     // Global contexts — все VALUE-имена в global scope (property, enum, library-module).
-    // CompletionItemKind выбирается по фактическому SyntheticKind. Для library-модулей
-    // (SyntheticKind.LIBRARY_MODULE) применяется #Использовать-gating.
+    // CompletionItemKind выбирается по фактическому SyntheticKind. К library-сущностям
+    // применяется library-gating (#Использовать / свой пакет / implicit) через
+    // libraryNameVisible; платформенные и конфигурационные имена не ограничиваются.
     for (var ctx : globalScopeProvider.getGlobalContexts(fileType)) {
       var name = ctx.getName();
       if (!matches(name, prefix)) {
         continue;
       }
-      if (ctx.getSyntheticKind() == SyntheticKind.LIBRARY_MODULE && !libVisible.test(name)) {
-        continue;
-      }
-      if (isImplicitlyHiddenInCompletion(name)) {
+      if (!libraryNameVisible(name, fileType, usedLibsLower, ownLibOrigin)) {
         continue;
       }
       var item = new CompletionItem(name);
