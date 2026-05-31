@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780248780873,
+  "lastUpdate": 1780255165803,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36022,6 +36022,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 128.24024038496913",
             "extra": "mean: 1219.4265561898549 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6417c884f1ac2442bef8b034f8d164f462339dac",
+          "message": "Merge pull request #3977 from 1c-syntax/feature/oscript-completion-same-package\n\nfeat(oscript): автокомплит видит соседей по своему пакету без #Использовать",
+          "timestamp": "2026-05-31T17:31:29+02:00",
+          "tree_id": "ce32d3671a30bc31bf271974d27bec7ea0a96b7f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6417c884f1ac2442bef8b034f8d164f462339dac"
+        },
+        "date": 1780255158257,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1150.8883113861084,
+            "unit": "sec",
+            "range": "stddev: 29.681641577058127",
+            "extra": "mean: 1150.8883113861084 sec\nrounds: 3"
           }
         ]
       }
