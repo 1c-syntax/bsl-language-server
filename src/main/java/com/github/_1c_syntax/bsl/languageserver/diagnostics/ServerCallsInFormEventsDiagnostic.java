@@ -158,6 +158,7 @@ public class ServerCallsInFormEventsDiagnostic extends AbstractListenerDiagnosti
     
     var methodSymbol = methodSymbolOpt.get();
     var directiveOpt = methodSymbol.getCompilerDirectiveKind();
-    return directiveOpt.map(SERVER_DIRECTIVES::contains).orElse(false);
+    return directiveOpt.map(d -> SERVER_DIRECTIVES.contains(d) &&
+      d != CompilerDirectiveKind.AT_SERVER_NO_CONTEXT).orElse(false);
   }
 }
