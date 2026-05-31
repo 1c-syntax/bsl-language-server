@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import java.util.EnumSet;
 import java.util.regex.Pattern;
 
 /**
@@ -63,15 +62,6 @@ public class ServerCallsInFormEventsDiagnostic extends AbstractListenerDiagnosti
    */
   private static final Pattern FORBIDDEN_EVENT_SUFFIX = CaseInsensitivePattern.compile( 
     ".*(ПриАктивизацииСтроки|OnActivateRow|НачалоВыбора|OnStartChoice)$"
-  );
-
-  /**
-   * Множество серверных директив компиляции.
-   * Содержит директивы &НаСервере и &НаСервереБезКонтекста.
-   */
-  private static final EnumSet<CompilerDirectiveKind> SERVER_DIRECTIVES = EnumSet.of(
-    CompilerDirectiveKind.AT_SERVER,
-    CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
   );
 
   /**
@@ -144,10 +134,13 @@ public class ServerCallsInFormEventsDiagnostic extends AbstractListenerDiagnosti
    * Проверяет, является ли метод серверным.
    * <br/>
    * Метод считается серверным, если он имеет директиву компиляции &НаСервере
-   * или &НаСервереБезКонтекста.
+   * или &AtServer.
+   * Методы имеющие директиву компиляции &НаСервереБезКонтекста или &AtServerNoContext
+   * исключены из проверки, так как их вызов разрешён из обрабатываемых событий формы
    * 
    * @param methodName имя метода для проверки
-   * @return true, если метод имеет серверную директиву компиляции
+   * @return true, если метод имеет серверную директиву компиляции &НаСервере,
+   * иначе false
    */
   private boolean isServerMethod(String methodName) {
     var methodSymbolOpt = documentContext.getSymbolTree().getMethodSymbol(methodName);
@@ -158,7 +151,6 @@ public class ServerCallsInFormEventsDiagnostic extends AbstractListenerDiagnosti
     
     var methodSymbol = methodSymbolOpt.get();
     var directiveOpt = methodSymbol.getCompilerDirectiveKind();
-    return directiveOpt.map(d -> SERVER_DIRECTIVES.contains(d) &&
-      d != CompilerDirectiveKind.AT_SERVER_NO_CONTEXT).orElse(false);
+    return directiveOpt.map(d -> d == CompilerDirectiveKind.AT_SERVER).orElse(false);
   }
 }

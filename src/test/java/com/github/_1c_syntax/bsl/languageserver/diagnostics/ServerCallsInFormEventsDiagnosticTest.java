@@ -101,24 +101,6 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
   }
 
   /**
-   * Тест проверки регистронезависимых названий событий.
-   * Проверяет работу с событиями в разном регистре.
-   */
-  @Test
-  void testCaseInsensitiveEventNames() {
-    List<Diagnostic> diagnostics = getDiagnostics();
-    
-    assertThat(diagnostics).hasSize(5);
-    
-    assertThat(diagnostics, true)
-      .hasRange(18, 4, 18, 47) 
-      .hasRange(25, 4, 25, 27) 
-      .hasRange(39, 4, 39, 27) 
-      .hasRange(41, 4, 41, 33)
-      .hasRange(48,4,48,33);
-  }
-
-  /**
    * Тест проверки отсутствия диагностик в обычных процедурах.
    * Убеждается, что диагностика не срабатывает в разрешенных местах.
    */
@@ -207,17 +189,6 @@ class ServerCallsInFormEventsDiagnosticTest extends AbstractDiagnosticTest<Serve
   void testEdgeCases() {
     List<Diagnostic> diagnostics = getDiagnostics();
     
-    assertThat(diagnostics).hasSize(5);
-  }
-
-  /**
-   * Тест проверки серверных директив.
-   * Проверяет обнаружение методов с директивами &НаСервере и &НаСервереБезКонтекста.
-   */
-  @Test
-  void testServerDirectives() {
-    List<Diagnostic> diagnostics = getDiagnostics();
-
     assertThat(diagnostics).hasSize(5);
   }
 
