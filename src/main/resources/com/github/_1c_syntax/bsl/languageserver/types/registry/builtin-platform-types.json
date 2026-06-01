@@ -162,23 +162,7 @@
     "aliases": [
       "String"
     ],
-    "members": [
-      {
-        "name": "Длина",
-        "kind": "METHOD",
-        "returnType": "Число"
-      },
-      {
-        "name": "ВРег",
-        "kind": "METHOD",
-        "returnType": "Строка"
-      },
-      {
-        "name": "НРег",
-        "kind": "METHOD",
-        "returnType": "Строка"
-      }
-    ]
+    "members": []
   },
   {
     "kind": "PRIMITIVE_TYPE",

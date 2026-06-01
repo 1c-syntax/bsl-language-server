@@ -135,6 +135,25 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   @Test
+  void primitiveStringHasNoMembers() {
+    // given — у примитива Строка нет методов ни в BSL, ни в OneScript:
+    // Длина/ВРег/НРег — это глобальные функции (СтрДлина/ВРег/НРег), а не члены типа.
+    when(holder.get()).thenReturn(Optional.empty());
+    var provider = new BuiltinPlatformTypesProvider(holder);
+
+    // when
+    var stringDecl = provider.getTypes().stream()
+      .filter(td -> "Строка".equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+
+    // then
+    assertThat(stringDecl.members())
+      .as("у примитива Строка не должно быть методов")
+      .isEmpty();
+  }
+
+  @Test
   void oscriptBilingualMemberPairsAreMergedIntoSingleBilingualMember() {
     // В дампе OneScript Массив.Добавить и Массив.Add — два отдельных
     // моноязычных члена подряд. После склейки при загрузке это один
