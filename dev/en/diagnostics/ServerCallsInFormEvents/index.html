@@ -1477,8 +1477,8 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-<p>Events <code>OnActivateRow</code> and <code>OnStartChoice</code> should not contain server procedure calls. These events should only execute on the client.</p>
-<p>Only server calls to methods of this form are diagnosed; calling MyModuleServer.MyServerMethod will not result in an error.</p>
+<p>Events <code>OnActivateRow</code> and <code>OnStartChoice</code> should not contain contextual server procedure calls. These events should only execute on the client.</p>
+<p>Only server calls to methods of this form executed within the server context (<code>&amp;AtServer</code>) are diagnosed. Calling general modules (e.g., <code>MyModuleServer.MyServerMethod</code>) or non-contextual server procedures of the form itself (<code>&amp;AtServerNoContext</code>) will not result in an error.</p>
 <p>According to the <a href="https://infostart.ru/1c/articles/1225834/">Infostart article</a>, calling server procedures from these events can lead to performance issues and form behavior problems.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -1497,8 +1497,15 @@
 <span class="k">EndProcedure</span>
 </code></pre></div>
 <h3 id="Correct">Correct<a class="headerlink" href="#Correct" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">OnActivateRow</span><span class="p">(</span><span class="nv">Element</span><span class="p">,</span> <span class="nv">SelectedRow</span><span class="p">,</span> <span class="nv">Field</span><span class="p">,</span> <span class="nv">NewValue</span><span class="p">,</span> <span class="nv">StandardProcessing</span><span class="p">)</span>
-    <span class="c1">// Correct: only client-side processing</span>
+<div class="highlight"><pre><span></span><code><span class="nd">&amp;AtClient</span>
+<span class="k">Procedure</span> <span class="nf">OnActivateRow</span><span class="p">(</span><span class="nv">Element</span><span class="p">,</span> <span class="nv">SelectedRow</span><span class="p">,</span> <span class="nv">Field</span><span class="p">,</span> <span class="nv">NewValue</span><span class="p">,</span> <span class="nv">StandardProcessing</span><span class="p">)</span>
+    <span class="c1">// Correct: only client processing</span>
+    <span class="nv">StandardProcessing</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>
+<span class="k">EndProcedure</span>
+
+<span class="nd">&amp;AtServerNoContext</span>
+<span class="k">Procedure</span> <span class="nf">OnActivateRow</span><span class="p">(</span><span class="nv">Element</span><span class="p">,</span> <span class="nv">SelectedRow</span><span class="p">,</span> <span class="nv">Field</span><span class="p">,</span> <span class="nv">NewValue</span><span class="p">,</span> <span class="nv">StandardProcessing</span><span class="p">)</span>
+    <span class="c1">// Correct: non-context server form calls are allowed</span>
     <span class="nv">StandardProcessing</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
