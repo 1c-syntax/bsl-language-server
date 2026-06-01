@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780255165803,
+  "lastUpdate": 1780318589057,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36053,6 +36053,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 29.681641577058127",
             "extra": "mean: 1150.8883113861084 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c72dcf9831267f05edc3d6e419c56389cf56d0ce",
+          "message": "Merge pull request #3984 from 1c-syntax/fix/string-primitive-no-members\n\nУбрать ложные методы у примитива Строка",
+          "timestamp": "2026-06-01T11:18:24+02:00",
+          "tree_id": "76c15ea834477d80b649e378eddf90d8d8a3469e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c72dcf9831267f05edc3d6e419c56389cf56d0ce"
+        },
+        "date": 1780318578607,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1186.858162164688,
+            "unit": "sec",
+            "range": "stddev: 65.75567416001971",
+            "extra": "mean: 1186.858162164688 sec\nrounds: 3"
           }
         ]
       }
