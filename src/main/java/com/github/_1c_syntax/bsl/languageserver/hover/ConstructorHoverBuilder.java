@@ -94,15 +94,7 @@ public class ConstructorHoverBuilder {
     if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        // Необязательный параметр помечаем «?»: знак приклеивается к типу
-        // (`Имя`: Тип?), а при отсутствии типа — к имени (`Имя?`).
-        sb.append("- `").append(p.displayName(lang));
-        var typesLabel = renderTypeSet(p.types(), lang);
-        if (typesLabel.isEmpty()) {
-          sb.append(p.optional() ? "?" : "").append('`');
-        } else {
-          sb.append("`: ").append(typesLabel).append(p.optional() ? "?" : "");
-        }
+        HoverParameters.appendNameAndType(sb, p.displayName(lang), renderTypeSet(p.types(), lang), p.optional());
         if (!p.defaultValue().isBlank()) {
           sb.append(" _= ").append(p.defaultValue()).append('_');
         }

@@ -302,4 +302,27 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
       .contains("* **Порт**: `Число` — номер порта.");
   }
 
+  @Test
+  void structureKeyWithMultipleDocTypesRenderedAsUnion() {
+    // given: ключ с перечислением типов через запятую в doc-комментарии.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Настройки - Структура - настройки:
+      //   * Значение - Строка, Число - значение настройки.
+      Процедура Тест(Настройки) Экспорт
+      КонецПроцедуры
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var method = symbolTree.getMethodSymbol("Тест").orElseThrow();
+    var paramSymbol = symbolTree.getVariableSymbol("Настройки", method).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(paramSymbol).getValue();
+
+    // then: перечисление типов отображается через « | », а не одним токеном.
+    assertThat(content)
+      .contains("* **Значение**: `Строка` | `Число`")
+      .doesNotContain("`Строка, Число`");
+  }
+
 }

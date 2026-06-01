@@ -43,7 +43,6 @@ import java.util.StringJoiner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -81,8 +80,8 @@ class VariableSymbolStructureRenderTest {
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(typeService.displayName(any(TypeRef.class), any(Language.class)))
       .thenAnswer(inv -> ((TypeRef) inv.getArgument(0)).qualifiedName());
-    when(resources.getResourceString(eq(VariableSymbolMarkupContentBuilder.class), eq("type"))).thenReturn("Тип");
-    when(resources.getResourceString(eq(VariableSymbolMarkupContentBuilder.class), eq("moduleVariable")))
+    when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "type")).thenReturn("Тип");
+    when(resources.getResourceString(VariableSymbolMarkupContentBuilder.class, "moduleVariable"))
       .thenReturn("Переменная уровня модуля");
 
     when(symbol.getKind()).thenReturn(VariableKind.MODULE);
@@ -175,7 +174,7 @@ class VariableSymbolStructureRenderTest {
 
   @Test
   void valueTableRowColumnsRenderedAsBulletList() {
-    // given: ТаблицаЗначений из СтрокаТаблицыЗначений { Сумма: Число }
+    // given: таблица значений с одной колонкой Сумма типа Число
     var tableRef = platform("ТаблицаЗначений");
     var rowRef = platform("СтрокаТаблицыЗначений");
     var rowSet = TypeSet.of(rowRef).withField(rowRef, "Сумма", TypeSet.of(NUMBER));
@@ -192,7 +191,7 @@ class VariableSymbolStructureRenderTest {
 
   @Test
   void nestedStructureRenderedWithIndentation() {
-    // given: Структура { Контакты: Структура { Email: Строка } }
+    // given: структура с ключом Контакты, значение которого — вложенная структура с ключом Email
     var ref = platform("Структура");
     var inner = platform("Структура");
     var innerSet = TypeSet.of(inner).withField(inner, "Email", TypeSet.of(STRING));
@@ -205,6 +204,21 @@ class VariableSymbolStructureRenderTest {
     assertThat(content)
       .contains("* **Контакты**: `Структура`")
       .contains("  * **Email**: `Строка`");
+  }
+
+  @Test
+  void sameKeyAcrossUnionRefsRenderedOnce() {
+    // given: union Структура | Неопределено, ключ Имя объявлен у структурного ref.
+    var structure = platform("Структура");
+    var undefined = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
+    var types = TypeSet.of(structure).withField(structure, "Имя", TypeSet.of(STRING))
+      .union(TypeSet.of(undefined));
+
+    // when
+    var content = render(types);
+
+    // then: ключ не дублируется из-за нескольких ref в наборе.
+    assertThat(content.split("\\* \\*\\*Имя\\*\\*", -1)).hasSize(2);
   }
 
   @Test

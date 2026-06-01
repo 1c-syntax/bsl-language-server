@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -506,34 +505,10 @@ public final class SignatureHelpProvider {
     var units = expandParameters(sig.parameters(), lang, argCount);
     var paramInfos = new ArrayList<ParameterInformation>(units.size());
     for (var i = 0; i < units.size(); i++) {
-      var unit = units.get(i);
-      var p = unit.descriptor();
       if (i > 0) {
         label.append(", ");
       }
-      var start = label.length();
-      label.append(unit.name());
-      var typesLabel = renderTypes(p.types(), lang);
-      if (!typesLabel.isEmpty()) {
-        label.append(": ").append(typesLabel);
-      }
-      if (p.optional()) {
-        // Необязательный параметр помечаем «?»: знак приклеивается к типу
-        // (ИмяПараметра: Тип?), а при отсутствии типа — к имени (ИмяПараметра?).
-        label.append('?');
-      }
-      if (p.optional() && !p.defaultValue().isBlank()) {
-        // Платформенный синтаксис: «ИмяПараметра = ЗначениеПоУмолчанию».
-        label.append(" = ").append(p.defaultValue());
-      }
-      var end = label.length();
-      var info = new ParameterInformation();
-      info.setLabel(Either.forRight(new Tuple.Two<>(start, end)));
-      var pDesc = p.displayDescription(lang);
-      if (!pDesc.isBlank()) {
-        info.setDocumentation(pDesc);
-      }
-      paramInfos.add(info);
+      paramInfos.add(appendParameter(label, units.get(i), lang));
     }
     label.append(')');
     if (sig.returnType() != null && sig.returnType() != TypeRef.UNKNOWN) {
@@ -545,6 +520,37 @@ public final class SignatureHelpProvider {
     var sigDesc = sig.displayDescription(lang);
     if (!sigDesc.isBlank()) {
       info.setDocumentation(sigDesc);
+    }
+    return info;
+  }
+
+  /**
+   * Дописать в {@code label} один параметр ({@code Имя: Тип? = Значение}) и вернуть
+   * соответствующий {@link ParameterInformation} с диапазоном подсветки.
+   * Необязательный параметр помечается «?»: знак приклеивается к типу
+   * ({@code Имя: Тип?}), а при отсутствии типа — к имени ({@code Имя?}).
+   */
+  private ParameterInformation appendParameter(StringBuilder label, ParamUnit unit, Language lang) {
+    var p = unit.descriptor();
+    var start = label.length();
+    label.append(unit.name());
+    var typesLabel = renderTypes(p.types(), lang);
+    if (!typesLabel.isEmpty()) {
+      label.append(": ").append(typesLabel);
+    }
+    if (p.optional()) {
+      label.append('?');
+    }
+    if (p.optional() && !p.defaultValue().isBlank()) {
+      // Платформенный синтаксис: «ИмяПараметра = ЗначениеПоУмолчанию».
+      label.append(" = ").append(p.defaultValue());
+    }
+    var end = label.length();
+    var info = new ParameterInformation();
+    info.setLabel(Either.forRight(new Tuple.Two<>(start, end)));
+    var pDesc = p.displayDescription(lang);
+    if (!pDesc.isBlank()) {
+      info.setDocumentation(pDesc);
     }
     return info;
   }
