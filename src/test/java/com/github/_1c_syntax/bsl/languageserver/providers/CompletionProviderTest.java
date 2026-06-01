@@ -833,6 +833,12 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     assertThat(detailMatchesSignature || detailMatchesMultiSignaturesCount)
       .as("detail метода — либо `(...)`, либо `N вариантов синтаксиса`, а не текст описания. Получили: %s", detail)
       .isTrue();
+    if (detailMatchesSignature) {
+      // Необязательные параметры теперь помечаются «?», а не квадратными скобками.
+      assertThat(detail)
+        .as("необязательные параметры — через «?», без квадратных скобок. Получили: %s", detail)
+        .doesNotContain("[").doesNotContain("]");
+    }
   }
 
   @Test
@@ -1015,8 +1021,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .as("документация члена — на русском при language=RU")
         .contains("Добавляет значение");
       assertThat(add.getDetail())
-        .as("имя параметра в сигнатуре — на русском; необязательный → в квадратных скобках")
-        .isEqualTo("([Значение])");
+        .as("имя параметра в сигнатуре — на русском; необязательный → со знаком «?»")
+        .isEqualTo("(Значение?)");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }
@@ -1034,8 +1040,8 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
         .contains("Adds a value")
         .doesNotContain("Добавляет");
       assertThat(add.getDetail())
-        .as("имя параметра в сигнатуре — на английском; необязательный → в квадратных скобках")
-        .isEqualTo("([Value])");
+        .as("имя параметра в сигнатуре — на английском; необязательный → со знаком «?»")
+        .isEqualTo("(Value?)");
     } finally {
       languageServerConfiguration.setLanguage(Language.DEFAULT_LANGUAGE);
     }

@@ -517,6 +517,11 @@ public final class SignatureHelpProvider {
       if (!typesLabel.isEmpty()) {
         label.append(": ").append(typesLabel);
       }
+      if (p.optional()) {
+        // Необязательный параметр помечаем «?»: знак приклеивается к типу
+        // (ИмяПараметра: Тип?), а при отсутствии типа — к имени (ИмяПараметра?).
+        label.append('?');
+      }
       if (p.optional() && !p.defaultValue().isBlank()) {
         // Платформенный синтаксис: «ИмяПараметра = ЗначениеПоУмолчанию».
         label.append(" = ").append(p.defaultValue());
