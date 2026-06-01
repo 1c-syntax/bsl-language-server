@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780347400356,
+  "lastUpdate": 1780354775786,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36115,6 +36115,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 42.06362442051337",
             "extra": "mean: 1374.8199602762859 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e3873d5a6d6f9b98a1b73fc9fc2101cfc6e9985",
+          "message": "Merge pull request #3982 from erprivalov/feature/Issue-3852\n\nfix: убрано ложное срабатывание диагностики ServerCallsInFormEvents на директиву &НаСервереБезКонтекста (#3852)",
+          "timestamp": "2026-06-01T13:56:17+02:00",
+          "tree_id": "bc34038ac38728acbed1d6efd05d4e43ecb7bf36",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6e3873d5a6d6f9b98a1b73fc9fc2101cfc6e9985"
+        },
+        "date": 1780354768347,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1314.6113838354747,
+            "unit": "sec",
+            "range": "stddev: 136.29016249516638",
+            "extra": "mean: 1314.6113838354747 sec\nrounds: 3"
           }
         ]
       }
