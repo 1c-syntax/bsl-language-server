@@ -235,4 +235,44 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     assertThat(content).contains("Тип: Строка");
   }
 
+  @Test
+  void structureContentsFromInferenceRenderedAsBulletList() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем С;
+      С = Новый Структура("Имя, Возраст", "Иван", 30);
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = symbolTree.getVariableSymbol("С", symbolTree.getModule()).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    // then
+    assertThat(content)
+      .contains("Тип: Структура")
+      .contains("* **Имя**: `Строка`")
+      .contains("* **Возраст**: `Число`");
+  }
+
+  @Test
+  void valueTableColumnsFromInferenceRenderedAsBulletList() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем ТЗ;
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("Сумма");
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = symbolTree.getVariableSymbol("ТЗ", symbolTree.getModule()).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    // then: колонки строки ТЗ показываются маркдаун-списком.
+    assertThat(content)
+      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений")
+      .contains("* **Сумма**");
+  }
+
 }

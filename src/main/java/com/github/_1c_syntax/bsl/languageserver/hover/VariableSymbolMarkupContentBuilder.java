@@ -36,6 +36,8 @@ import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -122,31 +124,69 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     // Hover — элемент интерфейса, поэтому язык отображения берём из настроек
     // LS (configuration), а не из ScriptVariant (язык исходников).
     var lang = configuration.getLanguage();
-    String joined = types.refs().stream()
-      .map(ref -> renderRef(types, ref, lang))
+    String header = types.refs().stream()
+      .map(ref -> inlineTypeLabel(types, ref, lang, false))
       .collect(Collectors.joining(" | "));
-    return "%s: %s".formatted(getResourceString(TYPE_KEY), joined);
+
+    var sb = new StringBuilder("%s: %s".formatted(getResourceString(TYPE_KEY), header));
+
+    // Содержимое «открытых» объектов (Структура/Соответствие/Фиксированные,
+    // строка ТаблицыЗначений) рендерим маркдаун-списком под заголовком типа.
+    var bullets = new ArrayList<String>();
+    for (var ref : types.refs()) {
+      collectFieldBullets(bullets, types, ref, lang, 0);
+    }
+    if (!bullets.isEmpty()) {
+      sb.append('\n');
+      bullets.forEach(line -> sb.append('\n').append(line));
+    }
+    return sb.toString();
   }
 
-  private String renderRef(TypeSet owner, TypeRef ref, Language lang) {
+  /**
+   * Собрать строки маркдаун-списка для полей «открытого» объекта {@code ref}.
+   * Поля берутся как из самого {@code ref} ({@link TypeSet#getLocalFields}), так
+   * и из типов-элементов коллекции (например, колонки {@code СтрокаТаблицыЗначений},
+   * подвешенной к {@code ТаблицаЗначений}). Вложенные структуры рекурсивно
+   * получают увеличенный отступ.
+   */
+  private void collectFieldBullets(List<String> out, TypeSet owner, TypeRef ref, Language lang, int indent) {
+    var pad = "  ".repeat(indent);
+    for (var entry : owner.getLocalFields(ref).entrySet()) {
+      var fieldTypes = entry.getValue();
+      var typeLabel = fieldTypes.refs().stream()
+        .map(r -> inlineTypeLabel(fieldTypes, r, lang, true))
+        .collect(Collectors.joining(" | "));
+      out.add("%s* **%s**: %s".formatted(pad, entry.getKey(), typeLabel));
+      for (var r : fieldTypes.refs()) {
+        collectFieldBullets(out, fieldTypes, r, lang, indent + 1);
+      }
+    }
+    // Колонки строки ТаблицыЗначений подвешены к типу строки через elementTypes.
+    var elementTypes = owner.getElementTypes(ref);
+    for (var elemRef : elementTypes.refs()) {
+      collectFieldBullets(out, elementTypes, elemRef, lang, indent);
+    }
+  }
+
+  /**
+   * Однострочная подпись типа: имя (опционально в обратных кавычках) и, для
+   * коллекций, тип элемента через «из»/«Of». Поля здесь не разворачиваются —
+   * они идут отдельным списком.
+   *
+   * @param code обрамлять ли имена типов обратными кавычками (для значений полей).
+   */
+  private String inlineTypeLabel(TypeSet owner, TypeRef ref, Language lang, boolean code) {
     var name = typeService.displayName(ref, lang);
+    var label = code ? "`" + name + "`" : name;
     var elementTypes = owner.getElementTypes(ref);
     if (!elementTypes.isEmpty()) {
       var elemJoined = elementTypes.refs().stream()
-        .map(r -> renderRef(elementTypes, r, lang))
+        .map(r -> inlineTypeLabel(elementTypes, r, lang, code))
         .collect(Collectors.joining(", "));
-      name = name + collectionOf(lang) + elemJoined;
+      label = label + collectionOf(lang) + elemJoined;
     }
-    var fields = owner.getLocalFields(ref);
-    if (!fields.isEmpty()) {
-      var fieldsJoined = fields.entrySet().stream()
-        .map(e -> e.getKey() + ": " + e.getValue().refs().stream()
-          .map(r -> renderRef(e.getValue(), r, lang))
-          .collect(Collectors.joining(" | ")))
-        .collect(Collectors.joining(", "));
-      name = name + " { " + fieldsJoined + " }";
-    }
-    return name;
+    return label;
   }
 
   /** Разделитель «коллекция → тип элемента» в локали отображения. */
