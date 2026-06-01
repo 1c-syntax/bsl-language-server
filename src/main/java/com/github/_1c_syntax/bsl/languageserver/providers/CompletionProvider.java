@@ -665,10 +665,10 @@ public final class CompletionProvider {
       }
       var p = params.get(i);
       var paramName = p.displayName(scriptVariant);
+      sb.append(paramName);
       if (p.optional()) {
-        sb.append('[').append(paramName).append(']');
-      } else {
-        sb.append(paramName);
+        // Необязательный параметр помечаем «?» после имени: ИмяПараметра?.
+        sb.append('?');
       }
     }
     sb.append(')');

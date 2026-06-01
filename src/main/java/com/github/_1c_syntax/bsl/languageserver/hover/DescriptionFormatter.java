@@ -249,6 +249,9 @@ public class DescriptionFormatter {
       }
 
       if (parameterDefinition.isOptional()) {
+        // Необязательный параметр помечаем «?»: знак приклеивается к типу
+        // (Имя: Тип?), а при отсутствии типа — к имени (Имя?).
+        parameter.append('?');
         parameter.append(" = ");
         parameter.append(parameterDefinition.getDefaultValue().value());
       }

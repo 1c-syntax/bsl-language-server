@@ -235,4 +235,94 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     assertThat(content).contains("Тип: Строка");
   }
 
+  @Test
+  void structureContentsFromInferenceRenderedAsBulletList() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем С;
+      С = Новый Структура("Имя, Возраст", "Иван", 30);
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = symbolTree.getVariableSymbol("С", symbolTree.getModule()).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    // then: у структуры с полями элемент-итератор (КлючИЗначение) в заголовке не показываем.
+    assertThat(content)
+      .contains("Тип: Структура")
+      .doesNotContain("КлючИЗначение")
+      .contains("* **Имя**: `Строка`")
+      .contains("* **Возраст**: `Число`");
+  }
+
+  @Test
+  void valueTableColumnsFromInferenceRenderedAsBulletList() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем ТЗ;
+      ТЗ = Новый ТаблицаЗначений;
+      ТЗ.Колонки.Добавить("Сумма");
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = symbolTree.getVariableSymbol("ТЗ", symbolTree.getModule()).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    // then: колонки строки ТЗ показываются маркдаун-списком.
+    assertThat(content)
+      .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений")
+      .contains("* **Сумма**");
+  }
+
+  @Test
+  void structureKeyDescriptionsFromParameterDocRendered() {
+    // given: параметр-структура с задокументированными ключами.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Настройки - Структура - настройки подключения:
+      //   * Адрес - Строка - адрес сервера.
+      //   * Порт - Число - номер порта.
+      Процедура Тест(Настройки) Экспорт
+      КонецПроцедуры
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var method = symbolTree.getMethodSymbol("Тест").orElseThrow();
+    var paramSymbol = symbolTree.getVariableSymbol("Настройки", method).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(paramSymbol).getValue();
+
+    // then: ключи показаны с типами и описаниями из doc-комментария, без шума «из КлючИЗначение».
+    assertThat(content)
+      .contains("Тип: Структура")
+      .doesNotContain("КлючИЗначение")
+      .contains("* **Адрес**: `Строка` — адрес сервера.")
+      .contains("* **Порт**: `Число` — номер порта.");
+  }
+
+  @Test
+  void structureKeyWithMultipleDocTypesRenderedAsUnion() {
+    // given: ключ с перечислением типов через запятую в doc-комментарии.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Настройки - Структура - настройки:
+      //   * Значение - Строка, Число - значение настройки.
+      Процедура Тест(Настройки) Экспорт
+      КонецПроцедуры
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var method = symbolTree.getMethodSymbol("Тест").orElseThrow();
+    var paramSymbol = symbolTree.getVariableSymbol("Настройки", method).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(paramSymbol).getValue();
+
+    // then: перечисление типов отображается через « | », а не одним токеном.
+    assertThat(content)
+      .contains("* **Значение**: `Строка` | `Число`")
+      .doesNotContain("`Строка, Число`");
+  }
+
 }

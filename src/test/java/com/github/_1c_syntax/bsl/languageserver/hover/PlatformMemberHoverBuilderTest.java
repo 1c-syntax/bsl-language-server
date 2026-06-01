@@ -308,8 +308,8 @@ class PlatformMemberHoverBuilderTest {
     // then
     var value = content.getValue();
     assertThat(value)
-      .contains("Опц")
-      .contains("[optionalParameter]")
+      .contains("`Опц`: Число?")
+      .doesNotContain("[optionalParameter]")
       .contains("= 0");
   }
 
