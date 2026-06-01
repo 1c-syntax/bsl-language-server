@@ -248,9 +248,10 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     // when
     var content = markupContentBuilder.getContent(varSymbol).getValue();
 
-    // then
+    // then: у структуры с полями элемент-итератор (КлючИЗначение) в заголовке не показываем.
     assertThat(content)
       .contains("Тип: Структура")
+      .doesNotContain("КлючИЗначение")
       .contains("* **Имя**: `Строка`")
       .contains("* **Возраст**: `Число`");
   }
@@ -273,6 +274,32 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     assertThat(content)
       .contains("Тип: ТаблицаЗначений из СтрокаТаблицыЗначений")
       .contains("* **Сумма**");
+  }
+
+  @Test
+  void structureKeyDescriptionsFromParameterDocRendered() {
+    // given: параметр-структура с задокументированными ключами.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Настройки - Структура - настройки подключения:
+      //   * Адрес - Строка - адрес сервера.
+      //   * Порт - Число - номер порта.
+      Процедура Тест(Настройки) Экспорт
+      КонецПроцедуры
+      """);
+    final var symbolTree = documentContext.getSymbolTree();
+    var method = symbolTree.getMethodSymbol("Тест").orElseThrow();
+    var paramSymbol = symbolTree.getVariableSymbol("Настройки", method).orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(paramSymbol).getValue();
+
+    // then: ключи показаны с типами и описаниями из doc-комментария, без шума «из КлючИЗначение».
+    assertThat(content)
+      .contains("Тип: Структура")
+      .doesNotContain("КлючИЗначение")
+      .contains("* **Адрес**: `Строка` — адрес сервера.")
+      .contains("* **Порт**: `Число` — номер порта.");
   }
 
 }
