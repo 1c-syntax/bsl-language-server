@@ -128,6 +128,10 @@ public class OScriptModuleMembersProvider {
     if (firstTimeForName) {
       typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), LanguageScope.OS);
       if (libraryEntry != null) {
+        // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
+        // (единый источник в GlobalScopeProvider вместо обращения инференсера к
+        // oScriptLibraryIndex).
+        globalScopeProvider.indexModuleType(uri, ref);
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
           typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
@@ -148,6 +152,7 @@ public class OScriptModuleMembersProvider {
    * удалении любого {@code .os}-документа из {@code ServerContext}.
    */
   public void unregister(URI uri) {
+    globalScopeProvider.removeModuleType(uri);
     var names = registeredByUri.remove(uri);
     if (names == null) {
       return;
