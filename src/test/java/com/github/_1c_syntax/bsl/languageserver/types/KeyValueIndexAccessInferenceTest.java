@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Тип значения по ключу в KV-коллекциях (Структура / Соответствие) — точный
  * по строковому литералу, union по динамическому индексу, empty для
  * неизвестных ключей. Сценарии параллельны completion-тестам, но проверяют
- * результат {@link TypeService#inferAtPosition} напрямую — на уровне TypeSet,
+ * результат {@link TypeService#expressionTypesAt} напрямую — на уровне TypeSet,
  * без учёта как именно потом этот тип отобразится в выпадашке.
  */
 @CleanupContextBeforeClassAndAfterClass

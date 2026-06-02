@@ -644,17 +644,11 @@ public class ExpressionTypeInferencer {
         if (!member.matches(memberName)) {
           continue;
         }
-        // Сначала composite-набор типов; для single-type returnType-fallback
-        // (legacy-проводка для членов, которые не используют новый API).
-        var memberTypes = member.returnTypes();
-        if (memberTypes != null && !memberTypes.isEmpty()) {
-          for (var ref : memberTypes.refs()) {
-            if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
-              result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
-            }
+        // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
+        for (var ref : member.returnTypes().refs()) {
+          if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
+            result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
           }
-        } else if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
-          result = result.union(enrichReturnRefWithElementFields(member.returnType(), elementSet));
         }
       }
     }

@@ -86,7 +86,7 @@ public class ExpressionAtPosition {
    * Найти lValue-предка terminal'а под курсором — для случая dereference на левой
    * части присваивания ({@code Объект.Свойство = …}). lValue — отдельная продукция
    * грамматики и не накрывается ни expression, ни complexIdentifier, поэтому
-   * без отдельного lookup'а hover/findMemberAt ничего не находят на lValue-цепочке.
+   * без отдельного lookup'а hover/memberAt ничего не находят на lValue-цепочке.
    */
   public static Optional<BSLParser.LValueContext> findLValueContext(
     DocumentContext documentContext,

@@ -113,7 +113,7 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
         continue;
       }
       var args = paramList.callParam();
-      // Конструкторы (Новый Тип(...)) резолвятся отдельно — findMemberAt
+      // Конструкторы (Новый Тип(...)) резолвятся отдельно — memberAt
       // не вернёт MemberDescriptor для имени типа.
       if (doCall.getParent() instanceof BSLParser.NewExpressionContext nex) {
         appendConstructorHints(result, documentContext, nex, args);
@@ -228,7 +228,7 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
       return idPosition(mc.methodName() == null ? null : mc.methodName().IDENTIFIER());
     }
     // NewExpression обрабатывается отдельно — конструкторы у платформенных
-    // классов резолвятся через TypeService.getConstructors, а findMemberAt
+    // классов резолвятся через TypeService.getConstructors, а memberAt
     // не вернёт MemberDescriptor для имени типа.
     return null;
   }

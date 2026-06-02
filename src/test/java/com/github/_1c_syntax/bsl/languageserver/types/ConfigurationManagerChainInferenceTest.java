@@ -89,7 +89,7 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
     String assignedVar
   ) {
     // Кладём курсор на имя метода в правой части присваивания, как в
-    // CommonModuleCallInferenceTest — inferAtPosition возвращает тип
+    // CommonModuleCallInferenceTest — expressionTypesAt возвращает тип
     // объемлющего выражения (вызова), а не самой переменной слева.
     var marker = assignedVar + " = ";
     var rhsStart = content.indexOf(marker) + marker.length();

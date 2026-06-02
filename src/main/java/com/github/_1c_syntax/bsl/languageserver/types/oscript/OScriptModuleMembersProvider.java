@@ -128,14 +128,15 @@ public class OScriptModuleMembersProvider {
     if (firstTimeForName) {
       typeRegistry.registerMemberSource(ref, () -> collectMembers(documentContext), LanguageScope.OS);
       if (libraryEntry != null) {
-        // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
-        // (единый источник в GlobalScopeProvider вместо обращения инференсера к
-        // oScriptLibraryIndex).
-        globalScopeProvider.indexModuleType(uri, ref);
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
           typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
+          // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
+          // (единый источник в GlobalScopeProvider вместо обращения инференсера к
+          // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
+          // роль CLASS не должна перетирать тип модуля под тем же URI.
+          globalScopeProvider.indexModuleType(uri, ref);
           globalScopeProvider.registerLibraryModule(qualifiedName, ref);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {

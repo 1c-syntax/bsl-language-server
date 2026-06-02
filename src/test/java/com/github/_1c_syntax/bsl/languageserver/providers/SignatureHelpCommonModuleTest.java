@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Signature help на вызове метода общего модуля. Ресивер-общий-модуль не
- * резолвится через индекс ссылок, а inferAtPosition на mid-call дал бы тип
+ * резолвится через индекс ссылок, а expressionTypesAt на mid-call дал бы тип
  * возврата вызова — поэтому без receiverTypesAt сигнатура не находилась
  * (тот же класс бага, что #3991 в completion).
  */

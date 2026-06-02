@@ -136,7 +136,7 @@ public final class SignatureHelpProvider {
 
   /**
    * Извлекает типы фактических аргументов из {@code doCall} через
-   * {@link TypeService#typesAt(DocumentContext, org.eclipse.lsp4j.Position)}. Незаполненный
+   * {@link TypeService#expressionTypesAt(DocumentContext, org.eclipse.lsp4j.Position)}. Незаполненный
    * аргумент или аргумент с неизвестным типом → {@link TypeSet#EMPTY}.
    */
   private List<TypeSet> inferArgTypes(BSLParser.DoCallContext doCall, DocumentContext documentContext) {

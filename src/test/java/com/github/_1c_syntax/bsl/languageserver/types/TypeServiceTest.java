@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -49,8 +48,6 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeService typeService;
-  @Autowired
-  private TypeRegistry typeRegistry;
 
   @BeforeEach
   void setUpWorkspaceContext() {
@@ -140,7 +137,7 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
     // when
     var types = typeService.typesAt(reference);
     var arrayRef = types.refs().iterator().next();
-    var members = typeRegistry.getMembers(arrayRef);
+    var members = typeService.getMembers(arrayRef, documentContext.getFileType());
 
     // then
     assertThat(members).extracting(com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor::name)

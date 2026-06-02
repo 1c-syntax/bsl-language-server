@@ -165,7 +165,7 @@ public final class PlatformMemberCalls {
       return;
     }
     // Позиция начала идентификатора входит в его токен (start-inclusive),
-    // этого достаточно для findMembersAt.
+    // этого достаточно для membersAt.
     var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
     sink.addAll(typeService.membersAt(documentContext, position));
   }

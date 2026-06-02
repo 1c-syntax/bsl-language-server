@@ -183,7 +183,7 @@ class TypeServiceDelegationTest {
 
   @Test
   void isUnknownGlobalAtTrueWhenNoMembersAndNoReference() {
-    // given — пустой документ-мок: findMembersAt вернёт empty, findReference — empty.
+    // given — пустой документ-мок: membersAt вернёт empty, findReference — empty.
     var docMock = org.mockito.Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
     when(docMock.getAst()).thenReturn(emptyAst());
@@ -198,7 +198,7 @@ class TypeServiceDelegationTest {
 
   @Test
   void isUnknownGlobalAtFalseWhenReferenceResolves() {
-    // given — findMembersAt пуст, но reference резолвится → не считаем неизвестным.
+    // given — membersAt пуст, но reference резолвится → не считаем неизвестным.
     var docMock = org.mockito.Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
     when(docMock.getAst()).thenReturn(emptyAst());
@@ -216,7 +216,7 @@ class TypeServiceDelegationTest {
 
   @Test
   void unknownMemberReceiverAtEmptyForBlankDocument() {
-    // given — пустой AST: findMembersAt empty (terminal не найден),
+    // given — пустой AST: membersAt empty (terminal не найден),
     // dereferenceMatcher.receiverTypesAt не вызывается (нет terminal).
     var docMock = org.mockito.Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);

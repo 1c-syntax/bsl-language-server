@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationParamSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +33,7 @@ import org.springframework.stereotype.Component;
 import java.util.StringJoiner;
 
 /**
- * Построитель контента для всплывающего окна для {@link AnnotationSymbol}.
+ * Построитель контента для всплывающего окна для {@link AnnotationParamSymbol}.
  */
 @Component
 @RequiredArgsConstructor

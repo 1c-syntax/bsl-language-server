@@ -68,7 +68,7 @@ import java.util.Optional;
  * read-write на другом, поэтому решение принимается только по
  * резолвленному member'у конкретного типа-владельца.
  * <p>
- * <b>Lock contention.</b> Раньше шаг 3 (findMemberAt → ExpressionTypeInferencer
+ * <b>Lock contention.</b> Раньше шаг 3 (memberAt → ExpressionTypeInferencer
  * → ReferenceResolver → ServerContextProvider.getDocument) брал per-document
  * RWLock и конкурировал с {@code populateContext} (там WRITE). Сейчас
  * reference-finder'ы переведены на {@code getDocumentNoLock} (см.

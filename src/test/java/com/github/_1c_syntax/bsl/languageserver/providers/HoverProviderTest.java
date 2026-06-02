@@ -155,7 +155,7 @@ class HoverProviderTest {
   void hoverOnMemberInLvalueAssignmentTarget() {
     // Регрессия: dereference в LHS присваивания (lValue) — hover должен резолвиться так же,
     // как в RHS. ExpressionAtPosition.findExpressionTree сейчас не покрывает lValue,
-    // поэтому findMemberAt возвращает пусто на `ИсточникДанных.Имя = …`.
+    // поэтому memberAt возвращает пусто на `ИсточникДанных.Имя = …`.
     var content = """
       СхемаКомпоновкиДанных = Новый СхемаКомпоновкиДанных;
       ИсточникДанных = СхемаКомпоновкиДанных.ИсточникиДанных.Добавить();
