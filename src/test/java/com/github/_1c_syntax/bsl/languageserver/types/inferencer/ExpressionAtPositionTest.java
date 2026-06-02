@@ -197,6 +197,36 @@ class ExpressionAtPositionTest {
   }
 
   @Test
+  void findCallStatementContextReturnsCallStatementForTrailingDotReceiver() {
+    // given — висячая точка: `ИмяМодуля.` без продолжения. В текущей грамматике
+    // ресивер — прямой ребёнок callStatement: (callStatement Идентификатор
+    // (incompleteAccess .)). Поиск целевого правила должен считать сам узел
+    // кандидатом (inclusive), иначе callStatement не находится.
+    var content = "Процедура Т() Экспорт\n    ОбщегоНазначения.\nКонецПроцедуры\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция внутри идентификатора-ресивера ОбщегоНазначения.
+    var callStmt = ExpressionAtPosition.findCallStatementContext(dc, new Position(1, 7));
+
+    // then
+    assertThat(callStmt).isPresent();
+  }
+
+  @Test
+  void findExpressionTreeReturnsBslExpressionForTrailingDotReceiver() {
+    // given — висячая точка `ИмяМодуля.`: именно этот сценарий dot-completion'а
+    // ресивера, который ранее давал пустое дерево (treePresent=false).
+    var content = "Процедура Т() Экспорт\n    ОбщегоНазначения.\nКонецПроцедуры\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция внутри идентификатора-ресивера.
+    var tree = ExpressionAtPosition.findExpressionTree(dc, new Position(1, 7));
+
+    // then — дерево построено, вывод типа ресивера возможен.
+    assertThat(tree).isPresent();
+  }
+
+  @Test
   void findExpressionTreeReturnsBslExpressionForLValue() {
     // given
     var content = "Объект.Свойство = 1;\n";
