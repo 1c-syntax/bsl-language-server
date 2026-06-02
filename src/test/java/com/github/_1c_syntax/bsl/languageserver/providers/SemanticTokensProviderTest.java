@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
+import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
@@ -1807,6 +1808,89 @@ class SemanticTokensProviderTest {
           .isNotEqualTo(4);
       }
     }
+  }
+
+  // endregion
+
+  // region findOverlaps
+
+  @Test
+  void findOverlaps_detectsConflictingTokensAtSamePosition() {
+    // given — два токена на одной позиции с разным типом (class vs property).
+    var classToken = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var propertyToken = new SemanticTokenEntry(0, 5, 10, 1, 0);
+
+    // when
+    var overlaps = SemanticTokensProvider.findOverlaps(List.of(classToken, propertyToken));
+
+    // then — конфликт зафиксирован.
+    assertThat(overlaps).hasSize(1);
+  }
+
+  @Test
+  void findOverlaps_ignoresExactDuplicates() {
+    // given — полностью идентичные токены от разных сапплаеров (де-дуп их уберёт).
+    var token = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var duplicate = new SemanticTokenEntry(0, 5, 10, 0, 0);
+
+    // when
+    var overlaps = SemanticTokensProvider.findOverlaps(List.of(token, duplicate));
+
+    // then — точный дубль конфликтом не считается.
+    assertThat(overlaps).isEmpty();
+  }
+
+  @Test
+  void findOverlaps_ignoresAdjacentAndDistinctTokens() {
+    // given — смежные (стык в стык) и непересекающиеся токены на одной строке.
+    var first = new SemanticTokenEntry(0, 0, 5, 0, 0);
+    var adjacent = new SemanticTokenEntry(0, 5, 5, 1, 0);
+    var distantOtherLine = new SemanticTokenEntry(1, 2, 5, 2, 0);
+
+    // when
+    var overlaps = SemanticTokensProvider.findOverlaps(List.of(first, adjacent, distantOtherLine));
+
+    // then — пересечений нет.
+    assertThat(overlaps).isEmpty();
+  }
+
+  @Test
+  void findOverlaps_detectsPartialOverlap() {
+    // given — частичное наложение спанов на одной строке.
+    var a = new SemanticTokenEntry(0, 0, 8, 0, 0);
+    var b = new SemanticTokenEntry(0, 5, 8, 1, 0);
+
+    // when
+    var overlaps = SemanticTokensProvider.findOverlaps(List.of(a, b));
+
+    // then — частичное наложение — это конфликт.
+    assertThat(overlaps).hasSize(1);
+  }
+
+  @Test
+  void findOverlaps_detectsSameStartDifferentLength() {
+    // given — общий start, но разная длина (один сапплаер покрасил шире другого).
+    var a = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var b = new SemanticTokenEntry(0, 5, 8, 0, 0);
+
+    // when
+    var overlaps = SemanticTokensProvider.findOverlaps(List.of(a, b));
+
+    // then — разная длина при общем начале — конфликт.
+    assertThat(overlaps).hasSize(1);
+  }
+
+  @Test
+  void findOverlaps_detectsSameSpanDifferentModifiers() {
+    // given — совпадают позиция и тип, но различаются модификаторы.
+    var a = new SemanticTokenEntry(0, 5, 10, 0, 0);
+    var b = new SemanticTokenEntry(0, 5, 10, 0, 1);
+
+    // when
+    var overlaps = SemanticTokensProvider.findOverlaps(List.of(a, b));
+
+    // then — разные модификаторы на одном спане — конфликт.
+    assertThat(overlaps).hasSize(1);
   }
 
   // endregion

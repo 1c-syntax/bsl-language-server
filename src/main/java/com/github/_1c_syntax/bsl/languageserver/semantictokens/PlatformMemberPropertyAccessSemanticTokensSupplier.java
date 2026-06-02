@@ -23,8 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -45,7 +47,7 @@ import java.util.Optional;
  * где {@code receiver} — типизированное выражение, чей тип резолвится через
  * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer}).
  * <p>
- * Свойство резолвится через {@link TypeService#findMemberAt(DocumentContext, Position)}.
+ * Свойство резолвится через {@link TypeService#memberAt(DocumentContext, Position)}.
  * Если найден member с {@link MemberKind#PROPERTY} — имя свойства получает
  * {@link SemanticTokenTypes#Property} + {@link SemanticTokenModifiers#DefaultLibrary}.
  * <p>
@@ -53,8 +55,17 @@ import java.util.Optional;
  * подсвечивает вызовы методов платформенных типов через accessCall. В отличие от
  * методного сапплаера здесь не нужен skip source-defined call-site'ов: source-defined
  * переменные (в т.ч. экспортные переменные модуля объекта) не выставляются как
- * члены типа, поэтому {@link TypeService#findMemberAt} их не находит и пересечения
+ * члены типа, поэтому {@link TypeService#memberAt} их не находит и пересечения
  * по позиции с {@link SymbolsSemanticTokensSupplier} не возникает.
+ * <p>
+ * Члены, которые уже красит {@link GlobalScopeSemanticTokensSupplier}, пропускаются,
+ * чтобы не накладывать второй токен на тот же идентификатор:
+ * <ul>
+ *   <li>ссылка на метаобъект конфигурации ({@code Справочники.Контрагенты}) —
+ *       returnType с {@link TypeKind#CONFIGURATION} → красится как {@code Class};</li>
+ *   <li>self-typed значение перечисления ({@code КодировкаТекста.UTF8}) —
+ *       owner совпадает с returnType → красится как {@code EnumMember}.</li>
+ * </ul>
  */
 @Component
 @RequiredArgsConstructor
@@ -87,13 +98,27 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
   }
 
   private boolean isPlatformProperty(DocumentContext documentContext, Position position) {
-    return typeService.findMemberAt(documentContext, position)
-      .map(TypeService.TypedMember::descriptor)
-      .filter(PlatformMemberPropertyAccessSemanticTokensSupplier::isProperty)
+    return typeService.memberAt(documentContext, position)
+      .filter(PlatformMemberPropertyAccessSemanticTokensSupplier::isHighlightableProperty)
       .isPresent();
   }
 
-  static boolean isProperty(MemberDescriptor descriptor) {
-    return descriptor.kind() == MemberKind.PROPERTY;
+  /**
+   * Член — это свойство, которое не относится к домену
+   * {@link GlobalScopeSemanticTokensSupplier} (метаобъект конфигурации или
+   * значение перечисления), а потому может быть покрашено как {@code Property}.
+   */
+  static boolean isHighlightableProperty(TypedMember member) {
+    var descriptor = member.descriptor();
+    if (descriptor.kind() != MemberKind.PROPERTY) {
+      return false;
+    }
+    var returnType = descriptor.returnType();
+    // Ссылка на метаобъект конфигурации (Справочники.Контрагенты) → Class в GlobalScope.
+    if (returnType.kind() == TypeKind.CONFIGURATION) {
+      return false;
+    }
+    // Self-typed значение перечисления (КодировкаТекста.UTF8) → EnumMember в GlobalScope.
+    return !Objects.equals(member.owner(), returnType);
   }
 }

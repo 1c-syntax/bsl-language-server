@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -465,6 +466,61 @@ public class SemanticTokensProvider {
         executor
       )
       .join();
+  }
+
+  /**
+   * Пересечение двух токенов, выданных сапплаерами на одном участке кода.
+   *
+   * @param first  токен с меньшей (или равной) начальной позицией
+   * @param second пересекающийся с ним токен
+   */
+  public record TokenOverlap(SemanticTokenEntry first, SemanticTokenEntry second) {
+  }
+
+  /**
+   * Находит пересечения токенов на одной строке (отладочный guard).
+   * <p>
+   * По спецификации LSP токены семантической подсветки не должны пересекаться:
+   * если два сапплаера покрасили один и тот же (или перекрывающийся) участок
+   * разными {@code type}/{@code modifiers} — это конфликт подсветки, который
+   * клиент отрисует недетерминированно. Точные дубли (полностью совпадающие
+   * по позиции и оформлению токены от разных сапплаеров) конфликтом не
+   * считаются — их убирает де-дупликация в {@link #toDeltaEncodedArray}.
+   *
+   * @param entries собранные со всех сапплаеров токены
+   * @return список пар пересекающихся токенов; пустой, если конфликтов нет
+   */
+  static List<TokenOverlap> findOverlaps(List<SemanticTokenEntry> entries) {
+    var byLine = new HashMap<Integer, List<SemanticTokenEntry>>();
+    for (var entry : entries) {
+      byLine.computeIfAbsent(entry.line(), k -> new ArrayList<>()).add(entry);
+    }
+
+    var overlaps = new ArrayList<TokenOverlap>();
+    for (var lineTokens : byLine.values()) {
+      lineTokens.sort(Comparator.comparingInt(SemanticTokenEntry::start));
+      for (int i = 0; i < lineTokens.size(); i++) {
+        var a = lineTokens.get(i);
+        int aEnd = a.start() + a.length();
+        for (int j = i + 1; j < lineTokens.size(); j++) {
+          var b = lineTokens.get(j);
+          if (b.start() >= aEnd) {
+            break; // токены отсортированы по start — дальше пересечений с a нет
+          }
+          if (!isExactDuplicate(a, b)) {
+            overlaps.add(new TokenOverlap(a, b));
+          }
+        }
+      }
+    }
+    return overlaps;
+  }
+
+  private static boolean isExactDuplicate(SemanticTokenEntry a, SemanticTokenEntry b) {
+    return a.start() == b.start()
+      && a.length() == b.length()
+      && a.type() == b.type()
+      && a.modifiers() == b.modifiers();
   }
 
   private static int[] toDeltaEncodedArray(List<SemanticTokenEntry> entries) {
