@@ -49,7 +49,7 @@ import java.util.Set;
  * — типизированное выражение, чей тип резолвится через
  * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer}).
  * <p>
- * Метод резолвится через {@link TypeService#findMemberAt(DocumentContext, Position)}.
+ * Метод резолвится через {@link TypeService#memberAt(DocumentContext, Position)}.
  * Если найден member с {@link MemberKind#METHOD} — имя метода получает
  * {@link SemanticTokenTypes#Method} + {@link SemanticTokenModifiers#DefaultLibrary},
  * а для async-методов платформы (флаг {@link MemberDescriptor#async()}) добавляется
@@ -102,7 +102,7 @@ public class PlatformMemberMethodCallSemanticTokensSupplier implements SemanticT
   }
 
   private Optional<MemberDescriptor> platformMethodAt(DocumentContext documentContext, Position position) {
-    return typeService.findMemberAt(documentContext, position)
+    return typeService.memberAt(documentContext, position)
       .map(TypeService.TypedMember::descriptor)
       .filter(descriptor -> descriptor.kind() == MemberKind.METHOD);
   }

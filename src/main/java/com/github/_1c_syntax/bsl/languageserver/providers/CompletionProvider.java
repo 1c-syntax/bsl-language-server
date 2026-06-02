@@ -251,12 +251,8 @@ public final class CompletionProvider {
       return List.of();
     }
     var fileType = documentContext.getFileType();
-    // позиция выражения — символ перед точкой
-    var beforeDot = new Position(position.getLine(), Math.max(0, dotInfo.dotColumn - 1));
-    var typeSet = typeService.findTypes(documentContext.getUri(), beforeDot);
-    if (typeSet.isEmpty()) {
-      typeSet = typeService.inferAtPosition(documentContext, beforeDot);
-    }
+    // тип ресивера слева от точки
+    var typeSet = typeService.receiverTypesAt(documentContext, position);
     if (typeSet.isEmpty()) {
       return List.of();
     }
@@ -309,13 +305,13 @@ public final class CompletionProvider {
       if (i == 0 || line.charAt(i - 1) != '.') {
         return null;
       }
-      return new DotCompletionInfo(i - 1, line.substring(i, col));
+      return new DotCompletionInfo(line.substring(i, col));
     } catch (Exception e) {
       return null;
     }
   }
 
-  private record DotCompletionInfo(int dotColumn, String prefix) {
+  private record DotCompletionInfo(String prefix) {
   }
 
   private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position) {

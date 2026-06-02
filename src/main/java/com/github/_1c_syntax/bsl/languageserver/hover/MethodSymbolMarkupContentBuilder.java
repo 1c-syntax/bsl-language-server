@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
@@ -35,11 +36,12 @@ import java.util.StringJoiner;
  */
 @Component
 @RequiredArgsConstructor
-public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<MethodSymbol> {
+public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
   private final DescriptionFormatter descriptionFormatter;
 
   @Override
-  public MarkupContent getContent(MethodSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (MethodSymbol) reference.symbol();
     var markupBuilder = new StringJoiner("\n");
 
     // сигнатура

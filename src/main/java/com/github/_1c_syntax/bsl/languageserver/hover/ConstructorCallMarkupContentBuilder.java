@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.ConstructorCallSymb
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,12 +37,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder<ConstructorCallSymbol> {
+public class ConstructorCallMarkupContentBuilder implements MarkupContentBuilder {
 
   private final ConstructorHoverBuilder constructorHoverBuilder;
 
   @Override
-  public MarkupContent getContent(ConstructorCallSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (ConstructorCallSymbol) reference.symbol();
     var ctors = symbol.getConstructors();
     if (ctors.isEmpty()) {
       return constructorHoverBuilder.build(

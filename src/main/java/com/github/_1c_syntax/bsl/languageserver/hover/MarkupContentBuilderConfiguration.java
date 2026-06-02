@@ -40,12 +40,11 @@ public class MarkupContentBuilderConfiguration {
    * различающихся реализацией {@link Symbol}.
    *
    * @param builders Список зарегистрированных построителей контента для всплывающего окна.
-   * @param <T>      Тип символа ({@link Symbol}).
    * @return Карта построителей контента для всплывающего окна и классов символов, для которых они предназначены.
    */
   @Bean
-  public <T extends Symbol> Map<Class<? extends Symbol>, MarkupContentBuilder<T>> markupContentBuilders(
-    Collection<MarkupContentBuilder<T>> builders
+  public Map<Class<? extends Symbol>, MarkupContentBuilder> markupContentBuilders(
+    Collection<MarkupContentBuilder> builders
   ) {
     return builders.stream().collect(Collectors.toMap(MarkupContentBuilder::getSymbolClass, Function.identity()));
   }

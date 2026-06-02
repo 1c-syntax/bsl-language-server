@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -48,6 +49,8 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeService typeService;
+  @Autowired
+  private TypeRegistry typeRegistry;
 
   @BeforeEach
   void setUpWorkspaceContext() {
@@ -57,21 +60,21 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
   @Test
   void simpleType() {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var types = typeService.findTypes(documentContext.getUri(), new Position(5, 10));
+    var types = typeService.expressionTypesAt(documentContext, new Position(5, 10));
     assertThat(types.refs()).hasSize(1);
   }
 
   @Test
   void twoTypesOnReassignment() {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var types = typeService.findTypes(documentContext.getUri(), new Position(8, 4));
+    var types = typeService.expressionTypesAt(documentContext, new Position(8, 4));
     assertThat(types.refs()).hasSize(2);
   }
 
   @Test
   void twoTypesOnPlaceOfUsage() {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var types = typeService.findTypes(documentContext.getUri(), new Position(10, 10));
+    var types = typeService.expressionTypesAt(documentContext, new Position(10, 10));
     assertThat(types.refs()).hasSize(2);
   }
 
@@ -81,7 +84,7 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
     var variableSymbol = documentContext.getSymbolTree()
       .getVariableSymbol("ДваТипа", documentContext.getSymbolTree().getModule()).orElseThrow();
     var reference = referenceOf(documentContext, variableSymbol);
-    var types = typeService.findTypes(reference);
+    var types = typeService.typesAt(reference);
     assertThat(types.refs()).hasSize(2);
   }
 
@@ -91,7 +94,7 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
     var variableSymbol = documentContext.getSymbolTree()
       .getVariableSymbol("Переприсваивание", documentContext.getSymbolTree().getModule()).orElseThrow();
     var reference = referenceOf(documentContext, variableSymbol);
-    var types = typeService.findTypes(reference);
+    var types = typeService.typesAt(reference);
     assertThat(types.refs()).hasSize(1);
   }
 
@@ -101,7 +104,7 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
     var variableSymbol = documentContext.getSymbolTree()
       .getVariableSymbol("ДругоеИмяМассива", documentContext.getSymbolTree().getModule()).orElseThrow();
     var reference = referenceOf(documentContext, variableSymbol);
-    var types = typeService.findTypes(reference);
+    var types = typeService.typesAt(reference);
     assertThat(types.refs()).hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName()).isEqualToIgnoringCase("Массив");
   }
@@ -112,7 +115,7 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
     var variableSymbol = documentContext.getSymbolTree()
       .getVariableSymbol("РезультатФункции", documentContext.getSymbolTree().getModule()).orElseThrow();
     var reference = referenceOf(documentContext, variableSymbol);
-    var types = typeService.findTypes(reference);
+    var types = typeService.typesAt(reference);
     assertThat(types.refs()).hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName()).isEqualToIgnoringCase("Строка");
   }
@@ -135,9 +138,9 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
     var reference = referenceOf(documentContext, variableSymbol);
 
     // when
-    var types = typeService.findTypes(reference);
+    var types = typeService.typesAt(reference);
     var arrayRef = types.refs().iterator().next();
-    var members = typeService.getMembers(arrayRef);
+    var members = typeRegistry.getMembers(arrayRef);
 
     // then
     assertThat(members).extracting(com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor::name)

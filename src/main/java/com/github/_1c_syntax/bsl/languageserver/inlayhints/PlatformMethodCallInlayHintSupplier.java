@@ -56,7 +56,7 @@ import java.util.List;
  * но для не-source-defined символов: {@code СтрНайти("a","b","",1)},
  * {@code Сообщение.Сообщить()}, {@code Новый Массив(5)} и т.п.).
  * <p>
- * Резолв члена выполняется через {@link TypeService#findMemberAt}, что
+ * Резолв члена выполняется через {@link TypeService#memberAt}, что
  * покрывает три кейса:
  * <ul>
  *   <li>{@link BSLParser.GlobalMethodCallContext} — глобальная функция
@@ -69,7 +69,7 @@ import java.util.List;
  * </ul>
  * <p>
  * Source-defined вызовы покрываются другим supplier'ом и здесь
- * фильтруются — {@link TypeService#findMemberAt} для них возвращает
+ * фильтруются — {@link TypeService#memberAt} для них возвращает
  * MemberDescriptor с непустым sourceSymbol.
  */
 @Component
@@ -123,7 +123,7 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
       if (methodNamePosition == null) {
         continue;
       }
-      var member = typeService.findMemberAt(documentContext, methodNamePosition)
+      var member = typeService.memberAt(documentContext, methodNamePosition)
         .map(TypeService.TypedMember::descriptor)
         .filter(m -> m.kind() == MemberKind.METHOD)
         // Source-defined методы покрывает SourceDefinedMethodCallInlayHintSupplier.
@@ -160,7 +160,7 @@ public class PlatformMethodCallInlayHintSupplier extends AbstractMethodCallInlay
       }
       var start = arg.getStart();
       var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
-      result.add(typeService.inferAtPosition(documentContext, position));
+      result.add(typeService.expressionTypesAt(documentContext, position));
     }
     return result;
   }

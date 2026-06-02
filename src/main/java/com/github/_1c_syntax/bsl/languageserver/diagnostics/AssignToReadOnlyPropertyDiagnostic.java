@@ -55,7 +55,7 @@ import java.util.Optional;
  * <ol>
  *   <li>{@link TypeRegistry#hasAnyReadOnlyMember()} — глобальный гейт.
  *       Без HBK / без accessMode-данных диагностика моментально no-op.</li>
- *   <li>{@link TypeService#findMemberAt(com.github._1c_syntax.bsl.languageserver.context.DocumentContext,
+ *   <li>{@link TypeService#memberAt(com.github._1c_syntax.bsl.languageserver.context.DocumentContext,
  *       Position)} — точный резолв member'а с учётом инференции типа
  *       ресивера (глобальное свойство, локальная переменная, цепочка
  *       аксессоров). Резолв bilingual: read-only находится независимо от
@@ -113,7 +113,7 @@ public class AssignToReadOnlyPropertyDiagnostic extends AbstractVisitorDiagnosti
     if (propertyId == null) {
       return Optional.empty();
     }
-    var member = typeService.findMemberAt(documentContext, positionInside(propertyId))
+    var member = typeService.memberAt(documentContext, positionInside(propertyId))
       .map(TypedMember::descriptor)
       .orElse(null);
     if (member == null || member.kind() != MemberKind.PROPERTY

@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import org.eclipse.lsp4j.Location;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -69,7 +72,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   @Test
   void infersBeanTypeForFieldWithExplicitName() {
     // when
-    var types = typeService.findTypes(variable("ВнедренныйПоИмени"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("ВнедренныйПоИмени")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
@@ -81,7 +84,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // поле объявлено как `&Пластилин Перем Логгер;` — имя желудя берётся из имени поля
 
     // when
-    var types = typeService.findTypes(variable("Логгер"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("Логгер")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
@@ -90,7 +93,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
   @Test
   void infersBeanTypeForConstructorParameter() {
     // when
-    var types = typeService.findTypes(variable("ЛоггерИзКонструктора"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("ЛоггерИзКонструктора")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
@@ -102,7 +105,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // желудь Василий объявлен с &Прозвище("Васян")
 
     // when
-    var types = typeService.findTypes(variable("ЧерезПрозвище"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("ЧерезПрозвище")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Василий");
@@ -114,7 +117,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // прозвище "Панк" есть у ДжонниРоттен и СидВишес; СидВишес помечен &Верховный
 
     // when
-    var types = typeService.findTypes(variable("ПриоритетныйПанк"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("ПриоритетныйПанк")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("СидВишес");
@@ -126,7 +129,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // РеальныйКласс объявлен как &Желудь("ЛогическоеИмя")
 
     // when
-    var types = typeService.findTypes(variable("Переименованный"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("Переименованный")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("РеальныйКласс");
@@ -138,7 +141,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // &Завязь(Значение = "ФабричныйЖелудь", Тип = "Логгер")
 
     // when
-    var types = typeService.findTypes(variable("ИзФабрики"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("ИзФабрики")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
@@ -151,7 +154,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // а желудь СовременныйЛоггер объявлен через &Компонент (= &Желудь)
 
     // when
-    var types = typeService.findTypes(variable("ЧерезМетаАннотацию"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("ЧерезМетаАннотацию")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("СовременныйЛоггер");
@@ -166,7 +169,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // ФабрикаЛогов, его тип — класс Лог.
 
     // when
-    var types = typeService.findTypes(variable("ЧерезЛог"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("ЧерезЛог")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Лог");
@@ -180,7 +183,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // а "/users" это маршрут, не имя желудя.
 
     // when
-    var types = typeService.findTypes(variable("КонтроллерПоИмени"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КонтроллерПоИмени")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("МойКонтроллер");
@@ -192,7 +195,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // прозвище "Контроллер" зашито в определении &Контроллер через &Прозвище("Контроллер")
 
     // when
-    var types = typeService.findTypes(variable("КонтроллерПоПрозвищу"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КонтроллерПоПрозвищу")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("МойКонтроллер");
@@ -204,7 +207,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // "/users" — маршрут (&Контроллер.Значение), а не имя желудя
 
     // when
-    var types = typeService.findTypes(variable("КонтроллерПоМаршруту"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КонтроллерПоМаршруту")));
 
     // then
     assertThat(types.isEmpty()).isTrue();
@@ -217,7 +220,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // должен дать именно ФиксированныйМассив (а не «МойСписок» как имя типа).
 
     // when
-    var types = typeService.findTypes(variable("КоллекцияИзОписания"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КоллекцияИзОписания")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("ФиксированныйМассив");
@@ -230,7 +233,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // поэтому срабатывает фоллбэк через TypeRegistry (поведение из issue #3959).
 
     // when
-    var types = typeService.findTypes(variable("КоллекцияФоллбэкомПоИмени"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КоллекцияФоллбэкомПоИмени")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Массив");
@@ -242,7 +245,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // ни как имя типа.
 
     // when
-    var types = typeService.findTypes(variable("НеизвестнаяКоллекция"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("НеизвестнаяКоллекция")));
 
     // then
     assertThat(types.isEmpty()).isTrue();
@@ -255,7 +258,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // "Логгер" декларативно переносится в имя желудя.
 
     // when
-    var types = typeService.findTypes(variable("КомпозитПоИмени"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КомпозитПоИмени")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
@@ -267,7 +270,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // ПереноситьЗначениеПоУмолчанию = Истина, значение по умолчанию "Логгер".
 
     // when
-    var types = typeService.findTypes(variable("КомпозитПоУмолчанию"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КомпозитПоУмолчанию")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Логгер");
@@ -280,7 +283,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // падает на имя переменной "КомпозитБезПереноса", желудя с таким именем нет.
 
     // when
-    var types = typeService.findTypes(variable("КомпозитБезПереноса"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КомпозитБезПереноса")));
 
     // then
     assertThat(types.isEmpty()).isTrue();
@@ -292,7 +295,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // мета-аннотации (разворачивание работает не только для Значение).
 
     // when
-    var types = typeService.findTypes(variable("КоллекцияЧерезФиксированныйТип"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КоллекцияЧерезФиксированныйТип")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Массив");
@@ -305,7 +308,7 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     // значение доходит именно через механизм псевдонимов.
 
     // when
-    var types = typeService.findTypes(variable("КоллекцияЧерезПсевдоним"));
+    var types = typeService.typesAt(referenceOf(consumer, variable("КоллекцияЧерезПсевдоним")));
 
     // then
     assertThat(qualifiedNames(types)).containsExactly("Массив");
@@ -329,12 +332,12 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
     var usagePosition = new Position(usageLine, lines[usageLine].indexOf("_Логгер") + 1);
 
     // when
-    var atUsage = typeService.inferAtPosition(doc, usagePosition);
+    var atUsage = typeService.expressionTypesAt(doc, usagePosition);
     var field = doc.getSymbolTree().getVariables().stream()
       .filter(v -> "Сохранённый".equals(v.getName()))
       .findFirst()
       .orElseThrow();
-    var fieldTypes = typeService.findTypes(field);
+    var fieldTypes = typeService.typesAt(referenceOf(doc, field));
 
     // then
     assertThat(qualifiedNames(atUsage))
@@ -354,5 +357,10 @@ class AutumnDependencyInjectionInferenceTest extends AbstractServerContextAwareT
 
   private static List<String> qualifiedNames(TypeSet types) {
     return types.refs().stream().map(TypeRef::qualifiedName).toList();
+  }
+
+  private static Reference referenceOf(DocumentContext documentContext, VariableSymbol variableSymbol) {
+    return Reference.of(documentContext.getSymbolTree().getModule(), variableSymbol,
+      new Location(documentContext.getUri().toString(), variableSymbol.getSelectionRange()), OccurrenceType.DEFINITION);
   }
 }

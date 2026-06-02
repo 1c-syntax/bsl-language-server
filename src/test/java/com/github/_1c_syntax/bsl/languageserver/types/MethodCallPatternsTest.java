@@ -105,7 +105,7 @@ class MethodCallPatternsTest extends AbstractServerContextAwareTest {
     int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
-    return typeService.inferAtPosition(dc, new Position(line, charInLine + 1));
+    return typeService.expressionTypesAt(dc, new Position(line, charInLine + 1));
   }
 
   private DocumentContext doc() {

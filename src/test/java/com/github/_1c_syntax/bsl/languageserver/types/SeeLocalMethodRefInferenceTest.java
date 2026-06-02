@@ -53,7 +53,7 @@ class SeeLocalMethodRefInferenceTest extends AbstractServerContextAwareTest {
     int line = content.substring(0, targetOffset).split("\n").length - 1;
     int charInLine = targetOffset - lineStart;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine));
     assertThat(types.refs())
       .as("параметр через `См. Конструктор` получает return-type Конструктора")
       .extracting(ref -> ref.qualifiedName())

@@ -52,8 +52,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -90,72 +88,6 @@ class TypeServiceDelegationTest {
   }
 
   @Test
-  void getDescriptionDelegatesToRegistry() {
-    // given
-    when(typeRegistry.getDescription(ARRAY)).thenReturn("описание");
-
-    // when / then
-    assertThat(typeService.getDescription(ARRAY)).isEqualTo("описание");
-  }
-
-  @Test
-  void getConstructorsDelegatesToRegistry() {
-    // given
-    var sig = SignatureDescriptor.EMPTY;
-    when(typeRegistry.getConstructors(ARRAY)).thenReturn(List.of(sig));
-
-    // when / then
-    assertThat(typeService.getConstructors(ARRAY)).containsExactly(sig);
-  }
-
-  @Test
-  void resolveDelegatesToRegistry() {
-    // given
-    when(typeRegistry.resolve("Массив")).thenReturn(Optional.of(ARRAY));
-
-    // when / then
-    assertThat(typeService.resolve("Массив")).contains(ARRAY);
-  }
-
-  @Test
-  void getGlobalContextNamesDelegatesAndBootstrapsTypeRegistry() {
-    // given
-    when(globalScopeProvider.getGlobalContextNames()).thenReturn(List.of("X", "Y"));
-
-    // when
-    var names = typeService.getGlobalContextNames();
-
-    // then
-    assertThat(names).containsExactly("X", "Y");
-    // bootstrap триггер: typeService.resolve("") вызван
-    verify(typeRegistry).resolve("");
-  }
-
-  @Test
-  void getGlobalContextNamesByFileTypeDelegates() {
-    // given
-    when(globalScopeProvider.getGlobalContextNames(FileType.BSL)).thenReturn(List.of("Z"));
-
-    // when
-    var names = typeService.getGlobalContextNames(FileType.BSL);
-
-    // then
-    assertThat(names).containsExactly("Z");
-    verify(typeRegistry).resolve("");
-  }
-
-  @Test
-  void findGlobalContextDelegates() {
-    // given
-    when(globalScopeProvider.findGlobalContext("X", FileType.BSL))
-      .thenReturn(Optional.of(ARRAY));
-    lenient().when(typeRegistry.resolve("X")).thenReturn(Optional.empty());
-
-    // when / then
-    assertThat(typeService.findGlobalContext("X", FileType.BSL)).contains(ARRAY);
-  }
-
-  @Test
   void findTypesByReferenceForSyntheticSymbolUsesValueType() {
     // given — Reference с SyntheticSymbol, у которого valueType=NUMBER.
     var synthetic = new SyntheticSymbol("X", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", NUMBER);
@@ -163,7 +95,7 @@ class TypeServiceDelegationTest {
     var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
 
     // when
-    var types = typeService.findTypes(ref);
+    var types = typeService.typesAt(ref);
 
     // then
     assertThat(types.refs()).containsExactly(NUMBER);
@@ -177,7 +109,7 @@ class TypeServiceDelegationTest {
     var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
 
     // when
-    var types = typeService.findTypes(ref);
+    var types = typeService.typesAt(ref);
 
     // then — нет valueType → EMPTY.
     assertThat(types).isSameAs(TypeSet.EMPTY);
@@ -192,16 +124,6 @@ class TypeServiceDelegationTest {
 
     // when / then
     assertThat(typeService.getDeclaredReturnTypes(method).refs()).containsExactly(NUMBER);
-  }
-
-  @Test
-  void getMembersDelegatesToRegistry() {
-    // given
-    var m = MemberDescriptor.method("F");
-    when(typeRegistry.getMembers(ARRAY)).thenReturn(List.of(m));
-
-    // when / then
-    assertThat(typeService.getMembers(ARRAY)).containsExactly(m);
   }
 
   @Test
@@ -260,42 +182,6 @@ class TypeServiceDelegationTest {
   }
 
   @Test
-  void findGlobalContextNoArgUsesNullFileType() {
-    // given
-    when(globalScopeProvider.findGlobalContext(eq("X"), eq((FileType) null)))
-      .thenReturn(Optional.of(ARRAY));
-    lenient().when(typeRegistry.resolve("X")).thenReturn(Optional.empty());
-
-    // when / then
-    assertThat(typeService.findGlobalContext("X")).contains(ARRAY);
-  }
-
-  @Test
-  void findTypesByUriReturnsEmptyWhenNoReferenceResolves() {
-    // given
-    var uri = java.net.URI.create("file:///fake.bsl");
-    var pos = new org.eclipse.lsp4j.Position(0, 0);
-    when(referenceResolver.findReference(uri, pos)).thenReturn(Optional.empty());
-
-    // when / then
-    assertThat(typeService.findTypes(uri, pos)).isSameAs(TypeSet.EMPTY);
-  }
-
-  @Test
-  void findTypesByUriDelegatesToReferenceFindTypes() {
-    // given — резолвер находит ссылку на synthetic символ с valueType=NUMBER.
-    var uri = java.net.URI.create("file:///fake.bsl");
-    var pos = new org.eclipse.lsp4j.Position(1, 5);
-    var synthetic = new SyntheticSymbol("Y", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "", NUMBER);
-    var location = new Location("file:///fake.bsl", new Range());
-    var ref = Reference.of(null, synthetic, location, OccurrenceType.REFERENCE);
-    when(referenceResolver.findReference(uri, pos)).thenReturn(Optional.of(ref));
-
-    // when / then
-    assertThat(typeService.findTypes(uri, pos).refs()).containsExactly(NUMBER);
-  }
-
-  @Test
   void isUnknownGlobalAtTrueWhenNoMembersAndNoReference() {
     // given — пустой документ-мок: findMembersAt вернёт empty, findReference — empty.
     var docMock = org.mockito.Mockito.mock(
@@ -335,10 +221,50 @@ class TypeServiceDelegationTest {
     var docMock = org.mockito.Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
     when(docMock.getAst()).thenReturn(emptyAst());
+    when(docMock.getContentList()).thenReturn(new String[0]);
     var pos = new org.eclipse.lsp4j.Position(0, 0);
 
     // when / then — нет идентификатора в позиции → empty.
     assertThat(typeService.unknownMemberReceiverAt(docMock, pos)).isEmpty();
+  }
+
+  @Test
+  void receiverTypesAtBeyondContentIsEmpty() {
+    // given — позиция указывает на строку за пределами текста документа.
+    var docMock = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(docMock.getAst()).thenReturn(emptyAst());
+    when(docMock.getContentList()).thenReturn(new String[]{"А.Б"});
+
+    // when / then — строка вне диапазона → ресивер не вычисляется.
+    var types = typeService.receiverTypesAt(docMock, new org.eclipse.lsp4j.Position(5, 0));
+    assertThat(types.refs()).isEmpty();
+  }
+
+  @Test
+  void receiverTypesAtWithoutPrecedingDotIsEmpty() {
+    // given — курсор в конце идентификатора с подчёркиванием, точки слева нет.
+    var docMock = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(docMock.getAst()).thenReturn(emptyAst());
+    when(docMock.getContentList()).thenReturn(new String[]{"Имя_Поля"});
+
+    // when / then — слева от идентификатора нет точки → ресивера нет.
+    var types = typeService.receiverTypesAt(docMock, new org.eclipse.lsp4j.Position(0, 8));
+    assertThat(types.refs()).isEmpty();
+  }
+
+  @Test
+  void receiverTypesAtDotInFirstColumnIsEmpty() {
+    // given — точка в первой колонке: слева от неё ресивера нет.
+    var docMock = org.mockito.Mockito.mock(
+      com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    when(docMock.getAst()).thenReturn(emptyAst());
+    when(docMock.getContentList()).thenReturn(new String[]{".Б"});
+
+    // when / then
+    var types = typeService.receiverTypesAt(docMock, new org.eclipse.lsp4j.Position(0, 2));
+    assertThat(types.refs()).isEmpty();
   }
 
   /** Пустой AST без токенов — Trees.findTerminalNodeContainsPosition не вернёт нодов. */

@@ -53,7 +53,7 @@ class ParameterJsDocInferenceTest extends AbstractServerContextAwareTest {
     int line = content.substring(0, rhsStart).split("\n").length - 1;
     int charInLine = rhsStart - lineStart;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine + 1));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine + 1));
     assertThat(types.refs())
       .as("usage of parameter with JsDoc type returns declared type")
       .extracting(ref -> ref.qualifiedName())
@@ -73,7 +73,7 @@ class ParameterJsDocInferenceTest extends AbstractServerContextAwareTest {
     int line = content.substring(0, rhsStart).split("\n").length - 1;
     int charInLine = rhsStart - lineStart;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, charInLine + 1));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, charInLine + 1));
     assertThat(types.refs())
       .as("each parameter retains its own declared type")
       .extracting(ref -> ref.qualifiedName())

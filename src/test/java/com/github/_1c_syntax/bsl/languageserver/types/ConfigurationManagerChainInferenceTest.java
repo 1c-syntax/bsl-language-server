@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -46,6 +47,9 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry typeRegistry;
 
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
   @Test
   void chainResolvesManagerModuleMethodReturnType() {
     initServerContext(PATH_TO_METADATA);
@@ -57,7 +61,8 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
 
     // sanity: коллекция Справочники зарегистрирована как глобальное свойство,
     // её член — менеджер-обёртка с методом МетодМенеджера.
-    var collection = typeService.findGlobalContext("Справочники").orElseThrow();
+    typeRegistry.resolve("");
+    var collection = globalScopeProvider.findGlobalContext("Справочники").orElseThrow();
     var catalogsMembers = typeRegistry.getMembers(collection);
     assertThat(catalogsMembers).extracting(m -> m.name()).contains("СправочникСМенеджером");
     var memberReturn = catalogsMembers.stream()
@@ -94,7 +99,7 @@ class ConfigurationManagerChainInferenceTest extends AbstractServerContextAwareT
     int line = content.substring(0, methodIdx).split("\n").length - 1;
     int pos = methodIdx - lineStart + 1;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, pos));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, pos));
     assertThat(types.refs())
       .as("chain return type for %s", assignedVar)
       .hasSize(1);

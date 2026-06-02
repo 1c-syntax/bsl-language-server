@@ -814,9 +814,6 @@ public class GlobalScopeProvider {
    * же URI перезаписывает тип (корректно отражает переименование модуля).
    */
   public void indexModuleType(URI uri, TypeRef ref) {
-    if (uri == null || ref == null) {
-      return;
-    }
     moduleTypeByUri.put(uri, ref);
   }
 
@@ -824,9 +821,6 @@ public class GlobalScopeProvider {
    * Снять связь URI→тип (при удалении документа/дерегистрации library-модуля).
    */
   public void removeModuleType(URI uri) {
-    if (uri == null) {
-      return;
-    }
     moduleTypeByUri.remove(uri);
   }
 
@@ -835,9 +829,6 @@ public class GlobalScopeProvider {
    * ({@code ModuleSymbol}), у которого есть URI, но нет имени для name-keyed lookup'а.
    */
   public Optional<TypeRef> moduleTypeByUri(URI uri) {
-    if (uri == null) {
-      return Optional.empty();
-    }
     return Optional.ofNullable(moduleTypeByUri.get(uri));
   }
 

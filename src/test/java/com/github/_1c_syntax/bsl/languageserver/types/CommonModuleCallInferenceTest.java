@@ -55,16 +55,15 @@ class CommonModuleCallInferenceTest extends AbstractServerContextAwareTest {
     int lineStart = content.lastIndexOf('\n', content.indexOf("ЗначениеВМассиве")) + 1;
     int pos = content.indexOf("ЗначениеВМассиве") - lineStart + 1;
 
-    var types = typeService.inferAtPosition(documentContext, new Position(line, pos));
+    var types = typeService.expressionTypesAt(documentContext, new Position(line, pos));
     assertThat(types.refs()).as("method call return type").hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName()).isEqualTo("Массив");
   }
 
   @Test
-  void findTypesOnCommonModuleReceiverYieldsModuleType() {
-    // #3991 root cause: ссылка на голое имя общего модуля резолвится в ModuleSymbol,
-    // а inferSymbol(ModuleSymbol) знал только OneScript-library-модули → пусто.
-    // Тип ресивера-общего-модуля должен выводиться как конфигурационный тип модуля.
+  void receiverTypesAtCommonModuleMemberYieldsModuleType() {
+    // #3991: тип ресивера-общего-модуля (ОбщегоНазначения.ОбщийМодуль()) должен
+    // выводиться как конфигурационный тип модуля.
     // given
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
@@ -72,13 +71,13 @@ class CommonModuleCallInferenceTest extends AbstractServerContextAwareTest {
       "./src/test/resources/types/CommonModuleMidCallCompletion.bsl");
 
     var content = documentContext.getContent();
-    int idx = content.indexOf("ОбщегоНазначения");
+    int idx = content.indexOf("ОбщийМодуль");
     int line = content.substring(0, idx).split("\n").length - 1;
     int lineStart = content.lastIndexOf('\n', idx) + 1;
     int col = idx - lineStart + 1;
 
-    // when
-    var types = typeService.findTypes(documentContext.getUri(), new Position(line, col));
+    // when — позиция на члене ОбщийМодуль, ресивер слева — ОбщегоНазначения
+    var types = typeService.receiverTypesAt(documentContext, new Position(line, col));
 
     // then
     assertThat(types.refs())

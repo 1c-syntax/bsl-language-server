@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
-import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -38,7 +37,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
   private TypeRegistry typeRegistry;
 
   @Autowired
-  private TypeService typeService;
+  private GlobalScopeProvider globalScopeProvider;
 
   @Test
   void registersManagerModuleMembers() {
@@ -75,7 +74,8 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
       + "ПервыйОбщийМодуль/Ext/Module.bsl");
 
-    var ns = typeService.findGlobalContext("ПервыйОбщийМодуль");
+    typeRegistry.resolve("");
+    var ns = globalScopeProvider.findGlobalContext("ПервыйОбщийМодуль");
     assertThat(ns).isPresent();
 
     var members = typeRegistry.getMembers(ns.get());
@@ -97,7 +97,8 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     TestUtils.getDocumentContextFromFile(
       "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
 
-    var ns = typeService.findGlobalContext("ОбщегоНазначения").orElseThrow();
+    typeRegistry.resolve("");
+    var ns = globalScopeProvider.findGlobalContext("ОбщегоНазначения").orElseThrow();
     var members = typeRegistry.getMembers(ns);
 
     var method = members.stream()
