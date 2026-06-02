@@ -23,7 +23,7 @@ plugins {
     id("org.jreleaser") version "1.24.0"
     id("org.sonarqube") version "7.3.0.8198"
     id("me.champeau.jmh") version "0.7.3"
-    id("com.gorylenko.gradle-git-properties") version "3.0.3"
+    id("com.gorylenko.gradle-git-properties") version "4.0.1"
 }
 
 repositories {
