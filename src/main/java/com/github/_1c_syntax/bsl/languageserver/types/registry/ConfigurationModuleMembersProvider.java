@@ -42,6 +42,7 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -80,6 +81,17 @@ public class ConfigurationModuleMembersProvider {
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Конфигурационный тип, под которым зарегистрирован модуль данного документа
+   * (общий модуль → {@code CONFIGURATION:<имя>}; менеджер/объектный модуль →
+   * соответствующий тип-обёртка). Empty, если документ не является
+   * зарегистрированным модулем конфигурации. Используется для вывода типа
+   * символа-модуля как значения (например, ресивер {@code ОбщегоНазначения.Метод()}).
+   */
+  public Optional<TypeRef> typeForUri(URI uri) {
+    return Optional.ofNullable(registeredByUri.get(uri));
+  }
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {

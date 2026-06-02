@@ -59,4 +59,31 @@ class CommonModuleCallInferenceTest extends AbstractServerContextAwareTest {
     assertThat(types.refs()).as("method call return type").hasSize(1);
     assertThat(types.refs().iterator().next().qualifiedName()).isEqualTo("Массив");
   }
+
+  @Test
+  void findTypesOnCommonModuleReceiverYieldsModuleType() {
+    // #3991 root cause: ссылка на голое имя общего модуля резолвится в ModuleSymbol,
+    // а inferSymbol(ModuleSymbol) знал только OneScript-library-модули → пусто.
+    // Тип ресивера-общего-модуля должен выводиться как конфигурационный тип модуля.
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CommonModuleMidCallCompletion.bsl");
+
+    var content = documentContext.getContent();
+    int idx = content.indexOf("ОбщегоНазначения");
+    int line = content.substring(0, idx).split("\n").length - 1;
+    int lineStart = content.lastIndexOf('\n', idx) + 1;
+    int col = idx - lineStart + 1;
+
+    // when
+    var types = typeService.findTypes(documentContext.getUri(), new Position(line, col));
+
+    // then
+    assertThat(types.refs())
+      .as("ресивер-общий-модуль должен резолвиться в тип модуля, а не пусто")
+      .hasSize(1);
+    assertThat(types.refs().iterator().next().qualifiedName()).isEqualTo("ОбщегоНазначения");
+  }
 }

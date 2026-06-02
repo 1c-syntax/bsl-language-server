@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationModuleMembersProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
@@ -105,6 +106,7 @@ public class ExpressionTypeInferencer {
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final ConfigurationModuleMembersProvider configurationModuleMembersProvider;
   private final AutumnComponentInferencer autumnComponentInferencer;
 
   /**
@@ -137,13 +139,29 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Для библиотечного OneScript-модуля (запись {@code <module>} из {@code lib.config})
-   * имя модуля в выражении ссылается на тип-namespace с экспортами как членами.
-   * {@link OScriptLibraryIndex} знает qualifiedName по URI, {@link TypeRegistry#resolve}
-   * — соответствующий {@link TypeRef}.
+   * Имя модуля в выражении ссылается на тип-namespace с экспортами как членами.
+   * Два источника:
+   * <ul>
+   *   <li>BSL-модуль конфигурации (общий модуль {@code ОбщегоНазначения}, модуль
+   *       менеджера/объекта) — {@link ConfigurationModuleMembersProvider} знает
+   *       зарегистрированный {@link TypeRef} по URI документа;</li>
+   *   <li>библиотечный OneScript-модуль (запись {@code <module>} из {@code lib.config}) —
+   *       {@link OScriptLibraryIndex} знает qualifiedName по URI, {@link TypeRegistry#resolve}
+   *       — соответствующий {@link TypeRef}.</li>
+   * </ul>
    */
   private TypeSet inferModuleAsType(ModuleSymbol module) {
+    // TODO(arch): оба типа модулей уже лежат в GlobalScopeProvider по имени
+    //  (общий модуль — PLATFORM_GLOBAL_PROPERTY, library — LIBRARY_MODULE).
+    //  Здесь же тип достаётся из двух URI-ключевых индексов — дублирование
+    //  резолва; свести к одному источнику. См. задачу в TaskList (#3991-review).
     var uri = module.getOwner().getUri();
+
+    var configurationType = configurationModuleMembersProvider.typeForUri(uri);
+    if (configurationType.isPresent()) {
+      return TypeSet.of(configurationType.get());
+    }
+
     var entries = oScriptLibraryIndex.findEntriesByUri(uri);
     if (entries.isEmpty()) {
       return TypeSet.EMPTY;

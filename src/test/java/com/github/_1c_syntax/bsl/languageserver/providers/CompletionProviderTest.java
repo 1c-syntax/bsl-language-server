@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Set;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CompletionProviderTest extends AbstractServerContextAwareTest {
@@ -157,6 +158,34 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .isNotEmpty()
       .extracting(CompletionItem::getLabel)
       .contains("Добавить");
+  }
+
+  @Test
+  void dotCompletionOnMidCallDotOfCommonModuleReturnsModuleMembers() {
+    // #3991: автодополнение прямо на точке внутри уже завершённого вызова
+    // общего модуля — `ОбщегоНазначения.|ОбщийМодуль("Имя")` — должно давать
+    // члены модуля (тип ресивера), а не тип возврата вызова.
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/CommonModuleMidCallCompletion.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `\tОбщегоНазначения.ОбщийМодуль("Имя");` — позиция сразу после точки
+    // (таб + 16 символов имени модуля + точка → член начинается с char 18)
+    params.setPosition(new Position(1, 18));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("mid-call точка должна предлагать члены общего модуля, а не тип возврата вызова")
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .contains("ОбщийМодуль", "ЗначениеВМассиве");
   }
 
   @Test
