@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +51,7 @@ class MultiWorkspaceTypeRegistryTest {
   private TypeRegistry typeRegistry;
 
   @Autowired
-  private TypeService typeService;
+  private GlobalScopeProvider globalScopeProvider;
 
   @BeforeEach
   void setUp() {
@@ -87,7 +86,7 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_A, "mw-a");
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isEmpty();
-    var nsRefA = typeService.findGlobalContext("Справочники").orElseThrow();
+    var nsRefA = globalScopeProvider.findGlobalContext("Справочники").orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefA))
       .extracting(MemberDescriptor::name)
       .containsExactly("Контрагенты");
@@ -96,7 +95,7 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_B, "mw-b");
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isEmpty();
-    var nsRefB = typeService.findGlobalContext("Справочники").orElseThrow();
+    var nsRefB = globalScopeProvider.findGlobalContext("Справочники").orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefB))
       .extracting(MemberDescriptor::name)
       .containsExactly("Номенклатура");
@@ -113,11 +112,11 @@ class MultiWorkspaceTypeRegistryTest {
     typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульB").orElseThrow());
 
     WorkspaceContextHolder.set(WS_A, "mw-a");
-    assertThat(typeService.findGlobalContext("ОбщийМодульA")).isPresent();
-    assertThat(typeService.findGlobalContext("ОбщийМодульB")).isEmpty();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульA")).isPresent();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульB")).isEmpty();
 
     WorkspaceContextHolder.set(WS_B, "mw-b");
-    assertThat(typeService.findGlobalContext("ОбщийМодульB")).isPresent();
-    assertThat(typeService.findGlobalContext("ОбщийМодульA")).isEmpty();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульB")).isPresent();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульA")).isEmpty();
   }
 }

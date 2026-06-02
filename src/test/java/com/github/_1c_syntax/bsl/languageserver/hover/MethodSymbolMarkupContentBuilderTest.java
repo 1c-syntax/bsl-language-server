@@ -22,10 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -54,7 +58,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -119,7 +123,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -143,7 +147,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -161,4 +165,9 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
   }
 
+
+  private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
+    return Reference.of(documentContext.getSymbolTree().getModule(), symbol,
+      new Location(documentContext.getUri().toString(), symbol.getSelectionRange()));
+  }
 }

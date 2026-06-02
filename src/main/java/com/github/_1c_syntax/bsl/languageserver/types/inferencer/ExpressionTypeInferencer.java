@@ -40,7 +40,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
@@ -104,7 +103,6 @@ public class ExpressionTypeInferencer {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
-  private final OScriptLibraryIndex oScriptLibraryIndex;
   private final AutumnComponentInferencer autumnComponentInferencer;
 
   /**
@@ -137,22 +135,17 @@ public class ExpressionTypeInferencer {
   }
 
   /**
-   * Для библиотечного OneScript-модуля (запись {@code <module>} из {@code lib.config})
-   * имя модуля в выражении ссылается на тип-namespace с экспортами как членами.
-   * {@link OScriptLibraryIndex} знает qualifiedName по URI, {@link TypeRegistry#resolve}
-   * — соответствующий {@link TypeRef}.
+   * Имя модуля в выражении ссылается на тип-namespace с экспортами как членами
+   * (общий модуль {@code ОбщегоНазначения}, модуль менеджера/объекта, библиотечный
+   * OneScript-модуль). Тип берётся из единого обратного индекса URI→тип в
+   * {@link GlobalScopeProvider#moduleTypeByUri(java.net.URI)}, который наполняют
+   * провайдеры регистрации модулей. Инференсер больше не обращается к
+   * подсистемным индексам (oscript/configuration) напрямую.
    */
   private TypeSet inferModuleAsType(ModuleSymbol module) {
-    var uri = module.getOwner().getUri();
-    var entries = oScriptLibraryIndex.findEntriesByUri(uri);
-    if (entries.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var refs = new LinkedHashSet<TypeRef>();
-    for (var entry : entries) {
-      typeRegistry.resolve(entry.qualifiedName()).ifPresent(refs::add);
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
+    return globalScopeProvider.moduleTypeByUri(module.getOwner().getUri())
+      .map(TypeSet::of)
+      .orElse(TypeSet.EMPTY);
   }
 
   // ---------------------------------------------------------------------------
@@ -651,17 +644,11 @@ public class ExpressionTypeInferencer {
         if (!member.matches(memberName)) {
           continue;
         }
-        // Сначала composite-набор типов; для single-type returnType-fallback
-        // (legacy-проводка для членов, которые не используют новый API).
-        var memberTypes = member.returnTypes();
-        if (memberTypes != null && !memberTypes.isEmpty()) {
-          for (var ref : memberTypes.refs()) {
-            if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
-              result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
-            }
+        // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
+        for (var ref : member.returnTypes().refs()) {
+          if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
+            result = result.union(enrichReturnRefWithElementFields(ref, elementSet));
           }
-        } else if (member.returnType() != null && member.returnType().kind() != TypeKind.UNKNOWN) {
-          result = result.union(enrichReturnRefWithElementFields(member.returnType(), elementSet));
         }
       }
     }

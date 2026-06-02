@@ -22,6 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -30,11 +33,15 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.eclipse.lsp4j.MarkupKind;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
@@ -78,7 +85,7 @@ class SyntheticSymbolMarkupContentBuilderTest {
       "Объект для работы со справочниками.", valueType);
 
     // when
-    var content = builder.getContent(symbol);
+    var content = builder.getContent(referenceTo(symbol));
 
     // then
     assertThat(content.getKind()).isEqualTo(MarkupKind.MARKDOWN);
@@ -97,7 +104,7 @@ class SyntheticSymbolMarkupContentBuilderTest {
       "Истина", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
 
     // when
-    var content = builder.getContent(symbol);
+    var content = builder.getContent(referenceTo(symbol));
 
     // then
     assertThat(content.getValue()).contains("Истина");
@@ -111,7 +118,7 @@ class SyntheticSymbolMarkupContentBuilderTest {
       "Истина", SyntheticKind.PLATFORM_GLOBAL_PROPERTY, "");
 
     // when
-    var content = builder.getContent(symbol);
+    var content = builder.getContent(referenceTo(symbol));
 
     // then
     var lines = content.getValue().split("\n");
@@ -135,7 +142,7 @@ class SyntheticSymbolMarkupContentBuilderTest {
       "OneScript: работа с файловой системой.");
 
     // when
-    var content = builder.getContent(symbol);
+    var content = builder.getContent(referenceTo(symbol));
 
     // then
     var value = content.getValue();
@@ -151,12 +158,17 @@ class SyntheticSymbolMarkupContentBuilderTest {
     var symbol = new SyntheticSymbol("Массив", SyntheticKind.TYPE_NAME, "Динамический массив.");
 
     // when
-    var content = builder.getContent(symbol);
+    var content = builder.getContent(referenceTo(symbol));
 
     // then
     var value = content.getValue();
     assertThat(value)
       .contains("Массив")
       .contains("[role.TYPE_NAME]");
+  }
+
+  private static Reference referenceTo(Symbol symbol) {
+    return Reference.of(Mockito.mock(SourceDefinedSymbol.class), symbol,
+      new Location("file:///t", new Range(new Position(0, 0), new Position(0, 0))));
   }
 }

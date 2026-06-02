@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
@@ -35,6 +37,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.Position;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
@@ -100,8 +106,10 @@ class VariableSymbolStructureRenderTest {
   }
 
   private String render(TypeSet types) {
-    when(typeService.findTypes(symbol)).thenReturn(types);
-    return builder.getContent(symbol).getValue();
+    var reference = Reference.of(Mockito.mock(SourceDefinedSymbol.class), symbol,
+      new Location("file:///t", new Range(new Position(0, 0), new Position(0, 0))));
+    when(typeService.typesAt(reference)).thenReturn(types);
+    return builder.getContent(reference).getValue();
   }
 
   private static TypeRef platform(String name) {

@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
  * Глобальные функции резолвятся напрямую (без инференса), поэтому собираются
  * без pre-filter'а. Члены типов (метод/свойство) предварительно отсеиваются по
  * имени через {@link TypeRegistry#isVersionedMemberName(String)} — это лишь
- * дешёвый фильтр, после которого {@link TypeService#findMembersAt} выполняет
+ * дешёвый фильтр, после которого {@link TypeService#membersAt} выполняет
  * точный резолв члена на конкретном типе-владельце (иначе сработал бы
  * однофамилец с другого типа).
  * <p>
@@ -165,9 +165,9 @@ public final class PlatformMemberCalls {
       return;
     }
     // Позиция начала идентификатора входит в его токен (start-inclusive),
-    // этого достаточно для findMembersAt.
+    // этого достаточно для membersAt.
     var position = new Position(token.getLine() - 1, token.getCharPositionInLine());
-    sink.addAll(typeService.findMembersAt(documentContext, position));
+    sink.addAll(typeService.membersAt(documentContext, position));
   }
 
   /**

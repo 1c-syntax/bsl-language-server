@@ -134,8 +134,8 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
     context.getConfiguration();
     provider.tryRegister();
 
-    var nsRu = typeService.findGlobalContext("Справочники");
-    var nsEn = typeService.findGlobalContext("Catalogs");
+    var nsRu = globalScopeProvider.findGlobalContext("Справочники");
+    var nsEn = globalScopeProvider.findGlobalContext("Catalogs");
 
     assertThat(nsRu).isPresent();
     assertThat(nsEn).isPresent();

@@ -77,6 +77,7 @@ public class ConfigurationModuleMembersProvider {
   );
 
   private final TypeRegistry typeRegistry;
+  private final GlobalScopeProvider globalScopeProvider;
 
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
@@ -123,6 +124,7 @@ public class ConfigurationModuleMembersProvider {
     }
 
     var prev = registeredByUri.put(documentContext.getUri(), ref);
+    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
       // тот же URI/тип — источник уже зарегистрирован, AST подхватится автоматически
       return;
@@ -145,6 +147,7 @@ public class ConfigurationModuleMembersProvider {
     var ref = typeRegistry.registerConfigurationType(name);
 
     var prev = registeredByUri.put(documentContext.getUri(), ref);
+    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
       return;
     }

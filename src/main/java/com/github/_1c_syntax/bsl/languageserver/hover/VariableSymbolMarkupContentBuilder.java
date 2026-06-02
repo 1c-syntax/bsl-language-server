@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
@@ -53,7 +54,7 @@ import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
-public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<VariableSymbol> {
+public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private static final String VARIABLE_KEY = "var";
   private static final String EXPORT_KEY = "export";
@@ -65,7 +66,8 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
   private final TypeService typeService;
 
   @Override
-  public MarkupContent getContent(VariableSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (VariableSymbol) reference.symbol();
     var markupBuilder = new StringJoiner("\n");
 
     // сигнатура
@@ -82,7 +84,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, variableInfo);
 
     // тип (выведенный)
-    var typesInfo = getInferredTypes(symbol);
+    var typesInfo = getInferredTypes(symbol, typeService.typesAt(reference));
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, typesInfo);
 
     // местоположение переменной
@@ -126,8 +128,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder<
     return resources.getResourceString(getClass(), key);
   }
 
-  private String getInferredTypes(VariableSymbol symbol) {
-    TypeSet types = typeService.findTypes(symbol);
+  private String getInferredTypes(VariableSymbol symbol, TypeSet types) {
     if (types.isEmpty()) {
       return "";
     }

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +46,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder<SyntheticSymbol> {
+public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final TypeRegistry typeRegistry;
   private final CollectionHoverHints collectionHoverHints;
@@ -53,7 +54,8 @@ public class SyntheticSymbolMarkupContentBuilder implements MarkupContentBuilder
   private final LanguageServerConfiguration configuration;
 
   @Override
-  public MarkupContent getContent(SyntheticSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (SyntheticSymbol) reference.symbol();
     // Hover — элемент интерфейса: язык отображения из настроек LS, а не из
     // ScriptVariant (язык исходников).
     var lang = configuration.getLanguage();

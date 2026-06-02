@@ -22,10 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -55,7 +59,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("ИмяБезОписания", symbolTree.getModule()).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -86,7 +90,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСправаОднойСтрокой", symbolTree.getModule()).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -122,7 +126,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуДвеСтроки_Функция", methodSymbol).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -160,7 +164,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция", methodSymbol).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     assertThat(content).isNotEmpty();
 
@@ -197,7 +201,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("ВалютаУчета", symbolTree.getModule()).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
@@ -229,7 +233,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("СтрокаПеременная", symbolTree.getModule()).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     // then
     assertThat(content).contains("Тип: Строка");
@@ -246,7 +250,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("С", symbolTree.getModule()).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     // then: у структуры с полями элемент-итератор (КлючИЗначение) в заголовке не показываем.
     assertThat(content)
@@ -268,7 +272,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var varSymbol = symbolTree.getVariableSymbol("ТЗ", symbolTree.getModule()).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(varSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, varSymbol)).getValue();
 
     // then: колонки строки ТЗ показываются маркдаун-списком.
     assertThat(content)
@@ -292,7 +296,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var paramSymbol = symbolTree.getVariableSymbol("Настройки", method).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(paramSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, paramSymbol)).getValue();
 
     // then: ключи показаны с типами и описаниями из doc-комментария, без шума «из КлючИЗначение».
     assertThat(content)
@@ -317,7 +321,7 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
     var paramSymbol = symbolTree.getVariableSymbol("Настройки", method).orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(paramSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, paramSymbol)).getValue();
 
     // then: перечисление типов отображается через « | », а не одним токеном.
     assertThat(content)
@@ -325,4 +329,9 @@ class VariableSymbolMarkupContentBuilderTest extends AbstractServerContextAwareT
       .doesNotContain("`Строка, Число`");
   }
 
+
+  private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
+    return Reference.of(documentContext.getSymbolTree().getModule(), symbol,
+      new Location(documentContext.getUri().toString(), symbol.getSelectionRange()));
+  }
 }

@@ -132,6 +132,11 @@ public class OScriptModuleMembersProvider {
           typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
+          // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
+          // (единый источник в GlobalScopeProvider вместо обращения инференсера к
+          // oScriptLibraryIndex). Только для роли MODULE: у dual-role .os-файла
+          // роль CLASS не должна перетирать тип модуля под тем же URI.
+          globalScopeProvider.indexModuleType(uri, ref);
           globalScopeProvider.registerLibraryModule(qualifiedName, ref);
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
@@ -148,6 +153,7 @@ public class OScriptModuleMembersProvider {
    * удалении любого {@code .os}-документа из {@code ServerContext}.
    */
   public void unregister(URI uri) {
+    globalScopeProvider.removeModuleType(uri);
     var names = registeredByUri.remove(uri);
     if (names == null) {
       return;

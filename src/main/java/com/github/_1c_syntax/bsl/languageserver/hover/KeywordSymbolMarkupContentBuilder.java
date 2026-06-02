@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
@@ -49,12 +50,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class KeywordSymbolMarkupContentBuilder implements MarkupContentBuilder<KeywordSymbol> {
+public class KeywordSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   private final Resources resources;
 
   @Override
-  public MarkupContent getContent(KeywordSymbol symbol) {
+  public MarkupContent getContent(Reference reference) {
+    var symbol = (KeywordSymbol) reference.symbol();
     var label = resources.getResourceString(getClass(), "keywordLabel");
     var markdown = "```bsl\n" + symbol.getName() + "\n```\n\n_" + label + "_\n\n" + symbol.getDescription();
     return new MarkupContent(MarkupKind.MARKDOWN, markdown);

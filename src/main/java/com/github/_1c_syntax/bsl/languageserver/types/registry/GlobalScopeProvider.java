@@ -58,6 +58,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -136,6 +137,15 @@ public class GlobalScopeProvider {
   private final Map<String, KeywordDescription> keywordDescriptions;
   /** lowercased имя глобального свойства (через registerGlobalProperty) → языковой скоуп. */
   private final Map<String, LanguageScope> globalContextScopes = new ConcurrentHashMap<>();
+  /**
+   * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
+   * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
+   * для общих модулей, {@code OScriptModuleMembersProvider} для library-модулей) синхронно
+   * рядом с регистрацией имени; читается выводом типа ресивера-модуля по {@code ModuleSymbol}
+   * (у которого на руках URI, а не имя). Единая точка вместо обращения инференсера к
+   * двум URI-ключевым индексам подсистем.
+   */
+  private final Map<URI, TypeRef> moduleTypeByUri = new ConcurrentHashMap<>();
   /**
    * Каноничные «составные» имена MD-объектов конфигурации в коллекционной
    * форме ({@code Справочники.Контрагенты}, {@code Documents.Документ1}).
@@ -796,6 +806,30 @@ public class GlobalScopeProvider {
       return;
     }
     globalSymbolScope.findSymbol(name).ifPresent(globalSymbolScope::unregister);
+  }
+
+  /**
+   * Связать URI документа-модуля с его типом-значением. Вызывается провайдерами
+   * регистрации модулей синхронно рядом с регистрацией имени. Повторный вызов с тем
+   * же URI перезаписывает тип (корректно отражает переименование модуля).
+   */
+  public void indexModuleType(URI uri, TypeRef ref) {
+    moduleTypeByUri.put(uri, ref);
+  }
+
+  /**
+   * Снять связь URI→тип (при удалении документа/дерегистрации library-модуля).
+   */
+  public void removeModuleType(URI uri) {
+    moduleTypeByUri.remove(uri);
+  }
+
+  /**
+   * Тип-значение модуля по URI документа. Используется выводом типа ресивера-модуля
+   * ({@code ModuleSymbol}), у которого есть URI, но нет имени для name-keyed lookup'а.
+   */
+  public Optional<TypeRef> moduleTypeByUri(URI uri) {
+    return Optional.ofNullable(moduleTypeByUri.get(uri));
   }
 
 

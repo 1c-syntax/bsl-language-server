@@ -22,8 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.MarkupKind;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,7 +50,7 @@ class AnnotationSymbolMarkupContentBuilderTest {
     when(annotationSymbol.getParent()).thenReturn(Optional.of(sourceDefinedSymbol));
 
     // when
-    MarkupContent content = builder.getContent(annotationSymbol);
+    MarkupContent content = builder.getContent(referenceTo(annotationSymbol));
 
     // then
     assertThat(content.getValue()).isEmpty();
@@ -61,10 +66,15 @@ class AnnotationSymbolMarkupContentBuilderTest {
     when(annotationSymbol.getParent()).thenReturn(Optional.empty());
 
     // when
-    MarkupContent content = builder.getContent(annotationSymbol);
+    MarkupContent content = builder.getContent(referenceTo(annotationSymbol));
 
     // then
     assertThat(content.getValue()).isEmpty();
     assertThat(content.getKind()).isEqualTo(MarkupKind.MARKDOWN);
+  }
+
+  private static Reference referenceTo(Symbol symbol) {
+    return Reference.of(Mockito.mock(SourceDefinedSymbol.class), symbol,
+      new Location("file:///t", new Range(new Position(0, 0), new Position(0, 0))));
   }
 }
