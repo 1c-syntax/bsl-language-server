@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -33,14 +33,11 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Сапплаер семантических токенов для обращения к свойствам платформенных типов
@@ -53,12 +50,11 @@ import java.util.Set;
  * {@link SemanticTokenTypes#Property} + {@link SemanticTokenModifiers#DefaultLibrary}.
  * <p>
  * Симметричен {@link PlatformMemberMethodCallSemanticTokensSupplier}, который
- * подсвечивает вызовы методов платформенных типов через accessCall.
- * <p>
- * Source-defined переменные (в т.ч. экспортные переменные модуля объекта,
- * доступные как {@code Объект.Перем}) подсвечиваются через
- * {@link SymbolsSemanticTokensSupplier} по ReferenceIndex — этот сапплаер
- * пропускает такие позиции, чтобы не дублировать токены.
+ * подсвечивает вызовы методов платформенных типов через accessCall. В отличие от
+ * методного сапплаера здесь не нужен skip source-defined call-site'ов: source-defined
+ * переменные (в т.ч. экспортные переменные модуля объекта) не выставляются как
+ * члены типа, поэтому {@link TypeService#findMemberAt} их не находит и пересечения
+ * по позиции с {@link SymbolsSemanticTokensSupplier} не возникает.
  */
 @Component
 @RequiredArgsConstructor
@@ -67,7 +63,6 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
   private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
 
   private final TypeService typeService;
-  private final ReferenceIndex referenceIndex;
   private final SemanticTokensHelper helper;
 
   @Override
@@ -75,14 +70,9 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
     var entries = new ArrayList<SemanticTokenEntry>();
     var ast = documentContext.getAst();
 
-    // Позиции, уже обработанные SymbolsSemanticTokensSupplier (source-defined
-    // переменные): пропускаем, чтобы не дублировать токен на одной позиции.
-    var sourceDefinedVarSites = collectSourceDefinedVarSites(documentContext);
-
     for (var accessProperty
       : Trees.<BSLParser.AccessPropertyContext>findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
       propertyNameRange(accessProperty)
-        .filter(range -> !sourceDefinedVarSites.contains(range.getStart()))
         .filter(range -> isPlatformProperty(documentContext, range.getStart()))
         .ifPresent(range -> helper.addRange(
           entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS));
@@ -99,15 +89,11 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
   private boolean isPlatformProperty(DocumentContext documentContext, Position position) {
     return typeService.findMemberAt(documentContext, position)
       .map(TypeService.TypedMember::descriptor)
-      .filter(descriptor -> descriptor.kind() == MemberKind.PROPERTY)
+      .filter(PlatformMemberPropertyAccessSemanticTokensSupplier::isProperty)
       .isPresent();
   }
 
-  private Set<Position> collectSourceDefinedVarSites(DocumentContext documentContext) {
-    var positions = new HashSet<Position>();
-    for (var reference : referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Variable)) {
-      positions.add(reference.selectionRange().getStart());
-    }
-    return positions;
+  static boolean isProperty(MemberDescriptor descriptor) {
+    return descriptor.kind() == MemberKind.PROPERTY;
   }
 }

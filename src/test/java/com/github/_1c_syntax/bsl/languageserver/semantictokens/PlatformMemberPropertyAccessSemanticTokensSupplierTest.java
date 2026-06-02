@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -82,9 +83,10 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
       new ExpectedToken(2, 15, 7, SemanticTokenTypes.Property,
         Set.of(SemanticTokenModifiers.DefaultLibrary), "Колонки")
     ));
+    // Количество начинается на line 2, char 23 (после "ТЗ.Колонки.").
     assertThat(decoded)
       .as("Количество — это accessCall, не accessProperty; данный сапплаер его не выдаёт")
-      .noneMatch(token -> token.length() == "Количество".length());
+      .noneMatch(token -> token.line() == 2 && token.start() == 23);
   }
 
   @Test
@@ -138,5 +140,29 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
 
     // then — пусто (свойство неизвестно).
     assertThat(decoded).isEmpty();
+  }
+
+  @Test
+  void testIsPropertyForPropertyDescriptor() {
+    // given
+    var property = MemberDescriptor.property("Колонки");
+
+    // when
+    var result = PlatformMemberPropertyAccessSemanticTokensSupplier.isProperty(property);
+
+    // then — свойство распознаётся как property.
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void testIsPropertyForMethodDescriptor() {
+    // given
+    var method = MemberDescriptor.method("Добавить");
+
+    // when
+    var result = PlatformMemberPropertyAccessSemanticTokensSupplier.isProperty(method);
+
+    // then — метод не является property.
+    assertThat(result).isFalse();
   }
 }
