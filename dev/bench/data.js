@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780354775786,
+  "lastUpdate": 1780419589597,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36146,6 +36146,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 136.29016249516638",
             "extra": "mean: 1314.6113838354747 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1e5d9e456d5b511ab72c759770ee82fc37591850",
+          "message": "Merge pull request #3992 from 1c-syntax/fix/commonmodule-completion-trailing-dot\n\nИсправлено автодополнение членов общего модуля после точки (#3988)",
+          "timestamp": "2026-06-02T11:17:08+02:00",
+          "tree_id": "a7a211eb91f18300d04a62c25bec67538eb5ec35",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1e5d9e456d5b511ab72c759770ee82fc37591850"
+        },
+        "date": 1780419581193,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1413.1413644949596,
+            "unit": "sec",
+            "range": "stddev: 14.560294905205359",
+            "extra": "mean: 1413.1413644949596 sec\nrounds: 3"
           }
         ]
       }
