@@ -21,12 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.stream.Stream;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Тесты для {@link ExpressionAtPosition} — поиска assignment/forEach/expression
@@ -184,19 +193,6 @@ class ExpressionAtPositionTest {
   }
 
   @Test
-  void findExpressionTreeReturnsBslExpressionForAssignmentRhs() {
-    // given
-    var content = "Х = 1 + 2;\n";
-    var dc = TestUtils.getDocumentContext(content);
-
-    // when — позиция внутри «1».
-    var tree = ExpressionAtPosition.findExpressionTree(dc, new Position(0, 4));
-
-    // then — построено выражение поверх ExpressionContext.
-    assertThat(tree).isPresent();
-  }
-
-  @Test
   void findCallStatementContextReturnsCallStatementForTrailingDotReceiver() {
     // given — висячая точка: `ИмяМодуля.` без продолжения. В текущей грамматике
     // ресивер — прямой ребёнок callStatement: (callStatement Идентификатор
@@ -208,34 +204,73 @@ class ExpressionAtPositionTest {
     // when — позиция внутри идентификатора-ресивера ОбщегоНазначения.
     var callStmt = ExpressionAtPosition.findCallStatementContext(dc, new Position(1, 7));
 
-    // then
-    assertThat(callStmt).isPresent();
+    // then — найден именно callStatement висячей точки (текст = ресивер + точка),
+    // а не какой-либо другой непустой узел.
+    assertThat(callStmt)
+      .get()
+      .extracting(org.antlr.v4.runtime.ParserRuleContext::getText)
+      .isEqualTo("ОбщегоНазначения.");
   }
 
-  @Test
-  void findExpressionTreeReturnsBslExpressionForTrailingDotReceiver() {
-    // given — висячая точка `ИмяМодуля.`: именно этот сценарий dot-completion'а
-    // ресивера, который ранее давал пустое дерево (treePresent=false).
-    var content = "Процедура Т() Экспорт\n    ОбщегоНазначения.\nКонецПроцедуры\n";
-    var dc = TestUtils.getDocumentContext(content);
-
-    // when — позиция внутри идентификатора-ресивера.
-    var tree = ExpressionAtPosition.findExpressionTree(dc, new Position(1, 7));
-
-    // then — дерево построено, вывод типа ресивера возможен.
-    assertThat(tree).isPresent();
+  static Stream<Arguments> findExpressionTreeBuildsTreeOverExpectedNode() {
+    return Stream.of(
+      // assignment RHS: корень — бинарная операция «+» (ExpressionContext)
+      arguments("Х = 1 + 2;\n", new Position(0, 4), "+"),
+      // lValue dot-chain: fallback на findLValueContext, корень — доступ «.Свойство»
+      arguments("Объект.Свойство = 1;\n", new Position(0, 10), ".Свойство"),
+      // висячая точка `ИмяМодуля.` — раньше давала пустое дерево (treePresent=false);
+      // корень — сам ресивер, что и доказывает корректный резолв висячей точки
+      arguments("Процедура Т() Экспорт\n    ОбщегоНазначения.\nКонецПроцедуры\n",
+        new Position(1, 7), "ОбщегоНазначения")
+    );
   }
 
-  @Test
-  void findExpressionTreeReturnsBslExpressionForLValue() {
+  @ParameterizedTest
+  @MethodSource
+  void findExpressionTreeBuildsTreeOverExpectedNode(String content, Position position, String expectedText) {
     // given
-    var content = "Объект.Свойство = 1;\n";
     var dc = TestUtils.getDocumentContext(content);
 
-    // when — позиция внутри `Свойство` (lValue, не expression).
-    var tree = ExpressionAtPosition.findExpressionTree(dc, new Position(0, 10));
+    // when
+    var tree = ExpressionAtPosition.findExpressionTree(dc, position);
 
-    // then — fallback на findLValueContext сработал.
-    assertThat(tree).isPresent();
+    // then — дерево построено именно поверх ожидаемого узла (а не любого непустого).
+    assertThat(tree)
+      .get()
+      .extracting(t -> t.getRepresentingAst().getText())
+      .isEqualTo(expectedText);
+  }
+
+  @Test
+  void allLookupsReturnEmptyWhenAstUnavailable() {
+    // given — документ без инициализированного токенизатора: getAst() кидает NPE
+    // (например, документ ещё не открыт/не прочитан).
+    var dc = mock(DocumentContext.class);
+    when(dc.getAst()).thenThrow(new NullPointerException());
+
+    // when / then — все точки входа безопасно возвращают пусто (safeGetAst → null).
+    var position = new Position(0, 0);
+    assertThat(ExpressionAtPosition.findExpressionContext(dc, position)).isEmpty();
+    assertThat(ExpressionAtPosition.findComplexIdentifierContext(dc, position)).isEmpty();
+    assertThat(ExpressionAtPosition.findCallStatementContext(dc, position)).isEmpty();
+    assertThat(ExpressionAtPosition.findLValueContext(dc, position)).isEmpty();
+    assertThat(ExpressionAtPosition.findAssignment(dc, position)).isEmpty();
+    assertThat(ExpressionAtPosition.findAssignmentRhs(dc, position)).isEmpty();
+    assertThat(ExpressionAtPosition.findForEachBindingAt(dc, position)).isEmpty();
+    assertThat(ExpressionAtPosition.findExpressionTree(dc, position)).isEmpty();
+  }
+
+  @Test
+  void findForEachBindingAtEmptyWhenTerminalParentIsNotForEach() {
+    // given — обычное присваивание, терминал есть, но его родитель — не
+    // ForEachStatement.
+    var content = "А = 100;\n";
+    var dc = TestUtils.getDocumentContext(content);
+
+    // when — позиция на идентификаторе «А».
+    var forEach = ExpressionAtPosition.findForEachBindingAt(dc, new Position(0, 0));
+
+    // then
+    assertThat(forEach).isEmpty();
   }
 }

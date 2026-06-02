@@ -151,11 +151,10 @@ public class ExpressionAtPosition {
   }
 
   /**
-   * Найти узел правила {@code ruleIndex}, накрывающий терминал под курсором:
-   * берём терминал в позиции, поднимаемся к его непосредственному родителю и
-   * ищем целевое правило, считая сам родитель кандидатом (см.
-   * {@link #ancestorOrSelf}). Тип результата выводится из ожидаемого
-   * {@code Optional<T>} вызывающего метода.
+   * Найти узел правила {@code ruleIndex}, накрывающий терминал под курсором. Берём
+   * терминал в позиции, поднимаемся к его непосредственному родителю и ищем целевое
+   * правило, считая сам родитель кандидатом (см. {@link #ancestorOrSelf}). Тип
+   * результата выводится из ожидаемого {@code Optional<T>} вызывающего метода.
    */
   private static <T extends ParserRuleContext> Optional<T> findEnclosingRule(
     DocumentContext documentContext, Position position, int ruleIndex
@@ -171,9 +170,9 @@ public class ExpressionAtPosition {
 
   /**
    * Найти ближайший узел правила {@code ruleIndex}, считая сам {@code node}
-   * кандидатом (inclusive). {@link Trees#getAncestorByRuleIndex} ищет строго
-   * среди предков и пропускает сам узел — но в текущей грамматике
-   * ресивер-идентификатор стоит прямым ребёнком целевого правила (например,
+   * кандидатом (inclusive). {@link Trees#getAncestorByRuleIndex} ищет строго среди
+   * предков и пропускает сам узел — но в текущей грамматике ресивер-идентификатор
+   * стоит прямым ребёнком целевого правила (например,
    * {@code (callStatement Идентификатор (incompleteAccess .))} для висячей точки
    * {@code Идентификатор.}), поэтому без проверки самого узла lookup даёт null.
    */
