@@ -24,6 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.Test;
@@ -159,6 +162,28 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
 
     // then — на члене глобальной цепочки наш сапплаер ничего не выдаёт.
     assertThat(decoded).isEmpty();
+  }
+
+  @Test
+  void testRangeScopingReturnsOnlyTokensInRange() {
+    // given — два обращения к свойству на разных строках (2 и 3).
+    String bsl = """
+      Процедура Тест()
+          ТЗ = Новый ТаблицаЗначений;
+          А = ТЗ.Колонки;
+          Б = ТЗ.Колонки;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(bsl);
+    // диапазон покрывает только строку 2 (первое обращение).
+    var range = new Range(new Position(2, 0), new Position(2, 100));
+
+    // when — range-перегрузка ограничивает дорогой memberAt диапазоном.
+    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext, range));
+
+    // then — токен только на строке 2, обращение на строке 3 не обработано.
+    assertThat(decoded).hasSize(1);
+    assertThat(decoded).allSatisfy(token -> assertThat(token.line()).isEqualTo(2));
   }
 
   @Test

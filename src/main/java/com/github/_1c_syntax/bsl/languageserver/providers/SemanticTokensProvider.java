@@ -53,6 +53,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 /**
  * Провайдер для предоставления семантических токенов.
@@ -172,8 +173,8 @@ public class SemanticTokensProvider {
   ) {
     Range range = params.getRange();
 
-    // Collect tokens from all suppliers in parallel
-    var entries = collectTokens(documentContext);
+    // Collect tokens from all suppliers in parallel, scoping expensive suppliers to the range
+    var entries = collectTokens(documentContext, range);
 
     // Filter tokens that fall within the specified range
     var filteredEntries = filterTokensByRange(entries, range);
@@ -457,10 +458,25 @@ public class SemanticTokensProvider {
    * Collect tokens from all suppliers in parallel using ForkJoinPool.
    */
   private List<SemanticTokenEntry> collectTokens(DocumentContext documentContext) {
+    return collectTokens(supplier -> supplier.getSemanticTokens(documentContext));
+  }
+
+  /**
+   * Собрать токены всех сапплаеров для запрошенного диапазона. Дорогие сапплаеры
+   * ограничивают тяжёлую работу диапазоном, дешёвые отдают полный набор (его
+   * затем триммит {@link #filterTokensByRange}).
+   */
+  private List<SemanticTokenEntry> collectTokens(DocumentContext documentContext, Range range) {
+    return collectTokens(supplier -> supplier.getSemanticTokens(documentContext, range));
+  }
+
+  private List<SemanticTokenEntry> collectTokens(
+    Function<SemanticTokensSupplier, List<SemanticTokenEntry>> invoker
+  ) {
     return CompletableFuture
       .supplyAsync(
         () -> suppliers.parallelStream()
-          .map(supplier -> supplier.getSemanticTokens(documentContext))
+          .map(invoker)
           .flatMap(Collection::stream)
           .toList(),
         executor

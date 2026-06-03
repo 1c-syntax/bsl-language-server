@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Сапплаер семантических токенов для обращения к свойствам платформенных типов
@@ -82,6 +83,16 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
 
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
+    return collect(documentContext, range -> true);
+  }
+
+  @Override
+  public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext, Range range) {
+    // Дорогой memberAt вызывается только для свойств в пределах запрошенного диапазона.
+    return collect(documentContext, nameRange -> Ranges.containsPosition(range, nameRange.getStart()));
+  }
+
+  private List<SemanticTokenEntry> collect(DocumentContext documentContext, Predicate<Range> inScope) {
     var entries = new ArrayList<SemanticTokenEntry>();
     var ast = documentContext.getAst();
     var fileType = documentContext.getFileType();
@@ -92,6 +103,7 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
         continue;
       }
       propertyNameRange(accessProperty)
+        .filter(inScope)
         .filter(range -> resolvesToMember(documentContext, range.getStart()))
         .ifPresent(range -> helper.addRange(
           entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS));
