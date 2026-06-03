@@ -1,4 +1,6 @@
 import org.apache.tools.ant.filters.EscapeUnicode
+import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.tasks.bundling.Jar
 import org.jreleaser.model.Active.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -211,7 +213,8 @@ afterEvaluate {
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
 
-    tasks.named("sourcesJar") {
+    tasks.named<Jar>("sourcesJar") {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
