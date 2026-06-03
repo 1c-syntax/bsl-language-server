@@ -54,6 +54,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
@@ -112,7 +113,19 @@ public class TypeRegistry {
   private final AtomicLong membersEpoch = new AtomicLong();
   private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
 
-  private record MembersKey(TypeRef ref, FileType fileType) {
+  private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
+
+    // fileType штатно бывает null: одноаргументный getMembers(ref) зовёт getMembers(ref, null)
+    // («фильтрация по скоупу не применяется»). ref допускает null защитно (см. computeMembers).
+    // Поэтому естественный порядок ключа — null-safe.
+    private static final Comparator<MembersKey> NATURAL_ORDER = Comparator
+      .comparing(MembersKey::ref, Comparator.nullsFirst(Comparator.naturalOrder()))
+      .thenComparing(MembersKey::fileType, Comparator.nullsFirst(Comparator.naturalOrder()));
+
+    @Override
+    public int compareTo(MembersKey other) {
+      return NATURAL_ORDER.compare(this, other);
+    }
   }
 
   private record CachedMembers(long epoch, List<MemberDescriptor> members) {
@@ -352,25 +365,12 @@ public class TypeRegistry {
   }
 
   private List<MemberDescriptor> computeMembers(TypeRef ref, FileType fileType) {
-    var sources = memberSources.get(ref);
-    if ((sources == null || sources.isEmpty()) && ref != null) {
-      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
-      if (canonical != null && !canonical.equals(ref)) {
-        sources = memberSources.get(canonical);
-      }
-    }
-    if (sources == null || sources.isEmpty()) {
+    var sources = resolveMemberSources(ref);
+    if (sources.isEmpty()) {
       return List.of();
     }
-    // sources — Collections.synchronizedList (см. registerMemberSource): итерация
-    // обязана идти под synchronized на самом списке, иначе возможен CME при
-    // конкурентной регистрации. Снимаем согласованный снимок и итерируем его.
-    List<ScopedMemberSource> snapshot;
-    synchronized (sources) {
-      snapshot = List.copyOf(sources);
-    }
     var byName = new LinkedHashMap<String, MemberDescriptor>();
-    for (var scoped : snapshot) {
+    for (var scoped : snapshotOf(sources)) {
       if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
         continue;
       }
@@ -381,6 +381,38 @@ public class TypeRegistry {
     // Неизменяемый список: память шарится между вызовами, случайная мутация
     // упадёт сразу (все потребители только итерируют).
     return List.copyOf(byName.values());
+  }
+
+  /**
+   * Источники членов типа с fallback на канонический псевдоним.
+   *
+   * @param ref тип, для которого ищутся источники членов.
+   * @return список источников; пустой, если их нет.
+   */
+  private List<ScopedMemberSource> resolveMemberSources(TypeRef ref) {
+    var sources = memberSources.get(ref);
+    if ((sources == null || sources.isEmpty()) && ref != null) {
+      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+      if (canonical != null && !canonical.equals(ref)) {
+        sources = memberSources.get(canonical);
+      }
+    }
+    return sources == null ? List.of() : sources;
+  }
+
+  /**
+   * Согласованный снимок {@code Collections.synchronizedList} (см.
+   * {@link #registerMemberSource}): итерация по synchronizedList обязана идти под
+   * {@code synchronized} на самом списке, иначе при конкурентной регистрации возможен
+   * {@code ConcurrentModificationException}.
+   *
+   * @param sources список источников членов.
+   * @return неизменяемый снимок, безопасный для итерации.
+   */
+  private static List<ScopedMemberSource> snapshotOf(List<ScopedMemberSource> sources) {
+    synchronized (sources) {
+      return List.copyOf(sources);
+    }
   }
 
   /**
