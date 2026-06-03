@@ -104,4 +104,24 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
     );
   }
 
+  @Override
+  public int getVariableNameLine() {
+    return variableNameLine;
+  }
+
+  @Override
+  public int getVariableNameStartCharacter() {
+    return variableNameStartCharacter;
+  }
+
+  @Override
+  public int getVariableNameEndCharacter() {
+    return variableNameEndCharacter;
+  }
+
+  @Override
+  public int compareTo(VariableSymbol other) {
+    return NATURAL_ORDER.compare(this, other);
+  }
+
 }

@@ -27,13 +27,29 @@ import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Информация о символе, представляющем собой переменную.
  */
-public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable {
+public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable, Comparable<VariableSymbol> {
+
+  /**
+   * Естественный порядок переменных, согласованный с {@code equals}: имя →
+   * URI владельца → позиция имени (строка, начальный и конечный символы).
+   * Использует дешёвые {@code int}-аксессоры позиции, а не
+   * {@link #getVariableNameRange()}, который аллоцирует {@code Range}/{@code Position}.
+   * Реализации {@link #compareTo(VariableSymbol)} обязаны делегировать сюда.
+   */
+  Comparator<VariableSymbol> NATURAL_ORDER = Comparator
+    .comparing(VariableSymbol::getName)
+    .thenComparing(variable -> variable.getOwner().getUri())
+    .thenComparingInt(VariableSymbol::getVariableNameLine)
+    .thenComparingInt(VariableSymbol::getVariableNameStartCharacter)
+    .thenComparingInt(VariableSymbol::getVariableNameEndCharacter);
+
   /**
    * @return Вид переменной
    */
@@ -54,6 +70,28 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
    * @return Диапазон, в котором определено имя переменной.
    */
   Range getVariableNameRange();
+
+  /**
+   * Дешёвый (без аллокации) аксессор строки имени переменной — в отличие от
+   * {@link #getVariableNameRange()}, который создаёт {@code Range}/{@code Position}.
+   *
+   * @return номер строки, в которой определено имя переменной.
+   */
+  int getVariableNameLine();
+
+  /**
+   * Дешёвый (без аллокации) аксессор начального символа имени переменной.
+   *
+   * @return номер начального символа имени переменной.
+   */
+  int getVariableNameStartCharacter();
+
+  /**
+   * Дешёвый (без аллокации) аксессор конечного символа имени переменной.
+   *
+   * @return номер конечного символа имени переменной.
+   */
+  int getVariableNameEndCharacter();
 
   @Override
   Optional<VariableDescription> getDescription();
