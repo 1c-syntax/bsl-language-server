@@ -23,12 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
+import org.eclipse.lsp4j.util.Positions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,9 +39,9 @@ import java.util.function.Predicate;
 /**
  * Общая основа сапплаеров, подсвечивающих обращения к членам платформенных типов
  * (свойство через accessProperty, вызов метода через accessCall). Тип члена
- * резолвится через {@link TypeService#memberAt(DocumentContext, Position)} —
- * дорогой инференс, поэтому в range-запросе он вызывается только для узлов в
- * пределах запрошенного диапазона.
+ * резолвится через {@link TypeService#memberAt} — дорогой инференс, поэтому в
+ * range-запросе он вызывается только для узлов, пересекающихся с запрошенным
+ * диапазоном.
  * <p>
  * Подклассы определяют четыре точки расширения:
  * <ul>
@@ -87,7 +87,17 @@ public abstract class AbstractPlatformMemberSemanticTokensSupplier<T extends Par
 
   @Override
   public final List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext, Range range) {
-    return collect(documentContext, nameRange -> Ranges.containsPosition(range, nameRange.getStart()));
+    return collect(documentContext, nameRange -> overlaps(range, nameRange));
+  }
+
+  /**
+   * Диапазон имени пересекается с запрошенным (частичное пересечение, как в
+   * {@code SemanticTokensProvider.filterTokensByRange}): имя, начинающееся до
+   * границы диапазона, но заходящее внутрь, не отбрасывается.
+   */
+  private static boolean overlaps(Range range, Range nameRange) {
+    return Positions.isBefore(nameRange.getStart(), range.getEnd())
+      && Positions.isBefore(range.getStart(), nameRange.getEnd());
   }
 
   private List<SemanticTokenEntry> collect(DocumentContext documentContext, Predicate<Range> inScope) {

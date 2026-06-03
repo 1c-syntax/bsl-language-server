@@ -165,8 +165,9 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
   }
 
   @Test
-  void testRangeScopingReturnsOnlyTokensInRange() {
-    // given — два обращения к свойству на разных строках (2 и 3).
+  void testRangeScopingByOverlap() {
+    // given — два обращения к свойству Колонки на разных строках (2 и 3).
+    // На строке 2 «Колонки» занимает столбцы [11, 18).
     String bsl = """
       Процедура Тест()
           ТЗ = Новый ТаблицаЗначений;
@@ -175,15 +176,18 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
       КонецПроцедуры
       """;
     var documentContext = TestUtils.getDocumentContext(bsl);
-    // диапазон покрывает только строку 2 (первое обращение).
-    var range = new Range(new Position(2, 0), new Position(2, 100));
 
-    // when — range-перегрузка ограничивает дорогой memberAt диапазоном.
-    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext, range));
+    // when/then — диапазон строки 2 не захватывает обращение на строке 3.
+    var line2 = helper.decodeFromEntries(supplier.getSemanticTokens(
+      documentContext, new Range(new Position(2, 0), new Position(2, 100))));
+    assertThat(line2).hasSize(1);
+    assertThat(line2).allSatisfy(token -> assertThat(token.line()).isEqualTo(2));
 
-    // then — токен только на строке 2, обращение на строке 3 не обработано.
-    assertThat(decoded).hasSize(1);
-    assertThat(decoded).allSatisfy(token -> assertThat(token.line()).isEqualTo(2));
+    // when/then — имя начинается до границы диапазона (start=14 внутри «Колонки»),
+    // но заходит внутрь → по overlap-семантике не отбрасывается.
+    var straddling = helper.decodeFromEntries(supplier.getSemanticTokens(
+      documentContext, new Range(new Position(2, 14), new Position(2, 100))));
+    assertThat(straddling).hasSize(1);
   }
 
   @Test

@@ -25,9 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.Test;
@@ -68,27 +65,9 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
     ));
   }
 
-  @Test
-  void testRangeScopingReturnsOnlyTokensInRange() {
-    // given — два вызова метода на разных строках (2 и 3).
-    String bsl = """
-      Процедура Тест()
-          М = Новый Массив;
-          М.Добавить(1);
-          М.Добавить(2);
-      КонецПроцедуры
-      """;
-    var documentContext = TestUtils.getDocumentContext(bsl);
-    // диапазон покрывает только строку 2 (первый вызов).
-    var range = new Range(new Position(2, 0), new Position(2, 100));
-
-    // when — range-перегрузка ограничивает дорогой memberAt диапазоном.
-    var decoded = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext, range));
-
-    // then — токен только на строке 2, вызов на строке 3 не обработан.
-    assertThat(decoded).hasSize(1);
-    assertThat(decoded).allSatisfy(token -> assertThat(token.line()).isEqualTo(2));
-  }
+  // Range-scoping — общее поведение базы AbstractPlatformMemberSemanticTokensSupplier,
+  // покрыто в PlatformMemberPropertyAccessSemanticTokensSupplierTest (один сапплаер
+  // на общий путь, чтобы не дублировать тест).
 
   @Test
   void testPlatformMethodAfterAwait() {
