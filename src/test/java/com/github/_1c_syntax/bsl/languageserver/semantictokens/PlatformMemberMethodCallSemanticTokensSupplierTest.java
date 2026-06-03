@@ -65,6 +65,10 @@ class PlatformMemberMethodCallSemanticTokensSupplierTest extends AbstractServerC
     ));
   }
 
+  // Range-scoping — общее поведение базы AbstractPlatformMemberSemanticTokensSupplier,
+  // покрыто в PlatformMemberPropertyAccessSemanticTokensSupplierTest (один сапплаер
+  // на общий путь, чтобы не дублировать тест).
+
   @Test
   void testPlatformMethodAfterAwait() {
     // given — реальный кейс: вызов метода платформенного типа после Ждать.

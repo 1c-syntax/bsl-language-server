@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 
@@ -37,5 +38,22 @@ public interface SemanticTokensSupplier {
    * @return Список семантических токенов
    */
   List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext);
+
+  /**
+   * Получить семантические токены только для указанного диапазона документа
+   * (запрос {@code textDocument/semanticTokens/range}).
+   * <p>
+   * Реализация по умолчанию игнорирует диапазон и возвращает токены всего
+   * документа — провайдер всё равно отфильтрует их по диапазону. Дорогие
+   * сапплаеры (с инференсом типов на каждый узел) переопределяют этот метод,
+   * чтобы не выполнять тяжёлую работу за пределами видимой области.
+   *
+   * @param documentContext Контекст документа
+   * @param range           Запрошенный диапазон (всегда задан вызывающим)
+   * @return Список семантических токенов в пределах диапазона
+   */
+  default List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext, Range range) {
+    return getSemanticTokens(documentContext);
+  }
 }
 
