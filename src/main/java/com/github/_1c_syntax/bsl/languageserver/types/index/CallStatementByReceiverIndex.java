@@ -21,16 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -52,16 +47,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * строит карту {@code базовый идентификатор → callStatement'ы} один раз на документ,
  * и поиск становится hash-lookup'ом по имени переменной.
  * <p>
- * Индекс держит AST-узлы, поэтому инвалидируется per-URI при изменении содержимого
- * ({@link DocumentContextContentChangedEvent}), освобождении вторичных данных
- * ({@link ServerContextDocumentClearedEvent} — так batch-анализ выбрасывает AST после
- * каждого файла, иначе индекс удерживал бы разобранные деревья всех файлов на весь
- * прогон), закрытии ({@link ServerContextDocumentClosedEvent}) и удалении
- * ({@link ServerContextDocumentRemovedEvent}) документа. Строится лениво.
+ * Индекс держит AST-узлы, поэтому инвалидируется per-URI на событиях жизненного
+ * цикла документа через {@link AbstractDocumentLifecycleClearableIndex} (изменение
+ * содержимого / освобождение вторичных данных / закрытие / удаление). Освобождение
+ * вторичных данных особенно важно: так batch-анализ выбрасывает AST после каждого
+ * файла, иначе индекс удерживал бы разобранные деревья всех файлов на весь прогон.
+ * Строится лениво.
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class CallStatementByReceiverIndex {
+public class CallStatementByReceiverIndex extends AbstractDocumentLifecycleClearableIndex {
 
   private final Map<URI, Map<String, List<BSLParser.CallStatementContext>>> byUri = new ConcurrentHashMap<>();
 
@@ -100,27 +95,8 @@ public class CallStatementByReceiverIndex {
    *
    * @param uri URI документа.
    */
+  @Override
   public void clear(URI uri) {
     byUri.remove(uri);
-  }
-
-  @EventListener
-  public void handleContentChanged(DocumentContextContentChangedEvent event) {
-    clear(event.getSource().getUri());
-  }
-
-  @EventListener
-  public void handleDataCleared(ServerContextDocumentClearedEvent event) {
-    clear(event.getDocumentContext().getUri());
-  }
-
-  @EventListener
-  public void handleDocumentClosed(ServerContextDocumentClosedEvent event) {
-    clear(event.getDocumentContext().getUri());
-  }
-
-  @EventListener
-  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    clear(event.getUri());
   }
 }

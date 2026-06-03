@@ -21,17 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -48,26 +43,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * пересчитывает тип одного и того же ресивера сотни раз.
  * <p>
  * <b>Только инвалидация, никакого жадного наполнения:</b> на старте
- * {@code populateContext} пересобирает все документы, и AOP шлёт
- * {@link DocumentContextContentChangedEvent} на каждый из них — обработчик лишь
- * чистит соответствующий URI (дешёвый no-op по пустому бакету), но не наполняет
- * кэш. Реальное наполнение происходит только при настоящих запросах инференса
- * (семантические токены / hover / диагностики по активным документам).
+ * {@code populateContext} пересобирает все документы, и AOP шлёт событие изменения
+ * содержимого на каждый из них — обработчик лишь чистит соответствующий URI
+ * (дешёвый no-op по пустому бакету), но не наполняет кэш. Реальное наполнение
+ * происходит только при настоящих запросах инференса (семантические токены / hover
+ * / диагностики по активным документам).
  * <p>
  * Ключ — сам {@link VariableSymbol}: его equals включает имя + документ +
  * позицию имени, поэтому одноимённые переменные из разных областей видимости —
  * разные ключи (коллизий по scope нет).
  * <p>
- * Инвалидация — per-URI: на изменение, освобождение вторичных данных
- * ({@link ServerContextDocumentClearedEvent} — batch-анализ так выбрасывает документ
- * после каждого файла), закрытие или удаление документа удаляется весь бакет этого
- * URI. Кросс-документные зависимости типа (тип переменной зависит от метода чужого
- * модуля) при правке чужого модуля не сбрасываются — это та же модель, что у
- * {@link SymbolTypeIndex}.
+ * Инвалидация — per-URI через {@link AbstractDocumentLifecycleClearableIndex}
+ * (изменение / очистка вторичных данных / закрытие / удаление документа удаляют
+ * весь бакет этого URI). Кросс-документные зависимости типа (тип переменной зависит
+ * от метода чужого модуля) при правке чужого модуля не сбрасываются — это та же
+ * модель, что у {@link SymbolTypeIndex}.
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class InferredVariableTypeIndex {
+public class InferredVariableTypeIndex extends AbstractDocumentLifecycleClearableIndex {
 
   private final Map<URI, Map<VariableSymbol, TypeSet>> typesByUri = new ConcurrentHashMap<>();
 
@@ -98,28 +92,9 @@ public class InferredVariableTypeIndex {
    *
    * @param uri URI документа.
    */
+  @Override
   public void clear(URI uri) {
     typesByUri.remove(uri);
-  }
-
-  @EventListener
-  public void handleContentChanged(DocumentContextContentChangedEvent event) {
-    clear(event.getSource().getUri());
-  }
-
-  @EventListener
-  public void handleDataCleared(ServerContextDocumentClearedEvent event) {
-    clear(event.getDocumentContext().getUri());
-  }
-
-  @EventListener
-  public void handleDocumentClosed(ServerContextDocumentClosedEvent event) {
-    clear(event.getDocumentContext().getUri());
-  }
-
-  @EventListener
-  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    clear(event.getUri());
   }
 
   private static URI uriOf(VariableSymbol variable) {

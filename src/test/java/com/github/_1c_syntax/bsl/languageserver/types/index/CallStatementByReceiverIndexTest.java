@@ -76,6 +76,22 @@ class CallStatementByReceiverIndexTest extends AbstractServerContextAwareTest {
     assertAllReceivers(uri, ast);
   }
 
+  @Test
+  void aggregatesMultipleCallsForSameReceiver() {
+    // given — два callStatement'а с одним базовым идентификатором ТЗ.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          ТЗ.Колонки.Добавить("Имя");
+          ТЗ.Очистить();
+      КонецПроцедуры
+      """);
+    var ast = documentContext.getAst();
+    var uri = documentContext.getUri();
+
+    // then — оба вызова сгруппированы под одним ресивером.
+    assertThat(index.byReceiver(uri, ast, "ТЗ")).hasSize(2);
+  }
+
   private void assertAllReceivers(URI uri, BSLParser.FileContext ast) {
     assertThat(index.byReceiver(uri, ast, "ТЗ")).hasSize(1);
     assertThat(index.byReceiver(uri, ast, "СТР")).as("без учёта регистра").hasSize(1);
