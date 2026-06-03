@@ -129,4 +129,26 @@ class PreprocessorSemanticTokensSupplierTest {
     );
     helper.assertTokensMatch(decoded, expected);
   }
+
+  @Test
+  void testStackDirective() {
+    // given
+    String bsl = """
+      #stack
+      Функция Тест()
+        Возврат 1;
+      КонецФункции
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    // #, stack
+    var expected = List.of(
+      new ExpectedToken(0, 0, 1, SemanticTokenTypes.Macro, "#"),
+      new ExpectedToken(0, 1, 5, SemanticTokenTypes.Macro, "stack")
+    );
+    helper.assertTokensMatch(decoded, expected);
+  }
 }
