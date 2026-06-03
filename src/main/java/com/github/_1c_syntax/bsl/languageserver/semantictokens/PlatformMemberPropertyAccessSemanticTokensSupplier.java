@@ -29,19 +29,16 @@ import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 /**
  * Сапплаер семантических токенов для обращения к свойствам платформенных типов
@@ -50,15 +47,11 @@ import java.util.function.Predicate;
  * {@link com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer}).
  * <p>
  * Свойство резолвится через {@link TypeService#memberAt(DocumentContext, Position)}.
- * Если найден member с {@link MemberKind#PROPERTY} — имя свойства получает
- * {@link SemanticTokenTypes#Property} + {@link SemanticTokenModifiers#DefaultLibrary}.
+ * Имя свойства получает {@link SemanticTokenTypes#Property} +
+ * {@link org.eclipse.lsp4j.SemanticTokenModifiers#DefaultLibrary}.
  * <p>
- * Симметричен {@link PlatformMemberMethodCallSemanticTokensSupplier}, который
- * подсвечивает вызовы методов платформенных типов через accessCall. В отличие от
- * методного сапплаера здесь не нужен skip source-defined call-site'ов: source-defined
- * переменные (в т.ч. экспортные переменные модуля объекта) не выставляются как
- * члены типа, поэтому {@link TypeService#memberAt} их не находит и пересечения
- * по позиции с {@link SymbolsSemanticTokensSupplier} не возникает.
+ * Симметричен {@link PlatformMemberMethodCallSemanticTokensSupplier} (вызовы методов
+ * через accessCall) — общий каркас в {@link AbstractPlatformMemberSemanticTokensSupplier}.
  * <p>
  * Цепочки, начинающиеся с глобального synthetic-имени ({@code Справочники.Контрагенты},
  * {@code Перечисления.Пол.Мужской}, {@code КодировкаТекста.UTF8}), целиком красит
@@ -70,51 +63,44 @@ import java.util.function.Predicate;
  * GlobalScope не трогает — их подсвечиваем мы.
  */
 @Component
-@RequiredArgsConstructor
-public class PlatformMemberPropertyAccessSemanticTokensSupplier implements SemanticTokensSupplier {
+public class PlatformMemberPropertyAccessSemanticTokensSupplier
+  extends AbstractPlatformMemberSemanticTokensSupplier<BSLParser.AccessPropertyContext> {
 
-  private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
   private static final Set<Integer> CHAIN_ROOTS =
     Set.of(BSLParser.RULE_complexIdentifier, BSLParser.RULE_callStatement);
 
-  private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
-  private final SemanticTokensHelper helper;
 
-  @Override
-  public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
-    return collect(documentContext, range -> true);
+  public PlatformMemberPropertyAccessSemanticTokensSupplier(TypeService typeService,
+                                                            GlobalScopeProvider globalScopeProvider,
+                                                            SemanticTokensHelper helper) {
+    super(typeService, helper);
+    this.globalScopeProvider = globalScopeProvider;
   }
 
   @Override
-  public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext, Range range) {
-    // Дорогой memberAt вызывается только для свойств в пределах запрошенного диапазона.
-    return collect(documentContext, nameRange -> Ranges.containsPosition(range, nameRange.getStart()));
+  protected int ruleIndex() {
+    return BSLParser.RULE_accessProperty;
   }
 
-  private List<SemanticTokenEntry> collect(DocumentContext documentContext, Predicate<Range> inScope) {
-    var entries = new ArrayList<SemanticTokenEntry>();
-    var ast = documentContext.getAst();
+  @Override
+  protected Optional<Range> nameRange(BSLParser.AccessPropertyContext node) {
+    return Optional.ofNullable(node.IDENTIFIER()).map(Ranges::create);
+  }
+
+  @Override
+  protected BiPredicate<BSLParser.AccessPropertyContext, Range> skipFilter(DocumentContext documentContext) {
     var fileType = documentContext.getFileType();
-
-    for (var accessProperty
-      : Trees.<BSLParser.AccessPropertyContext>findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
-      if (isGlobalScopeChain(accessProperty, fileType)) {
-        continue;
-      }
-      propertyNameRange(accessProperty)
-        .filter(inScope)
-        .filter(range -> resolvesToMember(documentContext, range.getStart()))
-        .ifPresent(range -> helper.addRange(
-          entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS));
-    }
-
-    return entries;
+    return (node, range) -> isGlobalScopeChain(node, fileType);
   }
 
-  private static Optional<Range> propertyNameRange(BSLParser.AccessPropertyContext accessProperty) {
-    return Optional.ofNullable(accessProperty.IDENTIFIER())
-      .map(Ranges::create);
+  @Override
+  protected void emit(List<SemanticTokenEntry> entries, DocumentContext documentContext, Range range) {
+    // Для accessProperty memberAt возвращает только свойство (метод — только для
+    // accessCall), поэтому достаточно проверки наличия члена.
+    if (typeService.memberAt(documentContext, range.getStart()).isPresent()) {
+      helper.addRange(entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS);
+    }
   }
 
   /**
@@ -143,14 +129,5 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
       base = callStatement.IDENTIFIER();
     }
     return Optional.ofNullable(base).map(TerminalNode::getText);
-  }
-
-  /**
-   * В позиции резолвится член типа. Для accessProperty это всегда свойство
-   * (метод резолвится только для accessCall), поэтому отдельная проверка
-   * {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberKind} не нужна.
-   */
-  private boolean resolvesToMember(DocumentContext documentContext, Position position) {
-    return typeService.memberAt(documentContext, position).isPresent();
   }
 }
