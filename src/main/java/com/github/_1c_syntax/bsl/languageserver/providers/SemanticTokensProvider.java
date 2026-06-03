@@ -523,20 +523,15 @@ public class SemanticTokensProvider {
           if (b.start() >= aEnd) {
             break; // токены отсортированы по start — дальше пересечений с a нет
           }
-          if (!isExactDuplicate(a, b)) {
+          // a и b уже на одной строке, поэтому equals рекорда (все 5 полей)
+          // эквивалентен проверке «точный дубль»: одинаковые позиция и оформление.
+          if (!a.equals(b)) {
             overlaps.add(new TokenOverlap(a, b));
           }
         }
       }
     }
     return overlaps;
-  }
-
-  private static boolean isExactDuplicate(SemanticTokenEntry a, SemanticTokenEntry b) {
-    return a.start() == b.start()
-      && a.length() == b.length()
-      && a.type() == b.type()
-      && a.modifiers() == b.modifiers();
   }
 
   private static int[] toDeltaEncodedArray(List<SemanticTokenEntry> entries) {
