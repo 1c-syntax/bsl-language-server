@@ -630,30 +630,21 @@ public class ConfigurationTypesProvider {
    * Триплет имён детей регистра (измерения/ресурсы/реквизиты), полученный
    * из конкретного MD-класса регистра. {@code null} — для не-регистров.
    */
-  record RegisterChildren(List<Attribute> dimensions,
-                          List<Attribute> resources,
-                          List<Attribute> attributes) {
-  }
-
-  @SuppressWarnings("unchecked")
-  private static List<Attribute> upcastAttributes(List<? extends Attribute> list) {
-    return (List<Attribute>) list;
+  record RegisterChildren(List<? extends Attribute> dimensions,
+                          List<? extends Attribute> resources,
+                          List<? extends Attribute> attributes) {
   }
 
   static @Nullable RegisterChildren registerChildrenOf(MD md) {
     return switch (md) {
       case InformationRegister r ->
-        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
-          upcastAttributes(r.getAttributes()));
+        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
       case AccumulationRegister r ->
-        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
-          upcastAttributes(r.getAttributes()));
+        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
       case AccountingRegister r ->
-        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
-          upcastAttributes(r.getAttributes()));
+        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
       case CalculationRegister r ->
-        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
-          upcastAttributes(r.getAttributes()));
+        new RegisterChildren(r.getDimensions(), r.getResources(), r.getAttributes());
       default -> null;
     };
   }

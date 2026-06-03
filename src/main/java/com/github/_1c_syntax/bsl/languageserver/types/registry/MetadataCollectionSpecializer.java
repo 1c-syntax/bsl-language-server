@@ -510,37 +510,35 @@ public class MetadataCollectionSpecializer {
   }
 
   /** Измерения регистра (InformationRegister/AccumulationRegister/AccountingRegister/CalculationRegister). */
-  @SuppressWarnings("unchecked")
-  static List<MD> registerDimensions(MD md) {
+  static List<? extends MD> registerDimensions(MD md) {
     if (md instanceof InformationRegister r) {
-      return (List<MD>) (List<?>) r.getDimensions();
+      return r.getDimensions();
     }
     if (md instanceof AccumulationRegister r) {
-      return (List<MD>) (List<?>) r.getDimensions();
+      return r.getDimensions();
     }
     if (md instanceof AccountingRegister r) {
-      return (List<MD>) (List<?>) r.getDimensions();
+      return r.getDimensions();
     }
     if (md instanceof CalculationRegister r) {
-      return (List<MD>) (List<?>) r.getDimensions();
+      return r.getDimensions();
     }
     return List.of();
   }
 
   /** Ресурсы регистра. */
-  @SuppressWarnings("unchecked")
-  static List<MD> registerResources(MD md) {
+  static List<? extends MD> registerResources(MD md) {
     if (md instanceof InformationRegister r) {
-      return (List<MD>) (List<?>) r.getResources();
+      return r.getResources();
     }
     if (md instanceof AccumulationRegister r) {
-      return (List<MD>) (List<?>) r.getResources();
+      return r.getResources();
     }
     if (md instanceof AccountingRegister r) {
-      return (List<MD>) (List<?>) r.getResources();
+      return r.getResources();
     }
     if (md instanceof CalculationRegister r) {
-      return (List<MD>) (List<?>) r.getResources();
+      return r.getResources();
     }
     return List.of();
   }
