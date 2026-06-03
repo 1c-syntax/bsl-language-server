@@ -742,6 +742,10 @@ public class ExpressionTypeInferencer {
    * (секция {@code // Параметры:}).
    */
   private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
+    // Кэш ключуется только по VariableSymbol, без fileType. Это корректно, потому что
+    // fileType документа детерминирован самой переменной (variable.getOwner().getFileType()),
+    // а inferSymbol всегда заводит ctx.documentContext == variable.getOwner() — то есть
+    // одна и та же переменная не инферится в двух разных fileType-контекстах.
     var cached = inferredVariableTypeIndex.get(variable);
     if (cached != null) {
       return cached;

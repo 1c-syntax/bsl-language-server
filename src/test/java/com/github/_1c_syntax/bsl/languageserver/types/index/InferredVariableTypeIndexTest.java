@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -71,6 +72,12 @@ class InferredVariableTypeIndexTest extends AbstractServerContextAwareTest {
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
     assertThat(index.get(variable)).as("сброс на изменение содержимого").isNull();
 
+    // освобождение вторичных данных (tryClearDocument в batch-анализе) сбрасывает кэш по URI.
+    inferencer.inferSymbol(variable);
+    assertThat(index.get(variable)).isNotNull();
+    eventPublisher.publishEvent(new ServerContextDocumentClearedEvent(serverContext, documentContext));
+    assertThat(index.get(variable)).as("сброс на освобождение вторичных данных").isNull();
+
     // закрытие документа сбрасывает кэш по URI.
     inferencer.inferSymbol(variable);
     assertThat(index.get(variable)).isNotNull();
@@ -82,6 +89,51 @@ class InferredVariableTypeIndexTest extends AbstractServerContextAwareTest {
     assertThat(index.get(variable)).isNotNull();
     eventPublisher.publishEvent(new ServerContextDocumentRemovedEvent(serverContext, uri));
     assertThat(index.get(variable)).as("сброс на удаление файла").isNull();
+  }
+
+  @Test
+  void realTryClearDocumentEvictsCacheViaAop() {
+    // given — документ с инферированной переменной в реальном ServerContext.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          ТЗ = Новый ТаблицаЗначений;
+      КонецПроцедуры
+      """);
+    var serverContext = documentContext.getServerContext();
+    var variable = variable(documentContext, "ТЗ");
+    inferencer.inferSymbol(variable);
+    assertThat(index.get(variable)).as("тип закэширован").isNotNull();
+
+    // when — реальный tryClearDocument на не-открытом документе; AOP-аспект
+    // публикует ServerContextDocumentClearedEvent.
+    var cleared = serverContext.tryClearDocument(documentContext);
+
+    // then — метод сообщил о реальной очистке, и кэш сброшен сквозь аспект.
+    assertThat(cleared).as("данные реально освобождены").isTrue();
+    assertThat(index.get(variable)).as("кэш сброшен событием очистки").isNull();
+  }
+
+  @Test
+  void openedDocumentIsNotClearedAndKeepsCache() {
+    // given — открытый в редакторе документ с инферированной переменной.
+    var source = """
+      Процедура Тест()
+          ТЗ = Новый ТаблицаЗначений;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(source);
+    var serverContext = documentContext.getServerContext();
+    serverContext.openDocument(documentContext, source, 1);
+    var variable = variable(documentContext, "ТЗ");
+    inferencer.inferSymbol(variable);
+    assertThat(index.get(variable)).isNotNull();
+
+    // when — tryClearDocument на открытом документе.
+    var cleared = serverContext.tryClearDocument(documentContext);
+
+    // then — no-op: событие не публикуется, кэш открытого документа уцелел.
+    assertThat(cleared).as("открытый документ не очищается").isFalse();
+    assertThat(index.get(variable)).as("кэш открытого документа сохранён").isNotNull();
   }
 
   private static VariableSymbol variable(DocumentContext documentContext, String name) {

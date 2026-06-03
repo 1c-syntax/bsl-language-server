@@ -23,12 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+
+import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,19 +59,26 @@ class CallStatementByReceiverIndexTest extends AbstractServerContextAwareTest {
     var serverContext = documentContext.getServerContext();
 
     // then — группировка по базовому идентификатору.
+    assertAllReceivers(uri, ast);
+
+    // when/then — каждое из 4 событий чистит индекс по URI; после него
+    // индекс пересобирается целиком (проверяем все ресиверы, не один ключ).
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertAllReceivers(uri, ast);
+
+    eventPublisher.publishEvent(new ServerContextDocumentClearedEvent(serverContext, documentContext));
+    assertAllReceivers(uri, ast);
+
+    eventPublisher.publishEvent(new ServerContextDocumentClosedEvent(serverContext, documentContext));
+    assertAllReceivers(uri, ast);
+
+    eventPublisher.publishEvent(new ServerContextDocumentRemovedEvent(serverContext, uri));
+    assertAllReceivers(uri, ast);
+  }
+
+  private void assertAllReceivers(URI uri, BSLParser.FileContext ast) {
     assertThat(index.byReceiver(uri, ast, "ТЗ")).hasSize(1);
     assertThat(index.byReceiver(uri, ast, "СТР")).as("без учёта регистра").hasSize(1);
     assertThat(index.byReceiver(uri, ast, "Нет")).isEmpty();
-
-    // when/then — каждое из 3 событий чистит индекс по URI; после него
-    // индекс пересобирается с тем же результатом.
-    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
-    assertThat(index.byReceiver(uri, ast, "ТЗ")).hasSize(1);
-
-    eventPublisher.publishEvent(new ServerContextDocumentClosedEvent(serverContext, documentContext));
-    assertThat(index.byReceiver(uri, ast, "ТЗ")).hasSize(1);
-
-    eventPublisher.publishEvent(new ServerContextDocumentRemovedEvent(serverContext, uri));
-    assertThat(index.byReceiver(uri, ast, "ТЗ")).hasSize(1);
   }
 }

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -52,8 +53,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * и поиск становится hash-lookup'ом по имени переменной.
  * <p>
  * Индекс держит AST-узлы, поэтому инвалидируется per-URI при изменении содержимого
- * ({@link DocumentContextContentChangedEvent}), закрытии
- * ({@link ServerContextDocumentClosedEvent}) и удалении
+ * ({@link DocumentContextContentChangedEvent}), освобождении вторичных данных
+ * ({@link ServerContextDocumentClearedEvent} — так batch-анализ выбрасывает AST после
+ * каждого файла, иначе индекс удерживал бы разобранные деревья всех файлов на весь
+ * прогон), закрытии ({@link ServerContextDocumentClosedEvent}) и удалении
  * ({@link ServerContextDocumentRemovedEvent}) документа. Строится лениво.
  */
 @Component
@@ -72,6 +75,11 @@ public class CallStatementByReceiverIndex {
    * @return callStatement'ы с таким ресивером.
    */
   public List<BSLParser.CallStatementContext> byReceiver(URI uri, BSLParser.FileContext ast, String receiverName) {
+    // Гонка clear<->computeIfAbsent осознанно не закрывается: если документ
+    // инвалидируется ровно между clear и завершением build, в карте может осесть
+    // индекс по предыдущему AST. Следующая инвалидация его уберёт, а инференс читает
+    // свежий AST явно — устаревший индекс лишь продлевает жизнь старым узлам до
+    // следующего события (та же модель «без кросс-документной инвалидации»).
     var index = byUri.computeIfAbsent(uri, k -> build(ast));
     return index.getOrDefault(receiverName.toLowerCase(Locale.ROOT), List.of());
   }
@@ -99,6 +107,11 @@ public class CallStatementByReceiverIndex {
   @EventListener
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
     clear(event.getSource().getUri());
+  }
+
+  @EventListener
+  public void handleDataCleared(ServerContextDocumentClearedEvent event) {
+    clear(event.getDocumentContext().getUri());
   }
 
   @EventListener

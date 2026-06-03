@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -157,6 +158,18 @@ public class EventPublisherAspect {
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isCloseDocumentCall() && args(documentContext)")
   public void serverContextCloseDocument(JoinPoint joinPoint, DocumentContext documentContext) {
     publishEvent(new ServerContextDocumentClosedEvent((ServerContext) joinPoint.getThis(), documentContext));
+  }
+
+  @AfterReturning(
+    pointcut = "Pointcuts.isServerContext() && Pointcuts.isTryClearDocumentCall() && args(documentContext)",
+    returning = "cleared"
+  )
+  public void serverContextTryClearDocument(JoinPoint joinPoint, DocumentContext documentContext, boolean cleared) {
+    // Публикуем только при реальной очистке: на открытом документе tryClearDocument
+    // делает no-op (cleared == false) и сбрасывать кэши не нужно.
+    if (cleared) {
+      publishEvent(new ServerContextDocumentClearedEvent((ServerContext) joinPoint.getThis(), documentContext));
+    }
   }
 
   @AfterReturning("Pointcuts.isLanguageServer() && Pointcuts.isInitializeCall() && args(initializeParams)")

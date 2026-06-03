@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -57,10 +58,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * позицию имени, поэтому одноимённые переменные из разных областей видимости —
  * разные ключи (коллизий по scope нет).
  * <p>
- * Инвалидация — per-URI: на изменение, закрытие или удаление документа удаляется
- * весь бакет этого URI. Кросс-документные зависимости типа (тип переменной зависит
- * от метода чужого модуля) при правке чужого модуля не сбрасываются — это та же
- * модель, что у {@link SymbolTypeIndex}.
+ * Инвалидация — per-URI: на изменение, освобождение вторичных данных
+ * ({@link ServerContextDocumentClearedEvent} — batch-анализ так выбрасывает документ
+ * после каждого файла), закрытие или удаление документа удаляется весь бакет этого
+ * URI. Кросс-документные зависимости типа (тип переменной зависит от метода чужого
+ * модуля) при правке чужого модуля не сбрасываются — это та же модель, что у
+ * {@link SymbolTypeIndex}.
  */
 @Component
 @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -102,6 +105,11 @@ public class InferredVariableTypeIndex {
   @EventListener
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
     clear(event.getSource().getUri());
+  }
+
+  @EventListener
+  public void handleDataCleared(ServerContextDocumentClearedEvent event) {
+    clear(event.getDocumentContext().getUri());
   }
 
   @EventListener
