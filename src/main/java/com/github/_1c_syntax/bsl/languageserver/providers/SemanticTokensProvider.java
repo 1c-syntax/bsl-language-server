@@ -455,9 +455,10 @@ public class SemanticTokensProvider {
   }
 
   /**
-   * Collect tokens from all suppliers in parallel using ForkJoinPool.
+   * Собрать токены всех сапплаеров по всему документу (как для full-запроса).
+   * Package-private — используется регрессионным guard-тестом на пересечения.
    */
-  private List<SemanticTokenEntry> collectTokens(DocumentContext documentContext) {
+  List<SemanticTokenEntry> collectTokens(DocumentContext documentContext) {
     return collectTokens(supplier -> supplier.getSemanticTokens(documentContext));
   }
 

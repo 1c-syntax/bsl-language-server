@@ -23,15 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
-import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -40,12 +37,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Guard: сапплаеры не должны выдавать пересекающиеся токены на одном участке кода.
  * <p>
- * Прогоняет все {@link SemanticTokensSupplier} на модуле из реальной конфигурации
- * (с populateContext, чтобы работал инференс типов) и проверяет отсутствие
- * конфликтов через {@link SemanticTokensProvider#findOverlaps}. Регрессионная
- * защита: например, доступ {@code РегистрыСведений.РегистрСведений1} красится
- * GlobalScope как {@code Class}, и сапплаер свойств не должен накладывать на тот
- * же токен {@code Property}.
+ * Собирает токены тем же путём, что и провайдер ({@link SemanticTokensProvider#collectTokens}),
+ * на модуле из реальной конфигурации (с populateContext, чтобы работал инференс
+ * типов) и проверяет отсутствие конфликтов через {@link SemanticTokensProvider#findOverlaps}.
+ * Регрессионная защита: например, доступ {@code РегистрыСведений.РегистрСведений1}
+ * красится GlobalScope как {@code Class}, и сапплаер свойств не должен накладывать
+ * на тот же токен {@code Property}.
  */
 @CleanupContextBeforeClassAndAfterClass
 class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
@@ -54,7 +51,7 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     PATH_TO_METADATA + "/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
   @Autowired
-  private List<SemanticTokensSupplier> suppliers;
+  private SemanticTokensProvider provider;
 
   @Autowired
   private SemanticTokensLegend legend;
@@ -65,11 +62,8 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     initServerContext(PATH_TO_METADATA);
     var documentContext = TestUtils.getDocumentContextFromFile(MODULE, context);
 
-    // when — собираем токены со всех сапплаеров, как это делает провайдер.
-    var allTokens = new ArrayList<SemanticTokenEntry>();
-    for (var supplier : suppliers) {
-      allTokens.addAll(supplier.getSemanticTokens(documentContext));
-    }
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
     var overlaps = SemanticTokensProvider.findOverlaps(allTokens);
 
     // then — пересечений быть не должно.
