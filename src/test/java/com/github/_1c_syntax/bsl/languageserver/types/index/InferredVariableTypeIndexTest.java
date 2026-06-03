@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +66,7 @@ class InferredVariableTypeIndexTest extends AbstractServerContextAwareTest {
 
     // after inferSymbol — тип выведен и закэширован.
     var types = inferencer.inferSymbol(variable);
-    assertThat(types.refs()).extracting(ref -> ref.qualifiedName()).contains("ТаблицаЗначений");
+    assertThat(types.refs()).extracting(TypeRef::qualifiedName).contains("ТаблицаЗначений");
     assertThat(index.get(variable)).as("после инференса тип закэширован").isEqualTo(types);
 
     // изменение документа сбрасывает кэш по URI.
