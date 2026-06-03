@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -100,6 +101,7 @@ public class ExpressionTypeInferencer {
 
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
+  private final InferredVariableTypeIndex inferredVariableTypeIndex;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -738,6 +740,11 @@ public class ExpressionTypeInferencer {
    * (секция {@code // Параметры:}).
    */
   private TypeSet inferVariable(VariableSymbol variable, InferenceContext ctx) {
+    var cached = inferredVariableTypeIndex.get(variable);
+    if (cached != null) {
+      return cached;
+    }
+
     var owner = variable.getOwner();
     TypeSet acc = TypeSet.EMPTY;
     Set<Position> visitedPositions = new HashSet<>();
@@ -765,6 +772,16 @@ public class ExpressionTypeInferencer {
     acc = attachDefaultElementTypes(acc);
     acc = accumulateStructureInsertFields(variable, acc, ctx);
     acc = accumulateValueTableColumnFields(variable, acc, ctx);
+
+    // Кэшируем только «чистый корень» инференса (visited содержит максимум саму
+    // переменную). Вложенный вызов (внутри инференса другой переменной, visited
+    // ≥ 2) мог быть усечён цикл-гардом и зависит от порядка обхода — его результат
+    // некорректно переиспользовать как самостоятельный. Перф от этого не страдает:
+    // горячий путь (ресивер member-доступа) — всегда корень, а вложенные выводы
+    // и так покрыты кэшем своего корня.
+    if (ctx.visited.size() <= 1) {
+      inferredVariableTypeIndex.put(variable, acc);
+    }
     return acc;
   }
 
