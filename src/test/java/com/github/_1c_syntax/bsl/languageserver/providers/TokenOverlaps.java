@@ -26,7 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntr
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.IntUnaryOperator;
 
 /**
  * Тестовая утилита: детект пересечений семантических токенов, выданных
@@ -57,36 +61,82 @@ final class TokenOverlaps {
   }
 
   /**
-   * Находит пересечения токенов на одной строке.
+   * Часть токена в пределах одной строки: токен может быть многострочным
+   * (склеенные комментарии и т.п.), тогда он раскладывается на несколько спанов.
+   */
+  private record Span(int line, int start, int end, SemanticTokenEntry origin) {
+  }
+
+  /**
+   * Находит пересечения токенов, считая каждый токен однострочным.
+   * Подходит для синтетических токенов в юнит-тестах.
    *
    * @param entries собранные со всех сапплаеров токены
    * @return список пар пересекающихся токенов; пустой, если конфликтов нет
    */
   static List<TokenOverlap> findOverlaps(List<SemanticTokenEntry> entries) {
-    var byLine = new HashMap<Integer, List<SemanticTokenEntry>>();
+    return findOverlaps(entries, line -> Integer.MAX_VALUE);
+  }
+
+  /**
+   * Находит пересечения токенов с учётом многострочных токенов: длина токена,
+   * выходящая за конец строки, переносится на следующие строки (по длинам строк
+   * из {@code lineLength}). Без этого многострочный токен сравнивался бы только
+   * на своей стартовой строке, и пересечение на строке-продолжении терялось бы.
+   *
+   * @param entries    собранные со всех сапплаеров токены
+   * @param lineLength длина строки по её 0-индексу (число символов без перевода строки)
+   * @return список пар пересекающихся токенов; пустой, если конфликтов нет
+   */
+  static List<TokenOverlap> findOverlaps(List<SemanticTokenEntry> entries, IntUnaryOperator lineLength) {
+    var spansByLine = new HashMap<Integer, List<Span>>();
     for (var entry : entries) {
-      byLine.computeIfAbsent(entry.line(), k -> new ArrayList<>()).add(entry);
+      expand(entry, lineLength, spansByLine);
     }
 
     var overlaps = new ArrayList<TokenOverlap>();
-    for (var lineTokens : byLine.values()) {
-      lineTokens.sort(Comparator.comparingInt(SemanticTokenEntry::start));
-      for (int i = 0; i < lineTokens.size(); i++) {
-        var a = lineTokens.get(i);
-        int aEnd = a.start() + a.length();
-        for (int j = i + 1; j < lineTokens.size(); j++) {
-          var b = lineTokens.get(j);
-          if (b.start() >= aEnd) {
-            break; // токены отсортированы по start — дальше пересечений с a нет
+    var reported = new HashSet<Set<SemanticTokenEntry>>();
+    for (var spans : spansByLine.values()) {
+      spans.sort(Comparator.comparingInt(Span::start));
+      for (int i = 0; i < spans.size(); i++) {
+        var a = spans.get(i);
+        for (int j = i + 1; j < spans.size(); j++) {
+          var b = spans.get(j);
+          if (b.start() >= a.end()) {
+            break; // спаны отсортированы по start — дальше пересечений с a нет
           }
-          // a и b уже на одной строке, поэтому equals рекорда (все 5 полей)
-          // эквивалентен проверке «точный дубль»: одинаковые позиция и оформление.
-          if (!a.equals(b)) {
-            overlaps.add(new TokenOverlap(a, b));
+          if (a.origin().equals(b.origin())) {
+            continue; // точный дубль токена — не конфликт
+          }
+          // пара токенов может пересекаться на нескольких строках — рапортуем один раз.
+          if (reported.add(Set.of(a.origin(), b.origin()))) {
+            overlaps.add(new TokenOverlap(a.origin(), b.origin()));
           }
         }
       }
     }
     return overlaps;
+  }
+
+  /** Разложить токен на пер-строчные спаны, перенося длину за концом строки. */
+  private static void expand(SemanticTokenEntry entry, IntUnaryOperator lineLength,
+                             Map<Integer, List<Span>> spansByLine) {
+    int line = entry.line();
+    int col = entry.start();
+    int remaining = entry.length();
+    while (remaining > 0) {
+      int available = Math.max(0, lineLength.applyAsInt(line) - col);
+      int take = Math.min(remaining, available);
+      if (take > 0) {
+        spansByLine.computeIfAbsent(line, k -> new ArrayList<>())
+          .add(new Span(line, col, col + take, entry));
+      }
+      if (remaining <= available) {
+        break;
+      }
+      remaining -= available + 1; // +1 — символ перевода строки
+      line++;
+      col = 0;
+    }
   }
 }

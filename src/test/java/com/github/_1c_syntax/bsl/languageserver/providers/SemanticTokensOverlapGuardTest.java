@@ -64,7 +64,9 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
 
     // when — собираем токены тем же путём, что и провайдер для full-запроса.
     var allTokens = provider.collectTokens(documentContext);
-    var overlaps = TokenOverlaps.findOverlaps(allTokens);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
 
     // then — пересечений быть не должно.
     assertThat(overlaps)

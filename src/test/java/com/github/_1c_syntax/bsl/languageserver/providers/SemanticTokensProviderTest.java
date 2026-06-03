@@ -1893,6 +1893,20 @@ class SemanticTokensProviderTest {
     assertThat(overlaps).hasSize(1);
   }
 
+  @Test
+  void findOverlaps_detectsMultilineTokenOverlapOnContinuationLine() {
+    // given — многострочный токен со строки 0 (длина уходит на строку 1) и токен
+    // на строке 1, попадающий в его продолжение. Строки длиной 5 символов.
+    var multiline = new SemanticTokenEntry(0, 0, 12, 0, 0);
+    var onNextLine = new SemanticTokenEntry(1, 2, 3, 1, 0);
+
+    // when — с учётом длин строк токен раскладывается на строки 0 и 1.
+    var overlaps = TokenOverlaps.findOverlaps(List.of(multiline, onNextLine), line -> 5);
+
+    // then — пересечение на строке-продолжении найдено (без multiline-учёта было бы 0).
+    assertThat(overlaps).hasSize(1);
+  }
+
   // endregion
 }
 
