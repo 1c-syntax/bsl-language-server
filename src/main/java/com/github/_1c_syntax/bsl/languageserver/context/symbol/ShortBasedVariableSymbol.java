@@ -119,9 +119,4 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     return variableNameEndCharacter;
   }
 
-  @Override
-  public int compareTo(VariableSymbol other) {
-    return NATURAL_ORDER.compare(this, other);
-  }
-
 }

@@ -37,16 +37,15 @@ import java.util.Optional;
 public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable, Comparable<VariableSymbol> {
 
   /**
-   * Естественный порядок переменных, согласованный с {@code equals}: имя →
-   * URI владельца → позиция имени (строка, начальный и конечный символы).
-   * Реализации {@link #compareTo(VariableSymbol)} обязаны делегировать сюда.
+   * Естественный порядок переменных: имя → URI владельца → позиция начала имени
+   * (строка, символ). Старт имени уникален в пределах документа, поэтому этого
+   * достаточно для строгого порядка.
    */
   Comparator<VariableSymbol> NATURAL_ORDER = Comparator
     .comparing(VariableSymbol::getName)
     .thenComparing(variable -> variable.getOwner().getUri())
     .thenComparingInt(VariableSymbol::getVariableNameLine)
-    .thenComparingInt(VariableSymbol::getVariableNameStartCharacter)
-    .thenComparingInt(VariableSymbol::getVariableNameEndCharacter);
+    .thenComparingInt(VariableSymbol::getVariableNameStartCharacter);
 
   /**
    * @return Вид переменной
@@ -100,5 +99,10 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
 
   static AbstractVariableSymbol.Builder builder() {
     return AbstractVariableSymbol.builder();
+  }
+
+  @Override
+  default int compareTo(VariableSymbol other) {
+    return NATURAL_ORDER.compare(this, other);
   }
 }

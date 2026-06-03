@@ -52,14 +52,11 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
   @Getter(AccessLevel.NONE)
   int endCharacter;
 
-  @Getter(AccessLevel.NONE)
   @EqualsAndHashCode.Include
   int variableNameLine;
-  @Getter(AccessLevel.NONE)
   @EqualsAndHashCode.Include
   int variableNameStartCharacter;
   @EqualsAndHashCode.Include
-  @Getter(AccessLevel.NONE)
   int variableNameEndCharacter;
 
   public IntBasedVariableSymbol(
@@ -102,26 +99,6 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
       variableNameLine,
       variableNameEndCharacter
     );
-  }
-
-  @Override
-  public int getVariableNameLine() {
-    return variableNameLine;
-  }
-
-  @Override
-  public int getVariableNameStartCharacter() {
-    return variableNameStartCharacter;
-  }
-
-  @Override
-  public int getVariableNameEndCharacter() {
-    return variableNameEndCharacter;
-  }
-
-  @Override
-  public int compareTo(VariableSymbol other) {
-    return NATURAL_ORDER.compare(this, other);
   }
 
 }
