@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780419589597,
+  "lastUpdate": 1780455402226,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36177,6 +36177,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 14.560294905205359",
             "extra": "mean: 1413.1413644949596 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "71c4b4e73fc8b31f98f24bbe947fda058522e974",
+          "message": "Merge pull request #3993 from 1c-syntax/refactor/typeservice-positional-api\n\nРезолв типа ресивера-модуля и позиционный API TypeService (#3991)",
+          "timestamp": "2026-06-03T00:07:36+02:00",
+          "tree_id": "f97406fd4b23ec09c50d8d5b7dd4fa0e39f60b1a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/71c4b4e73fc8b31f98f24bbe947fda058522e974"
+        },
+        "date": 1780455393269,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 1914.3496701717377,
+            "unit": "sec",
+            "range": "stddev: 291.6104910764811",
+            "extra": "mean: 1914.3496701717377 sec\nrounds: 3"
           }
         ]
       }
