@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -47,11 +48,13 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.HashMap;
@@ -60,6 +63,7 @@ import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 /**
@@ -96,6 +100,36 @@ public class TypeRegistry {
   private final Map<TypeRef, Type> types = new ConcurrentHashMap<>();
   /** Тип ↔ список источников членов (один тип может расширяться многими источниками). */
   private final Map<TypeRef, List<ScopedMemberSource>> memberSources = new ConcurrentHashMap<>();
+
+  /**
+   * Мемоизация {@link #getMembers(TypeRef, FileType)}. Сборка членов
+   * (особенно переспециализация config/generic-типов) дорогая, а на горячем
+   * пути (семантические токены, completion) повторяется для одного типа тысячи
+   * раз. Инвалидация — через {@link #membersEpoch}: любая мутация
+   * {@link #memberSources} (register/unregister) бампает счётчик, и устаревшие
+   * записи пересобираются при следующем обращении. В steady-state (во время
+   * запроса, без регистраций) memo стабилен.
+   */
+  private final AtomicLong membersEpoch = new AtomicLong();
+  private final Map<MembersKey, CachedMembers> membersCache = new ConcurrentHashMap<>();
+
+  private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
+
+    // fileType штатно бывает null: одноаргументный getMembers(ref) зовёт getMembers(ref, null)
+    // («фильтрация по скоупу не применяется»). ref допускает null защитно (см. computeMembers).
+    // Поэтому естественный порядок ключа — null-safe.
+    private static final Comparator<MembersKey> NATURAL_ORDER = Comparator
+      .comparing(MembersKey::ref, Comparator.nullsFirst(Comparator.naturalOrder()))
+      .thenComparing(MembersKey::fileType, Comparator.nullsFirst(Comparator.naturalOrder()));
+
+    @Override
+    public int compareTo(MembersKey other) {
+      return NATURAL_ORDER.compare(this, other);
+    }
+  }
+
+  private record CachedMembers(long epoch, List<MemberDescriptor> members) {
+  }
   /** Тип ↔ языковой скоуп (BSL/OS/BOTH). Отсутствие записи трактуется как BOTH. */
   private final Map<TypeRef, LanguageScope> typeScopes = new ConcurrentHashMap<>();
   /** Тип ↔ список описаний с их скоупом. В одном типе разные описания для BSL/OS допускаются. */
@@ -318,19 +352,31 @@ public class TypeRegistry {
    * резолвим по {@link #aliasIndex} по {@code qualifiedName} и пробуем
    * каноничный {@link TypeRef}.
    */
-  public Collection<MemberDescriptor> getMembers(TypeRef ref, com.github._1c_syntax.bsl.languageserver.context.FileType fileType) {
-    var sources = memberSources.get(ref);
-    if ((sources == null || sources.isEmpty()) && ref != null) {
-      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
-      if (canonical != null && !canonical.equals(ref)) {
-        sources = memberSources.get(canonical);
-      }
+  public Collection<MemberDescriptor> getMembers(TypeRef ref, FileType fileType) {
+    var epoch = membersEpoch.get();
+    var key = new MembersKey(ref, fileType);
+    var cached = membersCache.get(key);
+    if (cached != null && cached.epoch() == epoch) {
+      return cached.members();
     }
-    if (sources == null || sources.isEmpty()) {
-      return Collections.emptyList();
+    var members = computeMembers(ref, fileType);
+    membersCache.put(key, new CachedMembers(epoch, members));
+    return members;
+  }
+
+  private List<MemberDescriptor> computeMembers(TypeRef ref, FileType fileType) {
+    var sources = resolveMemberSources(ref);
+    if (sources.isEmpty()) {
+      return List.of();
+    }
+    // sources — Collections.synchronizedList (см. registerMemberSource): снимок под
+    // synchronized на самом списке, иначе при конкурентной регистрации возможен CME.
+    List<ScopedMemberSource> snapshot;
+    synchronized (sources) {
+      snapshot = List.copyOf(sources);
     }
     var byName = new LinkedHashMap<String, MemberDescriptor>();
-    for (var scoped : sources) {
+    for (var scoped : snapshot) {
       if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
         continue;
       }
@@ -338,7 +384,37 @@ public class TypeRegistry {
         byName.putIfAbsent(member.name().toLowerCase(Locale.ROOT), member);
       }
     }
-    return new ArrayList<>(byName.values());
+    // Неизменяемый список: память шарится между вызовами, случайная мутация
+    // упадёт сразу (все потребители только итерируют).
+    return List.copyOf(byName.values());
+  }
+
+  /**
+   * Источники членов типа с fallback на канонический псевдоним.
+   *
+   * @param ref тип, для которого ищутся источники членов.
+   * @return список источников; пустой, если их нет.
+   */
+  private List<ScopedMemberSource> resolveMemberSources(TypeRef ref) {
+    var sources = memberSources.get(ref);
+    if ((sources == null || sources.isEmpty()) && ref != null) {
+      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+      if (canonical != null && !canonical.equals(ref)) {
+        sources = memberSources.get(canonical);
+      }
+    }
+    return sources == null ? List.of() : sources;
+  }
+
+  /**
+   * Сбросить memo {@link #getMembers}. Member-source'ы конфигурационных модулей и
+   * OScript-библиотек лениво читают символьное дерево документа и меняют вывод при
+   * правке без ре-регистрации источника — поэтому при любом изменении содержимого
+   * документа memo надо инвалидировать.
+   */
+  @EventListener
+  public void invalidateMembersCache(DocumentContextContentChangedEvent event) {
+    membersEpoch.incrementAndGet();
   }
 
   /**
@@ -359,6 +435,7 @@ public class TypeRegistry {
     var effective = scope;
     memberSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
       .add(new ScopedMemberSource(source, effective));
+    membersEpoch.incrementAndGet();
   }
 
   /**
@@ -760,6 +837,7 @@ public class TypeRegistry {
     var ref = intern(TypeKind.USER, qualifiedName);
     types.remove(ref);
     memberSources.remove(ref);
+    membersEpoch.incrementAndGet();
     typeScopes.remove(ref);
     aliasIndex.remove(qualifiedName.toLowerCase(Locale.ROOT));
   }

@@ -134,6 +134,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода tryClearDocument.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* tryClearDocument(..))")
+  public void isTryClearDocumentCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода populateContext.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* populateContext(..))")

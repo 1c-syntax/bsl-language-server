@@ -27,13 +27,26 @@ import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * Информация о символе, представляющем собой переменную.
  */
-public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable {
+public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describable, Comparable<VariableSymbol> {
+
+  /**
+   * Естественный порядок переменных: имя → URI владельца → позиция начала имени
+   * (строка, символ). Старт имени уникален в пределах документа, поэтому этого
+   * достаточно для строгого порядка.
+   */
+  Comparator<VariableSymbol> NATURAL_ORDER = Comparator
+    .comparing(VariableSymbol::getName)
+    .thenComparing(variable -> variable.getOwner().getUri())
+    .thenComparingInt(VariableSymbol::getVariableNameLine)
+    .thenComparingInt(VariableSymbol::getVariableNameStartCharacter);
+
   /**
    * @return Вид переменной
    */
@@ -55,6 +68,27 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
    */
   Range getVariableNameRange();
 
+  /**
+   * Строка, в которой определено имя переменной.
+   *
+   * @return номер строки имени переменной.
+   */
+  int getVariableNameLine();
+
+  /**
+   * Начальный символ имени переменной в строке объявления.
+   *
+   * @return номер начального символа имени переменной.
+   */
+  int getVariableNameStartCharacter();
+
+  /**
+   * Конечный символ имени переменной в строке объявления.
+   *
+   * @return номер конечного символа имени переменной.
+   */
+  int getVariableNameEndCharacter();
+
   @Override
   Optional<VariableDescription> getDescription();
 
@@ -65,5 +99,10 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
 
   static AbstractVariableSymbol.Builder builder() {
     return AbstractVariableSymbol.builder();
+  }
+
+  @Override
+  default int compareTo(VariableSymbol other) {
+    return NATURAL_ORDER.compare(this, other);
   }
 }

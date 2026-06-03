@@ -104,4 +104,19 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     );
   }
 
+  @Override
+  public int getVariableNameLine() {
+    return variableNameLine;
+  }
+
+  @Override
+  public int getVariableNameStartCharacter() {
+    return variableNameStartCharacter;
+  }
+
+  @Override
+  public int getVariableNameEndCharacter() {
+    return variableNameEndCharacter;
+  }
+
 }

@@ -403,14 +403,17 @@ public class ServerContext {
    * Попытаться очистить документ, если он не открыт.
    *
    * @param documentContext документ, который необходимо попытаться закрыть.
+   * @return {@code true}, если вторичные данные документа были реально освобождены;
+   *         {@code false}, если документ открыт в редакторе и очистка пропущена.
    */
-  public void tryClearDocument(DocumentContext documentContext) {
+  public boolean tryClearDocument(DocumentContext documentContext) {
     if (openedDocuments.contains(documentContext)) {
-      return;
+      return false;
     }
 
     states.put(documentContext, State.WITHOUT_CONTENT);
     documentContext.clearSecondaryData();
+    return true;
   }
 
   /**
