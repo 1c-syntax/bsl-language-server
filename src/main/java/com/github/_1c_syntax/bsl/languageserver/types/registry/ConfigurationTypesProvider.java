@@ -21,11 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.context.api.ContextNames;
+import com.github._1c_syntax.bsl.context.api.Placeholder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -33,12 +36,23 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.mdo.AccountingRegister;
+import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
+import com.github._1c_syntax.bsl.mdo.CalculationRegister;
+import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
+import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
+import com.github._1c_syntax.bsl.mdo.DocumentJournal;
+import com.github._1c_syntax.bsl.mdo.Enum;
+import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
+import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.MDObject;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
+import com.github._1c_syntax.bsl.mdo.support.TemplateType;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ValueType;
 import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
@@ -108,6 +122,7 @@ public class ConfigurationTypesProvider {
   private final ServerContextProvider serverContextProvider;
   private final GlobalScopeProvider globalScopeProvider;
   private final LanguageServerConfiguration configuration;
+  private final MetadataCollectionSpecializer metadataCollectionSpecializer;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
@@ -202,6 +217,33 @@ public class ConfigurationTypesProvider {
         registerFamilySpecializations(fullName.getRu(), name);
       }
 
+      // Производные типы, чьё qualifiedName не начинается с familyCore родителя
+      // (ПВР-табчасти базовых/ведущих/вытесняющих видов расчёта, перерасчёты
+      // регистра расчёта). Специализация по родителю — отдельный проход.
+      registerDerivedSpecializations(md, name);
+
+      // Графы журнала документов — конкретные members на типе ЖурналДокументов.<имя>
+      // (HBK-плейсхолдера на уровне графы нет, регистрируем напрямую из mdclasses).
+      if (md instanceof DocumentJournal journal && !fullName.getRu().isBlank()) {
+        registerDocumentJournalColumnMembers(journal, fullName.getRu(), name);
+      }
+
+      // Значения перечисления — материализация generic-property <Имя значения>
+      // на ПеречислениеМенеджер.<Имя перечисления> из конфигурационных данных
+      // mdclasses. Каждое значение наследует от HBK-template'а accessMode/
+      // availabilities/sinceVersion и специализированный returnType.
+      if (md instanceof Enum anEnum && !fullName.getRu().isBlank()) {
+        registerEnumValueExpansion(ref, fullName.getRu(), name, anEnum);
+      }
+
+      // Измерения/ресурсы/реквизиты регистра — материализация generic-property
+      // <Имя измерения>/<Имя ресурса>/<Имя реквизита> на типе записи регистра
+      // (РегистрСведенийЗапись.<Имя> и аналоги Накопления/Бухгалтерии/Расчёта).
+      var registerChildren = registerChildrenOf(md);
+      if (registerChildren != null && !fullName.getRu().isBlank()) {
+        registerRegisterRecordExpansion(fullName.getRu(), name, registerChildren);
+      }
+
       // Дополнительные алиасы «коллекция.Имя» для совместимости и для случаев,
       // когда пользователь обращается напрямую (например, Hover на `Справочники.Контрагенты`).
       var collectionAliasRu = groupRu + "." + name;
@@ -224,6 +266,21 @@ public class ConfigurationTypesProvider {
     }
 
     int collections = registerCollectionNamespaces(collectionMembersByType);
+
+    // Внешние источники данных — multi-placeholder type-level специализация
+    // по иерархии конфигурации: источник → куб/таблица → измерение/таблица
+    // измерения.
+    registerExternalDataSourceSpecializations(children);
+
+    // Общие библиотеки (макеты СКД, стили) — global property с generic-property
+    // `<Имя макета>`/`<Имя стиля>`, материализуются именами из Configuration.
+    registerCommonLibraryExpansions();
+
+    // Метаданные.<коллекция>.<имя> и вложенные коллекции (Реквизиты/ТабличныеЧасти/…):
+    // specialization КоллекцияОбъектовМетаданных по per-property element-type
+    // из bsl-context + развёртывание имён детей коллекции из mdclasses.
+    metadataCollectionSpecializer.specialize();
+
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
   }
 
@@ -353,9 +410,37 @@ public class ConfigurationTypesProvider {
     typeRegistry.registerMemberSource(objectRef, objectSource, LanguageScope.BSL);
     typeRegistry.registerMemberSource(refRef, refSource, LanguageScope.BSL);
 
+    // Дополнительные mdclasses-specific аттрибуты, не входящие в getAllAttributes:
+    // признаки учёта и флаги учёта субконто для плана счетов.
+    registerMdoSpecificAttributeMembers(md, objectRef, refRef);
+
     // Табличные части: регистрируем пару типов <prefix>ТабличнаяЧасть(Строка)?.<MD>.<TS>
     // и добавляем member <TS-name> на объектный тип.
     registerTabularSections(md, name, fullRu, fullEn, objectRef);
+  }
+
+  /**
+   * Атрибуты, специфичные для отдельных MDOType, которые не приходят через
+   * {@link AttributeOwner#getAllAttributes()}: для {@link ChartOfAccounts} —
+   * признаки учёта и флаги учёта субконто. Все три типа реализуют {@link Attribute},
+   * поэтому используются через {@link #buildAttributeMembers(List)} как property-члены.
+   */
+  private void registerMdoSpecificAttributeMembers(MD md, TypeRef objectRef, TypeRef refRef) {
+    if (!(md instanceof ChartOfAccounts coa)) {
+      return;
+    }
+    var extras = new ArrayList<Attribute>();
+    extras.addAll(coa.getAccountingFlags());
+    extras.addAll(coa.getExtDimensionAccountingFlags());
+    if (extras.isEmpty()) {
+      return;
+    }
+    var captured = List.copyOf(extras);
+    MemberSource source = () -> buildAttributeMembers(captured);
+    typeRegistry.registerMemberSource(objectRef, source, LanguageScope.BSL);
+    if (!refRef.equals(objectRef)) {
+      typeRegistry.registerMemberSource(refRef, source, LanguageScope.BSL);
+    }
   }
 
   /**
@@ -453,30 +538,420 @@ public class ConfigurationTypesProvider {
    * источника на типе работают штатно — getMembers объединяет.
    */
   private void registerFamilySpecializations(String familyCore, String mdName) {
-    var generics = typeRegistry.findAllGenericsByFamilyCore(familyCore);
-    for (var generic : generics) {
+    for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
       var parameters = typeRegistry.getTypeParameters(generic);
-      if (parameters.isEmpty()) {
+      if (parameters.size() != 1) {
+        // Multi-placeholder generic'и обрабатываются отдельным caller'ом с
+        // явной Map<placeholder, value> (см. перегрузку ниже): подставлять
+        // mdName во ВСЕ placeholder'ы — нонсенс (получились бы типы вроде
+        // СправочникСсылка.X.X).
         continue;
       }
-      // Сейчас в HBK у каждого generic'а ровно один placeholder. Если
-      // когда-то появятся типы с несколькими параметрами, маппинг нужно
-      // будет расширить — но binding-API уже принимает Map<placeholder, value>.
-      var bindings = new LinkedHashMap<String, String>();
-      for (var name : parameters) {
-        bindings.put(name, mdName);
-      }
-      var specializedName = TypeRef.specialize(generic, bindings).qualifiedName();
-      if (specializedName.equals(generic.qualifiedName())) {
-        continue;
-      }
-      // Использует существующий TypeRef (Object/Ref/Manager уже
-      // зарегистрированы как CONFIGURATION выше) либо интернирует новый
-      // того же kind, что и generic (PLATFORM) — это критично, иначе
-      // инференсер строит (PLATFORM, name), а в реестре висит
-      // (CONFIGURATION, name) — разные TypeRef, members не находятся.
-      typeRegistry.registerSpecialization(specializedName, generic, bindings, LanguageScope.BSL);
+      specializeGeneric(generic, Map.of(parameters.get(0), mdName));
     }
+  }
+
+  /**
+   * Multi-placeholder вариант: специализирует только те generic'и семейства,
+   * у которых ВСЕ placeholder'ы покрыты {@code bindings}. Используется для
+   * родственных «вложенных» типов вроде {@code ВнешнийИсточникДанныхТаблица.
+   * <Имя внешнего источника>.<Имя таблицы внешнего источника данных>}, где
+   * binding строится из иерархии конфигурации (источник → таблица/куб →
+   * таблица измерения).
+   */
+  private void registerFamilySpecializations(String familyCore, Map<String, String> bindings) {
+    if (bindings.isEmpty()) {
+      return;
+    }
+    for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
+      var parameters = typeRegistry.getTypeParameters(generic);
+      if (parameters.isEmpty() || !bindings.keySet().containsAll(parameters)) {
+        continue;
+      }
+      specializeGeneric(generic, bindings);
+    }
+  }
+
+  private void specializeGeneric(TypeRef generic, Map<String, String> bindings) {
+    var specializedName = TypeRef.specialize(generic, bindings).qualifiedName();
+    if (specializedName.equals(generic.qualifiedName())) {
+      return;
+    }
+    // Использует существующий TypeRef (Object/Ref/Manager уже зарегистрированы
+    // как CONFIGURATION выше) либо интернирует новый того же kind, что и
+    // generic (PLATFORM) — это критично, иначе инференсер строит (PLATFORM,
+    // name), а в реестре висит (CONFIGURATION, name) — разные TypeRef,
+    // members не находятся.
+    typeRegistry.registerSpecialization(specializedName, generic, bindings, LanguageScope.BSL);
+  }
+
+  /**
+   * Регистрирует expansion generic-property {@code <Имя значения>} на
+   * {@code ПеречислениеМенеджер.<Имя перечисления>}: для каждого значения
+   * перечисления из mdclasses ({@link Enum#getEnumValues()}) создаётся
+   * материализованный member с подстановкой имени и наследованием HBK-меты
+   * (accessMode = READ, availabilities, sinceVersion 8.0,
+   * returnType = ПеречислениеСсылка.&lt;Имя перечисления&gt; со
+   * специализированным placeholder'ом).
+   */
+  private void registerEnumValueExpansion(TypeRef managerRef, String familyCore, String enumName, Enum anEnum) {
+    var values = anEnum.getEnumValues();
+    if (values.isEmpty()) {
+      return;
+    }
+    // Generic-источник: ПеречислениеМенеджер.<Имя перечисления>.
+    var generic = typeRegistry.findAllGenericsByFamilyCore(familyCore + "Менеджер").stream()
+      .findFirst()
+      .orElse(null);
+    if (generic == null) {
+      return;
+    }
+    var parameters = typeRegistry.getTypeParameters(generic);
+    if (parameters.size() != 1) {
+      return;
+    }
+    var valueNames = new ArrayList<String>(values.size());
+    for (var value : values) {
+      var valueName = value.getName();
+      if (!valueName.isBlank()) {
+        valueNames.add(valueName);
+      }
+    }
+    if (valueNames.isEmpty()) {
+      return;
+    }
+    var typeBindings = Map.of(parameters.get(0), enumName);
+    var memberExpansions = Map.<String, List<String>>of(memberPlaceholderName(generic), valueNames);
+    typeRegistry.registerMemberExpansion(managerRef, generic, typeBindings, memberExpansions,
+      LanguageScope.BSL);
+  }
+
+  /**
+   * Триплет имён детей регистра (измерения/ресурсы/реквизиты), полученный
+   * из конкретного MD-класса регистра. {@code null} — для не-регистров.
+   */
+  record RegisterChildren(List<Attribute> dimensions,
+                          List<Attribute> resources,
+                          List<Attribute> attributes) {
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<Attribute> upcastAttributes(List<? extends Attribute> list) {
+    return (List<Attribute>) list;
+  }
+
+  static @Nullable RegisterChildren registerChildrenOf(MD md) {
+    return switch (md) {
+      case InformationRegister r ->
+        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
+          upcastAttributes(r.getAttributes()));
+      case AccumulationRegister r ->
+        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
+          upcastAttributes(r.getAttributes()));
+      case AccountingRegister r ->
+        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
+          upcastAttributes(r.getAttributes()));
+      case CalculationRegister r ->
+        new RegisterChildren(upcastAttributes(r.getDimensions()), upcastAttributes(r.getResources()),
+          upcastAttributes(r.getAttributes()));
+      default -> null;
+    };
+  }
+
+  /**
+   * Регистрирует expansion generic-property {@code <Имя измерения>/<Имя ресурса>/
+   * <Имя реквизита>} на типе записи регистра ({@code РегистрСведенийЗапись.<Имя>}
+   * и аналоги для других семейств регистров). Имена детей берутся из mdclasses;
+   * мета — наследуется от HBK-template'ов.
+   *
+   * @param familyCore ru-часть имени семейства ({@code "РегистрСведений"} и т.п.)
+   * @param regName    имя регистра в конфигурации
+   * @param children   измерения/ресурсы/реквизиты регистра
+   */
+  private void registerRegisterRecordExpansion(String familyCore, String regName, RegisterChildren children) {
+    var generic = typeRegistry.findAllGenericsByFamilyCore(familyCore + "Запись").stream()
+      .findFirst()
+      .orElse(null);
+    if (generic == null) {
+      return;
+    }
+    var parameters = typeRegistry.getTypeParameters(generic);
+    if (parameters.size() != 1) {
+      return;
+    }
+    var typeBindings = Map.of(parameters.get(0), regName);
+    var specializedName = TypeRef.specialize(generic, typeBindings).qualifiedName();
+    var specialized = typeRegistry.resolve(specializedName).orElse(null);
+    if (specialized == null) {
+      return;
+    }
+    var expansions = new LinkedHashMap<String, List<String>>();
+    putAttributeNames(expansions, "Имя измерения", children.dimensions());
+    putAttributeNames(expansions, "Имя ресурса", children.resources());
+    putAttributeNames(expansions, "Имя реквизита", children.attributes());
+    if (expansions.isEmpty()) {
+      return;
+    }
+    typeRegistry.registerMemberExpansion(specialized, generic, typeBindings, expansions, LanguageScope.BSL);
+  }
+
+  /**
+   * Графы журнала документов как property-члены на типе журнала
+   * ({@code ЖурналДокументов.<имя>}). Источник имён и типов — mdclasses
+   * ({@link DocumentJournal#getColumns()}); все колонки реализуют
+   * {@link Attribute}, поэтому материализуются через {@link #buildAttributeMembers(List)}.
+   */
+  private void registerDocumentJournalColumnMembers(DocumentJournal journal, String familyCore, String name) {
+    var columns = journal.getColumns();
+    if (columns.isEmpty()) {
+      return;
+    }
+    var specName = familyCore + "." + name;
+    var specRef = typeRegistry.resolve(specName).orElse(null);
+    if (specRef == null) {
+      return;
+    }
+    var captured = List.copyOf(columns);
+    typeRegistry.registerMemberSource(specRef, () -> buildAttributeMembers(captured), LanguageScope.BSL);
+  }
+
+  /**
+   * Производные/вложенные типы, чьё семейство (familyCore) не совпадает с
+   * именем семейства родительского MD: подсемейства плана видов расчёта
+   * ({@code БазовыеВидыРасчета.<Имя ПВР>} и аналоги «Ведущие»/«Вытесняющие»)
+   * и перерасчёты регистра расчёта ({@code Перерасчет.<имя>}).
+   */
+  private void registerDerivedSpecializations(MD md, String mdName) {
+    if (md instanceof ChartOfCalculationTypes) {
+      registerFamilySpecializations("БазовыеВидыРасчета", mdName);
+      registerFamilySpecializations("ВедущиеВидыРасчета", mdName);
+      registerFamilySpecializations("ВытесняющиеВидыРасчета", mdName);
+    } else if (md instanceof CalculationRegister cr) {
+      registerRecalculationSpecializations(cr);
+    } else {
+      // Прочие MDO производных специализаций не имеют.
+    }
+  }
+
+  private void registerRecalculationSpecializations(CalculationRegister cr) {
+    for (var recalc : cr.getRecalculations()) {
+      var recalcName = recalc.getName();
+      if (!recalcName.isBlank()) {
+        registerFamilySpecializations("Перерасчет", recalcName);
+      }
+    }
+  }
+
+  /**
+   * Multi-placeholder type-level специализация для семейства внешних
+   * источников данных. Идёт по иерархии конфигурации:
+   * источник → куб/таблица → таблица измерения/измерение, и на каждом уровне
+   * вызывает {@link #registerFamilySpecializations(String, Map)} с расширенным
+   * binding'ом. {@code registerFamilySpecializations} сам фильтрует generic'и
+   * по полному покрытию placeholder'ов — лишние binding'и не мешают.
+   */
+  private void registerExternalDataSourceSpecializations(Iterable<MD> children) {
+    for (var md : children) {
+      if (!(md instanceof ExternalDataSource eds)) {
+        continue;
+      }
+      var edsName = eds.getName();
+      if (edsName.isBlank()) {
+        continue;
+      }
+      registerExternalDataSourceSpecialization(eds, edsName);
+    }
+  }
+
+  private void registerExternalDataSourceSpecialization(ExternalDataSource eds, String edsName) {
+    var familyCore = "ВнешнийИсточникДанных";
+    var sourceBindings = externalSourceBindings(edsName);
+    // Уровень источника: ВнешнийИсточникДанных.<имя> и аналоги.
+    registerFamilySpecializations(familyCore, sourceBindings);
+
+    // Таблицы (не под кубом).
+    for (var table : eds.getTables()) {
+      var tableName = table.getName();
+      if (tableName.isBlank()) {
+        continue;
+      }
+      var bindings = new LinkedHashMap<>(sourceBindings);
+      bindings.put("Имя таблицы", tableName);
+      bindings.put("Имя таблицы внешнего источника данных", tableName);
+      registerFamilySpecializations(familyCore, bindings);
+    }
+
+    // Кубы и вложенные в них таблицы измерения + измерения.
+    for (var cube : eds.getCubes()) {
+      var cubeName = cube.getName();
+      if (cubeName.isBlank()) {
+        continue;
+      }
+      var cubeBindings = new LinkedHashMap<>(sourceBindings);
+      cubeBindings.put("Имя куба", cubeName);
+      registerFamilySpecializations(familyCore, cubeBindings);
+
+      for (var dimTable : cube.getDimensionTables()) {
+        var dimTableName = dimTable.getName();
+        if (dimTableName.isBlank()) {
+          continue;
+        }
+        var b = new LinkedHashMap<>(cubeBindings);
+        b.put("Имя таблицы", dimTableName);
+        b.put("Имя таблицы внешнего источника данных", dimTableName);
+        registerFamilySpecializations(familyCore, b);
+      }
+      for (var dim : cube.getDimensions()) {
+        var dimName = dim.getName();
+        if (dimName.isBlank()) {
+          continue;
+        }
+        var b = new LinkedHashMap<>(cubeBindings);
+        b.put("Имя измерения", dimName);
+        registerFamilySpecializations(familyCore, b);
+      }
+    }
+  }
+
+  /**
+   * Binding'и для placeholder'ов имени источника. Разные generic'и используют
+   * либо {@code «Имя внешнего источника»}, либо {@code «Имя внешнего источника
+   * данных»} — кладём оба, multi-вариант {@link #registerFamilySpecializations}
+   * сам отфильтрует по фактическим placeholder'ам каждого generic'а.
+   */
+  private static Map<String, String> externalSourceBindings(String edsName) {
+    var b = new LinkedHashMap<String, String>();
+    b.put("Имя внешнего источника", edsName);
+    b.put("Имя внешнего источника данных", edsName);
+    return b;
+  }
+
+  /** Кладёт в expansion-map имена непустых атрибутов под ключом-placeholder'ом. */
+  static void putAttributeNames(Map<String, List<String>> sink, String placeholder,
+                                List<? extends Attribute> attributes) {
+    var names = attributes.stream()
+      .map(Attribute::getName)
+      .filter(n -> !n.isBlank())
+      .toList();
+    if (!names.isEmpty()) {
+      sink.put(placeholder, names);
+    }
+  }
+
+  /**
+   * Разворачивает generic-property у global-types «общих библиотек» конфигурации:
+   * {@code БиблиотекаМакетовОформленияКомпоновкиДанных.<Имя макета>} — общие макеты
+   * с типом {@link TemplateType#DATA_COMPOSITION_APPEARANCE_TEMPLATE} (остальные
+   * общие макеты — табличные, текстовые, бинарные и т.п. — в эту библиотеку не
+   * входят); {@code БиблиотекаСтилей.<Имя стиля>} — {@code Configuration.getStyles()};
+   * {@code БиблиотекаКартинок.<Имя картинки>} — {@code Configuration.getCommonPictures()}.
+   */
+  private void registerCommonLibraryExpansions() {
+    var cf = currentConfiguration();
+    if (cf == null) {
+      return;
+    }
+    registerCommonLibraryExpansion(typeRegistry,
+      "БиблиотекаМакетовОформленияКомпоновкиДанных",
+      namesOf(appearanceTemplatesOf(cf)));
+    registerCommonLibraryExpansion(typeRegistry,
+      "БиблиотекаСтилей", namesOf(cf.getStyles()));
+    registerCommonLibraryExpansion(typeRegistry,
+      "БиблиотекаКартинок", namesOf(cf.getCommonPictures()));
+  }
+
+  /**
+   * Общие макеты, относящиеся к набору {@code БиблиотекаМакетовОформленияКомпоновкиДанных}:
+   * фильтр по {@link TemplateType#DATA_COMPOSITION_APPEARANCE_TEMPLATE} —
+   * остальные типы общих макетов (табличные, текстовые, бинарные и т.п.) в эту
+   * библиотеку не входят. Вынесено отдельно для прямой проверки в тестах.
+   */
+  static List<MDObject> appearanceTemplatesOf(CF configuration) {
+    return configuration.getCommonTemplates().stream()
+      .filter(t -> t.getTemplateType() == TemplateType.DATA_COMPOSITION_APPEARANCE_TEMPLATE)
+      .map(MDObject.class::cast)
+      .toList();
+  }
+
+  /**
+   * Материализует generic-template'ы у global-type «общей библиотеки» в
+   * конкретные имена из конфигурации. См.
+   * {@link #registerCommonLibraryExpansions()} для контекста.
+   * <p>
+   * No-op: если {@code childNames} пуст, в реестре нет такого типа, у него нет
+   * generic-template'а среди членов либо snapshot пуст.
+   */
+  static void registerCommonLibraryExpansion(TypeRegistry typeRegistry, String typeName,
+                                             List<String> childNames) {
+    if (childNames.isEmpty()) {
+      return;
+    }
+    var ref = typeRegistry.resolve(typeName).orElse(null);
+    if (ref == null) {
+      return;
+    }
+    var placeholder = memberPlaceholderName(typeRegistry, ref);
+    if (placeholder.isBlank()) {
+      return;
+    }
+    var snapshot = typeRegistry.expandedMembers(ref, Map.of(),
+      Map.of(placeholder, childNames));
+    if (snapshot.isEmpty()) {
+      return;
+    }
+    MemberSource source = () -> snapshot;
+    typeRegistry.registerMemberSource(ref, source, LanguageScope.BSL);
+  }
+
+  /** package-private для теста. */
+  static <T extends MDObject> List<String> namesOf(List<? extends T> items) {
+    if (items.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<String>(items.size());
+    for (var it : items) {
+      var name = it.getName();
+      if (!name.isBlank()) {
+        result.add(name);
+      }
+    }
+    return List.copyOf(result);
+  }
+
+  @Nullable
+  private CF currentConfiguration() {
+    var workspaceUri = WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      return null;
+    }
+    var ctx = serverContextProvider.getAllContexts().get(workspaceUri);
+    if (ctx == null) {
+      return null;
+    }
+    var c = ctx.getConfiguration();
+    if (c.isEmpty()) {
+      return null;
+    }
+    return c;
+  }
+
+  /** Backward-compat alias для не-static вызовов. */
+  private String memberPlaceholderName(TypeRef generic) {
+    return memberPlaceholderName(typeRegistry, generic);
+  }
+
+  /**
+   * Имя placeholder'а в member-template'е generic'а. Извлекается из единственного
+   * generic-property типа-менеджера (для {@code ПеречислениеМенеджер.<Имя перечисления>}
+   * это {@code "Имя значения"}). Источник — bsl-context-разобранное имя члена.
+   */
+  static String memberPlaceholderName(TypeRegistry typeRegistry, TypeRef generic) {
+    return typeRegistry.getMembers(generic).stream()
+      .filter(MemberDescriptor::generic)
+      .findFirst()
+      .flatMap(m -> ContextNames.placeholders(m.bilingualName().primary()).stream().findFirst())
+      .map(Placeholder::name)
+      .orElse("");
   }
 
   private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {

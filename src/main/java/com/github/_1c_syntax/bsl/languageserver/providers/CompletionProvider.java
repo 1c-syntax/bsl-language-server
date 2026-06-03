@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -190,11 +191,11 @@ public final class CompletionProvider {
       return false;
     }
     var origin = entry.libOrigin();
-    if (origin == null || origin.isBlank()) {
+    if (origin.isBlank()) {
       return true;
     }
     var originLower = origin.toLowerCase(Locale.ROOT);
-    var samePackage = ownLibOrigin.map(originLower::equals).orElse(false);
+    boolean samePackage = ownLibOrigin.isPresent() && originLower.equals(ownLibOrigin.get());
     if (entry.implicit()
       && !configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion()
       && !samePackage) {
@@ -233,6 +234,19 @@ public final class CompletionProvider {
   }
 
   /**
+   * Generic-имена платформенных типов (e.g. {@code СправочникСсылка.<Имя справочника>},
+   * {@code ПерерасчетЗапись.<Имя перерасчета>}) — это шаблоны для specialization,
+   * не самостоятельные классы. В completion подставлять их буквально нельзя:
+   * у пользователя в коде такое имя — синтаксическая ошибка.
+   * <p>
+   * Детект placeholder'ов идёт через bsl-context ({@link ContextNames#placeholders}),
+   * а не через парсинг {@code <>} в LS — единая точка истины для имён generic'ов.
+   */
+  private static boolean isGenericTemplateName(String name) {
+    return !ContextNames.placeholders(name).isEmpty();
+  }
+
+  /**
    * @return предложения автодополнения для указанной позиции, обёрнутые в {@link CompletionList}.
    *     {@code isIncomplete = false}: список содержит все валидные кандидаты для текущего префикса
    *     — клиент может фильтровать дальше локально, повторно к серверу обращаться не обязан.
@@ -260,12 +274,6 @@ public final class CompletionProvider {
     var members = new LinkedHashMap<String, MemberDescriptor>();
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, fileType)) {
-        // Платформенные generic-«слоты» (например, `<Имя документа>`,
-        // `<Имя реквизита>`) — это абстрактные плейсхолдеры HBK, в реальной
-        // dot-completion они только мешают.
-        if (member.generic()) {
-          continue;
-        }
         members.putIfAbsent(member.name(), member);
       }
       // Декларированные ключи «открытого» объекта данных (Структура из
@@ -344,7 +352,7 @@ public final class CompletionProvider {
     var scriptVariant = documentContext.getScriptVariantLanguage();
     if (afterNew) {
       for (var className : filterNamesByLanguage(globalScopeProvider.getClasses(fileType), fileType, scriptVariant)) {
-        if (isImplicitlyHiddenInCompletion(className)) {
+        if (isImplicitlyHiddenInCompletion(className) || isGenericTemplateName(className)) {
           continue;
         }
         if (matches(className, prefix)) {
@@ -370,6 +378,9 @@ public final class CompletionProvider {
     // Каноничные составные имена MD-объектов конфигурации — только в BSL-файлах.
     if (fileType != FileType.OS) {
       for (var qualified : filterNamesByLanguage(globalScopeProvider.getConfigurationQualifiedNames(), fileType, scriptVariant)) {
+        if (isGenericTemplateName(qualified)) {
+          continue;
+        }
         if (matches(qualified, prefix)) {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
@@ -385,6 +396,9 @@ public final class CompletionProvider {
     for (var ctx : globalScopeProvider.getGlobalContexts(fileType)) {
       var name = ctx.getName();
       if (!matches(name, prefix)) {
+        continue;
+      }
+      if (isGenericTemplateName(name)) {
         continue;
       }
       if (!libraryNameVisible(name, fileType, usedLibsLower, ownLibOrigin)) {

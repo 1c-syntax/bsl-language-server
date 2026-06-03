@@ -274,8 +274,14 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       var values = enumeration.values();
       var members = new ArrayList<MemberDescriptor>(values.size());
       var enumRef = new TypeRef(TypeKind.PLATFORM, context.name().getName());
+      // Тип элементов набора берётся из bsl-context (страница enum: значения
+      // имеют такой-то тип). Если общий тип задан (как у библиотек картинок,
+      // стилей, цветов), значения возвращают его; иначе сам enumRef.
+      var valueRef = enumeration.valueType()
+        .map(n -> new TypeRef(TypeKind.PLATFORM, n.getName()))
+        .orElse(enumRef);
       for (var value : values) {
-        members.add(toMemberDescriptor(value, enumRef, enLookup));
+        members.add(toMemberDescriptor(value, valueRef, enLookup));
       }
       return List.copyOf(members);
     }
@@ -340,13 +346,16 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return toMemberDescriptor(method, ctx -> EnAttachments.EMPTY);
   }
 
-  private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef enumRef,
+  private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef valueRef,
                                                      Function<Object, EnAttachments> enLookup) {
-    return MemberDescriptor.property(
-      value.name().getName(),
-      enumRef,
-      value.description()
-    ).withMetadata(metadataOf(value))
+    var name = value.name().getName();
+    // generic-флаг приходит из bsl-context (ContextEnumValue#isGeneric()) —
+    // это шаблоны вроде БиблиотекаКартинок.<Имя картинки>, которые потом
+    // материализуются из конфигурации.
+    var descriptor = value.isGeneric()
+      ? MemberDescriptor.genericProperty(name, valueRef, value.description())
+      : MemberDescriptor.property(name, valueRef, value.description());
+    return descriptor.withMetadata(metadataOf(value))
       .withBilingualName(bilingualName(value.name()))
       .withBilingualDescription(BilingualString.of(
         safe(value.description()), safe(enLookup.apply(value).description())));

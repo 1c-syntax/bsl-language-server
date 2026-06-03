@@ -54,6 +54,7 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -152,16 +153,33 @@ public class TypeService {
   }
 
   /**
-   * Члены типа (методы + свойства) — для completion на точке. Фильтрует члены по
-   * языковому скоупу источника: источники, не совместимые с {@code fileType},
-   * пропускаются.
+   * Члены типа (методы + свойства) — для completion/hover/inferencer. Фильтрует:
+   * <ul>
+   *   <li>по языковому скоупу источника (источники, несовместимые с {@code fileType},
+   *       пропускаются);</li>
+   *   <li>generic-шаблоны ({@link MemberDescriptor#generic()} — placeholder'ы вида
+   *       {@code <Имя картинки>}, {@code <Имя документа>}) — они хранятся в
+   *       {@link TypeRegistry} как материал для materialization
+   *       ({@code registerMemberExpansion}/{@code registerSpecialization}), но
+   *       внешним потребителям бесполезны.</li>
+   * </ul>
    *
    * @param typeRef тип, чьи члены нужны.
    * @param fileType тип файла-потребителя (BSL/OS) для фильтрации по скоупу.
-   * @return члены типа.
+   * @return члены типа без generic-шаблонов.
    */
   public Collection<MemberDescriptor> getMembers(TypeRef typeRef, FileType fileType) {
-    return typeRegistry.getMembers(typeRef, fileType);
+    var raw = typeRegistry.getMembers(typeRef, fileType);
+    if (raw.isEmpty()) {
+      return raw;
+    }
+    var filtered = new ArrayList<MemberDescriptor>(raw.size());
+    for (var member : raw) {
+      if (!member.generic()) {
+        filtered.add(member);
+      }
+    }
+    return filtered;
   }
 
   /**

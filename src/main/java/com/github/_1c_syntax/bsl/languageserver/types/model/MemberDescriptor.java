@@ -194,6 +194,15 @@ public record MemberDescriptor(
       signatures, sourceSymbol, generic, metadata, newAsync);
   }
 
+  /** Копия дескриптора с признаком generic (placeholder в имени). */
+  public MemberDescriptor withGeneric(boolean newGeneric) {
+    if (this.generic == newGeneric) {
+      return this;
+    }
+    return new MemberDescriptor(bilingualName, kind, bilingualDescription, returnTypes,
+      signatures, sourceSymbol, newGeneric, metadata, async);
+  }
+
   /** Compat shortcut для двуязычных имён ru/en строками. */
   public MemberDescriptor withLocalizedNames(String newNameRu, String newNameEn) {
     return withBilingualName(BilingualString.of(newNameRu, newNameEn));
