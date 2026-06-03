@@ -1821,7 +1821,7 @@ class SemanticTokensProviderTest {
     var propertyToken = new SemanticTokenEntry(0, 5, 10, 1, 0);
 
     // when
-    var overlaps = SemanticTokensProvider.findOverlaps(List.of(classToken, propertyToken));
+    var overlaps = TokenOverlaps.findOverlaps(List.of(classToken, propertyToken));
 
     // then — конфликт зафиксирован.
     assertThat(overlaps).hasSize(1);
@@ -1834,7 +1834,7 @@ class SemanticTokensProviderTest {
     var duplicate = new SemanticTokenEntry(0, 5, 10, 0, 0);
 
     // when
-    var overlaps = SemanticTokensProvider.findOverlaps(List.of(token, duplicate));
+    var overlaps = TokenOverlaps.findOverlaps(List.of(token, duplicate));
 
     // then — точный дубль конфликтом не считается.
     assertThat(overlaps).isEmpty();
@@ -1848,7 +1848,7 @@ class SemanticTokensProviderTest {
     var distantOtherLine = new SemanticTokenEntry(1, 2, 5, 2, 0);
 
     // when
-    var overlaps = SemanticTokensProvider.findOverlaps(List.of(first, adjacent, distantOtherLine));
+    var overlaps = TokenOverlaps.findOverlaps(List.of(first, adjacent, distantOtherLine));
 
     // then — пересечений нет.
     assertThat(overlaps).isEmpty();
@@ -1861,7 +1861,7 @@ class SemanticTokensProviderTest {
     var b = new SemanticTokenEntry(0, 5, 8, 1, 0);
 
     // when
-    var overlaps = SemanticTokensProvider.findOverlaps(List.of(a, b));
+    var overlaps = TokenOverlaps.findOverlaps(List.of(a, b));
 
     // then — частичное наложение — это конфликт.
     assertThat(overlaps).hasSize(1);
@@ -1874,7 +1874,7 @@ class SemanticTokensProviderTest {
     var b = new SemanticTokenEntry(0, 5, 8, 0, 0);
 
     // when
-    var overlaps = SemanticTokensProvider.findOverlaps(List.of(a, b));
+    var overlaps = TokenOverlaps.findOverlaps(List.of(a, b));
 
     // then — разная длина при общем начале — конфликт.
     assertThat(overlaps).hasSize(1);
@@ -1887,7 +1887,7 @@ class SemanticTokensProviderTest {
     var b = new SemanticTokenEntry(0, 5, 10, 0, 1);
 
     // when
-    var overlaps = SemanticTokensProvider.findOverlaps(List.of(a, b));
+    var overlaps = TokenOverlaps.findOverlaps(List.of(a, b));
 
     // then — разные модификаторы на одном спане — конфликт.
     assertThat(overlaps).hasSize(1);

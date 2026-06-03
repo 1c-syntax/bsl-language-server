@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>
  * Собирает токены тем же путём, что и провайдер ({@link SemanticTokensProvider#collectTokens}),
  * на модуле из реальной конфигурации (с populateContext, чтобы работал инференс
- * типов) и проверяет отсутствие конфликтов через {@link SemanticTokensProvider#findOverlaps}.
+ * типов) и проверяет отсутствие конфликтов через {@link TokenOverlaps#findOverlaps}.
  * Регрессионная защита: например, доступ {@code РегистрыСведений.РегистрСведений1}
  * красится GlobalScope как {@code Class}, и сапплаер свойств не должен накладывать
  * на тот же токен {@code Property}.
@@ -64,7 +64,7 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
 
     // when — собираем токены тем же путём, что и провайдер для full-запроса.
     var allTokens = provider.collectTokens(documentContext);
-    var overlaps = SemanticTokensProvider.findOverlaps(allTokens);
+    var overlaps = TokenOverlaps.findOverlaps(allTokens);
 
     // then — пересечений быть не должно.
     assertThat(overlaps)
@@ -72,7 +72,7 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
       .isEmpty();
   }
 
-  private String describe(List<SemanticTokensProvider.TokenOverlap> overlaps, DocumentContext documentContext) {
+  private String describe(List<TokenOverlaps.TokenOverlap> overlaps, DocumentContext documentContext) {
     var lines = documentContext.getContentList();
     var sb = new StringBuilder();
     for (var overlap : overlaps) {
