@@ -362,8 +362,15 @@ public class TypeRegistry {
     if (sources == null || sources.isEmpty()) {
       return List.of();
     }
+    // sources — Collections.synchronizedList (см. registerMemberSource): итерация
+    // обязана идти под synchronized на самом списке, иначе возможен CME при
+    // конкурентной регистрации. Снимаем согласованный снимок и итерируем его.
+    List<ScopedMemberSource> snapshot;
+    synchronized (sources) {
+      snapshot = List.copyOf(sources);
+    }
     var byName = new LinkedHashMap<String, MemberDescriptor>();
-    for (var scoped : sources) {
+    for (var scoped : snapshot) {
       if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
         continue;
       }
