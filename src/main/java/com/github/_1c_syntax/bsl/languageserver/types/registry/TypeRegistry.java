@@ -369,8 +369,14 @@ public class TypeRegistry {
     if (sources.isEmpty()) {
       return List.of();
     }
+    // sources — Collections.synchronizedList (см. registerMemberSource): снимок под
+    // synchronized на самом списке, иначе при конкурентной регистрации возможен CME.
+    List<ScopedMemberSource> snapshot;
+    synchronized (sources) {
+      snapshot = List.copyOf(sources);
+    }
     var byName = new LinkedHashMap<String, MemberDescriptor>();
-    for (var scoped : snapshotOf(sources)) {
+    for (var scoped : snapshot) {
       if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
         continue;
       }
@@ -398,21 +404,6 @@ public class TypeRegistry {
       }
     }
     return sources == null ? List.of() : sources;
-  }
-
-  /**
-   * Согласованный снимок {@code Collections.synchronizedList} (см.
-   * {@link #registerMemberSource}): итерация по synchronizedList обязана идти под
-   * {@code synchronized} на самом списке, иначе при конкурентной регистрации возможен
-   * {@code ConcurrentModificationException}.
-   *
-   * @param sources список источников членов.
-   * @return неизменяемый снимок, безопасный для итерации.
-   */
-  private static List<ScopedMemberSource> snapshotOf(List<ScopedMemberSource> sources) {
-    synchronized (sources) {
-      return List.copyOf(sources);
-    }
   }
 
   /**
