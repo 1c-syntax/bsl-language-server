@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
@@ -102,6 +103,7 @@ public class ExpressionTypeInferencer {
   private final TypeRegistry typeRegistry;
   private final SymbolTypeIndex symbolTypeIndex;
   private final InferredVariableTypeIndex inferredVariableTypeIndex;
+  private final CallStatementByReceiverIndex callStatementByReceiverIndex;
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -835,10 +837,7 @@ public class ExpressionTypeInferencer {
     var variableName = variable.getName();
 
     var result = base;
-    for (var ruleNode : Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement)) {
-      if (!(ruleNode instanceof BSLParser.CallStatementContext call)) {
-        continue;
-      }
+    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variableName)) {
       var name = extractInsertReceiverName(call);
       if (name == null || !name.equalsIgnoreCase(variableName)) {
         continue;
@@ -918,10 +917,7 @@ public class ExpressionTypeInferencer {
     TypeSet rowSet = TypeSet.of(rowRef);
     boolean hasColumns = false;
 
-    for (var ruleNode : Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement)) {
-      if (!(ruleNode instanceof BSLParser.CallStatementContext call)) {
-        continue;
-      }
+    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variableName)) {
       var name = extractColumnsAddReceiverName(call);
       if (name == null || !name.equalsIgnoreCase(variableName)) {
         continue;
