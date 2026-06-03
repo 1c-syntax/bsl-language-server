@@ -22,14 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.types.scope.GlobalSymbolScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
@@ -38,8 +39,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Сапплаер семантических токенов для обращения к свойствам платформенных типов
@@ -58,33 +59,40 @@ import java.util.Optional;
  * члены типа, поэтому {@link TypeService#memberAt} их не находит и пересечения
  * по позиции с {@link SymbolsSemanticTokensSupplier} не возникает.
  * <p>
- * Члены, которые уже красит {@link GlobalScopeSemanticTokensSupplier}, пропускаются,
- * чтобы не накладывать второй токен на тот же идентификатор:
- * <ul>
- *   <li>ссылка на метаобъект конфигурации ({@code Справочники.Контрагенты}) —
- *       returnType с {@link TypeKind#CONFIGURATION} → красится как {@code Class};</li>
- *   <li>self-typed значение перечисления ({@code КодировкаТекста.UTF8}) —
- *       owner совпадает с returnType → красится как {@code EnumMember}.</li>
- * </ul>
+ * Цепочки, начинающиеся с глобального synthetic-имени ({@code Справочники.Контрагенты},
+ * {@code Перечисления.Пол.Мужской}, {@code КодировкаТекста.UTF8}), целиком красит
+ * {@link GlobalScopeSemanticTokensSupplier} (метаобъекты → {@code Class}, значения
+ * перечислений → {@code EnumMember}). Такие цепочки пропускаются по базовому
+ * идентификатору — это ровно домен GlobalScope, и только там возникал конфликт
+ * {@code Property} vs {@code Class}/{@code EnumMember}. Обращения к свойствам
+ * локально-типизированных переменных ({@code Объект.Ссылка}, {@code Строка.Родитель})
+ * GlobalScope не трогает — их подсвечиваем мы.
  */
 @Component
 @RequiredArgsConstructor
 public class PlatformMemberPropertyAccessSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
+  private static final Set<Integer> CHAIN_ROOTS =
+    Set.of(BSLParser.RULE_complexIdentifier, BSLParser.RULE_callStatement);
 
   private final TypeService typeService;
+  private final GlobalScopeProvider globalScopeProvider;
   private final SemanticTokensHelper helper;
 
   @Override
   public List<SemanticTokenEntry> getSemanticTokens(DocumentContext documentContext) {
     var entries = new ArrayList<SemanticTokenEntry>();
     var ast = documentContext.getAst();
+    var fileType = documentContext.getFileType();
 
     for (var accessProperty
       : Trees.<BSLParser.AccessPropertyContext>findAllRuleNodes(ast, BSLParser.RULE_accessProperty)) {
+      if (isGlobalScopeChain(accessProperty, fileType)) {
+        continue;
+      }
       propertyNameRange(accessProperty)
-        .filter(range -> isPlatformProperty(documentContext, range.getStart()))
+        .filter(range -> resolvesToMember(documentContext, range.getStart()))
         .ifPresent(range -> helper.addRange(
           entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS));
     }
@@ -97,28 +105,40 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier implements Seman
       .map(Ranges::create);
   }
 
-  private boolean isPlatformProperty(DocumentContext documentContext, Position position) {
-    return typeService.memberAt(documentContext, position)
-      .filter(PlatformMemberPropertyAccessSemanticTokensSupplier::isHighlightableProperty)
-      .isPresent();
+  /**
+   * Цепочка обращения для {@code accessProperty} начинается с глобального
+   * synthetic-имени (менеджер метаданных, глобальное перечисление, library-модуль),
+   * т.е. целиком относится к домену {@link GlobalScopeSemanticTokensSupplier}.
+   */
+  private boolean isGlobalScopeChain(BSLParser.AccessPropertyContext accessProperty, FileType fileType) {
+    return chainBaseName(accessProperty)
+      .flatMap(name -> globalScopeProvider.findGlobalEntry(name, fileType))
+      .map(entry -> entry.role() == GlobalSymbolScope.Role.VALUE)
+      .orElse(false);
   }
 
   /**
-   * Член — это свойство, которое не относится к домену
-   * {@link GlobalScopeSemanticTokensSupplier} (метаобъект конфигурации или
-   * значение перечисления), а потому может быть покрашено как {@code Property}.
+   * Имя базового идентификатора цепочки, в которой находится {@code accessProperty}
+   * (например, {@code Справочники} для {@code Справочники.Контрагенты.Ссылка}).
+   * Пусто, если цепочка начинается не с идентификатора (конструктор {@code Новый ...} и т.п.).
    */
-  static boolean isHighlightableProperty(TypedMember member) {
-    var descriptor = member.descriptor();
-    if (descriptor.kind() != MemberKind.PROPERTY) {
-      return false;
+  private static Optional<String> chainBaseName(BSLParser.AccessPropertyContext accessProperty) {
+    var root = Trees.getRootParent(accessProperty, CHAIN_ROOTS);
+    TerminalNode base = null;
+    if (root instanceof BSLParser.ComplexIdentifierContext complexId) {
+      base = complexId.IDENTIFIER();
+    } else if (root instanceof BSLParser.CallStatementContext callStatement) {
+      base = callStatement.IDENTIFIER();
     }
-    var returnType = descriptor.returnType();
-    // Ссылка на метаобъект конфигурации (Справочники.Контрагенты) → Class в GlobalScope.
-    if (returnType.kind() == TypeKind.CONFIGURATION) {
-      return false;
-    }
-    // Self-typed значение перечисления (КодировкаТекста.UTF8) → EnumMember в GlobalScope.
-    return !Objects.equals(member.owner(), returnType);
+    return Optional.ofNullable(base).map(TerminalNode::getText);
+  }
+
+  /**
+   * В позиции резолвится член типа. Для accessProperty это всегда свойство
+   * (метод резолвится только для accessCall), поэтому отдельная проверка
+   * {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberKind} не нужна.
+   */
+  private boolean resolvesToMember(DocumentContext documentContext, Position position) {
+    return typeService.memberAt(documentContext, position).isPresent();
   }
 }

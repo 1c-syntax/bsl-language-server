@@ -22,14 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
-import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.Test;
@@ -39,12 +33,11 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 import java.util.Set;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(SemanticTokensTestHelper.class)
 class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
-
-  private static final Range DUMMY_RANGE = Ranges.create();
 
   @Autowired
   private PlatformMemberPropertyAccessSemanticTokensSupplier supplier;
@@ -150,58 +143,38 @@ class PlatformMemberPropertyAccessSemanticTokensSupplierTest extends AbstractSer
   }
 
   @Test
-  void testHighlightablePlatformProperty() {
-    // given — обычное платформенное свойство (Колонки), returnType не из конфигурации.
-    var owner = new TypeRef(TypeKind.PLATFORM, "ТаблицаЗначений");
-    var returnType = new TypeRef(TypeKind.PLATFORM, "КоллекцияКолонокТаблицыЗначений");
-    var member = new TypedMember(owner, MemberDescriptor.property("Колонки", returnType), DUMMY_RANGE);
+  void testGlobalManagerChainSkipped() {
+    // given — конфигурация поднята: Справочники.Справочник1 резолвится и как
+    // глобальный менеджер (база цепочки), и как член (метаобъект). Без скипа член
+    // покрасился бы как Property, но всю цепочку красит GlobalScope (→ Class).
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      Процедура Тест()
+          А = Справочники.Справочник1;
+      КонецПроцедуры
+      """;
 
     // when
-    var result = PlatformMemberPropertyAccessSemanticTokensSupplier.isHighlightableProperty(member);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then — красим как Property.
-    assertThat(result).isTrue();
+    // then — на члене глобальной цепочки наш сапплаер ничего не выдаёт.
+    assertThat(decoded).isEmpty();
   }
 
   @Test
-  void testMethodNotHighlightable() {
-    // given
-    var owner = new TypeRef(TypeKind.PLATFORM, "Массив");
-    var member = new TypedMember(owner, MemberDescriptor.method("Добавить"), DUMMY_RANGE);
+  void testGlobalChainInCallStatementSkipped() {
+    // given — глобальная цепочка в statement-позиции (callStatement): база — Справочники.
+    initServerContext(PATH_TO_METADATA);
+    String bsl = """
+      Процедура Тест()
+          Справочники.Справочник1.СоздатьЭлемент();
+      КонецПроцедуры
+      """;
 
     // when
-    var result = PlatformMemberPropertyAccessSemanticTokensSupplier.isHighlightableProperty(member);
+    var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then — метод не является property.
-    assertThat(result).isFalse();
-  }
-
-  @Test
-  void testConfigurationReferenceMemberSkipped() {
-    // given — Справочники.ПрофилиГруппДоступа: returnType — ссылка на метаобъект.
-    // Такой член красит GlobalScope как Class; мы его пропускаем.
-    var owner = new TypeRef(TypeKind.PLATFORM, "СправочникиМенеджер");
-    var returnType = new TypeRef(TypeKind.CONFIGURATION, "СправочникСсылка.ПрофилиГруппДоступа");
-    var member = new TypedMember(owner, MemberDescriptor.property("ПрофилиГруппДоступа", returnType), DUMMY_RANGE);
-
-    // when
-    var result = PlatformMemberPropertyAccessSemanticTokensSupplier.isHighlightableProperty(member);
-
-    // then — не красим (домен GlobalScope, иначе конфликт Class vs Property).
-    assertThat(result).isFalse();
-  }
-
-  @Test
-  void testSelfTypedEnumMemberSkipped() {
-    // given — КодировкаТекста.UTF8: owner совпадает с returnType (значение перечисления).
-    // Такой член красит GlobalScope как EnumMember; мы его пропускаем.
-    var enumType = new TypeRef(TypeKind.PLATFORM, "КодировкаТекста");
-    var member = new TypedMember(enumType, MemberDescriptor.property("UTF8", enumType), DUMMY_RANGE);
-
-    // when
-    var result = PlatformMemberPropertyAccessSemanticTokensSupplier.isHighlightableProperty(member);
-
-    // then — не красим (домен GlobalScope, иначе конфликт EnumMember vs Property).
-    assertThat(result).isFalse();
+    // then — пусто (член глобальной цепочки в callStatement тоже пропущен).
+    assertThat(decoded).isEmpty();
   }
 }
