@@ -39,8 +39,6 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
   /**
    * Естественный порядок переменных, согласованный с {@code equals}: имя →
    * URI владельца → позиция имени (строка, начальный и конечный символы).
-   * Использует дешёвые {@code int}-аксессоры позиции, а не
-   * {@link #getVariableNameRange()}, который аллоцирует {@code Range}/{@code Position}.
    * Реализации {@link #compareTo(VariableSymbol)} обязаны делегировать сюда.
    */
   Comparator<VariableSymbol> NATURAL_ORDER = Comparator
@@ -72,22 +70,21 @@ public interface VariableSymbol extends SourceDefinedSymbol, Exportable, Describ
   Range getVariableNameRange();
 
   /**
-   * Дешёвый (без аллокации) аксессор строки имени переменной — в отличие от
-   * {@link #getVariableNameRange()}, который создаёт {@code Range}/{@code Position}.
+   * Строка, в которой определено имя переменной.
    *
-   * @return номер строки, в которой определено имя переменной.
+   * @return номер строки имени переменной.
    */
   int getVariableNameLine();
 
   /**
-   * Дешёвый (без аллокации) аксессор начального символа имени переменной.
+   * Начальный символ имени переменной в строке объявления.
    *
    * @return номер начального символа имени переменной.
    */
   int getVariableNameStartCharacter();
 
   /**
-   * Дешёвый (без аллокации) аксессор конечного символа имени переменной.
+   * Конечный символ имени переменной в строке объявления.
    *
    * @return номер конечного символа имени переменной.
    */
