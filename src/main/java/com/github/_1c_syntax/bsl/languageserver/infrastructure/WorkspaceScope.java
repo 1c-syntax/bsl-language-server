@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
@@ -74,8 +74,7 @@ public class WorkspaceScope implements Scope {
   }
 
   @Override
-  @Nullable
-  public Object remove(String name) {
+  public @Nullable Object remove(String name) {
     var key = resolveKey();
     var beans = store.get(key);
     return beans != null ? beans.remove(name) : null;
@@ -88,14 +87,12 @@ public class WorkspaceScope implements Scope {
   }
 
   @Override
-  @Nullable
-  public Object resolveContextualObject(String key) {
+  public @Nullable Object resolveContextualObject(String key) {
     return null;
   }
 
   @Override
-  @Nullable
-  public String getConversationId() {
+  public @Nullable String getConversationId() {
     var uri = WorkspaceContextHolder.get();
     return uri != null ? uri.toString() : null;
   }

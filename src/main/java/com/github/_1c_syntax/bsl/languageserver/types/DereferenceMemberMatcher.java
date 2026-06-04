@@ -40,11 +40,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionN
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.SkippedCallArgumentNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TerminalSymbolNode;
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -99,8 +99,7 @@ public class DereferenceMemberMatcher {
     return Optional.of(inferencer.infer(dereference.getLeft(), documentContext));
   }
 
-  @Nullable
-  private static BinaryOperationNode findDereferenceTree(DocumentContext documentContext, Position position,
+  private static @Nullable BinaryOperationNode findDereferenceTree(DocumentContext documentContext, Position position,
                                                          TerminalNode terminal) {
     var expression = ExpressionAtPosition.findExpressionTree(documentContext, position).orElse(null);
     if (expression == null) {
@@ -203,8 +202,7 @@ public class DereferenceMemberMatcher {
     return result;
   }
 
-  @Nullable
-  private static BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {
+  private static @Nullable BinaryOperationNode findDereferenceForTerminal(BslExpression root, TerminalNode terminal) {
     if (root instanceof BinaryOperationNode binary
       && binary.getOperator() == BslOperator.DEREFERENCE
       && rightMatchesTerminal(binary.getRight(), terminal)) {
