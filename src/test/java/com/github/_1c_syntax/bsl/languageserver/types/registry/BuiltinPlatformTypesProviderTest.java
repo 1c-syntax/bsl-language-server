@@ -264,7 +264,6 @@ class BuiltinPlatformTypesProviderTest {
     var httpRequest = oscriptType("HTTPЗапрос");
 
     var headers = member(httpRequest, "Заголовки");
-    assertThat(headers.matches("Headers")).as("ru/en-пара свойства склеена").isTrue();
     assertThat(typeNames(headers.returnTypes()))
       .as("Заголовки имеют тип Соответствие")
       .containsExactly("Соответствие");
@@ -272,6 +271,28 @@ class BuiltinPlatformTypesProviderTest {
     var resourceAddress = member(httpRequest, "АдресРесурса");
     assertThat(typeNames(resourceAddress.returnTypes()))
       .containsExactly("Строка");
+  }
+
+  @Test
+  void oscriptObjectPropertiesAreBilingualSingleMember() {
+    // #4006-follow-up: после простановки returnType ru/en-пара свойства всё
+    // ещё должна схлопываться в один двуязычный член (одинаковый returnType
+    // → совпадает s/fingerprint склейки). Иначе в ru-локали показались бы
+    // оба написания (Заголовки и Headers).
+    var httpRequest = oscriptType("HTTPЗапрос");
+
+    var headersMembers = httpRequest.members().stream()
+      .filter(m -> m.matches("Заголовки") || m.matches("Headers"))
+      .toList();
+
+    assertThat(headersMembers)
+      .as("Заголовки/Headers — ровно один двуязычный член")
+      .hasSize(1);
+    var headers = headersMembers.get(0);
+    assertThat(headers.displayName(Language.RU)).isEqualTo("Заголовки");
+    assertThat(headers.displayName(Language.EN)).isEqualTo("Headers");
+    assertThat(headers.matches("Заголовки")).isTrue();
+    assertThat(headers.matches("Headers")).isTrue();
   }
 
   @Test
