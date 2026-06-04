@@ -421,9 +421,11 @@ class ConfigurationTypesProviderHelpersTest {
     try {
       var packTypes = new java.util.ArrayList<TypePackProvider.TypeDecl>(typeDecls);
       PlatformTypesProvider pack = () -> packTypes;
-      var registry = registryFn.apply(new TypeRegistry(List.of(pack),
+      var rawRegistry = new TypeRegistry(List.of(pack),
         Mockito.mock(GlobalScopeProvider.class),
-        Mockito.mock(MemberMetadataIndex.class)));
+        Mockito.mock(MemberMetadataIndex.class));
+      rawRegistry.bootstrap();
+      var registry = registryFn.apply(rawRegistry);
       var configuration = Mockito.mock(Configuration.class);
       Mockito.when(configuration.isEmpty()).thenReturn(false);
       Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(children);
