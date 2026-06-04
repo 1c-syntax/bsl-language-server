@@ -399,8 +399,7 @@ public class MetadataCollectionSpecializer {
     }
     var dot = qualifiedName.lastIndexOf('.');
     var bare = dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
-    var mdoType = ref.getType();
-    var mdoTypeRu = mdoType == null ? "" : mdoType.fullName().getRu();
+    var mdoTypeRu = ref.getType().fullName().getRu();
     if (!mdoTypeRu.isBlank()) {
       return ChildName.withReturnType(bare, "ОбъектМетаданных: " + mdoTypeRu + "." + bare);
     }
