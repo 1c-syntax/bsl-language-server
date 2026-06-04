@@ -152,14 +152,14 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void ownerTypeFor_document_returnsHbkName() {
     MD doc = Document.builder().name("ПриходТовара").build();
-    assertThat(MetadataCollectionSpecializer.ownerTypeFor(doc))
+    assertThat(MetadataChildrenExtractor.ownerTypeFor(doc))
       .isEqualTo("ОбъектМетаданных: Документ");
   }
 
   @Test
   void ownerTypeFor_catalog_returnsHbkName() {
     MD cat = Catalog.builder().name("Контрагенты").build();
-    assertThat(MetadataCollectionSpecializer.ownerTypeFor(cat))
+    assertThat(MetadataChildrenExtractor.ownerTypeFor(cat))
       .isEqualTo("ОбъектМетаданных: Справочник");
   }
 
@@ -168,13 +168,13 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void hasStandardAttributes_document_isTrue() {
     MD doc = Document.builder().name("ПриходТовара").build();
-    assertThat(MetadataCollectionSpecializer.hasStandardAttributes(doc)).isTrue();
+    assertThat(MetadataChildrenExtractor.hasStandardAttributes(doc)).isTrue();
   }
 
   @Test
   void hasStandardAttributes_catalog_isTrue() {
     MD cat = Catalog.builder().name("X").build();
-    assertThat(MetadataCollectionSpecializer.hasStandardAttributes(cat)).isTrue();
+    assertThat(MetadataChildrenExtractor.hasStandardAttributes(cat)).isTrue();
   }
 
   // === standardAttributesFor ===
@@ -182,7 +182,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void standardAttributesFor_document_returnsKnownAttributes() {
     MD doc = Document.builder().name("X").build();
-    var attrs = MetadataCollectionSpecializer.standardAttributesFor(doc);
+    var attrs = MetadataChildrenExtractor.standardAttributesFor(doc);
     assertThat(attrs).extracting(c -> c.name().ru())
       .as("документ имеет стандартный реквизит «Ссылка» (из KnownStandardAttributes)")
       .contains("Ссылка");
@@ -192,27 +192,27 @@ class MetadataCollectionSpecializerHelpersTest {
 
   @Test
   void singleLingualMdNames_emptyInput_returnsEmpty() {
-    assertThat(MetadataCollectionSpecializer.singleLingualMdNames(List.of())).isEmpty();
+    assertThat(MetadataChildrenExtractor.singleLingualMdNames(List.of())).isEmpty();
   }
 
   @Test
   void singleLingualMdNames_nonEmptyInput_extractsRuName() {
     MD a = Document.builder().name("A").build();
     MD b = Document.builder().name("B").build();
-    var names = MetadataCollectionSpecializer.singleLingualMdNames(List.of(a, b));
+    var names = MetadataChildrenExtractor.singleLingualMdNames(List.of(a, b));
     assertThat(names).extracting(c -> c.name().ru()).containsExactly("A", "B");
   }
 
   @Test
   void mdoReferenceNames_emptyInput_returnsEmpty() {
-    assertThat(MetadataCollectionSpecializer.mdoReferenceNames(List.of())).isEmpty();
+    assertThat(MetadataChildrenExtractor.mdoReferenceNames(List.of())).isEmpty();
   }
 
   @Test
   void mdoReferenceNames_withTypedRef_buildsReturnTypeOverride() {
     var ref = MdoReference.create(
       MDOType.ACCUMULATION_REGISTER, "ОстаткиТоваров");
-    var entries = MetadataCollectionSpecializer.mdoReferenceNames(List.of(ref));
+    var entries = MetadataChildrenExtractor.mdoReferenceNames(List.of(ref));
     assertThat(entries).hasSize(1);
     var entry = entries.get(0);
     assertThat(entry.name().ru()).isEqualTo("ОстаткиТоваров");
@@ -224,40 +224,40 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void mdoReferenceNames_emptyRef_skipped() {
     var emptyRef = MdoReference.EMPTY;
-    assertThat(MetadataCollectionSpecializer.mdoReferenceNames(List.of(emptyRef))).isEmpty();
+    assertThat(MetadataChildrenExtractor.mdoReferenceNames(List.of(emptyRef))).isEmpty();
   }
 
   @Test
   void mdoReferenceNames_unknownType_skipsReturnTypeOverride() {
     var unknownRef = MdoReference.create(
       MDOType.UNKNOWN, "Безликая");
-    var entries = MetadataCollectionSpecializer.mdoReferenceNames(List.of(unknownRef));
+    var entries = MetadataChildrenExtractor.mdoReferenceNames(List.of(unknownRef));
     assertThat(entries).hasSize(1);
     assertThat(entries.get(0).returnTypeOverride()).isNull();
   }
 
   @Test
   void customAttributeNames_emptyInput_returnsEmpty() {
-    assertThat(MetadataCollectionSpecializer.customAttributeNames(List.of())).isEmpty();
+    assertThat(MetadataChildrenExtractor.customAttributeNames(List.of())).isEmpty();
   }
 
   @Test
   void customAttributeNames_nonEmpty_skipsBlanks() {
     var named = ObjectAttribute.builder().name("Контрагент").build();
     var blank = ObjectAttribute.builder().name("").build();
-    var names = MetadataCollectionSpecializer.customAttributeNames(List.of(named, blank));
+    var names = MetadataChildrenExtractor.customAttributeNames(List.of(named, blank));
     assertThat(names).extracting(c -> c.name().ru()).containsExactly("Контрагент");
   }
 
   @Test
   void tabularSectionEntries_emptyInput_returnsEmpty() {
-    assertThat(MetadataCollectionSpecializer.tabularSectionEntries(List.of())).isEmpty();
+    assertThat(MetadataChildrenExtractor.tabularSectionEntries(List.of())).isEmpty();
   }
 
   @Test
   void tabularSectionEntries_nonEmpty_carriesChildReference() {
     var ts = ObjectTabularSection.builder().name("Товары").build();
-    var entries = MetadataCollectionSpecializer.tabularSectionEntries(List.of(ts));
+    var entries = MetadataChildrenExtractor.tabularSectionEntries(List.of(ts));
     assertThat(entries).hasSize(1);
     assertThat(entries.get(0).name().ru()).isEqualTo("Товары");
     assertThat(entries.get(0).child()).isSameAs(ts);

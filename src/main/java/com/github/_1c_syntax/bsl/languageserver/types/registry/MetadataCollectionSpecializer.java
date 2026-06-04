@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.context.api.ContextType;
-import com.github._1c_syntax.bsl.context.api.KnownStandardAttributes;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -38,13 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.MD;
-import com.github._1c_syntax.bsl.mdo.TabularSection;
-import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
-import com.github._1c_syntax.bsl.mdo.support.AttributeKind;
-import com.github._1c_syntax.bsl.types.MDOType;
-import com.github._1c_syntax.bsl.types.MdoReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
@@ -128,23 +121,6 @@ public class MetadataCollectionSpecializer {
    * {@code ОбъектМетаданных: ТабличнаяЧасть} — состав стандартных реквизитов ТЧ
    * не зависит от родителя.
    */
-  private static final Map<MDOType, String> OWNER_TYPE_BY_MDO_TYPE = Map.ofEntries(
-    Map.entry(MDOType.CATALOG, "ОбъектМетаданных: Справочник"),
-    Map.entry(MDOType.DOCUMENT, "ОбъектМетаданных: Документ"),
-    Map.entry(MDOType.CHART_OF_ACCOUNTS, "ОбъектМетаданных: ПланСчетов"),
-    Map.entry(MDOType.CHART_OF_CALCULATION_TYPES, "ОбъектМетаданных: ПланВидовРасчета"),
-    Map.entry(MDOType.CHART_OF_CHARACTERISTIC_TYPES, "ОбъектМетаданных: ПланВидовХарактеристик"),
-    Map.entry(MDOType.EXCHANGE_PLAN, "ОбъектМетаданных: ПланОбмена"),
-    Map.entry(MDOType.TASK, "ОбъектМетаданных: Задача"),
-    Map.entry(MDOType.BUSINESS_PROCESS, "ОбъектМетаданных: БизнесПроцесс"),
-    Map.entry(MDOType.ENUM, "ОбъектМетаданных: Перечисление"),
-    Map.entry(MDOType.INFORMATION_REGISTER, "ОбъектМетаданных: РегистрСведений"),
-    Map.entry(MDOType.ACCUMULATION_REGISTER, "ОбъектМетаданных: РегистрНакопления"),
-    Map.entry(MDOType.ACCOUNTING_REGISTER, "ОбъектМетаданных: РегистрБухгалтерии"),
-    Map.entry(MDOType.CALCULATION_REGISTER, "ОбъектМетаданных: РегистрРасчета"),
-    Map.entry(MDOType.TABULAR_SECTION, "ОбъектМетаданных: ТабличнаяЧасть")
-  );
-
   /**
    * Имя дочернего элемента коллекции из mdclasses — двуязычное (для стандартных
    * реквизитов с {@link StandardAttribute#getFullName()}) либо одно-локалиное
@@ -229,8 +205,8 @@ public class MetadataCollectionSpecializer {
       MetadataChildrenExtractor::attributesFor),
     new CollectionSpec("СтандартныеРеквизиты", "StandardAttributes",
       BASE_COLLECTION_STD_ATTR, "ОписаниеСтандартногоРеквизита",
-      MetadataCollectionSpecializer::hasStandardAttributes,
-      MetadataCollectionSpecializer::standardAttributesFor),
+      MetadataChildrenExtractor::hasStandardAttributes,
+      MetadataChildrenExtractor::standardAttributesFor),
     new CollectionSpec("ТабличныеЧасти", "TabularSections",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ТабличнаяЧасть",
       MetadataChildrenExtractor::isTabularSectionOwner,
@@ -250,11 +226,11 @@ public class MetadataCollectionSpecializer {
     new CollectionSpec("Измерения", "Dimensions",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Измерение",
       MetadataChildrenExtractor::isRegister,
-      md -> singleLingualMdNames(MetadataChildrenExtractor.registerDimensions(md))),
+      md -> MetadataChildrenExtractor.singleLingualMdNames(MetadataChildrenExtractor.registerDimensions(md))),
     new CollectionSpec("Ресурсы", "Resources",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Ресурс",
       MetadataChildrenExtractor::isRegister,
-      md -> singleLingualMdNames(MetadataChildrenExtractor.registerResources(md))),
+      md -> MetadataChildrenExtractor.singleLingualMdNames(MetadataChildrenExtractor.registerResources(md))),
     new CollectionSpec("Перерасчеты", "Recalculations",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Перерасчет",
       MetadataChildrenExtractor::isCalculationRegister,
@@ -355,142 +331,11 @@ public class MetadataCollectionSpecializer {
   }
 
   /**
-   * Имена MD-объектов по {@link MdoReference}-ссылкам. Используется для коллекций
-   * вида {@code Document.Движения}, где элементами являются ссылки на другие MD
-   * (регистры накопления/сведений/и т.п.). Тип элемента вычисляется по
-   * {@link MDOType} ссылки: {@code AccumulationRegister.X} → returnType
-   * {@code ОбъектМетаданных: РегистрНакопления.X}.
-   */
-  static List<ChildName> mdoReferenceNames(Collection<MdoReference> refs) {
-    var result = new ArrayList<ChildName>(refs.size());
-    for (var ref : refs) {
-      var entry = mdoReferenceChildName(ref);
-      if (entry != null) {
-        result.add(entry);
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  private static @Nullable ChildName mdoReferenceChildName(MdoReference ref) {
-    var qualifiedName = ref.getMdoRefRu();
-    if (qualifiedName.isBlank()) {
-      qualifiedName = ref.getMdoRef();
-    }
-    if (qualifiedName.isBlank()) {
-      return null;
-    }
-    var dot = qualifiedName.lastIndexOf('.');
-    var bare = dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
-    var mdoTypeRu = ref.getType().fullName().getRu();
-    if (!mdoTypeRu.isBlank()) {
-      return ChildName.withReturnType(bare, "ОбъектМетаданных: " + mdoTypeRu + "." + bare);
-    }
-    return ChildName.of(bare);
-  }
-
-  /**
    * Пользовательские реквизиты для коллекции {@code Реквизиты}:
    * {@link AttributeOwner#getAllAttributes()} включает и стандартные реквизиты
    * с {@link AttributeKind#STANDARD} — они лежат в отдельной коллекции
    * {@code СтандартныеРеквизиты} и не должны попадать в {@code Реквизиты}.
    */
-  static List<ChildName> customAttributeNames(Collection<? extends Attribute> items) {
-    var result = new ArrayList<ChildName>(items.size());
-    for (var item : items) {
-      if (item.getKind() == AttributeKind.STANDARD) {
-        continue;
-      }
-      var entry = ChildName.of(item.getName());
-      if (entry != null) {
-        result.add(entry);
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  /**
-   * Стандартные реквизиты для коллекции {@code СтандартныеРеквизиты}. mdclasses
-   * не возвращает их через {@link AttributeOwner#getAllAttributes()} (там только
-   * пользовательские), HBK на странице {@code .СтандартныеРеквизиты} не перечисляет
-   * имена («Состав стандартных реквизитов зависит от вида объекта метаданных»).
-   * Источник — {@link KnownStandardAttributes} в bsl-context: единая точка
-   * платформенных констант.
-   */
-  static List<ChildName> standardAttributesFor(MD md) {
-    var ownerType = ownerTypeFor(md);
-    if (ownerType == null) {
-      return List.of();
-    }
-    var names = KnownStandardAttributes.forOwner(ownerType);
-    if (names.isEmpty()) {
-      return List.of();
-    }
-    var result = new ArrayList<ChildName>(names.size());
-    for (var n : names) {
-      var entry = ChildName.bilingual(n.getName(), n.getAlias());
-      if (entry != null) {
-        result.add(entry);
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  /**
-   * Тип-владелец стандартных реквизитов для конкретного MD. Сначала пытаемся
-   * по {@link MD#getMdoType()} через {@link #OWNER_TYPE_BY_MDO_TYPE}; если
-   * пришёл {@link MDOType#UNKNOWN} (наблюдается у {@link TabularSection}-реализаций,
-   * у которых {@code getMdoType()} default-импл через {@code getClass().getSimpleName()}
-   * не находит ключ — например {@code ObjectTabularSection}), резолвим по
-   * instanceof.
-   */
-  static @Nullable String ownerTypeFor(MD md) {
-    var byMdoType = OWNER_TYPE_BY_MDO_TYPE.get(md.getMdoType());
-    if (byMdoType != null) {
-      return byMdoType;
-    }
-    if (md instanceof TabularSection) {
-      return OWNER_TYPE_BY_MDO_TYPE.get(MDOType.TABULAR_SECTION);
-    }
-    return null;
-  }
-
-  /**
-   * Применимость spec'а {@code СтандартныеРеквизиты} к конкретному MD: есть ли
-   * у его типа набор стандартных реквизитов в {@link KnownStandardAttributes}.
-   */
-  static boolean hasStandardAttributes(MD md) {
-    return ownerTypeFor(md) != null;
-  }
-
-  /**
-   * Имена табчастей — single-lingual; child = сама TabularSection, чтобы
-   * на per-TS synthetic-типе развернуть имена её колонок ({@code Реквизиты}).
-   */
-  static List<ChildName> tabularSectionEntries(Collection<? extends TabularSection> sections) {
-    var result = new ArrayList<ChildName>(sections.size());
-    for (var ts : sections) {
-      var entry = ChildName.of(ts.getName(), ts);
-      if (entry != null) {
-        result.add(entry);
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  /** Имена MD-объектов single-lingual; child = null (рекурсии нет). */
-  static List<ChildName> singleLingualMdNames(Collection<? extends MD> items) {
-    var result = new ArrayList<ChildName>(items.size());
-    for (var item : items) {
-      var entry = ChildName.of(item.getName());
-      if (entry != null) {
-        result.add(entry);
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  /** Измерения регистра (InformationRegister/AccumulationRegister/AccountingRegister/CalculationRegister). */
   public void specialize() {
     var providerOpt = bslContextHolder.get();
     if (providerOpt.isEmpty()) {
