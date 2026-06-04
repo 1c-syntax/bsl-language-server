@@ -323,8 +323,8 @@ public class MetadataCollectionSpecializer {
 
   /**
    * Пользовательские реквизиты для коллекции {@code Реквизиты}:
-   * {@link AttributeOwner#getAllAttributes()} включает и стандартные реквизиты
-   * с {@link AttributeKind#STANDARD} — они лежат в отдельной коллекции
+   * {@link com.github._1c_syntax.bsl.mdo.AttributeOwner#getAllAttributes()} включает и стандартные реквизиты
+   * с {@link com.github._1c_syntax.bsl.mdo.support.AttributeKind#STANDARD} — они лежат в отдельной коллекции
    * {@code СтандартныеРеквизиты} и не должны попадать в {@code Реквизиты}.
    */
   public void specialize() {
