@@ -381,28 +381,30 @@ public class MetadataCollectionSpecializer {
   static List<ChildName> mdoReferenceNames(Collection<MdoReference> refs) {
     var result = new ArrayList<ChildName>(refs.size());
     for (var ref : refs) {
-      var qualifiedName = ref.getMdoRefRu();
-      if (qualifiedName == null || qualifiedName.isBlank()) {
-        qualifiedName = ref.getMdoRef();
-      }
-      if (qualifiedName == null || qualifiedName.isBlank()) {
-        continue;
-      }
-      var dot = qualifiedName.lastIndexOf('.');
-      var bare = dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
-      var mdoType = ref.getType();
-      var mdoTypeRu = mdoType == null ? "" : mdoType.fullName().getRu();
-      ChildName entry;
-      if (!mdoTypeRu.isBlank()) {
-        entry = ChildName.withReturnType(bare, "ОбъектМетаданных: " + mdoTypeRu + "." + bare);
-      } else {
-        entry = ChildName.of(bare);
-      }
+      var entry = mdoReferenceChildName(ref);
       if (entry != null) {
         result.add(entry);
       }
     }
     return List.copyOf(result);
+  }
+
+  private static @Nullable ChildName mdoReferenceChildName(MdoReference ref) {
+    var qualifiedName = ref.getMdoRefRu();
+    if (qualifiedName == null || qualifiedName.isBlank()) {
+      qualifiedName = ref.getMdoRef();
+    }
+    if (qualifiedName == null || qualifiedName.isBlank()) {
+      return null;
+    }
+    var dot = qualifiedName.lastIndexOf('.');
+    var bare = dot < 0 ? qualifiedName : qualifiedName.substring(dot + 1);
+    var mdoType = ref.getType();
+    var mdoTypeRu = mdoType == null ? "" : mdoType.fullName().getRu();
+    if (!mdoTypeRu.isBlank()) {
+      return ChildName.withReturnType(bare, "ОбъектМетаданных: " + mdoTypeRu + "." + bare);
+    }
+    return ChildName.of(bare);
   }
 
   static boolean isRegister(MD md) {
