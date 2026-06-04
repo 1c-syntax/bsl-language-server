@@ -579,6 +579,20 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_journalWithoutColumns_earlyReturn() {
+    var journal = DocumentJournal.builder().name("ПустойЖурнал").build();
+    runTryRegister(
+      "file:///test-journal-empty/",
+      registry -> registry,
+      List.of(makeGenericTypeDecl("ЖурналДокументов.<Имя журнала документов>", "Имя журнала документов")),
+      java.util.Map.of(journal.getMdoReference(), (MD) journal),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ЖурналДокументовМенеджер.ПустойЖурнал")).isPresent();
+      });
+  }
+
+  @Test
   void tryRegister_withChartOfAccountsAndExtDimensionFlag_runs() {
     var flag = ExtDimensionAccountingFlag.builder()
       .name("Валютный").build();
