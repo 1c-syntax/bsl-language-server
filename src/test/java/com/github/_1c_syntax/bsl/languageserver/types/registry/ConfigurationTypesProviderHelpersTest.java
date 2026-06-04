@@ -370,15 +370,54 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withCalculationRegister_invokesRecalculationSpec() {
-    var reg = CalculationRegister.builder().name("Начисления").build();
+    var recalc = com.github._1c_syntax.bsl.mdo.children.Recalculation.builder()
+      .name("ПоВремени").build();
+    var reg = CalculationRegister.builder().name("Начисления")
+      .recalculation(recalc).build();
     runTryRegister(
       "file:///test-calc-recalc/",
       registry -> registry,
-      List.of(),
+      List.of(makeGenericTypeDecl("Перерасчет.<Имя перерасчета>", "Имя перерасчета")),
       java.util.Map.of(reg.getMdoReference(), (MD) reg),
       (registry, p) -> {
         p.tryRegister();
         assertThat(registry.resolve("РегистрРасчетаМенеджер.Начисления")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_withChartOfCalculationTypes_invokesDerived() {
+    var pvr = com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes.builder()
+      .name("ОсновныеВидыРасчета").build();
+    runTryRegister(
+      "file:///test-pvr/",
+      registry -> registry,
+      List.of(
+        makeGenericTypeDecl("БазовыеВидыРасчета.<Имя плана видов расчета>", "Имя плана видов расчета"),
+        makeGenericTypeDecl("ВедущиеВидыРасчета.<Имя плана видов расчета>", "Имя плана видов расчета"),
+        makeGenericTypeDecl("ВытесняющиеВидыРасчета.<Имя плана видов расчета>", "Имя плана видов расчета")
+      ),
+      java.util.Map.of(pvr.getMdoReference(), (MD) pvr),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ПланВидовРасчетаМенеджер.ОсновныеВидыРасчета")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_withChartOfAccountsAndExtDimensionFlag_runs() {
+    var flag = com.github._1c_syntax.bsl.mdo.children.ExtDimensionAccountingFlag.builder()
+      .name("Валютный").build();
+    var coa = ChartOfAccounts.builder().name("Основной")
+      .extDimensionAccountingFlag(flag).build();
+    runTryRegister(
+      "file:///test-coa-flag/",
+      registry -> registry,
+      List.of(),
+      java.util.Map.of(coa.getMdoReference(), (MD) coa),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ПланСчетовМенеджер.Основной")).isPresent();
       });
   }
 
