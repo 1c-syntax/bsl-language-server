@@ -219,7 +219,7 @@ public class ConfigurationTypesProvider {
     var groupRu = mdoType.fullGroupName().getRu();
     var groupEn = mdoType.fullGroupName().getEn();
     var fullName = mdoType.fullName();
-    var managerNames = managerNamesFor(fullName, groupRu, groupEn, name);
+    var managerNames = managerNamesFor(fullName, name);
     var managerRu = managerNames.ru();
     var managerEn = managerNames.en();
     var ref = typeRegistry.registerConfigurationType(managerRu);
@@ -242,23 +242,14 @@ public class ConfigurationTypesProvider {
   private record ManagerNames(String ru, @Nullable String en) {
   }
 
-  private static ManagerNames managerNamesFor(MultiName fullName,
-                                              String groupRu, String groupEn, String name) {
-    if (!fullName.getRu().isBlank()) {
-      var ru = fullName.getRu() + "Менеджер." + name;
-      var fullEn = fullName.getEn();
-      var en = fullEn.isBlank() ? null : (fullEn + "Manager." + name);
-      return new ManagerNames(ru, en);
-    }
-    var ru = groupRu + "." + name;
-    var en = groupEn.equals(groupRu) ? null : (groupEn + "." + name);
+  private static ManagerNames managerNamesFor(MultiName fullName, String name) {
+    var ru = fullName.getRu() + "Менеджер." + name;
+    var fullEn = fullName.getEn();
+    var en = fullEn.isBlank() ? null : (fullEn + "Manager." + name);
     return new ManagerNames(ru, en);
   }
 
   private void registerSpecializationsAndExpansions(MD md, TypeRef ref, String name, MultiName fullName) {
-    if (fullName.getRu().isBlank()) {
-      return;
-    }
     var familyCore = fullName.getRu();
     registerFamilySpecializations(familyCore, name);
     registerDerivedSpecializations(md, name);
