@@ -158,7 +158,7 @@ class BuiltinPlatformTypesProviderTest {
     // Члены oscript-дампа двуязычны явными полями nameRu/nameEn (как в BSL-модели):
     // Массив.Добавить/Add — один член, а не два моноязычных. Никакой склейки по
     // порядку при загрузке нет.
-    var types = BuiltinPlatformTypesProvider.loadFromResource(
+    var types = BuiltinTypesJsonLoader.load(
       "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json");
 
     var arrayDecl = types.stream()
@@ -182,7 +182,7 @@ class BuiltinPlatformTypesProviderTest {
 
   @Test
   void asyncFlagIsReadFromJsonForMethods() {
-    var types = BuiltinPlatformTypesProvider.loadFromResource(
+    var types = BuiltinTypesJsonLoader.load(
       "com/github/_1c_syntax/bsl/languageserver/types/registry/async-method.json");
     var typeDecl = types.stream()
       .filter(td -> "ТипСАсинхМетодом".equals(td.name().primary()))
@@ -251,7 +251,7 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   private static TypePackProvider.TypeDecl oscriptType(String name) {
-    return BuiltinPlatformTypesProvider.loadFromResource(
+    return BuiltinTypesJsonLoader.load(
         "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json")
       .stream()
       .filter(td -> name.equals(td.name().primary()))
@@ -316,7 +316,7 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   private static TypePackProvider.TypeDecl bslType(String name) {
-    return BuiltinPlatformTypesProvider.loadFromResource(
+    return BuiltinTypesJsonLoader.load(
         "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json")
       .stream()
       .filter(td -> name.equals(td.name().primary()))
