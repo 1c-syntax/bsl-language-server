@@ -113,16 +113,9 @@ public class MetadataCollectionSpecializer {
   );
 
   /**
-   * Маппинг mdclasses-{@link MDOType} → qualifiedName типа-владельца в HBK,
-   * по которому {@link KnownStandardAttributes#forOwner(String)} выдаёт стандартные
-   * реквизиты. {@code TABULAR_SECTION} интерпретируется унифицированно как
-   * {@code ОбъектМетаданных: ТабличнаяЧасть} — состав стандартных реквизитов ТЧ
-   * не зависит от родителя.
-   */
-  /**
    * Имя дочернего элемента коллекции из mdclasses — двуязычное (для стандартных
-   * реквизитов с {@link StandardAttribute#getFullName()}) либо одно-локалиное
-   * (для пользовательских реквизитов / форм / макетов / …).
+   * реквизитов) либо одно-локалиное (для пользовательских реквизитов / форм /
+   * макетов / …).
    */
   record ChildName(BilingualString name, @Nullable MD child, @Nullable String returnTypeOverride) {
 
@@ -199,7 +192,7 @@ public class MetadataCollectionSpecializer {
   static final List<CollectionSpec> COLLECTIONS = List.of(
     new CollectionSpec("Реквизиты", "Attributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Реквизит",
-      MetadataChildrenExtractor::isAttributeOwner,
+      MetadataMdoPredicates::isAttributeOwner,
       MetadataChildrenExtractor::attributesFor),
     new CollectionSpec("СтандартныеРеквизиты", "StandardAttributes",
       BASE_COLLECTION_STD_ATTR, "ОписаниеСтандартногоРеквизита",
@@ -207,55 +200,55 @@ public class MetadataCollectionSpecializer {
       MetadataChildrenExtractor::standardAttributesFor),
     new CollectionSpec("ТабличныеЧасти", "TabularSections",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ТабличнаяЧасть",
-      MetadataChildrenExtractor::isTabularSectionOwner,
+      MetadataMdoPredicates::isTabularSectionOwner,
       MetadataChildrenExtractor::tabularSectionsFor),
     new CollectionSpec("Формы", "Forms",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Форма",
-      MetadataChildrenExtractor::isFormOwner,
+      MetadataMdoPredicates::isFormOwner,
       MetadataChildrenExtractor::formsFor),
     new CollectionSpec("Макеты", "Templates",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Макет",
-      MetadataChildrenExtractor::isTemplateOwner,
+      MetadataMdoPredicates::isTemplateOwner,
       MetadataChildrenExtractor::templatesFor),
     new CollectionSpec("Команды", "Commands",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Команда",
-      MetadataChildrenExtractor::isCommandOwner,
+      MetadataMdoPredicates::isCommandOwner,
       MetadataChildrenExtractor::commandsFor),
     new CollectionSpec("Измерения", "Dimensions",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Измерение",
-      MetadataChildrenExtractor::isRegister,
+      MetadataMdoPredicates::isRegister,
       md -> MetadataChildrenExtractor.singleLingualMdNames(MetadataChildrenExtractor.registerDimensions(md))),
     new CollectionSpec("Ресурсы", "Resources",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Ресурс",
-      MetadataChildrenExtractor::isRegister,
+      MetadataMdoPredicates::isRegister,
       md -> MetadataChildrenExtractor.singleLingualMdNames(MetadataChildrenExtractor.registerResources(md))),
     new CollectionSpec("Перерасчеты", "Recalculations",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Перерасчет",
-      MetadataChildrenExtractor::isCalculationRegister,
+      MetadataMdoPredicates::isCalculationRegister,
       MetadataChildrenExtractor::recalculationsFor),
     new CollectionSpec("Графы", "Columns",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Графа",
-      MetadataChildrenExtractor::isDocumentJournal,
+      MetadataMdoPredicates::isDocumentJournal,
       MetadataChildrenExtractor::journalColumnsFor),
     new CollectionSpec("ЗначенияПеречисления", "EnumValues",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ЗначениеПеречисления",
-      MetadataChildrenExtractor::isEnum,
+      MetadataMdoPredicates::isEnum,
       MetadataChildrenExtractor::enumValuesFor),
     new CollectionSpec("ПризнакиУчета", "AccountingFlags",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ПризнакУчетаПланаСчетов",
-      MetadataChildrenExtractor::isChartOfAccounts,
+      MetadataMdoPredicates::isChartOfAccounts,
       MetadataChildrenExtractor::accountingFlagsFor),
     new CollectionSpec("ПризнакиУчетаСубконто", "ExtDimensionAccountingFlags",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ПризнакУчетаСубконтоПланаСчетов",
-      MetadataChildrenExtractor::isChartOfAccounts,
+      MetadataMdoPredicates::isChartOfAccounts,
       MetadataChildrenExtractor::extDimensionAccountingFlagsFor),
     new CollectionSpec("РеквизитыАдресации", "AddressingAttributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: РеквизитАдресации",
-      MetadataChildrenExtractor::isTask,
+      MetadataMdoPredicates::isTask,
       MetadataChildrenExtractor::addressingAttributesFor),
     new CollectionSpec("Реквизиты адресации", "AddressingAttributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: РеквизитАдресации",
-      MetadataChildrenExtractor::isTask,
+      MetadataMdoPredicates::isTask,
       MetadataChildrenExtractor::addressingAttributesFor),
     // Коллекции, для которых mdclasses-API нет — returnType chain специализируется
     // (Получить/Найти возвращают конкретный element-type), но имена не разворачиваются.
@@ -289,7 +282,7 @@ public class MetadataCollectionSpecializer {
     // Имена приходят через Document.getRegisterRecords() (MdoReference, по нему берётся имя).
     new CollectionSpec("Движения", "RegisterRecords",
       BASE_COLLECTION_PROPERTY_VALUE, "ЗначениеСвойстваОбъектаМетаданных",
-      MetadataChildrenExtractor::isDocument,
+      MetadataMdoPredicates::isDocument,
       MetadataChildrenExtractor::registerRecordsFor),
 
     // ВводитсяНаОсновании — типы, на основании которых вводится объект.

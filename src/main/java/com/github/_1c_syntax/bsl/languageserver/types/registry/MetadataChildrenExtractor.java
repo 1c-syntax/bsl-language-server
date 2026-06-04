@@ -227,57 +227,6 @@ final class MetadataChildrenExtractor {
     return md instanceof Document doc ? mdoReferenceNames(doc.getRegisterRecords()) : List.of();
   }
 
-  static boolean isRegister(MD md) {
-    return md instanceof InformationRegister
-      || md instanceof AccumulationRegister
-      || md instanceof AccountingRegister
-      || md instanceof CalculationRegister;
-  }
-
-  static boolean isAttributeOwner(MD md) {
-    return md instanceof AttributeOwner;
-  }
-
-  static boolean isTabularSectionOwner(MD md) {
-    return md instanceof TabularSectionOwner;
-  }
-
-  static boolean isFormOwner(MD md) {
-    return md instanceof FormOwner;
-  }
-
-  static boolean isTemplateOwner(MD md) {
-    return md instanceof TemplateOwner;
-  }
-
-  static boolean isCommandOwner(MD md) {
-    return md instanceof CommandOwner;
-  }
-
-  static boolean isCalculationRegister(MD md) {
-    return md instanceof CalculationRegister;
-  }
-
-  static boolean isDocumentJournal(MD md) {
-    return md instanceof DocumentJournal;
-  }
-
-  static boolean isEnum(MD md) {
-    return md instanceof Enum;
-  }
-
-  static boolean isChartOfAccounts(MD md) {
-    return md instanceof ChartOfAccounts;
-  }
-
-  static boolean isTask(MD md) {
-    return md instanceof Task;
-  }
-
-  static boolean isDocument(MD md) {
-    return md instanceof Document;
-  }
-
   /** Измерения регистра (InformationRegister/AccumulationRegister/AccountingRegister/CalculationRegister). */
   static List<MD> registerDimensions(MD md) {
     if (md instanceof InformationRegister r) {
