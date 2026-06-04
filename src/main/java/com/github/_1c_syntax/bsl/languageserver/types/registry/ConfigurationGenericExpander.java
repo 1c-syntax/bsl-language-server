@@ -83,8 +83,7 @@ public class ConfigurationGenericExpander {
         continue;
       }
       var bindings = new LinkedHashMap<>(sourceBindings);
-      bindings.put("Имя таблицы", tableName);
-      bindings.put("Имя таблицы внешнего источника данных", tableName);
+      putTableName(bindings, tableName);
       registerFamilySpecializations(familyCore, bindings);
     }
 
@@ -101,6 +100,7 @@ public class ConfigurationGenericExpander {
                                     com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube cube, String cubeName) {
     var cubeBindings = new LinkedHashMap<>(sourceBindings);
     cubeBindings.put("Имя куба", cubeName);
+    cubeBindings.put("Cube name", cubeName);
     registerFamilySpecializations(familyCore, cubeBindings);
 
     for (var dimTable : cube.getDimensionTables()) {
@@ -109,8 +109,7 @@ public class ConfigurationGenericExpander {
         continue;
       }
       var b = new LinkedHashMap<>(cubeBindings);
-      b.put("Имя таблицы", dimTableName);
-      b.put("Имя таблицы внешнего источника данных", dimTableName);
+      putTableName(b, dimTableName);
       registerFamilySpecializations(familyCore, b);
     }
     for (var dim : cube.getDimensions()) {
@@ -120,8 +119,16 @@ public class ConfigurationGenericExpander {
       }
       var b = new LinkedHashMap<>(cubeBindings);
       b.put("Имя измерения", dimName);
+      b.put("Dimension name", dimName);
       registerFamilySpecializations(familyCore, b);
     }
+  }
+
+  private static void putTableName(Map<String, String> bindings, String tableName) {
+    bindings.put("Имя таблицы", tableName);
+    bindings.put("Имя таблицы внешнего источника данных", tableName);
+    bindings.put("Table name", tableName);
+    bindings.put("External data source table name", tableName);
   }
 
   /**
@@ -151,6 +158,7 @@ public class ConfigurationGenericExpander {
     var b = new LinkedHashMap<String, String>();
     b.put("Имя внешнего источника", edsName);
     b.put("Имя внешнего источника данных", edsName);
+    b.put("External data source name", edsName);
     return b;
   }
 
