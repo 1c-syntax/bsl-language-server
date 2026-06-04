@@ -540,6 +540,45 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_registerWithBlankChildren_expansionsEmpty() {
+    var reg = InformationRegister.builder().name("РСB")
+      .dimension(Dimension.builder().name("").build())
+      .resource(Resource.builder().name("").build())
+      .build();
+    runTryRegister(
+      "file:///test-reg-blank/",
+      registry -> registry,
+      List.of(makeGenericTypeDecl("РегистрСведенийЗапись.<Имя регистра сведений>", "Имя регистра сведений")),
+      java.util.Map.of(reg.getMdoReference(), (MD) reg),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("РегистрСведенийМенеджер.РСB")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_registerGenericWithoutParams_earlyReturn() {
+    var reg = InformationRegister.builder().name("РСP")
+      .dimension(Dimension.builder().name("Валюта").build()).build();
+    var typeDecl = new TypePackProvider.TypeDecl(
+      TypeKind.PLATFORM,
+      BilingualString.of("РегистрСведенийЗапись.<X>"),
+      List.of(),
+      false, "", List.of(), List.of(), false, false, "", "",
+      List.of(),
+      false);
+    runTryRegister(
+      "file:///test-reg-noparams/",
+      registry -> registry,
+      List.of(typeDecl),
+      java.util.Map.of(reg.getMdoReference(), (MD) reg),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("РегистрСведенийМенеджер.РСP")).isPresent();
+      });
+  }
+
+  @Test
   void tryRegister_withChartOfAccountsAndExtDimensionFlag_runs() {
     var flag = ExtDimensionAccountingFlag.builder()
       .name("Валютный").build();
