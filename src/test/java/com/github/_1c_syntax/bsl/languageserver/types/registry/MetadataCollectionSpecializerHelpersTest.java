@@ -120,31 +120,31 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void isRegister_informationRegister_isTrue() {
     MD ir = InformationRegister.builder().name("РегистрСведений1").build();
-    assertThat(MetadataCollectionSpecializer.isRegister(ir)).isTrue();
+    assertThat(MetadataChildrenExtractor.isRegister(ir)).isTrue();
   }
 
   @Test
   void isRegister_catalog_isFalse() {
     MD catalog = Catalog.builder().name("Контрагенты").build();
-    assertThat(MetadataCollectionSpecializer.isRegister(catalog)).isFalse();
+    assertThat(MetadataChildrenExtractor.isRegister(catalog)).isFalse();
   }
 
   @Test
   void isRegister_accumulationRegister_isTrue() {
     MD ar = AccumulationRegister.builder().name("X").build();
-    assertThat(MetadataCollectionSpecializer.isRegister(ar)).isTrue();
+    assertThat(MetadataChildrenExtractor.isRegister(ar)).isTrue();
   }
 
   @Test
   void isRegister_accountingRegister_isTrue() {
     MD ar = AccountingRegister.builder().name("X").build();
-    assertThat(MetadataCollectionSpecializer.isRegister(ar)).isTrue();
+    assertThat(MetadataChildrenExtractor.isRegister(ar)).isTrue();
   }
 
   @Test
   void isRegister_calculationRegister_isTrue() {
     MD cr = CalculationRegister.builder().name("X").build();
-    assertThat(MetadataCollectionSpecializer.isRegister(cr)).isTrue();
+    assertThat(MetadataChildrenExtractor.isRegister(cr)).isTrue();
   }
 
   // === ownerTypeFor ===

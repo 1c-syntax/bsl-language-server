@@ -41,21 +41,10 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.AccountingRegister;
 import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
-import com.github._1c_syntax.bsl.mdo.AttributeOwner;
-import com.github._1c_syntax.bsl.mdo.BusinessProcess;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
-import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
-import com.github._1c_syntax.bsl.mdo.CommandOwner;
-import com.github._1c_syntax.bsl.mdo.Document;
-import com.github._1c_syntax.bsl.mdo.DocumentJournal;
-import com.github._1c_syntax.bsl.mdo.Enum;
-import com.github._1c_syntax.bsl.mdo.FormOwner;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
-import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
-import com.github._1c_syntax.bsl.mdo.Task;
-import com.github._1c_syntax.bsl.mdo.TemplateOwner;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 import com.github._1c_syntax.bsl.mdo.support.AttributeKind;
 import com.github._1c_syntax.bsl.types.MDOType;
@@ -237,116 +226,67 @@ public class MetadataCollectionSpecializer {
    */
   private static final Predicate<MD> ANY = md -> true;
 
-  private static List<ChildName> attributesFor(MD md) {
-    return md instanceof AttributeOwner ao ? customAttributeNames(ao.getAllAttributes()) : List.of();
-  }
-
-  private static List<ChildName> tabularSectionsFor(MD md) {
-    return md instanceof TabularSectionOwner ts ? tabularSectionEntries(ts.getTabularSections()) : List.of();
-  }
-
-  private static List<ChildName> formsFor(MD md) {
-    return md instanceof FormOwner fo ? singleLingualMdNames(fo.getForms()) : List.of();
-  }
-
-  private static List<ChildName> templatesFor(MD md) {
-    return md instanceof TemplateOwner to ? singleLingualMdNames(to.getTemplates()) : List.of();
-  }
-
-  private static List<ChildName> commandsFor(MD md) {
-    return md instanceof CommandOwner co ? singleLingualMdNames(co.getCommands()) : List.of();
-  }
-
-  private static List<ChildName> recalculationsFor(MD md) {
-    return md instanceof CalculationRegister cr ? singleLingualMdNames(cr.getRecalculations()) : List.of();
-  }
-
-  private static List<ChildName> journalColumnsFor(MD md) {
-    return md instanceof DocumentJournal dj ? singleLingualMdNames(dj.getColumns()) : List.of();
-  }
-
-  private static List<ChildName> enumValuesFor(MD md) {
-    return md instanceof Enum e ? singleLingualMdNames(e.getEnumValues()) : List.of();
-  }
-
-  private static List<ChildName> accountingFlagsFor(MD md) {
-    return md instanceof ChartOfAccounts coa ? singleLingualMdNames(coa.getAccountingFlags()) : List.of();
-  }
-
-  private static List<ChildName> extDimensionAccountingFlagsFor(MD md) {
-    return md instanceof ChartOfAccounts coa
-      ? singleLingualMdNames(coa.getExtDimensionAccountingFlags()) : List.of();
-  }
-
-  private static List<ChildName> addressingAttributesFor(MD md) {
-    return md instanceof Task t ? singleLingualMdNames(t.getAddressingAttributes()) : List.of();
-  }
-
-  private static List<ChildName> registerRecordsFor(MD md) {
-    return md instanceof Document doc ? mdoReferenceNames(doc.getRegisterRecords()) : List.of();
-  }
-
   static final List<CollectionSpec> COLLECTIONS = List.of(
     new CollectionSpec("Реквизиты", "Attributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Реквизит",
-      AttributeOwner.class::isInstance,
-      MetadataCollectionSpecializer::attributesFor),
+      MetadataChildrenExtractor::isAttributeOwner,
+      MetadataChildrenExtractor::attributesFor),
     new CollectionSpec("СтандартныеРеквизиты", "StandardAttributes",
       BASE_COLLECTION_STD_ATTR, "ОписаниеСтандартногоРеквизита",
       MetadataCollectionSpecializer::hasStandardAttributes,
       MetadataCollectionSpecializer::standardAttributesFor),
     new CollectionSpec("ТабличныеЧасти", "TabularSections",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ТабличнаяЧасть",
-      TabularSectionOwner.class::isInstance,
-      MetadataCollectionSpecializer::tabularSectionsFor),
+      MetadataChildrenExtractor::isTabularSectionOwner,
+      MetadataChildrenExtractor::tabularSectionsFor),
     new CollectionSpec("Формы", "Forms",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Форма",
-      FormOwner.class::isInstance,
-      MetadataCollectionSpecializer::formsFor),
+      MetadataChildrenExtractor::isFormOwner,
+      MetadataChildrenExtractor::formsFor),
     new CollectionSpec("Макеты", "Templates",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Макет",
-      TemplateOwner.class::isInstance,
-      MetadataCollectionSpecializer::templatesFor),
+      MetadataChildrenExtractor::isTemplateOwner,
+      MetadataChildrenExtractor::templatesFor),
     new CollectionSpec("Команды", "Commands",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Команда",
-      CommandOwner.class::isInstance,
-      MetadataCollectionSpecializer::commandsFor),
+      MetadataChildrenExtractor::isCommandOwner,
+      MetadataChildrenExtractor::commandsFor),
     new CollectionSpec("Измерения", "Dimensions",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Измерение",
-      MetadataCollectionSpecializer::isRegister,
+      MetadataChildrenExtractor::isRegister,
       md -> singleLingualMdNames(registerDimensions(md))),
     new CollectionSpec("Ресурсы", "Resources",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Ресурс",
-      MetadataCollectionSpecializer::isRegister,
+      MetadataChildrenExtractor::isRegister,
       md -> singleLingualMdNames(registerResources(md))),
     new CollectionSpec("Перерасчеты", "Recalculations",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Перерасчет",
-      CalculationRegister.class::isInstance,
-      MetadataCollectionSpecializer::recalculationsFor),
+      MetadataChildrenExtractor::isCalculationRegister,
+      MetadataChildrenExtractor::recalculationsFor),
     new CollectionSpec("Графы", "Columns",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Графа",
-      DocumentJournal.class::isInstance,
-      MetadataCollectionSpecializer::journalColumnsFor),
+      MetadataChildrenExtractor::isDocumentJournal,
+      MetadataChildrenExtractor::journalColumnsFor),
     new CollectionSpec("ЗначенияПеречисления", "EnumValues",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ЗначениеПеречисления",
-      Enum.class::isInstance,
-      MetadataCollectionSpecializer::enumValuesFor),
+      MetadataChildrenExtractor::isEnum,
+      MetadataChildrenExtractor::enumValuesFor),
     new CollectionSpec("ПризнакиУчета", "AccountingFlags",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ПризнакУчетаПланаСчетов",
-      ChartOfAccounts.class::isInstance,
-      MetadataCollectionSpecializer::accountingFlagsFor),
+      MetadataChildrenExtractor::isChartOfAccounts,
+      MetadataChildrenExtractor::accountingFlagsFor),
     new CollectionSpec("ПризнакиУчетаСубконто", "ExtDimensionAccountingFlags",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ПризнакУчетаСубконтоПланаСчетов",
-      ChartOfAccounts.class::isInstance,
-      MetadataCollectionSpecializer::extDimensionAccountingFlagsFor),
+      MetadataChildrenExtractor::isChartOfAccounts,
+      MetadataChildrenExtractor::extDimensionAccountingFlagsFor),
     new CollectionSpec("РеквизитыАдресации", "AddressingAttributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: РеквизитАдресации",
-      Task.class::isInstance,
-      MetadataCollectionSpecializer::addressingAttributesFor),
+      MetadataChildrenExtractor::isTask,
+      MetadataChildrenExtractor::addressingAttributesFor),
     new CollectionSpec("Реквизиты адресации", "AddressingAttributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: РеквизитАдресации",
-      Task.class::isInstance,
-      MetadataCollectionSpecializer::addressingAttributesFor),
+      MetadataChildrenExtractor::isTask,
+      MetadataChildrenExtractor::addressingAttributesFor),
     // Коллекции, для которых mdclasses-API нет — returnType chain специализируется
     // (Получить/Найти возвращают конкретный element-type), но имена не разворачиваются.
     new CollectionSpec("Подсистемы", "Subsystems",
@@ -379,8 +319,8 @@ public class MetadataCollectionSpecializer {
     // Имена приходят через Document.getRegisterRecords() (MdoReference, по нему берётся имя).
     new CollectionSpec("Движения", "RegisterRecords",
       BASE_COLLECTION_PROPERTY_VALUE, "ЗначениеСвойстваОбъектаМетаданных",
-      Document.class::isInstance,
-      MetadataCollectionSpecializer::registerRecordsFor),
+      MetadataChildrenExtractor::isDocument,
+      MetadataChildrenExtractor::registerRecordsFor),
 
     // ВводитсяНаОсновании — типы, на основании которых вводится объект.
     // В mdclasses нет удобного getter'а — оставляем только returnType chain.
@@ -451,13 +391,6 @@ public class MetadataCollectionSpecializer {
       return ChildName.withReturnType(bare, "ОбъектМетаданных: " + mdoTypeRu + "." + bare);
     }
     return ChildName.of(bare);
-  }
-
-  static boolean isRegister(MD md) {
-    return md instanceof InformationRegister
-      || md instanceof AccumulationRegister
-      || md instanceof AccountingRegister
-      || md instanceof CalculationRegister;
   }
 
   /**
