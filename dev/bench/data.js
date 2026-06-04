@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780599595315,
+  "lastUpdate": 1780607432333,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36239,6 +36239,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.67922589109337",
             "extra": "mean: 292.1244974931081 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b50d75a947eee9fd887201396cd212dae1f73180",
+          "message": "Merge pull request #4003 from 1c-syntax/fix/missed-required-parameter-nullable-docall\n\nfix: устранить S2583 reliability-issue и почистить nullability/scope-аннотации",
+          "timestamp": "2026-06-04T09:00:12+02:00",
+          "tree_id": "2b48a71ce15069f9779496ab37848da235ec589a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b50d75a947eee9fd887201396cd212dae1f73180"
+        },
+        "date": 1780607428986,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 289.5613136291504,
+            "unit": "sec",
+            "range": "stddev: 6.086021781951161",
+            "extra": "mean: 289.5613136291504 sec\nrounds: 3"
           }
         ]
       }
