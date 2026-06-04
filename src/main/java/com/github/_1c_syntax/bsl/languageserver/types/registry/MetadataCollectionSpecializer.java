@@ -358,6 +358,10 @@ public class MetadataCollectionSpecializer {
 
   private static final Map<String, CollectionSpec> COLLECTION_BY_NAME = buildCollectionIndex();
 
+  private final TypeRegistry typeRegistry;
+  private final BslContextHolder bslContextHolder;
+  private final ServerContextProvider serverContextProvider;
+
   private static Map<String, CollectionSpec> buildCollectionIndex() {
     var m = new HashMap<String, CollectionSpec>();
     for (var spec : COLLECTIONS) {
@@ -366,10 +370,6 @@ public class MetadataCollectionSpecializer {
     }
     return Map.copyOf(m);
   }
-
-  private final TypeRegistry typeRegistry;
-  private final BslContextHolder bslContextHolder;
-  private final ServerContextProvider serverContextProvider;
 
   /**
    * Имена MD-объектов по {@link MdoReference}-ссылкам. Используется для коллекций

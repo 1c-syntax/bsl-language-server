@@ -232,21 +232,7 @@ public class ConfigurationTypesProvider {
       BilingualString.of(managerRu, managerEn == null ? managerRu : managerEn));
 
     registerObjectAndRefTypes(md, mdoType, name, fullName, commonAttributes);
-    if (!fullName.getRu().isBlank()) {
-      registerFamilySpecializations(fullName.getRu(), name);
-    }
-    registerDerivedSpecializations(md, name);
-    if (md instanceof DocumentJournal journal && !fullName.getRu().isBlank()) {
-      registerDocumentJournalColumnMembers(journal, fullName.getRu(), name);
-    }
-    if (md instanceof Enum anEnum && !fullName.getRu().isBlank()) {
-      registerEnumValueExpansion(ref, fullName.getRu(), name, anEnum);
-    }
-    var registerChildren = registerChildrenOf(md);
-    if (registerChildren != null && !fullName.getRu().isBlank()) {
-      registerRegisterRecordExpansion(fullName.getRu(), name, registerChildren);
-    }
-
+    registerSpecializationsAndExpansions(md, ref, name, fullName);
     registerCollectionAliases(ref, managerNames, groupRu, groupEn, name);
 
     collectionMembersByType
@@ -269,6 +255,25 @@ public class ConfigurationTypesProvider {
     var ru = groupRu + "." + name;
     var en = groupEn.equals(groupRu) ? null : (groupEn + "." + name);
     return new ManagerNames(ru, en);
+  }
+
+  private void registerSpecializationsAndExpansions(MD md, TypeRef ref, String name, MultiName fullName) {
+    if (fullName.getRu().isBlank()) {
+      return;
+    }
+    var familyCore = fullName.getRu();
+    registerFamilySpecializations(familyCore, name);
+    registerDerivedSpecializations(md, name);
+    if (md instanceof DocumentJournal journal) {
+      registerDocumentJournalColumnMembers(journal, familyCore, name);
+    }
+    if (md instanceof Enum anEnum) {
+      registerEnumValueExpansion(ref, familyCore, name, anEnum);
+    }
+    var registerChildren = registerChildrenOf(md);
+    if (registerChildren != null) {
+      registerRegisterRecordExpansion(familyCore, name, registerChildren);
+    }
   }
 
   private void registerCollectionAliases(TypeRef ref, ManagerNames managerNames,
