@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780607432333,
+  "lastUpdate": 1780609571280,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36270,6 +36270,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.086021781951161",
             "extra": "mean: 289.5613136291504 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d4ec2e032c679991829352c28760db10679f7830",
+          "message": "Merge pull request #3999 from 1c-syntax/copilot/fix-sources-jar-duplication\n\nFix `sourcesJar` failure by excluding duplicate generated sources",
+          "timestamp": "2026-06-04T09:04:31+02:00",
+          "tree_id": "75b125c01c2fca54a34e88a93c62c35fe9b9b816",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d4ec2e032c679991829352c28760db10679f7830"
+        },
+        "date": 1780609562596,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 292.6043592294057,
+            "unit": "sec",
+            "range": "stddev: 13.198793208450669",
+            "extra": "mean: 292.6043592294057 sec\nrounds: 3"
           }
         ]
       }
