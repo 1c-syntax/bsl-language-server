@@ -391,10 +391,10 @@ public class MetadataCollectionSpecializer {
 
   private static @Nullable ChildName mdoReferenceChildName(MdoReference ref) {
     var qualifiedName = ref.getMdoRefRu();
-    if (qualifiedName == null || qualifiedName.isBlank()) {
+    if (qualifiedName.isBlank()) {
       qualifiedName = ref.getMdoRef();
     }
-    if (qualifiedName == null || qualifiedName.isBlank()) {
+    if (qualifiedName.isBlank()) {
       return null;
     }
     var dot = qualifiedName.lastIndexOf('.');
