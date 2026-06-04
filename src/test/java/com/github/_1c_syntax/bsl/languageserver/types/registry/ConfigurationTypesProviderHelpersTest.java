@@ -503,6 +503,43 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_enumGenericWithoutParams_earlyReturn() {
+    var anEnum = com.github._1c_syntax.bsl.mdo.Enum.builder().name("ВидыКонтрагентаX")
+      .enumValue(EnumValue.builder().name("Юридическое").build()).build();
+    var typeDecl = new TypePackProvider.TypeDecl(
+      TypeKind.PLATFORM,
+      BilingualString.of("ПеречислениеМенеджер.<X>"),
+      List.of(),
+      false, "", List.of(), List.of(), false, false, "", "",
+      List.of(),
+      false);
+    runTryRegister(
+      "file:///test-enum-noparams/",
+      registry -> registry,
+      List.of(typeDecl),
+      java.util.Map.of(anEnum.getMdoReference(), (MD) anEnum),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ПеречислениеМенеджер.ВидыКонтрагентаX")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_enumWithBlankNamedValues_earlyReturn() {
+    var anEnum = com.github._1c_syntax.bsl.mdo.Enum.builder().name("ВидыКонтрагентаB")
+      .enumValue(EnumValue.builder().name("").build()).build();
+    runTryRegister(
+      "file:///test-enum-blank-values/",
+      registry -> registry,
+      List.of(makeGenericTypeDecl("ПеречислениеМенеджер.<Имя перечисления>", "Имя перечисления")),
+      java.util.Map.of(anEnum.getMdoReference(), (MD) anEnum),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ПеречислениеМенеджер.ВидыКонтрагентаB")).isPresent();
+      });
+  }
+
+  @Test
   void tryRegister_withChartOfAccountsAndExtDimensionFlag_runs() {
     var flag = ExtDimensionAccountingFlag.builder()
       .name("Валютный").build();
