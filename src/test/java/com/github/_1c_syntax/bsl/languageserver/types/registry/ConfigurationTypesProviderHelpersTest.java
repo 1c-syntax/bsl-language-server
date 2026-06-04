@@ -318,6 +318,121 @@ class ConfigurationTypesProviderHelpersTest {
     assertThat(name).isEqualTo("Имя значения");
   }
 
+  // === register*Expansion: интеграция через synthetic generic-templates ===
+
+  @Test
+  void tryRegister_withEnumAndGenericTemplate_expandsEnumValues() {
+    runTryRegister(
+      "file:///test-enum-expansion/",
+      registry -> registry,
+      List.of(makeGenericTypeDecl("ПеречислениеМенеджер.<Имя перечисления>", "Имя перечисления")),
+      makeEnumChildren("ВидыКонтрагента", "Юридическое", "Физическое"),
+      (registry, p) -> p.tryRegister());
+  }
+
+  @Test
+  void tryRegister_withDocumentJournalAndGenericTemplate_runs() {
+    var journal = DocumentJournal.builder().name("ОбщийЖурнал").build();
+    runTryRegister(
+      "file:///test-journal-expansion/",
+      registry -> registry,
+      List.of(makeGenericTypeDecl("ЖурналДокументов.<Имя журнала документов>", "Имя журнала документов")),
+      java.util.Map.of(journal.getMdoReference(), (MD) journal),
+      (registry, p) -> p.tryRegister());
+  }
+
+  @Test
+  void tryRegister_withInformationRegisterAndGenericTemplate_expandsDimensions() {
+    var reg = InformationRegister.builder().name("Курсы").build();
+    runTryRegister(
+      "file:///test-inforeg-expansion/",
+      registry -> registry,
+      List.of(makeGenericTypeDecl("РегистрСведенийЗапись.<Имя регистра сведений>", "Имя регистра сведений")),
+      java.util.Map.of(reg.getMdoReference(), (MD) reg),
+      (registry, p) -> p.tryRegister());
+  }
+
+  @Test
+  void tryRegister_withCalculationRegister_invokesRecalculationSpec() {
+    var reg = CalculationRegister.builder().name("Начисления").build();
+    runTryRegister(
+      "file:///test-calc-recalc/",
+      registry -> registry,
+      List.of(),
+      java.util.Map.of(reg.getMdoReference(), (MD) reg),
+      (registry, p) -> p.tryRegister());
+  }
+
+  private static TypePackProvider.TypeDecl makeGenericTypeDecl(String qualifiedRu, String placeholder) {
+    var memberRu = "<Имя значения>";
+    var member = MemberDescriptor.genericProperty(memberRu,
+        new com.github._1c_syntax.bsl.languageserver.types.model.TypeRef(TypeKind.PLATFORM, "Строка"),
+        "")
+      .withBilingualName(BilingualString.of(memberRu, "<Value name>"));
+    return new TypePackProvider.TypeDecl(
+      TypeKind.PLATFORM,
+      BilingualString.of(qualifiedRu),
+      List.of(member),
+      false,
+      "",
+      List.of(),
+      List.of(),
+      false,
+      false,
+      "",
+      "",
+      List.of(placeholder),
+      false
+    );
+  }
+
+  private static java.util.Map<com.github._1c_syntax.bsl.types.MdoReference, MD> makeEnumChildren(
+      String enumName, String... valueNames) {
+    var values = java.util.Arrays.stream(valueNames)
+      .map(n -> EnumValue.builder().name(n).build())
+      .toList();
+    var enumBuilder = com.github._1c_syntax.bsl.mdo.Enum.builder().name(enumName);
+    values.forEach(enumBuilder::enumValue);
+    var anEnum = enumBuilder.build();
+    return java.util.Map.of(anEnum.getMdoReference(), anEnum);
+  }
+
+  private static void runTryRegister(
+      String workspaceUriStr,
+      java.util.function.Function<TypeRegistry, TypeRegistry> registryFn,
+      List<? extends TypePackProvider.TypeDecl> typeDecls,
+      java.util.Map<com.github._1c_syntax.bsl.types.MdoReference, MD> children,
+      java.util.function.BiConsumer<TypeRegistry, ConfigurationTypesProvider> assertion) {
+    var workspaceUri = java.net.URI.create(workspaceUriStr);
+    WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");
+    WorkspaceContextHolder.set(workspaceUri);
+    try {
+      var packTypes = new java.util.ArrayList<TypePackProvider.TypeDecl>(typeDecls);
+      PlatformTypesProvider pack = () -> packTypes;
+      var registry = registryFn.apply(new TypeRegistry(List.of(pack),
+        Mockito.mock(GlobalScopeProvider.class),
+        Mockito.mock(MemberMetadataIndex.class)));
+      var configuration = Mockito.mock(Configuration.class);
+      Mockito.when(configuration.isEmpty()).thenReturn(false);
+      Mockito.when(configuration.getChildrenByMdoRef()).thenReturn(children);
+      var serverContext = Mockito.mock(ServerContext.class);
+      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      var serverProvider = Mockito.mock(ServerContextProvider.class);
+      Mockito.when(serverProvider.getAllContexts())
+        .thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      var globalScope = Mockito.mock(GlobalScopeProvider.class);
+      var lsConfig = Mockito.mock(
+        com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
+      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+      assertion.accept(registry, provider);
+    } finally {
+      WorkspaceContextHolder.clear();
+      WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
+    }
+  }
+
   @Test
   void memberPlaceholderName_noGenericMember_returnsEmpty() {
     var registry = new TypeRegistry(List.of(),
