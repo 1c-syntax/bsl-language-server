@@ -335,7 +335,9 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withDocumentJournalAndGenericTemplate_runs() {
-    var journal = DocumentJournal.builder().name("ОбщийЖурнал").build();
+    var column = com.github._1c_syntax.bsl.mdo.children.DocumentJournalColumn.builder()
+      .name("Контрагент").build();
+    var journal = DocumentJournal.builder().name("ОбщийЖурнал").column(column).build();
     runTryRegister(
       "file:///test-journal-expansion/",
       registry -> registry,
@@ -349,7 +351,12 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withInformationRegisterAndGenericTemplate_expandsDimensions() {
-    var reg = InformationRegister.builder().name("Курсы").build();
+    var dim = com.github._1c_syntax.bsl.mdo.children.Dimension.builder()
+      .name("Валюта").build();
+    var res = com.github._1c_syntax.bsl.mdo.children.Resource.builder()
+      .name("Курс").build();
+    var reg = InformationRegister.builder().name("Курсы")
+      .dimension(dim).resource(res).build();
     runTryRegister(
       "file:///test-inforeg-expansion/",
       registry -> registry,
