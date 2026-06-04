@@ -649,29 +649,35 @@ public class TypeRegistry {
     }
     var result = new ArrayList<MemberDescriptor>();
     for (var template : raw) {
-      if (!template.generic()) {
-        continue;
-      }
-      var ruName = template.bilingualName().primary();
-      var ruPlaceholders = ContextNames.placeholders(ruName);
-      var ruMatch = ruPlaceholders.stream()
-        .filter(p -> memberExpansions.containsKey(p.name()))
-        .findFirst()
-        .orElse(null);
-      if (ruMatch == null) {
-        continue;
-      }
-      // en-сторона имени имеет placeholder'ы в том же порядке (структурно
-      // парные ru/en — bsl-context их так и отдаёт).
-      var enName = template.bilingualName().en();
-      var enPlaceholders = enName.isEmpty() ? List.<Placeholder>of() : ContextNames.placeholders(enName);
-      var ruIndex = ruPlaceholders.indexOf(ruMatch);
-      var enMatch = ruIndex >= 0 && ruIndex < enPlaceholders.size() ? enPlaceholders.get(ruIndex) : null;
-      for (var value : memberExpansions.get(ruMatch.name())) {
-        result.add(materializeGenericMember(template, ruMatch, enMatch, value, typeBindings));
+      if (template.generic()) {
+        expandTemplate(template, memberExpansions, typeBindings, result);
       }
     }
     return result;
+  }
+
+  private static void expandTemplate(MemberDescriptor template,
+                                     Map<String, List<String>> memberExpansions,
+                                     Map<String, String> typeBindings,
+                                     List<MemberDescriptor> sink) {
+    var ruName = template.bilingualName().primary();
+    var ruPlaceholders = ContextNames.placeholders(ruName);
+    var ruMatch = ruPlaceholders.stream()
+      .filter(p -> memberExpansions.containsKey(p.name()))
+      .findFirst()
+      .orElse(null);
+    if (ruMatch == null) {
+      return;
+    }
+    // en-сторона имени имеет placeholder'ы в том же порядке (структурно
+    // парные ru/en — bsl-context их так и отдаёт).
+    var enName = template.bilingualName().en();
+    var enPlaceholders = enName.isEmpty() ? List.<Placeholder>of() : ContextNames.placeholders(enName);
+    var ruIndex = ruPlaceholders.indexOf(ruMatch);
+    var enMatch = ruIndex >= 0 && ruIndex < enPlaceholders.size() ? enPlaceholders.get(ruIndex) : null;
+    for (var value : memberExpansions.get(ruMatch.name())) {
+      sink.add(materializeGenericMember(template, ruMatch, enMatch, value, typeBindings));
+    }
   }
 
   /**

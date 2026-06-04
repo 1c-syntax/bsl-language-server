@@ -121,6 +121,10 @@ import org.jspecify.annotations.Nullable;
 @RequiredArgsConstructor
 public class MetadataCollectionSpecializer {
 
+  private final TypeRegistry typeRegistry;
+  private final BslContextHolder bslContextHolder;
+  private final ServerContextProvider serverContextProvider;
+
   private static final String BASE_COLLECTION_METADATA = "КоллекцияОбъектовМетаданных";
   private static final String BASE_COLLECTION_STD_ATTR = "ОписанияСтандартныхРеквизитов";
   private static final String BASE_COLLECTION_PROPERTY_VALUE = "КоллекцияЗначенийСвойстваОбъектаМетаданных";
@@ -510,42 +514,38 @@ public class MetadataCollectionSpecializer {
   }
 
   /** Измерения регистра (InformationRegister/AccumulationRegister/AccountingRegister/CalculationRegister). */
-  static List<? extends MD> registerDimensions(MD md) {
+  static List<MD> registerDimensions(MD md) {
     if (md instanceof InformationRegister r) {
-      return r.getDimensions();
+      return r.getDimensions().stream().map(MD.class::cast).toList();
     }
     if (md instanceof AccumulationRegister r) {
-      return r.getDimensions();
+      return r.getDimensions().stream().map(MD.class::cast).toList();
     }
     if (md instanceof AccountingRegister r) {
-      return r.getDimensions();
+      return r.getDimensions().stream().map(MD.class::cast).toList();
     }
     if (md instanceof CalculationRegister r) {
-      return r.getDimensions();
+      return r.getDimensions().stream().map(MD.class::cast).toList();
     }
     return List.of();
   }
 
   /** Ресурсы регистра. */
-  static List<? extends MD> registerResources(MD md) {
+  static List<MD> registerResources(MD md) {
     if (md instanceof InformationRegister r) {
-      return r.getResources();
+      return r.getResources().stream().map(MD.class::cast).toList();
     }
     if (md instanceof AccumulationRegister r) {
-      return r.getResources();
+      return r.getResources().stream().map(MD.class::cast).toList();
     }
     if (md instanceof AccountingRegister r) {
-      return r.getResources();
+      return r.getResources().stream().map(MD.class::cast).toList();
     }
     if (md instanceof CalculationRegister r) {
-      return r.getResources();
+      return r.getResources().stream().map(MD.class::cast).toList();
     }
     return List.of();
   }
-
-  private final TypeRegistry typeRegistry;
-  private final BslContextHolder bslContextHolder;
-  private final ServerContextProvider serverContextProvider;
 
   public void specialize() {
     var providerOpt = bslContextHolder.get();

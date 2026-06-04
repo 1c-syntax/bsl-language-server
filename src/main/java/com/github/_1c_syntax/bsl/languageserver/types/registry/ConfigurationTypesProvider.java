@@ -54,6 +54,7 @@ import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 import com.github._1c_syntax.bsl.mdo.support.TemplateType;
 import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.MultiName;
 import com.github._1c_syntax.bsl.types.ValueType;
 import com.github._1c_syntax.bsl.types.value.PrimitiveValueType;
 import lombok.RequiredArgsConstructor;
@@ -161,109 +162,14 @@ public class ConfigurationTypesProvider {
   }
 
   private void register(Iterable<MD> children) {
-    int count = 0;
     Map<MDOType, List<MemberDescriptor>> collectionMembersByType = new HashMap<>();
 
-    // Все общие реквизиты конфигурации — нужны при регистрации объектных/ссылочных
-    // обёрток MD: подмешиваем те, что включены для конкретного MDObject'а.
-    var commonAttributes = new ArrayList<CommonAttribute>();
+    var commonAttributes = collectCommonAttributes(children);
+    int count = 0;
     for (var md : children) {
-      if (md instanceof CommonAttribute ca) {
-        commonAttributes.add(ca);
+      if (processMdoChild(md, commonAttributes, collectionMembersByType)) {
+        count++;
       }
-    }
-
-    for (var md : children) {
-      var mdoType = md.getMdoType();
-      if (!MANAGER_TYPES.contains(mdoType)) {
-        continue;
-      }
-      var groupRu = mdoType.fullGroupName().getRu();
-      var groupEn = mdoType.fullGroupName().getEn();
-      var name = md.getName();
-      if (name.isBlank()) {
-        continue;
-      }
-
-      // Каноническая регистрация — менеджер-обёртка (например, СправочникМенеджер.Контрагенты).
-      // На неё же навешивает методы ConfigurationModuleMembersProvider при разборе ManagerModule.bsl,
-      // т.е. чейн `Справочники.Контрагенты.МетодМенеджера` резолвится через единый TypeRef.
-      // Если у MDOType нет «коротко-именованной» формы (fullName), то используем групповую форму как основу.
-      var fullName = mdoType.fullName();
-      String managerRu;
-      String managerEn;
-      if (!fullName.getRu().isBlank()) {
-        managerRu = fullName.getRu() + "Менеджер." + name;
-        var fullEn = fullName.getEn();
-        managerEn = fullEn.isBlank() ? null : (fullEn + "Manager." + name);
-      } else {
-        managerRu = groupRu + "." + name;
-        managerEn = groupEn.equals(groupRu) ? null : (groupEn + "." + name);
-      }
-
-      var ref = typeRegistry.registerConfigurationType(managerRu);
-      if (managerEn != null && !managerEn.equals(managerRu)) {
-        typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
-      }
-      typeRegistry.registerDisplayName(ref,
-        BilingualString.of(managerRu, managerEn == null ? managerRu : managerEn));
-
-      // Объектный/ссылочный типы и табличные части — только для объектных MD
-      // (registerObjectAndRefTypes отсеивает прочие по OBJECT_TYPES).
-      registerObjectAndRefTypes(md, mdoType, name, fullName, commonAttributes);
-
-      // Платформенные members generic-семейства (Менеджер/Ссылка/Объект/Выборка/
-      // Список/НаборЗаписей/КлючЗаписи/…) для конкретного MD-имени. Резолв ленивый.
-      if (!fullName.getRu().isBlank()) {
-        registerFamilySpecializations(fullName.getRu(), name);
-      }
-
-      // Производные типы, чьё qualifiedName не начинается с familyCore родителя
-      // (ПВР-табчасти базовых/ведущих/вытесняющих видов расчёта, перерасчёты
-      // регистра расчёта). Специализация по родителю — отдельный проход.
-      registerDerivedSpecializations(md, name);
-
-      // Графы журнала документов — конкретные members на типе ЖурналДокументов.<имя>
-      // (HBK-плейсхолдера на уровне графы нет, регистрируем напрямую из mdclasses).
-      if (md instanceof DocumentJournal journal && !fullName.getRu().isBlank()) {
-        registerDocumentJournalColumnMembers(journal, fullName.getRu(), name);
-      }
-
-      // Значения перечисления — материализация generic-property <Имя значения>
-      // на ПеречислениеМенеджер.<Имя перечисления> из конфигурационных данных
-      // mdclasses. Каждое значение наследует от HBK-template'а accessMode/
-      // availabilities/sinceVersion и специализированный returnType.
-      if (md instanceof Enum anEnum && !fullName.getRu().isBlank()) {
-        registerEnumValueExpansion(ref, fullName.getRu(), name, anEnum);
-      }
-
-      // Измерения/ресурсы/реквизиты регистра — материализация generic-property
-      // <Имя измерения>/<Имя ресурса>/<Имя реквизита> на типе записи регистра
-      // (РегистрСведенийЗапись.<Имя> и аналоги Накопления/Бухгалтерии/Расчёта).
-      var registerChildren = registerChildrenOf(md);
-      if (registerChildren != null && !fullName.getRu().isBlank()) {
-        registerRegisterRecordExpansion(fullName.getRu(), name, registerChildren);
-      }
-
-      // Дополнительные алиасы «коллекция.Имя» для совместимости и для случаев,
-      // когда пользователь обращается напрямую (например, Hover на `Справочники.Контрагенты`).
-      var collectionAliasRu = groupRu + "." + name;
-      if (!collectionAliasRu.equals(managerRu)) {
-        typeRegistry.registerConfigurationTypeAlias(collectionAliasRu, ref);
-      }
-      globalScopeProvider.registerConfigurationQualifiedName(collectionAliasRu);
-      if (!groupEn.equals(groupRu)) {
-        var collectionAliasEn = groupEn + "." + name;
-        if (!collectionAliasEn.equals(managerRu) && !collectionAliasEn.equals(managerEn)) {
-          typeRegistry.registerConfigurationTypeAlias(collectionAliasEn, ref);
-        }
-        globalScopeProvider.registerConfigurationQualifiedName(collectionAliasEn);
-      }
-
-      collectionMembersByType
-        .computeIfAbsent(mdoType, k -> new ArrayList<>())
-        .add(MemberDescriptor.property(name, ref));
-      count++;
     }
 
     int collections = registerCollectionNamespaces(collectionMembersByType);
@@ -283,6 +189,101 @@ public class ConfigurationTypesProvider {
     metadataCollectionSpecializer.specialize();
 
     LOGGER.debug("Configuration types registered: {}, collection global properties: {}", count, collections);
+  }
+
+  private static List<CommonAttribute> collectCommonAttributes(Iterable<MD> children) {
+    var commonAttributes = new ArrayList<CommonAttribute>();
+    for (var md : children) {
+      if (md instanceof CommonAttribute ca) {
+        commonAttributes.add(ca);
+      }
+    }
+    return commonAttributes;
+  }
+
+  /**
+   * Обработка одного MD-объекта в {@link #register}: регистрация менеджера,
+   * объектных/ссылочных типов, family-специализаций, expansion'ов для
+   * Enum/Journal/регистров, алиасов и member'а для namespace.
+   *
+   * @return {@code true} если MD относится к {@link #MANAGER_TYPES} и был зарегистрирован.
+   */
+  private boolean processMdoChild(MD md, List<CommonAttribute> commonAttributes,
+                                  Map<MDOType, List<MemberDescriptor>> collectionMembersByType) {
+    var mdoType = md.getMdoType();
+    if (!MANAGER_TYPES.contains(mdoType)) {
+      return false;
+    }
+    var name = md.getName();
+    if (name.isBlank()) {
+      return false;
+    }
+    var groupRu = mdoType.fullGroupName().getRu();
+    var groupEn = mdoType.fullGroupName().getEn();
+    var fullName = mdoType.fullName();
+    var managerNames = managerNamesFor(fullName, groupRu, groupEn, name);
+    var ref = typeRegistry.registerConfigurationType(managerNames.ru());
+    if (managerNames.en() != null && !managerNames.en().equals(managerNames.ru())) {
+      typeRegistry.registerConfigurationTypeAlias(managerNames.en(), ref);
+    }
+    typeRegistry.registerDisplayName(ref,
+      BilingualString.of(managerNames.ru(),
+        managerNames.en() == null ? managerNames.ru() : managerNames.en()));
+
+    registerObjectAndRefTypes(md, mdoType, name, fullName, commonAttributes);
+    if (!fullName.getRu().isBlank()) {
+      registerFamilySpecializations(fullName.getRu(), name);
+    }
+    registerDerivedSpecializations(md, name);
+    if (md instanceof DocumentJournal journal && !fullName.getRu().isBlank()) {
+      registerDocumentJournalColumnMembers(journal, fullName.getRu(), name);
+    }
+    if (md instanceof Enum anEnum && !fullName.getRu().isBlank()) {
+      registerEnumValueExpansion(ref, fullName.getRu(), name, anEnum);
+    }
+    var registerChildren = registerChildrenOf(md);
+    if (registerChildren != null && !fullName.getRu().isBlank()) {
+      registerRegisterRecordExpansion(fullName.getRu(), name, registerChildren);
+    }
+
+    registerCollectionAliases(ref, managerNames, groupRu, groupEn, name);
+
+    collectionMembersByType
+      .computeIfAbsent(mdoType, k -> new ArrayList<>())
+      .add(MemberDescriptor.property(name, ref));
+    return true;
+  }
+
+  private record ManagerNames(String ru, @Nullable String en) {
+  }
+
+  private static ManagerNames managerNamesFor(MultiName fullName,
+                                              String groupRu, String groupEn, String name) {
+    if (!fullName.getRu().isBlank()) {
+      var ru = fullName.getRu() + "Менеджер." + name;
+      var fullEn = fullName.getEn();
+      var en = fullEn.isBlank() ? null : (fullEn + "Manager." + name);
+      return new ManagerNames(ru, en);
+    }
+    var ru = groupRu + "." + name;
+    var en = groupEn.equals(groupRu) ? null : (groupEn + "." + name);
+    return new ManagerNames(ru, en);
+  }
+
+  private void registerCollectionAliases(TypeRef ref, ManagerNames managerNames,
+                                         String groupRu, String groupEn, String name) {
+    var collectionAliasRu = groupRu + "." + name;
+    if (!collectionAliasRu.equals(managerNames.ru())) {
+      typeRegistry.registerConfigurationTypeAlias(collectionAliasRu, ref);
+    }
+    globalScopeProvider.registerConfigurationQualifiedName(collectionAliasRu);
+    if (!groupEn.equals(groupRu)) {
+      var collectionAliasEn = groupEn + "." + name;
+      if (!collectionAliasEn.equals(managerNames.ru()) && !collectionAliasEn.equals(managerNames.en())) {
+        typeRegistry.registerConfigurationTypeAlias(collectionAliasEn, ref);
+      }
+      globalScopeProvider.registerConfigurationQualifiedName(collectionAliasEn);
+    }
   }
 
   /**
@@ -338,7 +339,7 @@ public class ConfigurationTypesProvider {
   private void registerObjectAndRefTypes(MD md,
                                          MDOType mdoType,
                                          String name,
-                                         com.github._1c_syntax.bsl.types.MultiName fullName,
+                                         MultiName fullName,
                                          List<CommonAttribute> commonAttributes) {
     if (!OBJECT_TYPES.contains(mdoType)) {
       return;
@@ -905,7 +906,7 @@ public class ConfigurationTypesProvider {
 
   /**
    * Двуязычное имя реквизита. Стандартные реквизиты (Дата/Номер/Ссылка/...)
-   * хранят оба написания в {@link com.github._1c_syntax.bsl.types.MultiName} —
+   * хранят оба написания в {@link MultiName} —
    * собираем {@link BilingualString} ровно из этой пары, чтобы:
    * <ul>
    *   <li>{@code MemberDescriptor.matches(name)} находил член по любому
