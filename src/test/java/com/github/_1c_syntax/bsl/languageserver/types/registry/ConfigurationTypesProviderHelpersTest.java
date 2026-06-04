@@ -411,6 +411,26 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_withCommonAttribute_buildsApplicableMembers() {
+    var common = com.github._1c_syntax.bsl.mdo.CommonAttribute.builder()
+      .name("Организация").build();
+    var doc = Document.builder().name("ПродажиТоваров")
+      .attribute(ObjectAttribute.builder().name("Контрагент").build()).build();
+    var children = new java.util.LinkedHashMap<com.github._1c_syntax.bsl.types.MdoReference, MD>();
+    children.put(common.getMdoReference(), common);
+    children.put(doc.getMdoReference(), doc);
+    runTryRegister(
+      "file:///test-common-attr/",
+      registry -> registry,
+      List.of(),
+      children,
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ДокументМенеджер.ПродажиТоваров")).isPresent();
+      });
+  }
+
+  @Test
   void tryRegister_withChartOfAccountsAndExtDimensionFlag_runs() {
     var flag = ExtDimensionAccountingFlag.builder()
       .name("Валютный").build();
