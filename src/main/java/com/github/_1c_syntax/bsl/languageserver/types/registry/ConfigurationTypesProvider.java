@@ -123,6 +123,7 @@ public class ConfigurationTypesProvider {
   private final GlobalScopeProvider globalScopeProvider;
   private final LanguageServerConfiguration configuration;
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
+  private final ConfigurationGenericExpander genericExpander;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
 
@@ -270,11 +271,11 @@ public class ConfigurationTypesProvider {
     // Внешние источники данных — multi-placeholder type-level специализация
     // по иерархии конфигурации: источник → куб/таблица → измерение/таблица
     // измерения.
-    registerExternalDataSourceSpecializations(children);
+    genericExpander.registerExternalDataSourceSpecializations(children);
 
     // Общие библиотеки (макеты СКД, стили) — global property с generic-property
     // `<Имя макета>`/`<Имя стиля>`, материализуются именами из Configuration.
-    registerCommonLibraryExpansions();
+    genericExpander.registerCommonLibraryExpansions();
 
     // Метаданные.<коллекция>.<имя> и вложенные коллекции (Реквизиты/ТабличныеЧасти/…):
     // specialization КоллекцияОбъектовМетаданных по per-property element-type
@@ -733,90 +734,6 @@ public class ConfigurationTypesProvider {
     }
   }
 
-  /**
-   * Multi-placeholder type-level специализация для семейства внешних
-   * источников данных. Идёт по иерархии конфигурации:
-   * источник → куб/таблица → таблица измерения/измерение, и на каждом уровне
-   * вызывает {@link #registerFamilySpecializations(String, Map)} с расширенным
-   * binding'ом. {@code registerFamilySpecializations} сам фильтрует generic'и
-   * по полному покрытию placeholder'ов — лишние binding'и не мешают.
-   */
-  private void registerExternalDataSourceSpecializations(Iterable<MD> children) {
-    for (var md : children) {
-      if (!(md instanceof ExternalDataSource eds)) {
-        continue;
-      }
-      var edsName = eds.getName();
-      if (edsName.isBlank()) {
-        continue;
-      }
-      registerExternalDataSourceSpecialization(eds, edsName);
-    }
-  }
-
-  private void registerExternalDataSourceSpecialization(ExternalDataSource eds, String edsName) {
-    var familyCore = "ВнешнийИсточникДанных";
-    var sourceBindings = externalSourceBindings(edsName);
-    // Уровень источника: ВнешнийИсточникДанных.<имя> и аналоги.
-    registerFamilySpecializations(familyCore, sourceBindings);
-
-    // Таблицы (не под кубом).
-    for (var table : eds.getTables()) {
-      var tableName = table.getName();
-      if (tableName.isBlank()) {
-        continue;
-      }
-      var bindings = new LinkedHashMap<>(sourceBindings);
-      bindings.put("Имя таблицы", tableName);
-      bindings.put("Имя таблицы внешнего источника данных", tableName);
-      registerFamilySpecializations(familyCore, bindings);
-    }
-
-    // Кубы и вложенные в них таблицы измерения + измерения.
-    for (var cube : eds.getCubes()) {
-      var cubeName = cube.getName();
-      if (cubeName.isBlank()) {
-        continue;
-      }
-      var cubeBindings = new LinkedHashMap<>(sourceBindings);
-      cubeBindings.put("Имя куба", cubeName);
-      registerFamilySpecializations(familyCore, cubeBindings);
-
-      for (var dimTable : cube.getDimensionTables()) {
-        var dimTableName = dimTable.getName();
-        if (dimTableName.isBlank()) {
-          continue;
-        }
-        var b = new LinkedHashMap<>(cubeBindings);
-        b.put("Имя таблицы", dimTableName);
-        b.put("Имя таблицы внешнего источника данных", dimTableName);
-        registerFamilySpecializations(familyCore, b);
-      }
-      for (var dim : cube.getDimensions()) {
-        var dimName = dim.getName();
-        if (dimName.isBlank()) {
-          continue;
-        }
-        var b = new LinkedHashMap<>(cubeBindings);
-        b.put("Имя измерения", dimName);
-        registerFamilySpecializations(familyCore, b);
-      }
-    }
-  }
-
-  /**
-   * Binding'и для placeholder'ов имени источника. Разные generic'и используют
-   * либо {@code «Имя внешнего источника»}, либо {@code «Имя внешнего источника
-   * данных»} — кладём оба, multi-вариант {@link #registerFamilySpecializations}
-   * сам отфильтрует по фактическим placeholder'ам каждого generic'а.
-   */
-  private static Map<String, String> externalSourceBindings(String edsName) {
-    var b = new LinkedHashMap<String, String>();
-    b.put("Имя внешнего источника", edsName);
-    b.put("Имя внешнего источника данных", edsName);
-    return b;
-  }
-
   /** Кладёт в expansion-map имена непустых атрибутов под ключом-placeholder'ом. */
   static void putAttributeNames(Map<String, List<String>> sink, String placeholder,
                                 List<? extends Attribute> attributes) {
@@ -827,103 +744,6 @@ public class ConfigurationTypesProvider {
     if (!names.isEmpty()) {
       sink.put(placeholder, names);
     }
-  }
-
-  /**
-   * Разворачивает generic-property у global-types «общих библиотек» конфигурации:
-   * {@code БиблиотекаМакетовОформленияКомпоновкиДанных.<Имя макета>} — общие макеты
-   * с типом {@link TemplateType#DATA_COMPOSITION_APPEARANCE_TEMPLATE} (остальные
-   * общие макеты — табличные, текстовые, бинарные и т.п. — в эту библиотеку не
-   * входят); {@code БиблиотекаСтилей.<Имя стиля>} — {@code Configuration.getStyles()};
-   * {@code БиблиотекаКартинок.<Имя картинки>} — {@code Configuration.getCommonPictures()}.
-   */
-  private void registerCommonLibraryExpansions() {
-    var cf = currentConfiguration();
-    if (cf == null) {
-      return;
-    }
-    registerCommonLibraryExpansion(typeRegistry,
-      "БиблиотекаМакетовОформленияКомпоновкиДанных",
-      namesOf(appearanceTemplatesOf(cf)));
-    registerCommonLibraryExpansion(typeRegistry,
-      "БиблиотекаСтилей", namesOf(cf.getStyles()));
-    registerCommonLibraryExpansion(typeRegistry,
-      "БиблиотекаКартинок", namesOf(cf.getCommonPictures()));
-  }
-
-  /**
-   * Общие макеты, относящиеся к набору {@code БиблиотекаМакетовОформленияКомпоновкиДанных}:
-   * фильтр по {@link TemplateType#DATA_COMPOSITION_APPEARANCE_TEMPLATE} —
-   * остальные типы общих макетов (табличные, текстовые, бинарные и т.п.) в эту
-   * библиотеку не входят. Вынесено отдельно для прямой проверки в тестах.
-   */
-  static List<MDObject> appearanceTemplatesOf(CF configuration) {
-    return configuration.getCommonTemplates().stream()
-      .filter(t -> t.getTemplateType() == TemplateType.DATA_COMPOSITION_APPEARANCE_TEMPLATE)
-      .map(MDObject.class::cast)
-      .toList();
-  }
-
-  /**
-   * Материализует generic-template'ы у global-type «общей библиотеки» в
-   * конкретные имена из конфигурации. См.
-   * {@link #registerCommonLibraryExpansions()} для контекста.
-   * <p>
-   * No-op: если {@code childNames} пуст, в реестре нет такого типа, у него нет
-   * generic-template'а среди членов либо snapshot пуст.
-   */
-  static void registerCommonLibraryExpansion(TypeRegistry typeRegistry, String typeName,
-                                             List<String> childNames) {
-    if (childNames.isEmpty()) {
-      return;
-    }
-    var ref = typeRegistry.resolve(typeName).orElse(null);
-    if (ref == null) {
-      return;
-    }
-    var placeholder = memberPlaceholderName(typeRegistry, ref);
-    if (placeholder.isBlank()) {
-      return;
-    }
-    var snapshot = typeRegistry.expandedMembers(ref, Map.of(),
-      Map.of(placeholder, childNames));
-    if (snapshot.isEmpty()) {
-      return;
-    }
-    MemberSource source = () -> snapshot;
-    typeRegistry.registerMemberSource(ref, source, LanguageScope.BSL);
-  }
-
-  /** package-private для теста. */
-  static <T extends MDObject> List<String> namesOf(List<? extends T> items) {
-    if (items.isEmpty()) {
-      return List.of();
-    }
-    var result = new ArrayList<String>(items.size());
-    for (var it : items) {
-      var name = it.getName();
-      if (!name.isBlank()) {
-        result.add(name);
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  @Nullable
-  private CF currentConfiguration() {
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      return null;
-    }
-    var ctx = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (ctx == null) {
-      return null;
-    }
-    var c = ctx.getConfiguration();
-    if (c.isEmpty()) {
-      return null;
-    }
-    return c;
   }
 
   /** Backward-compat alias для не-static вызовов. */

@@ -72,7 +72,7 @@ class RegisterCommonLibraryExpansionTest {
     var pictureRef = registry.intern(TypeKind.PLATFORM, "Картинка");
     seedGenericTemplate("БиблиотекаКартинок", "Имя картинки", "Icon name", pictureRef);
 
-    ConfigurationTypesProvider.registerCommonLibraryExpansion(
+    ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаКартинок", List.of("ОбщаяКартинка1", "ОбщаяКартинка2"));
 
     var libRef = registry.resolve("БиблиотекаКартинок").orElseThrow();
@@ -89,7 +89,7 @@ class RegisterCommonLibraryExpansionTest {
     var pictureRef = registry.intern(TypeKind.PLATFORM, "Картинка");
     seedGenericTemplate("БиблиотекаКартинок", "Имя картинки", "Icon name", pictureRef);
 
-    ConfigurationTypesProvider.registerCommonLibraryExpansion(
+    ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаКартинок", List.of("MyPic"));
 
     var libRef = registry.resolve("БиблиотекаКартинок").orElseThrow();
@@ -106,7 +106,7 @@ class RegisterCommonLibraryExpansionTest {
     seedGenericTemplate("БиблиотекаСтилей", "Имя стиля", "Style name",
       registry.intern(TypeKind.PLATFORM, "Стиль"));
 
-    ConfigurationTypesProvider.registerCommonLibraryExpansion(
+    ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаСтилей", List.of());
 
     var libRef = registry.resolve("БиблиотекаСтилей").orElseThrow();
@@ -119,7 +119,7 @@ class RegisterCommonLibraryExpansionTest {
   @Test
   void typeMissingFromRegistry_isNoOp() {
     // ни до seed, ни после — типа нет.
-    ConfigurationTypesProvider.registerCommonLibraryExpansion(
+    ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "НеСуществующаяБиблиотека", List.of("X", "Y"));
     assertThat(registry.resolve("НеСуществующаяБиблиотека")).isEmpty();
   }
@@ -139,7 +139,7 @@ class RegisterCommonLibraryExpansionTest {
     var cfg = Mockito.mock(CF.class);
     Mockito.when(cfg.getCommonTemplates()).thenReturn(List.of(dcsl, spreadsheet));
 
-    var filtered = ConfigurationTypesProvider.appearanceTemplatesOf(cfg);
+    var filtered = ConfigurationGenericExpander.appearanceTemplatesOf(cfg);
     assertThat(filtered).extracting(MDObject::getName).containsExactly("Светлый");
   }
 
@@ -147,13 +147,13 @@ class RegisterCommonLibraryExpansionTest {
   void namesOf_skipsBlankNames() {
     var withName = Style.builder().name("Темный").build();
     var withBlank = Style.builder().name("").build();
-    assertThat(ConfigurationTypesProvider.namesOf(List.of(withName, withBlank)))
+    assertThat(ConfigurationGenericExpander.namesOf(List.of(withName, withBlank)))
       .containsExactly("Темный");
   }
 
   @Test
   void namesOf_emptyList_returnsEmpty() {
-    assertThat(ConfigurationTypesProvider.namesOf(List.<Style>of()))
+    assertThat(ConfigurationGenericExpander.namesOf(List.<Style>of()))
       .isEmpty();
   }
 
@@ -166,7 +166,7 @@ class RegisterCommonLibraryExpansionTest {
       registry.intern(TypeKind.PLATFORM, "Строка"));
     registry.registerMemberSource(libRef, () -> List.of(plain), LanguageScope.BSL);
 
-    ConfigurationTypesProvider.registerCommonLibraryExpansion(
+    ConfigurationGenericExpander.registerCommonLibraryExpansion(
       registry, "БиблиотекаБезШаблона", List.of("X"));
 
     assertThat(registry.getMembers(libRef))
