@@ -49,8 +49,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -63,7 +61,7 @@ import java.util.Optional;
  * {@link ExpressionTypeInferencer}/{@link TypeRegistry}.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class TypeService {
 

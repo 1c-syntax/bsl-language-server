@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ThreadLocal-хранилище текущего workspace URI и имени.
- * Используется {@link WorkspaceScope} для определения ключа scope,
+ * Используется {@link WorkspaceBeanScope} для определения ключа scope,
  * а также для именования потоков в per-workspace ForkJoinPool.
  * <p>
  * URI должен быть нормализован вызывающим кодом перед передачей в {@code set()}.

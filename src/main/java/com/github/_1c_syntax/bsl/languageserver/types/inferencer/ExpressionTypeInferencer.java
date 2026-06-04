@@ -64,8 +64,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -90,7 +88,7 @@ import java.util.function.Predicate;
  * накапливает finder'ы из всего проекта (variable, method, module и т.д.).
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class ExpressionTypeInferencer {
 

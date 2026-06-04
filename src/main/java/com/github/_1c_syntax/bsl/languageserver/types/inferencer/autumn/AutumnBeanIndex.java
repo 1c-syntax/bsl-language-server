@@ -37,8 +37,6 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -79,7 +77,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * {@code AnnotationRepository}.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class AutumnBeanIndex {
 

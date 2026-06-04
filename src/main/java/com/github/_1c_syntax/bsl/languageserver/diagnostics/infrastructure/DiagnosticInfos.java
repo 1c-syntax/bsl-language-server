@@ -29,8 +29,6 @@ import com.github._1c_syntax.utils.StringInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -41,7 +39,7 @@ import java.util.stream.Collectors;
  * Per-workspace collection of DiagnosticInfo instances.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 @RequiredArgsConstructor
 public class DiagnosticInfos {
 
