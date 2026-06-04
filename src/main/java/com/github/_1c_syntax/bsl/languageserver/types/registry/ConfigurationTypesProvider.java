@@ -523,25 +523,14 @@ public class ConfigurationTypesProvider {
   /**
    * Регистрирует специализации ВСЕХ зарегистрированных дженериков семейства
    * (с qualifiedName, начинающимся с {@code familyCore}) для конкретного
-   * MD-имени.
-   * <p>
-   * Имена placeholder'ов берутся структурно из
-   * {@link TypeRegistry#getTypeParameters(TypeRef)} — это пробросом из
-   * {@code Context.typeParameters()} bsl-context'а. На LS-уровне больше
-   * нет ручного парсинга угловых скобок.
+   * MD-имени. Single-placeholder обёртка: подставляет {@code mdName} во все
+   * generic'и семейства с ровно одним placeholder'ом. Делегирует expander'у.
    * <p>
    * Покрывает всё семейство одним проходом: для Catalog это
    * {@code СправочникСсылка.<Имя>}, {@code СправочникОбъект.<Имя>},
    * {@code СправочникМенеджер.<Имя>}, {@code СправочникВыборка.<Имя>},
    * {@code СправочникСписок.<Имя>} и любые другие, которые HBK заведёт в
-   * будущем. ManagerRef/ObjectRef/RefRef, зарегистрированные ранее с уже
-   * навешанным кастомным MemberSource'ом (атрибуты и общие реквизиты),
-   * получают ДОПОЛНИТЕЛЬНЫЙ MemberSource для платформенных members. Два
-   * источника на типе работают штатно — getMembers объединяет.
-   */
-  /**
-   * Single-placeholder обёртка: подставляет {@code mdName} во все generic'и
-   * семейства, у которых ровно один placeholder. Делегирует expander'у.
+   * будущем.
    */
   private void registerFamilySpecializations(String familyCore, String mdName) {
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
