@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
@@ -37,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Ключ scope — workspace URI из {@link WorkspaceContextHolder}.
  * Если workspace URI не установлен, выбрасывается исключение.
  */
+@Slf4j
 public class WorkspaceBeanScope implements Scope {
 
   public static final String SCOPE_NAME = "workspace";
@@ -76,6 +78,12 @@ public class WorkspaceBeanScope implements Scope {
   @Override
   public @Nullable Object remove(String name) {
     var key = resolveKey();
+    // Контракт Scope.remove: вместе с бином снимаем и его destruction callback,
+    // иначе он останется в карте и повторно выполнится при removeWorkspace().
+    var callbacks = destructionCallbacks.get(key);
+    if (callbacks != null) {
+      callbacks.remove(name);
+    }
     var beans = store.get(key);
     return beans != null ? beans.remove(name) : null;
   }
@@ -103,7 +111,15 @@ public class WorkspaceBeanScope implements Scope {
   public void removeWorkspace(URI workspaceUri) {
     var callbacks = destructionCallbacks.remove(workspaceUri);
     if (callbacks != null) {
-      callbacks.values().forEach(Runnable::run);
+      // Каждый callback изолируем: падение одного не должно срывать остальные
+      // и последующую очистку store (иначе workspace-scoped бины протекают между запусками/тестами).
+      callbacks.forEach((name, callback) -> {
+        try {
+          callback.run();
+        } catch (RuntimeException e) {
+          LOGGER.warn("Destruction callback for bean '{}' in workspace {} failed", name, workspaceUri, e);
+        }
+      });
     }
     store.remove(workspaceUri);
   }
