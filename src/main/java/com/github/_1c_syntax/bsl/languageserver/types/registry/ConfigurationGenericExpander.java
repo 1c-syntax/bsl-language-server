@@ -56,6 +56,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ConfigurationGenericExpander {
 
+  private static final List<String> EDS_FAMILY_CORES = List.of(
+    "ВнешнийИсточникДанных", "ExternalDataSource");
+
   private final TypeRegistry typeRegistry;
   private final ServerContextProvider serverContextProvider;
 
@@ -72,9 +75,6 @@ public class ConfigurationGenericExpander {
       }
     }
   }
-
-  private static final List<String> EDS_FAMILY_CORES = List.of(
-    "ВнешнийИсточникДанных", "ExternalDataSource");
 
   private void registerExternalDataSourceSpecialization(ExternalDataSource eds) {
     var sourceBindings = externalSourceBindings(eds.getName());

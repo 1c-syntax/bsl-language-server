@@ -40,7 +40,6 @@ import com.github._1c_syntax.bsl.mdo.TemplateOwner;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.types.registry.MetadataCollectionSpecializer.ChildName;
-import static com.github._1c_syntax.bsl.languageserver.types.registry.MetadataCollectionSpecializer.customAttributeNames;
 import static com.github._1c_syntax.bsl.languageserver.types.registry.MetadataCollectionSpecializer.mdoReferenceNames;
 import static com.github._1c_syntax.bsl.languageserver.types.registry.MetadataCollectionSpecializer.singleLingualMdNames;
 import static com.github._1c_syntax.bsl.languageserver.types.registry.MetadataCollectionSpecializer.tabularSectionEntries;
@@ -56,7 +55,9 @@ final class MetadataChildrenExtractor {
   }
 
   static List<ChildName> attributesFor(MD md) {
-    return md instanceof AttributeOwner ao ? customAttributeNames(ao.getAllAttributes()) : List.of();
+    return md instanceof AttributeOwner ao
+      ? MetadataCollectionSpecializer.customAttributeNames(ao.getAllAttributes())
+      : List.of();
   }
 
   static List<ChildName> tabularSectionsFor(MD md) {
