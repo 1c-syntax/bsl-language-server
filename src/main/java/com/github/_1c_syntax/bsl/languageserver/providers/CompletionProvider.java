@@ -282,9 +282,10 @@ public final class CompletionProvider {
       return List.of();
     }
 
+    var scriptVariant = documentContext.getScriptVariantLanguage();
     var members = new LinkedHashMap<String, MemberDescriptor>();
     for (TypeRef ref : typeSet.refs()) {
-      for (var member : typeService.getMembers(ref, fileType)) {
+      for (var member : typeService.getCompletionMembers(ref, fileType, scriptVariant)) {
         members.putIfAbsent(member.name(), member);
       }
       // Декларированные ключи «открытого» объекта данных (Структура из
@@ -301,10 +302,8 @@ public final class CompletionProvider {
     }
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
-    var scriptVariant = documentContext.getScriptVariantLanguage();
     var filtered = members.values().stream()
       .filter(m -> matches(m.displayName(scriptVariant), prefix))
-      .filter(m -> !isForeignLocaleDeprecatedAlias(m, scriptVariant))
       .toList();
     return toCompletionItems(filtered, scriptVariant);
   }
@@ -316,20 +315,6 @@ public final class CompletionProvider {
   private static boolean isMemberDeprecated(MemberDescriptor member) {
     return !member.metadata().deprecatedSinceVersion().isEmpty()
       || member.getSymbolDescription().isDeprecated();
-  }
-
-  /**
-   * Устаревший член, чьё имя относится к «другой» локали, не должен попадать в
-   * автодополнение текущего скрипт-варианта. В OneScript {@code [DeprecatedName]}
-   * даёт единственное (как правило, английское) написание без русской пары —
-   * например {@code HTTPЗапрос.GetBodyAsBinary}. В ru-локали его быть не должно:
-   * там доступно актуальное русское имя ({@code ПолучитьТелоКакДвоичныеДанные}).
-   * Неустаревшие нейтральные имена (значения перечислений {@code ANSI}/{@code MD5})
-   * под фильтр не попадают — он срабатывает только для устаревших членов.
-   */
-  private static boolean isForeignLocaleDeprecatedAlias(MemberDescriptor member, Language scriptVariant) {
-    return isMemberDeprecated(member)
-      && !isInConfiguredLanguage(member.displayName(scriptVariant), scriptVariant);
   }
 
   @Nullable
@@ -464,6 +449,9 @@ public final class CompletionProvider {
         var item = new CompletionItem(method.getName());
         item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
+        if (method.isDeprecated()) {
+          markDeprecatedItem(item);
+        }
         items.add(item);
       }
     }
@@ -608,16 +596,22 @@ public final class CompletionProvider {
     return item;
   }
 
+  /** Помечает item устаревшим, если устарел его {@code member}. */
+  private void markDeprecated(CompletionItem item, MemberDescriptor member) {
+    if (isMemberDeprecated(member)) {
+      markDeprecatedItem(item);
+    }
+  }
+
   /**
    * Помечает completion item устаревшим: при поддержке клиентом тегов —
    * {@link CompletionItemTag#Deprecated}, иначе legacy-флагом
    * {@link CompletionItem#setDeprecated}. Клиент рисует такой пункт
-   * зачёркнутым.
+   * зачёркнутым. Применяется ко всем устаревшим членам автодополнения —
+   * платформенным, глобальным функциям, членам конфигурации и
+   * пользовательским методам oscript-классов.
    */
-  private void markDeprecated(CompletionItem item, MemberDescriptor member) {
-    if (!isMemberDeprecated(member)) {
-      return;
-    }
+  private void markDeprecatedItem(CompletionItem item) {
     if (deprecatedTagSupport) {
       item.setTags(List.of(CompletionItemTag.Deprecated));
     } else {

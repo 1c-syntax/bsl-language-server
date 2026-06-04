@@ -180,6 +180,52 @@ public class TypeService {
   }
 
   /**
+   * Члены типа для автодополнения в конкретной локали скрипта.
+   * <p>
+   * В отличие от {@link #getMembers(TypeRef, FileType)} (служит резолву имён и
+   * выводу типов — там матч идёт по обоим написаниям), здесь отсекаются
+   * устаревшие члены, у которых нет написания в запрошенной локали. Это
+   * платформенные {@code [DeprecatedName]}-алиасы OneScript, существующие
+   * только в одной локали (например {@code HTTPЗапрос.GetBodyAsBinary} — только
+   * англоязычный): в ru-локали предлагать его не нужно, там есть актуальное
+   * русское имя. Резолв такого имени для диагностики устаревания при этом
+   * сохраняется — {@link #getMembers(TypeRef, FileType)} его по-прежнему отдаёт.
+   *
+   * @param typeRef  тип, чьи члены нужны.
+   * @param fileType тип файла-потребителя (BSL/OS).
+   * @param language локаль скрипта (ru/en) для отбора написаний.
+   * @return члены, пригодные к показу в автодополнении данной локали.
+   */
+  public Collection<MemberDescriptor> getCompletionMembers(TypeRef typeRef, FileType fileType, Language language) {
+    var members = getMembers(typeRef, fileType);
+    if (members.isEmpty()) {
+      return members;
+    }
+    var result = new ArrayList<MemberDescriptor>(members.size());
+    for (var member : members) {
+      if (!isDeprecatedAliasOfOtherLocale(member, language)) {
+        result.add(member);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Устаревший член, у которого отсутствует написание в локали {@code language}
+   * (нет ru-имени в ru-локали либо en-имени в en-локали). Неустаревшие члены
+   * (в т.ч. нейтральные имена значений перечислений — {@code ANSI}, {@code MD5})
+   * под условие не попадают.
+   */
+  private static boolean isDeprecatedAliasOfOtherLocale(MemberDescriptor member, Language language) {
+    if (member.metadata().deprecatedSinceVersion().isEmpty()) {
+      return false;
+    }
+    var name = member.bilingualName();
+    var localizedName = language == Language.EN ? name.en() : name.ru();
+    return localizedName.isEmpty();
+  }
+
+  /**
    * Описание типа (текст для hover). Фильтрует описания по скоупу языка (BSL/OS) —
    * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
    *

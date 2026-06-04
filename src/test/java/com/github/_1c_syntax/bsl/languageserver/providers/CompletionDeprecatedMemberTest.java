@@ -84,6 +84,24 @@ class CompletionDeprecatedMemberTest extends AbstractServerContextAwareTest {
     assertThat(labels).doesNotContain("EnvironmentVariables");
   }
 
+  @Test
+  void deprecatedLocalMethodIsMarkedInCompletion() {
+    // #4006-follow-up: устаревшие пользовательские методы (помеченные
+    // doc-комментарием) тоже должны получать тег deprecated в автокомплите.
+    var content = "// Устарела. Используйте Актуальную.\n"
+      + "Процедура Старая() Экспорт\nКонецПроцедуры\n\n"
+      + "Процедура Актуальная() Экспорт\n\tСтар\nКонецПроцедуры";
+    var items = itemsAt(content, content.indexOf("\tСтар") + 5);
+
+    var old = items.stream()
+      .filter(it -> "Старая".equals(it.getLabel()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(isMarkedDeprecated(old))
+      .as("устаревший пользовательский метод помечается deprecated")
+      .isTrue();
+  }
+
   private static boolean isMarkedDeprecated(CompletionItem item) {
     return (item.getTags() != null && item.getTags().contains(CompletionItemTag.Deprecated))
       || Boolean.TRUE.equals(item.getDeprecated());
