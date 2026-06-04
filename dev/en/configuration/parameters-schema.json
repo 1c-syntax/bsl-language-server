@@ -326,6 +326,16 @@
             },
             "$id": "#/definitions/CommonModuleNameWords"
         },
+        "CommonModuleVariables": {
+            "description": "Variables declaration in common module",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Variables declaration in common module",
+            "$id": "#/definitions/CommonModuleVariables"
+        },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
             "default": true,
