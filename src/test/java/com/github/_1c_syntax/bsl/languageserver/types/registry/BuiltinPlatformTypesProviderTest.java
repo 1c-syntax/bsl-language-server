@@ -257,6 +257,44 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   @Test
+  void oscriptObjectPropertiesCarryReturnType() {
+    // Регрессия на #4006: свойства объектов OneScript должны нести тип, иначе
+    // вывод типов даёт Unknown и пропадают подсказки. Заголовки у HTTPЗапрос —
+    // это Соответствие; тип берётся из исходников OneScript-движка.
+    var httpRequest = oscriptType("HTTPЗапрос");
+
+    var headers = member(httpRequest, "Заголовки");
+    assertThat(headers.matches("Headers")).as("ru/en-пара свойства склеена").isTrue();
+    assertThat(typeNames(headers.returnTypes()))
+      .as("Заголовки имеют тип Соответствие")
+      .containsExactly("Соответствие");
+
+    var resourceAddress = member(httpRequest, "АдресРесурса");
+    assertThat(typeNames(resourceAddress.returnTypes()))
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void oscriptObjectMethodReturnTypesAreSpecific() {
+    // Регрессия на #4006: возвращаемые значения методов объектов OneScript
+    // не должны теряться. ПолучитьТелоКакПоток возвращает Поток.
+    var httpRequest = oscriptType("HTTPЗапрос");
+
+    var getBodyAsStream = member(httpRequest, "ПолучитьТелоКакПоток");
+    assertThat(typeNames(getBodyAsStream.returnTypes()))
+      .containsExactly("Поток");
+  }
+
+  private static TypePackProvider.TypeDecl oscriptType(String name) {
+    return BuiltinPlatformTypesProvider.loadFromResource(
+        "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json")
+      .stream()
+      .filter(td -> name.equals(td.name().primary()))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  @Test
   void primitiveTypesHaveNoConstructors() {
     // given
     when(holder.get()).thenReturn(Optional.empty());
