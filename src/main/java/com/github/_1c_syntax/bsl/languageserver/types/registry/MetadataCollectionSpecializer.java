@@ -237,11 +237,60 @@ public class MetadataCollectionSpecializer {
    */
   private static final Predicate<MD> ANY = md -> true;
 
+  private static List<ChildName> attributesFor(MD md) {
+    return md instanceof AttributeOwner ao ? customAttributeNames(ao.getAllAttributes()) : List.of();
+  }
+
+  private static List<ChildName> tabularSectionsFor(MD md) {
+    return md instanceof TabularSectionOwner ts ? tabularSectionEntries(ts.getTabularSections()) : List.of();
+  }
+
+  private static List<ChildName> formsFor(MD md) {
+    return md instanceof FormOwner fo ? singleLingualMdNames(fo.getForms()) : List.of();
+  }
+
+  private static List<ChildName> templatesFor(MD md) {
+    return md instanceof TemplateOwner to ? singleLingualMdNames(to.getTemplates()) : List.of();
+  }
+
+  private static List<ChildName> commandsFor(MD md) {
+    return md instanceof CommandOwner co ? singleLingualMdNames(co.getCommands()) : List.of();
+  }
+
+  private static List<ChildName> recalculationsFor(MD md) {
+    return md instanceof CalculationRegister cr ? singleLingualMdNames(cr.getRecalculations()) : List.of();
+  }
+
+  private static List<ChildName> journalColumnsFor(MD md) {
+    return md instanceof DocumentJournal dj ? singleLingualMdNames(dj.getColumns()) : List.of();
+  }
+
+  private static List<ChildName> enumValuesFor(MD md) {
+    return md instanceof Enum e ? singleLingualMdNames(e.getEnumValues()) : List.of();
+  }
+
+  private static List<ChildName> accountingFlagsFor(MD md) {
+    return md instanceof ChartOfAccounts coa ? singleLingualMdNames(coa.getAccountingFlags()) : List.of();
+  }
+
+  private static List<ChildName> extDimensionAccountingFlagsFor(MD md) {
+    return md instanceof ChartOfAccounts coa
+      ? singleLingualMdNames(coa.getExtDimensionAccountingFlags()) : List.of();
+  }
+
+  private static List<ChildName> addressingAttributesFor(MD md) {
+    return md instanceof Task t ? singleLingualMdNames(t.getAddressingAttributes()) : List.of();
+  }
+
+  private static List<ChildName> registerRecordsFor(MD md) {
+    return md instanceof Document doc ? mdoReferenceNames(doc.getRegisterRecords()) : List.of();
+  }
+
   static final List<CollectionSpec> COLLECTIONS = List.of(
     new CollectionSpec("Реквизиты", "Attributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Реквизит",
       AttributeOwner.class::isInstance,
-      md -> md instanceof AttributeOwner ao ? customAttributeNames(ao.getAllAttributes()) : List.of()),
+      MetadataCollectionSpecializer::attributesFor),
     new CollectionSpec("СтандартныеРеквизиты", "StandardAttributes",
       BASE_COLLECTION_STD_ATTR, "ОписаниеСтандартногоРеквизита",
       MetadataCollectionSpecializer::hasStandardAttributes,
@@ -249,19 +298,19 @@ public class MetadataCollectionSpecializer {
     new CollectionSpec("ТабличныеЧасти", "TabularSections",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ТабличнаяЧасть",
       TabularSectionOwner.class::isInstance,
-      md -> md instanceof TabularSectionOwner ts ? tabularSectionEntries(ts.getTabularSections()) : List.of()),
+      MetadataCollectionSpecializer::tabularSectionsFor),
     new CollectionSpec("Формы", "Forms",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Форма",
       FormOwner.class::isInstance,
-      md -> md instanceof FormOwner fo ? singleLingualMdNames(fo.getForms()) : List.of()),
+      MetadataCollectionSpecializer::formsFor),
     new CollectionSpec("Макеты", "Templates",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Макет",
       TemplateOwner.class::isInstance,
-      md -> md instanceof TemplateOwner to ? singleLingualMdNames(to.getTemplates()) : List.of()),
+      MetadataCollectionSpecializer::templatesFor),
     new CollectionSpec("Команды", "Commands",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Команда",
       CommandOwner.class::isInstance,
-      md -> md instanceof CommandOwner co ? singleLingualMdNames(co.getCommands()) : List.of()),
+      MetadataCollectionSpecializer::commandsFor),
     new CollectionSpec("Измерения", "Dimensions",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Измерение",
       MetadataCollectionSpecializer::isRegister,
@@ -273,32 +322,31 @@ public class MetadataCollectionSpecializer {
     new CollectionSpec("Перерасчеты", "Recalculations",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Перерасчет",
       CalculationRegister.class::isInstance,
-      md -> md instanceof CalculationRegister cr ? singleLingualMdNames(cr.getRecalculations()) : List.of()),
+      MetadataCollectionSpecializer::recalculationsFor),
     new CollectionSpec("Графы", "Columns",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Графа",
       DocumentJournal.class::isInstance,
-      md -> md instanceof DocumentJournal dj ? singleLingualMdNames(dj.getColumns()) : List.of()),
+      MetadataCollectionSpecializer::journalColumnsFor),
     new CollectionSpec("ЗначенияПеречисления", "EnumValues",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ЗначениеПеречисления",
       Enum.class::isInstance,
-      md -> md instanceof Enum e ? singleLingualMdNames(e.getEnumValues()) : List.of()),
+      MetadataCollectionSpecializer::enumValuesFor),
     new CollectionSpec("ПризнакиУчета", "AccountingFlags",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ПризнакУчетаПланаСчетов",
       ChartOfAccounts.class::isInstance,
-      md -> md instanceof ChartOfAccounts coa ? singleLingualMdNames(coa.getAccountingFlags()) : List.of()),
+      MetadataCollectionSpecializer::accountingFlagsFor),
     new CollectionSpec("ПризнакиУчетаСубконто", "ExtDimensionAccountingFlags",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: ПризнакУчетаСубконтоПланаСчетов",
       ChartOfAccounts.class::isInstance,
-      md -> md instanceof ChartOfAccounts coa
-        ? singleLingualMdNames(coa.getExtDimensionAccountingFlags()) : List.of()),
+      MetadataCollectionSpecializer::extDimensionAccountingFlagsFor),
     new CollectionSpec("РеквизитыАдресации", "AddressingAttributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: РеквизитАдресации",
       Task.class::isInstance,
-      md -> md instanceof Task t ? singleLingualMdNames(t.getAddressingAttributes()) : List.of()),
+      MetadataCollectionSpecializer::addressingAttributesFor),
     new CollectionSpec("Реквизиты адресации", "AddressingAttributes",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: РеквизитАдресации",
       Task.class::isInstance,
-      md -> md instanceof Task t ? singleLingualMdNames(t.getAddressingAttributes()) : List.of()),
+      MetadataCollectionSpecializer::addressingAttributesFor),
     // Коллекции, для которых mdclasses-API нет — returnType chain специализируется
     // (Получить/Найти возвращают конкретный element-type), но имена не разворачиваются.
     new CollectionSpec("Подсистемы", "Subsystems",
@@ -332,8 +380,7 @@ public class MetadataCollectionSpecializer {
     new CollectionSpec("Движения", "RegisterRecords",
       BASE_COLLECTION_PROPERTY_VALUE, "ЗначениеСвойстваОбъектаМетаданных",
       Document.class::isInstance,
-      md -> md instanceof Document doc
-        ? mdoReferenceNames(doc.getRegisterRecords()) : List.of()),
+      MetadataCollectionSpecializer::registerRecordsFor),
 
     // ВводитсяНаОсновании — типы, на основании которых вводится объект.
     // В mdclasses нет удобного getter'а — оставляем только returnType chain.
