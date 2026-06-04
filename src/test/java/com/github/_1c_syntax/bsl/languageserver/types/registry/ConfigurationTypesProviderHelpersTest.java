@@ -327,7 +327,10 @@ class ConfigurationTypesProviderHelpersTest {
       registry -> registry,
       List.of(makeGenericTypeDecl("ПеречислениеМенеджер.<Имя перечисления>", "Имя перечисления")),
       makeEnumChildren("ВидыКонтрагента", "Юридическое", "Физическое"),
-      (registry, p) -> p.tryRegister());
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ПеречислениеМенеджер.ВидыКонтрагента")).isPresent();
+      });
   }
 
   @Test
@@ -338,7 +341,10 @@ class ConfigurationTypesProviderHelpersTest {
       registry -> registry,
       List.of(makeGenericTypeDecl("ЖурналДокументов.<Имя журнала документов>", "Имя журнала документов")),
       java.util.Map.of(journal.getMdoReference(), (MD) journal),
-      (registry, p) -> p.tryRegister());
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ЖурналДокументовМенеджер.ОбщийЖурнал")).isPresent();
+      });
   }
 
   @Test
@@ -349,7 +355,10 @@ class ConfigurationTypesProviderHelpersTest {
       registry -> registry,
       List.of(makeGenericTypeDecl("РегистрСведенийЗапись.<Имя регистра сведений>", "Имя регистра сведений")),
       java.util.Map.of(reg.getMdoReference(), (MD) reg),
-      (registry, p) -> p.tryRegister());
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("РегистрСведенийМенеджер.Курсы")).isPresent();
+      });
   }
 
   @Test
@@ -360,7 +369,10 @@ class ConfigurationTypesProviderHelpersTest {
       registry -> registry,
       List.of(),
       java.util.Map.of(reg.getMdoReference(), (MD) reg),
-      (registry, p) -> p.tryRegister());
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("РегистрРасчетаМенеджер.Начисления")).isPresent();
+      });
   }
 
   private static TypePackProvider.TypeDecl makeGenericTypeDecl(String qualifiedRu, String placeholder) {
