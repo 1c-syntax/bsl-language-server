@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ConfigurationType;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformType;
 import com.github._1c_syntax.bsl.languageserver.types.model.PrimitiveType;
 import com.github._1c_syntax.bsl.languageserver.types.model.Type;
@@ -43,6 +44,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.UnknownType;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.bsl.context.api.ContextNames;
+import com.github._1c_syntax.bsl.context.api.Placeholder;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -61,6 +64,7 @@ import java.util.Map;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -367,12 +371,11 @@ public class TypeRegistry {
     if (sources.isEmpty()) {
       return List.of();
     }
-    // sources — Collections.synchronizedList (см. registerMemberSource): снимок под
-    // synchronized на самом списке, иначе при конкурентной регистрации возможен CME.
-    List<ScopedMemberSource> snapshot;
-    synchronized (sources) {
-      snapshot = List.copyOf(sources);
-    }
+    // Snapshot: список source'ов может модифицироваться параллельно через
+    // registerMemberSource/registerMemberOverride (Phase B/C MetadataCollectionSpecializer
+    // и др. workspace-scoped провайдеры). sources — CopyOnWriteArrayList,
+    // снимок через List.copyOf дёшев и стабилен на время итерации.
+    List<ScopedMemberSource> snapshot = List.copyOf(sources);
     var byName = new LinkedHashMap<String, MemberDescriptor>();
     for (var scoped : snapshot) {
       if (fileType != null && scoped.scope() != null && !scoped.scope().matches(fileType)) {
@@ -431,9 +434,24 @@ public class TypeRegistry {
    */
   public void registerMemberSource(TypeRef ref, MemberSource source, LanguageScope scope) {
     var effective = scope;
-    memberSources.computeIfAbsent(ref, k -> Collections.synchronizedList(new ArrayList<>()))
+    memberSources.computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>())
       .add(new ScopedMemberSource(source, effective));
     membersEpoch.incrementAndGet();
+  }
+
+  /**
+   * Аналог {@link #registerMemberSource}, но вставляет источник в НАЧАЛО списка,
+   * чтобы при сборе членов через {@link #getMembers(TypeRef)} он выигрывал
+   * dedup ({@code putIfAbsent} по имени). Используется для override returnType
+   * у конкретного member'а уже зарегистрированного типа (например, подмена
+   * {@code ОбъектМетаданныхКонфигурация.Документы} с общего
+   * {@code КоллекцияОбъектовМетаданных} на специализированный
+   * {@code КоллекцияОбъектовМетаданных.Документы}). Базовый источник остаётся
+   * в реестре — другие members (Справочники, Перечисления, …) приходят оттуда.
+   */
+  public void registerMemberOverride(TypeRef ref, MemberSource source, LanguageScope scope) {
+    var list = memberSources.computeIfAbsent(ref, k -> new CopyOnWriteArrayList<>());
+    list.addFirst(new ScopedMemberSource(source, scope));
   }
 
   /**
@@ -533,6 +551,162 @@ public class TypeRegistry {
   }
 
   /**
+   * Регистрирует материализацию generic-членов специализированного типа из
+   * конфигурационно-зависимых данных. Для каждого generic-члена generic-типа,
+   * чьё bilingual-имя содержит placeholder из {@code memberExpansions.keySet()},
+   * порождается по одной материализованной копии на каждое значение из списка.
+   * <p>
+   * У материализованной копии:
+   * <ul>
+   *   <li>placeholder в ru- и en-имени заменён значением (en-сторона —
+   *       по позиции placeholder'а);</li>
+   *   <li>{@code generic = false};</li>
+   *   <li>{@code returnType} и сигнатуры специализированы объединёнными
+   *       {@code typeBindings ∪ {placeholder → value}};</li>
+   *   <li>описание, {@link PlatformMetadata} ({@code accessMode},
+   *       {@code availabilities}, {@code sinceVersion} …) — наследуются от
+   *       template'а из HBK.</li>
+   * </ul>
+   * <p>
+   * Используется для конфигурационно-зависимых детей, чьи имена платформа
+   * моделирует как member-level placeholder: значения перечислений
+   * ({@code <Имя значения>}), реквизиты/измерения/ресурсы регистров и т.п.
+   *
+   * @param specializedRef   специализированный тип-владелец
+   * @param genericRef       generic-источник (member-template'ы)
+   * @param typeBindings     type-level подстановки от родительской специализации
+   * @param memberExpansions placeholder → список конкретных имён (из mdclasses)
+   * @param scope            языковой скоуп
+   */
+  public void registerMemberExpansion(TypeRef specializedRef, TypeRef genericRef,
+                                      Map<String, String> typeBindings,
+                                      Map<String, List<String>> memberExpansions,
+                                      LanguageScope scope) {
+    if (memberExpansions.isEmpty()) {
+      return;
+    }
+    var safeTypeBindings = Map.copyOf(typeBindings);
+    var safeExpansions = deepCopyExpansions(memberExpansions);
+    MemberSource source = () -> {
+      var materialized = expandGenericMembers(genericRef, safeTypeBindings, safeExpansions);
+      // Индексируем как делает registerSpecialization: read-only/версионные
+      // members проверяются через memberMetadataIndex.
+      for (var member : materialized) {
+        memberMetadataIndex.index(specializedRef, member);
+      }
+      return materialized;
+    };
+    registerMemberSource(specializedRef, source, scope);
+  }
+
+  /**
+   * Глубокая копия expansion-карты: внешний {@link Map#copyOf} даёт immutable
+   * shell, но значения-{@link List} остаются исходными (caller может ими
+   * управлять). Зафиксировать снимок целиком — каждый список тоже копируем.
+   */
+  private static Map<String, List<String>> deepCopyExpansions(Map<String, List<String>> raw) {
+    var entries = raw.entrySet();
+    var copy = LinkedHashMap.<String, List<String>>newLinkedHashMap(entries.size());
+    for (var entry : entries) {
+      copy.put(entry.getKey(), List.copyOf(entry.getValue()));
+    }
+    return Map.copyOf(copy);
+  }
+
+  /**
+   * Снимок материализованных generic-членов: ленивая логика
+   * {@link #registerMemberExpansion} один раз, без регистрации источника.
+   * Нужен, когда specializedRef совпадает с genericRef (self-target expansion):
+   * ленивый источник в этой раскладке самозамыкается через {@link #getMembers}.
+   */
+  public List<MemberDescriptor> expandedMembers(TypeRef genericRef,
+                                                Map<String, String> typeBindings,
+                                                Map<String, List<String>> memberExpansions) {
+    if (memberExpansions.isEmpty()) {
+      return List.of();
+    }
+    var safeTypeBindings = Map.copyOf(typeBindings);
+    var safeExpansions = deepCopyExpansions(memberExpansions);
+    return expandGenericMembers(genericRef, safeTypeBindings, safeExpansions);
+  }
+
+  /**
+   * Разворачивает generic-членов {@code genericRef} в материализованные копии
+   * по {@code memberExpansions}. См. {@link #registerMemberExpansion}.
+   * <p>
+   * Информация о placeholder'ах в именах членов берётся структурно из
+   * bsl-context через {@link ContextNames#placeholders(String)} — парсинга
+   * угловых скобок в LS нет.
+   */
+  private List<MemberDescriptor> expandGenericMembers(TypeRef genericRef,
+                                                      Map<String, String> typeBindings,
+                                                      Map<String, List<String>> memberExpansions) {
+    var raw = getMembers(genericRef);
+    if (raw.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<MemberDescriptor>();
+    for (var template : raw) {
+      if (template.generic()) {
+        expandTemplate(template, memberExpansions, typeBindings, result);
+      }
+    }
+    return result;
+  }
+
+  private static void expandTemplate(MemberDescriptor template,
+                                     Map<String, List<String>> memberExpansions,
+                                     Map<String, String> typeBindings,
+                                     List<MemberDescriptor> sink) {
+    var ruName = template.bilingualName().primary();
+    var ruPlaceholders = ContextNames.placeholders(ruName);
+    var ruMatch = ruPlaceholders.stream()
+      .filter(p -> memberExpansions.containsKey(p.name()))
+      .findFirst()
+      .orElse(null);
+    if (ruMatch == null) {
+      return;
+    }
+    // en-сторона имени имеет placeholder'ы в том же порядке (структурно
+    // парные ru/en — bsl-context их так и отдаёт).
+    var enName = template.bilingualName().en();
+    var enPlaceholders = enName.isEmpty() ? List.<Placeholder>of() : ContextNames.placeholders(enName);
+    var ruIndex = ruPlaceholders.indexOf(ruMatch);
+    var enMatch = ruIndex >= 0 && ruIndex < enPlaceholders.size() ? enPlaceholders.get(ruIndex) : null;
+    for (var value : memberExpansions.get(ruMatch.name())) {
+      sink.add(materializeGenericMember(template, ruMatch, enMatch, value, typeBindings));
+    }
+  }
+
+  /**
+   * Материализует одну копию generic-template'а: подставляет {@code value}
+   * в placeholder ru/en-имени структурно (по позициям из bsl-context),
+   * специализирует {@code returnType} + сигнатуры объединённым набором
+   * bindings, снимает флаг {@code generic}.
+   */
+  private static MemberDescriptor materializeGenericMember(MemberDescriptor template,
+                                                           Placeholder ruPlaceholder,
+                                                           @Nullable Placeholder enPlaceholder,
+                                                           String value,
+                                                           Map<String, String> typeBindings) {
+    var ruName = template.bilingualName().primary();
+    var newRu = ruName.substring(0, ruPlaceholder.start()) + value + ruName.substring(ruPlaceholder.end());
+    var enName = template.bilingualName().en();
+    String newEn;
+    if (enPlaceholder != null && !enName.isEmpty()) {
+      newEn = enName.substring(0, enPlaceholder.start()) + value + enName.substring(enPlaceholder.end());
+    } else {
+      newEn = enName;
+    }
+    var combined = new HashMap<>(typeBindings);
+    combined.put(ruPlaceholder.name(), value);
+    return template
+      .specialize(combined)
+      .withBilingualName(BilingualString.of(newRu, newEn))
+      .withGeneric(false);
+  }
+
+  /**
    * Двуязычное отображаемое имя специализированного типа: ru-сторона — уже
    * структурно специализированный {@code specializedRef.qualifiedName()}
    * ({@code СправочникСсылка.Контрагенты}), en-сторона — подстановка того же
@@ -544,37 +718,34 @@ public class TypeRegistry {
    */
   private void registerSpecializedDisplayName(TypeRef specializedRef, TypeRef genericRef,
                                               Map<String, String> bindings) {
-    if (bindings.size() != 1) {
+    if (bindings.isEmpty()) {
       return;
     }
     var genericName = displayNames.get(genericRef);
     if (genericName == null || genericName.en().isEmpty()) {
       return;
     }
-    var value = bindings.values().iterator().next();
-    var en = specializeName(genericRef.kind(), genericName.en(), value);
+    // en-сторона имени имеет placeholder'ы в том же порядке, что и ru
+    // (bsl-context выдаёт их структурно по позициям). Сопоставляем
+    // ru-placeholder'ы из qualifiedName с en-placeholder'ами из en-display
+    // позиционно и строим en-bindings для подстановки.
+    var ruPlaceholders = genericRef.placeholders();
+    var enRef = new TypeRef(genericRef.kind(), genericName.en());
+    var enPlaceholders = enRef.placeholders();
+    if (ruPlaceholders.size() != enPlaceholders.size()) {
+      return;
+    }
+    var enBindings = HashMap.<String, String>newHashMap(enPlaceholders.size());
+    for (var i = 0; i < ruPlaceholders.size(); i++) {
+      var value = bindings.get(ruPlaceholders.get(i).name());
+      if (value == null) {
+        return;
+      }
+      enBindings.put(enPlaceholders.get(i).name(), value);
+    }
+    var en = TypeRef.specialize(enRef, enBindings).qualifiedName();
     displayNames.putIfAbsent(specializedRef,
       BilingualString.of(specializedRef.qualifiedName(), en));
-  }
-
-  /**
-   * Подставляет {@code value} вместо placeholder'ов в имени, используя их
-   * структурные позиции из bsl-context ({@link TypeRef#placeholders()} →
-   * {@code ContextNames.placeholders}). Парсинга угловых скобок на стороне LS
-   * нет. Имя placeholder'а в en-написании отличается от ru, поэтому bindings
-   * строятся по фактическим именам, а не по ключам исходного binding'а.
-   */
-  private static String specializeName(TypeKind kind, String name, String value) {
-    var ref = new TypeRef(kind, name);
-    var placeholders = ref.placeholders();
-    if (placeholders.isEmpty()) {
-      return name;
-    }
-    var bindings = HashMap.<String, String>newHashMap(placeholders.size());
-    for (var placeholder : placeholders) {
-      bindings.put(placeholder.name(), value);
-    }
-    return TypeRef.specialize(ref, bindings).qualifiedName();
   }
 
   /**
