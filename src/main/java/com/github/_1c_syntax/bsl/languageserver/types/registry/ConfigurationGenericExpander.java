@@ -171,6 +171,8 @@ public class ConfigurationGenericExpander {
     if (cf == null) {
       return;
     }
+    // resolve() работает по aliasIndex (ru+en синхронно), поэтому достаточно
+    // одного из имён — TypeRef один и тот же. Кладём ru как канон.
     registerCommonLibraryExpansion("БиблиотекаМакетовОформленияКомпоновкиДанных",
       namesOf(appearanceTemplatesOf(cf)));
     registerCommonLibraryExpansion("БиблиотекаСтилей", namesOf(cf.getStyles()));
