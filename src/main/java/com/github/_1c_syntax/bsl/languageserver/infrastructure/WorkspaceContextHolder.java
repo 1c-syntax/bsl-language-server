@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ThreadLocal-хранилище текущего workspace URI и имени.
- * Используется {@link WorkspaceScope} для определения ключа scope,
+ * Используется {@link WorkspaceBeanScope} для определения ключа scope,
  * а также для именования потоков в per-workspace ForkJoinPool.
  * <p>
  * URI должен быть нормализован вызывающим кодом перед передачей в {@code set()}.
@@ -169,13 +170,11 @@ public final class WorkspaceContextHolder {
     CURRENT_WORKSPACE_NAME.set(name);
   }
 
-  @Nullable
-  public static URI get() {
+  public static @Nullable URI get() {
     return CURRENT_WORKSPACE.get();
   }
 
-  @Nullable
-  public static String getName() {
+  public static @Nullable String getName() {
     return CURRENT_WORKSPACE_NAME.get();
   }
 
@@ -190,10 +189,8 @@ public final class WorkspaceContextHolder {
    * При закрытии восстанавливает предыдущее значение ThreadLocal.
    */
   public static final class WorkspaceContext implements AutoCloseable {
-    @Nullable
-    private final URI previousUri;
-    @Nullable
-    private final String previousName;
+    private final @Nullable URI previousUri;
+    private final @Nullable String previousName;
 
     private WorkspaceContext(@Nullable URI previousUri, @Nullable String previousName) {
       this.previousUri = previousUri;

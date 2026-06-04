@@ -23,8 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -42,7 +40,7 @@ import java.util.List;
  * {@code language-gating}, в этом провайдере не реализуется.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class BuiltinOScriptPlatformTypesProvider implements PlatformTypesProvider {
 
   private static final String RESOURCE_PATH =

@@ -1,4 +1,6 @@
 import org.apache.tools.ant.filters.EscapeUnicode
+import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.tasks.bundling.Jar
 import org.jreleaser.model.Active.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -21,7 +23,7 @@ plugins {
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.1"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.24.0"
-    id("org.sonarqube") version "7.3.0.8198"
+    id("org.sonarqube") version "7.3.1.8318"
     id("me.champeau.jmh") version "0.7.3"
     id("com.gorylenko.gradle-git-properties") version "4.0.1"
 }
@@ -211,7 +213,8 @@ afterEvaluate {
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
 
-    tasks.named("sourcesJar") {
+    tasks.named<Jar>("sourcesJar") {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
