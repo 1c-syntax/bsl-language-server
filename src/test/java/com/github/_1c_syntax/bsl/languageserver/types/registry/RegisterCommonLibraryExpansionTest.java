@@ -158,6 +158,23 @@ class RegisterCommonLibraryExpansionTest {
   }
 
   @Test
+  void genericTemplateWithoutPlaceholderInName_snapshotEmpty_isNoOp() {
+    // Generic-member есть, но в его имени НЕТ placeholder'а в брэкетах —
+    // expandTemplate выходит на ruMatch == null, snapshot пустой.
+    var libRef = registry.intern(TypeKind.PLATFORM, "БиблиотекаБезPlaceholder");
+    var generic = MemberDescriptor.genericProperty("ПростоеИмя",
+        registry.intern(TypeKind.PLATFORM, "Строка"), "");
+    registry.registerMemberSource(libRef, () -> List.of(generic), LanguageScope.BSL);
+
+    ConfigurationGenericExpander.registerCommonLibraryExpansion(
+      registry, "БиблиотекаБезPlaceholder", List.of("X"));
+
+    assertThat(registry.getMembers(libRef))
+      .extracting(MemberDescriptor::name)
+      .containsExactly("ПростоеИмя");
+  }
+
+  @Test
   void typeWithoutGenericTemplate_isNoOp() {
     // Тип в реестре зарегистрирован, но среди членов нет generic-template'а —
     // expansion не находит placeholder, ничего не добавляет.
