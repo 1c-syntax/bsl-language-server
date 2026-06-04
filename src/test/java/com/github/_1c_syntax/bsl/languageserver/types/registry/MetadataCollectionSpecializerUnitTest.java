@@ -460,6 +460,21 @@ class MetadataCollectionSpecializerUnitTest {
     Mockito.verify(configuration, Mockito.never()).getChildrenByMdoRef();
   }
 
+  @Test
+  void specialize_noServerContext_isNoOp() {
+    var registry = new TypeRegistry(List.of(),
+      Mockito.mock(GlobalScopeProvider.class),
+      Mockito.mock(MemberMetadataIndex.class));
+    var holder = Mockito.mock(BslContextHolder.class);
+    when(holder.get()).thenReturn(Optional.of(Mockito.mock(ContextProvider.class)));
+    var serverProvider = Mockito.mock(ServerContextProvider.class);
+    when(serverProvider.getAllContexts()).thenReturn(Map.of());
+    WorkspaceContextHolder.registerWorkspace(TEST_WORKSPACE, "test");
+    WorkspaceContextHolder.set(TEST_WORKSPACE);
+    new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
+    Mockito.verify(serverProvider).getAllContexts();
+  }
+
   private static ContextProvider mockProvider(String typeName, ContextProperty... properties) {
     return mockProvider(List.of(mockType(typeName, properties)));
   }
