@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780455402226,
+  "lastUpdate": 1780599595315,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36208,6 +36208,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 291.6104910764811",
             "extra": "mean: 1914.3496701717377 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "85c521afc2639c6add84c19a6eaf6a99772b7c44",
+          "message": "Merge pull request #3998 from 1c-syntax/copilot/update-bsl-parser-to-0350\n\nUpdating bsl-parser and adding semantic highlighting",
+          "timestamp": "2026-06-03T23:59:27+02:00",
+          "tree_id": "bc63be5f5d9a567f7dae6722ed72edf6e6bbf950",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/85c521afc2639c6add84c19a6eaf6a99772b7c44"
+        },
+        "date": 1780599587735,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 292.1244974931081,
+            "unit": "sec",
+            "range": "stddev: 9.67922589109337",
+            "extra": "mean: 292.1244974931081 sec\nrounds: 3"
           }
         ]
       }
