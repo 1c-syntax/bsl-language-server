@@ -180,13 +180,18 @@ public class BuiltinTypesJsonLoader {
         descriptor = descriptor.withMetadata(metadata);
       }
       // Двуязычные имена: опциональные JSON-поля `nameRu` и `nameEn`.
-      // Если задан только `nameEn`, в `nameRu` остаётся пусто, и
-      // `displayName(RU)` отдаст {@code name}. Если задан `nameRu` —
-      // используется явно; иначе `displayName(RU)` тоже падает на name.
+      // Явная одноязычность (задан только один из `nameRu`/`nameEn`) делает
+      // член применимым лишь к своей локали — так выражаются англоязычные
+      // [DeprecatedName]-алиасы OneScript без русской пары.
+      // Член без явной локализации (только `name`) считается нейтральным
+      // (значение перечисления вроде ANSI/MD5): оба слота заполняются именем,
+      // чтобы он был применим к обеим локалям.
       var nameRu = stringField(m, "nameRu");
       var nameEn = stringField(m, "nameEn");
       if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
         descriptor = descriptor.withLocalizedNames(nameRu, nameEn);
+      } else if (name != null && !name.isEmpty()) {
+        descriptor = descriptor.withLocalizedNames(name, name);
       }
       // Двуязычное описание: опциональные `descriptionRu`/`descriptionEn`.
       // Если заданы — приоритетнее моноязычного `description` (которое

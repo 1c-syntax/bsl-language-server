@@ -47,6 +47,7 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionItemTag;
+import org.eclipse.lsp4j.CompletionItemTagSupportCapabilities;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
@@ -108,9 +109,9 @@ public final class CompletionProvider {
       .orElse(Boolean.FALSE);
     deprecatedTagSupport = completionItem
       .map(CompletionItemCapabilities::getTagSupport)
-      .map(tagSupport -> tagSupport.getValueSet() != null
-        && tagSupport.getValueSet().contains(CompletionItemTag.Deprecated))
-      .orElse(Boolean.FALSE);
+      .map(CompletionItemTagSupportCapabilities::getValueSet)
+      .filter(valueSet -> valueSet.contains(CompletionItemTag.Deprecated))
+      .isPresent();
   }
 
   /**
@@ -285,7 +286,7 @@ public final class CompletionProvider {
     var scriptVariant = documentContext.getScriptVariantLanguage();
     var members = new LinkedHashMap<String, MemberDescriptor>();
     for (TypeRef ref : typeSet.refs()) {
-      for (var member : typeService.getCompletionMembers(ref, fileType, scriptVariant)) {
+      for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
         members.putIfAbsent(member.name(), member);
       }
       // Декларированные ключи «открытого» объекта данных (Структура из

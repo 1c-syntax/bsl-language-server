@@ -92,6 +92,16 @@ public record BilingualString(String ru, String en) {
   }
 
   /**
+   * Есть ли у строки написание в указанной локали. Используется для отбора
+   * применимости сущности (например, члена типа) к языку: двуязычные и
+   * нейтральные строки (оба слота заполнены) применимы к обеим локалям, а
+   * одноязычные (заполнен только один слот) — лишь к своей.
+   */
+  public boolean hasLanguage(Language language) {
+    return language == Language.EN ? !en.isEmpty() : !ru.isEmpty();
+  }
+
+  /**
    * Case-insensitive сравнение с {@code candidate} по обеим локалям.
    */
   public boolean matches(String candidate) {

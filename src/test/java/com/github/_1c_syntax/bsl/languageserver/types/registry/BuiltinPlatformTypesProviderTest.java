@@ -22,17 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
-import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,7 +35,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Тесты для {@link BuiltinPlatformTypesProvider}. JSON-фолбэк должен
- * отдавать типы только когда bsl-context недоступен.
+ * отдавать типы только когда bsl-context недоступен. Парсинг JSON покрыт
+ * отдельно в {@link BuiltinTypesJsonLoaderTest}.
  */
 @ExtendWith(MockitoExtension.class)
 class BuiltinPlatformTypesProviderTest {
@@ -154,112 +150,6 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   @Test
-  void oscriptBilingualMemberIsSingleBilingualMember() {
-    // Члены oscript-дампа двуязычны явными полями nameRu/nameEn (как в BSL-модели):
-    // Массив.Добавить/Add — один член, а не два моноязычных. Никакой склейки по
-    // порядку при загрузке нет.
-    var types = BuiltinTypesJsonLoader.load(
-      "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json");
-
-    var arrayDecl = types.stream()
-      .filter(td -> "Массив".equals(td.name().primary()))
-      .findFirst()
-      .orElseThrow();
-
-    var addMembers = arrayDecl.members().stream()
-      .filter(m -> m.matches("Добавить") || m.matches("Add"))
-      .toList();
-
-    assertThat(addMembers)
-      .as("Добавить/Add — один двуязычный член")
-      .hasSize(1);
-    var add = addMembers.get(0);
-    assertThat(add.matches("Добавить")).as("находится по русскому имени").isTrue();
-    assertThat(add.matches("Add")).as("находится по английскому имени").isTrue();
-    assertThat(add.displayName(Language.RU)).isEqualTo("Добавить");
-    assertThat(add.displayName(Language.EN)).isEqualTo("Add");
-  }
-
-  @Test
-  void asyncFlagIsReadFromJsonForMethods() {
-    var types = BuiltinTypesJsonLoader.load(
-      "com/github/_1c_syntax/bsl/languageserver/types/registry/async-method.json");
-    var typeDecl = types.stream()
-      .filter(td -> "ТипСАсинхМетодом".equals(td.name().primary()))
-      .findFirst()
-      .orElseThrow();
-
-    var asyncMethod = typeDecl.members().stream()
-      .filter(m -> m.matches("ИнициализироватьАсинх"))
-      .findFirst().orElseThrow();
-    assertThat(asyncMethod.async()).as("метод с \"async\": true помечается асинхронным").isTrue();
-
-    var plainMethod = typeDecl.members().stream()
-      .filter(m -> m.matches("Инициализировать"))
-      .findFirst().orElseThrow();
-    assertThat(plainMethod.async()).as("обычный метод не асинхронный").isFalse();
-  }
-
-  @Test
-  void oscriptObjectPropertiesCarryReturnType() {
-    // Регрессия на #4006: свойства объектов OneScript должны нести тип, иначе
-    // вывод типов даёт Unknown и пропадают подсказки. Заголовки у HTTPЗапрос —
-    // это Соответствие; тип берётся из исходников OneScript-движка.
-    var httpRequest = oscriptType("HTTPЗапрос");
-
-    var headers = member(httpRequest, "Заголовки");
-    assertThat(typeNames(headers.returnTypes()))
-      .as("Заголовки имеют тип Соответствие")
-      .containsExactly("Соответствие");
-
-    var resourceAddress = member(httpRequest, "АдресРесурса");
-    assertThat(typeNames(resourceAddress.returnTypes()))
-      .containsExactly("Строка");
-  }
-
-  @Test
-  void oscriptObjectPropertiesAreBilingualSingleMember() {
-    // #4006-follow-up: после простановки returnType ru/en-пара свойства всё
-    // ещё должна схлопываться в один двуязычный член (одинаковый returnType
-    // → совпадает s/fingerprint склейки). Иначе в ru-локали показались бы
-    // оба написания (Заголовки и Headers).
-    var httpRequest = oscriptType("HTTPЗапрос");
-
-    var headersMembers = httpRequest.members().stream()
-      .filter(m -> m.matches("Заголовки") || m.matches("Headers"))
-      .toList();
-
-    assertThat(headersMembers)
-      .as("Заголовки/Headers — ровно один двуязычный член")
-      .hasSize(1);
-    var headers = headersMembers.get(0);
-    assertThat(headers.displayName(Language.RU)).isEqualTo("Заголовки");
-    assertThat(headers.displayName(Language.EN)).isEqualTo("Headers");
-    assertThat(headers.matches("Заголовки")).isTrue();
-    assertThat(headers.matches("Headers")).isTrue();
-  }
-
-  @Test
-  void oscriptObjectMethodReturnTypesAreSpecific() {
-    // Регрессия на #4006: возвращаемые значения методов объектов OneScript
-    // не должны теряться. ПолучитьТелоКакПоток возвращает Поток.
-    var httpRequest = oscriptType("HTTPЗапрос");
-
-    var getBodyAsStream = member(httpRequest, "ПолучитьТелоКакПоток");
-    assertThat(typeNames(getBodyAsStream.returnTypes()))
-      .containsExactly("Поток");
-  }
-
-  private static TypePackProvider.TypeDecl oscriptType(String name) {
-    return BuiltinTypesJsonLoader.load(
-        "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json")
-      .stream()
-      .filter(td -> name.equals(td.name().primary()))
-      .findFirst()
-      .orElseThrow();
-  }
-
-  @Test
   void primitiveTypesHaveNoConstructors() {
     // given
     when(holder.get()).thenReturn(Optional.empty());
@@ -273,65 +163,5 @@ class BuiltinPlatformTypesProviderTest {
 
     // then
     assertThat(numberDecl.constructors()).isEmpty();
-  }
-
-  @Test
-  void parameterTypesAreLoadedFromBuiltinJson() {
-    // given
-    var structure = bslType("Структура");
-
-    // when — у метода Вставить(Ключ, Значение) параметры несут типы из HBK
-    var insert = member(structure, "Вставить");
-    var firstParam = insert.signatures().get(0).parameters().get(0);
-
-    // then
-    assertThat(firstParam.name()).isEqualTo("Ключ");
-    assertThat(typeNames(firstParam.types())).containsExactly("Строка");
-  }
-
-  @Test
-  void unionReturnTypesAreLoadedFromBuiltinJson() {
-    // given
-    var table = bslType("ТаблицаЗначений");
-
-    // when — Найти возвращает СтрокаТаблицыЗначений либо Неопределено
-    var find = member(table, "Найти");
-
-    // then
-    assertThat(typeNames(find.returnTypes()))
-      .containsExactlyInAnyOrder("СтрокаТаблицыЗначений", "Неопределено");
-  }
-
-  @Test
-  void constructorsWithParameterTypesAreEnrichedFromBuiltinJson() {
-    // given
-    var structure = bslType("Структура");
-
-    // when / then — конструкторы дозаполнены из HBK и несут типы параметров
-    assertThat(structure.constructors()).isNotEmpty();
-    var anyParamWithType = structure.constructors().stream()
-      .flatMap(c -> c.parameters().stream())
-      .anyMatch(p -> !p.types().isEmpty());
-    assertThat(anyParamWithType).isTrue();
-  }
-
-  private static TypePackProvider.TypeDecl bslType(String name) {
-    return BuiltinTypesJsonLoader.load(
-        "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json")
-      .stream()
-      .filter(td -> name.equals(td.name().primary()))
-      .findFirst()
-      .orElseThrow();
-  }
-
-  private static MemberDescriptor member(TypePackProvider.TypeDecl typeDecl, String name) {
-    return typeDecl.members().stream()
-      .filter(m -> m.matches(name))
-      .findFirst()
-      .orElseThrow();
-  }
-
-  private static List<String> typeNames(TypeSet types) {
-    return types.refs().stream().map(TypeRef::qualifiedName).toList();
   }
 }

@@ -54,24 +54,30 @@ class CompletionDeprecatedMemberTest extends AbstractServerContextAwareTest {
 
   @Test
   void httpRequestRuCompletionHidesEnglishDeprecatedAliasesAndDuplicateLatinNames() {
+    // given — обращение к члену HTTPЗапрос в ru-локали
     var content = "Запрос = Новый HTTPЗапрос(\"/api\");\nЗапрос.";
+
+    // when
     var labels = labelsAt(content, content.length());
 
-    // Канонические члены в русском написании присутствуют.
-    assertThat(labels).contains("Заголовки", "ПолучитьТелоКакДвоичныеДанные");
-    // Английская сторона двуязычного члена в ru-локали не дублируется.
-    assertThat(labels).doesNotContain("Headers", "GetBodyAsBinaryData");
-    // Устаревшие англоязычные алиасы [DeprecatedName] в ru-локали скрыты.
-    assertThat(labels).doesNotContain("GetBodyAsBinary", "SetBodyFromBinary");
+    // then — канонические члены в русском написании есть; английская сторона
+    // двуязычного члена не дублируется, устаревшие [DeprecatedName]-алиасы скрыты
+    assertThat(labels)
+      .contains("Заголовки", "ПолучитьТелоКакДвоичныеДанные")
+      .doesNotContain("Headers", "GetBodyAsBinaryData")
+      .doesNotContain("GetBodyAsBinary", "SetBodyFromBinary");
   }
 
   @Test
   void deprecatedRussianMemberIsMarkedAndEnglishCounterpartHidden() {
+    // given — обращение к члену СистемнаяИнформация в ru-локали
     var content = "СИ = Новый СистемнаяИнформация;\nСИ.";
+
+    // when
     var items = itemsAt(content, content.length());
     var labels = items.stream().map(CompletionItem::getLabel).toList();
 
-    // Русское устаревшее имя видно и помечено deprecated.
+    // then — русское устаревшее имя видно и помечено deprecated
     var envVars = items.stream()
       .filter(it -> "ПеременныеСреды".equals(it.getLabel()))
       .findFirst()
@@ -79,20 +85,24 @@ class CompletionDeprecatedMemberTest extends AbstractServerContextAwareTest {
     assertThat(isMarkedDeprecated(envVars))
       .as("устаревший член помечается deprecated-тегом/флагом")
       .isTrue();
-
-    // Англоязычное устаревшее написание в ru-локали скрыто.
-    assertThat(labels).doesNotContain("EnvironmentVariables");
+    // ...а англоязычное написание в ru-локали скрыто
+    assertThat(labels)
+      .contains("ПеременныеСреды")
+      .doesNotContain("EnvironmentVariables");
   }
 
   @Test
   void deprecatedLocalMethodIsMarkedInCompletion() {
-    // #4006-follow-up: устаревшие пользовательские методы (помеченные
-    // doc-комментарием) тоже должны получать тег deprecated в автокомплите.
+    // given — #4006-follow-up: устаревший пользовательский метод (помечен
+    // doc-комментарием) тоже должен получать тег deprecated в автокомплите
     var content = "// Устарела. Используйте Актуальную.\n"
       + "Процедура Старая() Экспорт\nКонецПроцедуры\n\n"
       + "Процедура Актуальная() Экспорт\n\tСтар\nКонецПроцедуры";
+
+    // when
     var items = itemsAt(content, content.indexOf("\tСтар") + 5);
 
+    // then
     var old = items.stream()
       .filter(it -> "Старая".equals(it.getLabel()))
       .findFirst()
