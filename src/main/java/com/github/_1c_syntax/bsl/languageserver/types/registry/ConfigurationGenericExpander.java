@@ -39,6 +39,7 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,10 +73,12 @@ public class ConfigurationGenericExpander {
     }
   }
 
+  private static final List<String> EDS_FAMILY_CORES = List.of(
+    "ВнешнийИсточникДанных", "ExternalDataSource");
+
   private void registerExternalDataSourceSpecialization(ExternalDataSource eds) {
-    var familyCore = "ВнешнийИсточникДанных";
     var sourceBindings = externalSourceBindings(eds.getName());
-    registerFamilySpecializations(familyCore, sourceBindings);
+    registerFamilySpecializations(EDS_FAMILY_CORES, sourceBindings);
 
     for (var table : eds.getTables()) {
       var tableName = table.getName();
@@ -84,7 +87,7 @@ public class ConfigurationGenericExpander {
       }
       var bindings = new LinkedHashMap<>(sourceBindings);
       putTableName(bindings, tableName);
-      registerFamilySpecializations(familyCore, bindings);
+      registerFamilySpecializations(EDS_FAMILY_CORES, bindings);
     }
 
     for (var cube : eds.getCubes()) {
@@ -92,16 +95,16 @@ public class ConfigurationGenericExpander {
       if (cubeName.isBlank()) {
         continue;
       }
-      registerCubeBindings(familyCore, sourceBindings, cube, cubeName);
+      registerCubeBindings(sourceBindings, cube, cubeName);
     }
   }
 
-  private void registerCubeBindings(String familyCore, Map<String, String> sourceBindings,
+  private void registerCubeBindings(Map<String, String> sourceBindings,
                                     com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube cube, String cubeName) {
     var cubeBindings = new LinkedHashMap<>(sourceBindings);
     cubeBindings.put("Имя куба", cubeName);
     cubeBindings.put("Cube name", cubeName);
-    registerFamilySpecializations(familyCore, cubeBindings);
+    registerFamilySpecializations(EDS_FAMILY_CORES, cubeBindings);
 
     for (var dimTable : cube.getDimensionTables()) {
       var dimTableName = dimTable.getName();
@@ -110,7 +113,7 @@ public class ConfigurationGenericExpander {
       }
       var b = new LinkedHashMap<>(cubeBindings);
       putTableName(b, dimTableName);
-      registerFamilySpecializations(familyCore, b);
+      registerFamilySpecializations(EDS_FAMILY_CORES, b);
     }
     for (var dim : cube.getDimensions()) {
       var dimName = dim.getName();
@@ -120,7 +123,13 @@ public class ConfigurationGenericExpander {
       var b = new LinkedHashMap<>(cubeBindings);
       b.put("Имя измерения", dimName);
       b.put("Dimension name", dimName);
-      registerFamilySpecializations(familyCore, b);
+      registerFamilySpecializations(EDS_FAMILY_CORES, b);
+    }
+  }
+
+  private void registerFamilySpecializations(Collection<String> familyCores, Map<String, String> bindings) {
+    for (var familyCore : familyCores) {
+      registerFamilySpecializations(familyCore, bindings);
     }
   }
 
