@@ -98,6 +98,9 @@
                 "CommonModuleNameWords": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameWords"
                 },
+                "CommonModuleVariables": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleVariables"
+                },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
                 },
