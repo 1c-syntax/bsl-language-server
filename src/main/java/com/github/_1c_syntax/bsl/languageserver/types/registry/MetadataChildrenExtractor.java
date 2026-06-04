@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.mdo.AccountingRegister;
-import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
 import com.github._1c_syntax.bsl.mdo.AttributeOwner;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
@@ -32,7 +30,6 @@ import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
 import com.github._1c_syntax.bsl.mdo.FormOwner;
-import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
@@ -173,37 +170,4 @@ final class MetadataChildrenExtractor {
     return md instanceof Document doc ? mdoReferenceNames(doc.getRegisterRecords()) : List.of();
   }
 
-  /** Измерения регистра (InformationRegister/AccumulationRegister/AccountingRegister/CalculationRegister). */
-  static List<MD> registerDimensions(MD md) {
-    if (md instanceof InformationRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccumulationRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccountingRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof CalculationRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    return List.of();
-  }
-
-  /** Ресурсы регистра. */
-  static List<MD> registerResources(MD md) {
-    if (md instanceof InformationRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccumulationRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccountingRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof CalculationRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    return List.of();
-  }
 }

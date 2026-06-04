@@ -628,61 +628,61 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void registerDimensions_informationRegister_returnsDelegated() {
     var ir = InformationRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerDimensions(ir)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerDimensions(ir)).isEmpty();
   }
 
   @Test
   void registerDimensions_accumulationRegister_returnsDelegated() {
     var ar = AccumulationRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerDimensions(ar)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerDimensions(ar)).isEmpty();
   }
 
   @Test
   void registerDimensions_accountingRegister_returnsDelegated() {
     var ar = AccountingRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerDimensions(ar)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerDimensions(ar)).isEmpty();
   }
 
   @Test
   void registerDimensions_calculationRegister_returnsDelegated() {
     var cr = CalculationRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerDimensions(cr)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerDimensions(cr)).isEmpty();
   }
 
   @Test
   void registerDimensions_notRegister_returnsEmpty() {
     MD doc = Document.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerDimensions(doc)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerDimensions(doc)).isEmpty();
   }
 
   @Test
   void registerResources_informationRegister_returnsDelegated() {
     var ir = InformationRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerResources(ir)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerResources(ir)).isEmpty();
   }
 
   @Test
   void registerResources_accumulationRegister_returnsDelegated() {
     var ar = AccumulationRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerResources(ar)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerResources(ar)).isEmpty();
   }
 
   @Test
   void registerResources_accountingRegister_returnsDelegated() {
     var ar = AccountingRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerResources(ar)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerResources(ar)).isEmpty();
   }
 
   @Test
   void registerResources_calculationRegister_returnsDelegated() {
     var cr = CalculationRegister.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerResources(cr)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerResources(cr)).isEmpty();
   }
 
   @Test
   void registerResources_notRegister_returnsEmpty() {
     MD doc = Document.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.registerResources(doc)).isEmpty();
+    assertThat(RegisterChildrenExtractor.registerResources(doc)).isEmpty();
   }
 
   // === ChildName factories ===
