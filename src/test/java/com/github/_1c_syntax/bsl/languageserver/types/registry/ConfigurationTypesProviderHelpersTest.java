@@ -460,6 +460,49 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_withBlankNameChild_skipsRegistration() {
+    var blankCatalog = Catalog.builder().name("").build();
+    runTryRegister(
+      "file:///test-blank-name/",
+      registry -> registry,
+      List.of(),
+      java.util.Map.of(blankCatalog.getMdoReference(), (MD) blankCatalog),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("СправочникМенеджер.")).isEmpty();
+      });
+  }
+
+  @Test
+  void tryRegister_withInformationRegisterNoGenericTemplate_earlyReturn() {
+    var reg = InformationRegister.builder().name("Курсы2").build();
+    runTryRegister(
+      "file:///test-inforeg-no-template/",
+      registry -> registry,
+      List.of(),
+      java.util.Map.of(reg.getMdoReference(), (MD) reg),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("РегистрСведенийМенеджер.Курсы2")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_withDocumentJournalNoGenericTemplate_earlyReturn() {
+    var journal = DocumentJournal.builder().name("ОбщийЖурнал2")
+      .column(DocumentJournalColumn.builder().name("X").build()).build();
+    runTryRegister(
+      "file:///test-journal-no-template/",
+      registry -> registry,
+      List.of(),
+      java.util.Map.of(journal.getMdoReference(), (MD) journal),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ЖурналДокументовМенеджер.ОбщийЖурнал2")).isPresent();
+      });
+  }
+
+  @Test
   void tryRegister_withChartOfAccountsAndExtDimensionFlag_runs() {
     var flag = ExtDimensionAccountingFlag.builder()
       .name("Валютный").build();
