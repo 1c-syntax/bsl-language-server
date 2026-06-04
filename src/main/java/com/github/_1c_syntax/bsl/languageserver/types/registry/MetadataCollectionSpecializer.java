@@ -38,11 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.mdo.AccountingRegister;
-import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
-import com.github._1c_syntax.bsl.mdo.CalculationRegister;
-import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.TabularSection;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
@@ -254,11 +250,11 @@ public class MetadataCollectionSpecializer {
     new CollectionSpec("Измерения", "Dimensions",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Измерение",
       MetadataChildrenExtractor::isRegister,
-      md -> singleLingualMdNames(registerDimensions(md))),
+      md -> singleLingualMdNames(MetadataChildrenExtractor.registerDimensions(md))),
     new CollectionSpec("Ресурсы", "Resources",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Ресурс",
       MetadataChildrenExtractor::isRegister,
-      md -> singleLingualMdNames(registerResources(md))),
+      md -> singleLingualMdNames(MetadataChildrenExtractor.registerResources(md))),
     new CollectionSpec("Перерасчеты", "Recalculations",
       BASE_COLLECTION_METADATA, "ОбъектМетаданных: Перерасчет",
       MetadataChildrenExtractor::isCalculationRegister,
@@ -495,39 +491,6 @@ public class MetadataCollectionSpecializer {
   }
 
   /** Измерения регистра (InformationRegister/AccumulationRegister/AccountingRegister/CalculationRegister). */
-  static List<MD> registerDimensions(MD md) {
-    if (md instanceof InformationRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccumulationRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccountingRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof CalculationRegister r) {
-      return r.getDimensions().stream().map(MD.class::cast).toList();
-    }
-    return List.of();
-  }
-
-  /** Ресурсы регистра. */
-  static List<MD> registerResources(MD md) {
-    if (md instanceof InformationRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccumulationRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof AccountingRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    if (md instanceof CalculationRegister r) {
-      return r.getResources().stream().map(MD.class::cast).toList();
-    }
-    return List.of();
-  }
-
   public void specialize() {
     var providerOpt = bslContextHolder.get();
     if (providerOpt.isEmpty()) {

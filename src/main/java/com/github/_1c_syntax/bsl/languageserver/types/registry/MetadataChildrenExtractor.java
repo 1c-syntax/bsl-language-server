@@ -155,4 +155,38 @@ final class MetadataChildrenExtractor {
   static boolean isDocument(MD md) {
     return md instanceof Document;
   }
+
+  /** Измерения регистра (InformationRegister/AccumulationRegister/AccountingRegister/CalculationRegister). */
+  static List<MD> registerDimensions(MD md) {
+    if (md instanceof InformationRegister r) {
+      return r.getDimensions().stream().map(MD.class::cast).toList();
+    }
+    if (md instanceof AccumulationRegister r) {
+      return r.getDimensions().stream().map(MD.class::cast).toList();
+    }
+    if (md instanceof AccountingRegister r) {
+      return r.getDimensions().stream().map(MD.class::cast).toList();
+    }
+    if (md instanceof CalculationRegister r) {
+      return r.getDimensions().stream().map(MD.class::cast).toList();
+    }
+    return List.of();
+  }
+
+  /** Ресурсы регистра. */
+  static List<MD> registerResources(MD md) {
+    if (md instanceof InformationRegister r) {
+      return r.getResources().stream().map(MD.class::cast).toList();
+    }
+    if (md instanceof AccumulationRegister r) {
+      return r.getResources().stream().map(MD.class::cast).toList();
+    }
+    if (md instanceof AccountingRegister r) {
+      return r.getResources().stream().map(MD.class::cast).toList();
+    }
+    if (md instanceof CalculationRegister r) {
+      return r.getResources().stream().map(MD.class::cast).toList();
+    }
+    return List.of();
+  }
 }
