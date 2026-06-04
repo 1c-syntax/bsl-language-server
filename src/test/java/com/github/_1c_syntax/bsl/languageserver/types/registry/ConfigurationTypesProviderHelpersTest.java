@@ -411,6 +411,35 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_withEnumWithoutValues_earlyReturn() {
+    var emptyEnum = com.github._1c_syntax.bsl.mdo.Enum.builder().name("ПустоеПеречисление").build();
+    runTryRegister(
+      "file:///test-enum-empty/",
+      registry -> registry,
+      List.of(makeGenericTypeDecl("ПеречислениеМенеджер.<Имя перечисления>", "Имя перечисления")),
+      java.util.Map.of(emptyEnum.getMdoReference(), (MD) emptyEnum),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ПеречислениеМенеджер.ПустоеПеречисление")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_withEnumNoGenericTemplate_earlyReturn() {
+    var anEnum = com.github._1c_syntax.bsl.mdo.Enum.builder().name("ВидыКонтрагента")
+      .enumValue(EnumValue.builder().name("Юридическое").build()).build();
+    runTryRegister(
+      "file:///test-enum-no-template/",
+      registry -> registry,
+      List.of(),
+      java.util.Map.of(anEnum.getMdoReference(), (MD) anEnum),
+      (registry, p) -> {
+        p.tryRegister();
+        assertThat(registry.resolve("ПеречислениеМенеджер.ВидыКонтрагента")).isPresent();
+      });
+  }
+
+  @Test
   void tryRegister_withCommonAttribute_buildsApplicableMembers() {
     var common = com.github._1c_syntax.bsl.mdo.CommonAttribute.builder()
       .name("Организация").build();
