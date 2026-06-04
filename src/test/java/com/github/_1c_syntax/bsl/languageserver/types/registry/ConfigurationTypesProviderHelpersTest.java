@@ -34,12 +34,18 @@ import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.CalculationRegister;
 import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
+import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.children.Dimension;
+import com.github._1c_syntax.bsl.mdo.children.DocumentJournalColumn;
 import com.github._1c_syntax.bsl.mdo.children.EnumValue;
+import com.github._1c_syntax.bsl.mdo.children.ExtDimensionAccountingFlag;
 import com.github._1c_syntax.bsl.mdo.children.ObjectAttribute;
+import com.github._1c_syntax.bsl.mdo.children.Recalculation;
+import com.github._1c_syntax.bsl.mdo.children.Resource;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -335,7 +341,7 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withDocumentJournalAndGenericTemplate_runs() {
-    var column = com.github._1c_syntax.bsl.mdo.children.DocumentJournalColumn.builder()
+    var column = DocumentJournalColumn.builder()
       .name("Контрагент").build();
     var journal = DocumentJournal.builder().name("ОбщийЖурнал").column(column).build();
     runTryRegister(
@@ -351,9 +357,9 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withInformationRegisterAndGenericTemplate_expandsDimensions() {
-    var dim = com.github._1c_syntax.bsl.mdo.children.Dimension.builder()
+    var dim = Dimension.builder()
       .name("Валюта").build();
-    var res = com.github._1c_syntax.bsl.mdo.children.Resource.builder()
+    var res = Resource.builder()
       .name("Курс").build();
     var reg = InformationRegister.builder().name("Курсы")
       .dimension(dim).resource(res).build();
@@ -370,7 +376,7 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withCalculationRegister_invokesRecalculationSpec() {
-    var recalc = com.github._1c_syntax.bsl.mdo.children.Recalculation.builder()
+    var recalc = Recalculation.builder()
       .name("ПоВремени").build();
     var reg = CalculationRegister.builder().name("Начисления")
       .recalculation(recalc).build();
@@ -387,7 +393,7 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withChartOfCalculationTypes_invokesDerived() {
-    var pvr = com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes.builder()
+    var pvr = ChartOfCalculationTypes.builder()
       .name("ОсновныеВидыРасчета").build();
     runTryRegister(
       "file:///test-pvr/",
@@ -406,7 +412,7 @@ class ConfigurationTypesProviderHelpersTest {
 
   @Test
   void tryRegister_withChartOfAccountsAndExtDimensionFlag_runs() {
-    var flag = com.github._1c_syntax.bsl.mdo.children.ExtDimensionAccountingFlag.builder()
+    var flag = ExtDimensionAccountingFlag.builder()
       .name("Валютный").build();
     var coa = ChartOfAccounts.builder().name("Основной")
       .extDimensionAccountingFlag(flag).build();

@@ -195,7 +195,7 @@ public final class CompletionProvider {
       return true;
     }
     var originLower = origin.toLowerCase(Locale.ROOT);
-    boolean samePackage = ownLibOrigin.isPresent() && originLower.equals(ownLibOrigin.get());
+    boolean samePackage = ownLibOrigin.map(originLower::equals).orElse(false);
     if (entry.implicit()
       && !configuration.getOscriptOptions().isShowImplicitLibraryEntriesInCompletion()
       && !samePackage) {

@@ -584,7 +584,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     var typeBindings = Map.of(parameters.get(0), enumName);
-    var memberExpansions = Map.<String, List<String>>of(memberPlaceholderName(generic), valueNames);
+    var memberExpansions = Map.<String, List<String>>of(memberPlaceholderName(typeRegistry, generic), valueNames);
     typeRegistry.registerMemberExpansion(managerRef, generic, typeBindings, memberExpansions,
       LanguageScope.BSL);
   }
@@ -706,11 +706,6 @@ public class ConfigurationTypesProvider {
     if (!names.isEmpty()) {
       sink.put(placeholder, names);
     }
-  }
-
-  /** Backward-compat alias для не-static вызовов. */
-  private String memberPlaceholderName(TypeRef generic) {
-    return memberPlaceholderName(typeRegistry, generic);
   }
 
   /**
