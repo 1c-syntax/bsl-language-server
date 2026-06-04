@@ -538,52 +538,18 @@ public class ConfigurationTypesProvider {
    * получают ДОПОЛНИТЕЛЬНЫЙ MemberSource для платформенных members. Два
    * источника на типе работают штатно — getMembers объединяет.
    */
+  /**
+   * Single-placeholder обёртка: подставляет {@code mdName} во все generic'и
+   * семейства, у которых ровно один placeholder. Делегирует expander'у.
+   */
   private void registerFamilySpecializations(String familyCore, String mdName) {
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
       var parameters = typeRegistry.getTypeParameters(generic);
-      if (parameters.size() != 1) {
-        // Multi-placeholder generic'и обрабатываются отдельным caller'ом с
-        // явной Map<placeholder, value> (см. перегрузку ниже): подставлять
-        // mdName во ВСЕ placeholder'ы — нонсенс (получились бы типы вроде
-        // СправочникСсылка.X.X).
-        continue;
+      if (parameters.size() == 1) {
+        genericExpander.registerFamilySpecializations(familyCore,
+          Map.of(parameters.get(0), mdName));
       }
-      specializeGeneric(generic, Map.of(parameters.get(0), mdName));
     }
-  }
-
-  /**
-   * Multi-placeholder вариант: специализирует только те generic'и семейства,
-   * у которых ВСЕ placeholder'ы покрыты {@code bindings}. Используется для
-   * родственных «вложенных» типов вроде {@code ВнешнийИсточникДанныхТаблица.
-   * <Имя внешнего источника>.<Имя таблицы внешнего источника данных>}, где
-   * binding строится из иерархии конфигурации (источник → таблица/куб →
-   * таблица измерения).
-   */
-  private void registerFamilySpecializations(String familyCore, Map<String, String> bindings) {
-    if (bindings.isEmpty()) {
-      return;
-    }
-    for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
-      var parameters = typeRegistry.getTypeParameters(generic);
-      if (parameters.isEmpty() || !bindings.keySet().containsAll(parameters)) {
-        continue;
-      }
-      specializeGeneric(generic, bindings);
-    }
-  }
-
-  private void specializeGeneric(TypeRef generic, Map<String, String> bindings) {
-    var specializedName = TypeRef.specialize(generic, bindings).qualifiedName();
-    if (specializedName.equals(generic.qualifiedName())) {
-      return;
-    }
-    // Использует существующий TypeRef (Object/Ref/Manager уже зарегистрированы
-    // как CONFIGURATION выше) либо интернирует новый того же kind, что и
-    // generic (PLATFORM) — это критично, иначе инференсер строит (PLATFORM,
-    // name), а в реестре висит (CONFIGURATION, name) — разные TypeRef,
-    // members не находятся.
-    typeRegistry.registerSpecialization(specializedName, generic, bindings, LanguageScope.BSL);
   }
 
   /**
