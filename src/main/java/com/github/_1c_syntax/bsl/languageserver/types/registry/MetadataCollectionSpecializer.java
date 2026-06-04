@@ -121,10 +121,6 @@ import org.jspecify.annotations.Nullable;
 @RequiredArgsConstructor
 public class MetadataCollectionSpecializer {
 
-  private final TypeRegistry typeRegistry;
-  private final BslContextHolder bslContextHolder;
-  private final ServerContextProvider serverContextProvider;
-
   private static final String BASE_COLLECTION_METADATA = "КоллекцияОбъектовМетаданных";
   private static final String BASE_COLLECTION_STD_ATTR = "ОписанияСтандартныхРеквизитов";
   private static final String BASE_COLLECTION_PROPERTY_VALUE = "КоллекцияЗначенийСвойстваОбъектаМетаданных";
@@ -370,6 +366,10 @@ public class MetadataCollectionSpecializer {
     }
     return Map.copyOf(m);
   }
+
+  private final TypeRegistry typeRegistry;
+  private final BslContextHolder bslContextHolder;
+  private final ServerContextProvider serverContextProvider;
 
   /**
    * Имена MD-объектов по {@link MdoReference}-ссылкам. Используется для коллекций

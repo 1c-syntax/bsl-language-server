@@ -222,13 +222,14 @@ public class ConfigurationTypesProvider {
     var groupEn = mdoType.fullGroupName().getEn();
     var fullName = mdoType.fullName();
     var managerNames = managerNamesFor(fullName, groupRu, groupEn, name);
-    var ref = typeRegistry.registerConfigurationType(managerNames.ru());
-    if (managerNames.en() != null && !managerNames.en().equals(managerNames.ru())) {
-      typeRegistry.registerConfigurationTypeAlias(managerNames.en(), ref);
+    var managerRu = managerNames.ru();
+    var managerEn = managerNames.en();
+    var ref = typeRegistry.registerConfigurationType(managerRu);
+    if (managerEn != null && !managerEn.equals(managerRu)) {
+      typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
     }
     typeRegistry.registerDisplayName(ref,
-      BilingualString.of(managerNames.ru(),
-        managerNames.en() == null ? managerNames.ru() : managerNames.en()));
+      BilingualString.of(managerRu, managerEn == null ? managerRu : managerEn));
 
     registerObjectAndRefTypes(md, mdoType, name, fullName, commonAttributes);
     if (!fullName.getRu().isBlank()) {
