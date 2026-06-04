@@ -152,14 +152,14 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void ownerTypeFor_document_returnsHbkName() {
     MD doc = Document.builder().name("ПриходТовара").build();
-    assertThat(MetadataChildrenExtractor.ownerTypeFor(doc))
+    assertThat(StandardAttributesResolver.ownerTypeFor(doc))
       .isEqualTo("ОбъектМетаданных: Документ");
   }
 
   @Test
   void ownerTypeFor_catalog_returnsHbkName() {
     MD cat = Catalog.builder().name("Контрагенты").build();
-    assertThat(MetadataChildrenExtractor.ownerTypeFor(cat))
+    assertThat(StandardAttributesResolver.ownerTypeFor(cat))
       .isEqualTo("ОбъектМетаданных: Справочник");
   }
 
@@ -168,13 +168,13 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void hasStandardAttributes_document_isTrue() {
     MD doc = Document.builder().name("ПриходТовара").build();
-    assertThat(MetadataChildrenExtractor.hasStandardAttributes(doc)).isTrue();
+    assertThat(StandardAttributesResolver.hasStandardAttributes(doc)).isTrue();
   }
 
   @Test
   void hasStandardAttributes_catalog_isTrue() {
     MD cat = Catalog.builder().name("X").build();
-    assertThat(MetadataChildrenExtractor.hasStandardAttributes(cat)).isTrue();
+    assertThat(StandardAttributesResolver.hasStandardAttributes(cat)).isTrue();
   }
 
   // === standardAttributesFor ===
@@ -182,7 +182,7 @@ class MetadataCollectionSpecializerHelpersTest {
   @Test
   void standardAttributesFor_document_returnsKnownAttributes() {
     MD doc = Document.builder().name("X").build();
-    var attrs = MetadataChildrenExtractor.standardAttributesFor(doc);
+    var attrs = StandardAttributesResolver.standardAttributesFor(doc);
     assertThat(attrs).extracting(c -> c.name().ru())
       .as("документ имеет стандартный реквизит «Ссылка» (из KnownStandardAttributes)")
       .contains("Ссылка");

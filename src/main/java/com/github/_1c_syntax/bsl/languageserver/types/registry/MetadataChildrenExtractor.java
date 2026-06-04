@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.context.api.KnownStandardAttributes;
 import com.github._1c_syntax.bsl.mdo.AccountingRegister;
 import com.github._1c_syntax.bsl.mdo.AccumulationRegister;
 import com.github._1c_syntax.bsl.mdo.Attribute;
@@ -40,14 +39,12 @@ import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
 import com.github._1c_syntax.bsl.mdo.Task;
 import com.github._1c_syntax.bsl.mdo.TemplateOwner;
 import com.github._1c_syntax.bsl.mdo.support.AttributeKind;
-import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.types.registry.MetadataCollectionSpecializer.ChildName;
 
@@ -57,23 +54,6 @@ import static com.github._1c_syntax.bsl.languageserver.types.registry.MetadataCo
  * (S1200): все MDO-instanceof-проверки локализованы здесь.
  */
 final class MetadataChildrenExtractor {
-
-  private static final Map<MDOType, String> OWNER_TYPE_BY_MDO_TYPE = Map.ofEntries(
-    Map.entry(MDOType.CATALOG, "ОбъектМетаданных: Справочник"),
-    Map.entry(MDOType.DOCUMENT, "ОбъектМетаданных: Документ"),
-    Map.entry(MDOType.CHART_OF_ACCOUNTS, "ОбъектМетаданных: ПланСчетов"),
-    Map.entry(MDOType.CHART_OF_CALCULATION_TYPES, "ОбъектМетаданных: ПланВидовРасчета"),
-    Map.entry(MDOType.CHART_OF_CHARACTERISTIC_TYPES, "ОбъектМетаданных: ПланВидовХарактеристик"),
-    Map.entry(MDOType.EXCHANGE_PLAN, "ОбъектМетаданных: ПланОбмена"),
-    Map.entry(MDOType.TASK, "ОбъектМетаданных: Задача"),
-    Map.entry(MDOType.BUSINESS_PROCESS, "ОбъектМетаданных: БизнесПроцесс"),
-    Map.entry(MDOType.ENUM, "ОбъектМетаданных: Перечисление"),
-    Map.entry(MDOType.INFORMATION_REGISTER, "ОбъектМетаданных: РегистрСведений"),
-    Map.entry(MDOType.ACCUMULATION_REGISTER, "ОбъектМетаданных: РегистрНакопления"),
-    Map.entry(MDOType.ACCOUNTING_REGISTER, "ОбъектМетаданных: РегистрБухгалтерии"),
-    Map.entry(MDOType.CALCULATION_REGISTER, "ОбъектМетаданных: РегистрРасчета"),
-    Map.entry(MDOType.TABULAR_SECTION, "ОбъектМетаданных: ТабличнаяЧасть")
-  );
 
   private MetadataChildrenExtractor() {
   }
@@ -101,40 +81,6 @@ final class MetadataChildrenExtractor {
       }
     }
     return List.copyOf(result);
-  }
-
-  static List<ChildName> standardAttributesFor(MD md) {
-    var ownerType = ownerTypeFor(md);
-    if (ownerType == null) {
-      return List.of();
-    }
-    var names = KnownStandardAttributes.forOwner(ownerType);
-    if (names.isEmpty()) {
-      return List.of();
-    }
-    var result = new ArrayList<ChildName>(names.size());
-    for (var n : names) {
-      var entry = ChildName.bilingual(n.getName(), n.getAlias());
-      if (entry != null) {
-        result.add(entry);
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  static @Nullable String ownerTypeFor(MD md) {
-    var byMdoType = OWNER_TYPE_BY_MDO_TYPE.get(md.getMdoType());
-    if (byMdoType != null) {
-      return byMdoType;
-    }
-    if (md instanceof TabularSection) {
-      return OWNER_TYPE_BY_MDO_TYPE.get(MDOType.TABULAR_SECTION);
-    }
-    return null;
-  }
-
-  static boolean hasStandardAttributes(MD md) {
-    return ownerTypeFor(md) != null;
   }
 
   static List<ChildName> tabularSectionEntries(Collection<? extends TabularSection> sections) {
