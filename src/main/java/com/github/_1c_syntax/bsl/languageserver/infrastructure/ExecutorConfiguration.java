@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import io.sentry.spring7.SentryTaskDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
@@ -92,7 +91,7 @@ public class ExecutorConfiguration {
   // so parallelStream forks always have correct ThreadLocal context.
 
   @Bean(destroyMethod = "shutdown")
-  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService populateContextExecutor() {
     return createWorkspaceForkJoinPool("populate-context-");
   }
@@ -104,25 +103,25 @@ public class ExecutorConfiguration {
   }
 
   @Bean(destroyMethod = "shutdown")
-  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService diagnosticComputerExecutor() {
     return createWorkspaceForkJoinPool("diagnostic-computer-");
   }
 
   @Bean(destroyMethod = "shutdown")
-  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService analyzeOnStartExecutor() {
     return createWorkspaceForkJoinPool("analyze-on-start-");
   }
 
   @Bean(destroyMethod = "shutdown")
-  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService semanticTokensExecutor() {
     return createWorkspaceForkJoinPool("semantic-tokens-");
   }
 
   @Bean(destroyMethod = "shutdown")
-  @Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.INTERFACES)
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService cliExecutor() {
     return createWorkspaceForkJoinPool("cli-");
   }

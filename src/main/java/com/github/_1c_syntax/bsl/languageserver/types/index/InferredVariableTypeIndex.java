@@ -25,8 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -60,7 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * модель, что у {@link SymbolTypeIndex}.
  */
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class InferredVariableTypeIndex extends AbstractDocumentLifecycleClearableIndex {
 
   private final Map<URI, Map<VariableSymbol, TypeSet>> typesByUri = new ConcurrentHashMap<>();

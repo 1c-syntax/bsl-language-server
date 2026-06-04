@@ -51,8 +51,6 @@ import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticSymbol;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -87,7 +85,7 @@ import java.util.function.Supplier;
  */
 @Slf4j
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class GlobalScopeProvider {
 
   private static final String RESOURCE_PATH =

@@ -26,8 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8Platfor
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -49,7 +47,7 @@ import java.util.Optional;
  */
 @Slf4j
 @Component
-@Scope(value = WorkspaceScope.SCOPE_NAME, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@WorkspaceScope
 public class BslContextHolder {
 
   private final PlatformContextProviderFactory factory;
