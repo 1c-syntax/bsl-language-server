@@ -46,6 +46,7 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemTag;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
@@ -92,13 +93,23 @@ public final class CompletionProvider {
   // прикрепления `editor.action.triggerParameterHints` к completion item.
   private boolean snippetSupport;
 
+  // Кэшируется на initialize. Поддерживает ли клиент CompletionItemTag.Deprecated —
+  // если нет, помечаем устаревший член legacy-флагом setDeprecated.
+  private boolean deprecatedTagSupport;
+
   @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
   public void handleInitializeEvent() {
-    snippetSupport = clientCapabilitiesHolder.getCapabilities()
+    var completionItem = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getCompletion)
-      .map(CompletionCapabilities::getCompletionItem)
+      .map(CompletionCapabilities::getCompletionItem);
+    snippetSupport = completionItem
       .map(CompletionItemCapabilities::getSnippetSupport)
+      .orElse(Boolean.FALSE);
+    deprecatedTagSupport = completionItem
+      .map(CompletionItemCapabilities::getTagSupport)
+      .map(tagSupport -> tagSupport.getValueSet() != null
+        && tagSupport.getValueSet().contains(CompletionItemTag.Deprecated))
       .orElse(Boolean.FALSE);
   }
 
@@ -293,8 +304,32 @@ public final class CompletionProvider {
     var scriptVariant = documentContext.getScriptVariantLanguage();
     var filtered = members.values().stream()
       .filter(m -> matches(m.displayName(scriptVariant), prefix))
+      .filter(m -> !isForeignLocaleDeprecatedAlias(m, scriptVariant))
       .toList();
     return toCompletionItems(filtered, scriptVariant);
+  }
+
+  /**
+   * Член устарел (платформенный {@code deprecatedSinceVersion} либо пометка
+   * устаревания в doc-комментарии source-члена).
+   */
+  private static boolean isMemberDeprecated(MemberDescriptor member) {
+    return !member.metadata().deprecatedSinceVersion().isEmpty()
+      || member.getSymbolDescription().isDeprecated();
+  }
+
+  /**
+   * Устаревший член, чьё имя относится к «другой» локали, не должен попадать в
+   * автодополнение текущего скрипт-варианта. В OneScript {@code [DeprecatedName]}
+   * даёт единственное (как правило, английское) написание без русской пары —
+   * например {@code HTTPЗапрос.GetBodyAsBinary}. В ru-локали его быть не должно:
+   * там доступно актуальное русское имя ({@code ПолучитьТелоКакДвоичныеДанные}).
+   * Неустаревшие нейтральные имена (значения перечислений {@code ANSI}/{@code MD5})
+   * под фильтр не попадают — он срабатывает только для устаревших членов.
+   */
+  private static boolean isForeignLocaleDeprecatedAlias(MemberDescriptor member, Language scriptVariant) {
+    return isMemberDeprecated(member)
+      && !isInConfiguredLanguage(member.displayName(scriptVariant), scriptVariant);
   }
 
   @Nullable
@@ -569,7 +604,25 @@ public final class CompletionProvider {
       }
     }
     applyDocumentation(item, member, scriptVariant);
+    markDeprecated(item, member);
     return item;
+  }
+
+  /**
+   * Помечает completion item устаревшим: при поддержке клиентом тегов —
+   * {@link CompletionItemTag#Deprecated}, иначе legacy-флагом
+   * {@link CompletionItem#setDeprecated}. Клиент рисует такой пункт
+   * зачёркнутым.
+   */
+  private void markDeprecated(CompletionItem item, MemberDescriptor member) {
+    if (!isMemberDeprecated(member)) {
+      return;
+    }
+    if (deprecatedTagSupport) {
+      item.setTags(List.of(CompletionItemTag.Deprecated));
+    } else {
+      item.setDeprecated(Boolean.TRUE);
+    }
   }
 
   /**
