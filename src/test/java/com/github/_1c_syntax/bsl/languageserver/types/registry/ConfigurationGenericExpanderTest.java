@@ -101,5 +101,6 @@ class ConfigurationGenericExpanderTest {
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     var expander = new ConfigurationGenericExpander(registry, serverProvider);
     expander.registerFamilySpecializations("X", java.util.Map.of());
+    org.assertj.core.api.Assertions.assertThat(registry.resolve("X")).isEmpty();
   }
 }
