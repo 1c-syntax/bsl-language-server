@@ -503,24 +503,24 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
-  void tryRegister_enumGenericWithoutParams_earlyReturn() {
-    var anEnum = com.github._1c_syntax.bsl.mdo.Enum.builder().name("ВидыКонтрагентаX")
+  void tryRegister_enumGenericWithTwoParams_earlyReturn() {
+    var anEnum = com.github._1c_syntax.bsl.mdo.Enum.builder().name("ВидыКонтрагентаTwo")
       .enumValue(EnumValue.builder().name("Юридическое").build()).build();
     var typeDecl = new TypePackProvider.TypeDecl(
       TypeKind.PLATFORM,
-      BilingualString.of("ПеречислениеМенеджер.<X>"),
+      BilingualString.of("ПеречислениеМенеджер.<A>.<B>"),
       List.of(),
       false, "", List.of(), List.of(), false, false, "", "",
-      List.of(),
+      List.of("A", "B"),
       false);
     runTryRegister(
-      "file:///test-enum-noparams/",
+      "file:///test-enum-twoparams/",
       registry -> registry,
       List.of(typeDecl),
       java.util.Map.of(anEnum.getMdoReference(), (MD) anEnum),
       (registry, p) -> {
         p.tryRegister();
-        assertThat(registry.resolve("ПеречислениеМенеджер.ВидыКонтрагентаX")).isPresent();
+        assertThat(registry.resolve("ПеречислениеМенеджер.ВидыКонтрагентаTwo")).isPresent();
       });
   }
 
@@ -557,24 +557,24 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
-  void tryRegister_registerGenericWithoutParams_earlyReturn() {
-    var reg = InformationRegister.builder().name("РСP")
+  void tryRegister_registerGenericWithTwoParams_earlyReturn() {
+    var reg = InformationRegister.builder().name("РСTwo")
       .dimension(Dimension.builder().name("Валюта").build()).build();
     var typeDecl = new TypePackProvider.TypeDecl(
       TypeKind.PLATFORM,
-      BilingualString.of("РегистрСведенийЗапись.<X>"),
+      BilingualString.of("РегистрСведенийЗапись.<A>.<B>"),
       List.of(),
       false, "", List.of(), List.of(), false, false, "", "",
-      List.of(),
+      List.of("A", "B"),
       false);
     runTryRegister(
-      "file:///test-reg-noparams/",
+      "file:///test-reg-twoparams/",
       registry -> registry,
       List.of(typeDecl),
       java.util.Map.of(reg.getMdoReference(), (MD) reg),
       (registry, p) -> {
         p.tryRegister();
-        assertThat(registry.resolve("РегистрСведенийМенеджер.РСP")).isPresent();
+        assertThat(registry.resolve("РегистрСведенийМенеджер.РСTwo")).isPresent();
       });
   }
 
