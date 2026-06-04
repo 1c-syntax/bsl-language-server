@@ -103,4 +103,32 @@ class ConfigurationGenericExpanderTest {
     expander.registerFamilySpecializations("X", java.util.Map.of());
     org.assertj.core.api.Assertions.assertThat(registry.resolve("X")).isEmpty();
   }
+
+  @Test
+  void registerExternalDataSourceSpecializations_blankNamedEntities_skipsThem() {
+    var blankTable = com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceTable.builder()
+      .name("").build();
+    var blankCube = com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube.builder()
+      .name("").build();
+    var goodCube = com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube.builder()
+      .name("Куб1")
+      .dimensionTable(com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCubeDimensionTable.builder()
+        .name("").build())
+      .dimension(com.github._1c_syntax.bsl.mdo.children.Dimension.builder()
+        .name("").build())
+      .build();
+    var eds = com.github._1c_syntax.bsl.mdo.ExternalDataSource.builder()
+      .name("ВИД1")
+      .table(blankTable)
+      .cube(blankCube)
+      .cube(goodCube)
+      .build();
+    var registry = new TypeRegistry(List.of(),
+      Mockito.mock(GlobalScopeProvider.class),
+      Mockito.mock(MemberMetadataIndex.class));
+    var serverProvider = Mockito.mock(ServerContextProvider.class);
+    var expander = new ConfigurationGenericExpander(registry, serverProvider);
+    expander.registerExternalDataSourceSpecializations(List.of(eds));
+    org.assertj.core.api.Assertions.assertThat(registry.resolve("ВнешнийИсточникДанных.ВИД1")).isEmpty();
+  }
 }
