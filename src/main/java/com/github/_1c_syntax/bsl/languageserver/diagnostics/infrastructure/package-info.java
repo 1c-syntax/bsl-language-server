@@ -19,6 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
+/**
+ * Инфраструктура регистрации диагностик и предоставления метаинформации о них.
+ */
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 

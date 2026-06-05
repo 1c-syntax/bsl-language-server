@@ -69,14 +69,22 @@ public abstract class AbstractCfgVisitor {
     return map;
   }
 
+  /** Обходимый граф потока управления. */
   protected final ControlFlowGraph graph;
 
+  /**
+   * Конструктор.
+   *
+   * @param graph обходимый граф потока управления
+   */
   protected AbstractCfgVisitor(ControlFlowGraph graph) {
     this.graph = graph;
   }
 
   /**
-   * @param v начинает обход с указанной вершины
+   * Начинает обход графа с указанной вершины.
+   *
+   * @param v вершина, с которой начинается обход
    */
   public void visitVertex(CfgVertex v) {
     if (v instanceof BranchingVertex vertex) {
@@ -87,7 +95,9 @@ public abstract class AbstractCfgVisitor {
   }
 
   /**
-   * @param v вершина линейного блока.
+   * Обходит вершину линейного блока.
+   *
+   * @param v вершина линейного блока
    */
   protected void visitBasicBlock(BasicBlockVertex v) {
     dispatchRoutes(v);
@@ -116,85 +126,107 @@ public abstract class AbstractCfgVisitor {
   }
 
   /**
-   * @param v обход условной ветки
+   * Обходит условную вершину (ветвление).
+   *
+   * @param v посещаемая условная вершина
    */
   protected void visitConditionalVertex(ConditionalVertex v) {
     dispatchRoutes(v);
   }
 
   /**
-   * @param v обход цикла while
+   * Обходит вершину цикла {@code Пока}.
+   *
+   * @param v посещаемая вершина цикла {@code Пока}
    */
   protected void visitWhileLoopVertex(WhileLoopVertex v) {
     dispatchRoutes(v);
   }
 
   /**
-   * @param v обход цикла for
+   * Обходит вершину цикла {@code Для}.
+   *
+   * @param v посещаемая вершина цикла {@code Для}
    */
   protected void visitForLoopVertex(ForLoopVertex v) {
     dispatchRoutes(v);
   }
 
   /**
-   * @param v обход цикла forEach
+   * Обходит вершину цикла {@code Для Каждого}.
+   *
+   * @param v посещаемая вершина цикла {@code Для Каждого}
    */
   protected void visitForeachLoopVertex(ForeachLoopVertex v) {
     dispatchRoutes(v);
   }
 
   /**
-   * @param v обход узла метки
+   * Обходит вершину метки.
+   *
+   * @param v посещаемая вершина метки
    */
   protected void visitLabelVertex(LabelVertex v) {
     dispatchRoutes(v);
   }
 
   /**
-   * @param v обход узла метки
+   * Обходит вершину конструкции {@code Попытка…Исключение}.
+   *
+   * @param v посещаемая вершина конструкции {@code Попытка…Исключение}
    */
   protected void visitTryExceptVertex(TryExceptVertex v) {
     dispatchRoutes(v);
   }
 
   /**
-   * @param v обход узла метки
+   * Обходит вершину выхода.
+   *
+   * @param v посещаемая вершина выхода
    */
   protected void visitExitVertex(ExitVertex v) {
     dispatchRoutes(v);
   }
 
   /**
+   * Обходит прямое ребро перехода по потоку управления.
+   *
    * @param e ребро перехода по потоку управления
-   * @return true - если переход нужно совершить.
-   * false - если обход в этом направлении не нужен
+   * @return {@code true} — если переход нужно совершить;
+   *         {@code false} — если обход в этом направлении не нужен
    */
   protected boolean visitDirectEdge(CfgEdge e) {
     return true;
   }
 
   /**
+   * Обходит ребро перехода по ветви «истина».
+   *
    * @param e ребро перехода по потоку управления
-   * @return true - если переход нужно совершить.
-   * false - если обход в этом направлении не нужен
+   * @return {@code true} — если переход нужно совершить;
+   *         {@code false} — если обход в этом направлении не нужен
    */
   protected boolean visitTrueEdge(CfgEdge e) {
     return true;
   }
 
   /**
+   * Обходит ребро перехода по ветви «ложь».
+   *
    * @param e ребро перехода по потоку управления
-   * @return true - если переход нужно совершить.
-   * false - если обход в этом направлении не нужен
+   * @return {@code true} — если переход нужно совершить;
+   *         {@code false} — если обход в этом направлении не нужен
    */
   protected boolean visitFalseEdge(CfgEdge e) {
     return true;
   }
 
   /**
+   * Обходит ребро итерации цикла (переход назад к началу цикла).
+   *
    * @param e ребро перехода по потоку управления
-   * @return true - если переход нужно совершить.
-   * false - если обход в этом направлении не нужен
+   * @return {@code true} — если переход нужно совершить;
+   *         {@code false} — если обход в этом направлении не нужен
    */
   protected boolean visitLoopIterationEdge(CfgEdge e) {
     // чаще всего проходить назад/наверх по циклу в КФГ не нужно. Кому понадобится - переопределит
@@ -214,7 +246,10 @@ public abstract class AbstractCfgVisitor {
   }
 
   /**
-   * @param v возможность вызвать прямую диспетчеризацию вершины из подкласса
+   * Выполняет прямую диспетчеризацию вершины к соответствующему методу-визитору.
+   * Доступен подклассам для явного вызова диспетчеризации.
+   *
+   * @param v диспетчеризуемая вершина
    */
   protected final void dispatchVertex(CfgVertex v) {
     var dispatch = dispatchVertexFunctions.get(v.getClass());

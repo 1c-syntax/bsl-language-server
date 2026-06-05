@@ -40,6 +40,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * Диагностика повторяющихся блоков кода в синтаксической конструкции {@code Если…Тогда…ИначеЕсли…}.
+ *
  * @author Leon Chagelishvili &lt;lChagelishvily@gmail.com&gt;
  */
 @DiagnosticMetadata(

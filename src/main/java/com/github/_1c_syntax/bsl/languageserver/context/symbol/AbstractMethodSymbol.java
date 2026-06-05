@@ -198,6 +198,9 @@ public abstract class AbstractMethodSymbol implements MethodSymbol {
    * передавать {@code range}/{@code subNameRange} как {@code Range} вместо
    * четырёх int-полей. Параметризация по подтипам {@code C}/{@code B}
    * сохраняет fluent-цепочку builder'а потомков.
+   *
+   * @param <C> тип конструируемого символа-наследника
+   * @param <B> тип самого builder'а-наследника (self-type для fluent-цепочки)
    */
   public abstract static class AbstractMethodSymbolBuilder<
     C extends AbstractMethodSymbol,

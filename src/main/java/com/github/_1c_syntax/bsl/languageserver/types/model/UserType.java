@@ -32,6 +32,9 @@ import java.util.Optional;
  * <p>
  * Хранит {@link WeakReference} на исходный символ, чтобы не удерживать
  * символы живыми вне жизненного цикла {@code ServerContext}.
+ *
+ * @param ref         ссылка на тип в реестре типов
+ * @param declaration слабая ссылка на символ-источник, объявивший тип
  */
 public record UserType(TypeRef ref, WeakReference<SourceDefinedSymbol> declaration) implements Type {
 

@@ -50,6 +50,9 @@ public class ModuleReference {
    * Структура:
    * - localMethods: Set методов для локального вызова (без модуля)
    * - moduleMethodPairs: Map из имени модуля -> Set методов этого модуля
+   *
+   * @param localMethods      множество методов для локального вызова (без указания модуля)
+   * @param moduleMethodPairs соответствие «имя модуля → множество методов этого модуля»
    */
   public record ParsedAccessors(
     Set<String> localMethods,

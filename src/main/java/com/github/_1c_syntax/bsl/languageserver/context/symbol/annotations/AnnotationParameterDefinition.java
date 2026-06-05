@@ -26,6 +26,10 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 /**
  * Класс хранит информацию о параметре аннотации.
  * См. {@link Annotation}
+ *
+ * @param name     имя параметра аннотации
+ * @param value    значение параметра: строковый литерал либо вложенная аннотация
+ * @param optional признак необязательности параметра
  */
 public record AnnotationParameterDefinition(String name, Either<String, Annotation> value, boolean optional) {
 }
