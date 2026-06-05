@@ -47,13 +47,6 @@ public abstract class AbstractDiagnostic implements BSLDiagnostic {
   /** Контекст обрабатываемого документа. */
   protected DocumentContext documentContext;
 
-  /**
-   * Конструктор по умолчанию.
-   */
-  protected AbstractDiagnostic() {
-    // no-op
-  }
-
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     this.documentContext = documentContext;

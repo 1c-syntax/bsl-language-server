@@ -34,13 +34,6 @@ import java.util.List;
  */
 public abstract class AbstractCommentFoldingRangeSupplier implements FoldingRangeSupplier {
 
-  /**
-   * Конструктор по умолчанию.
-   */
-  protected AbstractCommentFoldingRangeSupplier() {
-    // no-op
-  }
-
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
     List<FoldingRange> foldingRanges = new ArrayList<>();
