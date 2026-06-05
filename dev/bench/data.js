@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780609571280,
+  "lastUpdate": 1780619415805,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36301,6 +36301,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 13.198793208450669",
             "extra": "mean: 292.6043592294057 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6125f1f249d18a5a90f66c209da0941c80d51b97",
+          "message": "Merge pull request #4004 from 1c-syntax/fix/workspace-bean-scope-destruction-callbacks\n\nfix(infrastructure): корректная обработка destruction callbacks в WorkspaceBeanScope",
+          "timestamp": "2026-06-04T09:24:16+02:00",
+          "tree_id": "11d79b093bb7ab2aaf59ba710e0e3f50c77cd9b9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6125f1f249d18a5a90f66c209da0941c80d51b97"
+        },
+        "date": 1780619412471,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 282.51801856358844,
+            "unit": "sec",
+            "range": "stddev: 2.755221650006991",
+            "extra": "mean: 282.51801856358844 sec\nrounds: 3"
           }
         ]
       }
