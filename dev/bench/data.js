@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780623742957,
+  "lastUpdate": 1780632807909,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36363,6 +36363,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 17.89710066900019",
             "extra": "mean: 283.16114203135174 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d837e3169575c028dde890aa361f9e464fbb47b8",
+          "message": "Merge pull request #3995 from 1c-syntax/feature/generics-bc-placeholders\n\nДженерики платформенных «библиотек» + цепочки Метаданные",
+          "timestamp": "2026-06-04T20:08:48+02:00",
+          "tree_id": "b4377dc7c60e66e2c1234b66d3e5f25102aefd01",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d837e3169575c028dde890aa361f9e464fbb47b8"
+        },
+        "date": 1780632800439,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 298.38784941037494,
+            "unit": "sec",
+            "range": "stddev: 19.42951111013787",
+            "extra": "mean: 298.38784941037494 sec\nrounds: 3"
           }
         ]
       }
