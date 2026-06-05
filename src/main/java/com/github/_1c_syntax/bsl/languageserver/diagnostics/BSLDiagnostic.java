@@ -40,10 +40,26 @@ import java.util.Map;
  */
 public interface BSLDiagnostic {
 
+  /**
+   * Выполнить диагностику документа.
+   *
+   * @param documentContext Контекст документа, для которого выполняется диагностика
+   * @return Список найденных замечаний
+   */
   List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
+  /**
+   * Установить метаинформацию о диагностике.
+   *
+   * @param info Метаинформация о диагностике
+   */
   void setInfo(DiagnosticInfo info);
 
+  /**
+   * Получить метаинформацию о диагностике.
+   *
+   * @return Метаинформация о диагностике
+   */
   DiagnosticInfo getInfo();
 
   /**

@@ -19,4 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
+/**
+ * Поставщики быстрых исправлений (code actions) для диагностик и кода.
+ */
 package com.github._1c_syntax.bsl.languageserver.codeactions;

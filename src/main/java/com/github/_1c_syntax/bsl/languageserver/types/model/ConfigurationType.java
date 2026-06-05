@@ -25,6 +25,8 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
  * Тип, определённый в конфигурации 1С (например, {@code Справочники.Контрагенты},
  * {@code Документы.Заказ}). Привязан к соответствующему MDObject через
  * {@code mdoRef}, хранящийся в {@link TypeRef#qualifiedName()}.
+ *
+ * @param ref ссылка на тип в реестре типов
  */
 public record ConfigurationType(TypeRef ref) implements Type {
 }

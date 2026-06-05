@@ -50,6 +50,13 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
   private final Map<URI, Set<String>> enabledMethods = new HashMap<>();
 
   /**
+   * Конструктор по умолчанию.
+   */
+  protected AbstractComplexityInlayHintSupplier() {
+    // no-op
+  }
+
+  /**
    * Получение подсказок о местах увеличения сложности метода.
    * <p>
    *

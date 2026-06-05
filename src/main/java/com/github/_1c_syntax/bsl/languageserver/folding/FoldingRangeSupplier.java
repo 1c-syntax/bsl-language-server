@@ -32,6 +32,8 @@ import java.util.List;
  */
 public interface FoldingRangeSupplier {
   /**
+   * Рассчитывает области сворачивания для документа.
+   *
    * @param documentContext Контекст документа, для которого надо рассчитать области сворачивания
    * @return Список областей сворачивания
    */

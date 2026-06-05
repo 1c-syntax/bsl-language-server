@@ -36,6 +36,13 @@ import java.util.List;
 public abstract class AbstractASTDocumentHighlightSupplier implements DocumentHighlightSupplier {
 
   /**
+   * Конструктор по умолчанию.
+   */
+  protected AbstractASTDocumentHighlightSupplier() {
+    // no-op
+  }
+
+  /**
    * Добавляет подсветку для токена, полученного из TerminalNode.
    * <p>
    * Используется для прямого доступа к токенам через геттеры ANTLR-контекста.

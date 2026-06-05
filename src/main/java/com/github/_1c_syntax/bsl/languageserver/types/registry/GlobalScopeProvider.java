@@ -251,6 +251,9 @@ public class GlobalScopeProvider {
    * <p>
    * Метод {@link #forContext(String)} возвращает описание для указанной
    * родительской конструкции; если такового нет — {@link #primary()}.
+   *
+   * @param primary  основное (контекстно-независимое) описание keyword'а
+   * @param byParent описания по родительским конструкциям: ru-имя родителя → пара ru/en описаний
    */
   public record KeywordDescription(BilingualString primary, Map<String, BilingualString> byParent) {
     public static final KeywordDescription EMPTY = new KeywordDescription(BilingualString.EMPTY, Map.of());
@@ -1385,6 +1388,11 @@ public class GlobalScopeProvider {
 
   /**
    * Описание платформенной глобальной переменной.
+   *
+   * @param name        основное имя переменной
+   * @param aliases     альтернативные имена (синонимы) переменной
+   * @param description текстовое описание переменной
+   * @param type        ссылка на тип значения переменной
    */
   public record PlatformVariable(String name, List<String> aliases, String description, TypeRef type) {
   }

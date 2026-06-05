@@ -19,4 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
+/**
+ * Модели данных, используемые репортерами результатов анализа.
+ */
 package com.github._1c_syntax.bsl.languageserver.reporters.data;

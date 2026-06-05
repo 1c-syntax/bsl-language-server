@@ -19,6 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
+/**
+ * Контекст сервера и документов: модель разобранных исходников 1С и доступ к ним.
+ */
 @NullMarked
 package com.github._1c_syntax.bsl.languageserver.context;
 
