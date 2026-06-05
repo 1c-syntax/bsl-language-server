@@ -189,6 +189,36 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void dotCompletionOnCatalogManagerReturnsPredefinedValues() {
+    // Автодополнение после `Справочники.Справочник1.` должно предлагать
+    // предопределённые значения справочника (включая вложенные в группах).
+    // given
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PredefinedValuesCompletion.bsl");
+
+    var params = new CompletionParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    // строка `Справочники.Справочник1.` — позиция сразу после завершающей точки
+    params.setPosition(new Position(1, 24));
+
+    // when
+    var items = completionProvider.getCompletion(documentContext, params).getItems();
+
+    // then
+    assertThat(items)
+      .as("после `Справочники.Справочник1.` должны предлагаться предопределённые значения")
+      .isNotEmpty()
+      .extracting(CompletionItem::getLabel)
+      .contains(
+        "ПредопределённыйЭлемент1",
+        "ПредопределённыйЭлемент2",
+        "ПредопределённаяГруппа",
+        "ВложенныйЭлемент");
+  }
+
+  @Test
   void testNoDotCompletionReturnsGlobals() {
     var content = "Сооб";
     var documentContext = TestUtils.getDocumentContext(content);

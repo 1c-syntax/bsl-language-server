@@ -50,7 +50,9 @@ import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.MDObject;
+import com.github._1c_syntax.bsl.mdo.PredefinedDataOwner;
 import com.github._1c_syntax.bsl.mdo.TabularSectionOwner;
+import com.github._1c_syntax.bsl.mdo.children.PredefinedValue;
 import com.github._1c_syntax.bsl.mdo.children.StandardAttribute;
 import com.github._1c_syntax.bsl.mdo.support.TemplateType;
 import com.github._1c_syntax.bsl.types.MDOType;
@@ -267,6 +269,9 @@ public class ConfigurationTypesProvider {
     }
     if (md instanceof Enum anEnum) {
       registerEnumValueExpansion(ref, familyCore, name, anEnum);
+    }
+    if (md instanceof PredefinedDataOwner predefinedDataOwner) {
+      registerPredefinedValueExpansion(ref, familyCore, name, predefinedDataOwner);
     }
     var registerChildren = registerChildrenOf(md);
     if (registerChildren != null) {
@@ -585,6 +590,55 @@ public class ConfigurationTypesProvider {
     var memberExpansions = Map.<String, List<String>>of(memberPlaceholderName(typeRegistry, generic), valueNames);
     typeRegistry.registerMemberExpansion(managerRef, generic, typeBindings, memberExpansions,
       LanguageScope.BSL);
+  }
+
+  /**
+   * Регистрирует expansion generic-property {@code <Имя предопределённого>} на менеджер-типе
+   * объекта-владельца предопределённых данных ({@code СправочникМенеджер.<Имя>},
+   * {@code ПланСчетовМенеджер.<Имя>}, {@code ПланВидовХарактеристикМенеджер.<Имя>},
+   * {@code ПланВидовРасчетаМенеджер.<Имя>}, {@code ПланОбменаМенеджер.<Имя>}): для каждого
+   * предопределённого значения из mdclasses ({@link PredefinedDataOwner#getPredefinedValues()})
+   * создаётся материализованный member. Иерархия (группы) разворачивается в плоский список имён —
+   * в 1С предопределённые группы доступны по имени так же, как элементы
+   * ({@code Справочники.X.ИмяГруппы}).
+   */
+  private void registerPredefinedValueExpansion(TypeRef managerRef, String familyCore, String mdName,
+                                                PredefinedDataOwner owner) {
+    var values = owner.getPredefinedValues();
+    if (values.isEmpty()) {
+      return;
+    }
+    var valueNames = new ArrayList<String>();
+    collectPredefinedNames(values, valueNames);
+    if (valueNames.isEmpty()) {
+      return;
+    }
+    // Тип предопределённого значения — ссылка объекта (Справочники.X.Россия -> СправочникСсылка.X),
+    // что даёт дальнейший автокомплит по реквизитам. Если ссылочный тип почему-то не зарегистрирован,
+    // оставляем member без типа — имя в автокомплите всё равно появится.
+    var refType = typeRegistry.resolve(familyCore + "Ссылка." + mdName).orElse(null);
+    var members = valueNames.stream()
+      .distinct()
+      .map(valueName -> refType == null
+        ? MemberDescriptor.property(valueName)
+        : MemberDescriptor.property(valueName, refType))
+      .toList();
+    // В отличие от значений перечислений (placeholder generic-члена менеджера), у менеджеров
+    // справочников/планов нет placeholder'а под предопределённые — регистрируем members напрямую.
+    typeRegistry.registerMemberSource(managerRef, () -> members, LanguageScope.BSL);
+  }
+
+  /**
+   * Рекурсивно собирает имена предопределённых значений (включая вложенные группы) в плоский список.
+   */
+  private static void collectPredefinedNames(List<PredefinedValue> values, List<String> target) {
+    for (var value : values) {
+      var name = value.getName();
+      if (!name.isBlank()) {
+        target.add(name);
+      }
+      collectPredefinedNames(value.getChildItems(), target);
+    }
   }
 
   /**
