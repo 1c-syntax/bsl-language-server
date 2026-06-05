@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780619415805,
+  "lastUpdate": 1780623742957,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36332,6 +36332,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.755221650006991",
             "extra": "mean: 282.51801856358844 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b366100feae93f9352ded78e1b78f8107743d00c",
+          "message": "Merge pull request #4005 from erprivalov/feature/Issue-3854\n\nfeat: Добавлена диагностика объявления переменных модуля (Перем) в Общем Модуле (Issue #3854)",
+          "timestamp": "2026-06-04T15:55:52+02:00",
+          "tree_id": "af68a78e546c7eee767673b58f42421ef4c58992",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b366100feae93f9352ded78e1b78f8107743d00c"
+        },
+        "date": 1780623734991,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 283.16114203135174,
+            "unit": "sec",
+            "range": "stddev: 17.89710066900019",
+            "extra": "mean: 283.16114203135174 sec\nrounds: 3"
           }
         ]
       }
