@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.BeforeWorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.sun.nio.file.SensitivityWatchEventModifier;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +76,6 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@SuppressWarnings("removal") // SensitivityWatchEventModifier deprecated в jdk21; baseline репо ниже
 public class OScriptLibraryFileSystemWatcher {
 
   private static final String LIB_CONFIG_FILENAME = LibConfigDiscovery.LIB_CONFIG_FILENAME;
@@ -243,10 +241,6 @@ public class OScriptLibraryFileSystemWatcher {
     if (!dir.toFile().isDirectory()) {
       return null;
     }
-    return dir.register(
-      watchService,
-      new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY},
-      SensitivityWatchEventModifier.HIGH
-    );
+    return dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
   }
 }
