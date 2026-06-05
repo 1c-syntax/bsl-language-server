@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780651023230,
+  "lastUpdate": 1780653069771,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36425,6 +36425,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.139530078891898",
             "extra": "mean: 282.3148452440898 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2acbdd143dd4b9e8c3697f8869bc884be45e3af4",
+          "message": "Merge pull request #4009 from 1c-syntax/copilot/fix-failing-github-actions-job-publish\n\nFix publish workflow failure by wiring `sourcesJar` to `generateGitProperties`",
+          "timestamp": "2026-06-05T09:37:05+02:00",
+          "tree_id": "1daa38665b2c3c43c18211c5922f6d26a95b7c68",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2acbdd143dd4b9e8c3697f8869bc884be45e3af4"
+        },
+        "date": 1780653060957,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 289.723915497462,
+            "unit": "sec",
+            "range": "stddev: 6.750411041699835",
+            "extra": "mean: 289.723915497462 sec\nrounds: 3"
           }
         ]
       }
