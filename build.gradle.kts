@@ -215,6 +215,7 @@ afterEvaluate {
 
     tasks.named<Jar>("sourcesJar") {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        dependsOn(tasks.generateGitProperties)
         dependsOn(tasks.generateSentryDebugMetaPropertiesjava)
         dependsOn(tasks.collectExternalDependenciesForSentry)
     }
