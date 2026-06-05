@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780632807909,
+  "lastUpdate": 1780651023230,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36394,6 +36394,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 19.42951111013787",
             "extra": "mean: 298.38784941037494 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a17afe169ee47db528dad40f08337fb4de3475d7",
+          "message": "Merge pull request #4007 from 1c-syntax/claude/onescript-types-json-66eOM\n\nfix(types): типизация свойств и возвращаемых значений методов oscript",
+          "timestamp": "2026-06-05T08:24:58+02:00",
+          "tree_id": "2b83d8ddc743a0d2ad62067e4624646072aa4cd7",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a17afe169ee47db528dad40f08337fb4de3475d7"
+        },
+        "date": 1780651014521,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 282.3148452440898,
+            "unit": "sec",
+            "range": "stddev: 11.139530078891898",
+            "extra": "mean: 282.3148452440898 sec\nrounds: 3"
           }
         ]
       }
