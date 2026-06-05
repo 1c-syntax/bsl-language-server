@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780653069771,
+  "lastUpdate": 1780655108143,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36456,6 +36456,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.750411041699835",
             "extra": "mean: 289.723915497462 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "27dbd6e26af70c36890cf6c8576d6bb5290a583d",
+          "message": "Merge pull request #4008 from 1c-syntax/fix/javadoc-warnings\n\ndocs(javadoc): починить предупреждения javadoc, убрать internal API из watcher'ов",
+          "timestamp": "2026-06-05T09:45:25+02:00",
+          "tree_id": "4feb5248e338d6ff5b94217d94fcbffd57abc4b2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/27dbd6e26af70c36890cf6c8576d6bb5290a583d"
+        },
+        "date": 1780655099535,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 284.98748151461285,
+            "unit": "sec",
+            "range": "stddev: 11.85836490315452",
+            "extra": "mean: 284.98748151461285 sec\nrounds: 3"
           }
         ]
       }
