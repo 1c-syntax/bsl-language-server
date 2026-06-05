@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls;
+import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
@@ -66,11 +67,11 @@ public class UnavailableMemberCallDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void check() {
-    var target = PlatformMemberCalls.targetCompatibilityMode(documentContext, configuration);
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var reported = new HashSet<Range>();
     for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
       var metadata = member.descriptor().metadata();
-      if (!PlatformMemberCalls.firesUnavailable(metadata.sinceVersion(), target)) {
+      if (!PlatformMemberVersions.firesUnavailable(metadata.sinceVersion(), target)) {
         continue;
       }
       if (reported.add(member.range())) {

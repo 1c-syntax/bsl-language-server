@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -305,14 +305,14 @@ public final class CompletionProvider {
     }
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
-    var target = PlatformMemberCalls.targetCompatibilityMode(documentContext, configuration);
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var filtered = members.values().stream()
       .filter(m -> matches(m.displayName(scriptVariant), prefix))
       // Член, недоступный в целевой версии платформы (sinceVersion новее target),
       // в автодополнении предлагать не нужно — его вызов помечает
       // UnavailableMemberCall. Устаревшие при этом остаются (показываются
       // зачёркнутыми).
-      .filter(m -> !PlatformMemberCalls.firesUnavailable(m.metadata().sinceVersion(), target))
+      .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
       .toList();
     return toCompletionItems(filtered, scriptVariant, target);
   }
@@ -324,7 +324,7 @@ public final class CompletionProvider {
    * oscript ({@code "*"}) срабатывает всегда.
    */
   private static boolean isMemberDeprecated(MemberDescriptor member, CompatibilityMode target) {
-    return PlatformMemberCalls.firesDeprecated(member.metadata().deprecatedSinceVersion(), target)
+    return PlatformMemberVersions.firesDeprecated(member.metadata().deprecatedSinceVersion(), target)
       || member.getSymbolDescription().isDeprecated();
   }
 
@@ -443,7 +443,7 @@ public final class CompletionProvider {
     // Global functions. Один и тот же двуязычный дескриптор зарегистрирован
     // под ru- и en-ключом, поэтому в values() встречается дважды — дедуп по
     // primary-имени через seenFn.
-    var target = PlatformMemberCalls.targetCompatibilityMode(documentContext, configuration);
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var seenFn = new java.util.HashSet<String>();
     for (var fn : globalScopeProvider.getFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {

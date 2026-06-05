@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.platform.PlatformMemberCalls;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -88,11 +89,11 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
    * из возможных типов-владельцев ресивера делает член устаревшим.
    */
   private void checkPlatformMembers() {
-    var target = PlatformMemberCalls.targetCompatibilityMode(documentContext, configuration);
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var reported = new HashSet<Range>();
     for (var member : PlatformMemberCalls.collect(documentContext, typeService, typeRegistry)) {
       var metadata = member.descriptor().metadata();
-      if (PlatformMemberCalls.firesDeprecated(metadata.deprecatedSinceVersion(), target)
+      if (PlatformMemberVersions.firesDeprecated(metadata.deprecatedSinceVersion(), target)
         && reported.add(member.range())) {
         var replacements = metadata.recommendedReplacements();
         var hint = replacements.isEmpty()
