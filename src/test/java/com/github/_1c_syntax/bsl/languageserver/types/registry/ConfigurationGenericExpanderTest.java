@@ -105,6 +105,33 @@ class ConfigurationGenericExpanderTest {
   }
 
   @Test
+  void registerExternalDataSourceSpecializations_withGoodEntities_processesAll() {
+    var table = com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceTable.builder()
+      .name("Таблица1").build();
+    var dimTable = com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCubeDimensionTable.builder()
+      .name("ТаблицаИзмерения1").build();
+    var dim = com.github._1c_syntax.bsl.mdo.children.Dimension.builder()
+      .name("Измерение1").build();
+    var cube = com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube.builder()
+      .name("Куб2")
+      .dimensionTable(dimTable)
+      .dimension(dim)
+      .build();
+    var eds = com.github._1c_syntax.bsl.mdo.ExternalDataSource.builder()
+      .name("ВИД2")
+      .table(table)
+      .cube(cube)
+      .build();
+    var registry = new TypeRegistry(List.of(),
+      Mockito.mock(GlobalScopeProvider.class),
+      Mockito.mock(MemberMetadataIndex.class));
+    var serverProvider = Mockito.mock(ServerContextProvider.class);
+    var expander = new ConfigurationGenericExpander(registry, serverProvider);
+    expander.registerExternalDataSourceSpecializations(List.of(eds));
+    org.assertj.core.api.Assertions.assertThat(registry.resolve("ВнешнийИсточникДанных.ВИД2")).isEmpty();
+  }
+
+  @Test
   void registerExternalDataSourceSpecializations_blankNamedEntities_skipsThem() {
     var blankTable = com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceTable.builder()
       .name("").build();
