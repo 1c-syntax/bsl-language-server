@@ -129,6 +129,30 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void catalogManagerExposesPredefinedValues() {
+    // Менеджер справочника отдаёт предопределённые значения как члены
+    // (Справочники.Справочник1.ПредопределённыйЭлемент1), включая вложенные в группах.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    var managerRef = typeRegistry.resolve("СправочникМенеджер.Справочник1").orElseThrow();
+    var memberNames = typeRegistry.getMembers(managerRef).stream().map(MemberDescriptor::name).toList();
+    assertThat(memberNames)
+      .as("менеджер справочника должен отдавать предопределённые значения, включая вложенные в группах")
+      .contains(
+        "ПредопределённыйЭлемент1",
+        "ПредопределённыйЭлемент2",
+        "ПредопределённаяГруппа",
+        "ВложенныйЭлемент");
+
+    // Цепочка Справочники.Справочник1 ведёт на тот же менеджер — предопределённые видны и через неё.
+    var viaCollection = typeRegistry.resolve("Справочники.Справочник1").orElseThrow();
+    assertThat(typeRegistry.getMembers(viaCollection).stream().map(MemberDescriptor::name))
+      .contains("ПредопределённыйЭлемент1", "ВложенныйЭлемент");
+  }
+
+  @Test
   void registersCollectionNamespacesWithMetadataMembers() {
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
