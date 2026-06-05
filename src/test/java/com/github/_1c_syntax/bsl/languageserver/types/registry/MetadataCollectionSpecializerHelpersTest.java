@@ -541,6 +541,28 @@ class MetadataCollectionSpecializerHelpersTest {
     assertThat(result.get(0).name()).isEqualTo("Контрагент");
   }
 
+  @Test
+  void buildPerOwnerCollectionMembers_elementReturningMethodAndRegularMember() {
+    var registry = new TypeRegistry(java.util.List.of(),
+      Mockito.mock(GlobalScopeProvider.class),
+      Mockito.mock(MemberMetadataIndex.class));
+    var baseRef = registry.registerConfigurationType("База");
+    var elementRef = new TypeRef(TypeKind.PLATFORM, "ОбъектМетаданных: Реквизит");
+    var anyRef = new TypeRef(TypeKind.PLATFORM, "Произвольный");
+    var sig = new SignatureDescriptor(java.util.List.of(), TypeSet.of(anyRef), BilingualString.EMPTY);
+    var getMethod = MemberDescriptor.method("Получить", java.util.List.of(sig));
+    var regularProp = MemberDescriptor.property("Свойство",
+      new TypeRef(TypeKind.PLATFORM, "Строка"));
+    registry.registerMemberSource(baseRef, () -> java.util.List.of(getMethod, regularProp),
+      LanguageScope.BSL);
+
+    var result = MetadataCollectionSpecializer.buildPerOwnerCollectionMembers(
+      registry, baseRef, elementRef, java.util.List.of(), "Владелец");
+    assertThat(result).hasSize(2);
+    assertThat(result).extracting(MemberDescriptor::name)
+      .containsExactlyInAnyOrder("Получить", "Свойство");
+  }
+
   // === withElementReturnType (продолжение) ===
 
   @Test
