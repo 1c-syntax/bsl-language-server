@@ -46,8 +46,8 @@ public class BuiltinOScriptPlatformTypesProvider implements PlatformTypesProvide
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json";
 
-  /** см. {@link BuiltinPlatformTypesProvider#CACHED_TYPES} — JSON парсится один раз на JVM. */
-  private static final List<TypeDecl> CACHED_TYPES = List.copyOf(BuiltinPlatformTypesProvider.loadFromResource(RESOURCE_PATH));
+  /** JSON парсится общим {@link BuiltinTypesJsonLoader} один раз на JVM. */
+  private static final List<TypeDecl> CACHED_TYPES = List.copyOf(BuiltinTypesJsonLoader.load(RESOURCE_PATH));
 
   private final List<TypeDecl> types;
 

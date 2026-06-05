@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -38,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.SyntheticKind;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -46,6 +48,8 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemTag;
+import org.eclipse.lsp4j.CompletionItemTagSupportCapabilities;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
@@ -92,14 +96,24 @@ public final class CompletionProvider {
   // прикрепления `editor.action.triggerParameterHints` к completion item.
   private boolean snippetSupport;
 
+  // Кэшируется на initialize. Поддерживает ли клиент CompletionItemTag.Deprecated —
+  // если нет, помечаем устаревший член legacy-флагом setDeprecated.
+  private boolean deprecatedTagSupport;
+
   @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
   public void handleInitializeEvent() {
-    snippetSupport = clientCapabilitiesHolder.getCapabilities()
+    var completionItem = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getCompletion)
-      .map(CompletionCapabilities::getCompletionItem)
+      .map(CompletionCapabilities::getCompletionItem);
+    snippetSupport = completionItem
       .map(CompletionItemCapabilities::getSnippetSupport)
       .orElse(Boolean.FALSE);
+    deprecatedTagSupport = completionItem
+      .map(CompletionItemCapabilities::getTagSupport)
+      .map(CompletionItemTagSupportCapabilities::getValueSet)
+      .filter(valueSet -> valueSet.contains(CompletionItemTag.Deprecated))
+      .isPresent();
   }
 
   /**
@@ -271,9 +285,10 @@ public final class CompletionProvider {
       return List.of();
     }
 
+    var scriptVariant = documentContext.getScriptVariantLanguage();
     var members = new LinkedHashMap<String, MemberDescriptor>();
     for (TypeRef ref : typeSet.refs()) {
-      for (var member : typeService.getMembers(ref, fileType)) {
+      for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
         members.putIfAbsent(member.name(), member);
       }
       // Декларированные ключи «открытого» объекта данных (Структура из
@@ -290,11 +305,27 @@ public final class CompletionProvider {
     }
 
     var prefix = dotInfo.prefix.toLowerCase(Locale.ROOT);
-    var scriptVariant = documentContext.getScriptVariantLanguage();
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var filtered = members.values().stream()
       .filter(m -> matches(m.displayName(scriptVariant), prefix))
+      // Член, недоступный в целевой версии платформы (sinceVersion новее target),
+      // в автодополнении предлагать не нужно — его вызов помечает
+      // UnavailableMemberCall. Устаревшие при этом остаются (показываются
+      // зачёркнутыми).
+      .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
       .toList();
-    return toCompletionItems(filtered, scriptVariant);
+    return toCompletionItems(filtered, scriptVariant, target);
+  }
+
+  /**
+   * Член устарел: платформенный — если устарел для целевой версии платформы
+   * ({@code target >= deprecatedSinceVersion}, как в {@code DeprecatedMethodCall});
+   * source-член — по пометке устаревания в doc-комментарии. Sentinel-версия
+   * oscript ({@code "*"}) срабатывает всегда.
+   */
+  private static boolean isMemberDeprecated(MemberDescriptor member, CompatibilityMode target) {
+    return PlatformMemberVersions.firesDeprecated(member.metadata().deprecatedSinceVersion(), target)
+      || member.getSymbolDescription().isDeprecated();
   }
 
   @Nullable
@@ -412,6 +443,7 @@ public final class CompletionProvider {
     // Global functions. Один и тот же двуязычный дескриптор зарегистрирован
     // под ru- и en-ключом, поэтому в values() встречается дважды — дедуп по
     // primary-имени через seenFn.
+    var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     var seenFn = new java.util.HashSet<String>();
     for (var fn : globalScopeProvider.getFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
@@ -419,7 +451,7 @@ public final class CompletionProvider {
       }
       var displayName = fn.displayName(scriptVariant);
       if (matches(displayName, prefix)) {
-        items.add(toCompletionItem(fn, scriptVariant));
+        items.add(toCompletionItem(fn, scriptVariant, target));
       }
     }
 
@@ -429,6 +461,9 @@ public final class CompletionProvider {
         var item = new CompletionItem(method.getName());
         item.setKind(method.isFunction() ? CompletionItemKind.Function : CompletionItemKind.Method);
         applyCallableInsertText(item, method.getName(), !method.getParameters().isEmpty());
+        if (method.isDeprecated()) {
+          markDeprecatedItem(item);
+        }
         items.add(item);
       }
     }
@@ -524,14 +559,15 @@ public final class CompletionProvider {
     }
   }
 
-  private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant) {
-    return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant);
+  private CompletionItem toCompletionItem(MemberDescriptor member, Language scriptVariant, CompatibilityMode target) {
+    return buildMemberItem(member, CompletionItemKind.Function, CompletionItemKind.Variable, scriptVariant, target);
   }
 
-  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members, Language scriptVariant) {
+  private List<CompletionItem> toCompletionItems(Collection<MemberDescriptor> members, Language scriptVariant,
+                                                 CompatibilityMode target) {
     var items = new ArrayList<CompletionItem>(members.size());
     for (var member : members) {
-      items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant));
+      items.add(buildMemberItem(member, CompletionItemKind.Method, CompletionItemKind.Property, scriptVariant, target));
     }
     return items;
   }
@@ -551,7 +587,8 @@ public final class CompletionProvider {
   private CompletionItem buildMemberItem(MemberDescriptor member,
                                          CompletionItemKind methodKind,
                                          CompletionItemKind propertyKind,
-                                         Language scriptVariant) {
+                                         Language scriptVariant,
+                                         CompatibilityMode target) {
     var displayName = member.displayName(scriptVariant);
     var item = new CompletionItem(displayName);
     if (member.kind() == MemberKind.METHOD) {
@@ -569,7 +606,31 @@ public final class CompletionProvider {
       }
     }
     applyDocumentation(item, member, scriptVariant);
+    markDeprecated(item, member, target);
     return item;
+  }
+
+  /** Помечает item устаревшим, если {@code member} устарел для целевой версии. */
+  private void markDeprecated(CompletionItem item, MemberDescriptor member, CompatibilityMode target) {
+    if (isMemberDeprecated(member, target)) {
+      markDeprecatedItem(item);
+    }
+  }
+
+  /**
+   * Помечает completion item устаревшим: при поддержке клиентом тегов —
+   * {@link CompletionItemTag#Deprecated}, иначе legacy-флагом
+   * {@link CompletionItem#setDeprecated}. Клиент рисует такой пункт
+   * зачёркнутым. Применяется ко всем устаревшим членам автодополнения —
+   * платформенным, глобальным функциям, членам конфигурации и
+   * пользовательским методам oscript-классов.
+   */
+  private void markDeprecatedItem(CompletionItem item) {
+    if (deprecatedTagSupport) {
+      item.setTags(List.of(CompletionItemTag.Deprecated));
+    } else {
+      item.setDeprecated(Boolean.TRUE);
+    }
   }
 
   /**

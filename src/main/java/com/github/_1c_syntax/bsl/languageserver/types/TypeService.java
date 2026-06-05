@@ -180,6 +180,38 @@ public class TypeService {
   }
 
   /**
+   * Члены типа, применимые к указанной локали скрипта — для автодополнения.
+   * <p>
+   * В отличие от {@link #getMembers(TypeRef, FileType)} (служит резолву имён и
+   * выводу типов — там матч идёт по обоим написаниям), здесь член отсеивается,
+   * если у него нет написания в запрошенной локали
+   * ({@link MemberDescriptor#appliesTo(Language)}). Так из ru-автодополнения
+   * уходят, например, англоязычные {@code [DeprecatedName]}-алиасы OneScript
+   * без русской пары ({@code HTTPЗапрос.GetBodyAsBinary}). Отбор зависит только
+   * от имени члена — никаких проверок устаревания и прочих свойств. Резолв
+   * таких имён для диагностик сохраняется: {@link #getMembers(TypeRef, FileType)}
+   * по-прежнему отдаёт их.
+   *
+   * @param typeRef  тип, чьи члены нужны.
+   * @param fileType тип файла-потребителя (BSL/OS).
+   * @param language локаль скрипта (ru/en) для отбора написаний.
+   * @return члены, применимые к данной локали.
+   */
+  public Collection<MemberDescriptor> getMembers(TypeRef typeRef, FileType fileType, Language language) {
+    var members = getMembers(typeRef, fileType);
+    if (members.isEmpty()) {
+      return members;
+    }
+    var result = new ArrayList<MemberDescriptor>(members.size());
+    for (var member : members) {
+      if (member.appliesTo(language)) {
+        result.add(member);
+      }
+    }
+    return result;
+  }
+
+  /**
    * Описание типа (текст для hover). Фильтрует описания по скоупу языка (BSL/OS) —
    * когда один и тот же {@link TypeRef} имеет разные описания в BSL и OS.
    *
