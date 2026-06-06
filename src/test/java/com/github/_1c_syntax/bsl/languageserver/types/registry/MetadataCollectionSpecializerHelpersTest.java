@@ -542,6 +542,16 @@ class MetadataCollectionSpecializerHelpersTest {
   }
 
   @Test
+  void memberDescriptor_withGenericSameValue_returnsSameInstance() {
+    var generic = MemberDescriptor.genericProperty("<Имя>",
+      new TypeRef(TypeKind.PLATFORM, "Строка"), "");
+    assertThat(generic.withGeneric(true)).isSameAs(generic);
+    var plain = MemberDescriptor.property("Имя",
+      new TypeRef(TypeKind.PLATFORM, "Строка"));
+    assertThat(plain.withGeneric(false)).isSameAs(plain);
+  }
+
+  @Test
   void buildPerOwnerCollectionMembers_elementReturningMethodAndRegularMember() {
     var registry = new TypeRegistry(java.util.List.of(),
       Mockito.mock(GlobalScopeProvider.class),
