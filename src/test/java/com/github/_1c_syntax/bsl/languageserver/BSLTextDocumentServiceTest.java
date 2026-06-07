@@ -627,6 +627,47 @@ class BSLTextDocumentServiceTest {
     assertThat(result.getLeft()).isEmpty();
   }
 
+  @Test
+  void prepareTypeHierarchyRoutesForOsClass() throws Exception {
+    var item = openOsDocument("./src/test/resources/type-hierarchy/Млекопитающее.os");
+    var docId = new TextDocumentIdentifier(item.getUri());
+
+    var prepared = textDocumentService
+      .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
+
+    assertThat(prepared).isNotNull().isNotEmpty();
+
+    var hierarchyItem = prepared.get(0);
+    var supertypes = textDocumentService
+      .typeHierarchySupertypes(new TypeHierarchySupertypesParams(hierarchyItem)).get();
+    var subtypes = textDocumentService
+      .typeHierarchySubtypes(new TypeHierarchySubtypesParams(hierarchyItem)).get();
+
+    assertThat(supertypes).isNotNull();
+    assertThat(subtypes).isNotNull();
+  }
+
+  @Test
+  void implementationRoutesForOsInterface() throws Exception {
+    var item = openOsDocument("./src/test/resources/oscript-libraries/interface-lib/src/МойИнтерфейс.os");
+    var docId = new TextDocumentIdentifier(item.getUri());
+
+    var result = textDocumentService
+      .implementation(new ImplementationParams(docId, new Position(0, 0))).get();
+
+    assertThat(result).isNotNull();
+    assertThat(result.isLeft()).isTrue();
+  }
+
+  private TextDocumentItem openOsDocument(String path) throws IOException {
+    File file = new File(path);
+    String uri = Absolute.uri(file).toString();
+    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    var item = new TextDocumentItem(uri, "bsl", 1, content);
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+    return item;
+  }
+
   /**
    * Регрессионный тест: {@code withFreshDocumentContextInternal} должен устанавливать
    * workspace context на рабочем потоке {@code text-document-service-X},

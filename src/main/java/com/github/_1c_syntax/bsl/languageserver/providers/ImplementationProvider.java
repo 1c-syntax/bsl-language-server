@@ -26,10 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptExtends;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
@@ -42,7 +41,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,7 +63,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ImplementationProvider {
 
-  private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final OScriptClassResolver classResolver;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   private final Comparator<Location> locationComparator = Comparator
@@ -87,7 +85,7 @@ public class ImplementationProvider {
       return Collections.emptyList();
     }
 
-    var interfaceNames = classNames(documentContext).stream()
+    var interfaceNames = classResolver.classNames(documentContext).stream()
       .map(name -> name.toLowerCase(Locale.ROOT))
       .collect(Collectors.toSet());
     if (interfaceNames.isEmpty()) {
@@ -136,7 +134,7 @@ public class ImplementationProvider {
         }
       }
       current = OScriptExtends.parentClassName(current, metaAnnotationResolver)
-        .flatMap(parent -> resolveClassDocument(parent, serverContext))
+        .flatMap(parent -> classResolver.resolveClassDocument(parent, serverContext))
         .orElse(null);
     }
     return false;
@@ -160,19 +158,6 @@ public class ImplementationProvider {
     return null;
   }
 
-  private List<String> classNames(DocumentContext documentContext) {
-    var uri = documentContext.getUri();
-    var libraryNames = oScriptLibraryIndex.findEntriesByUri(uri).stream()
-      .filter(entry -> entry.kind() == OScriptLibraryIndex.EntryKind.CLASS)
-      .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
-      .distinct()
-      .toList();
-    if (!libraryNames.isEmpty()) {
-      return libraryNames;
-    }
-    return List.of(FilenameUtils.getBaseName(uri.getPath()));
-  }
-
   private static Range classSelectionRange(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getConstructor()
       .map(MethodSymbol::getSelectionRange)
@@ -181,27 +166,5 @@ public class ImplementationProvider {
 
   private static Location location(DocumentContext documentContext, Range range) {
     return new Location(documentContext.getUri().toString(), range);
-  }
-
-  /**
-   * Разрешить имя класса ({@code &Расширяет("Имя")}) в документ: сначала через
-   * каталог library-классов, затем — поиском по basename среди {@code .os}-файлов.
-   */
-  private Optional<DocumentContext> resolveClassDocument(String name, ServerContext serverContext) {
-    var libraryUri = oScriptLibraryIndex.findClassUri(name)
-      .or(() -> oScriptLibraryIndex.findUri(name));
-    if (libraryUri.isPresent()) {
-      var document = serverContext.getDocument(libraryUri.get());
-      if (document != null) {
-        return Optional.of(document);
-      }
-    }
-    for (var candidate : serverContext.getDocuments().values()) {
-      if (candidate.getFileType() == FileType.OS
-        && FilenameUtils.getBaseName(candidate.getUri().getPath()).equalsIgnoreCase(name)) {
-        return Optional.of(candidate);
-      }
-    }
-    return Optional.empty();
   }
 }

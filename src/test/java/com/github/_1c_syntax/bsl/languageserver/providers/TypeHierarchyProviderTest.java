@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
@@ -53,6 +54,15 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
   @BeforeEach
   void init() {
     initServerContext(FIXTURE_ROOT);
+  }
+
+  @Test
+  void prepareReturnsEmptyForBslFile() {
+    var bsl = TestUtils.getDocumentContext("Процедура П()\nКонецПроцедуры\n");
+
+    var items = provider.prepareTypeHierarchy(bsl, prepareParams(bsl));
+
+    assertThat(items).isEmpty();
   }
 
   @Test

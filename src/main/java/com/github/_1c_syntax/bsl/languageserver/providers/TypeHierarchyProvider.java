@@ -23,14 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptExtends;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TypeHierarchyItem;
@@ -39,14 +37,12 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -77,7 +73,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TypeHierarchyProvider {
 
-  private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final OScriptClassResolver classResolver;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   private final Comparator<TypeHierarchyItem> itemComparator = Comparator
@@ -121,7 +117,7 @@ public class TypeHierarchyProvider {
     TypeHierarchySupertypesParams params
   ) {
     return OScriptExtends.parentClassName(documentContext, metaAnnotationResolver)
-      .flatMap(name -> resolveClassDocument(name, documentContext.getServerContext()))
+      .flatMap(name -> classResolver.resolveClassDocument(name, documentContext.getServerContext()))
       .map(this::toItem)
       .map(List::of)
       .orElseGet(Collections::emptyList);
@@ -151,7 +147,7 @@ public class TypeHierarchyProvider {
    * родителя через {@code &Расширяет} или сам является чьим-то родителем.
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
-    return isLibraryClass(documentContext.getUri())
+    return classResolver.isLibraryClass(documentContext)
       || OScriptExtends.parentClassName(documentContext, metaAnnotationResolver).isPresent()
       || !subtypeDocuments(documentContext).isEmpty();
   }
@@ -161,12 +157,9 @@ public class TypeHierarchyProvider {
    * через {@code &Расширяет}/{@code &Extends}.
    */
   private List<DocumentContext> subtypeDocuments(DocumentContext documentContext) {
-    var ownNames = classNames(documentContext).stream()
+    var ownNames = classResolver.classNames(documentContext).stream()
       .map(name -> name.toLowerCase(Locale.ROOT))
       .collect(Collectors.toSet());
-    if (ownNames.isEmpty()) {
-      return Collections.emptyList();
-    }
 
     var result = new ArrayList<DocumentContext>();
     for (var candidate : documentContext.getServerContext().getDocuments().values()) {
@@ -180,56 +173,9 @@ public class TypeHierarchyProvider {
     return result;
   }
 
-  /**
-   * Имена, под которыми класс известен другим классам (для разрешения
-   * {@code &Расширяет("...")}): qualifiedNames library-класса из {@code lib.config}
-   * либо basename файла для обычного {@code .os}.
-   */
-  private List<String> classNames(DocumentContext documentContext) {
-    var uri = documentContext.getUri();
-    var libraryNames = oScriptLibraryIndex.findEntriesByUri(uri).stream()
-      .filter(entry -> entry.kind() == OScriptLibraryIndex.EntryKind.CLASS)
-      .map(OScriptLibraryIndex.LibraryEntry::qualifiedName)
-      .distinct()
-      .toList();
-    if (!libraryNames.isEmpty()) {
-      return libraryNames;
-    }
-    return List.of(FilenameUtils.getBaseName(uri.getPath()));
-  }
-
-  /**
-   * Разрешить имя класса ({@code &Расширяет("Имя")}) в документ: сначала через
-   * каталог library-классов, затем — поиском по basename среди {@code .os}-файлов.
-   */
-  private Optional<DocumentContext> resolveClassDocument(String name, ServerContext serverContext) {
-    var libraryUri = oScriptLibraryIndex.findClassUri(name)
-      .or(() -> oScriptLibraryIndex.findUri(name));
-    if (libraryUri.isPresent()) {
-      var document = serverContext.getDocument(libraryUri.get());
-      if (document != null) {
-        return Optional.of(document);
-      }
-    }
-    for (var candidate : serverContext.getDocuments().values()) {
-      if (candidate.getFileType() != FileType.OS) {
-        continue;
-      }
-      if (FilenameUtils.getBaseName(candidate.getUri().getPath()).equalsIgnoreCase(name)) {
-        return Optional.of(candidate);
-      }
-    }
-    return Optional.empty();
-  }
-
-  private boolean isLibraryClass(URI uri) {
-    return oScriptLibraryIndex.findEntriesByUri(uri).stream()
-      .anyMatch(entry -> entry.kind() == OScriptLibraryIndex.EntryKind.CLASS);
-  }
-
   private TypeHierarchyItem toItem(DocumentContext documentContext) {
     var module = documentContext.getSymbolTree().getModule();
-    var names = new LinkedHashSet<>(classNames(documentContext));
+    var names = new LinkedHashSet<>(classResolver.classNames(documentContext));
 
     var item = new TypeHierarchyItem(
       names.iterator().next(),
