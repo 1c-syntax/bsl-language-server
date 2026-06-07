@@ -66,6 +66,17 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void prepareReturnsEmptyForPlainOsClassNotInHierarchy() {
+    // .os без &Расширяет, не library-класс и без наследников — в иерархии не участвует.
+    var os = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "Процедура Метод() Экспорт\nКонецПроцедуры\n", context);
+
+    var items = provider.prepareTypeHierarchy(os, prepareParams(os));
+
+    assertThat(items).isEmpty();
+  }
+
+  @Test
   void prepareReturnsClassForOScriptFile() {
     var document = document("Млекопитающее.os");
 

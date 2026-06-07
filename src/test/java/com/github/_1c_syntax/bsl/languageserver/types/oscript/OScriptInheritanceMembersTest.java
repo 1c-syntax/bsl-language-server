@@ -74,6 +74,16 @@ class OScriptInheritanceMembersTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void baseClassExposesOwnMembersAndNoInheritedOnes() {
+    var members = membersOf("БазовыйКласс");
+
+    assertThat(members)
+      .extracting(MemberDescriptor::name)
+      .contains("БазовыйМетод", "БазовоеСвойство")
+      .doesNotContain("ПромежуточныйМетод", "ДочернийМетод");
+  }
+
+  @Test
   void overriddenMemberWinsOverInherited() {
     var members = membersOf("ДочернийКласс");
 

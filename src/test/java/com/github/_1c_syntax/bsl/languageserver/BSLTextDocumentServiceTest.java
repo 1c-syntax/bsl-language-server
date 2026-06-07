@@ -648,6 +648,18 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
+  void prepareTypeHierarchyReturnsNullForNonHierarchyOsFile() throws Exception {
+    // Плоский .os-класс без наследования/реализаций — иерархии нет, ожидаем null.
+    var item = openOsDocument("./src/test/resources/standalone-class.os");
+    var docId = new TextDocumentIdentifier(item.getUri());
+
+    var prepared = textDocumentService
+      .prepareTypeHierarchy(new TypeHierarchyPrepareParams(docId, new Position(0, 0))).get();
+
+    assertThat(prepared).isNull();
+  }
+
+  @Test
   void implementationRoutesForOsInterface() throws Exception {
     var item = openOsDocument("./src/test/resources/oscript-libraries/interface-lib/src/МойИнтерфейс.os");
     var docId = new TextDocumentIdentifier(item.getUri());

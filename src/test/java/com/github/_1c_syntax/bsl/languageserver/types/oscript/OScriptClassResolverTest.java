@@ -79,6 +79,18 @@ class OScriptClassResolverTest extends AbstractServerContextAwareTest {
     assertThat(classResolver.resolveClassDocument("НетТакогоКласса", context)).isEmpty();
   }
 
+  @Test
+  void resolveClassDocumentFindsNonLibraryFileByBasename() {
+    initServerContext();
+    TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n", context);
+
+    var resolved = classResolver.resolveClassDocument("fake-uri", context);
+
+    assertThat(resolved).isPresent();
+    assertThat(resolved.get().getUri().getPath()).endsWith("fake-uri.os");
+  }
+
   private void initLib() {
     initServerContext(FIXTURE_ROOT, false);
     index.reindex(context);

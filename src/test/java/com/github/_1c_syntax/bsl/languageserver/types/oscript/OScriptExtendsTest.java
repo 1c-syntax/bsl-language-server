@@ -63,6 +63,12 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void parentClassNameEmptyForAnnotationWithoutStringArgument() {
+    var dc = os("&Extends\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
+    assertThat(OScriptExtends.parentClassName(dc, resolver)).isEmpty();
+  }
+
+  @Test
   void parentClassNameAbsentWithoutAnnotation() {
     var dc = os("Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
     assertThat(OScriptExtends.parentClassName(dc, resolver)).isEmpty();

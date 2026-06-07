@@ -66,10 +66,9 @@ public class ImplementationProvider {
   private final OScriptClassResolver classResolver;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
-  private final Comparator<Location> locationComparator = Comparator
-    .comparing(Location::getUri)
-    .thenComparing(location -> location.getRange().getStart().getLine())
-    .thenComparing(location -> location.getRange().getStart().getCharacter());
+  // Результаты — по одной локации на класс/метод-реализатор, поэтому URI
+  // уникален: сортировки по нему достаточно для детерминированного порядка.
+  private final Comparator<Location> locationComparator = Comparator.comparing(Location::getUri);
 
   /**
    * Найти реализации интерфейса, представленного текущим документом.
@@ -88,9 +87,6 @@ public class ImplementationProvider {
     var interfaceNames = classResolver.classNames(documentContext).stream()
       .map(name -> name.toLowerCase(Locale.ROOT))
       .collect(Collectors.toSet());
-    if (interfaceNames.isEmpty()) {
-      return Collections.emptyList();
-    }
 
     var methodName = methodNameAt(documentContext, params);
     var serverContext = documentContext.getServerContext();
@@ -141,18 +137,15 @@ public class ImplementationProvider {
   }
 
   /**
-   * Имя метода интерфейса под курсором (для перехода к одноимённым реализациям),
-   * либо {@code null}, если курсор не на экспортном методе (тогда переход — к
-   * самим реализующим классам). Конструктор {@code ПриСозданииОбъекта}
-   * исключается.
+   * Имя экспортного метода интерфейса под курсором (для перехода к одноимённым
+   * реализациям), либо {@code null}, если курсор не на экспортном методе (тогда
+   * переход — к самим реализующим классам). Конструктор {@code ПриСозданииОбъекта}
+   * по соглашению не экспортный, поэтому отсекается фильтром экспортности
+   * (а у реализаций — фильтром {@code isExport} при поиске одноимённого метода).
    */
   private static String methodNameAt(DocumentContext documentContext, ImplementationParams params) {
     var symbol = documentContext.getSymbolTree().getSymbolAtPosition(params.getPosition());
     if (symbol instanceof MethodSymbol method && method.isExport()) {
-      var constructor = documentContext.getSymbolTree().getConstructor();
-      if (constructor.isPresent() && constructor.get() == method) {
-        return null;
-      }
       return method.getName();
     }
     return null;

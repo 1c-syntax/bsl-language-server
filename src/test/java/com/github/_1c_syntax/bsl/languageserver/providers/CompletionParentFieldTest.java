@@ -104,6 +104,25 @@ class CompletionParentFieldTest extends AbstractServerContextAwareTest {
       .contains("БазовыйМетод", "БазовоеСвойство");
   }
 
+  @Test
+  void plainModuleFieldIsNotTypedAsParent() {
+    initLib();
+
+    // Обычное поле (не &Родитель и не _ОбъектРодитель) не получает тип родителя.
+    var content = "Перем Обычное Экспорт;\n"
+      + "\n"
+      + "&Расширяет(\"БазовыйКласс\")\n"
+      + "Процедура ПриСозданииОбъекта()\n"
+      + "КонецПроцедуры\n"
+      + "\n"
+      + "Функция Тест() Экспорт\n"
+      + "\tОбычное.\n"
+      + "КонецФункции\n";
+
+    assertThat(labelsAfterDot(content, "Обычное."))
+      .doesNotContain("БазовыйМетод", "БазовоеСвойство");
+  }
+
   private java.util.List<String> labelsAfterDot(String content, String receiver) {
     var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
