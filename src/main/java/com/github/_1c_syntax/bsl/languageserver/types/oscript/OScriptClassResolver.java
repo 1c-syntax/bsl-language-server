@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,12 +95,11 @@ public class OScriptClassResolver {
         return Optional.of(document);
       }
     }
-    for (var candidate : serverContext.getDocuments().values()) {
-      if (candidate.getFileType() == FileType.OS
-        && FilenameUtils.getBaseName(candidate.getUri().getPath()).equalsIgnoreCase(name)) {
-        return Optional.of(candidate);
-      }
-    }
-    return Optional.empty();
+    // Deterministic выбор при совпадении basename у нескольких .os-файлов:
+    // порядок итерации getDocuments() не гарантирован, поэтому сортируем по URI.
+    return serverContext.getDocuments().values().stream()
+      .filter(candidate -> candidate.getFileType() == FileType.OS)
+      .filter(candidate -> FilenameUtils.getBaseName(candidate.getUri().getPath()).equalsIgnoreCase(name))
+      .min(Comparator.comparing(candidate -> candidate.getUri().toString()));
   }
 }

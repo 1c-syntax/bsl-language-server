@@ -629,6 +629,10 @@ class BSLTextDocumentServiceTest {
 
   @Test
   void prepareTypeHierarchyRoutesForOsClass() throws Exception {
+    // Открываем всю цепочку, чтобы super/subtypes резолвились в непустой результат.
+    openOsDocument("./src/test/resources/type-hierarchy/Животное.os");
+    openOsDocument("./src/test/resources/type-hierarchy/Кошка.os");
+    openOsDocument("./src/test/resources/type-hierarchy/Собака.os");
     var item = openOsDocument("./src/test/resources/type-hierarchy/Млекопитающее.os");
     var docId = new TextDocumentIdentifier(item.getUri());
 
@@ -643,8 +647,8 @@ class BSLTextDocumentServiceTest {
     var subtypes = textDocumentService
       .typeHierarchySubtypes(new TypeHierarchySubtypesParams(hierarchyItem)).get();
 
-    assertThat(supertypes).isNotNull();
-    assertThat(subtypes).isNotNull();
+    assertThat(supertypes).isNotNull().isNotEmpty();
+    assertThat(subtypes).isNotNull().isNotEmpty();
   }
 
   @Test
@@ -669,6 +673,8 @@ class BSLTextDocumentServiceTest {
 
     assertThat(result).isNotNull();
     assertThat(result.isLeft()).isTrue();
+    // Реализации (Реализация1/Реализация2) проиндексированы как library-классы interface-lib.
+    assertThat(result.getLeft()).isNotEmpty();
   }
 
   private TextDocumentItem openOsDocument(String path) throws IOException {
