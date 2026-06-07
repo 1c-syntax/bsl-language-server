@@ -62,13 +62,15 @@ class OScriptModuleMembersProviderTest {
   private GlobalScopeProvider globalScopeProvider;
   @Mock
   private OScriptExtends oScriptExtends;
+  @Mock
+  private TypeRelationIndex typeRelationIndex;
 
   private OScriptModuleMembersProvider provider;
 
   @BeforeEach
   void setUp() {
     provider = new OScriptModuleMembersProvider(
-      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends);
+      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends, typeRelationIndex);
   }
 
   @Test

@@ -23,10 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptExtends;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelationIndex;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
@@ -34,14 +33,11 @@ import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +52,10 @@ import java.util.stream.Collectors;
  *       реализующих классах;</li>
  *   <li>курсор в любом другом месте файла-интерфейса → сами реализующие классы.</li>
  * </ul>
+ * Сам разбор отношений {@code &Реализует}/{@code &Расширяет} (в т.ч.
+ * транзитивный обход через абстрактных родителей) делегирован
+ * {@link TypeRelationIndex}; имена классов в документы переводит
+ * {@link OScriptClassResolver}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation">Goto Implementation Request specification</a>
  */
@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
 public class ImplementationProvider {
 
   private final OScriptClassResolver classResolver;
-  private final OScriptExtends oScriptExtends;
+  private final TypeRelationIndex typeRelationIndex;
 
   // Результаты — по одной локации на класс/метод-реализатор, поэтому URI
   // уникален: сортировки по нему достаточно для детерминированного порядка.
@@ -80,7 +80,7 @@ public class ImplementationProvider {
    */
   public List<Location> getImplementations(DocumentContext documentContext, ImplementationParams params) {
     if (documentContext.getFileType() != FileType.OS
-      || !oScriptExtends.isInterface(documentContext)) {
+      || !typeRelationIndex.isInterface(documentContext)) {
       return Collections.emptyList();
     }
 
@@ -95,7 +95,8 @@ public class ImplementationProvider {
     for (var candidate : serverContext.getDocuments().values()) {
       if (candidate.getFileType() != FileType.OS
         || candidate.getUri().equals(documentContext.getUri())
-        || !implementsAnyTransitively(candidate, interfaceNames, serverContext)) {
+        || !typeRelationIndex.implementsAny(candidate, interfaceNames,
+              name -> classResolver.resolveClassDocument(name, serverContext))) {
         continue;
       }
       if (methodName != null) {
@@ -108,31 +109,6 @@ public class ImplementationProvider {
     }
     result.sort(locationComparator);
     return result;
-  }
-
-  /**
-   * Реализует ли класс (транзитивно по цепочке {@code &Расширяет}) хотя бы один
-   * из интерфейсов. Покрывает случай абстрактного родителя: родитель объявляет
-   * {@code &Реализует("Интерфейс")}, а наследник через {@code &Расширяет} считается
-   * реализацией этого интерфейса (см. документацию extends — комбинирование
-   * наследования и интерфейсов).
-   */
-  private boolean implementsAnyTransitively(DocumentContext candidate, Set<String> interfaceNames,
-                                            ServerContext serverContext) {
-    var visited = new HashSet<URI>();
-    DocumentContext current = candidate;
-    while (current != null && visited.add(current.getUri())) {
-      var implemented = oScriptExtends.implementedInterfaceNames(current);
-      for (var name : implemented) {
-        if (interfaceNames.contains(name.toLowerCase(Locale.ROOT))) {
-          return true;
-        }
-      }
-      current = oScriptExtends.parentClassName(current)
-        .flatMap(parent -> classResolver.resolveClassDocument(parent, serverContext))
-        .orElse(null);
-    }
-    return false;
   }
 
   /**

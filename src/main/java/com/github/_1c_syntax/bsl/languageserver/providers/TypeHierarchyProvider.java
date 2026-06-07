@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptExtends;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelationIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
@@ -36,13 +36,10 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 /**
  * Провайдер иерархии типов для OneScript-классов, использующих библиотеку
@@ -52,17 +49,9 @@ import java.util.stream.Collectors;
  * Обрабатывает запросы {@code textDocument/prepareTypeHierarchy},
  * {@code typeHierarchy/supertypes} и {@code typeHierarchy/subtypes}.
  * <p>
- * Наследование в библиотеке {@code extends} объявляется аннотацией
- * {@code &Расширяет("ИмяРодителя")} (или её английским псевдонимом
- * {@code &Extends}) над конструктором класса {@code ПриСозданииОбъекта}:
- * <pre>
- *   &amp;Расширяет("Родитель")
- *   Процедура ПриСозданииОбъекта()
- *   КонецПроцедуры
- * </pre>
- * Имя родителя — то же, что используется в {@code Новый Родитель}: для
- * библиотечного класса это его {@code qualifiedName} из {@code lib.config}
- * (см. {@link OScriptClassResolver}), для обычного {@code .os}-файла — basename.
+ * Отношения наследования провайдер не разбирает сам, а спрашивает у
+ * {@link TypeRelationIndex} — единой точки истины об {@code &Расширяет}; имена
+ * классов в документы переводит {@link OScriptClassResolver}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy">Prepare Type Hierarchy Request specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_supertypes">Type Hierarchy Supertypes specification</a>
@@ -73,7 +62,7 @@ import java.util.stream.Collectors;
 public class TypeHierarchyProvider {
 
   private final OScriptClassResolver classResolver;
-  private final OScriptExtends oScriptExtends;
+  private final TypeRelationIndex typeRelationIndex;
 
   private final Comparator<TypeHierarchyItem> itemComparator = Comparator
     .comparing(TypeHierarchyItem::getName, String.CASE_INSENSITIVE_ORDER)
@@ -115,8 +104,9 @@ public class TypeHierarchyProvider {
     DocumentContext documentContext,
     TypeHierarchySupertypesParams params
   ) {
-    return oScriptExtends.parentClassName(documentContext)
-      .flatMap(name -> classResolver.resolveClassDocument(name, documentContext.getServerContext()))
+    var serverContext = documentContext.getServerContext();
+    return typeRelationIndex.supertype(documentContext,
+        name -> classResolver.resolveClassDocument(name, serverContext))
       .map(this::toItem)
       .map(List::of)
       .orElseGet(Collections::emptyList);
@@ -147,7 +137,7 @@ public class TypeHierarchyProvider {
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
     return classResolver.isLibraryClass(documentContext)
-      || oScriptExtends.parentClassName(documentContext).isPresent()
+      || typeRelationIndex.supertypeName(documentContext).isPresent()
       || !subtypeDocuments(documentContext).isEmpty();
   }
 
@@ -156,20 +146,11 @@ public class TypeHierarchyProvider {
    * через {@code &Расширяет}/{@code &Extends}.
    */
   private List<DocumentContext> subtypeDocuments(DocumentContext documentContext) {
-    var ownNames = classResolver.classNames(documentContext).stream()
-      .map(name -> name.toLowerCase(Locale.ROOT))
-      .collect(Collectors.toSet());
-
-    var result = new ArrayList<DocumentContext>();
-    for (var candidate : documentContext.getServerContext().getDocuments().values()) {
-      if (candidate.getFileType() != FileType.OS || candidate.getUri().equals(documentContext.getUri())) {
-        continue;
-      }
-      oScriptExtends.parentClassName(candidate)
-        .filter(parent -> ownNames.contains(parent.toLowerCase(Locale.ROOT)))
-        .ifPresent(parent -> result.add(candidate));
-    }
-    return result;
+    return typeRelationIndex.subtypes(
+      documentContext,
+      documentContext.getServerContext().getDocuments().values(),
+      classResolver::classNames
+    );
   }
 
   private TypeHierarchyItem toItem(DocumentContext documentContext) {
@@ -183,7 +164,7 @@ public class TypeHierarchyProvider {
       module.getRange(),
       selectionRange(documentContext)
     );
-    oScriptExtends.parentClassName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
+    typeRelationIndex.supertypeName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
     return item;
   }
 

@@ -45,7 +45,6 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,18 +74,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class OScriptModuleMembersProvider {
 
-  /**
-   * Защита от циклов наследования ({@code A → B → A}): набор типов, сборка
-   * наследуемых членов которых уже идёт в текущем потоке. Без неё ленивые
-   * источники зациклились бы через {@link TypeRegistry#getMembers}.
-   */
-  private static final ThreadLocal<Set<TypeRef>> INHERITANCE_IN_PROGRESS =
-    ThreadLocal.withInitial(HashSet::new);
-
   private final TypeRegistry typeRegistry;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptExtends oScriptExtends;
+  private final TypeRelationIndex typeRelationIndex;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -179,44 +171,25 @@ public class OScriptModuleMembersProvider {
   /**
    * Зарегистрировать ленивый источник членов, наследуемых от родительского
    * класса библиотеки {@code extends} (аннотация {@code &Расширяет} над
-   * {@code ПриСозданииОбъекта}). Источник добавляется ПОСЛЕ собственного
-   * источника членов класса, поэтому при дедупликации в
-   * {@link TypeRegistry#getMembers} собственные/переопределённые члены
-   * выигрывают у унаследованных. Резолв родителя ленивый — он может быть
-   * проиндексирован позже наследника, а смена {@code &Расширяет} подхватывается
-   * без ре-регистрации (hot-reload).
+   * {@code ПриСозданииОбъекта}). Сам обход цепочки наследования и защита от
+   * циклов вынесены в {@link TypeRelationIndex} — здесь лишь регистрируется
+   * делегирующий источник. Источник добавляется ПОСЛЕ собственного источника
+   * членов класса, поэтому при дедупликации в {@link TypeRegistry#getMembers}
+   * собственные/переопределённые члены выигрывают у унаследованных. Резолв
+   * родителя ленивый — он может быть проиндексирован позже наследника, а смена
+   * {@code &Расширяет} подхватывается без ре-регистрации (hot-reload).
    */
   private void registerInheritedMembers(DocumentContext documentContext, TypeRef classRef) {
-    typeRegistry.registerMemberSource(classRef, () -> inheritedMembers(documentContext, classRef), LanguageScope.OS);
-  }
-
-  /**
-   * Экспортируемые члены родительского класса (транзитивно — через его
-   * собственный унаследованный источник). Пустой список, если наследование не
-   * объявлено, родитель не разрешается или обнаружен цикл.
-   */
-  private Collection<MemberDescriptor> inheritedMembers(DocumentContext documentContext, TypeRef classRef) {
-    var parentName = oScriptExtends.parentClassName(documentContext).orElse(null);
-    if (parentName == null) {
-      return List.of();
-    }
-    var parentRef = typeRegistry.resolve(parentName, FileType.OS).orElse(null);
-    if (parentRef == null || parentRef.equals(classRef)) {
-      return List.of();
-    }
-    var inProgress = INHERITANCE_IN_PROGRESS.get();
-    if (!inProgress.add(classRef)) {
-      return List.of();
-    }
-    try {
-      return List.copyOf(typeRegistry.getMembers(parentRef, FileType.OS));
-    } finally {
-      inProgress.remove(classRef);
-      // Не держим пустой Set в ThreadLocal на пуловых потоках (S5164).
-      if (inProgress.isEmpty()) {
-        INHERITANCE_IN_PROGRESS.remove();
-      }
-    }
+    typeRegistry.registerMemberSource(
+      classRef,
+      () -> typeRelationIndex.inheritedMembers(
+        documentContext,
+        classRef,
+        name -> typeRegistry.resolve(name, FileType.OS),
+        parentRef -> typeRegistry.getMembers(parentRef, FileType.OS)
+      ),
+      LanguageScope.OS
+    );
   }
 
   private Collection<MemberDescriptor> collectMembers(DocumentContext documentContext) {
