@@ -94,10 +94,9 @@ public class ImplementationProvider {
 
     var result = new ArrayList<Location>();
     for (var candidate : serverContext.getDocuments().values()) {
-      if (candidate.getFileType() != FileType.OS || candidate.getUri().equals(documentContext.getUri())) {
-        continue;
-      }
-      if (!implementsAnyTransitively(candidate, interfaceNames, serverContext)) {
+      if (candidate.getFileType() != FileType.OS
+        || candidate.getUri().equals(documentContext.getUri())
+        || !implementsAnyTransitively(candidate, interfaceNames, serverContext)) {
         continue;
       }
       if (methodName != null) {

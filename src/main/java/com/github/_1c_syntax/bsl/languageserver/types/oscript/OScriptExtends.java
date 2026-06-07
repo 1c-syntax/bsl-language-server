@@ -189,26 +189,31 @@ public class OScriptExtends {
     if (documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }
-    for (var method : documentContext.getSymbolTree().getMethods()) {
-      var annotations = method.getAnnotations();
-      // Роль "Расширяет" покрывает прямую &Расширяет("X") и мета-аннотации
-      // («ОСень»), разворачивающиеся в неё (например, &ХранилищеСущностей из autumn-data).
-      for (var value : metaResolver.valuesByRole(annotations, EXTENDS_ROLE)) {
-        if (value != null && !value.isBlank()) {
-          return Optional.of(value);
-        }
-      }
-      // Английский псевдоним &Extends("X") (если у роли нет класса-определения).
-      for (Annotation annotation : annotations) {
-        if (ENGLISH_ANNOTATION.equalsIgnoreCase(annotation.getName())) {
-          var parent = firstStringParameter(annotation);
-          if (parent.isPresent()) {
-            return parent;
-          }
-        }
-      }
+    return documentContext.getSymbolTree().getMethods().stream()
+      .map(method -> parentFromAnnotations(method.getAnnotations(), metaResolver))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .findFirst();
+  }
+
+  /**
+   * Имя родителя из аннотаций одного метода: сначала роль {@link #EXTENDS_ROLE}
+   * (прямой {@code &Расширяет} и мета-аннотации «ОСени»), затем английский
+   * псевдоним {@code &Extends} (если у роли нет класса-определения).
+   */
+  private static Optional<String> parentFromAnnotations(List<Annotation> annotations,
+                                                        AutumnMetaAnnotationResolver metaResolver) {
+    var byRole = metaResolver.valuesByRole(annotations, EXTENDS_ROLE).stream()
+      .filter(value -> value != null && !value.isBlank())
+      .findFirst();
+    if (byRole.isPresent()) {
+      return byRole;
     }
-    return Optional.empty();
+    return annotations.stream()
+      .filter(annotation -> ENGLISH_ANNOTATION.equalsIgnoreCase(annotation.getName()))
+      .map(OScriptExtends::firstStringParameter)
+      .flatMap(Optional::stream)
+      .findFirst();
   }
 
   /**

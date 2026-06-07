@@ -54,8 +54,10 @@ class CompletionInheritedMembersTest extends AbstractServerContextAwareTest {
   void instanceCompletionIncludesInheritedMembers() {
     initLib();
 
-    var content = "Объект = Новый ДочернийКласс();\n"
-      + "Объект.\n";
+    var content = """
+      Объект = Новый ДочернийКласс();
+      Объект.
+      """;
     var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var params = new CompletionParams();

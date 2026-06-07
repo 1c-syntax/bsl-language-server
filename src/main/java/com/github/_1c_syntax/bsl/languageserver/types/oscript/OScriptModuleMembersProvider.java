@@ -76,6 +76,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class OScriptModuleMembersProvider {
 
+  /**
+   * Защита от циклов наследования ({@code A → B → A}): набор типов, сборка
+   * наследуемых членов которых уже идёт в текущем потоке. Без неё ленивые
+   * источники зациклились бы через {@link TypeRegistry#getMembers}.
+   */
+  private static final ThreadLocal<Set<TypeRef>> INHERITANCE_IN_PROGRESS =
+    ThreadLocal.withInitial(HashSet::new);
+
   private final TypeRegistry typeRegistry;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -83,7 +91,7 @@ public class OScriptModuleMembersProvider {
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
-  private final Map<URI, java.util.Set<String>> registeredByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Set<String>> registeredByUri = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -168,14 +176,6 @@ public class OScriptModuleMembersProvider {
       globalScopeProvider.unregisterLibraryClass(name);
     }
   }
-
-  /**
-   * Защита от циклов наследования ({@code A → B → A}): набор типов, сборка
-   * наследуемых членов которых уже идёт в текущем потоке. Без неё ленивые
-   * источники зациклились бы через {@link TypeRegistry#getMembers}.
-   */
-  private static final ThreadLocal<Set<TypeRef>> INHERITANCE_IN_PROGRESS =
-    ThreadLocal.withInitial(HashSet::new);
 
   /**
    * Зарегистрировать ленивый источник членов, наследуемых от родительского

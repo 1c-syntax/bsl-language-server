@@ -82,8 +82,12 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
 
   @Test
   void implementedInterfaceNamesCollectsMultiple() {
-    var dc = os("&Реализует(\"ИнтерфейсА\")\n&Реализует(\"ИнтерфейсБ\")\n"
-      + "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
+    var dc = os("""
+      &Реализует("ИнтерфейсА")
+      &Реализует("ИнтерфейсБ")
+      Процедура ПриСозданииОбъекта()
+      КонецПроцедуры
+      """);
     assertThat(OScriptExtends.implementedInterfaceNames(dc, resolver))
       .containsExactlyInAnyOrder("ИнтерфейсА", "ИнтерфейсБ");
   }
