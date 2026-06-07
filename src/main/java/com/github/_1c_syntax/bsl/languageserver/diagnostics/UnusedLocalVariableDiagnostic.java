@@ -42,6 +42,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Диагностика неиспользуемых локальных и модульных переменных.
+ * 
+ * Срабатывает, если переменная объявлена, но к ней нет обращений по ссылке.
+ * Счётчик цикла {@code Для} не считается неиспользуемым, даже если он не
+ * упоминается в теле цикла.
+ */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -69,6 +76,9 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
     VariableKind.DYNAMIC
   );
 
+  /**
+   * Ищет объявленные, но неиспользуемые переменные модуля и метода.
+   */
   @Override
   public void check() {
     Set<Range> forLoopCounterRanges = getForLoopCounterRanges();
@@ -84,6 +94,11 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
       );
   }
 
+  /**
+   * Возвращает диапазоны имён переменных-счётчиков в конструкциях {@code Для ... По ... Цикл}.
+   *
+   * @return множество диапазонов идентификаторов счётчиков цикла в текущем модуле
+   */
   private Set<Range> getForLoopCounterRanges() {
     return Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_forStatement).stream()
       .map(BSLParser.ForStatementContext.class::cast)
@@ -93,6 +108,13 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
       .collect(Collectors.toSet());
   }
 
+  /**
+   * Проверяет, что переменная объявлена как счётчик цикла {@code Для}.
+   *
+   * @param variable               проверяемая переменная
+   * @param forLoopCounterRanges   диапазоны имён счётчиков цикла
+   * @return {@code true}, если переменная определена в заголовке цикла {@code Для}
+   */
   private boolean isForLoopCounter(VariableSymbol variable,
                                    Collection<Range> forLoopCounterRanges) {
     return referenceIndex.getReferencesTo(variable).stream()
