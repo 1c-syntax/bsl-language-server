@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import lombok.experimental.UtilityClass;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -90,6 +92,66 @@ public class OScriptExtends {
 
   /** Имена аннотации поля-держателя родителя (в нижнем регистре): {@code &Родитель}. */
   private static final Set<String> PARENT_FIELD_ANNOTATIONS = Set.of("родитель");
+
+  /**
+   * Базовая роль аннотации реализации интерфейса {@code &Реализует("Интерфейс")}.
+   * Аннотация повторяемая — класс может реализовывать несколько интерфейсов.
+   */
+  public static final String IMPLEMENTS_ROLE = "Реализует";
+
+  /**
+   * Базовая роль аннотации-маркера интерфейса {@code &Интерфейс} (ставится на
+   * конструктор класса-интерфейса).
+   */
+  public static final String INTERFACE_ROLE = "Интерфейс";
+
+  /**
+   * Имена интерфейсов, которые класс объявляет реализуемыми через
+   * {@code &Реализует("...")} (с учётом мета-аннотаций). Имя интерфейса — то же,
+   * что используется в {@code Новый Интерфейс}: qualifiedName library-класса или
+   * basename файла.
+   *
+   * @param documentContext контекст {@code .os}-документа
+   * @param metaResolver    резолвер мета-аннотаций «ОСени»
+   * @return список имён реализуемых интерфейсов (возможно, пустой)
+   */
+  public static List<String> implementedInterfaceNames(DocumentContext documentContext,
+                                                       AutumnMetaAnnotationResolver metaResolver) {
+    if (documentContext.getFileType() != FileType.OS) {
+      return List.of();
+    }
+    var result = new ArrayList<String>();
+    for (var method : documentContext.getSymbolTree().getMethods()) {
+      for (var value : metaResolver.valuesByRole(method.getAnnotations(), IMPLEMENTS_ROLE)) {
+        if (value != null && !value.isBlank()) {
+          result.add(value);
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Является ли {@code .os}-документ интерфейсом — несёт ли какой-либо его метод
+   * (на практике — конструктор {@code ПриСозданииОбъекта}) аннотацию-маркер
+   * {@code &Интерфейс} (с учётом мета-аннотаций).
+   *
+   * @param documentContext контекст {@code .os}-документа
+   * @param metaResolver    резолвер мета-аннотаций «ОСени»
+   * @return {@code true}, если документ — интерфейс
+   */
+  public static boolean isInterface(DocumentContext documentContext,
+                                    AutumnMetaAnnotationResolver metaResolver) {
+    if (documentContext.getFileType() != FileType.OS) {
+      return false;
+    }
+    for (var method : documentContext.getSymbolTree().getMethods()) {
+      if (metaResolver.hasRole(method.getAnnotations(), INTERFACE_ROLE)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /**
    * Является ли переменная держателем экземпляра родителя: либо помечена

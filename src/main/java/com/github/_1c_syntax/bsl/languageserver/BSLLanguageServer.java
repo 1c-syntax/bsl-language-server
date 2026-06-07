@@ -143,6 +143,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentHighlightProvider(getDocumentHighlightProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
+    capabilities.setImplementationProvider(Boolean.TRUE);
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
     capabilities.setTypeHierarchyProvider(getTypeHierarchyProvider());
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());

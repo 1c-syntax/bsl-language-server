@@ -623,8 +623,8 @@ class BSLTextDocumentServiceTest {
     var result = textDocumentService.implementation(params).get();
 
     assertThat(result).isNotNull();
-    assertThat(result.isRight()).isTrue();
-    assertThat(result.getRight()).isEmpty();
+    assertThat(result.isLeft()).isTrue();
+    assertThat(result.getLeft()).isEmpty();
   }
 
   /**

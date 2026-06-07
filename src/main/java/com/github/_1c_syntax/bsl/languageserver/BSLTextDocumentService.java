@@ -45,6 +45,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CompletionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.ImplementationProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
@@ -171,6 +172,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final FoldingRangeProvider foldingRangeProvider;
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
+  private final ImplementationProvider implementationProvider;
   private final CompletionProvider completionProvider;
   private final ReferencesProvider referencesProvider;
   private final DefinitionProvider definitionProvider;
@@ -279,7 +281,16 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(
     ImplementationParams params
   ) {
-    return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> Either.forLeft(implementationProvider.getImplementations(documentContext, params))
+    );
   }
 
   @Override
