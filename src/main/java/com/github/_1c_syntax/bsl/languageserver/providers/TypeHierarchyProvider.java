@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
  * </pre>
  * Имя родителя — то же, что используется в {@code Новый Родитель}: для
  * библиотечного класса это его {@code qualifiedName} из {@code lib.config}
- * (см. {@link OScriptLibraryIndex}), для обычного {@code .os}-файла — basename.
+ * (см. {@link OScriptClassResolver}), для обычного {@code .os}-файла — basename.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy">Prepare Type Hierarchy Request specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_supertypes">Type Hierarchy Supertypes specification</a>
