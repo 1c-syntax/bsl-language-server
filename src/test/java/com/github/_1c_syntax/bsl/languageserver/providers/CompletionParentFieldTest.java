@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -131,7 +132,7 @@ class CompletionParentFieldTest extends AbstractServerContextAwareTest {
       .doesNotContain("БазовыйМетод", "БазовоеСвойство");
   }
 
-  private java.util.List<String> labelsAfterDot(String content, String receiver) {
+  private List<String> labelsAfterDot(String content, String receiver) {
     var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
 
     var lines = content.split("\n", -1);
