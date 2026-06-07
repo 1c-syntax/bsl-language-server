@@ -70,6 +70,7 @@ class OScriptInheritanceMembersTest extends AbstractServerContextAwareTest {
 
     assertThat(members)
       .extracting(MemberDescriptor::name)
+      .contains("ДочернийМетод", "БазовыйМетод")
       .doesNotContain("ВнутреннийМетодБазы");
   }
 

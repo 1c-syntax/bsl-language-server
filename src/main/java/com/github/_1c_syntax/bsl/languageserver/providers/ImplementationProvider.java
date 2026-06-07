@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -143,7 +144,7 @@ public class ImplementationProvider {
    * по соглашению не экспортный, поэтому отсекается фильтром экспортности
    * (а у реализаций — фильтром {@code isExport} при поиске одноимённого метода).
    */
-  private static String methodNameAt(DocumentContext documentContext, ImplementationParams params) {
+  private static @Nullable String methodNameAt(DocumentContext documentContext, ImplementationParams params) {
     var symbol = documentContext.getSymbolTree().getSymbolAtPosition(params.getPosition());
     if (symbol instanceof MethodSymbol method && method.isExport()) {
       return method.getName();

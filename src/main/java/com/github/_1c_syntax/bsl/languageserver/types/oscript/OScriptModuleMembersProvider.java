@@ -213,6 +213,10 @@ public class OScriptModuleMembersProvider {
       return List.copyOf(typeRegistry.getMembers(parentRef, FileType.OS));
     } finally {
       inProgress.remove(classRef);
+      // Не держим пустой Set в ThreadLocal на пуловых потоках (S5164).
+      if (inProgress.isEmpty()) {
+        INHERITANCE_IN_PROGRESS.remove();
+      }
     }
   }
 
