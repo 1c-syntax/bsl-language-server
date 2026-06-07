@@ -68,6 +68,7 @@ import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.TypeHierarchyRegistrationOptions;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.eclipse.lsp4j.WorkspaceFoldersOptions;
 import org.eclipse.lsp4j.WorkspaceServerCapabilities;
@@ -143,6 +144,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
     capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
+    capabilities.setTypeHierarchyProvider(getTypeHierarchyProvider());
     capabilities.setSelectionRangeProvider(getSelectionRangeProvider());
     capabilities.setColorProvider(getColorProvider());
     capabilities.setRenameProvider(getRenameProvider(params));
@@ -379,6 +381,12 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
     callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
     return callHierarchyRegistrationOptions;
+  }
+
+  private static TypeHierarchyRegistrationOptions getTypeHierarchyProvider() {
+    var typeHierarchyRegistrationOptions = new TypeHierarchyRegistrationOptions();
+    typeHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    return typeHierarchyRegistrationOptions;
   }
 
   private static WorkspaceSymbolOptions getWorkspaceProvider() {

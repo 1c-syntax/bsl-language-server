@@ -60,6 +60,7 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.PrepareRenameParams;
 import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
@@ -69,10 +70,15 @@ import org.eclipse.lsp4j.SemanticTokensDeltaParams;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensRangeParams;
 import org.eclipse.lsp4j.SignatureHelpParams;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
+import org.eclipse.lsp4j.TypeHierarchyItem;
+import org.eclipse.lsp4j.TypeHierarchyPrepareParams;
+import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
+import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.BeforeEach;
@@ -761,6 +767,38 @@ class BSLTextDocumentServiceTest {
     var params = new CallHierarchyOutgoingCallsParams(item);
     var result = textDocumentService.callHierarchyOutgoingCalls(params).get();
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  void prepareTypeHierarchyUnknownFile() throws Exception {
+    var params = new TypeHierarchyPrepareParams(getTextDocumentIdentifier(), new Position(0, 0));
+    var result = textDocumentService.prepareTypeHierarchy(params).get();
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void typeHierarchySupertypesUnknownFile() throws Exception {
+    var params = new TypeHierarchySupertypesParams(unknownTypeHierarchyItem());
+    var result = textDocumentService.typeHierarchySupertypes(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void typeHierarchySubtypesUnknownFile() throws Exception {
+    var params = new TypeHierarchySubtypesParams(unknownTypeHierarchyItem());
+    var result = textDocumentService.typeHierarchySubtypes(params).get();
+    assertThat(result).isEmpty();
+  }
+
+  private TypeHierarchyItem unknownTypeHierarchyItem() {
+    var zeroRange = new Range(new Position(0, 0), new Position(0, 0));
+    return new TypeHierarchyItem(
+      "Unknown",
+      SymbolKind.Class,
+      getTextDocumentIdentifier().getUri(),
+      zeroRange,
+      zeroRange
+    );
   }
 
   @Test

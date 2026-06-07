@@ -51,6 +51,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SignatureHelpProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.TypeHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
@@ -121,6 +122,10 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.TypeHierarchyItem;
+import org.eclipse.lsp4j.TypeHierarchyPrepareParams;
+import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
+import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -170,6 +175,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ReferencesProvider referencesProvider;
   private final DefinitionProvider definitionProvider;
   private final CallHierarchyProvider callHierarchyProvider;
+  private final TypeHierarchyProvider typeHierarchyProvider;
   private final SelectionRangeProvider selectionRangeProvider;
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
@@ -504,6 +510,55 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return withFreshDocumentContext(
       documentContext,
       () -> callHierarchyProvider.outgoingCalls(documentContext, params)
+    );
+  }
+
+  @Override
+  public CompletableFuture<@Nullable List<TypeHierarchyItem>> prepareTypeHierarchy(TypeHierarchyPrepareParams params) {
+    // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContextNullable(
+      documentContext,
+      () -> {
+        List<TypeHierarchyItem> typeHierarchyItems = typeHierarchyProvider.prepareTypeHierarchy(documentContext, params);
+        if (typeHierarchyItems.isEmpty()) {
+          return null;
+        }
+        return typeHierarchyItems;
+      }
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySupertypes(TypeHierarchySupertypesParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> typeHierarchyProvider.supertypes(documentContext, params)
+    );
+  }
+
+  @Override
+  public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySubtypes(TypeHierarchySubtypesParams params) {
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+    var documentContext = maybeDocument.get();
+
+    return withFreshDocumentContext(
+      documentContext,
+      () -> typeHierarchyProvider.subtypes(documentContext, params)
     );
   }
 
