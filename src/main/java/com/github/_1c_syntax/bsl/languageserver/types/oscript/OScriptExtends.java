@@ -23,11 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import lombok.experimental.UtilityClass;
 
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Поддержка библиотеки наследования OneScript
@@ -77,6 +80,36 @@ public class OScriptExtends {
 
   /** Английский псевдоним аннотации наследования (в нижнем регистре). */
   private static final String ENGLISH_ANNOTATION = "extends";
+
+  /**
+   * Имя поля, которое библиотека {@code extends} неявно создаёт в собранном
+   * объекте-наследнике для хранения экземпляра родителя. Доступно даже без
+   * явного объявления поля с {@code &Родитель}.
+   */
+  public static final String IMPLICIT_PARENT_FIELD = "_ОбъектРодитель";
+
+  /** Имена аннотации поля-держателя родителя (в нижнем регистре): {@code &Родитель}. */
+  private static final Set<String> PARENT_FIELD_ANNOTATIONS = Set.of("родитель");
+
+  /**
+   * Является ли переменная держателем экземпляра родителя: либо помечена
+   * {@code &Родитель} (явный держатель с произвольным именем), либо это неявное
+   * поле {@link #IMPLICIT_PARENT_FIELD}. Тип такого поля — родительский класс.
+   *
+   * @param variable переменная (как правило, поле модуля {@code .os}-класса)
+   * @return {@code true}, если переменная хранит экземпляр родителя
+   */
+  public static boolean isParentHolder(VariableSymbol variable) {
+    if (IMPLICIT_PARENT_FIELD.equalsIgnoreCase(variable.getName())) {
+      return true;
+    }
+    for (Annotation annotation : variable.getAnnotations()) {
+      if (PARENT_FIELD_ANNOTATIONS.contains(annotation.getName().toLowerCase(Locale.ROOT))) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /**
    * Имя родительского класса для документа {@code .os}, объявленное аннотацией
