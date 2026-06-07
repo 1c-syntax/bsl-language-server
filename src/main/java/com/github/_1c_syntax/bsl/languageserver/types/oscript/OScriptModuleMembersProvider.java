@@ -45,9 +45,11 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -128,6 +130,7 @@ public class OScriptModuleMembersProvider {
       if (libraryEntry != null) {
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
           typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+          registerInheritedMembers(documentContext, ref);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
           // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
@@ -139,6 +142,7 @@ public class OScriptModuleMembersProvider {
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+        registerInheritedMembers(documentContext, ref);
       }
       LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName,
         libraryEntry != null ? libraryEntry.kind() : documentContext.getModuleType());
@@ -160,6 +164,53 @@ public class OScriptModuleMembersProvider {
       typeRegistry.unregisterUserType(name);
       globalScopeProvider.unregisterLibraryModule(name);
       globalScopeProvider.unregisterLibraryClass(name);
+    }
+  }
+
+  /**
+   * Защита от циклов наследования ({@code A → B → A}): набор типов, сборка
+   * наследуемых членов которых уже идёт в текущем потоке. Без неё ленивые
+   * источники зациклились бы через {@link TypeRegistry#getMembers}.
+   */
+  private static final ThreadLocal<Set<TypeRef>> INHERITANCE_IN_PROGRESS =
+    ThreadLocal.withInitial(HashSet::new);
+
+  /**
+   * Зарегистрировать ленивый источник членов, наследуемых от родительского
+   * класса библиотеки {@code extends} (аннотация {@code &Расширяет} над
+   * {@code ПриСозданииОбъекта}). Источник добавляется ПОСЛЕ собственного
+   * источника членов класса, поэтому при дедупликации в
+   * {@link TypeRegistry#getMembers} собственные/переопределённые члены
+   * выигрывают у унаследованных. Резолв родителя ленивый — он может быть
+   * проиндексирован позже наследника, а смена {@code &Расширяет} подхватывается
+   * без ре-регистрации (hot-reload).
+   */
+  private void registerInheritedMembers(DocumentContext documentContext, TypeRef classRef) {
+    typeRegistry.registerMemberSource(classRef, () -> inheritedMembers(documentContext, classRef), LanguageScope.OS);
+  }
+
+  /**
+   * Экспортируемые члены родительского класса (транзитивно — через его
+   * собственный унаследованный источник). Пустой список, если наследование не
+   * объявлено, родитель не разрешается или обнаружен цикл.
+   */
+  private Collection<MemberDescriptor> inheritedMembers(DocumentContext documentContext, TypeRef classRef) {
+    var parentName = OScriptExtends.parentClassName(documentContext).orElse(null);
+    if (parentName == null) {
+      return List.of();
+    }
+    var parentRef = typeRegistry.resolve(parentName, FileType.OS).orElse(null);
+    if (parentRef == null || parentRef.equals(classRef)) {
+      return List.of();
+    }
+    var inProgress = INHERITANCE_IN_PROGRESS.get();
+    if (!inProgress.add(classRef)) {
+      return List.of();
+    }
+    try {
+      return List.copyOf(typeRegistry.getMembers(parentRef, FileType.OS));
+    } finally {
+      inProgress.remove(classRef);
     }
   }
 

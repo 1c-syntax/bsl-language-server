@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +46,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -76,12 +75,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class TypeHierarchyProvider {
-
-  /**
-   * Имена аннотации наследования библиотеки {@code extends} (в нижнем регистре):
-   * русское {@code &Расширяет} и английский псевдоним {@code &Extends}.
-   */
-  private static final Set<String> EXTENDS_ANNOTATION_NAMES = Set.of("расширяет", "extends");
 
   private final OScriptLibraryIndex oScriptLibraryIndex;
 
@@ -125,7 +118,7 @@ public class TypeHierarchyProvider {
     DocumentContext documentContext,
     TypeHierarchySupertypesParams params
   ) {
-    return parentName(documentContext)
+    return OScriptExtends.parentClassName(documentContext)
       .flatMap(name -> resolveClassDocument(name, documentContext.getServerContext()))
       .map(this::toItem)
       .map(List::of)
@@ -157,7 +150,7 @@ public class TypeHierarchyProvider {
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
     return isLibraryClass(documentContext.getUri())
-      || parentName(documentContext).isPresent()
+      || OScriptExtends.parentClassName(documentContext).isPresent()
       || !subtypeDocuments(documentContext).isEmpty();
   }
 
@@ -178,50 +171,11 @@ public class TypeHierarchyProvider {
       if (candidate.getFileType() != FileType.OS || candidate.getUri().equals(documentContext.getUri())) {
         continue;
       }
-      parentName(candidate)
+      OScriptExtends.parentClassName(candidate)
         .filter(parent -> ownNames.contains(parent.toLowerCase(Locale.ROOT)))
         .ifPresent(parent -> result.add(candidate));
     }
     return result;
-  }
-
-  /**
-   * Имя родительского класса из аннотации {@code &Расширяет}/{@code &Extends}
-   * над любым методом документа (на практике — над конструктором
-   * {@code ПриСозданииОбъекта}).
-   */
-  private static Optional<String> parentName(DocumentContext documentContext) {
-    if (documentContext.getFileType() != FileType.OS) {
-      return Optional.empty();
-    }
-    for (MethodSymbol method : documentContext.getSymbolTree().getMethods()) {
-      for (Annotation annotation : method.getAnnotations()) {
-        if (!EXTENDS_ANNOTATION_NAMES.contains(annotation.getName().toLowerCase(Locale.ROOT))) {
-          continue;
-        }
-        var parent = firstStringParameter(annotation);
-        if (parent.isPresent()) {
-          return parent;
-        }
-      }
-    }
-    return Optional.empty();
-  }
-
-  /**
-   * Первый строковый литерал-параметр аннотации. Имя родителя в
-   * {@code &Расширяет("Родитель")} задаётся позиционно (параметр {@code Значение}).
-   */
-  private static Optional<String> firstStringParameter(Annotation annotation) {
-    for (var parameter : annotation.getParameters()) {
-      if (parameter.value().isLeft()) {
-        var value = parameter.value().getLeft();
-        if (value != null && !value.isBlank()) {
-          return Optional.of(value);
-        }
-      }
-    }
-    return Optional.empty();
   }
 
   /**
@@ -282,7 +236,7 @@ public class TypeHierarchyProvider {
       module.getRange(),
       selectionRange(documentContext)
     );
-    parentName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
+    OScriptExtends.parentClassName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
     return item;
   }
 
