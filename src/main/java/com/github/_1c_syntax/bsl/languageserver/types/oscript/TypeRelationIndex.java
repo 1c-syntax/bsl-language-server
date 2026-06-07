@@ -136,16 +136,23 @@ public class TypeRelationIndex {
   }
 
   /**
-   * Реализует ли документ-кандидат (транзитивно по цепочке {@code &Расширяет})
-   * хотя бы один из интерфейсов. Покрывает случай абстрактного родителя:
-   * родитель объявляет {@code &Реализует("Интерфейс")}, а наследник через
-   * {@code &Расширяет} считается реализацией этого интерфейса (см. документацию
-   * extends — комбинирование наследования и интерфейсов). Обход итеративный,
-   * защита от циклов — локальным множеством посещённых URI.
+   * Реализует ли документ-кандидат (транзитивно) хотя бы один из интерфейсов.
+   * Учитываются два измерения транзитивности из документации extends:
+   * <ul>
+   *   <li><b>наследование классов</b> — родитель объявляет
+   *       {@code &Реализует("Интерфейс")}, а наследник через {@code &Расширяет}
+   *       считается реализацией (случай абстрактного родителя);</li>
+   *   <li><b>иерархия интерфейсов</b> — интерфейс может расширять другой интерфейс
+   *       аннотацией {@code &Расширяет}, поэтому реализатор производного интерфейса
+   *       является реализатором и всех его базовых интерфейсов.</li>
+   * </ul>
+   * Обход цепочки классов итеративный (guard — множество посещённых URI),
+   * разворачивание каждого интерфейса вверх по его {@code &Расширяет}-цепочке —
+   * в {@link #interfaceClosureMatches} (guard — множество посещённых имён).
    *
    * @param candidate      проверяемый документ
-   * @param interfaceNames имена интерфейсов в нижнем регистре
-   * @param nameToDocument разрешение имени родителя в документ
+   * @param interfaceNames имена искомых интерфейсов в нижнем регистре
+   * @param nameToDocument разрешение имени класса/интерфейса в документ
    * @return {@code true}, если кандидат реализует один из интерфейсов
    */
   public boolean implementsAny(
@@ -160,11 +167,35 @@ public class TypeRelationIndex {
     DocumentContext current = candidate;
     while (current != null && visited.add(current.getUri())) {
       for (var name : oScriptExtends.implementedInterfaceNames(current)) {
-        if (interfaceNames.contains(name.toLowerCase(Locale.ROOT))) {
+        if (interfaceClosureMatches(name, interfaceNames, nameToDocument)) {
           return true;
         }
       }
       current = oScriptExtends.parentClassName(current).flatMap(nameToDocument).orElse(null);
+    }
+    return false;
+  }
+
+  /**
+   * Содержит ли замыкание интерфейса {@code interfaceName} (он сам плюс все его
+   * базовые интерфейсы, объявленные через {@code &Расширяет}) хотя бы одно из
+   * искомых имён. Обход вверх по иерархии интерфейсов с защитой от циклов по
+   * множеству посещённых имён.
+   */
+  private boolean interfaceClosureMatches(
+    String interfaceName,
+    Set<String> targets,
+    Function<String, Optional<DocumentContext>> nameToDocument
+  ) {
+    var visited = new HashSet<String>();
+    String name = interfaceName;
+    while (name != null && visited.add(name.toLowerCase(Locale.ROOT))) {
+      if (targets.contains(name.toLowerCase(Locale.ROOT))) {
+        return true;
+      }
+      name = nameToDocument.apply(name)
+        .flatMap(oScriptExtends::parentClassName)
+        .orElse(null);
     }
     return false;
   }

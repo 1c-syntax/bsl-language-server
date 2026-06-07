@@ -115,6 +115,42 @@ class TypeRelationIndexTest {
   }
 
   @Test
+  void implementsAnyMatchesBaseInterfaceThroughInterfaceHierarchy() {
+    var candidate = osDocument("file:///РеализацияПроизводного.os");
+    var derived = osDocument("file:///ПроизводныйИнтерфейс.os");
+    // Кандидат реализует производный интерфейс, который &Расширяет базовый.
+    when(oScriptExtends.implementedInterfaceNames(candidate)).thenReturn(List.of("ПроизводныйИнтерфейс"));
+    when(oScriptExtends.parentClassName(candidate)).thenReturn(Optional.empty());
+    when(oScriptExtends.parentClassName(derived)).thenReturn(Optional.of("БазовыйИнтерфейс"));
+
+    var result = index.implementsAny(candidate, Set.of("базовыйинтерфейс"),
+      name -> "ПроизводныйИнтерфейс".equals(name) ? Optional.of(derived) : Optional.empty());
+
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void implementsAnyTerminatesOnInterfaceHierarchyCycleWithoutMatch() {
+    var candidate = osDocument("file:///Реализация.os");
+    var ifaceA = osDocument("file:///ИнтерфейсА.os");
+    var ifaceB = osDocument("file:///ИнтерфейсБ.os");
+    when(oScriptExtends.implementedInterfaceNames(candidate)).thenReturn(List.of("ИнтерфейсА"));
+    when(oScriptExtends.parentClassName(candidate)).thenReturn(Optional.empty());
+    // Цикл в иерархии интерфейсов: А → Б → А.
+    when(oScriptExtends.parentClassName(ifaceA)).thenReturn(Optional.of("ИнтерфейсБ"));
+    when(oScriptExtends.parentClassName(ifaceB)).thenReturn(Optional.of("ИнтерфейсА"));
+
+    var result = index.implementsAny(candidate, Set.of("искомый"),
+      name -> switch (name) {
+        case "ИнтерфейсА" -> Optional.of(ifaceA);
+        case "ИнтерфейсБ" -> Optional.of(ifaceB);
+        default -> Optional.empty();
+      });
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
   void implementsAnyTerminatesOnExtendsCycleWithoutMatch() {
     var a = osDocument("file:///A.os");
     var b = osDocument("file:///B.os");
