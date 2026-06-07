@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.LanguageScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -62,14 +61,14 @@ class OScriptModuleMembersProviderTest {
   @Mock
   private GlobalScopeProvider globalScopeProvider;
   @Mock
-  private AutumnMetaAnnotationResolver metaAnnotationResolver;
+  private OScriptExtends oScriptExtends;
 
   private OScriptModuleMembersProvider provider;
 
   @BeforeEach
   void setUp() {
     provider = new OScriptModuleMembersProvider(
-      typeRegistry, oScriptLibraryIndex, globalScopeProvider, metaAnnotationResolver);
+      typeRegistry, oScriptLibraryIndex, globalScopeProvider, oScriptExtends);
   }
 
   @Test

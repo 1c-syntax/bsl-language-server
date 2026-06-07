@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptExtends;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +64,7 @@ import java.util.stream.Collectors;
 public class ImplementationProvider {
 
   private final OScriptClassResolver classResolver;
-  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
+  private final OScriptExtends oScriptExtends;
 
   // Результаты — по одной локации на класс/метод-реализатор, поэтому URI
   // уникален: сортировки по нему достаточно для детерминированного порядка.
@@ -81,7 +80,7 @@ public class ImplementationProvider {
    */
   public List<Location> getImplementations(DocumentContext documentContext, ImplementationParams params) {
     if (documentContext.getFileType() != FileType.OS
-      || !OScriptExtends.isInterface(documentContext, metaAnnotationResolver)) {
+      || !oScriptExtends.isInterface(documentContext)) {
       return Collections.emptyList();
     }
 
@@ -123,13 +122,13 @@ public class ImplementationProvider {
     var visited = new HashSet<URI>();
     DocumentContext current = candidate;
     while (current != null && visited.add(current.getUri())) {
-      var implemented = OScriptExtends.implementedInterfaceNames(current, metaAnnotationResolver);
+      var implemented = oScriptExtends.implementedInterfaceNames(current);
       for (var name : implemented) {
         if (interfaceNames.contains(name.toLowerCase(Locale.ROOT))) {
           return true;
         }
       }
-      current = OScriptExtends.parentClassName(current, metaAnnotationResolver)
+      current = oScriptExtends.parentClassName(current)
         .flatMap(parent -> classResolver.resolveClassDocument(parent, serverContext))
         .orElse(null);
     }

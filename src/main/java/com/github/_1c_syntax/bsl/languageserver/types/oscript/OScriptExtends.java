@@ -26,7 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
-import lombok.experimental.UtilityClass;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,9 +69,10 @@ import java.util.Set;
  *   Процедура ПриСозданииОбъекта()
  * </pre>
  * Разворачивание мета-аннотаций делегируется {@link AutumnMetaAnnotationResolver}
- * (роль {@link #EXTENDS_ROLE}).
+ * (роль {@link #EXTENDS_ROLE}), который внедряется через конструктор.
  */
-@UtilityClass
+@Component
+@RequiredArgsConstructor
 public class OScriptExtends {
 
   /**
@@ -105,6 +107,9 @@ public class OScriptExtends {
    */
   public static final String INTERFACE_ROLE = "Интерфейс";
 
+  /** Резолвер мета-аннотаций «ОСени» (внедряется через конструктор). */
+  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
+
   /**
    * Имена интерфейсов, которые класс объявляет реализуемыми через
    * {@code &Реализует("...")} (с учётом мета-аннотаций). Имя интерфейса — то же,
@@ -112,17 +117,15 @@ public class OScriptExtends {
    * basename файла.
    *
    * @param documentContext контекст {@code .os}-документа
-   * @param metaResolver    резолвер мета-аннотаций «ОСени»
    * @return список имён реализуемых интерфейсов (возможно, пустой)
    */
-  public static List<String> implementedInterfaceNames(DocumentContext documentContext,
-                                                       AutumnMetaAnnotationResolver metaResolver) {
+  public List<String> implementedInterfaceNames(DocumentContext documentContext) {
     if (documentContext.getFileType() != FileType.OS) {
       return List.of();
     }
     var result = new ArrayList<String>();
     for (var method : documentContext.getSymbolTree().getMethods()) {
-      for (var value : metaResolver.valuesByRole(method.getAnnotations(), IMPLEMENTS_ROLE)) {
+      for (var value : metaAnnotationResolver.valuesByRole(method.getAnnotations(), IMPLEMENTS_ROLE)) {
         if (value != null && !value.isBlank()) {
           result.add(value);
         }
@@ -137,16 +140,14 @@ public class OScriptExtends {
    * {@code &Интерфейс} (с учётом мета-аннотаций).
    *
    * @param documentContext контекст {@code .os}-документа
-   * @param metaResolver    резолвер мета-аннотаций «ОСени»
    * @return {@code true}, если документ — интерфейс
    */
-  public static boolean isInterface(DocumentContext documentContext,
-                                    AutumnMetaAnnotationResolver metaResolver) {
+  public boolean isInterface(DocumentContext documentContext) {
     if (documentContext.getFileType() != FileType.OS) {
       return false;
     }
     for (var method : documentContext.getSymbolTree().getMethods()) {
-      if (metaResolver.hasRole(method.getAnnotations(), INTERFACE_ROLE)) {
+      if (metaAnnotationResolver.hasRole(method.getAnnotations(), INTERFACE_ROLE)) {
         return true;
       }
     }
@@ -161,7 +162,7 @@ public class OScriptExtends {
    * @param variable переменная (как правило, поле модуля {@code .os}-класса)
    * @return {@code true}, если переменная хранит экземпляр родителя
    */
-  public static boolean isParentHolder(VariableSymbol variable) {
+  public boolean isParentHolder(VariableSymbol variable) {
     if (IMPLICIT_PARENT_FIELD.equalsIgnoreCase(variable.getName())) {
       return true;
     }
@@ -180,17 +181,15 @@ public class OScriptExtends {
    * документацию).
    *
    * @param documentContext контекст {@code .os}-документа
-   * @param metaResolver    резолвер мета-аннотаций «ОСени»
    * @return имя родителя или {@link Optional#empty()}, если файл не {@code .os}
    *         либо наследование не объявлено
    */
-  public static Optional<String> parentClassName(DocumentContext documentContext,
-                                                 AutumnMetaAnnotationResolver metaResolver) {
+  public Optional<String> parentClassName(DocumentContext documentContext) {
     if (documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }
     return documentContext.getSymbolTree().getMethods().stream()
-      .map(method -> parentFromAnnotations(method.getAnnotations(), metaResolver))
+      .map(method -> parentFromAnnotations(method.getAnnotations()))
       .filter(Optional::isPresent)
       .map(Optional::get)
       .findFirst();
@@ -201,9 +200,8 @@ public class OScriptExtends {
    * (прямой {@code &Расширяет} и мета-аннотации «ОСени»), затем английский
    * псевдоним {@code &Extends} (если у роли нет класса-определения).
    */
-  private static Optional<String> parentFromAnnotations(List<Annotation> annotations,
-                                                        AutumnMetaAnnotationResolver metaResolver) {
-    var byRole = metaResolver.valuesByRole(annotations, EXTENDS_ROLE).stream()
+  private Optional<String> parentFromAnnotations(List<Annotation> annotations) {
+    var byRole = metaAnnotationResolver.valuesByRole(annotations, EXTENDS_ROLE).stream()
       .filter(value -> value != null && !value.isBlank())
       .findFirst();
     if (byRole.isPresent()) {

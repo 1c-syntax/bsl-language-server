@@ -38,7 +38,6 @@ import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByRecei
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredVariableTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -112,7 +111,7 @@ public class ExpressionTypeInferencer {
   private final ReferenceIndex referenceIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final AutumnComponentInferencer autumnComponentInferencer;
-  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
+  private final OScriptExtends oScriptExtends;
 
   /**
    * Вывести типы выражения в контексте документа.
@@ -833,7 +832,7 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     var owner = variable.getOwner();
-    if (owner.getFileType() != FileType.OS || !OScriptExtends.isParentHolder(variable)) {
+    if (owner.getFileType() != FileType.OS || !oScriptExtends.isParentHolder(variable)) {
       return TypeSet.EMPTY;
     }
     return parentClassType(owner);
@@ -845,7 +844,7 @@ public class ExpressionTypeInferencer {
    * или родитель не разрешается в зарегистрированный тип.
    */
   private TypeSet parentClassType(DocumentContext documentContext) {
-    return OScriptExtends.parentClassName(documentContext, metaAnnotationResolver)
+    return oScriptExtends.parentClassName(documentContext)
       .flatMap(name -> typeRegistry.resolve(name, FileType.OS))
       .map(TypeSet::of)
       .orElse(TypeSet.EMPTY);

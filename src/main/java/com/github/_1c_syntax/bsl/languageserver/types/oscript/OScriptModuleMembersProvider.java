@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.types.ModuleType;
@@ -87,7 +86,7 @@ public class OScriptModuleMembersProvider {
   private final TypeRegistry typeRegistry;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
-  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
+  private final OScriptExtends oScriptExtends;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -197,7 +196,7 @@ public class OScriptModuleMembersProvider {
    * объявлено, родитель не разрешается или обнаружен цикл.
    */
   private Collection<MemberDescriptor> inheritedMembers(DocumentContext documentContext, TypeRef classRef) {
-    var parentName = OScriptExtends.parentClassName(documentContext, metaAnnotationResolver).orElse(null);
+    var parentName = oScriptExtends.parentClassName(documentContext).orElse(null);
     if (parentName == null) {
       return List.of();
     }

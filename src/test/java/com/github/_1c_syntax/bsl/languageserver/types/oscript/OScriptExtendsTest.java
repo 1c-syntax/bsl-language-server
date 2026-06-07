@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OScriptExtendsTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private AutumnMetaAnnotationResolver resolver;
+  private OScriptExtends oScriptExtends;
 
   @BeforeEach
   void init() {
@@ -47,37 +46,37 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
   @Test
   void parentClassNameForBslFileIsEmpty() {
     var dc = TestUtils.getDocumentContext("Процедура П()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.parentClassName(dc, resolver)).isEmpty();
+    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
   }
 
   @Test
   void parentClassNameDirectRussianAnnotation() {
     var dc = os("&Расширяет(\"Родитель\")\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.parentClassName(dc, resolver)).contains("Родитель");
+    assertThat(oScriptExtends.parentClassName(dc)).contains("Родитель");
   }
 
   @Test
   void parentClassNameEnglishAliasAnnotation() {
     var dc = os("&Extends(\"Родитель\")\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.parentClassName(dc, resolver)).contains("Родитель");
+    assertThat(oScriptExtends.parentClassName(dc)).contains("Родитель");
   }
 
   @Test
   void parentClassNameEmptyForAnnotationWithoutStringArgument() {
     var dc = os("&Extends\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.parentClassName(dc, resolver)).isEmpty();
+    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
   }
 
   @Test
   void parentClassNameAbsentWithoutAnnotation() {
     var dc = os("Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.parentClassName(dc, resolver)).isEmpty();
+    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
   }
 
   @Test
   void implementedInterfaceNamesForBslFileIsEmpty() {
     var dc = TestUtils.getDocumentContext("Процедура П()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.implementedInterfaceNames(dc, resolver)).isEmpty();
+    assertThat(oScriptExtends.implementedInterfaceNames(dc)).isEmpty();
   }
 
   @Test
@@ -88,40 +87,40 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
       Процедура ПриСозданииОбъекта()
       КонецПроцедуры
       """);
-    assertThat(OScriptExtends.implementedInterfaceNames(dc, resolver))
+    assertThat(oScriptExtends.implementedInterfaceNames(dc))
       .containsExactlyInAnyOrder("ИнтерфейсА", "ИнтерфейсБ");
   }
 
   @Test
   void isInterfaceTrueForInterfaceMarker() {
     var dc = os("&Интерфейс\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.isInterface(dc, resolver)).isTrue();
+    assertThat(oScriptExtends.isInterface(dc)).isTrue();
   }
 
   @Test
   void isInterfaceFalseForPlainClassAndBsl() {
     var os = os("Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
     var bsl = TestUtils.getDocumentContext("Процедура П()\nКонецПроцедуры\n");
-    assertThat(OScriptExtends.isInterface(os, resolver)).isFalse();
-    assertThat(OScriptExtends.isInterface(bsl, resolver)).isFalse();
+    assertThat(oScriptExtends.isInterface(os)).isFalse();
+    assertThat(oScriptExtends.isInterface(bsl)).isFalse();
   }
 
   @Test
   void isParentHolderForImplicitField() {
     var variable = moduleVariable("Перем _ОбъектРодитель;\n", "_ОбъектРодитель");
-    assertThat(OScriptExtends.isParentHolder(variable)).isTrue();
+    assertThat(oScriptExtends.isParentHolder(variable)).isTrue();
   }
 
   @Test
   void isParentHolderForAnnotatedField() {
     var variable = moduleVariable("&Родитель\nПерем СсылкаНаРодителя;\n", "СсылкаНаРодителя");
-    assertThat(OScriptExtends.isParentHolder(variable)).isTrue();
+    assertThat(oScriptExtends.isParentHolder(variable)).isTrue();
   }
 
   @Test
   void isParentHolderFalseForPlainField() {
     var variable = moduleVariable("Перем ОбычноеПоле;\n", "ОбычноеПоле");
-    assertThat(OScriptExtends.isParentHolder(variable)).isFalse();
+    assertThat(oScriptExtends.isParentHolder(variable)).isFalse();
   }
 
   private DocumentContext os(String content) {

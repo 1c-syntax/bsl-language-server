@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -74,7 +73,7 @@ import java.util.stream.Collectors;
 public class TypeHierarchyProvider {
 
   private final OScriptClassResolver classResolver;
-  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
+  private final OScriptExtends oScriptExtends;
 
   private final Comparator<TypeHierarchyItem> itemComparator = Comparator
     .comparing(TypeHierarchyItem::getName, String.CASE_INSENSITIVE_ORDER)
@@ -116,7 +115,7 @@ public class TypeHierarchyProvider {
     DocumentContext documentContext,
     TypeHierarchySupertypesParams params
   ) {
-    return OScriptExtends.parentClassName(documentContext, metaAnnotationResolver)
+    return oScriptExtends.parentClassName(documentContext)
       .flatMap(name -> classResolver.resolveClassDocument(name, documentContext.getServerContext()))
       .map(this::toItem)
       .map(List::of)
@@ -148,7 +147,7 @@ public class TypeHierarchyProvider {
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
     return classResolver.isLibraryClass(documentContext)
-      || OScriptExtends.parentClassName(documentContext, metaAnnotationResolver).isPresent()
+      || oScriptExtends.parentClassName(documentContext).isPresent()
       || !subtypeDocuments(documentContext).isEmpty();
   }
 
@@ -166,7 +165,7 @@ public class TypeHierarchyProvider {
       if (candidate.getFileType() != FileType.OS || candidate.getUri().equals(documentContext.getUri())) {
         continue;
       }
-      OScriptExtends.parentClassName(candidate, metaAnnotationResolver)
+      oScriptExtends.parentClassName(candidate)
         .filter(parent -> ownNames.contains(parent.toLowerCase(Locale.ROOT)))
         .ifPresent(parent -> result.add(candidate));
     }
@@ -184,7 +183,7 @@ public class TypeHierarchyProvider {
       module.getRange(),
       selectionRange(documentContext)
     );
-    OScriptExtends.parentClassName(documentContext, metaAnnotationResolver).ifPresent(parent -> item.setDetail(": " + parent));
+    oScriptExtends.parentClassName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
     return item;
   }
 
