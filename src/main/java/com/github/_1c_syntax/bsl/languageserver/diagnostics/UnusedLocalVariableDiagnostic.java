@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -28,11 +29,18 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -63,14 +71,32 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void check() {
+    Set<Range> forLoopCounterRanges = getForLoopCounterRanges();
     documentContext.getSymbolTree().getVariables().stream()
       .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
       .filter(variable -> !variable.isExport())
+      .filter(variable -> !isForLoopCounter(variable, forLoopCounterRanges))
       .filter(variable -> referenceIndex.getReferencesTo(variable).stream()
         .filter(ref -> ref.occurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty()
       )
       .forEach(variable -> diagnosticStorage.addDiagnostic(
         variable.getSelectionRange(), info.getMessage(variable.getName()))
       );
+  }
+
+  private Set<Range> getForLoopCounterRanges() {
+    return Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_forStatement).stream()
+      .map(BSLParser.ForStatementContext.class::cast)
+      .map(BSLParser.ForStatementContext::IDENTIFIER)
+      .filter(Objects::nonNull)
+      .map(Ranges::create)
+      .collect(Collectors.toSet());
+  }
+
+  private boolean isForLoopCounter(VariableSymbol variable,
+                                   Collection<Range> forLoopCounterRanges) {
+    return referenceIndex.getReferencesTo(variable).stream()
+      .filter(ref -> ref.occurrenceType() == OccurrenceType.DEFINITION)
+      .anyMatch(ref -> forLoopCounterRanges.contains(ref.selectionRange()));
   }
 }
