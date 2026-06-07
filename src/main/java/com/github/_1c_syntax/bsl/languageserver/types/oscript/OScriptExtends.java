@@ -23,13 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
 import lombok.experimental.UtilityClass;
 
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Поддержка библиотеки наследования OneScript
@@ -46,37 +44,72 @@ import java.util.Set;
  * Имя родителя — то же, что используется в {@code Новый Родитель}: для
  * библиотечного класса это его {@code qualifiedName} из {@code lib.config},
  * для обычного {@code .os}-файла — basename.
+ * <p>
+ * Наследование распознаётся не только при прямом использовании {@code &Расширяет},
+ * но и через <b>мета-аннотации</b> фреймворка «ОСень»: пользовательская аннотация,
+ * определённая классом с {@code &Аннотация("Имя")} и {@code &Расширяет("Родитель")},
+ * означает, что любой класс, помеченный {@code &Имя(...)}, наследует
+ * {@code Родитель}. Так устроена, например, библиотека
+ * <a href="https://github.com/autumn-library/autumn-data">autumn-data</a>:
+ * <pre>
+ *   // Определение аннотации &ХранилищеСущностей:
+ *   &amp;Аннотация("ХранилищеСущностей")
+ *   &amp;Расширяет("ХранилищеСущностей")
+ *   &amp;Желудь
+ *   Процедура ПриСозданииОбъекта(Значение, ИсточникДанных = "")
+ *
+ *   // Использование — класс получает члены ХранилищеСущностей (ПолучитьОдно и т.п.):
+ *   &amp;ХранилищеСущностей("Справочник")
+ *   Процедура ПриСозданииОбъекта()
+ * </pre>
+ * Разворачивание мета-аннотаций делегируется {@link AutumnMetaAnnotationResolver}
+ * (роль {@link #EXTENDS_ROLE}).
  */
 @UtilityClass
 public class OScriptExtends {
 
   /**
-   * Имена аннотации наследования (в нижнем регистре): русское {@code &Расширяет}
-   * и английский псевдоним {@code &Extends}.
+   * Базовая роль аннотации наследования (имя русской аннотации extends).
+   * Через неё {@link AutumnMetaAnnotationResolver} распознаёт и прямое
+   * {@code &Расширяет("X")}, и мета-аннотации, разворачивающиеся в неё.
    */
-  private static final Set<String> ANNOTATION_NAMES = Set.of("расширяет", "extends");
+  public static final String EXTENDS_ROLE = "Расширяет";
+
+  /** Английский псевдоним аннотации наследования (в нижнем регистре). */
+  private static final String ENGLISH_ANNOTATION = "extends";
 
   /**
-   * Имя родительского класса из аннотации {@code &Расширяет}/{@code &Extends}
-   * над любым методом документа (на практике — над конструктором
-   * {@code ПриСозданииОбъекта}).
+   * Имя родительского класса для документа {@code .os}, объявленное аннотацией
+   * наследования над любым методом (на практике — над конструктором
+   * {@code ПриСозданииОбъекта}). Учитывает мета-аннотации (см. класс-уровневую
+   * документацию).
    *
    * @param documentContext контекст {@code .os}-документа
+   * @param metaResolver    резолвер мета-аннотаций «ОСени»
    * @return имя родителя или {@link Optional#empty()}, если файл не {@code .os}
    *         либо наследование не объявлено
    */
-  public static Optional<String> parentClassName(DocumentContext documentContext) {
+  public static Optional<String> parentClassName(DocumentContext documentContext,
+                                                 AutumnMetaAnnotationResolver metaResolver) {
     if (documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }
-    for (MethodSymbol method : documentContext.getSymbolTree().getMethods()) {
-      for (Annotation annotation : method.getAnnotations()) {
-        if (!ANNOTATION_NAMES.contains(annotation.getName().toLowerCase(Locale.ROOT))) {
-          continue;
+    for (var method : documentContext.getSymbolTree().getMethods()) {
+      var annotations = method.getAnnotations();
+      // Роль "Расширяет" покрывает прямую &Расширяет("X") и мета-аннотации
+      // («ОСень»), разворачивающиеся в неё (например, &ХранилищеСущностей из autumn-data).
+      for (var value : metaResolver.valuesByRole(annotations, EXTENDS_ROLE)) {
+        if (value != null && !value.isBlank()) {
+          return Optional.of(value);
         }
-        var parent = firstStringParameter(annotation);
-        if (parent.isPresent()) {
-          return parent;
+      }
+      // Английский псевдоним &Extends("X") (если у роли нет класса-определения).
+      for (Annotation annotation : annotations) {
+        if (ENGLISH_ANNOTATION.equalsIgnoreCase(annotation.getName())) {
+          var parent = firstStringParameter(annotation);
+          if (parent.isPresent()) {
+            return parent;
+          }
         }
       }
     }
@@ -85,7 +118,7 @@ public class OScriptExtends {
 
   /**
    * Первый строковый литерал-параметр аннотации. Имя родителя в
-   * {@code &Расширяет("Родитель")} задаётся позиционно (параметр {@code Значение}).
+   * {@code &Extends("Родитель")} задаётся позиционно.
    */
   private static Optional<String> firstStringParameter(Annotation annotation) {
     for (var parameter : annotation.getParameters()) {
