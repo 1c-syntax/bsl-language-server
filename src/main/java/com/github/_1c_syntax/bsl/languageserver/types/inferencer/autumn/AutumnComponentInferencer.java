@@ -84,22 +84,32 @@ public class AutumnComponentInferencer {
   }
 
   /**
-   * Имя желудя, внедряемого в точку с аннотацией {@code &Пластилин} — для навигации к
-   * производителю. Возвращается только для обычного внедрения по имени желудя
-   * ({@code Тип} не задан либо равен {@code Желудь}); для внедрения прилепляемой коллекции
-   * и при пустом имени — пусто.
+   * Внедряемый желудь точки с аннотацией {@code &Пластилин} — для навигации к производителю.
+   * Имя желудя берётся из {@code Значение} (или первого позиционного), иначе — из имени
+   * переменной/параметра; параметр {@code Тип} с именем коллекции помечает внедрение
+   * прилепляемой коллекции (тогда целей навигации несколько — все подходящие желуди).
    *
    * @param annotations  аннотации поля/параметра
    * @param fallbackName имя переменной/параметра — используется как имя желудя, если оно не
    *                     задано в аннотации
-   * @return имя желудя для резолва производителя либо пусто, если это не точка внедрения желудя
-   *         по имени
+   * @return внедряемый желудь либо пусто, если это не точка внедрения или имя желудя пустое
    */
-  public Optional<String> injectedBeanName(List<Annotation> annotations, String fallbackName) {
+  public Optional<InjectedBean> injectedBean(List<Annotation> annotations, String fallbackName) {
     return metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION)
-      .filter(injection -> AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionType(injection)))
-      .map(injection -> beanName(injection, fallbackName))
-      .filter(name -> !name.isBlank());
+      .map(injection -> new InjectedBean(
+        beanName(injection, fallbackName),
+        !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionType(injection))))
+      .filter(bean -> !bean.name().isBlank());
+  }
+
+  /**
+   * Внедряемый желудь: имя для резолва производителя и признак внедрения прилепляемой коллекции.
+   *
+   * @param name       Имя желудя (ключ резолва производителя/членов).
+   * @param collection {@code true}, если внедряется прилепляемая коллекция (нужны все подходящие
+   *                   желуди), иначе одиночный желудь.
+   */
+  public record InjectedBean(String name, boolean collection) {
   }
 
   private TypeSet injectedType(Annotation injection, String fallbackName, FileType fileType) {

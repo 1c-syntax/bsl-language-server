@@ -181,13 +181,41 @@ public class AutumnBeanIndex {
     }
     ensureBuilt();
     return selectCandidates(name).stream()
-      .map(candidate -> new BeanDeclaration(
-        candidate.type(),
-        candidate.primary(),
-        candidate.sourceUri(),
-        candidate.kind(),
-        candidate.factoryMethodName()))
+      .map(AutumnBeanIndex::toDeclaration)
       .toList();
+  }
+
+  /**
+   * Разрешить объявления ВСЕХ производителей, подходящих под имя/прозвище, — без приоритета
+   * {@code &Верховный}. Для навигации к членам прилепляемой коллекции, которой по контракту
+   * нужны все подходящие желуди, а не один.
+   *
+   * @param name Имя или прозвище (квалификатор) желудя.
+   * @return Объявления всех производителей под этим именем; пусто, если их нет.
+   */
+  public List<BeanDeclaration> resolveAllDeclarations(String name) {
+    if (name.isBlank()) {
+      return List.of();
+    }
+    ensureBuilt();
+    return candidatesFor(name).stream()
+      .map(AutumnBeanIndex::toDeclaration)
+      .toList();
+  }
+
+  private static BeanDeclaration toDeclaration(BeanCandidate candidate) {
+    return new BeanDeclaration(
+      candidate.type(),
+      candidate.primary(),
+      candidate.sourceUri(),
+      candidate.kind(),
+      candidate.factoryMethodName());
+  }
+
+  /** Все кандидаты, зарегистрированные под именем/прозвищем (lowercase), либо пустой список. */
+  private List<BeanCandidate> candidatesFor(String name) {
+    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
+    return candidates == null || candidates.isEmpty() ? List.of() : List.copyOf(candidates);
   }
 
   /**
@@ -195,14 +223,11 @@ public class AutumnBeanIndex {
    * одного приоритетного возвращаются только приоритетные, иначе — все кандидаты имени.
    */
   private List<BeanCandidate> selectCandidates(String name) {
-    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
-    if (candidates == null || candidates.isEmpty()) {
-      return List.of();
-    }
+    var candidates = candidatesFor(name);
     var primaryCandidates = candidates.stream()
       .filter(BeanCandidate::primary)
       .toList();
-    return primaryCandidates.isEmpty() ? List.copyOf(candidates) : primaryCandidates;
+    return primaryCandidates.isEmpty() ? candidates : primaryCandidates;
   }
 
   /**

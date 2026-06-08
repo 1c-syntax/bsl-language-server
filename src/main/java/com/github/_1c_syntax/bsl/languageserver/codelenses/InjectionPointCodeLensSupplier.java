@@ -101,7 +101,7 @@ public class InjectionPointCodeLensSupplier
 
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, InjectionPointCodeLensData data) {
-    var producers = beanIndex.resolveDeclarations(data.getBeanName()).stream()
+    var producers = declarationsFor(data.getBeanName(), data.isCollection()).stream()
       .map(this::locateProducer)
       .flatMap(Optional::stream)
       .toList();
@@ -131,14 +131,24 @@ public class InjectionPointCodeLensSupplier
     String memberName,
     Range range
   ) {
-    return componentInferencer.injectedBeanName(annotations, memberName)
-      .filter(beanName -> !beanIndex.resolveDeclarations(beanName).isEmpty())
-      .map(beanName -> {
-        var data = new InjectionPointCodeLensData(documentContext.getUri(), getId(), beanName);
+    return componentInferencer.injectedBean(annotations, memberName)
+      .filter(bean -> !declarationsFor(bean.name(), bean.collection()).isEmpty())
+      .map(bean -> {
+        var data = new InjectionPointCodeLensData(documentContext.getUri(), getId(), bean.name(), bean.collection());
         var codeLens = new CodeLens(range);
         codeLens.setData(data);
         return codeLens;
       });
+  }
+
+  /**
+   * Объявления производителей под именем желудя: для коллекции — все подходящие желуди
+   * (без приоритета {@code &Верховный}), для одиночного внедрения — с приоритетом.
+   */
+  private List<BeanDeclaration> declarationsFor(String beanName, boolean collection) {
+    return collection
+      ? beanIndex.resolveAllDeclarations(beanName)
+      : beanIndex.resolveDeclarations(beanName);
   }
 
   /**
@@ -187,16 +197,23 @@ public class InjectionPointCodeLensSupplier
     String beanName;
 
     /**
+     * Признак внедрения прилепляемой коллекции (цели — все подходящие желуди, без приоритета).
+     */
+    boolean collection;
+
+    /**
      * Конструктор данных линзы точки внедрения.
      *
-     * @param uri      URI документа.
-     * @param id       Идентификатор поставщика линз.
-     * @param beanName Имя внедряемого желудя.
+     * @param uri        URI документа.
+     * @param id         Идентификатор поставщика линз.
+     * @param beanName   Имя внедряемого желудя.
+     * @param collection Признак внедрения прилепляемой коллекции.
      */
-    @ConstructorProperties({"uri", "id", "beanName"})
-    public InjectionPointCodeLensData(URI uri, String id, String beanName) {
+    @ConstructorProperties({"uri", "id", "beanName", "collection"})
+    public InjectionPointCodeLensData(URI uri, String id, String beanName, boolean collection) {
       super(uri, id);
       this.beanName = beanName;
+      this.collection = collection;
     }
   }
 }

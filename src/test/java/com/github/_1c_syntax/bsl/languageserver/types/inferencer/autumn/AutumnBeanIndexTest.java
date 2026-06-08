@@ -430,6 +430,33 @@ class AutumnBeanIndexTest {
   }
 
   @Test
+  void resolveAllDeclarationsReturnsAllCandidatesWithoutPrimaryFilter() {
+    // given: два желудя под общим прозвищем «Панк», один помечен &Верховный
+    var sid = new TypeRef(TypeKind.USER, "СидВишес");
+    var johnny = new TypeRef(TypeKind.USER, "ДжонниРоттен");
+    registerClass("ДжонниРоттен", johnny, method(component(null), qualifier("Панк")));
+    registerClass("СидВишес", sid, method(component(null), primary(), qualifier("Панк")));
+    init();
+
+    // when: для членов коллекции нужны ВСЕ кандидаты, а не только приоритетный
+    var declarations = beanIndex.resolveAllDeclarations("Панк");
+
+    // then
+    assertThat(declarations).extracting(AutumnBeanIndex.BeanDeclaration::type)
+      .containsExactlyInAnyOrder(sid, johnny);
+  }
+
+  @Test
+  void resolveAllDeclarationsReturnsEmptyForUnknownOrBlankName() {
+    // given
+    init();
+
+    // when / then
+    assertThat(beanIndex.resolveAllDeclarations("НетТакого")).isEmpty();
+    assertThat(beanIndex.resolveAllDeclarations("")).isEmpty();
+  }
+
+  @Test
   void resolveDeclarationsReturnsEmptyForUnknownOrBlankName() {
     // given
     init();
