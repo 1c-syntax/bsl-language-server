@@ -50,7 +50,8 @@ import java.util.stream.Collectors;
 public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String REGEX_DELETION_FILE =
-    "УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile";
+    "УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile"
+      + "|УдалитьФайлыАсинх|DeleteFilesAsync|ПереместитьФайлАсинх|MoveFileAsync";
 
   private static final Pattern GET_TEMP_FILE_NAME_PATTERN = CaseInsensitivePattern.compile(
     "^(ПолучитьИмяВременногоФайла|GetTempFileName)"
