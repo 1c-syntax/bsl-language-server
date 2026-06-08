@@ -70,11 +70,27 @@ public class CodeLensProvider {
    * @return Список линз.
    */
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return enabledCodeLensSuppliersProvider.getObject().stream()
+    var codeLenses = enabledCodeLensSuppliersProvider.getObject().stream()
       .filter(codeLensSupplier -> codeLensSupplier.isApplicable(documentContext))
       .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+
+    if (clientCapabilitiesHolder.isLsp4ij()) {
+      // LSP4IJ не исполняет команду линзы по клику, а повторно шлёт codeLens/resolve
+      // (lsp4ij#1585). Поэтому для него линзы разрешаются сразу — с готовой командой
+      // клик срабатывает, а codeLens/resolve не нужен (resolveProvider анонсирован false).
+      codeLenses.forEach(codeLens -> resolveEagerly(documentContext, codeLens));
+    }
+
+    return codeLenses;
+  }
+
+  private void resolveEagerly(DocumentContext documentContext, CodeLens codeLens) {
+    var data = extractData(codeLens);
+    if (data != null) {
+      resolveCodeLens(documentContext, codeLens, data);
+    }
   }
 
   /**
