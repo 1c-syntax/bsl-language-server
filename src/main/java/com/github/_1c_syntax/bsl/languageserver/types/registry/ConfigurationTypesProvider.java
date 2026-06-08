@@ -116,7 +116,8 @@ public class ConfigurationTypesProvider {
     MDOType.SETTINGS_STORAGE,
     MDOType.WS_REFERENCE,
     MDOType.INTEGRATION_SERVICE,
-    MDOType.INTEGRATION_SERVICE_CHANNEL
+    MDOType.INTEGRATION_SERVICE_CHANNEL,
+    MDOType.PALETTE_COLOR
   );
 
   private final TypeRegistry typeRegistry;
