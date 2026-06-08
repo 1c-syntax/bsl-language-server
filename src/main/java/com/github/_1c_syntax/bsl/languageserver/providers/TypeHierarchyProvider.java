@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelationIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Провайдер иерархии типов для OneScript-классов, использующих библиотеку
@@ -52,7 +51,7 @@ import java.util.Optional;
  * <p>
  * Отношения наследования провайдер не разбирает сам, а спрашивает у
  * {@link TypeRelationIndex} — единой точки истины об {@code &Расширяет}; имена
- * классов в документы переводит {@link OScriptClassResolver}.
+ * классов для отображения берутся из {@link OScriptLibraryIndex}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy">Prepare Type Hierarchy Request specification</a>
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#typeHierarchy_supertypes">Type Hierarchy Supertypes specification</a>
@@ -62,7 +61,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TypeHierarchyProvider {
 
-  private final OScriptClassResolver classResolver;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
   private final TypeRelationIndex typeRelationIndex;
 
   private final Comparator<TypeHierarchyItem> itemComparator = Comparator
@@ -105,9 +104,7 @@ public class TypeHierarchyProvider {
     DocumentContext documentContext,
     TypeHierarchySupertypesParams params
   ) {
-    var serverContext = documentContext.getServerContext();
-    return typeRelationIndex.supertype(documentContext,
-        name -> classResolver.resolveClassDocument(name, serverContext))
+    return typeRelationIndex.supertype(documentContext)
       .map(this::toItem)
       .map(List::of)
       .orElseGet(Collections::emptyList);
@@ -137,19 +134,9 @@ public class TypeHierarchyProvider {
    * родителя через {@code &Расширяет} или сам является чьим-то родителем.
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
-    return classResolver.isLibraryClass(documentContext)
-      || effectiveSupertypeName(documentContext).isPresent()
+    return oScriptLibraryIndex.isLibraryClass(documentContext)
+      || typeRelationIndex.supertypeName(documentContext).isPresent()
       || !subtypeDocuments(documentContext).isEmpty();
-  }
-
-  /**
-   * Имя супертипа с поправкой на мета-аннотации: у класса-определения аннотации
-   * {@code &Расширяет} — шаблон мета-аннотации, а не собственный супертип.
-   */
-  private Optional<String> effectiveSupertypeName(DocumentContext documentContext) {
-    var serverContext = documentContext.getServerContext();
-    return typeRelationIndex.supertypeName(documentContext,
-      name -> classResolver.resolveClassDocument(name, serverContext));
   }
 
   /**
@@ -157,16 +144,12 @@ public class TypeHierarchyProvider {
    * через {@code &Расширяет}/{@code &Extends}.
    */
   private List<DocumentContext> subtypeDocuments(DocumentContext documentContext) {
-    return typeRelationIndex.subtypes(
-      documentContext,
-      documentContext.getServerContext().getDocuments().values(),
-      classResolver::classNames
-    );
+    return typeRelationIndex.subtypes(documentContext);
   }
 
   private TypeHierarchyItem toItem(DocumentContext documentContext) {
     var module = documentContext.getSymbolTree().getModule();
-    var names = new LinkedHashSet<>(classResolver.classNames(documentContext));
+    var names = new LinkedHashSet<>(oScriptLibraryIndex.classNames(documentContext));
 
     var item = new TypeHierarchyItem(
       names.iterator().next(),
@@ -175,7 +158,7 @@ public class TypeHierarchyProvider {
       module.getRange(),
       selectionRange(documentContext)
     );
-    effectiveSupertypeName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
+    typeRelationIndex.supertypeName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
     return item;
   }
 

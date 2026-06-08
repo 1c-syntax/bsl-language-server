@@ -23,9 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Единая точка истины об отношениях наследования между OneScript-классами
@@ -47,14 +50,18 @@ import java.util.function.Function;
  * Раньше транзитивный обход цепочки {@code &Расширяет} и защита от циклов были
  * продублированы в трёх местах — провайдере членов ({@link OScriptModuleMembersProvider}),
  * провайдере иерархии типов и провайдере перехода к реализациям. Теперь все
- * обходы и cycle-guard'ы живут здесь, а потребители лишь задают способ
- * разрешения имён (в документ или в {@link TypeRef}) через функции — поэтому
- * индекс не зависит ни от {@code TypeRegistry}, ни от {@code OScriptClassResolver}
- * и не образует с ними циклов в графе бинов.
+ * обходы и cycle-guard'ы живут здесь.
  * <p>
- * Отношения читаются «вживую» из аннотаций через {@link OScriptExtends} при
- * каждом запросе (а не кэшируются), что бесплатно даёт hot-reload: правка
- * {@code &Расширяет}/{@code &Реализует} подхватывается без ре-регистрации.
+ * Разбор аннотаций делегируется {@link OScriptExtends}. Разрешение имени класса
+ * в документ — каноническим путём системы типов (тем же, что использует
+ * {@code Новый Имя}): {@link TypeRegistry#resolve} → {@link UserType} →
+ * символ-источник → его документ, с приоритетом по каталогу library-классов
+ * {@link OScriptLibraryIndex}. Все три бина workspace-scoped (CGLIB-прокси),
+ * поэтому конструкторные зависимости между ними цикл графа бинов не образуют.
+ * <p>
+ * Отношения читаются «вживую» из аннотаций при каждом запросе (а не кэшируются),
+ * что бесплатно даёт hot-reload: правка {@code &Расширяет}/{@code &Реализует}
+ * подхватывается без ре-регистрации.
  */
 @Component
 @WorkspaceScope
@@ -70,105 +77,70 @@ public class TypeRelationIndex {
   private final ThreadLocal<Set<TypeRef>> inheritanceInProgress = ThreadLocal.withInitial(HashSet::new);
 
   private final OScriptExtends oScriptExtends;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final TypeRegistry typeRegistry;
 
   /**
    * Является ли документ интерфейсом ({@code &Интерфейс} на конструкторе).
+   *
+   * @param documentContext контекст {@code .os}-документа
+   * @return {@code true}, если документ — интерфейс
    */
   public boolean isInterface(DocumentContext documentContext) {
     return oScriptExtends.isInterface(documentContext);
   }
 
   /**
-   * Имя родителя, объявленного через {@code &Расширяет} (без требования, чтобы
-   * родитель уже был доступен/разрешался). {@link Optional#empty()}, если
-   * наследование не объявлено.
-   */
-  public Optional<String> supertypeName(DocumentContext documentContext) {
-    return oScriptExtends.parentClassName(documentContext);
-  }
-
-  /**
-   * Имя родителя для целей иерархии типов с поправкой на мета-аннотации «ОСени».
-   * Для обычного класса — то же, что {@link #supertypeName(DocumentContext)}
-   * (имя возвращается даже без разрешения родителя). Для класса-определения
-   * аннотации ({@code &Аннотация}) {@code &Расширяет} — это шаблон мета-аннотации,
-   * а не собственный супертип, поэтому имя возвращается лишь когда родитель сам
-   * разрешается в класс-определение аннотации (наследование аннотация→аннотация).
+   * Имя супертипа для целей иерархии типов с поправкой на мета-аннотации «ОСени».
+   * Для обычного класса — имя из {@code &Расширяет} (возвращается даже если
+   * родитель не разрешается). Для класса-определения аннотации ({@code &Аннотация})
+   * {@code &Расширяет} — это шаблон мета-аннотации, а не собственный супертип,
+   * поэтому имя возвращается лишь когда родитель сам разрешается в класс-определение
+   * аннотации (наследование аннотация→аннотация).
    *
    * @param documentContext документ, для которого вычисляется супертип
-   * @param nameToDocument   разрешение имени класса в документ (обычно через
-   *                         {@code OScriptClassResolver})
    * @return имя супертипа либо {@link Optional#empty()}
    */
-  public Optional<String> supertypeName(
-    DocumentContext documentContext,
-    Function<String, Optional<DocumentContext>> nameToDocument
-  ) {
+  public Optional<String> supertypeName(DocumentContext documentContext) {
     var parentName = oScriptExtends.parentClassName(documentContext);
     if (parentName.isEmpty() || !oScriptExtends.isAnnotationDefinition(documentContext)) {
       return parentName;
     }
-    return parentName.filter(name -> nameToDocument.apply(name)
+    var serverContext = documentContext.getServerContext();
+    return parentName.filter(name -> resolveDocument(name, serverContext)
       .map(oScriptExtends::isAnnotationDefinition)
       .orElse(false));
   }
 
   /**
-   * Прямой родительский документ (супертип через {@code &Расширяет}),
-   * разрешённый переданной функцией {@code nameToDocument}.
+   * Прямой родительский документ (супертип через {@code &Расширяет}). Имя
+   * родителя разрешается в документ каноническим путём системы типов; для
+   * класса-определения аннотации действует поправка из {@link #supertypeName}.
    *
    * @param documentContext документ-наследник
-   * @param nameToDocument   разрешение имени класса в документ (обычно через
-   *                         {@code OScriptClassResolver})
    * @return документ родителя либо {@link Optional#empty()}
    */
-  public Optional<DocumentContext> supertype(
-    DocumentContext documentContext,
-    Function<String, Optional<DocumentContext>> nameToDocument
-  ) {
+  public Optional<DocumentContext> supertype(DocumentContext documentContext) {
+    var serverContext = documentContext.getServerContext();
     return oScriptExtends.parentClassName(documentContext)
-      .flatMap(nameToDocument)
+      .flatMap(name -> resolveDocument(name, serverContext))
       .filter(parent -> inheritableFromParent(documentContext, parent));
   }
 
   /**
-   * Допустимо ли регистрировать отношение наследования {@code child → parent}
-   * библиотеки {@code extends}. Класс-определение аннотации ({@code &Аннотация})
-   * несёт {@code &Расширяет} как шаблон мета-аннотации для классов, помеченных
-   * этой аннотацией, а не как собственный супертип, поэтому такое отношение
-   * считается реальным только между аннотациями (аннотация→аннотация);
-   * аннотация→обычный класс отбрасывается. Для обычных классов ограничения нет.
-   *
-   * @param child  документ-наследник
-   * @param parent документ-родитель
-   * @return {@code true}, если отношение наследования допустимо
-   */
-  private boolean inheritableFromParent(DocumentContext child, DocumentContext parent) {
-    return !oScriptExtends.isAnnotationDefinition(child)
-      || oScriptExtends.isAnnotationDefinition(parent);
-  }
-
-  /**
-   * Прямые наследники: все {@code .os}-документы из {@code universe}, объявившие
+   * Прямые наследники: все {@code .os}-документы workspace, объявившие
    * {@code documentContext} своим родителем через {@code &Расширяет}.
    *
    * @param documentContext документ-родитель
-   * @param universe         просматриваемые документы (обычно все из ServerContext)
-   * @param classNamesOf     имена, под которыми класс известен другим (обычно
-   *                         через {@code OScriptClassResolver#classNames})
    * @return список документов-наследников
    */
-  public List<DocumentContext> subtypes(
-    DocumentContext documentContext,
-    Collection<DocumentContext> universe,
-    Function<DocumentContext, List<String>> classNamesOf
-  ) {
+  public List<DocumentContext> subtypes(DocumentContext documentContext) {
     var ownNames = new HashSet<String>();
-    for (var name : classNamesOf.apply(documentContext)) {
+    for (var name : oScriptLibraryIndex.classNames(documentContext)) {
       ownNames.add(name.toLowerCase(Locale.ROOT));
     }
     var result = new ArrayList<DocumentContext>();
-    for (var candidate : universe) {
+    for (var candidate : documentContext.getServerContext().getDocuments().values()) {
       if (candidate.getFileType() != FileType.OS
         || candidate.getUri().equals(documentContext.getUri())) {
         continue;
@@ -179,6 +151,19 @@ public class TypeRelationIndex {
         .ifPresent(parent -> result.add(candidate));
     }
     return result;
+  }
+
+  /**
+   * Допустимо ли регистрировать отношение наследования {@code child → parent}
+   * библиотеки {@code extends}. Класс-определение аннотации ({@code &Аннотация})
+   * несёт {@code &Расширяет} как шаблон мета-аннотации для классов, помеченных
+   * этой аннотацией, а не как собственный супертип, поэтому такое отношение
+   * считается реальным только между аннотациями (аннотация→аннотация);
+   * аннотация→обычный класс отбрасывается. Для обычных классов ограничения нет.
+   */
+  private boolean inheritableFromParent(DocumentContext child, DocumentContext parent) {
+    return !oScriptExtends.isAnnotationDefinition(child)
+      || oScriptExtends.isAnnotationDefinition(parent);
   }
 
   /**
@@ -198,26 +183,24 @@ public class TypeRelationIndex {
    *
    * @param candidate      проверяемый документ
    * @param interfaceNames имена искомых интерфейсов в нижнем регистре
-   * @param nameToDocument разрешение имени класса/интерфейса в документ
    * @return {@code true}, если кандидат реализует один из интерфейсов
    */
-  public boolean implementsAny(
-    DocumentContext candidate,
-    Set<String> interfaceNames,
-    Function<String, Optional<DocumentContext>> nameToDocument
-  ) {
+  public boolean implementsAny(DocumentContext candidate, Set<String> interfaceNames) {
     if (interfaceNames.isEmpty()) {
       return false;
     }
+    var serverContext = candidate.getServerContext();
     var visited = new HashSet<URI>();
     DocumentContext current = candidate;
     while (current != null && visited.add(current.getUri())) {
       for (var name : oScriptExtends.implementedInterfaceNames(current)) {
-        if (interfaceClosureMatches(name, interfaceNames, nameToDocument)) {
+        if (interfaceClosureMatches(name, interfaceNames, serverContext)) {
           return true;
         }
       }
-      current = oScriptExtends.parentClassName(current).flatMap(nameToDocument).orElse(null);
+      current = oScriptExtends.parentClassName(current)
+        .flatMap(name -> resolveDocument(name, serverContext))
+        .orElse(null);
     }
     return false;
   }
@@ -231,7 +214,7 @@ public class TypeRelationIndex {
   private boolean interfaceClosureMatches(
     String interfaceName,
     Set<String> targets,
-    Function<String, Optional<DocumentContext>> nameToDocument
+    ServerContext serverContext
   ) {
     var visited = new HashSet<String>();
     String name = interfaceName;
@@ -239,7 +222,7 @@ public class TypeRelationIndex {
       if (targets.contains(name.toLowerCase(Locale.ROOT))) {
         return true;
       }
-      name = nameToDocument.apply(name)
+      name = resolveDocument(name, serverContext)
         .flatMap(oScriptExtends::parentClassName)
         .orElse(null);
     }
@@ -257,26 +240,20 @@ public class TypeRelationIndex {
    *
    * @param documentContext документ-наследник
    * @param classRef         тип наследника (ключ guard'а от циклов)
-   * @param nameToRef        разрешение имени родителя в {@link TypeRef}
-   * @param membersOf        получение членов типа (обычно {@code TypeRegistry#getMembers})
    * @return унаследованные члены; пустой список, если наследование не объявлено,
    *         родитель не разрешается или обнаружен цикл
    */
-  public Collection<MemberDescriptor> inheritedMembers(
-    DocumentContext documentContext,
-    TypeRef classRef,
-    Function<String, Optional<TypeRef>> nameToRef,
-    Function<TypeRef, Collection<MemberDescriptor>> membersOf
-  ) {
+  public Collection<MemberDescriptor> inheritedMembers(DocumentContext documentContext, TypeRef classRef) {
     // Класс-определение аннотации (&Аннотация) несёт &Расширяет как шаблон
     // мета-аннотации, а не собственное наследование, поэтому членов родителя не
-    // получает. Здесь доступно лишь разрешение имени в TypeRef (не в документ),
-    // поэтому редкий случай аннотация→аннотация по членам не разворачиваем — для
-    // класса-маркера это несущественно (в отличие от иерархии типов в supertype).
+    // получает. Редкий случай аннотация→аннотация по членам не разворачиваем —
+    // для класса-маркера это несущественно (в отличие от иерархии типов).
     if (oScriptExtends.isAnnotationDefinition(documentContext)) {
       return List.of();
     }
-    var parentRef = oScriptExtends.parentClassName(documentContext).flatMap(nameToRef).orElse(null);
+    var parentRef = oScriptExtends.parentClassName(documentContext)
+      .flatMap(name -> typeRegistry.resolve(name, FileType.OS))
+      .orElse(null);
     if (parentRef == null || parentRef.equals(classRef)) {
       return List.of();
     }
@@ -285,7 +262,7 @@ public class TypeRelationIndex {
       return List.of();
     }
     try {
-      return List.copyOf(membersOf.apply(parentRef));
+      return List.copyOf(typeRegistry.getMembers(parentRef, FileType.OS));
     } finally {
       inProgress.remove(classRef);
       // Не держим пустой Set в ThreadLocal на пуловых потоках (S5164).
@@ -293,5 +270,29 @@ public class TypeRelationIndex {
         inheritanceInProgress.remove();
       }
     }
+  }
+
+  /**
+   * Разрешить имя OneScript-класса ({@code &Расширяет("Имя")} / {@code &Реализует("Имя")})
+   * в документ. Сначала — через каталог library-классов {@link OScriptLibraryIndex}
+   * (надёжный URI без слабых ссылок), затем — каноническим путём системы типов:
+   * {@code Имя → TypeRef → UserType → символ-источник → его документ} (тот же
+   * резолв, что у {@code Новый Имя}; покрывает обычные {@code .os} по basename).
+   */
+  private Optional<DocumentContext> resolveDocument(String name, ServerContext serverContext) {
+    var libraryUri = oScriptLibraryIndex.findClassUri(name)
+      .or(() -> oScriptLibraryIndex.findUri(name));
+    if (libraryUri.isPresent()) {
+      var document = serverContext.getDocument(libraryUri.get());
+      if (document != null) {
+        return Optional.of(document);
+      }
+    }
+    return typeRegistry.resolve(name, FileType.OS)
+      .map(typeRegistry::get)
+      .filter(UserType.class::isInstance)
+      .map(UserType.class::cast)
+      .flatMap(UserType::getDeclaration)
+      .map(SourceDefinedSymbol::getOwner);
   }
 }

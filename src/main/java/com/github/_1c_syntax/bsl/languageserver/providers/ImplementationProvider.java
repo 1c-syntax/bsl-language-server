@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptClassResolver;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelationIndex;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ImplementationParams;
@@ -54,8 +54,8 @@ import java.util.stream.Collectors;
  * </ul>
  * Сам разбор отношений {@code &Реализует}/{@code &Расширяет} (в т.ч.
  * транзитивный обход через абстрактных родителей) делегирован
- * {@link TypeRelationIndex}; имена классов в документы переводит
- * {@link OScriptClassResolver}.
+ * {@link TypeRelationIndex}; имена классов-интерфейсов берутся из
+ * {@link OScriptLibraryIndex}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation">Goto Implementation Request specification</a>
  */
@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ImplementationProvider {
 
-  private final OScriptClassResolver classResolver;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
   private final TypeRelationIndex typeRelationIndex;
 
   // Результаты — по одной локации на класс/метод-реализатор, поэтому URI
@@ -84,7 +84,7 @@ public class ImplementationProvider {
       return Collections.emptyList();
     }
 
-    var interfaceNames = classResolver.classNames(documentContext).stream()
+    var interfaceNames = oScriptLibraryIndex.classNames(documentContext).stream()
       .map(name -> name.toLowerCase(Locale.ROOT))
       .collect(Collectors.toSet());
 
@@ -95,8 +95,7 @@ public class ImplementationProvider {
     for (var candidate : serverContext.getDocuments().values()) {
       if (candidate.getFileType() != FileType.OS
         || candidate.getUri().equals(documentContext.getUri())
-        || !typeRelationIndex.implementsAny(candidate, interfaceNames,
-              name -> classResolver.resolveClassDocument(name, serverContext))) {
+        || !typeRelationIndex.implementsAny(candidate, interfaceNames)) {
         continue;
       }
       if (methodName != null) {

@@ -21,263 +21,245 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Optional;
+import java.nio.file.Path;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
- * Юнит-тесты централизованных обходов отношений наследования: разбор аннотаций
- * замокан через {@link OScriptExtends}, проверяются сами алгоритмы (скан
- * наследников, транзитивная реализация интерфейсов, защита от циклов).
+ * Интеграционные тесты централизованных обходов отношений наследования
+ * библиотеки extends на реальных {@code .os}-фикстурах: иерархия типов
+ * ({@code &Расширяет}), транзитивная реализация интерфейсов
+ * ({@code &Реализует}/иерархия интерфейсов), унаследованные члены, защита от
+ * циклов и поправка на мета-аннотации «ОСени» ({@code &Аннотация}).
  */
-class TypeRelationIndexTest {
+@CleanupContextBeforeClassAndAfterClass
+class TypeRelationIndexTest extends AbstractServerContextAwareTest {
 
-  private final OScriptExtends oScriptExtends = mock(OScriptExtends.class);
-  private final TypeRelationIndex index = new TypeRelationIndex(oScriptExtends);
+  @Autowired
+  private TypeRelationIndex index;
 
-  private static DocumentContext osDocument(String uri) {
-    var documentContext = mock(DocumentContext.class);
-    when(documentContext.getUri()).thenReturn(URI.create(uri));
-    when(documentContext.getFileType()).thenReturn(FileType.OS);
-    return documentContext;
+  @Autowired
+  private OScriptLibraryIndex libraryIndex;
+
+  @Autowired
+  private TypeRegistry typeRegistry;
+
+  private static final Path TYPE_HIERARCHY = Path.of("src/test/resources/type-hierarchy").toAbsolutePath();
+  private static final Path EXTENDS_LIB =
+    Path.of("src/test/resources/oscript-libraries/extends-lib").toAbsolutePath();
+  private static final Path INTERFACE_HIERARCHY =
+    Path.of("src/test/resources/oscript-libraries/interface-hierarchy-lib").toAbsolutePath();
+  private static final Path INTERFACE_ABSTRACT =
+    Path.of("src/test/resources/oscript-libraries/interface-abstract-lib").toAbsolutePath();
+  private static final Path AUTUMN_DATA =
+    Path.of("src/test/resources/oscript-libraries/autumn-data-sample").toAbsolutePath();
+  private static final Path CYCLE_LIB =
+    Path.of("src/test/resources/oscript-libraries/cycle-lib").toAbsolutePath();
+
+  // --- иерархия типов (&Расширяет, basename-резолв) ---
+
+  @Test
+  void supertypeNameReturnsDeclaredParent() {
+    initPlain(TYPE_HIERARCHY);
+    var cat = plainDoc(TYPE_HIERARCHY, "Кошка.os");
+
+    assertThat(index.supertypeName(cat)).contains("Млекопитающее");
+    assertThat(index.isInterface(cat)).isFalse();
   }
 
   @Test
-  void isInterfaceAndSupertypeNameDelegateToAnnotations() {
-    var doc = osDocument("file:///Класс.os");
-    when(oScriptExtends.isInterface(doc)).thenReturn(true);
-    when(oScriptExtends.parentClassName(doc)).thenReturn(Optional.of("Родитель"));
+  void supertypeResolvesParentDocument() {
+    initPlain(TYPE_HIERARCHY);
+    var cat = plainDoc(TYPE_HIERARCHY, "Кошка.os");
+    var mammal = plainDoc(TYPE_HIERARCHY, "Млекопитающее.os");
 
-    assertThat(index.isInterface(doc)).isTrue();
-    assertThat(index.supertypeName(doc)).contains("Родитель");
+    assertThat(index.supertype(cat)).contains(mammal);
   }
 
   @Test
-  void supertypeResolvesParentNameThroughProvidedFunction() {
-    var child = osDocument("file:///Кошка.os");
-    var parent = osDocument("file:///Млекопитающее.os");
-    when(oScriptExtends.parentClassName(child)).thenReturn(Optional.of("Млекопитающее"));
+  void supertypeEmptyForRootClass() {
+    initPlain(TYPE_HIERARCHY);
+    var animal = plainDoc(TYPE_HIERARCHY, "Животное.os");
 
-    var resolved = index.supertype(child,
-      name -> "Млекопитающее".equals(name) ? Optional.of(parent) : Optional.empty());
-
-    assertThat(resolved).contains(parent);
+    assertThat(index.supertype(animal)).isEmpty();
+    assertThat(index.supertypeName(animal)).isEmpty();
   }
 
   @Test
-  void subtypesCollectsOsDocumentsThatDeclareGivenParent() {
-    var parent = osDocument("file:///Млекопитающее.os");
-    var child = osDocument("file:///Кошка.os");
-    var unrelated = osDocument("file:///Дерево.os");
-    when(oScriptExtends.parentClassName(child)).thenReturn(Optional.of("Млекопитающее"));
-    when(oScriptExtends.parentClassName(unrelated)).thenReturn(Optional.empty());
+  void subtypesReturnsDirectChildren() {
+    initPlain(TYPE_HIERARCHY);
+    var mammal = plainDoc(TYPE_HIERARCHY, "Млекопитающее.os");
 
-    var subtypes = index.subtypes(parent, List.of(parent, child, unrelated),
-      doc -> doc == parent ? List.of("Млекопитающее") : List.of());
+    assertThat(index.subtypes(mammal))
+      .extracting(documentName())
+      .containsExactlyInAnyOrder("Кошка", "Собака");
+  }
 
-    assertThat(subtypes).containsExactly(child);
+  @Test
+  void subtypesEmptyForLeafClass() {
+    initPlain(TYPE_HIERARCHY);
+    var cat = plainDoc(TYPE_HIERARCHY, "Кошка.os");
+
+    assertThat(index.subtypes(cat)).isEmpty();
+  }
+
+  // --- реализация интерфейсов (&Реализует, иерархия интерфейсов) ---
+
+  @Test
+  void isInterfaceTrueForInterfaceMarker() {
+    initLibrary(INTERFACE_HIERARCHY);
+    var baseInterface = libDoc(INTERFACE_HIERARCHY, "БазовыйИнтерфейс.os");
+
+    assertThat(index.isInterface(baseInterface)).isTrue();
   }
 
   @Test
   void implementsAnyMatchesDirectInterface() {
-    var candidate = osDocument("file:///Реализация.os");
-    when(oScriptExtends.implementedInterfaceNames(candidate)).thenReturn(List.of("МойИнтерфейс"));
-    when(oScriptExtends.parentClassName(candidate)).thenReturn(Optional.empty());
+    initLibrary(INTERFACE_HIERARCHY);
+    var implementer = libDoc(INTERFACE_HIERARCHY, "РеализацияБазового.os");
 
-    assertThat(index.implementsAny(candidate, Set.of("мойинтерфейс"), name -> Optional.empty())).isTrue();
-  }
-
-  @Test
-  void implementsAnyMatchesInterfaceDeclaredOnAbstractParent() {
-    var child = osDocument("file:///Наследник.os");
-    var parent = osDocument("file:///АбстрактныйКласс.os");
-    when(oScriptExtends.implementedInterfaceNames(child)).thenReturn(List.of());
-    when(oScriptExtends.parentClassName(child)).thenReturn(Optional.of("АбстрактныйКласс"));
-    when(oScriptExtends.implementedInterfaceNames(parent)).thenReturn(List.of("МойИнтерфейс"));
-    when(oScriptExtends.parentClassName(parent)).thenReturn(Optional.empty());
-
-    var result = index.implementsAny(child, Set.of("мойинтерфейс"),
-      name -> "АбстрактныйКласс".equals(name) ? Optional.of(parent) : Optional.empty());
-
-    assertThat(result).isTrue();
+    assertThat(index.implementsAny(implementer, Set.of("базовыйинтерфейс"))).isTrue();
+    assertThat(index.implementsAny(implementer, Set.of("несуществующийинтерфейс"))).isFalse();
+    assertThat(index.implementsAny(implementer, Set.of())).isFalse();
   }
 
   @Test
   void implementsAnyMatchesBaseInterfaceThroughInterfaceHierarchy() {
-    var candidate = osDocument("file:///РеализацияПроизводного.os");
-    var derived = osDocument("file:///ПроизводныйИнтерфейс.os");
-    // Кандидат реализует производный интерфейс, который &Расширяет базовый.
-    when(oScriptExtends.implementedInterfaceNames(candidate)).thenReturn(List.of("ПроизводныйИнтерфейс"));
-    when(oScriptExtends.parentClassName(candidate)).thenReturn(Optional.empty());
-    when(oScriptExtends.parentClassName(derived)).thenReturn(Optional.of("БазовыйИнтерфейс"));
+    initLibrary(INTERFACE_HIERARCHY);
+    var implementer = libDoc(INTERFACE_HIERARCHY, "РеализацияПроизводного.os");
 
-    var result = index.implementsAny(candidate, Set.of("базовыйинтерфейс"),
-      name -> "ПроизводныйИнтерфейс".equals(name) ? Optional.of(derived) : Optional.empty());
-
-    assertThat(result).isTrue();
+    assertThat(index.implementsAny(implementer, Set.of("базовыйинтерфейс"))).isTrue();
   }
 
   @Test
-  void implementsAnyTerminatesOnInterfaceHierarchyCycleWithoutMatch() {
-    var candidate = osDocument("file:///Реализация.os");
-    var ifaceA = osDocument("file:///ИнтерфейсА.os");
-    var ifaceB = osDocument("file:///ИнтерфейсБ.os");
-    when(oScriptExtends.implementedInterfaceNames(candidate)).thenReturn(List.of("ИнтерфейсА"));
-    when(oScriptExtends.parentClassName(candidate)).thenReturn(Optional.empty());
-    // Цикл в иерархии интерфейсов: А → Б → А.
-    when(oScriptExtends.parentClassName(ifaceA)).thenReturn(Optional.of("ИнтерфейсБ"));
-    when(oScriptExtends.parentClassName(ifaceB)).thenReturn(Optional.of("ИнтерфейсА"));
+  void implementsAnyMatchesInterfaceDeclaredOnAbstractParent() {
+    initLibrary(INTERFACE_ABSTRACT);
+    var concrete = libDoc(INTERFACE_ABSTRACT, "КонкретноеХранилище.os");
 
-    var result = index.implementsAny(candidate, Set.of("искомый"),
-      name -> switch (name) {
-        case "ИнтерфейсА" -> Optional.of(ifaceA);
-        case "ИнтерфейсБ" -> Optional.of(ifaceB);
-        default -> Optional.empty();
-      });
+    assertThat(index.implementsAny(concrete, Set.of("интерфейсхранилища"))).isTrue();
+  }
 
-    assertThat(result).isFalse();
+  // --- унаследованные члены ---
+
+  @Test
+  void inheritedMembersReturnsParentMembersTransitively() {
+    initLibrary(EXTENDS_LIB);
+    var child = libDoc(EXTENDS_LIB, "ДочернийКласс.os");
+    var childRef = typeRegistry.resolve("ДочернийКласс", FileType.OS).orElseThrow();
+
+    assertThat(index.inheritedMembers(child, childRef))
+      .extracting(MemberDescriptor::name)
+      .contains("ПромежуточныйМетод", "БазовыйМетод");
   }
 
   @Test
-  void implementsAnyTerminatesOnExtendsCycleWithoutMatch() {
-    var a = osDocument("file:///A.os");
-    var b = osDocument("file:///B.os");
-    when(oScriptExtends.implementedInterfaceNames(a)).thenReturn(List.of());
-    when(oScriptExtends.implementedInterfaceNames(b)).thenReturn(List.of());
-    when(oScriptExtends.parentClassName(a)).thenReturn(Optional.of("B"));
-    when(oScriptExtends.parentClassName(b)).thenReturn(Optional.of("A"));
+  void inheritedMembersEmptyForRootClass() {
+    initLibrary(EXTENDS_LIB);
+    var base = libDoc(EXTENDS_LIB, "БазовыйКласс.os");
+    var baseRef = typeRegistry.resolve("БазовыйКласс", FileType.OS).orElseThrow();
 
-    var result = index.implementsAny(a, Set.of("мойинтерфейс"),
-      name -> switch (name) {
-        case "A" -> Optional.of(a);
-        case "B" -> Optional.of(b);
-        default -> Optional.empty();
-      });
-
-    assertThat(result).isFalse();
+    assertThat(index.inheritedMembers(base, baseRef)).isEmpty();
   }
+
+  // --- мета-аннотации «ОСени»: класс-аннотация — не подтип обычного класса ---
 
   @Test
   void supertypeSuppressedForAnnotationDefinitionExtendingPlainClass() {
-    // given — класс-определение аннотации &Расширяет обычный класс: это шаблон
-    // мета-аннотации, а не собственный супертип.
-    var annotation = osDocument("file:///АннотацияХранилище.os");
-    var base = osDocument("file:///Хранилище.os");
-    when(oScriptExtends.parentClassName(annotation)).thenReturn(Optional.of("Хранилище"));
-    when(oScriptExtends.isAnnotationDefinition(annotation)).thenReturn(true);
-    when(oScriptExtends.isAnnotationDefinition(base)).thenReturn(false);
+    initLibrary(AUTUMN_DATA);
+    var annotation = libDoc(AUTUMN_DATA, "АннотацияХранилищеСущностей.os");
 
-    // when
-    var resolved = index.supertype(annotation, name -> Optional.of(base));
-    var name = index.supertypeName(annotation, n -> Optional.of(base));
-
-    // then
-    assertThat(resolved).isEmpty();
-    assertThat(name).isEmpty();
+    assertThat(index.supertype(annotation)).isEmpty();
+    assertThat(index.supertypeName(annotation)).isEmpty();
   }
 
   @Test
-  void supertypeKeptForAnnotationExtendingAnnotation() {
-    // given — наследование аннотация→аннотация остаётся реальным отношением.
-    var child = osDocument("file:///ПроизводнаяАннотация.os");
-    var parentAnnotation = osDocument("file:///БазоваяАннотация.os");
-    when(oScriptExtends.parentClassName(child)).thenReturn(Optional.of("БазоваяАннотация"));
-    when(oScriptExtends.isAnnotationDefinition(child)).thenReturn(true);
-    when(oScriptExtends.isAnnotationDefinition(parentAnnotation)).thenReturn(true);
+  void subtypesExcludesAnnotationDefinitionButKeepsAnnotatedClass() {
+    initLibrary(AUTUMN_DATA);
+    var base = libDoc(AUTUMN_DATA, "ХранилищеСущностей.os");
 
-    // when
-    var resolved = index.supertype(child, name -> Optional.of(parentAnnotation));
-    var name = index.supertypeName(child, n -> Optional.of(parentAnnotation));
-
-    // then
-    assertThat(resolved).contains(parentAnnotation);
-    assertThat(name).contains("БазоваяАннотация");
-  }
-
-  @Test
-  void subtypesExcludesAnnotationDefinitionOfPlainParent() {
-    // given
-    var parent = osDocument("file:///Хранилище.os");
-    var annotation = osDocument("file:///АннотацияХранилище.os");
-    when(oScriptExtends.parentClassName(annotation)).thenReturn(Optional.of("Хранилище"));
-    when(oScriptExtends.isAnnotationDefinition(annotation)).thenReturn(true);
-    when(oScriptExtends.isAnnotationDefinition(parent)).thenReturn(false);
-
-    // when
-    var subtypes = index.subtypes(parent, List.of(parent, annotation),
-      doc -> doc == parent ? List.of("Хранилище") : List.of());
-
-    // then
-    assertThat(subtypes).isEmpty();
+    assertThat(index.subtypes(base))
+      .extracting(documentName())
+      .containsExactly("СправочникиХранилище")
+      .doesNotContain("АннотацияХранилищеСущностей");
   }
 
   @Test
   void inheritedMembersSuppressedForAnnotationDefinition() {
-    // given
-    var annotation = osDocument("file:///АннотацияХранилище.os");
-    var annotationRef = new TypeRef(TypeKind.USER, "АннотацияХранилище");
-    var baseRef = new TypeRef(TypeKind.USER, "Хранилище");
-    when(oScriptExtends.parentClassName(annotation)).thenReturn(Optional.of("Хранилище"));
-    when(oScriptExtends.isAnnotationDefinition(annotation)).thenReturn(true);
+    initLibrary(AUTUMN_DATA);
+    var annotation = libDoc(AUTUMN_DATA, "АннотацияХранилищеСущностей.os");
+    var annotationRef = typeRegistry.resolve("АннотацияХранилищеСущностей", FileType.OS).orElseThrow();
 
-    // when
-    var members = index.inheritedMembers(annotation, annotationRef,
-      name -> Optional.of(baseRef),
-      ref -> List.of(MemberDescriptor.property("БазовоеСвойство")));
+    assertThat(index.inheritedMembers(annotation, annotationRef)).isEmpty();
+  }
 
-    // then
-    assertThat(members).isEmpty();
+  // --- защита от циклов ---
+
+  @Test
+  void inheritedMembersTerminatesOnExtendsCycle() {
+    initLibrary(CYCLE_LIB);
+    var cycleA = libDoc(CYCLE_LIB, "ЦиклА.os");
+    var cycleARef = typeRegistry.resolve("ЦиклА", FileType.OS).orElseThrow();
+
+    // Не должно уйти в бесконечную рекурсию; набор членов конечен.
+    assertThat(index.inheritedMembers(cycleA, cycleARef))
+      .extracting(MemberDescriptor::name)
+      .contains("МетодБ");
   }
 
   @Test
-  void inheritedMembersReturnsParentMembers() {
-    var child = osDocument("file:///Кошка.os");
-    var childRef = new TypeRef(TypeKind.USER, "Кошка");
-    var parentRef = new TypeRef(TypeKind.USER, "Млекопитающее");
-    var parentMember = MemberDescriptor.property("БазовоеСвойство");
-    when(oScriptExtends.parentClassName(child)).thenReturn(Optional.of("Млекопитающее"));
+  void implementsAnyTerminatesOnInterfaceHierarchyCycle() {
+    initLibrary(CYCLE_LIB);
+    var implementer = libDoc(CYCLE_LIB, "РеализаторЦикла.os");
 
-    var members = index.inheritedMembers(child, childRef,
-      name -> Optional.of(parentRef),
-      ref -> ref.equals(parentRef) ? List.of(parentMember) : List.of());
-
-    assertThat(members).containsExactly(parentMember);
+    // Поиск несуществующего интерфейса обходит циклическое замыкание и завершается.
+    assertThat(index.implementsAny(implementer, Set.of("несуществующий"))).isFalse();
+    // А оба интерфейса из цикла находятся как реализуемые.
+    assertThat(index.implementsAny(implementer, Set.of("интерфейсциклб"))).isTrue();
   }
 
-  @Test
-  void inheritedMembersEmptyWhenNoParentDeclared() {
-    var doc = osDocument("file:///Корень.os");
-    var ref = new TypeRef(TypeKind.USER, "Корень");
-    when(oScriptExtends.parentClassName(doc)).thenReturn(Optional.empty());
+  // --- helpers ---
 
-    assertThat(index.inheritedMembers(doc, ref, name -> Optional.empty(), r -> List.of())).isEmpty();
+  private void initLibrary(Path root) {
+    initServerContext(root, false);
+    libraryIndex.reindex(context);
   }
 
-  @Test
-  void inheritedMembersBreaksRecursiveCycle() {
-    var doc = osDocument("file:///Сам.os");
-    var ownRef = new TypeRef(TypeKind.USER, "Сам");
-    var parentRef = new TypeRef(TypeKind.USER, "Родитель");
-    when(oScriptExtends.parentClassName(doc)).thenReturn(Optional.of("Родитель"));
+  private void initPlain(Path root) {
+    initServerContext(root);
+  }
 
-    // membersOf повторно входит в inheritedMembers для того же ownRef — guard
-    // должен оборвать рекурсию и вернуть пустой набор на повторном входе.
-    var members = index.inheritedMembers(doc, ownRef,
-      name -> Optional.of(parentRef),
-      ref -> index.inheritedMembers(doc, ownRef, n -> Optional.of(parentRef), r -> List.of()));
+  private DocumentContext libDoc(Path root, String fileName) {
+    return document(Absolute.uri(root.resolve("src").resolve(fileName).toUri()), fileName);
+  }
 
-    assertThat(members).isEmpty();
+  private DocumentContext plainDoc(Path root, String fileName) {
+    return document(Absolute.uri(root.resolve(fileName).toUri()), fileName);
+  }
+
+  private DocumentContext document(URI uri, String name) {
+    var documentContext = context.getDocument(uri);
+    assertThat(documentContext).as("document %s must be populated", name).isNotNull();
+    return documentContext;
+  }
+
+  private static java.util.function.Function<DocumentContext, String> documentName() {
+    return doc -> {
+      var path = doc.getUri().getPath();
+      var base = path.substring(path.lastIndexOf('/') + 1);
+      return base.endsWith(".os") ? base.substring(0, base.length() - 3) : base;
+    };
   }
 }

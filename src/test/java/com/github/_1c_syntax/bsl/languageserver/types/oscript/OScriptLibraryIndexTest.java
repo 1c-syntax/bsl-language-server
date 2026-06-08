@@ -205,6 +205,32 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void classNamesUsesQualifiedNameForLibraryClass() {
+    // given — у класса RenamedClass qualifiedName из lib.config отличается от basename файла.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+    var renamed = context.getDocument(Absolute.uri(fixtureRoot.resolve("src/mainclass.os").toUri()));
+
+    // when / then — берётся qualifiedName, а не basename.
+    assertThat(index.classNames(renamed)).containsExactly("RenamedClass");
+    assertThat(index.isLibraryClass(renamed)).isTrue();
+  }
+
+  @Test
+  void classNamesFallsBackToBasenameForNonLibraryFile() {
+    // given — обычный .os, не зарегистрированный в lib.config.
+    initServerContext();
+    var plain = com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext(
+      com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n", context);
+
+    // when / then — fallback на basename, library-классом не считается.
+    assertThat(index.classNames(plain)).containsExactly("fake-uri");
+    assertThat(index.isLibraryClass(plain)).isFalse();
+  }
+
+  @Test
   void findEntriesByUriReturnsRolesForLibraryFile() {
     // given
     var fixtureRoot = Path.of("src/test/resources/oscript-libraries/mylib").toAbsolutePath();

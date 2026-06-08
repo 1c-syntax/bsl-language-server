@@ -182,12 +182,7 @@ public class OScriptModuleMembersProvider {
   private void registerInheritedMembers(DocumentContext documentContext, TypeRef classRef) {
     typeRegistry.registerMemberSource(
       classRef,
-      () -> typeRelationIndex.inheritedMembers(
-        documentContext,
-        classRef,
-        name -> typeRegistry.resolve(name, FileType.OS),
-        parentRef -> typeRegistry.getMembers(parentRef, FileType.OS)
-      ),
+      () -> typeRelationIndex.inheritedMembers(documentContext, classRef),
       LanguageScope.OS
     );
   }
