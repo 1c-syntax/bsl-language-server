@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelationIndex;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
@@ -128,7 +129,12 @@ public class ImplementationProvider {
   private static Range classSelectionRange(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getConstructor()
       .map(MethodSymbol::getSelectionRange)
-      .orElseGet(() -> documentContext.getSymbolTree().getModule().getSelectionRange());
+      .orElseGet(() -> {
+        // Согласованно с TypeHierarchyProvider.selectionRange: getSelectionRange()
+        // модуля может вернуть null (поле без @NonNull) — даём безопасный fallback.
+        var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+        return range != null ? range : Ranges.create(0, 0, 0, 0);
+      });
   }
 
   private static Location location(DocumentContext documentContext, Range range) {

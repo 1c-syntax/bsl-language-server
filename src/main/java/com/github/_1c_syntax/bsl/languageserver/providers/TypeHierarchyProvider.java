@@ -64,7 +64,7 @@ public class TypeHierarchyProvider {
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final TypeRelationIndex typeRelationIndex;
 
-  private final Comparator<TypeHierarchyItem> itemComparator = Comparator
+  private static final Comparator<TypeHierarchyItem> ITEM_COMPARATOR = Comparator
     .comparing(TypeHierarchyItem::getName, String.CASE_INSENSITIVE_ORDER)
     .thenComparing(TypeHierarchyItem::getUri);
 
@@ -124,7 +124,7 @@ public class TypeHierarchyProvider {
   ) {
     var result = subtypeDocuments(documentContext).stream()
       .map(this::toItem)
-      .sorted(itemComparator)
+      .sorted(ITEM_COMPARATOR)
       .toList();
     return result.isEmpty() ? Collections.emptyList() : result;
   }
@@ -150,9 +150,10 @@ public class TypeHierarchyProvider {
   private TypeHierarchyItem toItem(DocumentContext documentContext) {
     var module = documentContext.getSymbolTree().getModule();
     var names = new LinkedHashSet<>(oScriptLibraryIndex.classNames(documentContext));
+    var primaryName = names.isEmpty() ? "" : names.iterator().next();
 
     var item = new TypeHierarchyItem(
-      names.iterator().next(),
+      primaryName,
       SymbolKind.Class,
       documentContext.getUri().toString(),
       module.getRange(),
