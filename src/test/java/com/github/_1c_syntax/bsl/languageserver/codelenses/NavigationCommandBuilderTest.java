@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class NavigationCommandBuilderTest {
 
-  private static final URI URI_VALUE = URI.create("file:///module.os");
+  private static final URI URI_VALUE = Absolute.uri("file:///module.os");
   private static final Position POSITION = new Position(1, 4);
 
   @Mock

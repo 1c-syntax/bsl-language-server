@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -262,7 +263,7 @@ class AutumnBeanIndexTest {
   @Test
   void rebuildsContributionOfChangedDocument() {
     // given: фабрика регистрирует желудь "Старый"
-    var uri = URI.create("file:///beans/Фабрика.os");
+    var uri = Absolute.uri("file:///beans/Фабрика.os");
     var entry = new LibraryEntry(uri, "Фабрика", EntryKind.CLASS, "lib", false);
     entries.add(entry);
     when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
@@ -351,7 +352,7 @@ class AutumnBeanIndexTest {
     assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
 
     // when: изменён .os-документ, который зарегистрирован только как МОДУЛЬ (не класс)
-    var moduleUri = URI.create("file:///beans/Модуль.os");
+    var moduleUri = Absolute.uri("file:///beans/Модуль.os");
     when(libraryIndex.findEntriesByUri(moduleUri))
       .thenReturn(List.of(new LibraryEntry(moduleUri, "Модуль", EntryKind.MODULE, "lib", false)));
     var document = mock(DocumentContext.class);
@@ -384,7 +385,7 @@ class AutumnBeanIndexTest {
       assertThat(declaration.kind()).isEqualTo(AutumnBeanIndex.ProducerKind.COMPONENT);
       assertThat(declaration.factoryMethodName()).isNull();
       assertThat(declaration.primary()).isFalse();
-      assertThat(declaration.sourceUri()).isEqualTo(URI.create("file:///beans/Логгер.os"));
+      assertThat(declaration.sourceUri()).isEqualTo(Absolute.uri("file:///beans/Логгер.os"));
     });
   }
 
@@ -405,7 +406,7 @@ class AutumnBeanIndexTest {
       assertThat(declaration.type()).isEqualTo(type);
       assertThat(declaration.kind()).isEqualTo(AutumnBeanIndex.ProducerKind.FACTORY);
       assertThat(declaration.factoryMethodName()).isEqualTo("СоединениеСБазой");
-      assertThat(declaration.sourceUri()).isEqualTo(URI.create("file:///beans/Фабрика.os"));
+      assertThat(declaration.sourceUri()).isEqualTo(Absolute.uri("file:///beans/Фабрика.os"));
     });
   }
 
@@ -441,7 +442,7 @@ class AutumnBeanIndexTest {
   // --- helpers ---------------------------------------------------------------
 
   private URI registerEntry(String qualifiedName) {
-    var uri = URI.create("file:///beans/" + qualifiedName + ".os");
+    var uri = Absolute.uri("file:///beans/" + qualifiedName + ".os");
     var entry = new LibraryEntry(uri, qualifiedName, EntryKind.CLASS, "lib", false);
     entries.add(entry);
     when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
