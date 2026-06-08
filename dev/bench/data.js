@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780908542992,
+  "lastUpdate": 1780924268604,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36549,6 +36549,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.365881427786122",
             "extra": "mean: 280.26428111394245 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fe19922e44c4db30f684262de2c24974247193bb",
+          "message": "Merge pull request #4020 from 1c-syntax/feature/bsl-context-0.7-mdo-queue-palette\n\nfeat(types): bsl-context 0.7.0 + поддержка нового MDO ЦветПалитры",
+          "timestamp": "2026-06-08T14:21:37+02:00",
+          "tree_id": "f205453aaa0565444a3f6781feebf874bb6d8f69",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fe19922e44c4db30f684262de2c24974247193bb"
+        },
+        "date": 1780924260312,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 278.58375938733417,
+            "unit": "sec",
+            "range": "stddev: 9.214291465195526",
+            "extra": "mean: 278.58375938733417 sec\nrounds: 3"
           }
         ]
       }
