@@ -57,8 +57,6 @@ public final class LibConfigParser {
   private static final String NAME_ATTRIBUTE = "name";
   private static final String FILE_ATTRIBUTE = "file";
 
-  private static final XMLInputFactory XML_INPUT_FACTORY = createXmlInputFactory();
-
   private static XMLInputFactory createXmlInputFactory() {
     var factory = XMLInputFactory.newDefaultFactory();
     // Защита от XXE: lib.config не должен подтягивать DTD/внешние сущности.
@@ -81,8 +79,11 @@ public final class LibConfigParser {
     var modules = new ArrayList<LibEntry>();
     var classes = new ArrayList<LibEntry>();
 
+    // Фабрика создаётся на вызов: XMLInputFactory не гарантирует потокобезопасность,
+    // а newDefaultFactory() дёшев (без ServiceLoader), parse() не на горячем пути.
+    var factory = createXmlInputFactory();
     try (InputStream input = Files.newInputStream(libConfigPath)) {
-      var reader = XML_INPUT_FACTORY.createXMLStreamReader(input);
+      var reader = factory.createXMLStreamReader(input);
       try {
         while (reader.hasNext()) {
           if (reader.next() != XMLStreamConstants.START_ELEMENT) {
