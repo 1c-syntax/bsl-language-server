@@ -336,6 +336,16 @@
             "title": "Variables declaration in common module",
             "$id": "#/definitions/CommonModuleVariables"
         },
+        "CompareWithBoolean": {
+            "description": "Comparison with a boolean constant",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Comparison with a boolean constant",
+            "$id": "#/definitions/CompareWithBoolean"
+        },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
             "default": true,
