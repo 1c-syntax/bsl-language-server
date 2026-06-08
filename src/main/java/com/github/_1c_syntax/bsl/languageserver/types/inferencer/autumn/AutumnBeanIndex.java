@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -102,10 +103,45 @@ public class AutumnBeanIndex {
   private final AtomicReference<CompletableFuture<Void>> ready = new AtomicReference<>();
 
   /**
-   * Кандидат-желудь: тип компонента, признак приоритетного ({@code &Верховный})
-   * и URI .os-файла, из которого он зарегистрирован.
+   * Вид производителя желудя: класс-компонент ({@code &Желудь}/{@code &Дуб}, производитель —
+   * его конструктор) либо фабричный метод ({@code &Завязь}, производитель — сам метод).
    */
-  private record BeanCandidate(TypeRef type, boolean primary, URI sourceUri) {
+  public enum ProducerKind {
+    COMPONENT,
+    FACTORY
+  }
+
+  /**
+   * Объявление производителя желудя для навигации.
+   *
+   * @param type              Тип производимого желудя.
+   * @param primary           Признак приоритетного желудя ({@code &Верховный}).
+   * @param sourceUri         URI .os-файла с объявлением производителя.
+   * @param kind              Вид производителя.
+   * @param factoryMethodName Имя фабричного метода для {@link ProducerKind#FACTORY};
+   *                          {@code null} для {@link ProducerKind#COMPONENT}.
+   */
+  public record BeanDeclaration(
+    TypeRef type,
+    boolean primary,
+    URI sourceUri,
+    ProducerKind kind,
+    @Nullable String factoryMethodName
+  ) {
+  }
+
+  /**
+   * Кандидат-желудь: тип компонента, признак приоритетного ({@code &Верховный}),
+   * URI .os-файла, из которого он зарегистрирован, вид производителя и имя
+   * фабричного метода (для {@code &Завязь}).
+   */
+  private record BeanCandidate(
+    TypeRef type,
+    boolean primary,
+    URI sourceUri,
+    ProducerKind kind,
+    @Nullable String factoryMethodName
+  ) {
   }
 
   /**
@@ -120,23 +156,53 @@ public class AutumnBeanIndex {
       return TypeSet.EMPTY;
     }
     ensureBuilt();
-    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
-    if (candidates == null || candidates.isEmpty()) {
+    var selected = selectCandidates(name);
+    if (selected.isEmpty()) {
       return TypeSet.EMPTY;
     }
-
     var refs = new LinkedHashSet<TypeRef>();
-    for (var candidate : candidates) {
-      if (candidate.primary()) {
-        refs.add(candidate.type());
-      }
-    }
-    if (refs.isEmpty()) {
-      for (var candidate : candidates) {
-        refs.add(candidate.type());
-      }
+    for (var candidate : selected) {
+      refs.add(candidate.type());
     }
     return TypeSet.of(refs);
+  }
+
+  /**
+   * Разрешить объявления производителей желудя по его имени или прозвищу — для навигации к
+   * месту объявления (конструктор класса-компонента или фабричный метод {@code &Завязь}).
+   *
+   * @param name Имя или прозвище желудя.
+   * @return Объявления производителей; при конфликте имён предпочитаются помеченные
+   *         {@code &Верховный}, иначе возвращаются все кандидаты. Пусто, если желудь не найден.
+   */
+  public List<BeanDeclaration> resolveDeclarations(String name) {
+    if (name.isBlank()) {
+      return List.of();
+    }
+    ensureBuilt();
+    return selectCandidates(name).stream()
+      .map(candidate -> new BeanDeclaration(
+        candidate.type(),
+        candidate.primary(),
+        candidate.sourceUri(),
+        candidate.kind(),
+        candidate.factoryMethodName()))
+      .toList();
+  }
+
+  /**
+   * Выбрать кандидатов по имени с учётом приоритета {@code &Верховный}: при наличии хотя бы
+   * одного приоритетного возвращаются только приоритетные, иначе — все кандидаты имени.
+   */
+  private List<BeanCandidate> selectCandidates(String name) {
+    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
+    if (candidates == null || candidates.isEmpty()) {
+      return List.of();
+    }
+    var primaryCandidates = candidates.stream()
+      .filter(BeanCandidate::primary)
+      .toList();
+    return primaryCandidates.isEmpty() ? List.copyOf(candidates) : primaryCandidates;
   }
 
   /**
@@ -283,7 +349,7 @@ public class AutumnBeanIndex {
         var name = metaAnnotationResolver.roleValues(match.getValue(), match.getKey()).stream()
           .findFirst()
           .orElse(defaultName);
-        register(annotations, name, ownerType, uri);
+        register(annotations, name, ownerType, uri, ProducerKind.COMPONENT, null);
       });
   }
 
@@ -302,13 +368,15 @@ public class AutumnBeanIndex {
         .findFirst()
         .orElse(method.getName());
       typeRegistry.resolve(typeName)
-        .ifPresent(beanType -> register(annotations, name, beanType, uri));
+        .ifPresent(beanType ->
+          register(annotations, name, beanType, uri, ProducerKind.FACTORY, method.getName()));
     });
   }
 
-  private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri) {
+  private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri,
+                        ProducerKind kind, @Nullable String factoryMethodName) {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
-    var candidate = new BeanCandidate(type, primary, uri);
+    var candidate = new BeanCandidate(type, primary, uri, kind, factoryMethodName);
 
     addCandidate(uri, primaryName, candidate);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {

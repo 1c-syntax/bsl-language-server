@@ -368,6 +368,76 @@ class AutumnBeanIndexTest {
     assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
   }
 
+  @Test
+  void resolveDeclarationsReturnsComponentProducer() {
+    // given
+    var type = new TypeRef(TypeKind.USER, "Логгер");
+    registerClass("Логгер", type, method(component(null)));
+    init();
+
+    // when
+    var declarations = beanIndex.resolveDeclarations("Логгер");
+
+    // then
+    assertThat(declarations).singleElement().satisfies(declaration -> {
+      assertThat(declaration.type()).isEqualTo(type);
+      assertThat(declaration.kind()).isEqualTo(AutumnBeanIndex.ProducerKind.COMPONENT);
+      assertThat(declaration.factoryMethodName()).isNull();
+      assertThat(declaration.primary()).isFalse();
+      assertThat(declaration.sourceUri()).isEqualTo(URI.create("file:///beans/Логгер.os"));
+    });
+  }
+
+  @Test
+  void resolveDeclarationsReturnsFactoryProducerWithMethodName() {
+    // given
+    var type = new TypeRef(TypeKind.USER, "СоединениеСБазой");
+    when(typeRegistry.resolve("СоединениеСБазой")).thenReturn(Optional.of(type));
+    registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
+      method(oak()), namedMethod("СоединениеСБазой", factory(null, null)));
+    init();
+
+    // when
+    var declarations = beanIndex.resolveDeclarations("СоединениеСБазой");
+
+    // then
+    assertThat(declarations).singleElement().satisfies(declaration -> {
+      assertThat(declaration.type()).isEqualTo(type);
+      assertThat(declaration.kind()).isEqualTo(AutumnBeanIndex.ProducerKind.FACTORY);
+      assertThat(declaration.factoryMethodName()).isEqualTo("СоединениеСБазой");
+      assertThat(declaration.sourceUri()).isEqualTo(URI.create("file:///beans/Фабрика.os"));
+    });
+  }
+
+  @Test
+  void resolveDeclarationsPrefersPrimaryOnConflict() {
+    // given
+    var sid = new TypeRef(TypeKind.USER, "СидВишес");
+    var johnny = new TypeRef(TypeKind.USER, "ДжонниРоттен");
+    registerClass("ДжонниРоттен", johnny, method(component(null), qualifier("Панк")));
+    registerClass("СидВишес", sid, method(component(null), primary(), qualifier("Панк")));
+    init();
+
+    // when
+    var declarations = beanIndex.resolveDeclarations("Панк");
+
+    // then
+    assertThat(declarations).singleElement().satisfies(declaration -> {
+      assertThat(declaration.type()).isEqualTo(sid);
+      assertThat(declaration.primary()).isTrue();
+    });
+  }
+
+  @Test
+  void resolveDeclarationsReturnsEmptyForUnknownOrBlankName() {
+    // given
+    init();
+
+    // when / then
+    assertThat(beanIndex.resolveDeclarations("НетТакого")).isEmpty();
+    assertThat(beanIndex.resolveDeclarations("")).isEmpty();
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   private URI registerEntry(String qualifiedName) {
