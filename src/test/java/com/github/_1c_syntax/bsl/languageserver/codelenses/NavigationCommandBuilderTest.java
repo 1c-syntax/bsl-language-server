@@ -70,6 +70,19 @@ class NavigationCommandBuilderTest {
   }
 
   @Test
+  void gotoCommandForCodeServerUsesWrapperCommand() {
+    // given: code-server — VS Code-совместимый клиент с расширением language-1c-bsl
+    connectClient("code-server");
+    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
+
+    // when
+    var command = builder.gotoCommand("title", URI_VALUE, POSITION, List.of(location(10)));
+
+    // then
+    assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.VS_CODE_GOTO_COMMAND);
+  }
+
+  @Test
   void gotoCommandForOtherClientUsesBuiltinCommand() {
     // given
     connectClient("Neovim");

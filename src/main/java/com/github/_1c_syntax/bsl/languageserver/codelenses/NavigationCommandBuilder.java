@@ -75,7 +75,8 @@ public class NavigationCommandBuilder {
   private static final Set<String> VS_CODE_LIKE_CLIENT_NAMES = Set.of(
     "Visual Studio Code",
     "Cursor",
-    "Antigravity"
+    "Antigravity",
+    "code-server"
   );
 
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
