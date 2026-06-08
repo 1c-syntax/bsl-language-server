@@ -208,8 +208,17 @@ public final class FormatProvider {
     }
     if (";".equals(ch)) {
       var targetLineLsp = position.getLine();
-      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, position.getCharacter());
-      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, position.getCharacter());
+      var contentList = documentContext.getContentList();
+      if (targetLineLsp >= contentList.length) {
+        return null;
+      }
+      // Курсор может оказаться правее фактического конца синхронизированной строки (только что
+      // набранный ';' ещё не доехал до серверной копии документа — рассинхрон у LSP4IJ). Без клампа
+      // диапазон правки уехал бы за конец строки и форматтер дописал бы хвостовой перенос строки,
+      // затирая набранный символ. Зеркалим клампинг ветки "\n".
+      var cutoff = Math.min(position.getCharacter(), contentList[targetLineLsp].length());
+      var range = Ranges.create(targetLineLsp, 0, targetLineLsp, cutoff);
+      return new EditWindow(targetLineLsp, targetLineLsp + 1, range, cutoff);
     }
     return null;
   }
