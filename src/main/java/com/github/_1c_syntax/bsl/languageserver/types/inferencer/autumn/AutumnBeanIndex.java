@@ -203,6 +203,21 @@ public class AutumnBeanIndex {
       .toList();
   }
 
+  /**
+   * Имена и прозвища желудей, зарегистрированные из указанного .os-файла.
+   * <p>
+   * Для обратной линзы: какие желуди объявляет этот документ-производитель — по ним ищутся
+   * точки внедрения.
+   *
+   * @param uri URI .os-файла.
+   * @return Имена желудей (lowercase) этого файла; пусто, если файл желудей не объявляет.
+   */
+  public Set<String> namesForUri(URI uri) {
+    ensureBuilt();
+    var names = namesByUri.get(uri);
+    return names == null ? Set.of() : Set.copyOf(names);
+  }
+
   private static BeanDeclaration toDeclaration(BeanCandidate candidate) {
     return new BeanDeclaration(
       candidate.type(),
