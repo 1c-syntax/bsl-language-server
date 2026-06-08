@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780686725759,
+  "lastUpdate": 1780908542992,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36518,6 +36518,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.2550747216099145",
             "extra": "mean: 282.4420630931854 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4532339f450977879279e879a60a3ff18793ef23",
+          "message": "Merge pull request #4015 from johnnyshut/feature/3260-async-temp-file-deletion\n\nfeat: Исправлено ложное срабатывание MissingTemporaryFileDeletion при асинхронном удалении файлов",
+          "timestamp": "2026-06-08T09:54:35+02:00",
+          "tree_id": "0f7aebbbdb9f7845e61287baa5c92a12fbc57b63",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4532339f450977879279e879a60a3ff18793ef23"
+        },
+        "date": 1780908534160,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 280.26428111394245,
+            "unit": "sec",
+            "range": "stddev: 6.365881427786122",
+            "extra": "mean: 280.26428111394245 sec\nrounds: 3"
           }
         ]
       }
