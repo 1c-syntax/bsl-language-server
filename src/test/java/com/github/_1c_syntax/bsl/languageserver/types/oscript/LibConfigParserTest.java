@@ -77,6 +77,26 @@ class LibConfigParserTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void parsesInterleavedModulesAndClasses(@TempDir Path tmp) throws IOException {
+    // module и class идут вперемешку (как в реальном logos/lib.config)
+    var libConfig = tmp.resolve("lib.config");
+    Files.writeString(libConfig,
+      "<package-def>"
+        + "<module name=\"M1\" file=\"m1.os\"/>"
+        + "<class name=\"C1\" file=\"c1.os\"/>"
+        + "<module name=\"M2\" file=\"m2.os\"/>"
+        + "<class name=\"C2\" file=\"c2.os\"/>"
+        + "</package-def>");
+
+    var result = parser.parse(libConfig);
+
+    assertThat(result.modules()).extracting(LibConfigParser.LibEntry::name)
+      .containsExactly("M1", "M2");
+    assertThat(result.classes()).extracting(LibConfigParser.LibEntry::name)
+      .containsExactly("C1", "C2");
+  }
+
+  @Test
   void returnsEmptyOnMalformedXml(@TempDir Path tmp) throws IOException {
     var libConfig = tmp.resolve("lib.config");
     Files.writeString(libConfig, "<package-def><module name='broken");

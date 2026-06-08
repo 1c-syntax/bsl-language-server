@@ -23,11 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import tools.jackson.dataformat.xml.XmlMapper;
-import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -49,46 +52,63 @@ import java.util.List;
 @Component
 public final class LibConfigParser {
 
-  private final XmlMapper xmlMapper = XmlMapper.builder().build();
+  private static final String MODULE_ELEMENT = "module";
+  private static final String CLASS_ELEMENT = "class";
+  private static final String NAME_ATTRIBUTE = "name";
+  private static final String FILE_ATTRIBUTE = "file";
+
+  private static final XMLInputFactory XML_INPUT_FACTORY = createXmlInputFactory();
+
+  private static XMLInputFactory createXmlInputFactory() {
+    var factory = XMLInputFactory.newDefaultFactory();
+    // Защита от XXE: lib.config не должен подтягивать DTD/внешние сущности.
+    factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+    factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+    return factory;
+  }
 
   /**
+   * Разобрать манифест {@code lib.config}.
+   * <p>
+   * Элементы {@code <module>}/{@code <class>} читаются потоково в документном порядке, поэтому
+   * любое их чередование обрабатывается корректно (Jackson-десериализация двух unwrapped-списков
+   * теряла первый элемент каждого типа при интерливинге). Поток также корректно отрабатывает BOM.
+   *
    * @param libConfigPath абсолютный путь к {@code lib.config}
-   * @return распарсенный манифест либо пустой, если файл не читается
+   * @return распарсенный манифест либо пустой, если файл не читается или некорректен
    */
   public LibConfig parse(Path libConfigPath) {
-    try {
-      var content = Files.readString(libConfigPath);
-      var raw = xmlMapper.readValue(content, RawPackageDef.class);
-      return toLibConfig(raw);
+    var modules = new ArrayList<LibEntry>();
+    var classes = new ArrayList<LibEntry>();
+
+    try (InputStream input = Files.newInputStream(libConfigPath)) {
+      var reader = XML_INPUT_FACTORY.createXMLStreamReader(input);
+      try {
+        while (reader.hasNext()) {
+          if (reader.next() != XMLStreamConstants.START_ELEMENT) {
+            continue;
+          }
+          var element = reader.getLocalName();
+          if (!MODULE_ELEMENT.equals(element) && !CLASS_ELEMENT.equals(element)) {
+            continue;
+          }
+          var name = reader.getAttributeValue(null, NAME_ATTRIBUTE);
+          var file = reader.getAttributeValue(null, FILE_ATTRIBUTE);
+          if (name != null && file != null) {
+            (MODULE_ELEMENT.equals(element) ? modules : classes).add(new LibEntry(name, file));
+          }
+        }
+      } finally {
+        reader.close();
+      }
     } catch (IOException e) {
       LOGGER.warn("Failed to parse lib.config: {}", libConfigPath, e);
       return new LibConfig(List.of(), List.of());
-    } catch (RuntimeException e) {
+    } catch (XMLStreamException e) {
       LOGGER.warn("Malformed lib.config: {}", libConfigPath, e);
       return new LibConfig(List.of(), List.of());
     }
-  }
 
-  private static LibConfig toLibConfig(RawPackageDef raw) {
-    if (raw == null) {
-      return new LibConfig(List.of(), List.of());
-    }
-    var modules = new ArrayList<LibEntry>();
-    if (raw.module != null) {
-      for (var m : raw.module) {
-        if (m.name != null && m.file != null) {
-          modules.add(new LibEntry(m.name, m.file));
-        }
-      }
-    }
-    var classes = new ArrayList<LibEntry>();
-    if (raw.klass != null) {
-      for (var c : raw.klass) {
-        if (c.name != null && c.file != null) {
-          classes.add(new LibEntry(c.name, c.file));
-        }
-      }
-    }
     return new LibConfig(List.copyOf(modules), List.copyOf(classes));
   }
 
@@ -108,25 +128,6 @@ public final class LibConfigParser {
    * @param file путь к {@code .os}-файлу
    */
   public record LibEntry(String name, String file) {
-  }
-
-  /** Внутренняя POJO для парсинга XML. */
-  public static final class RawPackageDef {
-    @JacksonXmlElementWrapper(useWrapping = false)
-    public List<RawEntry> module;
-
-    @JacksonXmlElementWrapper(useWrapping = false)
-    @JacksonXmlProperty(localName = "class")
-    public List<RawEntry> klass;
-  }
-
-  /** Внутренняя POJO для одной записи. */
-  public static final class RawEntry {
-    @JacksonXmlProperty(isAttribute = true)
-    public String name;
-
-    @JacksonXmlProperty(isAttribute = true)
-    public String file;
   }
 }
 
