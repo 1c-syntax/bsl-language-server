@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780924268604,
+  "lastUpdate": 1780961741977,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36580,6 +36580,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.214291465195526",
             "extra": "mean: 278.58375938733417 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6c0f262ea6ff5c7883ede6e793f95659ccf7bbbe",
+          "message": "Merge pull request #4021 from 1c-syntax/fix/lib-config-interleaving\n\nfix(oscript): не терять первый module/class в lib.config при чередовании",
+          "timestamp": "2026-06-08T23:35:25+02:00",
+          "tree_id": "e879f5a7d121b3878aa7617b7e1dcc2cd7bfd1f1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6c0f262ea6ff5c7883ede6e793f95659ccf7bbbe"
+        },
+        "date": 1780961732866,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 279.2317340373993,
+            "unit": "sec",
+            "range": "stddev: 12.668848213261443",
+            "extra": "mean: 279.2317340373993 sec\nrounds: 3"
           }
         ]
       }
