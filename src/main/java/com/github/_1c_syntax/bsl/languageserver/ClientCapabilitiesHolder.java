@@ -26,6 +26,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.InitializeParams;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -33,8 +34,8 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 /**
- * Null-safe bridge для получения возможностей клиента, была произведена инициализация
- * сервера запросом
+ * Null-safe bridge для получения сведений о клиенте (возможности и информация о клиенте),
+ * заявленных при инициализации сервера запросом
  * {@link org.eclipse.lsp4j.services.LanguageServer#initialize(InitializeParams)}.
  */
 @Component
@@ -50,11 +51,26 @@ public class ClientCapabilitiesHolder {
   private @Nullable ClientCapabilities capabilities;
 
   /**
+   * Информация о клиенте (имя и версия редактора).
+   */
+  @Setter
+  private @Nullable ClientInfo clientInfo;
+
+  /**
    * Получить возможности клиента, если было произведено подключение клиента к серверу.
    *
    * @return Заявленные возможности клиента.
    */
   public Optional<ClientCapabilities> getCapabilities() {
     return Optional.ofNullable(capabilities);
+  }
+
+  /**
+   * Получить информацию о клиенте, если она была сообщена при подключении.
+   *
+   * @return Информация о клиенте (имя и версия).
+   */
+  public Optional<ClientInfo> getClientInfo() {
+    return Optional.ofNullable(clientInfo);
   }
 }
