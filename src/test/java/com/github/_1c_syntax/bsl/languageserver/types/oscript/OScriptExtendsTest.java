@@ -74,6 +74,22 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void parentClassNameIgnoresAnnotationOnNonConstructorMethod() {
+    // given — &Расширяет стоит на вспомогательном методе, а не на конструкторе.
+    var dc = os("""
+      Процедура ПриСозданииОбъекта()
+      КонецПроцедуры
+
+      &Расширяет("Родитель")
+      Процедура Вспомогательный()
+      КонецПроцедуры
+      """);
+
+    // when / then — наследование не объявлено (аннотация не на конструкторе).
+    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
+  }
+
+  @Test
   void implementedInterfaceNamesForBslFileIsEmpty() {
     var dc = TestUtils.getDocumentContext("Процедура П()\nКонецПроцедуры\n");
     assertThat(oScriptExtends.implementedInterfaceNames(dc)).isEmpty();
@@ -89,6 +105,22 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
       """);
     assertThat(oScriptExtends.implementedInterfaceNames(dc))
       .containsExactlyInAnyOrder("ИнтерфейсА", "ИнтерфейсБ");
+  }
+
+  @Test
+  void implementedInterfaceNamesIgnoresAnnotationOnNonConstructorMethod() {
+    // given — &Реализует на вспомогательном методе, конструктор без аннотации.
+    var dc = os("""
+      Процедура ПриСозданииОбъекта()
+      КонецПроцедуры
+
+      &Реализует("ИнтерфейсА")
+      Процедура Вспомогательный()
+      КонецПроцедуры
+      """);
+
+    // when / then — реализация не объявлена.
+    assertThat(oScriptExtends.implementedInterfaceNames(dc)).isEmpty();
   }
 
   @Test

@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -112,9 +113,9 @@ public class OScriptExtends {
 
   /**
    * Имена интерфейсов, которые класс объявляет реализуемыми через
-   * {@code &Реализует("...")} (с учётом мета-аннотаций). Имя интерфейса — то же,
-   * что используется в {@code Новый Интерфейс}: qualifiedName library-класса или
-   * basename файла.
+   * {@code &Реализует("...")} на конструкторе {@code ПриСозданииОбъекта}
+   * (с учётом мета-аннотаций). Имя интерфейса — то же, что используется в
+   * {@code Новый Интерфейс}: qualifiedName library-класса или basename файла.
    *
    * @param documentContext контекст {@code .os}-документа
    * @return список имён реализуемых интерфейсов (возможно, пустой)
@@ -124,20 +125,18 @@ public class OScriptExtends {
       return List.of();
     }
     var result = new ArrayList<String>();
-    for (var method : documentContext.getSymbolTree().getMethods()) {
-      for (var value : metaAnnotationResolver.valuesByRole(method.getAnnotations(), IMPLEMENTS_ROLE)) {
-        if (value != null && !value.isBlank()) {
-          result.add(value);
-        }
+    for (var value : metaAnnotationResolver.valuesByRole(constructorAnnotations(documentContext), IMPLEMENTS_ROLE)) {
+      if (value != null && !value.isBlank()) {
+        result.add(value);
       }
     }
-    return result;
+    return List.copyOf(result);
   }
 
   /**
-   * Является ли {@code .os}-документ интерфейсом — несёт ли какой-либо его метод
-   * (на практике — конструктор {@code ПриСозданииОбъекта}) аннотацию-маркер
-   * {@code &Интерфейс} (с учётом мета-аннотаций).
+   * Является ли {@code .os}-документ интерфейсом — несёт ли его конструктор
+   * {@code ПриСозданииОбъекта} аннотацию-маркер {@code &Интерфейс}
+   * (с учётом мета-аннотаций).
    *
    * @param documentContext контекст {@code .os}-документа
    * @return {@code true}, если документ — интерфейс
@@ -146,12 +145,7 @@ public class OScriptExtends {
     if (documentContext.getFileType() != FileType.OS) {
       return false;
     }
-    for (var method : documentContext.getSymbolTree().getMethods()) {
-      if (metaAnnotationResolver.hasRole(method.getAnnotations(), INTERFACE_ROLE)) {
-        return true;
-      }
-    }
-    return false;
+    return metaAnnotationResolver.hasRole(constructorAnnotations(documentContext), INTERFACE_ROLE);
   }
 
   /**
@@ -189,9 +183,8 @@ public class OScriptExtends {
 
   /**
    * Имя родительского класса для документа {@code .os}, объявленное аннотацией
-   * наследования над любым методом (на практике — над конструктором
-   * {@code ПриСозданииОбъекта}). Учитывает мета-аннотации (см. класс-уровневую
-   * документацию).
+   * наследования над конструктором {@code ПриСозданииОбъекта}. Учитывает
+   * мета-аннотации (см. класс-уровневую документацию).
    *
    * @param documentContext контекст {@code .os}-документа
    * @return имя родителя или {@link Optional#empty()}, если файл не {@code .os}
@@ -201,11 +194,27 @@ public class OScriptExtends {
     if (documentContext.getFileType() != FileType.OS) {
       return Optional.empty();
     }
-    return documentContext.getSymbolTree().getMethods().stream()
-      .map(method -> parentFromAnnotations(method.getAnnotations()))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
-      .findFirst();
+    return parentFromAnnotations(constructorAnnotations(documentContext));
+  }
+
+  /**
+   * Аннотации конструктора {@code ПриСозданииОбъекта} ({@code OnObjectCreate}) —
+   * единственного метода, на котором библиотека {@code extends} объявляет
+   * {@code &Расширяет}/{@code &Реализует}/{@code &Интерфейс}. Конструктор ищется
+   * по имени среди методов, а не через {@code SymbolTree.getConstructor()}:
+   * {@code ConstructorSymbol} создаётся только для классифицированных
+   * OScript-классов, а наследование работает и для обычных {@code .os}-файлов.
+   *
+   * @param documentContext контекст {@code .os}-документа
+   * @return аннотации конструктора либо пустой список, если конструктора нет
+   */
+  private List<Annotation> constructorAnnotations(DocumentContext documentContext) {
+    for (var method : documentContext.getSymbolTree().getMethods()) {
+      if (Methods.isOscriptClassConstructorName(method.getName())) {
+        return method.getAnnotations();
+      }
+    }
+    return List.of();
   }
 
   /**
