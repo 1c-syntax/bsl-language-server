@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Вывод типа внедряемой зависимости фреймворка «ОСень» (Autumn).
@@ -80,6 +81,25 @@ public class AutumnComponentInferencer {
     return metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION)
       .map(injection -> injectedType(injection, fallbackName, fileType))
       .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Имя желудя, внедряемого в точку с аннотацией {@code &Пластилин} — для навигации к
+   * производителю. Возвращается только для обычного внедрения по имени желудя
+   * ({@code Тип} не задан либо равен {@code Желудь}); для внедрения прилепляемой коллекции
+   * и при пустом имени — пусто.
+   *
+   * @param annotations  аннотации поля/параметра
+   * @param fallbackName имя переменной/параметра — используется как имя желудя, если оно не
+   *                     задано в аннотации
+   * @return имя желудя для резолва производителя либо пусто, если это не точка внедрения желудя
+   *         по имени
+   */
+  public Optional<String> injectedBeanName(List<Annotation> annotations, String fallbackName) {
+    return metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION)
+      .filter(injection -> AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionType(injection)))
+      .map(injection -> beanName(injection, fallbackName))
+      .filter(name -> !name.isBlank());
   }
 
   private TypeSet injectedType(Annotation injection, String fallbackName, FileType fileType) {
