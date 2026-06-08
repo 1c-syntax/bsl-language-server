@@ -92,7 +92,7 @@ dependencies {
     api("io.github.1c-syntax:mdclasses:0.19.0")
     api("io.github.1c-syntax:bsl-common-library:0.11.0")
     api("io.github.1c-syntax:supportconf:0.16.0")
-    api("io.github.1c-syntax:bsl-context:0.6.0")
+    api("io.github.1c-syntax:bsl-context:0.7.0")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.0")
