@@ -30,7 +30,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -81,27 +80,8 @@ public final class LibConfigParser {
 
     // Фабрика создаётся на вызов: XMLInputFactory не гарантирует потокобезопасность,
     // а newDefaultFactory() дёшев (без ServiceLoader), parse() не на горячем пути.
-    var factory = createXmlInputFactory();
-    try (InputStream input = Files.newInputStream(libConfigPath)) {
-      var reader = factory.createXMLStreamReader(input);
-      try {
-        while (reader.hasNext()) {
-          if (reader.next() != XMLStreamConstants.START_ELEMENT) {
-            continue;
-          }
-          var element = reader.getLocalName();
-          if (!MODULE_ELEMENT.equals(element) && !CLASS_ELEMENT.equals(element)) {
-            continue;
-          }
-          var name = reader.getAttributeValue(null, NAME_ATTRIBUTE);
-          var file = reader.getAttributeValue(null, FILE_ATTRIBUTE);
-          if (name != null && file != null) {
-            (MODULE_ELEMENT.equals(element) ? modules : classes).add(new LibEntry(name, file));
-          }
-        }
-      } finally {
-        reader.close();
-      }
+    try (var input = Files.newInputStream(libConfigPath)) {
+      readEntries(createXmlInputFactory().createXMLStreamReader(input), modules, classes);
     } catch (IOException e) {
       LOGGER.warn("Failed to parse lib.config: {}", libConfigPath, e);
       return new LibConfig(List.of(), List.of());
@@ -111,6 +91,36 @@ public final class LibConfigParser {
     }
 
     return new LibConfig(List.copyOf(modules), List.copyOf(classes));
+  }
+
+  private static void readEntries(XMLStreamReader reader, List<LibEntry> modules, List<LibEntry> classes)
+    throws XMLStreamException {
+    try {
+      while (reader.hasNext()) {
+        if (reader.next() == XMLStreamConstants.START_ELEMENT) {
+          addEntry(reader, modules, classes);
+        }
+      }
+    } finally {
+      reader.close();
+    }
+  }
+
+  private static void addEntry(XMLStreamReader reader, List<LibEntry> modules, List<LibEntry> classes) {
+    var element = reader.getLocalName();
+    List<LibEntry> target;
+    if (MODULE_ELEMENT.equals(element)) {
+      target = modules;
+    } else if (CLASS_ELEMENT.equals(element)) {
+      target = classes;
+    } else {
+      return;
+    }
+    var name = reader.getAttributeValue(null, NAME_ATTRIBUTE);
+    var file = reader.getAttributeValue(null, FILE_ATTRIBUTE);
+    if (name != null && file != null) {
+      target.add(new LibEntry(name, file));
+    }
   }
 
   /**
