@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Провайдер иерархии типов для OneScript-классов, использующих библиотеку
@@ -137,8 +138,18 @@ public class TypeHierarchyProvider {
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
     return classResolver.isLibraryClass(documentContext)
-      || typeRelationIndex.supertypeName(documentContext).isPresent()
+      || effectiveSupertypeName(documentContext).isPresent()
       || !subtypeDocuments(documentContext).isEmpty();
+  }
+
+  /**
+   * Имя супертипа с поправкой на мета-аннотации: у класса-определения аннотации
+   * {@code &Расширяет} — шаблон мета-аннотации, а не собственный супертип.
+   */
+  private Optional<String> effectiveSupertypeName(DocumentContext documentContext) {
+    var serverContext = documentContext.getServerContext();
+    return typeRelationIndex.supertypeName(documentContext,
+      name -> classResolver.resolveClassDocument(name, serverContext));
   }
 
   /**
@@ -164,7 +175,7 @@ public class TypeHierarchyProvider {
       module.getRange(),
       selectionRange(documentContext)
     );
-    typeRelationIndex.supertypeName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
+    effectiveSupertypeName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
     return item;
   }
 

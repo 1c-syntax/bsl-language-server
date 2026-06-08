@@ -289,7 +289,15 @@ public class AutumnMetaAnnotationResolver {
     }
   }
 
-  private static boolean isAnnotationDefinition(DocumentContext document) {
+  /**
+   * Является ли {@code .os}-документ классом-определением пользовательской
+   * аннотации «ОСени»: помечен ли его конструктор {@code ПриСозданииОбъекта}
+   * маркером {@code &Аннотация}.
+   *
+   * @param document проверяемый документ
+   * @return {@code true}, если документ определяет пользовательскую аннотацию
+   */
+  public boolean isAnnotationDefinition(DocumentContext document) {
     return document.getSymbolTree().getConstructor()
       .map(constructor ->
         AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())

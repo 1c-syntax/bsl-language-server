@@ -155,6 +155,19 @@ public class OScriptExtends {
   }
 
   /**
+   * Является ли {@code .os}-документ классом-определением пользовательской
+   * аннотации «ОСени» ({@code &Аннотация} на конструкторе). У такого класса
+   * {@code &Расширяет} играет роль <b>шаблона</b> мета-аннотации (что наследуют
+   * классы, помеченные этой аннотацией), а не собственного супертипа.
+   *
+   * @param documentContext контекст {@code .os}-документа
+   * @return {@code true}, если документ определяет пользовательскую аннотацию
+   */
+  public boolean isAnnotationDefinition(DocumentContext documentContext) {
+    return metaAnnotationResolver.isAnnotationDefinition(documentContext);
+  }
+
+  /**
    * Является ли переменная держателем экземпляра родителя: либо помечена
    * {@code &Родитель} (явный держатель с произвольным именем), либо это неявное
    * поле {@link #IMPLICIT_PARENT_FIELD}. Тип такого поля — родительский класс.

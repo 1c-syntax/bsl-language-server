@@ -62,4 +62,25 @@ class AutumnDataInheritanceTest extends AbstractServerContextAwareTest {
       .extracting(MemberDescriptor::name)
       .contains("ПолучитьОдно", "Получить", "Сохранить", "НайтиПоКоду");
   }
+
+  @Test
+  void annotationDefinitionClassDoesNotInheritBaseStorageMembers() {
+    // given — класс-определение мета-аннотации помечен &Аннотация и несёт
+    // &Расширяет как ШАБЛОН для классов, помеченных этой аннотацией, а не как
+    // собственное наследование. Поэтому сам он не должен получать члены базового
+    // класса ХранилищеСущностей.
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/autumn-data-sample").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+
+    // when
+    var ref = typeRegistry.resolve("АннотацияХранилищеСущностей", FileType.OS).orElseThrow();
+    var members = typeRegistry.getMembers(ref, FileType.OS);
+
+    // then — только собственные члены, без членов базового ХранилищеСущностей.
+    assertThat(members)
+      .extracting(MemberDescriptor::name)
+      .contains("ПолучитьИмяТипаСущности", "ПолучитьИсточникДанных")
+      .doesNotContain("ПолучитьОдно", "Получить", "Сохранить");
+  }
 }

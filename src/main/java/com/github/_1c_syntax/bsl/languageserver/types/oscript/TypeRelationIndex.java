@@ -88,6 +88,32 @@ public class TypeRelationIndex {
   }
 
   /**
+   * Имя родителя для целей иерархии типов с поправкой на мета-аннотации «ОСени».
+   * Для обычного класса — то же, что {@link #supertypeName(DocumentContext)}
+   * (имя возвращается даже без разрешения родителя). Для класса-определения
+   * аннотации ({@code &Аннотация}) {@code &Расширяет} — это шаблон мета-аннотации,
+   * а не собственный супертип, поэтому имя возвращается лишь когда родитель сам
+   * разрешается в класс-определение аннотации (наследование аннотация→аннотация).
+   *
+   * @param documentContext документ, для которого вычисляется супертип
+   * @param nameToDocument   разрешение имени класса в документ (обычно через
+   *                         {@code OScriptClassResolver})
+   * @return имя супертипа либо {@link Optional#empty()}
+   */
+  public Optional<String> supertypeName(
+    DocumentContext documentContext,
+    Function<String, Optional<DocumentContext>> nameToDocument
+  ) {
+    var parentName = oScriptExtends.parentClassName(documentContext);
+    if (parentName.isEmpty() || !oScriptExtends.isAnnotationDefinition(documentContext)) {
+      return parentName;
+    }
+    return parentName.filter(name -> nameToDocument.apply(name)
+      .map(oScriptExtends::isAnnotationDefinition)
+      .orElse(false));
+  }
+
+  /**
    * Прямой родительский документ (супертип через {@code &Расширяет}),
    * разрешённый переданной функцией {@code nameToDocument}.
    *
@@ -100,7 +126,26 @@ public class TypeRelationIndex {
     DocumentContext documentContext,
     Function<String, Optional<DocumentContext>> nameToDocument
   ) {
-    return oScriptExtends.parentClassName(documentContext).flatMap(nameToDocument);
+    return oScriptExtends.parentClassName(documentContext)
+      .flatMap(nameToDocument)
+      .filter(parent -> inheritableFromParent(documentContext, parent));
+  }
+
+  /**
+   * Допустимо ли регистрировать отношение наследования {@code child → parent}
+   * библиотеки {@code extends}. Класс-определение аннотации ({@code &Аннотация})
+   * несёт {@code &Расширяет} как шаблон мета-аннотации для классов, помеченных
+   * этой аннотацией, а не как собственный супертип, поэтому такое отношение
+   * считается реальным только между аннотациями (аннотация→аннотация);
+   * аннотация→обычный класс отбрасывается. Для обычных классов ограничения нет.
+   *
+   * @param child  документ-наследник
+   * @param parent документ-родитель
+   * @return {@code true}, если отношение наследования допустимо
+   */
+  private boolean inheritableFromParent(DocumentContext child, DocumentContext parent) {
+    return !oScriptExtends.isAnnotationDefinition(child)
+      || oScriptExtends.isAnnotationDefinition(parent);
   }
 
   /**
@@ -130,6 +175,7 @@ public class TypeRelationIndex {
       }
       oScriptExtends.parentClassName(candidate)
         .filter(parent -> ownNames.contains(parent.toLowerCase(Locale.ROOT)))
+        .filter(parent -> inheritableFromParent(candidate, documentContext))
         .ifPresent(parent -> result.add(candidate));
     }
     return result;
@@ -222,6 +268,14 @@ public class TypeRelationIndex {
     Function<String, Optional<TypeRef>> nameToRef,
     Function<TypeRef, Collection<MemberDescriptor>> membersOf
   ) {
+    // Класс-определение аннотации (&Аннотация) несёт &Расширяет как шаблон
+    // мета-аннотации, а не собственное наследование, поэтому членов родителя не
+    // получает. Здесь доступно лишь разрешение имени в TypeRef (не в документ),
+    // поэтому редкий случай аннотация→аннотация по членам не разворачиваем — для
+    // класса-маркера это несущественно (в отличие от иерархии типов в supertype).
+    if (oScriptExtends.isAnnotationDefinition(documentContext)) {
+      return List.of();
+    }
     var parentRef = oScriptExtends.parentClassName(documentContext).flatMap(nameToRef).orElse(null);
     if (parentRef == null || parentRef.equals(classRef)) {
       return List.of();

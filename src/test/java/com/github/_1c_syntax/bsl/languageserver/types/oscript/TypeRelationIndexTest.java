@@ -170,6 +170,78 @@ class TypeRelationIndexTest {
   }
 
   @Test
+  void supertypeSuppressedForAnnotationDefinitionExtendingPlainClass() {
+    // given — класс-определение аннотации &Расширяет обычный класс: это шаблон
+    // мета-аннотации, а не собственный супертип.
+    var annotation = osDocument("file:///АннотацияХранилище.os");
+    var base = osDocument("file:///Хранилище.os");
+    when(oScriptExtends.parentClassName(annotation)).thenReturn(Optional.of("Хранилище"));
+    when(oScriptExtends.isAnnotationDefinition(annotation)).thenReturn(true);
+    when(oScriptExtends.isAnnotationDefinition(base)).thenReturn(false);
+
+    // when
+    var resolved = index.supertype(annotation, name -> Optional.of(base));
+    var name = index.supertypeName(annotation, n -> Optional.of(base));
+
+    // then
+    assertThat(resolved).isEmpty();
+    assertThat(name).isEmpty();
+  }
+
+  @Test
+  void supertypeKeptForAnnotationExtendingAnnotation() {
+    // given — наследование аннотация→аннотация остаётся реальным отношением.
+    var child = osDocument("file:///ПроизводнаяАннотация.os");
+    var parentAnnotation = osDocument("file:///БазоваяАннотация.os");
+    when(oScriptExtends.parentClassName(child)).thenReturn(Optional.of("БазоваяАннотация"));
+    when(oScriptExtends.isAnnotationDefinition(child)).thenReturn(true);
+    when(oScriptExtends.isAnnotationDefinition(parentAnnotation)).thenReturn(true);
+
+    // when
+    var resolved = index.supertype(child, name -> Optional.of(parentAnnotation));
+    var name = index.supertypeName(child, n -> Optional.of(parentAnnotation));
+
+    // then
+    assertThat(resolved).contains(parentAnnotation);
+    assertThat(name).contains("БазоваяАннотация");
+  }
+
+  @Test
+  void subtypesExcludesAnnotationDefinitionOfPlainParent() {
+    // given
+    var parent = osDocument("file:///Хранилище.os");
+    var annotation = osDocument("file:///АннотацияХранилище.os");
+    when(oScriptExtends.parentClassName(annotation)).thenReturn(Optional.of("Хранилище"));
+    when(oScriptExtends.isAnnotationDefinition(annotation)).thenReturn(true);
+    when(oScriptExtends.isAnnotationDefinition(parent)).thenReturn(false);
+
+    // when
+    var subtypes = index.subtypes(parent, List.of(parent, annotation),
+      doc -> doc == parent ? List.of("Хранилище") : List.of());
+
+    // then
+    assertThat(subtypes).isEmpty();
+  }
+
+  @Test
+  void inheritedMembersSuppressedForAnnotationDefinition() {
+    // given
+    var annotation = osDocument("file:///АннотацияХранилище.os");
+    var annotationRef = new TypeRef(TypeKind.USER, "АннотацияХранилище");
+    var baseRef = new TypeRef(TypeKind.USER, "Хранилище");
+    when(oScriptExtends.parentClassName(annotation)).thenReturn(Optional.of("Хранилище"));
+    when(oScriptExtends.isAnnotationDefinition(annotation)).thenReturn(true);
+
+    // when
+    var members = index.inheritedMembers(annotation, annotationRef,
+      name -> Optional.of(baseRef),
+      ref -> List.of(MemberDescriptor.property("БазовоеСвойство")));
+
+    // then
+    assertThat(members).isEmpty();
+  }
+
+  @Test
   void inheritedMembersReturnsParentMembers() {
     var child = osDocument("file:///Кошка.os");
     var childRef = new TypeRef(TypeKind.USER, "Кошка");
