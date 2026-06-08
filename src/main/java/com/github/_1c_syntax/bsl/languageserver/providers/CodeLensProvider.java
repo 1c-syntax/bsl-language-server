@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.jspecify.annotations.Nullable;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
@@ -118,11 +119,17 @@ public class CodeLensProvider {
    * сапплаер линзы (параметр-тип класса сапплаера).
    *
    * @param codeLens Линза, из которой необходимо извлечь данные.
-   * @return Извлеченные данные линзы.
+   * @return Извлеченные данные линзы либо {@code null}, если линза пришла без поля
+   *         {@link CodeLens#getData()} (например, клиент LSP4IJ присылает на
+   *         {@code codeLens/resolve} линзу без данных) — резолвить такую линзу нечем.
    */
   @SneakyThrows
-  public CodeLensData extractData(CodeLens codeLens) {
+  public @Nullable CodeLensData extractData(CodeLens codeLens) {
     var rawCodeLensData = codeLens.getData();
+
+    if (rawCodeLensData == null) {
+      return null;
+    }
 
     if (rawCodeLensData instanceof CodeLensData data) {
       return data;

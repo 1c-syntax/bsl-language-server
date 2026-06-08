@@ -145,6 +145,18 @@ class CodeLensProviderTest {
     }
   }
 
+  @Test
+  void testExtractDataReturnsNullWhenLensHasNoData() {
+    // given: клиент (например LSP4IJ) прислал на codeLens/resolve линзу без поля data
+    var codeLens = new CodeLens();
+
+    // when
+    var data = codeLensProvider.extractData(codeLens);
+
+    // then
+    assertThat(data).isNull();
+  }
+
   private void prepareCodeLensRefreshSupport(boolean refreshSupport) {
     var workspaceClientCapabilities = new WorkspaceClientCapabilities();
     workspaceClientCapabilities.setCodeLens(new CodeLensWorkspaceCapabilities(refreshSupport));
