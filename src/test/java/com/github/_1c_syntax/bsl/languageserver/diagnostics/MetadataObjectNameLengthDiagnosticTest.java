@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.children.ObjectModule;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -153,7 +154,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   @Test
   void testWithoutModules() {
 
-    initServerContext(PATH_TO_METADATA);
+    initServerContextOnce(Absolute.path(PATH_TO_METADATA));
 
     documentContext = spy(getDocumentContext());
 
@@ -188,7 +189,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
 
   @SneakyThrows
   void getDocumentContextFromFile(String modulePath, String content) {
-    initServerContext(PATH_TO_METADATA);
+    initServerContextOnce(Absolute.path(PATH_TO_METADATA));
     var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
     documentContext = spy(TestUtils.getDocumentContext(testFile.toURI(), content, context));
     var moduleByUri = Objects.requireNonNull(context).getConfiguration()
