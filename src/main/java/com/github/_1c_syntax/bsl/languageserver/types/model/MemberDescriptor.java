@@ -303,6 +303,16 @@ public record MemberDescriptor(
       PlatformMetadata.EMPTY);
   }
 
+  /**
+   * Событие платформенного типа (например, {@code Форма.ПриОткрытии}). У события
+   * есть сигнатура параметров (handler-контракт), но возвращаемого типа нет.
+   */
+  public static MemberDescriptor event(String name, String description,
+                                       List<SignatureDescriptor> signatures) {
+    return new MemberDescriptor(name, MemberKind.EVENT, description, TypeSet.EMPTY, signatures,
+      null, false, PlatformMetadata.EMPTY);
+  }
+
   private static TypeSet typesOf(TypeRef ref) {
     return ref == null || ref.equals(TypeRef.UNKNOWN) ? TypeSet.EMPTY : TypeSet.of(ref);
   }

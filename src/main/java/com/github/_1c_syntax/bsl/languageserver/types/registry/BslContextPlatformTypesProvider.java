@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.context.api.ContextCollection;
 import com.github._1c_syntax.bsl.context.api.ContextConstructor;
 import com.github._1c_syntax.bsl.context.api.ContextEnum;
 import com.github._1c_syntax.bsl.context.api.ContextEnumValue;
+import com.github._1c_syntax.bsl.context.api.ContextEvent;
 import com.github._1c_syntax.bsl.context.api.ContextMethod;
 import com.github._1c_syntax.bsl.context.api.ContextMethodSignature;
 import com.github._1c_syntax.bsl.context.api.ContextName;
@@ -78,15 +79,12 @@ import java.util.Set;
  *       {@link GlobalScopeProvider}.</li>
  * </ul>
  * <p>
- * Что из членов типа сейчас НЕ публикуется (type-system v2 моделирует только
- * {@link MemberKind#METHOD} / {@link MemberKind#PROPERTY}): события
- * ({@code ContextType.events()}). Также не публикуются метаданные
- * методов/свойств/конструкторов ({@code sinceVersion},
- * {@code deprecatedSinceVersion}, {@code recommendedReplacements},
- * {@code availabilities}, {@code accessMode}, {@code syntaxText},
- * {@code defaultValue} и т.п.) — они доступны в bsl-context, но
- * соответствующие LS-дескрипторы их пока не носят. См. {@code tmp/PLAN.md}
- * в bsl-context.
+ * События ({@code ContextType.events()}) публикуются как члены типа c
+ * {@link MemberKind#EVENT}; у событий нет возвращаемого значения
+ * (handler-контракт), сигнатура хранит только параметры. Из метаданных
+ * методов/свойств/конструкторов часть полей ({@code syntaxText},
+ * {@code defaultValue} и т.п.) пока не носится LS-дескрипторами — они
+ * доступны в bsl-context, см. {@code tmp/PLAN.md} в bsl-context.
  */
 @Slf4j
 @Component
@@ -259,12 +257,15 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
                                                        Function<Object, EnAttachments> enLookup) {
     if (context instanceof ContextType type) {
       var members = new ArrayList<MemberDescriptor>(
-        type.methods().size() + type.properties().size());
+        type.methods().size() + type.properties().size() + type.events().size());
       for (var property : type.properties()) {
         members.add(toMemberDescriptor(property, enLookup));
       }
       for (var method : type.methods()) {
         members.add(toMemberDescriptor(method, enLookup));
+      }
+      for (var event : type.events()) {
+        members.add(toMemberDescriptor(event, enLookup));
       }
       return List.copyOf(members);
     }
@@ -344,6 +345,27 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return toMemberDescriptor(method, ctx -> EnAttachments.EMPTY);
   }
 
+  /**
+   * Платформенное событие типа. У события нет возвращаемого значения (handler-контракт),
+   * поэтому {@code returnTypes = EMPTY}; сигнатуры — только параметры.
+   */
+  static MemberDescriptor toMemberDescriptor(ContextEvent event,
+                                             Function<Object, EnAttachments> enLookup) {
+    var signatures = toSignatures(event.signatures(), TypeRef.UNKNOWN, enLookup);
+    return new MemberDescriptor(
+      bilingualName(event.name()),
+      MemberKind.EVENT,
+      BilingualString.of(safe(event.description()), safe(enLookup.apply(event).description())),
+      TypeSet.EMPTY,
+      signatures,
+      null,
+      false,
+      metadataOf(event),
+      false
+    );
+  }
+
+
   private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef valueRef,
                                                      Function<Object, EnAttachments> enLookup) {
     var name = value.name().getName();
@@ -405,6 +427,23 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   /**
    * Извлекает платформенные метаданные из {@link ContextProperty}.
    */
+  /**
+   * Извлекает платформенные метаданные из {@link ContextEvent}.
+   */
+  private static PlatformMetadata metadataOf(ContextEvent event) {
+    return new PlatformMetadata(
+      event.sinceVersion(),
+      event.deprecatedSinceVersion(),
+      event.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(event.availabilities()),
+      null,
+      "",
+      "",
+      List.of(),
+      List.of()
+    );
+  }
+
   private static PlatformMetadata metadataOf(ContextProperty property) {
     return new PlatformMetadata(
       property.sinceVersion(),
