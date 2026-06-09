@@ -143,7 +143,7 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     var path = Absolute.path(PATH_TO_METADATA);
     var testFile = Path.of(moduleFile).toAbsolutePath();
 
-    initServerContext(path);
+    initServerContextOnce(path);
     var serverContext = spy(context);
     var configuration = spy(serverContext.getConfiguration());
     when(((Configuration) configuration).getSynchronousExtensionAndAddInCallUseMode()).thenReturn(useMode);
