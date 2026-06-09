@@ -45,6 +45,21 @@ jobs:
         java-version: ${{ matrix.java_version }}
         distribution: 'corretto'
         cache: gradle
+    - name: Disable Defender real-time scan on Windows runner
+      # На windows-latest runner'е защитник в реальном времени сканирует
+      # каждый файл, открываемый Gradle/JVM. На тестах LS, которые обходят
+      # фикстуры metadata (134 каталога / 157 файлов) и интенсивно работают
+      # с tmp и gradle-cache, это даёт x2-3 замедление относительно
+      # ubuntu/macOS-runner'ов. Исключаем рабочую директорию, TEMP, gradle-cache
+      # и JVM/Gradle процессы — runner создаётся одноразово, эффект только
+      # в рамках текущего job'а.
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Add-MpPreference -ExclusionPath "${{ github.workspace }}"
+        Add-MpPreference -ExclusionPath "$env:TEMP"
+        Add-MpPreference -ExclusionPath "$env:USERPROFILE\.gradle"
+        Add-MpPreference -ExclusionProcess "java.exe","javaw.exe","gradle.bat","gradle"
     - name: Build with Gradle
       run: ./gradlew check --stacktrace
     - name: Archive test results
