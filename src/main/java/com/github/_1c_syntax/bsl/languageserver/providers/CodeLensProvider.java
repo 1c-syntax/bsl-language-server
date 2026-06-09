@@ -41,11 +41,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -80,36 +78,22 @@ public class CodeLensProvider {
   }
 
   /**
-   * URI документа, к которому привязана линза.
-   * <p>
-   * Берётся из данных линзы ({@link #extractData(CodeLens)}); пусто, если линза пришла без
-   * данных (резолвить такую линзу нечем).
-   *
-   * @param unresolved Неразрешенная линза.
-   * @return URI связанного документа либо {@link Optional#empty()}, если у линзы нет данных.
-   */
-  public Optional<URI> documentUri(CodeLens unresolved) {
-    return Optional.ofNullable(extractData(unresolved)).map(CodeLensData::getUri);
-  }
-
-  /**
    * Провести операцию разрешения линзы (заполнение свойства
    * {@link CodeLens#setCommand(Command)}).
    * <p>
    * При разрешении линзы свойство {@link CodeLens#setData(Object)}
    * очищается с целью уменьшения трафика между клиентом и сервером.
-   * <p>
-   * Если линза пришла без данных, резолвить нечем — она возвращается без изменений.
    *
    * @param documentContext Контекст документа.
    * @param unresolved      Неразрешенная линза.
-   * @return Разрешенная линза либо исходная линза, если у неё нет данных.
+   * @param data            Данные линзы.
+   * @return Разрешенная линза.
    */
-  public CodeLens resolveCodeLens(DocumentContext documentContext, CodeLens unresolved) {
-    var data = extractData(unresolved);
-    if (data == null) {
-      return unresolved;
-    }
+  public CodeLens resolveCodeLens(
+    DocumentContext documentContext,
+    CodeLens unresolved,
+    CodeLensData data
+  ) {
     var codeLensSupplier = codeLensSuppliersById.get(data.getId());
     var resolvedCodeLens = codeLensSupplier.resolve(documentContext, unresolved, data);
     resolvedCodeLens.setData(null);

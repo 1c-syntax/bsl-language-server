@@ -338,15 +338,19 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
-    var maybeDocument = codeLensProvider.documentUri(unresolved)
-      .flatMap(serverContextProvider::getDocumentUnsafe);
+    var data = codeLensProvider.extractData(unresolved);
+    if (data == null) {
+      // Линза без данных — резолвить нечем, возвращаем как есть.
+      return CompletableFuture.completedFuture(unresolved);
+    }
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(data.getUri().toString());
     if (maybeDocument.isEmpty()) {
       return CompletableFuture.completedFuture(unresolved);
     }
     var documentContext = maybeDocument.get();
     return withFreshDocumentContext(
       documentContext,
-      () -> codeLensProvider.resolveCodeLens(documentContext, unresolved)
+      () -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data)
     );
   }
 
