@@ -36,6 +36,22 @@ If NOT Value Then
 EndIf;
 ```
 
+## Exceptions
+
+The diagnostic is triggered only if the type of the second operand can be inferred and
+it is **unambiguously** `Boolean`. If the type cannot be determined or is a union of
+types, no issue is reported — in such cases comparison with a boolean constant may be
+justified.
+
+For example, `SafeMode()` returns a value of type `Boolean | String`, so comparison with
+`False` is correct here and no issue is reported:
+
+```bsl
+If SafeMode() <> False Then
+    // ...
+EndIf;
+```
+
 ## Sources
 
 * [Standard: Comparison with True and False (RU)](https://its.1c.ru/db/v8std#content:441) (item 4)

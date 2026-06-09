@@ -50,9 +50,24 @@ class CompareWithBooleanDiagnosticTest extends AbstractDiagnosticTest<CompareWit
 
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(1, 9, 1, 26)
-      .hasRange(5, 9, 5, 25)
-      .hasRange(9, 9, 9, 26);
+      .hasRange(4, 9, 4, 22)
+      .hasRange(9, 9, 9, 20)
+      .hasRange(14, 9, 14, 22);
+  }
+
+  /**
+   * Проверяет отсутствие ложного срабатывания при сравнении с булевой константой
+   * операнда, тип которого является объединением ({@code Булево | Строка}) — такое
+   * сравнение может быть обоснованным (например для {@code БезопасныйРежим()}).
+   * В фикстуре переменная {@code Результат} получает типы {@code Булево} и
+   * {@code Строка} в разных ветках, сравнение с {@code Истина} на строке 35 (0-based 34)
+   * не должно подсвечиваться.
+   */
+  @Test
+  void noFalsePositiveOnUnionType() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).noneMatch(d -> d.getRange().getStart().getLine() == 34);
   }
 
 }
