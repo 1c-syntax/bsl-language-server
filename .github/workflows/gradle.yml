@@ -56,10 +56,14 @@ jobs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
+        Write-Host "=== Defender state BEFORE:"
+        Get-MpPreference | Select-Object DisableRealtimeMonitoring, ExclusionPath, ExclusionProcess | Format-List
         Add-MpPreference -ExclusionPath "${{ github.workspace }}"
         Add-MpPreference -ExclusionPath "$env:TEMP"
         Add-MpPreference -ExclusionPath "$env:USERPROFILE\.gradle"
         Add-MpPreference -ExclusionProcess "java.exe","javaw.exe","gradle.bat","gradle"
+        Write-Host "=== Defender state AFTER:"
+        Get-MpPreference | Select-Object DisableRealtimeMonitoring, ExclusionPath, ExclusionProcess | Format-List
     - name: Build with Gradle
       run: ./gradlew check --stacktrace
     - name: Archive test results
