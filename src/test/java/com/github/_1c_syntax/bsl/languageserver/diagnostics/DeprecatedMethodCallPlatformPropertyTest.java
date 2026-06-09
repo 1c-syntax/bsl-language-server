@@ -61,4 +61,18 @@ class DeprecatedMethodCallPlatformPropertyTest
       configuration.getV8PlatformOptions().setTargetVersion(null);
     }
   }
+
+  @Test
+  void deprecatedPropertyNotReportedForTargetBelowThreshold() {
+    // Негативная граница: для target ниже семейства устаревания (8.2.x)
+    // диагностика молчит. 8.1.99 — последний патч 8.1, гарантированно ниже
+    // нормализованного «устарел с 8.2» → 8.2.99 (см. PlatformMemberVersions).
+    configuration.getV8PlatformOptions().setTargetVersion("8.1.99");
+    try {
+      List<Diagnostic> diagnostics = getDiagnostics("DeprecatedMethodCallPlatformProperty");
+      assertThat(diagnostics).isEmpty();
+    } finally {
+      configuration.getV8PlatformOptions().setTargetVersion(null);
+    }
+  }
 }

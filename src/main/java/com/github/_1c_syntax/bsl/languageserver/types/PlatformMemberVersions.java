@@ -53,6 +53,9 @@ public class PlatformMemberVersions {
    */
   private static final Pattern VERSION_PATTERN = Pattern.compile("^\\d+[._]\\d+([._]\\d+)?");
 
+  /** Sentinel «последний патч семейства» — синхронизирован с MAX_VERSION в CompatibilityMode. */
+  private static final int MAX_PATCH = 99;
+
   /**
    * Sentinel-значение поля {@code deprecatedSinceVersion} — «устарел всегда»,
    * безотносительно версии платформы. Используется для oscript-конвенции
@@ -144,7 +147,4 @@ public class PlatformMemberVersions {
     }
     return new CompatibilityMode(matched);
   }
-
-  /** Sentinel «последний патч семейства» — синхронизирован с MAX_VERSION в CompatibilityMode. */
-  private static final int MAX_PATCH = 99;
 }
