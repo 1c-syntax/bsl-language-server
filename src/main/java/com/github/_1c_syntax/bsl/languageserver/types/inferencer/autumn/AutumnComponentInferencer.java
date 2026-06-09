@@ -92,14 +92,23 @@ public class AutumnComponentInferencer {
    * @param annotations  аннотации поля/параметра
    * @param fallbackName имя переменной/параметра — используется как имя желудя, если оно не
    *                     задано в аннотации
-   * @return внедряемый желудь либо пусто, если это не точка внедрения или имя желудя пустое
+   * @return внедряемый желудь либо пусто, если это не точка внедрения, имя желудя пустое или
+   *         задан явно пустой {@code Тип=""} (в autumn — ошибка, точка не разрешается)
    */
   public Optional<InjectedBean> injectedBean(List<Annotation> annotations, String fallbackName) {
     return metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION)
-      .map(injection -> new InjectedBean(
-        beanName(injection, fallbackName),
-        !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionType(injection))))
-      .filter(bean -> !bean.name().isBlank());
+      .flatMap(injection -> {
+        var name = beanName(injection, fallbackName);
+        var collectionName = collectionType(injection);
+        // Пустое имя желудя или явный Тип="" (не «Желудь» и не коллекция) — точка внедрения не
+        // разрешается, как и в inferInjectedType; иначе линза вела бы к ложным целям.
+        if (name.isBlank() || collectionName.isBlank()) {
+          return Optional.empty();
+        }
+        return Optional.of(new InjectedBean(
+          name,
+          !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionName)));
+      });
   }
 
   /**

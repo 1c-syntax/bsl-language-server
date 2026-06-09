@@ -279,6 +279,16 @@ class AutumnComponentInferencerTest {
   }
 
   @Test
+  void injectedBeanEmptyWhenTypeIsExplicitlyBlank() {
+    // given: явный Тип="" — ошибка (не «Желудь» и не коллекция); как и inferInjectedType,
+    // injectedBean не разрешает такую точку, иначе линза вела бы к ложным целям
+    var annotations = List.of(plasticine(named("Тип", "")));
+
+    // when / then
+    assertThat(inferencer.injectedBean(annotations, "Поле")).isEmpty();
+  }
+
+  @Test
   void injectedBeanEmptyWhenNoInjectionAnnotation() {
     // given
     var annotations = List.of(annotation("Желудь"));
