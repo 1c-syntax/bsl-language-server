@@ -425,9 +425,6 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   /**
-   * Извлекает платформенные метаданные из {@link ContextProperty}.
-   */
-  /**
    * Извлекает платформенные метаданные из {@link ContextEvent}.
    */
   private static PlatformMetadata metadataOf(ContextEvent event) {
@@ -444,6 +441,9 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     );
   }
 
+  /**
+   * Извлекает платформенные метаданные из {@link ContextProperty}.
+   */
   private static PlatformMetadata metadataOf(ContextProperty property) {
     return new PlatformMetadata(
       property.sinceVersion(),
