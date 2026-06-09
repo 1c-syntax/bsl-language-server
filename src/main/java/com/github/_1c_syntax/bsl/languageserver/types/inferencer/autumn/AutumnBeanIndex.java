@@ -22,23 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -48,9 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс желудей фреймворка «ОСень»: отображение «имя/прозвище желудя → тип».
@@ -80,14 +71,11 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @Component
 @WorkspaceScope
-@RequiredArgsConstructor
-public class AutumnBeanIndex {
+public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
 
   /** Роли, под которыми класс является желудём (имя берётся с этой роль-аннотации). */
   private static final List<String> COMPONENT_ROLES = List.of(AutumnAnnotations.COMPONENT, AutumnAnnotations.OAK);
 
-  private final OScriptLibraryIndex libraryIndex;
-  private final ServerContextProvider serverContextProvider;
   private final TypeRegistry typeRegistry;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
@@ -95,13 +83,14 @@ public class AutumnBeanIndex {
   private final Map<String, Set<BeanCandidate>> beansByName = new ConcurrentHashMap<>();
   /** URI .os-файла → имена, под которыми он зарегистрировал кандидатов (для точечного удаления). */
   private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
-  /**
-   * Барьер первичной сборки: завершённый future — индекс построен; {@code null} —
-   * не построен (соберётся лениво). Сборка ленивая и происходит после полной
-   * индексации, когда {@code AnnotationRepository} целостен — поэтому порядок
-   * индексации компонента и класса-определения аннотации не важен.
-   */
-  private final AtomicReference<CompletableFuture<Void>> ready = new AtomicReference<>();
+  public AutumnBeanIndex(OScriptLibraryIndex libraryIndex,
+                         ServerContextProvider serverContextProvider,
+                         TypeRegistry typeRegistry,
+                         AutumnMetaAnnotationResolver metaAnnotationResolver) {
+    super(libraryIndex, serverContextProvider);
+    this.typeRegistry = typeRegistry;
+    this.metaAnnotationResolver = metaAnnotationResolver;
+  }
 
   /**
    * Вид производителя желудя: класс-компонент ({@code &Желудь}/{@code &Дуб}, производитель —
@@ -286,81 +275,15 @@ public class AutumnBeanIndex {
     return primaryCandidates.isEmpty() ? candidates : primaryCandidates;
   }
 
-  /**
-   * Полный сброс индекса — будет перестроен лениво при следующем обращении.
-   * Реакция на переиндексацию библиотек (мог измениться состав классов).
-   */
-  @EventListener(OScriptLibraryIndexedEvent.class)
-  public void invalidate() {
-    ready.set(null);
-  }
-
-  /**
-   * Обновить индекс при правке .os-документа. Обычный класс обновляется точечно
-   * (удаление его прежнего вклада + переиндексация только его). Класс-определение
-   * аннотации ({@code &Аннотация}) затрагивает роли в чужих классах — такой
-   * случай сбрасывает индекс на полную ленивую пересборку. До первой сборки или
-   * для .bsl — ничего не делаем.
-   */
-  @EventListener
-  public void handleDocumentChange(DocumentContextContentChangedEvent event) {
-    var document = event.getSource();
-    if (document.getFileType() != FileType.OS || ready.get() == null) {
-      return;
-    }
-    if (isAnnotationDefinition(document)) {
-      ready.set(null);
-      return;
-    }
-    var uri = document.getUri();
-    removeByUri(uri);
-    indexDocument(uri);
-  }
-
-  /** Удалить вклад удалённого .os-документа. */
-  @EventListener
-  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    if (ready.get() == null) {
-      return;
-    }
-    removeByUri(event.getUri());
-  }
-
-  /** Гарантировать, что индекс собран; сборка выполняется ровно один раз. */
-  private void ensureBuilt() {
-    while (true) {
-      var done = ready.get();
-      if (done != null) {
-        done.join();
-        return;
-      }
-      var fresh = new CompletableFuture<Void>();
-      if (ready.compareAndSet(null, fresh)) {
-        try {
-          rebuild();
-          fresh.complete(null);
-        } catch (RuntimeException e) {
-          ready.compareAndSet(fresh, null);
-          fresh.completeExceptionally(e);
-          throw e;
-        }
-        return;
-      }
-      // Другой поток уже строит — повторим и присоединимся к его future.
-    }
-  }
-
-  private void rebuild() {
+  @Override
+  protected void clearIndex() {
     beansByName.clear();
     namesByUri.clear();
-    libraryIndex.findEntries(EntryKind.CLASS).stream()
-      .map(LibraryEntry::uri)
-      .distinct()
-      .forEach(this::indexDocument);
   }
 
   /** Удалить из индекса все кандидаты, зарегистрированные из указанного .os-файла. */
-  private void removeByUri(URI uri) {
+  @Override
+  protected void removeByUri(URI uri) {
     var names = namesByUri.remove(uri);
     if (names == null) {
       return;
@@ -373,28 +296,8 @@ public class AutumnBeanIndex {
     }
   }
 
-  /** Несёт ли конструктор класса маркер {@code &Аннотация} (класс-определение пользовательской аннотации). */
-  private static boolean isAnnotationDefinition(DocumentContext document) {
-    return document.getSymbolTree().getConstructor()
-      .map(constructor ->
-        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
-      .orElse(false);
-  }
-
-  /** Проиндексировать желуди и фабрики, объявленные в .os-классе по указанному URI. */
-  private void indexDocument(URI uri) {
-    var classEntries = libraryIndex.findEntriesByUri(uri).stream()
-      .filter(entry -> entry.kind() == EntryKind.CLASS)
-      .toList();
-    if (classEntries.isEmpty()) {
-      return;
-    }
-    serverContextProvider.getServerContext(uri)
-      .map(serverContext -> serverContext.getDocument(uri))
-      .ifPresent(document -> indexClass(document, classEntries, uri));
-  }
-
-  private void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
+  @Override
+  protected void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
     var symbolTree = document.getSymbolTree();
     // Аннотации компонента (&Желудь/&Дуб) размещаются исключительно над конструктором.
     symbolTree.getConstructor().ifPresent(constructor -> {

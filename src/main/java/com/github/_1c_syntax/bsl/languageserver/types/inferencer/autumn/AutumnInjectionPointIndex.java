@@ -22,19 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
-import lombok.RequiredArgsConstructor;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import org.eclipse.lsp4j.Range;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -42,9 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Обратный индекс точек внедрения фреймворка «ОСень»: отображение «имя желудя → точки внедрения»
@@ -54,22 +45,25 @@ import java.util.concurrent.atomic.AtomicReference;
  * желудей — это классы-желуди), но собирает не объявления производителей, а места внедрения.
  * Используется обратной линзой «производитель → точки внедрения». Имя внедряемого желудя
  * вычисляется через {@link AutumnComponentInferencer#injectedBean} — единый источник правды
- * с прямой линзой и выводом типа.
+ * с прямой линзой и выводом типа. Общая обвязка ленивой сборки — в {@link AbstractAutumnLibraryIndex}.
  */
 @Component
 @WorkspaceScope
-@RequiredArgsConstructor
-public class AutumnInjectionPointIndex {
+public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
 
-  private final OScriptLibraryIndex libraryIndex;
-  private final ServerContextProvider serverContextProvider;
   private final AutumnComponentInferencer componentInferencer;
 
   /** Имя желудя (lowercase) → точки внедрения, ссылающиеся на него. */
   private final Map<String, Set<InjectionPoint>> pointsByName = new ConcurrentHashMap<>();
   /** URI .os-файла → имена, под которыми он зарегистрировал точки (для точечного удаления). */
   private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
-  private final AtomicReference<CompletableFuture<Void>> ready = new AtomicReference<>();
+
+  public AutumnInjectionPointIndex(OScriptLibraryIndex libraryIndex,
+                                   ServerContextProvider serverContextProvider,
+                                   AutumnComponentInferencer componentInferencer) {
+    super(libraryIndex, serverContextProvider);
+    this.componentInferencer = componentInferencer;
+  }
 
   /**
    * Точка внедрения: .os-файл потребителя и диапазон поля/параметра с {@code &Пластилин}.
@@ -95,113 +89,14 @@ public class AutumnInjectionPointIndex {
     return points == null || points.isEmpty() ? List.of() : List.copyOf(points);
   }
 
-  /**
-   * Полный сброс индекса — будет перестроен лениво при следующем обращении.
-   * Реакция на переиндексацию библиотек.
-   */
-  @EventListener(OScriptLibraryIndexedEvent.class)
-  public void invalidate() {
-    ready.set(null);
-  }
-
-  /**
-   * Обновить индекс при правке .os-документа: точечно переиндексировать обычный класс;
-   * класс-определение аннотации сбрасывает индекс на полную ленивую пересборку (как у
-   * {@link AutumnBeanIndex}). До первой сборки или для .bsl — ничего не делаем.
-   *
-   * @param event Событие изменения содержимого документа.
-   */
-  @EventListener
-  public void handleDocumentChange(DocumentContextContentChangedEvent event) {
-    var document = event.getSource();
-    if (document.getFileType() != FileType.OS || ready.get() == null) {
-      return;
-    }
-    if (isAnnotationDefinition(document)) {
-      ready.set(null);
-      return;
-    }
-    var uri = document.getUri();
-    removeByUri(uri);
-    indexDocument(uri);
-  }
-
-  /**
-   * Удалить вклад удалённого .os-документа.
-   *
-   * @param event Событие удаления документа.
-   */
-  @EventListener
-  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    if (ready.get() == null) {
-      return;
-    }
-    removeByUri(event.getUri());
-  }
-
-  private void ensureBuilt() {
-    while (true) {
-      var done = ready.get();
-      if (done != null) {
-        done.join();
-        return;
-      }
-      var fresh = new CompletableFuture<Void>();
-      if (ready.compareAndSet(null, fresh)) {
-        try {
-          rebuild();
-          fresh.complete(null);
-        } catch (RuntimeException e) {
-          ready.compareAndSet(fresh, null);
-          fresh.completeExceptionally(e);
-          throw e;
-        }
-        return;
-      }
-    }
-  }
-
-  private void rebuild() {
+  @Override
+  protected void clearIndex() {
     pointsByName.clear();
     namesByUri.clear();
-    libraryIndex.findEntries(EntryKind.CLASS).stream()
-      .map(OScriptLibraryIndex.LibraryEntry::uri)
-      .distinct()
-      .forEach(this::indexDocument);
   }
 
-  private void removeByUri(URI uri) {
-    var names = namesByUri.remove(uri);
-    if (names == null) {
-      return;
-    }
-    for (var name : names) {
-      pointsByName.computeIfPresent(name, (key, points) -> {
-        points.removeIf(point -> uri.equals(point.uri()));
-        return points.isEmpty() ? null : points;
-      });
-    }
-  }
-
-  private static boolean isAnnotationDefinition(DocumentContext document) {
-    return document.getSymbolTree().getConstructor()
-      .map(constructor ->
-        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
-      .orElse(false);
-  }
-
-  private void indexDocument(URI uri) {
-    var hasClass = libraryIndex.findEntriesByUri(uri).stream()
-      .anyMatch(entry -> entry.kind() == EntryKind.CLASS);
-    if (!hasClass) {
-      return;
-    }
-    serverContextProvider.getServerContext(uri)
-      .map(serverContext -> serverContext.getDocument(uri))
-      .ifPresent(document -> indexClass(document, uri));
-  }
-
-  private void indexClass(DocumentContext document, URI uri) {
+  @Override
+  protected void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
     if (isAnnotationDefinition(document)) {
       return;
     }
@@ -213,6 +108,20 @@ public class AutumnInjectionPointIndex {
 
     for (var variable : symbolTree.getVariables()) {
       indexInjection(uri, variable.getAnnotations(), variable.getName(), variable.getVariableNameRange());
+    }
+  }
+
+  @Override
+  protected void removeByUri(URI uri) {
+    var names = namesByUri.remove(uri);
+    if (names == null) {
+      return;
+    }
+    for (var name : names) {
+      pointsByName.computeIfPresent(name, (key, points) -> {
+        points.removeIf(point -> uri.equals(point.uri()));
+        return points.isEmpty() ? null : points;
+      });
     }
   }
 
