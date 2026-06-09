@@ -243,7 +243,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
       pathByModuleType.getOrDefault(moduleType, "Module.bsl")
     );
 
-    initServerContext(CONFIGURATION_PATH.toRealPath());
+    initServerContextOnce(CONFIGURATION_PATH.toRealPath());
     return TestUtils.getDocumentContext(
       tempFile.toRealPath().toUri(),
       FileUtils.readFileToString(tempFile.toFile(), StandardCharsets.UTF_8),
