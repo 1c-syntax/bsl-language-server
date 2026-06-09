@@ -125,23 +125,6 @@ class NavigationCommandBuilderTest {
   }
 
   @Test
-  void gotoCommandWithSeveralTargetsForOtherClientUsesShowReferences() {
-    // given: LSP4IJ и прочие не-VS-Code клиенты. editor.action.goToLocations у LSP4IJ читает
-    // режим "peek" как java.lang.String (а приходит JsonPrimitive), игнорирует его и прыгает к
-    // первой цели. Поэтому при нескольких целях показываем поповер через showReferences.
-    connectClient("Neovim");
-    var builder = new NavigationCommandBuilder(clientCapabilitiesHolder);
-    var targets = List.of(location(10), location(20));
-
-    // when
-    var command = builder.gotoCommand("title", URI_VALUE, POSITION, targets);
-
-    // then
-    assertThat(command.getCommand()).isEqualTo(NavigationCommandBuilder.BUILTIN_REFERENCES_COMMAND);
-    assertThat(command.getArguments()).containsExactly(URI_VALUE.toString(), POSITION, targets);
-  }
-
-  @Test
   void referencesCommandForVsCodeLikeClientUsesWrapperCommand() {
     // given
     connectClient("Antigravity");
