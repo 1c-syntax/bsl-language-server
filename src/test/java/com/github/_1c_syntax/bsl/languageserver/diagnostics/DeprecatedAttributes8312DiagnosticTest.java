@@ -38,7 +38,7 @@ class DeprecatedAttributes8312DiagnosticTest extends AbstractDiagnosticTest<Depr
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(45);
+    assertThat(diagnostics).hasSize(33);
     assertThat(diagnostics, true)
       .hasRange(1, 37, 1, 53)
       .hasRange(2, 30, 2, 41)
@@ -62,27 +62,15 @@ class DeprecatedAttributes8312DiagnosticTest extends AbstractDiagnosticTest<Depr
       .hasRange(26, 18, 26, 38)
       .hasRange(27, 20, 27, 38)
       .hasRange(28, 20, 28, 40)
-      .hasRange(30, 13, 30, 27)
-      .hasRange(31, 13, 31, 42)
-      .hasRange(32, 13, 32, 41)
       .hasRange(33, 13, 33, 60)
-      .hasRange(35, 21, 35, 38)
-      .hasRange(36, 14, 36, 45)
       .hasRange(40, 9, 40, 20)
       .hasRange(41, 14, 41, 25)
       .hasRange(42, 14, 42, 25)
       .hasRange(43, 9, 43, 19)
       .hasRange(44, 14, 44, 24)
       .hasRange(45, 14, 45, 24)
-      .hasRange(47, 9, 47, 22)
-      .hasRange(48, 9, 48, 35)
-      .hasRange(49, 9, 49, 33)
       .hasRange(50, 9, 50, 34)
-      .hasRange(52, 10, 52, 22)
-      .hasRange(53, 10, 53, 26)
       .hasRange(58, 17, 58, 46)
-      .hasRange(62, 4, 62, 36)
-      .hasRange(66, 4, 66, 25)
       .hasRange(70, 54, 70, 69)
       .hasRange(74, 30, 74, 41);
 

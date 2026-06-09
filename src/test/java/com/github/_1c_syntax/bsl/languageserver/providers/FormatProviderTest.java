@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
@@ -429,6 +430,31 @@ class FormatProviderTest {
 
     // then: единственный токен строки выходит за курсор и отфильтрован, форматировать нечего
     assertThat(textEdits).isEmpty();
+  }
+
+  @Test
+  void testOnTypeFormattingSemicolonClampsCursorPastLineEnd() {
+    // given: рассинхрон клиента (LSP4IJ) — серверная копия строки ещё без набранной `;`,
+    // поэтому курсор (col 19) оказывается правее фактического конца строки (18 символов).
+    // Раньше ветка `;` не клампила позицию, диапазон правки уезжал за конец строки и при
+    // применении затирал только что набранную `;`.
+    String fileContent = "f = Новый Массив()";
+    var params = onTypeParams(";", 0, 19);
+
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getOnTypeFormatting(params, documentContext);
+
+    // then: диапазон правки не выходит за конец синхронизированной строки и не содержит переноса
+    assertThat(textEdits).hasSize(1);
+    TextEdit edit = textEdits.getFirst();
+    assertThat(edit.getRange().getEnd().getCharacter()).isEqualTo(18);
+    assertThat(edit.getNewText()).doesNotContain("\n");
+    assertThat(edit.getNewText()).isEqualTo("f = Новый Массив()");
   }
 
   @Test

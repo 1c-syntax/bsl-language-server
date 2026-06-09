@@ -216,6 +216,42 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_withPaletteColorChild_registersManager() {
+    var workspaceUri = java.net.URI.create("file:///test-cfg-palette/");
+    WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");
+    WorkspaceContextHolder.set(workspaceUri);
+    try {
+      var paletteColor = (MD) com.github._1c_syntax.bsl.mdo.PaletteColor.builder()
+        .name("ПервичныйЦвет").build();
+      var configuration = Mockito.mock(Configuration.class);
+      Mockito.when(configuration.isEmpty()).thenReturn(false);
+      Mockito.when(configuration.getChildrenByMdoRef())
+        .thenReturn(java.util.Map.of(paletteColor.getMdoReference(), paletteColor));
+      var serverContext = Mockito.mock(ServerContext.class);
+      Mockito.when(serverContext.getConfiguration()).thenReturn(configuration);
+      var serverProvider = Mockito.mock(ServerContextProvider.class);
+      Mockito.when(serverProvider.getAllContexts())
+        .thenReturn(java.util.Map.of(workspaceUri, serverContext));
+
+      var registry = new TypeRegistry(List.of(),
+        Mockito.mock(GlobalScopeProvider.class),
+        Mockito.mock(MemberMetadataIndex.class));
+      var globalScope = Mockito.mock(GlobalScopeProvider.class);
+      var lsConfig = Mockito.mock(
+        com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.class);
+      var mcs = Mockito.mock(MetadataCollectionSpecializer.class);
+      var provider = new ConfigurationTypesProvider(registry, serverProvider, globalScope,
+        lsConfig, mcs, new ConfigurationGenericExpander(registry, serverProvider));
+
+      provider.tryRegister();
+      assertThat(registry.resolve("ЦветПалитрыМенеджер.ПервичныйЦвет")).isPresent();
+    } finally {
+      WorkspaceContextHolder.clear();
+      WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
+    }
+  }
+
+  @Test
   void tryRegister_withMultipleMdoTypes_registersAll() {
     var workspaceUri = java.net.URI.create("file:///test-cfg-all/");
     WorkspaceContextHolder.registerWorkspace(workspaceUri, "t");

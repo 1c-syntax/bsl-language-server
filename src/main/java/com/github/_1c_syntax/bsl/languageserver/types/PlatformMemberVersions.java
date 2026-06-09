@@ -45,11 +45,16 @@ import java.util.regex.Pattern;
 public class PlatformMemberVersions {
 
   /**
-   * Строка версии вида {@code 8.3.10} — минимум три числовых компонента через
-   * {@code .} или {@code _} (этого достаточно для {@link CompatibilityMode}).
-   * Двухкомпонентные ({@code 8.3}) и прочие — невалидны.
+   * Строка версии вида {@code 8.3.10} либо {@code 8.2} — минимум два числовых
+   * компонента через {@code .} или {@code _}. Двухкомпонентные значения
+   * приходят из СП у API, депрекированных ещё в эпоху платформ 8.0/8.1/8.2
+   * (например, {@code ТабличныйДокумент.ИмяПараметровПечати} — устарел с 8.2),
+   * — их нормализуем до трёхкомпонентного вида в {@link #normalize}.
    */
-  private static final Pattern VERSION_PATTERN = Pattern.compile("^\\d+[._]\\d+[._]\\d+");
+  private static final Pattern VERSION_PATTERN = Pattern.compile("^\\d+[._]\\d+([._]\\d+)?");
+
+  /** Sentinel «последний патч семейства» — синхронизирован с MAX_VERSION в CompatibilityMode. */
+  private static final int MAX_PATCH = 99;
 
   /**
    * Sentinel-значение поля {@code deprecatedSinceVersion} — «устарел всегда»,
@@ -67,7 +72,10 @@ public class PlatformMemberVersions {
    */
   public static CompatibilityMode targetCompatibilityMode(DocumentContext documentContext,
                                                           LanguageServerConfiguration configuration) {
-    var explicit = parse(configuration.getV8PlatformOptions().getTargetVersion());
+    // Для target-настройки берём «начало семейства» — она задаётся пользователем
+    // явно (например, «8.3.10») и обычно уже трёхкомпонентна; для двухкомпонентной
+    // консервативная интерпретация — самая старая 8.x.0.
+    var explicit = parseSinceVersion(configuration.getV8PlatformOptions().getTargetVersion());
     if (explicit != null) {
       return explicit;
     }
@@ -83,7 +91,7 @@ public class PlatformMemberVersions {
     if (DEPRECATED_ALWAYS.equals(deprecatedSinceVersion)) {
       return true;
     }
-    var version = parse(deprecatedSinceVersion);
+    var version = parseDeprecatedSinceVersion(deprecatedSinceVersion);
     return version != null && CompatibilityMode.compareTo(version, target) >= 0;
   }
 
@@ -92,20 +100,51 @@ public class PlatformMemberVersions {
    * Пустая или неразборчивая строка версии → {@code false}.
    */
   public static boolean firesUnavailable(String sinceVersion, CompatibilityMode target) {
-    var version = parse(sinceVersion);
+    var version = parseSinceVersion(sinceVersion);
     return version != null && CompatibilityMode.compareTo(version, target) < 0;
   }
 
   /**
-   * Парсит строку версии вида {@code 8.3.10} в {@link CompatibilityMode}.
-   * Пустые, двухкомпонентные ({@code 8.3}) и иные неразборчивые строки →
-   * {@code null} (проверку версии для такого члена пропускаем).
+   * Парсит {@code sinceVersion} вида {@code 8.3.10} либо {@code 8.2}.
+   * Двухкомпонентное значение «доступно с 8.2» означает «доступно с первого
+   * патча 8.2», т.е. {@code 8.2.0}.
    */
   @Nullable
-  private static CompatibilityMode parse(@Nullable String version) {
-    if (version == null || !VERSION_PATTERN.matcher(version).find()) {
+  private static CompatibilityMode parseSinceVersion(@Nullable String version) {
+    return normalize(version, 0);
+  }
+
+  /**
+   * Парсит {@code deprecatedSinceVersion} вида {@code 8.3.10} либо {@code 8.2}.
+   * Двухкомпонентное значение «устарел с 8.2» означает «устарел к моменту
+   * последнего патча 8.2», т.е. {@code 8.2.99} — иначе диагностика «устарел
+   * с 8.2» начнёт срабатывать на промежуточных версиях семейства 8.2 раньше
+   * времени.
+   */
+  @Nullable
+  private static CompatibilityMode parseDeprecatedSinceVersion(@Nullable String version) {
+    return normalize(version, MAX_PATCH);
+  }
+
+  /**
+   * Достраивает строку версии до трёхкомпонентной — {@link CompatibilityMode}
+   * требует минимум три компонента. Подставляемый патч {@code defaultPatch}
+   * задаётся вызывающей стороной (для {@code sinceVersion} — начало семейства,
+   * для {@code deprecatedSinceVersion} — конец семейства).
+   */
+  @Nullable
+  private static CompatibilityMode normalize(@Nullable String version, int defaultPatch) {
+    if (version == null) {
       return null;
     }
-    return new CompatibilityMode(version);
+    var matcher = VERSION_PATTERN.matcher(version);
+    if (!matcher.find()) {
+      return null;
+    }
+    var matched = matcher.group();
+    if (matcher.group(1) == null) {
+      matched = matched + "." + defaultPatch;
+    }
+    return new CompatibilityMode(matched);
   }
 }
