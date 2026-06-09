@@ -42,6 +42,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -216,6 +217,46 @@ public class AutumnBeanIndex {
     ensureBuilt();
     var names = namesByUri.get(uri);
     return names == null ? Set.of() : Set.copyOf(names);
+  }
+
+  /**
+   * Фабричные желуди ({@code &Завязь}), объявленные в указанном файле, сгруппированные по
+   * фабричному методу: имя метода → имена/прозвища производимого им желудя.
+   * <p>
+   * Для обратной линзы: над каждым методом {@code &Завязь} показываются точки внедрения именно
+   * его желудя — отдельно от агрегатной линзы на конструкторе.
+   *
+   * @param uri URI .os-файла.
+   * @return группы «фабричный метод → имена желудя»; пусто, если фабричных желудей в файле нет.
+   */
+  public List<FactoryBean> factoryBeansForUri(URI uri) {
+    ensureBuilt();
+    var names = namesByUri.get(uri);
+    if (names == null) {
+      return List.of();
+    }
+    Map<String, Set<String>> namesByMethod = new LinkedHashMap<>();
+    for (var name : names) {
+      for (var candidate : beansByName.getOrDefault(name, Set.of())) {
+        if (uri.equals(candidate.sourceUri())
+          && candidate.kind() == ProducerKind.FACTORY
+          && candidate.factoryMethodName() != null) {
+          namesByMethod.computeIfAbsent(candidate.factoryMethodName(), key -> new LinkedHashSet<>()).add(name);
+        }
+      }
+    }
+    return namesByMethod.entrySet().stream()
+      .map(entry -> new FactoryBean(entry.getKey(), Set.copyOf(entry.getValue())))
+      .toList();
+  }
+
+  /**
+   * Фабричный желудь файла для обратной линзы: метод {@code &Завязь} и имена производимого желудя.
+   *
+   * @param factoryMethodName Имя фабричного метода {@code &Завязь}.
+   * @param beanNames         Имена/прозвища производимого желудя (ключи поиска точек внедрения).
+   */
+  public record FactoryBean(String factoryMethodName, Set<String> beanNames) {
   }
 
   private static BeanDeclaration toDeclaration(BeanCandidate candidate) {

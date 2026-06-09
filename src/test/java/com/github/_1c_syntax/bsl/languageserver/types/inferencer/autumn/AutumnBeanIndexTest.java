@@ -235,6 +235,34 @@ class AutumnBeanIndexTest {
   }
 
   @Test
+  void factoryBeansForUriReturnsFactoryMethodsOfFile() {
+    // given: метод &Завязь "СоздатьСписок" объявляет желудь "СписокЖелудей"
+    when(typeRegistry.resolve("Массив")).thenReturn(Optional.of(new TypeRef(TypeKind.PLATFORM, "Массив")));
+    registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
+      method(oak()), namedMethod("СоздатьСписок", factory("СписокЖелудей", "Массив")));
+    init();
+
+    // when
+    var factoryBeans = beanIndex.factoryBeansForUri(Absolute.uri("file:///beans/Фабрика.os"));
+
+    // then: метод &Завязь и имя (lowercase) производимого им желудя
+    assertThat(factoryBeans).singleElement().satisfies(factoryBean -> {
+      assertThat(factoryBean.factoryMethodName()).isEqualTo("СоздатьСписок");
+      assertThat(factoryBean.beanNames()).containsExactly("списокжелудей");
+    });
+  }
+
+  @Test
+  void factoryBeansForUriEmptyForComponentOnlyFile() {
+    // given: класс-компонент без фабричных методов &Завязь
+    registerClass("Логгер", new TypeRef(TypeKind.USER, "Логгер"), method(component(null)));
+    init();
+
+    // when / then
+    assertThat(beanIndex.factoryBeansForUri(Absolute.uri("file:///beans/Логгер.os"))).isEmpty();
+  }
+
+  @Test
   void skipsFactoryWhenTypeIsExplicitlyBlank() {
     // given: явный Тип="" — в autumn Тип("") это ошибка, валидного типа нет. Резолв имени
     // метода застаблен в тип: если бы код ошибочно фолбэчил пустой Тип на имя метода,

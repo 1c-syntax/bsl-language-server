@@ -25,8 +25,10 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.FactoryBean;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex.InjectionPoint;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -62,6 +64,7 @@ class BeanUsagesCodeLensSupplierTest {
   private static final URI CONSUMER_URI = Absolute.uri("file:///Потребитель.os");
   private static final Range CONSTRUCTOR_RANGE = range(1);
   private static final Range INJECTION_RANGE = range(5);
+  private static final Range FACTORY_METHOD_RANGE = range(8);
 
   @Mock
   private LanguageServerConfiguration configuration;
@@ -138,7 +141,54 @@ class BeanUsagesCodeLensSupplierTest {
       anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(expectedLocations)))
       .thenReturn(command);
     var unresolved = new CodeLens(CONSTRUCTOR_RANGE);
-    var data = new DefaultCodeLensData(PRODUCER_URI, supplier.getId());
+    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), null);
+
+    // when
+    var resolved = supplier.resolve(documentContext, unresolved, data);
+
+    // then
+    assertThat(resolved.getCommand()).isSameAs(command);
+  }
+
+  @Test
+  void buildsLensOnFactoryMethodForItsBean() {
+    // given: фабричный метод &Завязь объявляет желудь, у которого есть точки внедрения;
+    // агрегатных желудей на конструкторе нет (namesForUri пуст) — проверяем именно линзу на методе
+    var supplier = supplier();
+    when(beanIndex.namesForUri(PRODUCER_URI)).thenReturn(Set.of());
+    when(beanIndex.factoryBeansForUri(PRODUCER_URI))
+      .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
+    when(injectionPointIndex.resolve("лог")).thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE)));
+    var method = mock(MethodSymbol.class);
+    when(method.getSelectionRange()).thenReturn(FACTORY_METHOD_RANGE);
+    when(symbolTree.getMethodSymbol("СоздатьЛог")).thenReturn(Optional.of(method));
+
+    // when
+    var codeLenses = supplier.getCodeLenses(documentContext);
+
+    // then
+    assertThat(codeLenses).singleElement().satisfies(codeLens -> {
+      assertThat(codeLens.getRange()).isEqualTo(FACTORY_METHOD_RANGE);
+      var data = (BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData) codeLens.getData();
+      assertThat(data.getFactoryMethodName()).isEqualTo("СоздатьЛог");
+    });
+  }
+
+  @Test
+  void resolveFactoryLensUsesItsBeanInjectionPoints() {
+    // given
+    var supplier = supplier();
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    when(beanIndex.factoryBeansForUri(PRODUCER_URI))
+      .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
+    when(injectionPointIndex.resolve("лог")).thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE)));
+    var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
+    var command = new Command("title", "command", List.of());
+    when(navigationCommandBuilder.referencesCommand(
+      anyString(), eq(PRODUCER_URI), eq(FACTORY_METHOD_RANGE.getStart()), eq(expectedLocations)))
+      .thenReturn(command);
+    var unresolved = new CodeLens(FACTORY_METHOD_RANGE);
+    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "СоздатьЛог");
 
     // when
     var resolved = supplier.resolve(documentContext, unresolved, data);
