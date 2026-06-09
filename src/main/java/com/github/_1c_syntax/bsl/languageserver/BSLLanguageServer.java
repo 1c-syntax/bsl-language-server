@@ -324,12 +324,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return options;
   }
 
-  private CodeLensOptions getCodeLensProvider() {
+  private static CodeLensOptions getCodeLensProvider() {
     var codeLensOptions = new CodeLensOptions();
-    // LSP4IJ не исполняет команду линзы по клику, а повторно шлёт codeLens/resolve
-    // (lsp4ij#1585). Для него линзы разрешаются заранее в CodeLensProvider, поэтому
-    // codeLens/resolve не анонсируем.
-    codeLensOptions.setResolveProvider(!clientCapabilitiesHolder.isLsp4ij());
+    codeLensOptions.setResolveProvider(Boolean.TRUE);
     codeLensOptions.setWorkDoneProgress(Boolean.FALSE);
     return codeLensOptions;
   }

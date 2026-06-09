@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.Gson;
 import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.ClientInfo;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -143,27 +142,6 @@ class CodeLensProviderTest {
       var newConvertedData = codeLensProvider.extractData(codeLens);
 
       assertThat(oldData).isEqualTo(newConvertedData);
-    }
-  }
-
-  @Test
-  void testResolvesCodeLensesEagerlyForLsp4ij() {
-    // given: клиент LSP4IJ (опознаётся по формату версии «… (build …)»)
-    clientCapabilitiesHolder.setClientInfo(
-      new ClientInfo("IntelliJ IDEA 2026.1.2", "2026.1.2 (build IU-261.24374.151)"));
-    var filePath = "./src/test/resources/providers/codeLens.bsl";
-    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
-
-    try {
-      // when
-      List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
-
-      // then: линзы уже разрешены (команда заполнена) — клик в LSP4IJ сработает без resolve
-      assertThat(codeLenses)
-        .hasSizeGreaterThan(0)
-        .allMatch(codeLens -> codeLens.getCommand() != null);
-    } finally {
-      clientCapabilitiesHolder.setClientInfo(null);
     }
   }
 

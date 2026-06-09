@@ -73,25 +73,4 @@ public class ClientCapabilitiesHolder {
   public Optional<ClientInfo> getClientInfo() {
     return Optional.ofNullable(clientInfo);
   }
-
-  /**
-   * Подключён ли клиент через LSP4IJ (LSP-клиент для JetBrains IDE).
-   * <p>
-   * Стабильного маркера «LSP4IJ» в {@code clientInfo} нет — клиент представляется именем IDE.
-   * Опознаётся по формату версии {@code "<versionName> (build <buildNumber>)"}, который LSP4IJ
-   * формирует для всех JetBrains IDE.
-   * <p>
-   * Нужно для обхода дефекта LSP4IJ: клик по разрешённой линзе не исполняет её команду, а
-   * повторно шлёт {@code codeLens/resolve} (см.
-   * <a href="https://github.com/redhat-developer/lsp4ij/issues/1585">lsp4ij#1585</a>). Поэтому
-   * для LSP4IJ линзы разрешаются заранее, а {@code codeLens/resolve} не анонсируется.
-   *
-   * @return {@code true}, если клиент — LSP4IJ; иначе {@code false}.
-   */
-  public boolean isLsp4ij() {
-    return getClientInfo()
-      .map(ClientInfo::getVersion)
-      .filter(version -> version.contains("(build "))
-      .isPresent();
-  }
 }
