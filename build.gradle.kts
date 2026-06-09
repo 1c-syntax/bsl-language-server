@@ -251,17 +251,33 @@ tasks.test {
     //
     // Уровень параллелизма можно переопределить Gradle-свойством
     // `maxParallelForks` (например, `-PmaxParallelForks=4`). По умолчанию
-    // на CI (env `CI=true` / `GITHUB_ACTIONS=true`) используется один форк,
-    // чтобы не упереться в OOM при `maxHeapSize=3g` на каждый форк.
-    // Локально — половина доступных процессоров, ограниченная диапазоном
-    // от 1 до 4.
+    // на CI — 2 форка на Windows-runner (4 vCPU / 16 GB → 2×3g heap = 6 GB)
+    // и 1 на ubuntu/macOS (там IO дешевле, второй форк сам по себе пользы
+    // не даёт), на ubuntu и mac исторически оставался 1 для совместимости
+    // с heap'ом и Spring-контекстами. Локально — половина доступных
+    // процессоров, ограниченная диапазоном от 1 до 4.
     val isCi = System.getenv("CI") == "true" || System.getenv("GITHUB_ACTIONS") == "true"
+    val isWindowsCi = isCi && System.getProperty("os.name").lowercase().contains("win")
     maxParallelForks = (project.findProperty("maxParallelForks") as String?)?.toIntOrNull()
-        ?: if (isCi) 1 else (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
+        ?: when {
+            isWindowsCi -> 2
+            isCi -> 1
+            else -> (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
+        }
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
-    jvmArgs("-javaagent:${jmockitPath}", "-javaagent:${mockitoAgentPath}")
+    jvmArgs(
+        "-javaagent:${jmockitPath}",
+        "-javaagent:${mockitoAgentPath}",
+        // Только C1 JIT: тестовые методы выполняются 1-2 раза, C2-компиляция
+        // hot-spots окупиться не успевает. На Windows экономит десятки секунд
+        // JIT-времени в долгих тест-jvm.
+        "-XX:TieredStopAtLevel=1",
+        // CDS: ускоряет class loading при старте JVM. На Windows эффект больше
+        // из-за PE-loader overhead.
+        "-Xshare:auto",
+    )
 
     // Cleanup test cache directories after tests complete
     doLast {
