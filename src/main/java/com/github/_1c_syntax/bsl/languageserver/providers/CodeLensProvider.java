@@ -120,8 +120,7 @@ public class CodeLensProvider {
    *
    * @param codeLens Линза, из которой необходимо извлечь данные.
    * @return Извлеченные данные линзы либо {@code null}, если линза пришла без поля
-   *         {@link CodeLens#getData()} (например, клиент LSP4IJ присылает на
-   *         {@code codeLens/resolve} линзу без данных) — резолвить такую линзу нечем.
+   *         {@link CodeLens#getData()} — резолвить такую линзу нечем.
    */
   @SneakyThrows
   public @Nullable CodeLensData extractData(CodeLens codeLens) {
