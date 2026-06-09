@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1780995664693,
+  "lastUpdate": 1780997733133,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36673,6 +36673,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 5.345843017426163",
             "extra": "mean: 278.39867345492047 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6cc43e3a11a60c3280932fc0ed69d160d912cf88",
+          "message": "Merge pull request #4022 from 1c-syntax/fix/ontype-semicolon-past-eol\n\nfix(formatting): не затирать ';' при onType-форматировании, когда курсор за концом строки",
+          "timestamp": "2026-06-09T08:04:44+02:00",
+          "tree_id": "7af0128bbfcc7ace78284bf0d04cb84bd13a4528",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6cc43e3a11a60c3280932fc0ed69d160d912cf88"
+        },
+        "date": 1780997725218,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 267.02292982737225,
+            "unit": "sec",
+            "range": "stddev: 14.654339859789278",
+            "extra": "mean: 267.02292982737225 sec\nrounds: 3"
           }
         ]
       }
