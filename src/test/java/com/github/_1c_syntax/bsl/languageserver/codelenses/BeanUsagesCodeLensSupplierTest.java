@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex.InjectionPoint;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
@@ -79,7 +80,8 @@ class BeanUsagesCodeLensSupplierTest {
   private BeanUsagesCodeLensSupplier supplier() {
     when(documentContext.getUri()).thenReturn(PRODUCER_URI);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
-    return new BeanUsagesCodeLensSupplier(configuration, beanIndex, injectionPointIndex, navigationCommandBuilder);
+    return new BeanUsagesCodeLensSupplier(
+      new Resources(configuration), beanIndex, injectionPointIndex, navigationCommandBuilder);
   }
 
   @Test

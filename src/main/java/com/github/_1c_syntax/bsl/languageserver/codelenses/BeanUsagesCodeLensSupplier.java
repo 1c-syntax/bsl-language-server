@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
@@ -54,7 +53,7 @@ public class BeanUsagesCodeLensSupplier implements CodeLensSupplier<DefaultCodeL
 
   private static final String TITLE_KEY = "usages";
 
-  private final LanguageServerConfiguration configuration;
+  private final Resources resources;
   private final AutumnBeanIndex beanIndex;
   private final AutumnInjectionPointIndex injectionPointIndex;
   private final NavigationCommandBuilder navigationCommandBuilder;
@@ -85,7 +84,7 @@ public class BeanUsagesCodeLensSupplier implements CodeLensSupplier<DefaultCodeL
       return unresolved;
     }
 
-    var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, locations.size());
+    var title = resources.getResourceString(getClass(), TITLE_KEY, locations.size());
     var position = unresolved.getRange().getStart();
     var command = navigationCommandBuilder.referencesCommand(title, documentContext.getUri(), position, locations);
     unresolved.setCommand(command);

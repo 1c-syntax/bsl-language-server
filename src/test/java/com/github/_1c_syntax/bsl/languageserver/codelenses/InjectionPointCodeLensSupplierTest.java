@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnCo
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
@@ -92,7 +93,7 @@ class InjectionPointCodeLensSupplierTest {
     when(symbolTree.getConstructor()).thenReturn(Optional.empty());
     when(symbolTree.getVariables()).thenReturn(List.of());
     return new InjectionPointCodeLensSupplier(
-      configuration, componentInferencer, beanIndex, serverContextProvider, navigationCommandBuilder);
+      new Resources(configuration), componentInferencer, beanIndex, serverContextProvider, navigationCommandBuilder);
   }
 
   @Test

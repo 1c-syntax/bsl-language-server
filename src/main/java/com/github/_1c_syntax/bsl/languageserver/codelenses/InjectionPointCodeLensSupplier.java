@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
@@ -58,8 +57,8 @@ import java.util.Optional;
  * <p>
  * Производитель резолвится по правилам DI-вывода через {@link AutumnBeanIndex}; при нескольких
  * кандидатах (например, конфликт имён без {@code &Верховный}) команда открывает поповер со
- * списком целей. Линза показывается только для разрешимых внедрений по имени желудя; внедрение
- * прилепляемых коллекций здесь не обрабатывается.
+ * списком целей. Линза показывается только для разрешимых внедрений по имени желудя; для
+ * прилепляемых коллекций навигация строится ко всем подходящим производителям.
  */
 @Component
 @Order(6)
@@ -70,7 +69,7 @@ public class InjectionPointCodeLensSupplier
   private static final String TITLE_KEY = "injects";
   private static final String TITLE_MANY_KEY = "injectsMany";
 
-  private final LanguageServerConfiguration configuration;
+  private final Resources resources;
   private final AutumnComponentInferencer componentInferencer;
   private final AutumnBeanIndex beanIndex;
   private final ServerContextProvider serverContextProvider;
@@ -174,9 +173,9 @@ public class InjectionPointCodeLensSupplier
   private String title(String beanName, List<LocatedProducer> producers) {
     if (producers.size() == 1) {
       var fileName = Path.of(producers.getFirst().declaration().sourceUri()).getFileName().toString();
-      return Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, beanName, fileName);
+      return resources.getResourceString(getClass(), TITLE_KEY, beanName, fileName);
     }
-    return Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_MANY_KEY, producers.size());
+    return resources.getResourceString(getClass(), TITLE_MANY_KEY, producers.size());
   }
 
   /** Производитель желудя с уже вычисленным местоположением для навигации. */
