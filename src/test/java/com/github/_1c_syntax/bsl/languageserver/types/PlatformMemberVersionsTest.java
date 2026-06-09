@@ -58,8 +58,36 @@ class PlatformMemberVersionsTest {
     var target = new CompatibilityMode("8.3.20");
     assertThat(PlatformMemberVersions.firesDeprecated("", target)).isFalse();
     assertThat(PlatformMemberVersions.firesDeprecated(null, target)).isFalse();
-    assertThat(PlatformMemberVersions.firesDeprecated("8.3", target)).isFalse();
     assertThat(PlatformMemberVersions.firesDeprecated("кривая", target)).isFalse();
+  }
+
+  @Test
+  void firesDeprecatedNormalizesTwoComponentToLastPatchOfFamily() {
+    // «Устарел с 8.2» по семантике СП = «устарел к последнему патчу 8.2», т.е. 8.2.99.
+    // Любая 8.3+ платформа — после этого, диагностика срабатывает.
+    var target8320 = new CompatibilityMode("8.3.20");
+    assertThat(PlatformMemberVersions.firesDeprecated("8.2", target8320)).isTrue();
+    assertThat(PlatformMemberVersions.firesDeprecated("8.3", target8320)).isFalse(); // 8.3.99 > 8.3.20
+
+    // Промежуточная версия внутри того же семейства не должна давать ложное срабатывание.
+    var target8205 = new CompatibilityMode("8.2.5");
+    assertThat(PlatformMemberVersions.firesDeprecated("8.2", target8205)).isFalse();
+
+    // Target ниже семейства устаревания — точно не срабатывает.
+    var target810 = new CompatibilityMode("8.1.0");
+    assertThat(PlatformMemberVersions.firesDeprecated("8.2", target810)).isFalse();
+  }
+
+  @Test
+  void firesUnavailableNormalizesTwoComponentToFirstPatchOfFamily() {
+    // «Доступно с 8.2» = «доступно с первого патча 8.2», т.е. 8.2.0.
+    // На любой target >= 8.2.0 — доступно (не срабатывает unavailable).
+    var target8205 = new CompatibilityMode("8.2.5");
+    assertThat(PlatformMemberVersions.firesUnavailable("8.2", target8205)).isFalse();
+
+    // На target ниже семейства — недоступно (срабатывает).
+    var target815 = new CompatibilityMode("8.1.5");
+    assertThat(PlatformMemberVersions.firesUnavailable("8.2", target815)).isTrue();
   }
 
   @Test

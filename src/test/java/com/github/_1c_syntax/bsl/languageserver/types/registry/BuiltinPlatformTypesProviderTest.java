@@ -150,6 +150,39 @@ class BuiltinPlatformTypesProviderTest {
   }
 
   @Test
+  void chartFamilyHasDeprecatedPaletteMembers() {
+    // Запасной JSON-fallback должен содержать устаревшие свойства/методы
+    // Диаграммы (и однотипно ДиаграммаГанта/СводнаяДиаграмма) — они раньше
+    // ловились хардкодом DeprecatedAttributes8312Diagnostic, теперь подаются
+    // через провайдер.
+    when(holder.get()).thenReturn(Optional.empty());
+    var provider = new BuiltinPlatformTypesProvider(holder);
+    var types = provider.getTypes();
+
+    for (var typeName : java.util.List.of("Диаграмма", "ДиаграммаГанта", "СводнаяДиаграмма")) {
+      var decl = types.stream()
+        .filter(td -> typeName.equals(td.name().primary()))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("type " + typeName + " not in JSON fallback"));
+      assertThat(decl.members())
+        .as("deprecated members on %s", typeName)
+        .extracting(m -> m.name())
+        .containsExactlyInAnyOrder(
+          "ПалитраЦветов",
+          "ЦветНачалаГрадиентнойПалитры",
+          "ЦветКонцаГрадиентнойПалитры",
+          "ПолучитьПалитру",
+          "УстановитьПалитру"
+        );
+      for (var member : decl.members()) {
+        assertThat(member.metadata().deprecatedSinceVersion())
+          .as("%s.%s deprecatedSinceVersion", typeName, member.name())
+          .isEqualTo("8.3.12");
+      }
+    }
+  }
+
+  @Test
   void primitiveTypesHaveNoConstructors() {
     // given
     when(holder.get()).thenReturn(Optional.empty());
