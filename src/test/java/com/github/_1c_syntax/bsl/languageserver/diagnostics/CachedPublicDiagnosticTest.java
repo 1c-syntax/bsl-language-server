@@ -145,7 +145,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     Path path = Absolute.path(PATH_TO_METADATA);
     Path moduleFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
-    initServerContext(path);
+    initServerContextOnce(path);
     var configuration = context.getConfiguration();
     documentContext = spy(TestUtils.getDocumentContext(
       testFile.toUri(),
