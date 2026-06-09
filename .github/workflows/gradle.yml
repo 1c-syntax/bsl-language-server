@@ -39,7 +39,7 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
-    - name: Redirect TEMP and Gradle cache to D: drive on Windows runner
+    - name: "Redirect TEMP and Gradle cache to D: drive on Windows runner"
       # На windows-runner GA рабочий dir уже на D: (через actions/checkout),
       # но TEMP и .gradle cache по умолчанию остаются на C: — медленный диск
       # (актуально с 2025-08, см. actions/runner-images#12744). Перенос heavy-IO
