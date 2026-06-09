@@ -28,12 +28,22 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+/**
+ * Тесты диагностики {@link CompareWithBooleanDiagnostic}.
+ * Проверяют срабатывания на сравнениях с булевой константой и отсутствие
+ * срабатываний на корректных конструкциях.
+ */
 class CompareWithBooleanDiagnosticTest extends AbstractDiagnosticTest<CompareWithBooleanDiagnostic> {
 
   CompareWithBooleanDiagnosticTest() {
     super(CompareWithBooleanDiagnostic.class);
   }
 
+  /**
+   * Проверяет срабатывание диагностики на сравнениях с булевой константой
+   * ({@code = Истина}, {@code <> Ложь}, {@code Истина = ...}) и отсутствие
+   * срабатываний на корректных конструкциях.
+   */
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();

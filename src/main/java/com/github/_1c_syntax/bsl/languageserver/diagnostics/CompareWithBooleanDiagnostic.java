@@ -32,6 +32,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 
+/**
+ * Диагностика, выявляющая избыточное сравнение выражений с булевой константой
+ * {@code Истина}/{@code Ложь} через операторы {@code =} и {@code <>}
+ * (например {@code Если Значение = Истина Тогда}).
+ */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
@@ -43,6 +48,14 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 )
 public class CompareWithBooleanDiagnostic extends AbstractExpressionTreeDiagnostic {
 
+  /**
+   * Проверяет бинарную операцию на избыточное сравнение с булевой константой.
+   * Диагностика срабатывает, если операция является сравнением ({@code =} или {@code <>})
+   * и хотя бы один из её операндов — булева константа ({@code Истина}/{@code Ложь}),
+   * например {@code Значение = Истина} или {@code Истина <> Значение}.
+   *
+   * @param node узел бинарной операции дерева выражений
+   */
   @Override
   protected void visitBinaryOperation(BinaryOperationNode node) {
 
@@ -58,6 +71,14 @@ public class CompareWithBooleanDiagnostic extends AbstractExpressionTreeDiagnost
     super.visitBinaryOperation(node);
   }
 
+  /**
+   * Определяет, является ли узел выражения булевой константой.
+   * Распознаются как русские ({@code Истина}/{@code Ложь}), так и английские
+   * ({@code True}/{@code False}) литералы.
+   *
+   * @param expression проверяемый узел дерева выражений
+   * @return {@code true}, если узел — литерал {@code Истина}/{@code Ложь}, иначе {@code false}
+   */
   private static boolean isBooleanLiteral(BslExpression expression) {
     if (expression.getNodeType() != ExpressionNodeType.LITERAL) {
       return false;
@@ -72,6 +93,12 @@ public class CompareWithBooleanDiagnostic extends AbstractExpressionTreeDiagnost
       || constValue.getToken(BSLParser.FALSE, 0) != null;
   }
 
+  /**
+   * Регистрирует замечание на всё выражение сравнения — от первого токена левого операнда
+   * до последнего токена правого операнда.
+   *
+   * @param node узел бинарной операции, на которую добавляется замечание
+   */
   private void addDiagnostic(BinaryOperationNode node) {
     var startToken = Trees.getTokens(node.getLeft().getRepresentingAst())
       .stream()
