@@ -267,17 +267,7 @@ tasks.test {
 
     val jmockitPath = classpath.find { it.name.contains("jmockit") }!!.absolutePath
     val mockitoAgentPath = classpath.find { it.name.contains("mockito-core") }!!.absolutePath
-    jvmArgs(
-        "-javaagent:${jmockitPath}",
-        "-javaagent:${mockitoAgentPath}",
-        // Только C1 JIT: тестовые методы выполняются 1-2 раза, C2-компиляция
-        // hot-spots окупиться не успевает. На Windows экономит десятки секунд
-        // JIT-времени в долгих тест-jvm.
-        "-XX:TieredStopAtLevel=1",
-        // CDS: ускоряет class loading при старте JVM. На Windows эффект больше
-        // из-за PE-loader overhead.
-        "-Xshare:auto",
-    )
+    jvmArgs("-javaagent:${jmockitPath}", "-javaagent:${mockitoAgentPath}")
 
     // Cleanup test cache directories after tests complete
     doLast {
