@@ -79,12 +79,15 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String GANTT_CHART_RU = "ДиаграммаГанта";
   private static final String PIVOT_CHART_EN = "PivotChart";
   private static final String PIVOT_CHART_RU = "СводнаяДиаграмма";
-  // General deprecated attributes
+  // Ниже — устаревшие имена, которых нет в актуальном СП и в HBK
+  // (вендор удалил их из документации, перенести в платформенный JSON-fallback
+  // не получится — DeprecatedMethodCallDiagnostic найдёт члена по СП и пройдёт
+  // мимо). Хардкод оставлен как safety-net для конфигураций с режимом
+  // совместимости < 8.3.12, где обращение к этим членам формально ещё валидно.
   private static final String SHOW_LEGEND_EN = "ShowLegend";
   private static final String SHOW_LEGEND_RU = "ОтображатьЛегенду";
   private static final String SHOW_TITLE_EN = "ShowTitle";
   private static final String SHOW_TITLE_RU = "ОтображатьЗаголовок";
-  // Chart deprecated attributes
   private static final String GRADIENT_PALETTE_MAX_COLORS_EN = "GradientPaletteMaxColors";
   private static final String GRADIENT_PALETTE_MAX_COLORS_RU = "МаксимальноеКоличествоЦветовГрадиентнойПалитры";
 

@@ -38,11 +38,6 @@ class DeprecatedAttributes8312DiagnosticTest extends AbstractDiagnosticTest<Depr
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // Свойства/методы Диаграммы (ПалитраЦветов / GradientPalette* / Get|SetPalette)
-    // и глобальный ОчиститьЖурналРегистрации перенесены в платформенный JSON-
-    // fallback и теперь ловятся универсальным DeprecatedMethodCallDiagnostic
-    // (т.е. с использованием bsl-context / builtin-platform-types.json), поэтому
-    // в этой диагностике их больше нет.
     assertThat(diagnostics).hasSize(33);
     assertThat(diagnostics, true)
       .hasRange(1, 37, 1, 53)
