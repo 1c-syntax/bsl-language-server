@@ -39,6 +39,19 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
+    - name: Redirect TEMP and Gradle cache to D: drive on Windows runner
+      # На windows-runner GA рабочий dir уже на D: (через actions/checkout),
+      # но TEMP и .gradle cache по умолчанию остаются на C: — медленный диск
+      # (актуально с 2025-08, см. actions/runner-images#12744). Перенос heavy-IO
+      # на D: (Dev Drive ReFS) даёт до 30% ускорения CI с интенсивным file IO.
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path "D:\tmp" | Out-Null
+        New-Item -ItemType Directory -Force -Path "D:\gradle" | Out-Null
+        "TEMP=D:\tmp"           | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        "TMP=D:\tmp"            | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        "GRADLE_USER_HOME=D:\gradle" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
     - name: Set up JDK ${{ matrix.java_version }}
       uses: actions/setup-java@v5
       with:
