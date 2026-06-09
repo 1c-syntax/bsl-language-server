@@ -92,9 +92,21 @@ public class NavigationCommandBuilder {
    * @return Команда с идентификатором, выбранным под клиента.
    */
   public Command gotoCommand(String title, URI uri, Position position, List<Location> targets) {
-    var multiple = targets.size() == 1 ? MULTIPLE_GOTO : MULTIPLE_PEEK;
-    var commandId = isVsCodeLike() ? VS_CODE_GOTO_COMMAND : BUILTIN_GOTO_COMMAND;
-    return new Command(title, commandId, List.of(uri.toString(), position, targets, multiple));
+    var singleTarget = targets.size() == 1;
+    if (isVsCodeLike()) {
+      // VS Code и форки: команда-обёртка корректно оживляет аргументы, а редактор чтит режим
+      // multiple — единственная цель прыжок, несколько целей поповер.
+      var multiple = singleTarget ? MULTIPLE_GOTO : MULTIPLE_PEEK;
+      return new Command(title, VS_CODE_GOTO_COMMAND, List.of(uri.toString(), position, targets, multiple));
+    }
+    // Прочие клиенты (LSP4IJ): editor.action.goToLocations не чтит режим multiple — читает его как
+    // java.lang.String, тогда как аргумент приходит JsonPrimitive, — и всегда прыгает к первой цели.
+    // Поэтому при нескольких целях показываем поповер через editor.action.showReferences (его LSP4IJ
+    // эмулирует надёжно), а к единственной цели переходим обычным goToLocations.
+    if (singleTarget) {
+      return new Command(title, BUILTIN_GOTO_COMMAND, List.of(uri.toString(), position, targets, MULTIPLE_GOTO));
+    }
+    return new Command(title, BUILTIN_REFERENCES_COMMAND, List.of(uri.toString(), position, targets));
   }
 
   /**
