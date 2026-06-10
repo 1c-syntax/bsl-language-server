@@ -128,7 +128,7 @@ dependencies {
     implementation("org.apache.commons:commons-exec:1.6.0")
 
     // JGit
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.7.0.202606012155-r")
 
     // progress bar
     implementation("me.tongfei:progressbar:0.10.2")
