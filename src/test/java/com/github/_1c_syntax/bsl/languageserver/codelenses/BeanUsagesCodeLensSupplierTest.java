@@ -92,7 +92,7 @@ class BeanUsagesCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог")))
+    when(injectionPointIndex.usagesOfComponent(PRODUCER_URI, Set.of("мойлог")))
       .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var constructor = mock(ConstructorSymbol.class);
     when(constructor.getSelectionRange()).thenReturn(CONSTRUCTOR_RANGE);
@@ -138,7 +138,7 @@ class BeanUsagesCodeLensSupplierTest {
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог")))
+    when(injectionPointIndex.usagesOfComponent(PRODUCER_URI, Set.of("мойлог")))
       .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
     var command = new Command("title", "command", List.of());
@@ -163,7 +163,7 @@ class BeanUsagesCodeLensSupplierTest {
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of());
     when(beanIndex.factoryBeansForUri(PRODUCER_URI))
       .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.usagesOf(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
+    when(injectionPointIndex.usagesOfFactory(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
       .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var method = mock(MethodSymbol.class);
     when(method.getSelectionRange()).thenReturn(FACTORY_METHOD_RANGE);
@@ -187,7 +187,7 @@ class BeanUsagesCodeLensSupplierTest {
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(beanIndex.factoryBeansForUri(PRODUCER_URI))
       .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.usagesOf(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
+    when(injectionPointIndex.usagesOfFactory(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
       .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
     var command = new Command("title", "command", List.of());
@@ -210,7 +210,7 @@ class BeanUsagesCodeLensSupplierTest {
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог"))).thenReturn(List.of());
+    when(injectionPointIndex.usagesOfComponent(PRODUCER_URI, Set.of("мойлог"))).thenReturn(List.of());
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
       anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(List.of())))

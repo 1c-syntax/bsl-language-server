@@ -125,7 +125,7 @@ public class BeanUsagesCodeLensSupplier
 
   /** Точки внедрения компонентного желудя файла, разрешающиеся именно в него (линза на конструкторе). */
   private List<Location> componentLocations(URI uri) {
-    return toLocations(injectionPointIndex.usagesOf(uri, null, beanIndex.componentBeanNamesForUri(uri)));
+    return toLocations(injectionPointIndex.usagesOfComponent(uri, beanIndex.componentBeanNamesForUri(uri)));
   }
 
   /** Точки внедрения желудя конкретного фабричного метода {@code &Завязь}. */
@@ -133,7 +133,8 @@ public class BeanUsagesCodeLensSupplier
     return beanIndex.factoryBeansForUri(uri).stream()
       .filter(factoryBean -> factoryBean.factoryMethodName().equals(factoryMethodName))
       .findFirst()
-      .map(factoryBean -> toLocations(injectionPointIndex.usagesOf(uri, factoryMethodName, factoryBean.beanNames())))
+      .map(factoryBean ->
+        toLocations(injectionPointIndex.usagesOfFactory(uri, factoryMethodName, factoryBean.beanNames())))
       .orElseGet(List::of);
   }
 

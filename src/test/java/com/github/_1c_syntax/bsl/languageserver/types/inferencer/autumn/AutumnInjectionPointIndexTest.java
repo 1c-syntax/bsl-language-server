@@ -94,8 +94,8 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when / then
-    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of())).isEmpty();
-    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("НетТакого"))).isEmpty();
+    assertThat(index.usagesOfComponent(PRODUCER_URI, Set.of())).isEmpty();
+    assertThat(index.usagesOfComponent(PRODUCER_URI, Set.of("НетТакого"))).isEmpty();
   }
 
   @Test
@@ -110,7 +110,7 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when
-    var points = index.usagesOf(PRODUCER_URI, null, Set.of("Лог"));
+    var points = index.usagesOfComponent(PRODUCER_URI, Set.of("Лог"));
 
     // then
     assertThat(points).singleElement().satisfies(point -> {
@@ -132,7 +132,7 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when
-    var points = index.usagesOf(PRODUCER_URI, null, Set.of("Лог"));
+    var points = index.usagesOfComponent(PRODUCER_URI, Set.of("Лог"));
 
     // then
     assertThat(points).singleElement().satisfies(point -> assertThat(point.range()).isEqualTo(range));
@@ -149,8 +149,8 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when / then: линза выбранного производителя показывает точку, чужого — нет
-    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Лог"))).hasSize(1);
-    assertThat(index.usagesOf(OTHER_PRODUCER_URI, null, Set.of("Лог"))).isEmpty();
+    assertThat(index.usagesOfComponent(PRODUCER_URI, Set.of("Лог"))).hasSize(1);
+    assertThat(index.usagesOfComponent(OTHER_PRODUCER_URI, Set.of("Лог"))).isEmpty();
   }
 
   @Test
@@ -164,7 +164,7 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when / then: коллекция показывается на PRODUCER_URI несмотря на выбор OTHER_PRODUCER_URI
-    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Обработчик")))
+    assertThat(index.usagesOfComponent(PRODUCER_URI, Set.of("Обработчик")))
       .singleElement().satisfies(point -> assertThat(point.collection()).isTrue());
   }
 
@@ -176,7 +176,7 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when / then
-    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Поле"))).isEmpty();
+    assertThat(index.usagesOfComponent(PRODUCER_URI, Set.of("Поле"))).isEmpty();
   }
 
   @Test
@@ -187,7 +187,7 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when / then: аннотация-определение пропускается, точка не индексируется
-    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Внедрение"))).isEmpty();
+    assertThat(index.usagesOfComponent(PRODUCER_URI, Set.of("Внедрение"))).isEmpty();
   }
 
   // --- helpers ---------------------------------------------------------------

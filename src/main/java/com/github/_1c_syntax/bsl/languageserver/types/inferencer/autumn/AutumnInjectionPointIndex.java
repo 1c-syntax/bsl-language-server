@@ -25,11 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.ProducerKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import org.eclipse.lsp4j.Range;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -39,6 +39,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 /**
  * Обратный индекс точек внедрения фреймворка «ОСень»: где какой желудь внедряется
@@ -90,20 +91,47 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
   }
 
   /**
-   * Точки внедрения, которые разрешаются именно в указанного производителя.
-   * <p>
-   * Для каждой точки переигрывается выбор производителя: одиночное внедрение по имени
-   * включается, только если правила DI ({@link AutumnBeanIndex#resolveDeclarations}) выбирают
-   * именно этого производителя (учитывая {@code &Верховный}); внедрение коллекции включается
-   * всегда (коллекция внедряет всех производителей подходящего имени, включая этого).
+   * Точки внедрения, разрешающиеся в компонентный желудь ({@code &Желудь}/{@code &Дуб})
+   * указанного файла (линза на конструкторе). См. {@link #usages}.
+   *
+   * @param producerUri URI .os-файла производителя.
+   * @param beanNames   Имена/прозвища компонентного желудя.
+   * @return точки внедрения, разрешающиеся в этот компонент; пусто, если их нет.
+   */
+  public List<InjectionPoint> usagesOfComponent(URI producerUri, Set<String> beanNames) {
+    return usages(beanNames, declaration ->
+      producerUri.equals(declaration.sourceUri()) && declaration.kind() == ProducerKind.COMPONENT);
+  }
+
+  /**
+   * Точки внедрения, разрешающиеся в желудь фабричного метода {@code &Завязь} указанного файла
+   * (линза на методе). См. {@link #usages}.
    *
    * @param producerUri       URI .os-файла производителя.
-   * @param factoryMethodName Имя фабричного метода {@code &Завязь} либо {@code null}, если
-   *                          производитель — компонентный желудь ({@code &Желудь}/{@code &Дуб}).
-   * @param beanNames         Имена/прозвища желудя, производимого этим производителем.
-   * @return точки внедрения, разрешающиеся в этого производителя; пусто, если их нет.
+   * @param factoryMethodName Имя фабричного метода {@code &Завязь}.
+   * @param beanNames         Имена/прозвища производимого им желудя.
+   * @return точки внедрения, разрешающиеся в этот фабричный желудь; пусто, если их нет.
    */
-  public List<InjectionPoint> usagesOf(URI producerUri, @Nullable String factoryMethodName, Set<String> beanNames) {
+  public List<InjectionPoint> usagesOfFactory(URI producerUri, String factoryMethodName, Set<String> beanNames) {
+    return usages(beanNames, declaration ->
+      producerUri.equals(declaration.sourceUri())
+        && declaration.kind() == ProducerKind.FACTORY
+        && factoryMethodName.equals(declaration.factoryMethodName()));
+  }
+
+  /**
+   * Точки внедрения желудя, разрешающиеся в конкретного производителя.
+   * <p>
+   * Для каждой точки переигрывается выбор производителя: одиночное внедрение включается, только
+   * если правила DI ({@link AutumnBeanIndex#resolveDeclarations}, с приоритетом {@code &Верховный})
+   * выбирают производителя, удовлетворяющего {@code selectsProducer}; внедрение коллекции
+   * включается всегда (коллекция внедряет всех производителей подходящего имени).
+   *
+   * @param beanNames       Имена/прозвища желудя производителя.
+   * @param selectsProducer Предикат: выбран ли DI этот производитель среди объявлений имени.
+   * @return точки внедрения, разрешающиеся в производителя; пусто, если их нет.
+   */
+  private List<InjectionPoint> usages(Set<String> beanNames, Predicate<BeanDeclaration> selectsProducer) {
     ensureBuilt();
     var result = new LinkedHashSet<InjectionPoint>();
     for (var beanName : beanNames) {
@@ -111,7 +139,7 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
       if (points == null || points.isEmpty()) {
         continue;
       }
-      var singletonResolvesToProducer = producesName(beanName, producerUri, factoryMethodName);
+      var singletonResolvesToProducer = beanIndex.resolveDeclarations(beanName).stream().anyMatch(selectsProducer);
       for (var point : points) {
         if (point.collection() || singletonResolvesToProducer) {
           result.add(point);
@@ -119,16 +147,6 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
       }
     }
     return List.copyOf(result);
-  }
-
-  /** Выбирают ли правила DI (с приоритетом {@code &Верховный}) для имени именно этого производителя. */
-  private boolean producesName(String beanName, URI producerUri, @Nullable String factoryMethodName) {
-    return beanIndex.resolveDeclarations(beanName).stream()
-      .anyMatch(declaration -> producerUri.equals(declaration.sourceUri())
-        && (factoryMethodName == null
-          ? declaration.kind() == ProducerKind.COMPONENT
-          : declaration.kind() == ProducerKind.FACTORY
-            && factoryMethodName.equals(declaration.factoryMethodName())));
   }
 
   @Override
