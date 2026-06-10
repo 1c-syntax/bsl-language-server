@@ -43,7 +43,6 @@ import org.springframework.stereotype.Component;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -99,16 +98,15 @@ public class InjectionPointCodeLensSupplier
 
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, InjectionPointCodeLensData data) {
-    var producers = declarationsFor(data.getBeanName(), data.isCollection()).stream()
+    var locations = definitionsFor(data.getBeanName(), data.isCollection()).stream()
       .map(this::locateProducer)
       .flatMap(Optional::stream)
       .toList();
-    if (producers.isEmpty()) {
+    if (locations.isEmpty()) {
       return unresolved;
     }
 
-    var locations = producers.stream().map(LocatedProducer::location).toList();
-    var title = title(data.getBeanName(), producers);
+    var title = title(locations.size());
     var position = unresolved.getRange().getStart();
     var command = navigationCommandBuilder.gotoCommand(title, documentContext.getUri(), position, locations);
     unresolved.setCommand(command);
@@ -130,7 +128,7 @@ public class InjectionPointCodeLensSupplier
     Range range
   ) {
     return componentInferencer.injectedBean(annotations, memberName)
-      .filter(bean -> !declarationsFor(bean.name(), bean.collection()).isEmpty())
+      .filter(bean -> !definitionsFor(bean.name(), bean.collection()).isEmpty())
       .map(bean -> {
         var data = new InjectionPointCodeLensData(documentContext.getUri(), getId(), bean.name(), bean.collection());
         var codeLens = new CodeLens(range);
@@ -140,44 +138,39 @@ public class InjectionPointCodeLensSupplier
   }
 
   /**
-   * Объявления производителей под именем желудя: для коллекции — все подходящие желуди
+   * Определения производителей под именем желудя: для коллекции — все подходящие желуди
    * (без приоритета {@code &Верховный}), для одиночного внедрения — с приоритетом.
    */
-  private List<BeanDefinition> declarationsFor(String beanName, boolean collection) {
+  private List<BeanDefinition> definitionsFor(String beanName, boolean collection) {
     return collection
       ? beanIndex.resolveAllDefinitions(beanName)
       : beanIndex.resolveDefinitions(beanName);
   }
 
   /**
-   * Местоположение производителя желудя: диапазон конструктора класса-компонента либо
-   * фабричного метода {@code &Завязь} в его .os-файле.
+   * Местоположение производителя желудя: диапазон метода-производителя (конструктора
+   * класса-компонента либо фабричного метода {@code &Завязь}) в его .os-файле.
    */
-  private Optional<LocatedProducer> locateProducer(BeanDefinition declaration) {
-    return serverContextProvider.getServerContext(declaration.sourceUri())
-      .map(serverContext -> serverContext.getDocument(declaration.sourceUri()))
+  private Optional<Location> locateProducer(BeanDefinition definition) {
+    return serverContextProvider.getServerContext(definition.sourceUri())
+      .map(serverContext -> serverContext.getDocument(definition.sourceUri()))
       .map(DocumentContext::getSymbolTree)
-      .flatMap(symbolTree -> producerRange(symbolTree, declaration))
-      .map(range -> new LocatedProducer(declaration, new Location(declaration.sourceUri().toString(), range)));
+      .flatMap(symbolTree -> producerRange(symbolTree, definition))
+      .map(range -> new Location(definition.sourceUri().toString(), range));
   }
 
-  private static Optional<Range> producerRange(SymbolTree symbolTree, BeanDefinition declaration) {
+  private static Optional<Range> producerRange(SymbolTree symbolTree, BeanDefinition definition) {
     // Производитель — это метод (конструктор ПриСозданииОбъекта тоже MethodSymbol), поэтому ищем
     // единообразно по имени метода-производителя; ветвление по виду производителя не нужно.
-    return symbolTree.getMethodSymbol(declaration.producerMethodName())
+    return symbolTree.getMethodSymbol(definition.producerMethodName())
       .map(SourceDefinedSymbol::getSelectionRange);
   }
 
-  private String title(String beanName, List<LocatedProducer> producers) {
-    if (producers.size() == 1) {
-      var fileName = Path.of(producers.getFirst().declaration().sourceUri()).getFileName().toString();
-      return resources.getResourceString(getClass(), TITLE_KEY, beanName, fileName);
+  private String title(int producerCount) {
+    if (producerCount == 1) {
+      return resources.getResourceString(getClass(), TITLE_KEY);
     }
-    return resources.getResourceString(getClass(), TITLE_MANY_KEY, producers.size());
-  }
-
-  /** Производитель желудя с уже вычисленным местоположением для навигации. */
-  private record LocatedProducer(BeanDefinition declaration, Location location) {
+    return resources.getResourceString(getClass(), TITLE_MANY_KEY, producerCount);
   }
 
   /**
