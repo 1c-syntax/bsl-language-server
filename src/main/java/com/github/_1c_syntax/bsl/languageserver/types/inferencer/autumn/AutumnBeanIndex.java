@@ -79,7 +79,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   /** Имя/прозвище желудя (lowercase) → кандидаты. Значения — конкурентные множества (как в Repository). */
-  private final Map<String, Set<BeanCandidate>> beansByName = new ConcurrentHashMap<>();
+  private final Map<String, Set<BeanDeclaration>> beansByName = new ConcurrentHashMap<>();
   /** URI .os-файла → имена, под которыми он зарегистрировал кандидатов (для точечного удаления). */
   private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
   public AutumnBeanIndex(OScriptLibraryIndex libraryIndex,
@@ -104,19 +104,6 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    *                           желудь {@code &Желудь}/{@code &Дуб}); {@code false} — метод {@code &Завязь}.
    */
   public record BeanDeclaration(
-    TypeRef type,
-    boolean primary,
-    URI sourceUri,
-    String producerMethodName,
-    boolean isConstructor
-  ) {
-  }
-
-  /**
-   * Кандидат-желудь: тип, признак приоритетного ({@code &Верховный}), URI .os-файла, имя
-   * метода-производителя и признак конструктора (как autumn-{@code Завязь}).
-   */
-  private record BeanCandidate(
     TypeRef type,
     boolean primary,
     URI sourceUri,
@@ -161,9 +148,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
       return List.of();
     }
     ensureBuilt();
-    return selectCandidates(name).stream()
-      .map(AutumnBeanIndex::toDeclaration)
-      .toList();
+    return selectCandidates(name);
   }
 
   /**
@@ -179,9 +164,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
       return List.of();
     }
     ensureBuilt();
-    return candidatesFor(name).stream()
-      .map(AutumnBeanIndex::toDeclaration)
-      .toList();
+    return candidatesFor(name);
   }
 
   /**
@@ -264,29 +247,20 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     return Set.copyOf(result);
   }
 
-  private static BeanDeclaration toDeclaration(BeanCandidate candidate) {
-    return new BeanDeclaration(
-      candidate.type(),
-      candidate.primary(),
-      candidate.sourceUri(),
-      candidate.producerMethodName(),
-      candidate.isConstructor());
-  }
-
-  /** Все кандидаты, зарегистрированные под именем/прозвищем (lowercase), либо пустой список. */
-  private List<BeanCandidate> candidatesFor(String name) {
+  /** Все объявления, зарегистрированные под именем/прозвищем (lowercase), либо пустой список. */
+  private List<BeanDeclaration> candidatesFor(String name) {
     var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
     return candidates == null || candidates.isEmpty() ? List.of() : List.copyOf(candidates);
   }
 
   /**
-   * Выбрать кандидатов по имени с учётом приоритета {@code &Верховный}: при наличии хотя бы
-   * одного приоритетного возвращаются только приоритетные, иначе — все кандидаты имени.
+   * Выбрать объявления по имени с учётом приоритета {@code &Верховный}: при наличии хотя бы
+   * одного приоритетного возвращаются только приоритетные, иначе — все объявления имени.
    */
-  private List<BeanCandidate> selectCandidates(String name) {
+  private List<BeanDeclaration> selectCandidates(String name) {
     var candidates = candidatesFor(name);
     var primaryCandidates = candidates.stream()
-      .filter(BeanCandidate::primary)
+      .filter(BeanDeclaration::primary)
       .toList();
     return primaryCandidates.isEmpty() ? candidates : primaryCandidates;
   }
@@ -377,7 +351,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri,
                         String producerMethodName, boolean isConstructor) {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
-    var candidate = new BeanCandidate(type, primary, uri, producerMethodName, isConstructor);
+    var candidate = new BeanDeclaration(type, primary, uri, producerMethodName, isConstructor);
 
     addCandidate(uri, primaryName, candidate);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {
@@ -385,7 +359,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     }
   }
 
-  private void addCandidate(URI uri, String name, BeanCandidate candidate) {
+  private void addCandidate(URI uri, String name, BeanDeclaration candidate) {
     var key = name.toLowerCase(Locale.ROOT);
     beansByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(candidate);
     namesByUri.computeIfAbsent(uri, u -> ConcurrentHashMap.newKeySet()).add(key);
