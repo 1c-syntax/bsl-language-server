@@ -110,7 +110,7 @@ class TypeHierarchyProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void supertypesResolvesEnglishExtendsAlias() {
+  void supertypesResolvedForEachSibling() {
     var document = document("Собака.os");
 
     var supertypes = provider.supertypes(document, new TypeHierarchySupertypesParams(item(document)));

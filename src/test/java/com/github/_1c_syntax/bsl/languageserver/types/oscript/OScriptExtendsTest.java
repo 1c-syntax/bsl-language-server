@@ -56,14 +56,15 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void parentClassNameEnglishAliasAnnotation() {
+  void parentClassNameIgnoresUnknownEnglishAnnotation() {
+    // given/when/then: английского псевдонима у extends нет — &Extends не распознаётся
     var dc = os("&Extends(\"Родитель\")\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(oScriptExtends.parentClassName(dc)).contains("Родитель");
+    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
   }
 
   @Test
   void parentClassNameEmptyForAnnotationWithoutStringArgument() {
-    var dc = os("&Extends\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
+    var dc = os("&Расширяет\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
     assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
   }
 

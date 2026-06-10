@@ -40,9 +40,8 @@ import java.util.Set;
  * Поддержка библиотеки наследования OneScript
  * <a href="https://github.com/oscript-library/extends">extends</a> (автор — nixel2007).
  * <p>
- * Наследование объявляется аннотацией {@code &Расширяет("ИмяРодителя")}
- * (или её английским псевдонимом {@code &Extends}) над конструктором класса
- * {@code ПриСозданииОбъекта}:
+ * Наследование объявляется аннотацией {@code &Расширяет("ИмяРодителя")} над
+ * конструктором класса {@code ПриСозданииОбъекта}:
  * <pre>
  *   &amp;Расширяет("Родитель")
  *   Процедура ПриСозданииОбъекта()
@@ -82,9 +81,6 @@ public class OScriptExtends {
    * {@code &Расширяет("X")}, и мета-аннотации, разворачивающиеся в неё.
    */
   public static final String EXTENDS_ROLE = "Расширяет";
-
-  /** Английский псевдоним аннотации наследования (в нижнем регистре). */
-  private static final String ENGLISH_ANNOTATION = "extends";
 
   /**
    * Имя поля, которое библиотека {@code extends} неявно создаёт в собранном
@@ -218,37 +214,14 @@ public class OScriptExtends {
   }
 
   /**
-   * Имя родителя из аннотаций одного метода: сначала роль {@link #EXTENDS_ROLE}
-   * (прямой {@code &Расширяет} и мета-аннотации «ОСени»), затем английский
-   * псевдоним {@code &Extends} (если у роли нет класса-определения).
+   * Имя родителя из аннотаций одного метода: роль {@link #EXTENDS_ROLE} —
+   * прямой {@code &Расширяет} и мета-аннотации «ОСени», разворачивающиеся в неё.
+   * Английского псевдонима у аннотации нет: библиотека extends определяет только
+   * русские классы-аннотации.
    */
   private Optional<String> parentFromAnnotations(List<Annotation> annotations) {
-    var byRole = metaAnnotationResolver.valuesByRole(annotations, EXTENDS_ROLE).stream()
+    return metaAnnotationResolver.valuesByRole(annotations, EXTENDS_ROLE).stream()
       .filter(value -> value != null && !value.isBlank())
       .findFirst();
-    if (byRole.isPresent()) {
-      return byRole;
-    }
-    return annotations.stream()
-      .filter(annotation -> ENGLISH_ANNOTATION.equalsIgnoreCase(annotation.getName()))
-      .map(OScriptExtends::firstStringParameter)
-      .flatMap(Optional::stream)
-      .findFirst();
-  }
-
-  /**
-   * Первый строковый литерал-параметр аннотации. Имя родителя в
-   * {@code &Extends("Родитель")} задаётся позиционно.
-   */
-  private static Optional<String> firstStringParameter(Annotation annotation) {
-    for (var parameter : annotation.getParameters()) {
-      if (parameter.value().isLeft()) {
-        var value = parameter.value().getLeft();
-        if (value != null && !value.isBlank()) {
-          return Optional.of(value);
-        }
-      }
-    }
-    return Optional.empty();
   }
 }
