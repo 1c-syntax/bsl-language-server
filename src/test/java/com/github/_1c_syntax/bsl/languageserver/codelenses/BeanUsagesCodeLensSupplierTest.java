@@ -91,8 +91,9 @@ class BeanUsagesCodeLensSupplierTest {
   void buildsLensOverConstructorWhenBeanHasInjectionPoints() {
     // given
     var supplier = supplier();
-    when(beanIndex.namesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.resolve("мойлог")).thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE)));
+    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
+    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог")))
+      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var constructor = mock(ConstructorSymbol.class);
     when(constructor.getSelectionRange()).thenReturn(CONSTRUCTOR_RANGE);
     when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
@@ -111,8 +112,8 @@ class BeanUsagesCodeLensSupplierTest {
   void doesNotBuildLensWhenNoInjectionPoints() {
     // given
     var supplier = supplier();
-    when(beanIndex.namesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.resolve("мойлог")).thenReturn(List.of());
+    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
+    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог"))).thenReturn(List.of());
 
     // when / then
     assertThat(supplier.getCodeLenses(documentContext)).isEmpty();
@@ -122,7 +123,7 @@ class BeanUsagesCodeLensSupplierTest {
   void doesNotBuildLensWhenDocumentDeclaresNoBeans() {
     // given
     var supplier = supplier();
-    when(beanIndex.namesForUri(PRODUCER_URI)).thenReturn(Set.of());
+    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of());
 
     // when / then
     assertThat(supplier.getCodeLenses(documentContext)).isEmpty();
@@ -133,8 +134,9 @@ class BeanUsagesCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.namesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.resolve("мойлог")).thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE)));
+    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
+    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог")))
+      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
@@ -155,10 +157,11 @@ class BeanUsagesCodeLensSupplierTest {
     // given: фабричный метод &Завязь объявляет желудь, у которого есть точки внедрения;
     // агрегатных желудей на конструкторе нет (namesForUri пуст) — проверяем именно линзу на методе
     var supplier = supplier();
-    when(beanIndex.namesForUri(PRODUCER_URI)).thenReturn(Set.of());
+    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of());
     when(beanIndex.factoryBeansForUri(PRODUCER_URI))
       .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.resolve("лог")).thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE)));
+    when(injectionPointIndex.usagesOf(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
+      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var method = mock(MethodSymbol.class);
     when(method.getSelectionRange()).thenReturn(FACTORY_METHOD_RANGE);
     when(symbolTree.getMethodSymbol("СоздатьЛог")).thenReturn(Optional.of(method));
@@ -181,7 +184,8 @@ class BeanUsagesCodeLensSupplierTest {
     when(configuration.getLanguage()).thenReturn(Language.RU);
     when(beanIndex.factoryBeansForUri(PRODUCER_URI))
       .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.resolve("лог")).thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE)));
+    when(injectionPointIndex.usagesOf(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
+      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(

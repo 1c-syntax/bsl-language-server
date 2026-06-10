@@ -248,6 +248,33 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   public record FactoryBean(String factoryMethodName, Set<String> beanNames) {
   }
 
+  /**
+   * Имена/прозвища компонентного желудя ({@code &Желудь}/{@code &Дуб}), объявленного в указанном
+   * файле, — производитель которого его конструктор.
+   * <p>
+   * Для обратной линзы на конструкторе: фабричные желуди ({@code &Завязь}) сюда не входят — у них
+   * собственные линзы на методах (см. {@link #factoryBeansForUri(URI)}).
+   *
+   * @param uri URI .os-файла.
+   * @return имена компонентного желудя файла (lowercase); пусто, если компонентного желудя нет.
+   */
+  public Set<String> componentBeanNamesForUri(URI uri) {
+    ensureBuilt();
+    var names = namesByUri.get(uri);
+    if (names == null) {
+      return Set.of();
+    }
+    var result = new LinkedHashSet<String>();
+    for (var name : names) {
+      for (var candidate : beansByName.getOrDefault(name, Set.of())) {
+        if (uri.equals(candidate.sourceUri()) && candidate.kind() == ProducerKind.COMPONENT) {
+          result.add(name);
+        }
+      }
+    }
+    return Set.copyOf(result);
+  }
+
   private static BeanDeclaration toDeclaration(BeanCandidate candidate) {
     return new BeanDeclaration(
       candidate.type(),

@@ -263,6 +263,35 @@ class AutumnBeanIndexTest {
   }
 
   @Test
+  void componentBeanNamesForUriReturnsComponentNamesWithQualifier() {
+    // given: компонент с прозвищем — оба имени принадлежат конструктору-производителю
+    registerClass("Логгер", new TypeRef(TypeKind.USER, "Логгер"),
+      method(component("Лог"), qualifier("ОсновнойЛог")));
+    init();
+
+    // when
+    var names = beanIndex.componentBeanNamesForUri(Absolute.uri("file:///beans/Логгер.os"));
+
+    // then
+    assertThat(names).containsExactlyInAnyOrder("лог", "основнойлог");
+  }
+
+  @Test
+  void componentBeanNamesForUriExcludesFactoryBeans() {
+    // given: дуб с фабричным методом — имя фабричного желудя не входит в компонентные имена
+    when(typeRegistry.resolve("Массив")).thenReturn(Optional.of(new TypeRef(TypeKind.PLATFORM, "Массив")));
+    registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
+      method(oak()), namedMethod("СоздатьСписок", factory("СписокЖелудей", "Массив")));
+    init();
+
+    // when
+    var names = beanIndex.componentBeanNamesForUri(Absolute.uri("file:///beans/Фабрика.os"));
+
+    // then: компонентный желудь — сам дуб (по имени класса), фабричный "списокжелудей" исключён
+    assertThat(names).containsExactly("фабрика");
+  }
+
+  @Test
   void skipsFactoryWhenTypeIsExplicitlyBlank() {
     // given: явный Тип="" — в autumn Тип("") это ошибка, валидного типа нет. Резолв имени
     // метода застаблен в тип: если бы код ошибочно фолбэчил пустой Тип на имя метода,

@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex.InjectionPoint;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,6 @@ import java.beans.ConstructorProperties;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Обратная линза навигации по внедрению зависимостей «ОСени»: показывает, в скольких точках
@@ -77,8 +77,9 @@ public class BeanUsagesCodeLensSupplier
     var uri = documentContext.getUri();
     var codeLenses = new ArrayList<CodeLens>();
 
-    // Агрегатная линза на конструкторе: все желуди файла (включая желудь &Дуба).
-    if (!aggregateLocations(documentContext).isEmpty()) {
+    // Линза на конструкторе — для компонентного желудя (&Желудь/&Дуб): точки внедрения,
+    // которые разрешаются именно в него.
+    if (!componentLocations(uri).isEmpty()) {
       symbolTree.getConstructor().ifPresent(constructor -> {
         var codeLens = new CodeLens(constructor.getSelectionRange());
         codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), null));
@@ -86,14 +87,15 @@ public class BeanUsagesCodeLensSupplier
       });
     }
 
-    // Отдельная линза на каждом методе &Завязь: точки внедрения именно его желудя.
+    // Линза на каждом методе &Завязь — для производимого им желудя.
     for (var factoryBean : beanIndex.factoryBeansForUri(uri)) {
-      if (locationsFor(factoryBean.beanNames()).isEmpty()) {
+      var methodName = factoryBean.factoryMethodName();
+      if (injectionPointIndex.usagesOf(uri, methodName, factoryBean.beanNames()).isEmpty()) {
         continue;
       }
-      symbolTree.getMethodSymbol(factoryBean.factoryMethodName()).ifPresent(method -> {
+      symbolTree.getMethodSymbol(methodName).ifPresent(method -> {
         var codeLens = new CodeLens(method.getSelectionRange());
-        codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), factoryBean.factoryMethodName()));
+        codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), methodName));
         codeLenses.add(codeLens);
       });
     }
@@ -103,16 +105,17 @@ public class BeanUsagesCodeLensSupplier
 
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, BeanUsagesCodeLensData data) {
+    var uri = documentContext.getUri();
     var locations = data.getFactoryMethodName() == null
-      ? aggregateLocations(documentContext)
-      : factoryLocations(documentContext, data.getFactoryMethodName());
+      ? componentLocations(uri)
+      : factoryLocations(uri, data.getFactoryMethodName());
     if (locations.isEmpty()) {
       return unresolved;
     }
 
     var title = resources.getResourceString(getClass(), TITLE_KEY, locations.size());
     var position = unresolved.getRange().getStart();
-    var command = navigationCommandBuilder.referencesCommand(title, documentContext.getUri(), position, locations);
+    var command = navigationCommandBuilder.referencesCommand(title, uri, position, locations);
     unresolved.setCommand(command);
     return unresolved;
   }
@@ -122,26 +125,22 @@ public class BeanUsagesCodeLensSupplier
     return BeanUsagesCodeLensData.class;
   }
 
-  /** Точки внедрения всех желудей, объявленных в документе (агрегатная линза на конструкторе). */
-  private List<Location> aggregateLocations(DocumentContext documentContext) {
-    return locationsFor(beanIndex.namesForUri(documentContext.getUri()));
+  /** Точки внедрения компонентного желудя файла, разрешающиеся именно в него (линза на конструкторе). */
+  private List<Location> componentLocations(URI uri) {
+    return toLocations(injectionPointIndex.usagesOf(uri, null, beanIndex.componentBeanNamesForUri(uri)));
   }
 
   /** Точки внедрения желудя конкретного фабричного метода {@code &Завязь}. */
-  private List<Location> factoryLocations(DocumentContext documentContext, String factoryMethodName) {
-    return beanIndex.factoryBeansForUri(documentContext.getUri()).stream()
+  private List<Location> factoryLocations(URI uri, String factoryMethodName) {
+    return beanIndex.factoryBeansForUri(uri).stream()
       .filter(factoryBean -> factoryBean.factoryMethodName().equals(factoryMethodName))
       .findFirst()
-      .map(factoryBean -> locationsFor(factoryBean.beanNames()))
+      .map(factoryBean -> toLocations(injectionPointIndex.usagesOf(uri, factoryMethodName, factoryBean.beanNames())))
       .orElseGet(List::of);
   }
 
-  /** Точки внедрения переданных желудей как {@link Location}. */
-  private List<Location> locationsFor(Set<String> beanNames) {
-    return beanNames.stream()
-      .map(injectionPointIndex::resolve)
-      .flatMap(List::stream)
-      .distinct()
+  private static List<Location> toLocations(List<InjectionPoint> points) {
+    return points.stream()
       .map(point -> new Location(point.uri().toString(), point.range()))
       .toList();
   }

@@ -31,7 +31,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.ProducerKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
@@ -50,6 +54,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -62,12 +67,17 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AutumnInjectionPointIndexTest {
 
+  private static final URI PRODUCER_URI = Absolute.uri("file:///beans/Лог.os");
+  private static final URI OTHER_PRODUCER_URI = Absolute.uri("file:///beans/ДругойЛог.os");
+
   @Mock
   private OScriptLibraryIndex libraryIndex;
   @Mock
   private ServerContextProvider serverContextProvider;
   @Mock
   private AutumnComponentInferencer componentInferencer;
+  @Mock
+  private AutumnBeanIndex beanIndex;
 
   private final List<LibraryEntry> entries = new ArrayList<>();
 
@@ -75,7 +85,7 @@ class AutumnInjectionPointIndexTest {
 
   private void init() {
     when(libraryIndex.findEntries(EntryKind.CLASS)).thenReturn(entries);
-    index = new AutumnInjectionPointIndex(libraryIndex, serverContextProvider, componentInferencer);
+    index = new AutumnInjectionPointIndex(libraryIndex, serverContextProvider, componentInferencer, beanIndex);
   }
 
   @Test
@@ -84,26 +94,29 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when / then
-    assertThat(index.resolve("")).isEmpty();
-    assertThat(index.resolve("НетТакого")).isEmpty();
+    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of())).isEmpty();
+    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("НетТакого"))).isEmpty();
   }
 
   @Test
-  void indexesFieldInjection() {
-    // given: класс-потребитель с полем &Пластилин, внедряющим желудь "Лог"
+  void indexesFieldInjectionResolvedToProducer() {
+    // given: класс-потребитель с полем &Пластилин, внедряющим желудь "Лог" (одиночно),
+    // производитель которого — компонент в PRODUCER_URI
     var range = range(3);
     var uri = registerClass("Потребитель", field("Лог", range), List.of());
     when(componentInferencer.injectedBean(anyList(), eq("Лог")))
       .thenReturn(Optional.of(new InjectedBean("Лог", false)));
+    componentProducer("Лог", PRODUCER_URI);
     init();
 
     // when
-    var points = index.resolve("Лог");
+    var points = index.usagesOf(PRODUCER_URI, null, Set.of("Лог"));
 
     // then
     assertThat(points).singleElement().satisfies(point -> {
       assertThat(point.uri()).isEqualTo(uri);
       assertThat(point.range()).isEqualTo(range);
+      assertThat(point.collection()).isFalse();
     });
   }
 
@@ -112,28 +125,58 @@ class AutumnInjectionPointIndexTest {
     // given: внедрение через параметр конструктора
     var range = range(1);
     var parameter = ParameterDefinition.builder().name("лог").annotations(List.of()).range(range).build();
-    var uri = registerClass("ПотребительВКонструкторе", null, List.of(parameter));
+    registerClass("ПотребительВКонструкторе", null, List.of(parameter));
     when(componentInferencer.injectedBean(anyList(), eq("лог")))
       .thenReturn(Optional.of(new InjectedBean("Лог", false)));
+    componentProducer("Лог", PRODUCER_URI);
     init();
 
     // when
-    var points = index.resolve("Лог");
+    var points = index.usagesOf(PRODUCER_URI, null, Set.of("Лог"));
 
     // then
     assertThat(points).singleElement().satisfies(point -> assertThat(point.range()).isEqualTo(range));
   }
 
   @Test
+  void singletonInjectionHiddenForNonSelectedProducer() {
+    // given: одиночное внедрение "Лог" разрешается DI в PRODUCER_URI (например, по &Верховный),
+    // а не в одноимённого непримарного производителя OTHER_PRODUCER_URI
+    registerClass("Потребитель", field("Лог", range(3)), List.of());
+    when(componentInferencer.injectedBean(anyList(), eq("Лог")))
+      .thenReturn(Optional.of(new InjectedBean("Лог", false)));
+    componentProducer("Лог", PRODUCER_URI);
+    init();
+
+    // when / then: линза выбранного производителя показывает точку, чужого — нет
+    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Лог"))).hasSize(1);
+    assertThat(index.usagesOf(OTHER_PRODUCER_URI, null, Set.of("Лог"))).isEmpty();
+  }
+
+  @Test
+  void collectionInjectionIncludedForAnyProducerOfName() {
+    // given: внедрение коллекции "Обработчик" — внедряет всех производителей имени, поэтому
+    // показывается на любом из них, даже если resolveDeclarations выбрал бы другого
+    registerClass("Потребитель", field("Обработчик", range(4)), List.of());
+    when(componentInferencer.injectedBean(anyList(), eq("Обработчик")))
+      .thenReturn(Optional.of(new InjectedBean("Обработчик", true)));
+    componentProducer("Обработчик", OTHER_PRODUCER_URI);
+    init();
+
+    // when / then: коллекция показывается на PRODUCER_URI несмотря на выбор OTHER_PRODUCER_URI
+    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Обработчик")))
+      .singleElement().satisfies(point -> assertThat(point.collection()).isTrue());
+  }
+
+  @Test
   void ignoresMembersWithoutInjection() {
     // given
-    var uri = registerClass("Обычный", field("Поле", range(2)), List.of());
+    registerClass("Обычный", field("Поле", range(2)), List.of());
     when(componentInferencer.injectedBean(anyList(), eq("Поле"))).thenReturn(Optional.empty());
     init();
 
     // when / then
-    assertThat(index.resolve("Поле")).isEmpty();
-    assertThat(uri).isNotNull();
+    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Поле"))).isEmpty();
   }
 
   @Test
@@ -144,10 +187,16 @@ class AutumnInjectionPointIndexTest {
     init();
 
     // when / then: аннотация-определение пропускается, точка не индексируется
-    assertThat(index.resolve("Внедрение")).isEmpty();
+    assertThat(index.usagesOf(PRODUCER_URI, null, Set.of("Внедрение"))).isEmpty();
   }
 
   // --- helpers ---------------------------------------------------------------
+
+  /** Замокать одиночного производителя желудя: resolveDeclarations(имя) -> компонент в producerUri. */
+  private void componentProducer(String beanName, URI producerUri) {
+    when(beanIndex.resolveDeclarations(beanName)).thenReturn(List.of(
+      new BeanDeclaration(new TypeRef(TypeKind.USER, beanName), false, producerUri, ProducerKind.COMPONENT, null)));
+  }
 
   private URI registerClass(String qualifiedName, VariableSymbol variable,
                             List<ParameterDefinition> parameters, Annotation... constructorAnnotations) {

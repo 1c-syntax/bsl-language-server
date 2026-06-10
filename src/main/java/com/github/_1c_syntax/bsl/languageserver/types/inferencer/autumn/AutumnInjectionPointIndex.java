@@ -25,12 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.ProducerKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -38,20 +41,27 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Обратный индекс точек внедрения фреймворка «ОСень»: отображение «имя желудя → точки внедрения»
+ * Обратный индекс точек внедрения фреймворка «ОСень»: где какой желудь внедряется
  * ({@code &Пластилин} на полях и параметрах конструктора).
  * <p>
- * Зеркало {@link AutumnBeanIndex}: сканирует те же .os-классы библиотек (настоящие потребители
- * желудей — это классы-желуди), но собирает не объявления производителей, а места внедрения.
- * Используется обратной линзой «производитель → точки внедрения». Имя внедряемого желудя
- * вычисляется через {@link AutumnComponentInferencer#injectedBean} — единый источник правды
- * с прямой линзой и выводом типа. Общая обвязка ленивой сборки — в {@link AbstractAutumnLibraryIndex}.
+ * Зеркало {@link AutumnBeanIndex}: сканирует те же .os-классы библиотек (потребители желудей —
+ * это классы-желуди) и для каждой точки внедрения запоминает имя внедряемого желудя (через
+ * {@link AutumnComponentInferencer#injectedBean} — единый источник правды с прямой линзой и
+ * выводом типа) и признак внедрения коллекции.
+ * <p>
+ * Для обратной линзы важна точность по <i>производителю</i>, а не только по имени: при конфликте
+ * имён одиночное внедрение {@code &Пластилин("Имя")} ведёт лишь к выбранному правилами DI
+ * производителю (приоритет {@code &Верховный}), а коллекция — ко всем. Поэтому
+ * {@link #usagesOf} «переигрывает» выбор производителя на каждую точку через живой
+ * {@link AutumnBeanIndex} (всегда актуальный — без рассинхрона с инкрементальными апдейтами).
+ * Общая обвязка ленивой сборки — в {@link AbstractAutumnLibraryIndex}.
  */
 @Component
 @WorkspaceScope
 public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
 
   private final AutumnComponentInferencer componentInferencer;
+  private final AutumnBeanIndex beanIndex;
 
   /** Имя желудя (lowercase) → точки внедрения, ссылающиеся на него. */
   private final Map<String, Set<InjectionPoint>> pointsByName = new ConcurrentHashMap<>();
@@ -60,33 +70,65 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
 
   public AutumnInjectionPointIndex(OScriptLibraryIndex libraryIndex,
                                    ServerContextProvider serverContextProvider,
-                                   AutumnComponentInferencer componentInferencer) {
+                                   AutumnComponentInferencer componentInferencer,
+                                   AutumnBeanIndex beanIndex) {
     super(libraryIndex, serverContextProvider);
     this.componentInferencer = componentInferencer;
+    this.beanIndex = beanIndex;
   }
 
   /**
-   * Точка внедрения: .os-файл потребителя и диапазон поля/параметра с {@code &Пластилин}.
+   * Точка внедрения: .os-файл потребителя, диапазон поля/параметра с {@code &Пластилин} и признак
+   * внедрения прилепляемой коллекции (коллекция внедряет всех подходящих производителей, одиночное
+   * внедрение — лишь выбранного).
    *
-   * @param uri   URI .os-файла потребителя.
-   * @param range Диапазон имени поля или параметра — точки внедрения.
+   * @param uri        URI .os-файла потребителя.
+   * @param range      Диапазон имени поля или параметра — точки внедрения.
+   * @param collection {@code true}, если это внедрение прилепляемой коллекции.
    */
-  public record InjectionPoint(URI uri, Range range) {
+  public record InjectionPoint(URI uri, Range range, boolean collection) {
   }
 
   /**
-   * Разрешить точки внедрения желудя по его имени или прозвищу.
+   * Точки внедрения, которые разрешаются именно в указанного производителя.
+   * <p>
+   * Для каждой точки переигрывается выбор производителя: одиночное внедрение по имени
+   * включается, только если правила DI ({@link AutumnBeanIndex#resolveDeclarations}) выбирают
+   * именно этого производителя (учитывая {@code &Верховный}); внедрение коллекции включается
+   * всегда (коллекция внедряет всех производителей подходящего имени, включая этого).
    *
-   * @param name Имя или прозвище (квалификатор) желудя.
-   * @return Точки внедрения, ссылающиеся на это имя; пусто, если их нет.
+   * @param producerUri       URI .os-файла производителя.
+   * @param factoryMethodName Имя фабричного метода {@code &Завязь} либо {@code null}, если
+   *                          производитель — компонентный желудь ({@code &Желудь}/{@code &Дуб}).
+   * @param beanNames         Имена/прозвища желудя, производимого этим производителем.
+   * @return точки внедрения, разрешающиеся в этого производителя; пусто, если их нет.
    */
-  public List<InjectionPoint> resolve(String name) {
-    if (name.isBlank()) {
-      return List.of();
-    }
+  public List<InjectionPoint> usagesOf(URI producerUri, @Nullable String factoryMethodName, Set<String> beanNames) {
     ensureBuilt();
-    var points = pointsByName.get(name.toLowerCase(Locale.ROOT));
-    return points == null || points.isEmpty() ? List.of() : List.copyOf(points);
+    var result = new LinkedHashSet<InjectionPoint>();
+    for (var beanName : beanNames) {
+      var points = pointsByName.get(beanName.toLowerCase(Locale.ROOT));
+      if (points == null || points.isEmpty()) {
+        continue;
+      }
+      var singletonResolvesToProducer = producesName(beanName, producerUri, factoryMethodName);
+      for (var point : points) {
+        if (point.collection() || singletonResolvesToProducer) {
+          result.add(point);
+        }
+      }
+    }
+    return List.copyOf(result);
+  }
+
+  /** Выбирают ли правила DI (с приоритетом {@code &Верховный}) для имени именно этого производителя. */
+  private boolean producesName(String beanName, URI producerUri, @Nullable String factoryMethodName) {
+    return beanIndex.resolveDeclarations(beanName).stream()
+      .anyMatch(declaration -> producerUri.equals(declaration.sourceUri())
+        && (factoryMethodName == null
+          ? declaration.kind() == ProducerKind.COMPONENT
+          : declaration.kind() == ProducerKind.FACTORY
+            && factoryMethodName.equals(declaration.factoryMethodName())));
   }
 
   @Override
@@ -128,7 +170,8 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
   private void indexInjection(URI uri, List<Annotation> annotations, String memberName, Range range) {
     componentInferencer.injectedBean(annotations, memberName).ifPresent(bean -> {
       var key = bean.name().toLowerCase(Locale.ROOT);
-      pointsByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(new InjectionPoint(uri, range));
+      pointsByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())
+        .add(new InjectionPoint(uri, range, bean.collection()));
       namesByUri.computeIfAbsent(uri, u -> ConcurrentHashMap.newKeySet()).add(key);
     });
   }
