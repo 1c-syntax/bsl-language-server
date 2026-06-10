@@ -24,19 +24,25 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -59,14 +65,17 @@ import java.util.Set;
  * {@link OScriptLibraryIndex}. Все три бина workspace-scoped (CGLIB-прокси),
  * поэтому конструкторные зависимости между ними цикл графа бинов не образуют.
  * <p>
- * Отношения читаются «вживую» из аннотаций при каждом запросе (а не кэшируются),
- * что бесплатно даёт hot-reload: правка {@code &Расширяет}/{@code &Реализует}
- * подхватывается без ре-регистрации.
+ * Отношения «вниз» (наследники, реализаторы) находятся через {@link TypeRelationIndex} —
+ * обратный индекс прямых отношений (имя → URI), без сканирования всех документов
+ * workspace. Отношения «вверх» (родитель) читаются «вживую» из аннотаций при каждом
+ * запросе, что бесплатно даёт hot-reload: правка {@code &Расширяет}/{@code &Реализует}
+ * подхватывается без ре-регистрации (точечную инвалидацию индекса выполняют его
+ * event-обработчики).
  */
 @Component
 @WorkspaceScope
 @RequiredArgsConstructor
-public class TypeRelationIndex {
+public class TypeRelations {
 
   /**
    * Защита от циклов наследования ({@code A → B → A}) при сборке наследуемых
@@ -79,6 +88,7 @@ public class TypeRelationIndex {
   private final OScriptExtends oScriptExtends;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final TypeRegistry typeRegistry;
+  private final TypeRelationIndex typeRelationIndex;
 
   /**
    * Является ли документ интерфейсом ({@code &Интерфейс} на конструкторе).
@@ -135,20 +145,17 @@ public class TypeRelationIndex {
    * @return список документов-наследников
    */
   public List<DocumentContext> subtypes(DocumentContext documentContext) {
-    var ownNames = new HashSet<String>();
-    for (var name : oScriptLibraryIndex.classNames(documentContext)) {
-      ownNames.add(name.toLowerCase(Locale.ROOT));
-    }
+    var serverContext = documentContext.getServerContext();
+    var ownNames = oScriptLibraryIndex.classNames(documentContext);
     var result = new ArrayList<DocumentContext>();
-    for (var candidate : documentContext.getServerContext().getDocuments().values()) {
-      if (candidate.getFileType() != FileType.OS
-        || candidate.getUri().equals(documentContext.getUri())) {
+    for (var uri : typeRelationIndex.directSubtypeUris(ownNames, serverContext)) {
+      if (uri.equals(documentContext.getUri())) {
         continue;
       }
-      oScriptExtends.parentClassName(candidate)
-        .filter(parent -> ownNames.contains(parent.toLowerCase(Locale.ROOT)))
-        .filter(parent -> inheritableFromParent(candidate, documentContext))
-        .ifPresent(parent -> result.add(candidate));
+      var candidate = serverContext.getDocument(uri);
+      if (candidate != null && inheritableFromParent(candidate, documentContext)) {
+        result.add(candidate);
+      }
     }
     return result;
   }
@@ -167,66 +174,92 @@ public class TypeRelationIndex {
   }
 
   /**
-   * Реализует ли документ-кандидат (транзитивно) хотя бы один из интерфейсов.
-   * Учитываются два измерения транзитивности из документации extends:
+   * Все реализаторы интерфейса: документы, разрешающиеся реализациями
+   * {@code interfaceDocument} с учётом двух измерений транзитивности из
+   * документации extends:
    * <ul>
-   *   <li><b>наследование классов</b> — родитель объявляет
-   *       {@code &Реализует("Интерфейс")}, а наследник через {@code &Расширяет}
-   *       считается реализацией (случай абстрактного родителя);</li>
    *   <li><b>иерархия интерфейсов</b> — интерфейс может расширять другой интерфейс
    *       аннотацией {@code &Расширяет}, поэтому реализатор производного интерфейса
-   *       является реализатором и всех его базовых интерфейсов.</li>
+   *       является реализатором и всех его базовых;</li>
+   *   <li><b>наследование классов</b> — наследник (через {@code &Расширяет})
+   *       класса-реализатора сам является реализатором (случай абстрактного
+   *       родителя).</li>
    * </ul>
-   * Обход цепочки классов итеративный (guard — множество посещённых URI),
-   * разворачивание каждого интерфейса вверх по его {@code &Расширяет}-цепочке —
-   * в {@link #interfaceClosureMatches} (guard — множество посещённых имён).
+   * Поиск идёт «вниз» от интерфейса по {@link TypeRelationIndex} без сканирования
+   * документов workspace: сначала замыкание производных интерфейсов, затем их
+   * прямые реализаторы и поддеревья наследников реализаторов. Циклы гасятся
+   * множествами посещённых URI.
    *
-   * @param candidate      проверяемый документ
-   * @param interfaceNames имена искомых интерфейсов в нижнем регистре
-   * @return {@code true}, если кандидат реализует один из интерфейсов
+   * @param interfaceDocument документ-интерфейс
+   * @return документы-реализаторы (без самих интерфейсов); пусто, если их нет
    */
-  public boolean implementsAny(DocumentContext candidate, Set<String> interfaceNames) {
-    if (interfaceNames.isEmpty()) {
-      return false;
-    }
-    var serverContext = candidate.getServerContext();
-    var visited = new HashSet<URI>();
-    DocumentContext current = candidate;
-    while (current != null && visited.add(current.getUri())) {
-      for (var name : oScriptExtends.implementedInterfaceNames(current)) {
-        if (interfaceClosureMatches(name, interfaceNames, serverContext)) {
-          return true;
+  public List<DocumentContext> implementors(DocumentContext interfaceDocument) {
+    var serverContext = interfaceDocument.getServerContext();
+
+    // Замыкание интерфейсов: сам интерфейс + производные интерфейсы по &Расширяет.
+    var interfaceNames = new LinkedHashSet<String>();
+    var interfaceUris = new HashSet<URI>();
+    var interfaceQueue = new ArrayDeque<DocumentContext>();
+    interfaceQueue.add(interfaceDocument);
+    while (!interfaceQueue.isEmpty()) {
+      var current = interfaceQueue.poll();
+      if (!interfaceUris.add(current.getUri())) {
+        continue;
+      }
+      var names = oScriptLibraryIndex.classNames(current);
+      for (var name : names) {
+        interfaceNames.add(name.toLowerCase(Locale.ROOT));
+      }
+      for (var uri : typeRelationIndex.directSubtypeUris(names, serverContext)) {
+        var derived = serverContext.getDocument(uri);
+        if (derived != null && oScriptExtends.isInterface(derived)) {
+          interfaceQueue.add(derived);
         }
       }
-      current = oScriptExtends.parentClassName(current)
-        .flatMap(name -> resolveDocument(name, serverContext))
-        .orElse(null);
     }
-    return false;
+
+    // Прямые реализаторы замыкания + поддеревья их наследников.
+    var result = new LinkedHashMap<URI, DocumentContext>();
+    var classQueue = new ArrayDeque<DocumentContext>();
+    for (var uri : typeRelationIndex.directImplementorUris(interfaceNames, serverContext)) {
+      var implementor = serverContext.getDocument(uri);
+      if (implementor != null) {
+        classQueue.add(implementor);
+      }
+    }
+    while (!classQueue.isEmpty()) {
+      var current = classQueue.poll();
+      if (interfaceUris.contains(current.getUri())
+        || result.putIfAbsent(current.getUri(), current) != null) {
+        continue;
+      }
+      var names = oScriptLibraryIndex.classNames(current);
+      for (var uri : typeRelationIndex.directSubtypeUris(names, serverContext)) {
+        var child = serverContext.getDocument(uri);
+        if (child != null && inheritableFromParent(child, current)) {
+          classQueue.add(child);
+        }
+      }
+    }
+    return List.copyOf(result.values());
   }
 
   /**
-   * Содержит ли замыкание интерфейса {@code interfaceName} (он сам плюс все его
-   * базовые интерфейсы, объявленные через {@code &Расширяет}) хотя бы одно из
-   * искомых имён. Обход вверх по иерархии интерфейсов с защитой от циклов по
-   * множеству посещённых имён.
+   * Диапазон выделения класса для элементов навигации/иерархии: subName
+   * конструктора, если он есть (на нём объявляются аннотации extends), иначе —
+   * selectionRange модуля (поле без {@code @NonNull} может быть {@code null} —
+   * даём безопасный нулевой fallback).
+   *
+   * @param documentContext контекст {@code .os}-документа-класса
+   * @return диапазон выделения класса
    */
-  private boolean interfaceClosureMatches(
-    String interfaceName,
-    Set<String> targets,
-    ServerContext serverContext
-  ) {
-    var visited = new HashSet<String>();
-    String name = interfaceName;
-    while (name != null && visited.add(name.toLowerCase(Locale.ROOT))) {
-      if (targets.contains(name.toLowerCase(Locale.ROOT))) {
-        return true;
-      }
-      name = resolveDocument(name, serverContext)
-        .flatMap(oScriptExtends::parentClassName)
-        .orElse(null);
-    }
-    return false;
+  public Range classSelectionRange(DocumentContext documentContext) {
+    return documentContext.getSymbolTree().getConstructor()
+      .map(MethodSymbol::getSelectionRange)
+      .orElseGet(() -> {
+        var range = documentContext.getSymbolTree().getModule().getSelectionRange();
+        return range != null ? range : Ranges.create(0, 0, 0, 0);
+      });
   }
 
   /**

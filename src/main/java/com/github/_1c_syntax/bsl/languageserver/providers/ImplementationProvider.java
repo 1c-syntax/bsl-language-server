@@ -24,9 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelationIndex;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelations;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ImplementationParams;
 import org.eclipse.lsp4j.Location;
@@ -38,8 +36,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 /**
  * Провайдер запроса {@code textDocument/implementation} для интерфейсов
@@ -54,9 +50,8 @@ import java.util.stream.Collectors;
  *   <li>курсор в любом другом месте файла-интерфейса → сами реализующие классы.</li>
  * </ul>
  * Сам разбор отношений {@code &Реализует}/{@code &Расширяет} (в т.ч.
- * транзитивный обход через абстрактных родителей) делегирован
- * {@link TypeRelationIndex}; имена классов-интерфейсов берутся из
- * {@link OScriptLibraryIndex}.
+ * транзитивный обход через абстрактных родителей и иерархию интерфейсов)
+ * делегирован {@link TypeRelations#implementors}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation">Goto Implementation Request specification</a>
  */
@@ -64,8 +59,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ImplementationProvider {
 
-  private final OScriptLibraryIndex oScriptLibraryIndex;
-  private final TypeRelationIndex typeRelationIndex;
+  private final TypeRelations typeRelations;
 
   // Результаты — по одной локации на класс/метод-реализатор, поэтому URI
   // уникален: сортировки по нему достаточно для детерминированного порядка.
@@ -81,30 +75,20 @@ public class ImplementationProvider {
    */
   public List<Location> getImplementations(DocumentContext documentContext, ImplementationParams params) {
     if (documentContext.getFileType() != FileType.OS
-      || !typeRelationIndex.isInterface(documentContext)) {
+      || !typeRelations.isInterface(documentContext)) {
       return Collections.emptyList();
     }
 
-    var interfaceNames = oScriptLibraryIndex.classNames(documentContext).stream()
-      .map(name -> name.toLowerCase(Locale.ROOT))
-      .collect(Collectors.toSet());
-
     var methodName = methodNameAt(documentContext, params);
-    var serverContext = documentContext.getServerContext();
 
     var result = new ArrayList<Location>();
-    for (var candidate : serverContext.getDocuments().values()) {
-      if (candidate.getFileType() != FileType.OS
-        || candidate.getUri().equals(documentContext.getUri())
-        || !typeRelationIndex.implementsAny(candidate, interfaceNames)) {
-        continue;
-      }
+    for (var implementor : typeRelations.implementors(documentContext)) {
       if (methodName != null) {
-        candidate.getSymbolTree().getMethodSymbol(methodName)
+        implementor.getSymbolTree().getMethodSymbol(methodName)
           .filter(MethodSymbol::isExport)
-          .ifPresent(method -> result.add(location(candidate, method.getSelectionRange())));
+          .ifPresent(method -> result.add(location(implementor, method.getSelectionRange())));
       } else {
-        result.add(location(candidate, classSelectionRange(candidate)));
+        result.add(location(implementor, typeRelations.classSelectionRange(implementor)));
       }
     }
     result.sort(locationComparator);
@@ -124,17 +108,6 @@ public class ImplementationProvider {
       return method.getName();
     }
     return null;
-  }
-
-  private static Range classSelectionRange(DocumentContext documentContext) {
-    return documentContext.getSymbolTree().getConstructor()
-      .map(MethodSymbol::getSelectionRange)
-      .orElseGet(() -> {
-        // Согласованно с TypeHierarchyProvider.selectionRange: getSelectionRange()
-        // модуля может вернуть null (поле без @NonNull) — даём безопасный fallback.
-        var range = documentContext.getSymbolTree().getModule().getSelectionRange();
-        return range != null ? range : Ranges.create(0, 0, 0, 0);
-      });
   }
 
   private static Location location(DocumentContext documentContext, Range range) {

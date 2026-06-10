@@ -78,7 +78,7 @@ public class OScriptModuleMembersProvider {
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
   private final OScriptExtends oScriptExtends;
-  private final TypeRelationIndex typeRelationIndex;
+  private final TypeRelations typeRelations;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -172,7 +172,7 @@ public class OScriptModuleMembersProvider {
    * Зарегистрировать ленивый источник членов, наследуемых от родительского
    * класса библиотеки {@code extends} (аннотация {@code &Расширяет} над
    * {@code ПриСозданииОбъекта}). Сам обход цепочки наследования и защита от
-   * циклов вынесены в {@link TypeRelationIndex} — здесь лишь регистрируется
+   * циклов вынесены в {@link TypeRelations} — здесь лишь регистрируется
    * делегирующий источник. Источник добавляется ПОСЛЕ собственного источника
    * членов класса, поэтому при дедупликации в {@link TypeRegistry#getMembers}
    * собственные/переопределённые члены выигрывают у унаследованных. Резолв
@@ -182,7 +182,7 @@ public class OScriptModuleMembersProvider {
   private void registerInheritedMembers(DocumentContext documentContext, TypeRef classRef) {
     typeRegistry.registerMemberSource(
       classRef,
-      () -> typeRelationIndex.inheritedMembers(documentContext, classRef),
+      () -> typeRelations.inheritedMembers(documentContext, classRef),
       LanguageScope.OS
     );
   }

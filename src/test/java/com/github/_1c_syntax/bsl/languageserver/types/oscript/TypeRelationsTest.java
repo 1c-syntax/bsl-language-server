@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,10 +45,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * циклов и поправка на мета-аннотации «ОСени» ({@code &Аннотация}).
  */
 @CleanupContextBeforeClassAndAfterClass
-class TypeRelationIndexTest extends AbstractServerContextAwareTest {
+class TypeRelationsTest extends AbstractServerContextAwareTest {
 
   @Autowired
-  private TypeRelationIndex index;
+  private TypeRelations index;
 
   @Autowired
   private OScriptLibraryIndex libraryIndex;
@@ -127,29 +126,40 @@ class TypeRelationIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void implementsAnyMatchesDirectInterface() {
+  void implementorsOfBaseInterfaceIncludeDerivedInterfaceImplementors() {
+    // given: РеализацияБазового реализует БазовыйИнтерфейс напрямую,
+    // РеализацияПроизводного — через ПроизводныйИнтерфейс (&Расширяет базового)
     initLibrary(INTERFACE_HIERARCHY);
-    var implementer = libDoc(INTERFACE_HIERARCHY, "РеализацияБазового.os");
+    var baseInterface = libDoc(INTERFACE_HIERARCHY, "БазовыйИнтерфейс.os");
 
-    assertThat(index.implementsAny(implementer, Set.of("базовыйинтерфейс"))).isTrue();
-    assertThat(index.implementsAny(implementer, Set.of("несуществующийинтерфейс"))).isFalse();
-    assertThat(index.implementsAny(implementer, Set.of())).isFalse();
+    // when / then
+    assertThat(index.implementors(baseInterface))
+      .extracting(documentName())
+      .containsExactlyInAnyOrder("РеализацияБазового", "РеализацияПроизводного");
   }
 
   @Test
-  void implementsAnyMatchesBaseInterfaceThroughInterfaceHierarchy() {
+  void implementorsOfDerivedInterfaceExcludeBaseImplementors() {
+    // given
     initLibrary(INTERFACE_HIERARCHY);
-    var implementer = libDoc(INTERFACE_HIERARCHY, "РеализацияПроизводного.os");
+    var derivedInterface = libDoc(INTERFACE_HIERARCHY, "ПроизводныйИнтерфейс.os");
 
-    assertThat(index.implementsAny(implementer, Set.of("базовыйинтерфейс"))).isTrue();
+    // when / then: реализатор только базового интерфейса не реализует производный
+    assertThat(index.implementors(derivedInterface))
+      .extracting(documentName())
+      .containsExactly("РеализацияПроизводного");
   }
 
   @Test
-  void implementsAnyMatchesInterfaceDeclaredOnAbstractParent() {
+  void implementorsIncludeSubclassesOfAbstractImplementor() {
+    // given: интерфейс реализует абстрактный родитель, конкретный класс наследует его
     initLibrary(INTERFACE_ABSTRACT);
-    var concrete = libDoc(INTERFACE_ABSTRACT, "КонкретноеХранилище.os");
+    var storageInterface = libDoc(INTERFACE_ABSTRACT, "ИнтерфейсХранилища.os");
 
-    assertThat(index.implementsAny(concrete, Set.of("интерфейсхранилища"))).isTrue();
+    // when / then
+    assertThat(index.implementors(storageInterface))
+      .extracting(documentName())
+      .containsExactlyInAnyOrder("АбстрактноеХранилище", "КонкретноеХранилище");
   }
 
   // --- унаследованные члены ---
@@ -220,14 +230,16 @@ class TypeRelationIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void implementsAnyTerminatesOnInterfaceHierarchyCycle() {
+  void implementorsTerminateOnInterfaceHierarchyCycle() {
+    // given: ИнтерфейсЦиклА и ИнтерфейсЦиклБ расширяют друг друга (цикл);
+    // РеализаторЦикла реализует ИнтерфейсЦиклА
     initLibrary(CYCLE_LIB);
-    var implementer = libDoc(CYCLE_LIB, "РеализаторЦикла.os");
+    var cycledInterface = libDoc(CYCLE_LIB, "ИнтерфейсЦиклБ.os");
 
-    // Поиск несуществующего интерфейса обходит циклическое замыкание и завершается.
-    assertThat(index.implementsAny(implementer, Set.of("несуществующий"))).isFalse();
-    // А оба интерфейса из цикла находятся как реализуемые.
-    assertThat(index.implementsAny(implementer, Set.of("интерфейсциклб"))).isTrue();
+    // when / then: обход замыкания завершается, реализатор найден через цикл
+    assertThat(index.implementors(cycledInterface))
+      .extracting(documentName())
+      .containsExactly("РеализаторЦикла");
   }
 
   // --- helpers ---

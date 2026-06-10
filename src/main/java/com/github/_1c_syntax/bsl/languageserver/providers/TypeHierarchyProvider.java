@@ -23,12 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelationIndex;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelations;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TypeHierarchyItem;
 import org.eclipse.lsp4j.TypeHierarchyPrepareParams;
@@ -38,7 +35,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -50,7 +46,7 @@ import java.util.List;
  * {@code typeHierarchy/supertypes} и {@code typeHierarchy/subtypes}.
  * <p>
  * Отношения наследования провайдер не разбирает сам, а спрашивает у
- * {@link TypeRelationIndex} — единой точки истины об {@code &Расширяет}; имена
+ * {@link TypeRelations} — единой точки истины об {@code &Расширяет}; имена
  * классов для отображения берутся из {@link OScriptLibraryIndex}.
  *
  * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareTypeHierarchy">Prepare Type Hierarchy Request specification</a>
@@ -62,7 +58,7 @@ import java.util.List;
 public class TypeHierarchyProvider {
 
   private final OScriptLibraryIndex oScriptLibraryIndex;
-  private final TypeRelationIndex typeRelationIndex;
+  private final TypeRelations typeRelations;
 
   private static final Comparator<TypeHierarchyItem> ITEM_COMPARATOR = Comparator
     .comparing(TypeHierarchyItem::getName, String.CASE_INSENSITIVE_ORDER)
@@ -104,7 +100,7 @@ public class TypeHierarchyProvider {
     DocumentContext documentContext,
     TypeHierarchySupertypesParams params
   ) {
-    return typeRelationIndex.supertype(documentContext)
+    return typeRelations.supertype(documentContext)
       .map(this::toItem)
       .map(List::of)
       .orElseGet(Collections::emptyList);
@@ -122,7 +118,7 @@ public class TypeHierarchyProvider {
     DocumentContext documentContext,
     TypeHierarchySubtypesParams params
   ) {
-    var result = subtypeDocuments(documentContext).stream()
+    var result = typeRelations.subtypes(documentContext).stream()
       .map(this::toItem)
       .sorted(ITEM_COMPARATOR)
       .toList();
@@ -135,46 +131,23 @@ public class TypeHierarchyProvider {
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
     return oScriptLibraryIndex.isLibraryClass(documentContext)
-      || typeRelationIndex.supertypeName(documentContext).isPresent()
-      || !subtypeDocuments(documentContext).isEmpty();
-  }
-
-  /**
-   * Все {@code .os}-классы workspace, объявившие данный класс своим родителем
-   * через {@code &Расширяет}/{@code &Extends}.
-   */
-  private List<DocumentContext> subtypeDocuments(DocumentContext documentContext) {
-    return typeRelationIndex.subtypes(documentContext);
+      || typeRelations.supertypeName(documentContext).isPresent()
+      || !typeRelations.subtypes(documentContext).isEmpty();
   }
 
   private TypeHierarchyItem toItem(DocumentContext documentContext) {
     var module = documentContext.getSymbolTree().getModule();
-    var names = new LinkedHashSet<>(oScriptLibraryIndex.classNames(documentContext));
-    var primaryName = names.isEmpty() ? "" : names.iterator().next();
+    // classNames по контракту непустой: qualifiedName library-класса либо basename файла.
+    var primaryName = oScriptLibraryIndex.classNames(documentContext).getFirst();
 
     var item = new TypeHierarchyItem(
       primaryName,
       SymbolKind.Class,
       documentContext.getUri().toString(),
       module.getRange(),
-      selectionRange(documentContext)
+      typeRelations.classSelectionRange(documentContext)
     );
-    typeRelationIndex.supertypeName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
+    typeRelations.supertypeName(documentContext).ifPresent(parent -> item.setDetail(": " + parent));
     return item;
-  }
-
-  /**
-   * Диапазон выделения корневого элемента: subName-конструктора, если он есть
-   * (на нём обычно объявлена аннотация {@code &Расширяет}), иначе — первый
-   * токен модуля.
-   */
-  private static Range selectionRange(DocumentContext documentContext) {
-    return documentContext.getSymbolTree().getConstructor()
-      .map(MethodSymbol::getSelectionRange)
-      .orElseGet(() -> {
-        var module = documentContext.getSymbolTree().getModule();
-        var range = module.getSelectionRange();
-        return range != null ? range : Ranges.create(0, 0, 0, 0);
-      });
   }
 }
