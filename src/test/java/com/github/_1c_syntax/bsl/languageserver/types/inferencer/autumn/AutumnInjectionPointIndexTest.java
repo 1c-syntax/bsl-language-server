@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
@@ -189,6 +190,27 @@ class AutumnInjectionPointIndexTest {
     assertThat(index.usagesOfComponent(PRODUCER_URI, Set.of("Внедрение"))).isEmpty();
   }
 
+  @Test
+  void doesNotDoubleCountParameterDuplicatedAsVariable() {
+    // given: параметр конструктора дублируется среди переменных (kind=PARAMETER) с теми же
+    // аннотациями — без фильтра точка внедрения индексировалась бы дважды
+    var paramRange = range(1);
+    var parameter = ParameterDefinition.builder().name("лог").annotations(List.of()).range(paramRange).build();
+    var parameterVariable = field("лог", range(2));
+    lenient().when(parameterVariable.getKind()).thenReturn(VariableKind.PARAMETER);
+    registerClass("Потребитель", parameterVariable, List.of(parameter));
+    when(componentInferencer.injectedBean(anyList(), eq("лог")))
+      .thenReturn(Optional.of(new InjectedBean("Лог", false)));
+    componentProducer("Лог", PRODUCER_URI);
+    init();
+
+    // when
+    var points = index.usagesOfComponent(PRODUCER_URI, Set.of("Лог"));
+
+    // then: одна точка — по параметру конструктора
+    assertThat(points).singleElement().satisfies(point -> assertThat(point.range()).isEqualTo(paramRange));
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   /** Замокать одиночного производителя желудя: resolveDefinitions(имя) -> компонент в producerUri. */
@@ -223,6 +245,7 @@ class AutumnInjectionPointIndexTest {
     lenient().when(variable.getName()).thenReturn(name);
     lenient().when(variable.getAnnotations()).thenReturn(List.of());
     lenient().when(variable.getVariableNameRange()).thenReturn(nameRange);
+    lenient().when(variable.getKind()).thenReturn(VariableKind.MODULE);
     return variable;
   }
 

@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
@@ -66,6 +67,8 @@ public class InjectionPointCodeLensSupplier
 
   private static final String TITLE_KEY = "injects";
   private static final String TITLE_MANY_KEY = "injectsMany";
+  private static final String TITLE_PARAMETER_KEY = "injectsParameter";
+  private static final String TITLE_MANY_PARAMETER_KEY = "injectsManyParameter";
 
   private final Resources resources;
   private final AutumnComponentInferencer componentInferencer;
@@ -85,11 +88,17 @@ public class InjectionPointCodeLensSupplier
 
     symbolTree.getConstructor().ifPresent(constructor ->
       constructor.getParameters().forEach(parameter ->
-        toCodeLens(documentContext, parameter.getAnnotations(), parameter.getName(), parameter.getRange())
+        toCodeLens(documentContext, parameter.getAnnotations(), parameter.getName(), parameter.getRange(), true)
           .ifPresent(codeLenses::add)));
 
     for (var variable : symbolTree.getVariables()) {
-      toCodeLens(documentContext, variable.getAnnotations(), variable.getName(), variable.getVariableNameRange())
+      // Только поля модуля: параметры конструктора уже обработаны выше (они дублируются в
+      // переменных с kind=PARAMETER и теми же аннотациями), локальные переменные — не точки внедрения.
+      if (variable.getKind() != VariableKind.MODULE) {
+        continue;
+      }
+      toCodeLens(documentContext, variable.getAnnotations(), variable.getName(), variable.getVariableNameRange(),
+        false)
         .ifPresent(codeLenses::add);
     }
 
@@ -106,7 +115,7 @@ public class InjectionPointCodeLensSupplier
       return unresolved;
     }
 
-    var title = title(locations.size());
+    var title = title(data, locations.size());
     var position = unresolved.getRange().getStart();
     var command = navigationCommandBuilder.gotoCommand(title, documentContext.getUri(), position, locations);
     unresolved.setCommand(command);
@@ -125,12 +134,14 @@ public class InjectionPointCodeLensSupplier
     DocumentContext documentContext,
     List<Annotation> annotations,
     String memberName,
-    Range range
+    Range range,
+    boolean parameter
   ) {
     return componentInferencer.injectedBean(annotations, memberName)
       .filter(bean -> !definitionsFor(bean.name(), bean.collection()).isEmpty())
       .map(bean -> {
-        var data = new InjectionPointCodeLensData(documentContext.getUri(), getId(), bean.name(), bean.collection());
+        var data = new InjectionPointCodeLensData(
+          documentContext.getUri(), getId(), bean.name(), bean.collection(), parameter);
         var codeLens = new CodeLens(range);
         codeLens.setData(data);
         return codeLens;
@@ -166,11 +177,17 @@ public class InjectionPointCodeLensSupplier
       .map(SourceDefinedSymbol::getSelectionRange);
   }
 
-  private String title(int producerCount) {
-    if (producerCount == 1) {
-      return resources.getResourceString(getClass(), TITLE_KEY);
+  private String title(InjectionPointCodeLensData data, int producerCount) {
+    // Линзы параметров конструктора рендерятся стопкой над строкой конструктора —
+    // без имени желудя они неотличимы друг от друга, поэтому имя включается в заголовок.
+    if (data.isParameter()) {
+      return producerCount == 1
+        ? resources.getResourceString(getClass(), TITLE_PARAMETER_KEY, data.getBeanName())
+        : resources.getResourceString(getClass(), TITLE_MANY_PARAMETER_KEY, data.getBeanName(), producerCount);
     }
-    return resources.getResourceString(getClass(), TITLE_MANY_KEY, producerCount);
+    return producerCount == 1
+      ? resources.getResourceString(getClass(), TITLE_KEY)
+      : resources.getResourceString(getClass(), TITLE_MANY_KEY, producerCount);
   }
 
   /**
@@ -192,18 +209,26 @@ public class InjectionPointCodeLensSupplier
     boolean collection;
 
     /**
+     * Признак точки внедрения на параметре конструктора (в заголовок линзы включается имя
+     * желудя — линзы параметров рендерятся стопкой над строкой конструктора).
+     */
+    boolean parameter;
+
+    /**
      * Конструктор данных линзы точки внедрения.
      *
      * @param uri        URI документа.
      * @param id         Идентификатор поставщика линз.
      * @param beanName   Имя внедряемого желудя.
      * @param collection Признак внедрения прилепляемой коллекции.
+     * @param parameter  Признак точки внедрения на параметре конструктора.
      */
-    @ConstructorProperties({"uri", "id", "beanName", "collection"})
-    public InjectionPointCodeLensData(URI uri, String id, String beanName, boolean collection) {
+    @ConstructorProperties({"uri", "id", "beanName", "collection", "parameter"})
+    public InjectionPointCodeLensData(URI uri, String id, String beanName, boolean collection, boolean parameter) {
       super(uri, id);
       this.beanName = beanName;
       this.collection = collection;
+      this.parameter = parameter;
     }
   }
 }

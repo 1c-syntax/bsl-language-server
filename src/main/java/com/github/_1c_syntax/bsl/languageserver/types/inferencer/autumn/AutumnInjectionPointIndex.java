@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
@@ -163,6 +164,11 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
         indexInjection(uri, parameter.getAnnotations(), parameter.getName(), parameter.getRange())));
 
     for (var variable : symbolTree.getVariables()) {
+      // Только поля модуля: параметры конструктора уже проиндексированы выше (они дублируются в
+      // переменных с kind=PARAMETER и теми же аннотациями) — иначе точка считалась бы дважды.
+      if (variable.getKind() != VariableKind.MODULE) {
+        continue;
+      }
       indexInjection(uri, variable.getAnnotations(), variable.getName(), variable.getVariableNameRange());
     }
   }

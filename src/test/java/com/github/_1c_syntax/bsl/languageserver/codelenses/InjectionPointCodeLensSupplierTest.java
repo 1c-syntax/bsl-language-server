@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
@@ -46,6 +47,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -60,6 +62,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -115,6 +118,7 @@ class InjectionPointCodeLensSupplierTest {
       var data = (InjectionPointCodeLensSupplier.InjectionPointCodeLensData) codeLens.getData();
       assertThat(data.getBeanName()).isEqualTo("Лог");
       assertThat(data.isCollection()).isFalse();
+      assertThat(data.isParameter()).isFalse();
     });
   }
 
@@ -137,8 +141,11 @@ class InjectionPointCodeLensSupplierTest {
     var codeLenses = supplier.getCodeLenses(documentContext);
 
     // then
-    assertThat(codeLenses).singleElement().satisfies(codeLens ->
-      assertThat(codeLens.getRange()).isEqualTo(MEMBER_RANGE));
+    assertThat(codeLenses).singleElement().satisfies(codeLens -> {
+      assertThat(codeLens.getRange()).isEqualTo(MEMBER_RANGE);
+      var data = (InjectionPointCodeLensSupplier.InjectionPointCodeLensData) codeLens.getData();
+      assertThat(data.isParameter()).isTrue();
+    });
   }
 
   @Test
@@ -274,6 +281,7 @@ class InjectionPointCodeLensSupplierTest {
     when(field.getName()).thenReturn(name);
     when(field.getAnnotations()).thenReturn(List.of());
     when(field.getVariableNameRange()).thenReturn(nameRange);
+    when(field.getKind()).thenReturn(VariableKind.MODULE);
     return field;
   }
 
@@ -282,10 +290,57 @@ class InjectionPointCodeLensSupplierTest {
       new TypeRef(TypeKind.USER, "Лог"), false, sourceUri, "ПриСозданииОбъекта", true);
   }
 
+  @Test
+  void skipsParameterKindVariableDuplicate() {
+    // given: параметр конструктора дублируется среди переменных (kind=PARAMETER,
+    // VariableSymbolComputer) — вторая линза по дубликату не строится
+    var supplier = supplier();
+    var constructor = mock(ConstructorSymbol.class);
+    var parameter = ParameterDefinition.builder()
+      .name("лог")
+      .annotations(List.of())
+      .range(MEMBER_RANGE)
+      .build();
+    when(constructor.getParameters()).thenReturn(List.of(parameter));
+    when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
+    var parameterVariable = injectionField("лог", range(9));
+    when(parameterVariable.getKind()).thenReturn(VariableKind.PARAMETER);
+    when(symbolTree.getVariables()).thenReturn(List.of(parameterVariable));
+    when(componentInferencer.injectedBean(anyList(), eq("лог"))).thenReturn(injection("Лог"));
+    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+
+    // when / then: одна линза — по параметру конструктора
+    assertThat(supplier.getCodeLenses(documentContext)).hasSize(1);
+  }
+
+  @Test
+  void resolveParameterLensIncludesBeanNameInTitle() {
+    // given: линзы параметров рендерятся стопкой над конструктором — в заголовке нужно имя желудя
+    var supplier = supplier();
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    stubProducerConstructor();
+    var command = new Command("title", "command", List.of());
+    when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
+      .thenReturn(command);
+    var unresolved = new CodeLens(MEMBER_RANGE);
+    unresolved.setData(new InjectionPointCodeLensSupplier.InjectionPointCodeLensData(
+      CONSUMER_URI, "injectionPoint", "Лог", false, true));
+
+    // when
+    supplier.resolve(documentContext, unresolved, dataOf(unresolved));
+
+    // then
+    var titleCaptor = ArgumentCaptor.forClass(String.class);
+    verify(navigationCommandBuilder)
+      .gotoCommand(titleCaptor.capture(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList());
+    assertThat(titleCaptor.getValue()).contains("Лог");
+  }
+
   private CodeLens unresolvedLens(String beanName, boolean collection) {
     var codeLens = new CodeLens(MEMBER_RANGE);
     codeLens.setData(new InjectionPointCodeLensSupplier.InjectionPointCodeLensData(
-      CONSUMER_URI, "injectionPoint", beanName, collection));
+      CONSUMER_URI, "injectionPoint", beanName, collection, false));
     return codeLens;
   }
 
