@@ -107,11 +107,6 @@ public class AutumnCollectionIndex extends AbstractAutumnLibraryIndex {
     var symbolTree = document.getSymbolTree();
     symbolTree.getConstructor().ifPresent(constructor -> {
       var annotations = constructor.getAnnotations();
-      // Класс-определение пользовательской аннотации ({@code &Аннотация("Имя")}) —
-      // не реализация коллекции, его аннотации нужны лишь для разворачивания мета.
-      if (AutumnAnnotations.find(annotations, AutumnAnnotations.ANNOTATION_MARKER).isPresent()) {
-        return;
-      }
       metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.ATTACHABLE_COLLECTION)
         .flatMap(annotation -> metaAnnotationResolver
           .roleValues(annotation, AutumnAnnotations.ATTACHABLE_COLLECTION).stream()

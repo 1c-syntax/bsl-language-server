@@ -82,6 +82,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   private final Map<String, Set<BeanDefinition>> beansByName = new ConcurrentHashMap<>();
   /** URI .os-файла → имена, под которыми он зарегистрировал кандидатов (для точечного удаления). */
   private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
+
   public AutumnBeanIndex(OScriptLibraryIndex libraryIndex,
                          ServerContextProvider serverContextProvider,
                          TypeRegistry typeRegistry,
@@ -168,26 +169,12 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   }
 
   /**
-   * Имена и прозвища желудей, зарегистрированные из указанного .os-файла.
-   * <p>
-   * Для обратной линзы: какие желуди объявляет этот документ-производитель — по ним ищутся
-   * точки внедрения.
-   *
-   * @param uri URI .os-файла.
-   * @return Имена желудей (lowercase) этого файла; пусто, если файл желудей не объявляет.
-   */
-  public Set<String> namesForUri(URI uri) {
-    ensureBuilt();
-    var names = namesByUri.get(uri);
-    return names == null ? Set.of() : Set.copyOf(names);
-  }
-
-  /**
    * Фабричные желуди ({@code &Завязь}), объявленные в указанном файле, сгруппированные по
    * фабричному методу: имя метода → имена/прозвища производимого им желудя.
    * <p>
    * Для обратной линзы: над каждым методом {@code &Завязь} показываются точки внедрения именно
-   * его желудя — отдельно от агрегатной линзы на конструкторе.
+   * его желудя — отдельно от линзы компонентного желудя на конструкторе
+   * (см. {@link #componentBeanNamesForUri(URI)}).
    *
    * @param uri URI .os-файла.
    * @return группы «фабричный метод → имена желудя»; пусто, если фабричных желудей в файле нет.
@@ -292,11 +279,6 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     // Аннотации компонента (&Желудь/&Дуб) размещаются исключительно над конструктором.
     symbolTree.getConstructor().ifPresent(constructor -> {
       var constructorAnnotations = constructor.getAnnotations();
-      // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не желудь:
-      // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
-      if (AutumnAnnotations.find(constructorAnnotations, AutumnAnnotations.ANNOTATION_MARKER).isPresent()) {
-        return;
-      }
       for (var entry : classEntries) {
         typeRegistry.resolve(entry.qualifiedName()).ifPresent(ownerType ->
           registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri, constructor.getName()));

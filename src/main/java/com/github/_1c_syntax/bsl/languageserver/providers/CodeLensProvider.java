@@ -29,13 +29,13 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.jspecify.annotations.Nullable;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensWorkspaceCapabilities;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

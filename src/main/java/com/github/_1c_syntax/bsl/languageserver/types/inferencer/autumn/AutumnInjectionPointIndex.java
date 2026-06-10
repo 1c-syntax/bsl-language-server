@@ -156,9 +156,6 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
 
   @Override
   protected void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
-    if (isAnnotationDefinition(document)) {
-      return;
-    }
     var symbolTree = document.getSymbolTree();
 
     symbolTree.getConstructor().ifPresent(constructor ->

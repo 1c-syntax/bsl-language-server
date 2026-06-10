@@ -146,7 +146,7 @@ abstract class AbstractAutumnLibraryIndex {
    * @param document Контекст документа .os-класса.
    * @return {@code true}, если класс — определение пользовательской аннотации.
    */
-  protected static boolean isAnnotationDefinition(DocumentContext document) {
+  private static boolean isAnnotationDefinition(DocumentContext document) {
     return document.getSymbolTree().getConstructor()
       .map(constructor ->
         AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
@@ -170,6 +170,9 @@ abstract class AbstractAutumnLibraryIndex {
     }
     serverContextProvider.getServerContext(uri)
       .map(serverContext -> serverContext.getDocument(uri))
+      // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не предметный класс:
+      // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
+      .filter(document -> !isAnnotationDefinition(document))
       .ifPresent(document -> indexClass(document, classEntries, uri));
   }
 
@@ -177,7 +180,8 @@ abstract class AbstractAutumnLibraryIndex {
   protected abstract void clearIndex();
 
   /**
-   * Проиндексировать .os-класс по указанному URI.
+   * Проиндексировать .os-класс по указанному URI. Классы-определения аннотаций сюда
+   * не попадают — они отфильтрованы общей обвязкой.
    *
    * @param document     Контекст документа класса.
    * @param classEntries Записи-классы этого файла из {@link OScriptLibraryIndex} (одно имя файла
