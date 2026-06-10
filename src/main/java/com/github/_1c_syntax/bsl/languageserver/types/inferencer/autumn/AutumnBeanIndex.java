@@ -22,33 +22,25 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс желудей фреймворка «ОСень»: отображение «имя/прозвище желудя → тип».
@@ -78,34 +70,47 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @Component
 @WorkspaceScope
-@RequiredArgsConstructor
-public class AutumnBeanIndex {
+public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
 
   /** Роли, под которыми класс является желудём (имя берётся с этой роль-аннотации). */
   private static final List<String> COMPONENT_ROLES = List.of(AutumnAnnotations.COMPONENT, AutumnAnnotations.OAK);
 
-  private final OScriptLibraryIndex libraryIndex;
-  private final ServerContextProvider serverContextProvider;
   private final TypeRegistry typeRegistry;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   /** Имя/прозвище желудя (lowercase) → кандидаты. Значения — конкурентные множества (как в Repository). */
-  private final Map<String, Set<BeanCandidate>> beansByName = new ConcurrentHashMap<>();
+  private final Map<String, Set<BeanDefinition>> beansByName = new ConcurrentHashMap<>();
   /** URI .os-файла → имена, под которыми он зарегистрировал кандидатов (для точечного удаления). */
   private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
-  /**
-   * Барьер первичной сборки: завершённый future — индекс построен; {@code null} —
-   * не построен (соберётся лениво). Сборка ленивая и происходит после полной
-   * индексации, когда {@code AnnotationRepository} целостен — поэтому порядок
-   * индексации компонента и класса-определения аннотации не важен.
-   */
-  private final AtomicReference<CompletableFuture<Void>> ready = new AtomicReference<>();
+
+  public AutumnBeanIndex(OScriptLibraryIndex libraryIndex,
+                         ServerContextProvider serverContextProvider,
+                         TypeRegistry typeRegistry,
+                         AutumnMetaAnnotationResolver metaAnnotationResolver) {
+    super(libraryIndex, serverContextProvider);
+    this.typeRegistry = typeRegistry;
+    this.metaAnnotationResolver = metaAnnotationResolver;
+  }
 
   /**
-   * Кандидат-желудь: тип компонента, признак приоритетного ({@code &Верховный})
-   * и URI .os-файла, из которого он зарегистрирован.
+   * Объявление производителя желудя для навигации — зеркало autumn-{@code Завязь}: у каждого
+   * желудя есть метод-производитель (конструктор или {@code &Завязь}), различаемые флагом.
+   *
+   * @param type               Тип производимого желудя.
+   * @param primary            Признак приоритетного желудя ({@code &Верховный}).
+   * @param sourceUri          URI .os-файла с объявлением производителя.
+   * @param producerMethodName Имя метода-производителя: конструктора ({@code ПриСозданииОбъекта})
+   *                           для компонентного желудя либо метода {@code &Завязь} для фабричного.
+   * @param isConstructor      {@code true}, если производитель — конструктор класса (компонентный
+   *                           желудь {@code &Желудь}/{@code &Дуб}); {@code false} — метод {@code &Завязь}.
    */
-  private record BeanCandidate(TypeRef type, boolean primary, URI sourceUri) {
+  public record BeanDefinition(
+    TypeRef type,
+    boolean primary,
+    URI sourceUri,
+    String producerMethodName,
+    boolean isConstructor
+  ) {
   }
 
   /**
@@ -120,100 +125,142 @@ public class AutumnBeanIndex {
       return TypeSet.EMPTY;
     }
     ensureBuilt();
-    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
-    if (candidates == null || candidates.isEmpty()) {
+    var selected = selectCandidates(name);
+    if (selected.isEmpty()) {
       return TypeSet.EMPTY;
     }
-
     var refs = new LinkedHashSet<TypeRef>();
-    for (var candidate : candidates) {
-      if (candidate.primary()) {
-        refs.add(candidate.type());
-      }
-    }
-    if (refs.isEmpty()) {
-      for (var candidate : candidates) {
-        refs.add(candidate.type());
-      }
+    for (var candidate : selected) {
+      refs.add(candidate.type());
     }
     return TypeSet.of(refs);
   }
 
   /**
-   * Полный сброс индекса — будет перестроен лениво при следующем обращении.
-   * Реакция на переиндексацию библиотек (мог измениться состав классов).
+   * Разрешить объявления производителей желудя по его имени или прозвищу — для навигации к
+   * месту объявления (конструктор класса-компонента или фабричный метод {@code &Завязь}).
+   *
+   * @param name Имя или прозвище желудя.
+   * @return Объявления производителей; при конфликте имён предпочитаются помеченные
+   *         {@code &Верховный}, иначе возвращаются все кандидаты. Пусто, если желудь не найден.
    */
-  @EventListener(OScriptLibraryIndexedEvent.class)
-  public void invalidate() {
-    ready.set(null);
+  public List<BeanDefinition> resolveDefinitions(String name) {
+    if (name.isBlank()) {
+      return List.of();
+    }
+    ensureBuilt();
+    return selectCandidates(name);
   }
 
   /**
-   * Обновить индекс при правке .os-документа. Обычный класс обновляется точечно
-   * (удаление его прежнего вклада + переиндексация только его). Класс-определение
-   * аннотации ({@code &Аннотация}) затрагивает роли в чужих классах — такой
-   * случай сбрасывает индекс на полную ленивую пересборку. До первой сборки или
-   * для .bsl — ничего не делаем.
+   * Разрешить объявления ВСЕХ производителей, подходящих под имя/прозвище, — без приоритета
+   * {@code &Верховный}. Для навигации к членам прилепляемой коллекции, которой по контракту
+   * нужны все подходящие желуди, а не один.
+   *
+   * @param name Имя или прозвище (квалификатор) желудя.
+   * @return Объявления всех производителей под этим именем; пусто, если их нет.
    */
-  @EventListener
-  public void handleDocumentChange(DocumentContextContentChangedEvent event) {
-    var document = event.getSource();
-    if (document.getFileType() != FileType.OS || ready.get() == null) {
-      return;
+  public List<BeanDefinition> resolveAllDefinitions(String name) {
+    if (name.isBlank()) {
+      return List.of();
     }
-    if (isAnnotationDefinition(document)) {
-      ready.set(null);
-      return;
-    }
-    var uri = document.getUri();
-    removeByUri(uri);
-    indexDocument(uri);
+    ensureBuilt();
+    return candidatesFor(name);
   }
 
-  /** Удалить вклад удалённого .os-документа. */
-  @EventListener
-  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    if (ready.get() == null) {
-      return;
+  /**
+   * Фабричные желуди ({@code &Завязь}), объявленные в указанном файле, сгруппированные по
+   * фабричному методу: имя метода → имена/прозвища производимого им желудя.
+   * <p>
+   * Для обратной линзы: над каждым методом {@code &Завязь} показываются точки внедрения именно
+   * его желудя — отдельно от линзы компонентного желудя на конструкторе
+   * (см. {@link #componentBeanNamesForUri(URI)}).
+   *
+   * @param uri URI .os-файла.
+   * @return группы «фабричный метод → имена желудя»; пусто, если фабричных желудей в файле нет.
+   */
+  public List<FactoryMethodBean> factoryMethodBeansForUri(URI uri) {
+    ensureBuilt();
+    var names = namesByUri.get(uri);
+    if (names == null) {
+      return List.of();
     }
-    removeByUri(event.getUri());
-  }
-
-  /** Гарантировать, что индекс собран; сборка выполняется ровно один раз. */
-  private void ensureBuilt() {
-    while (true) {
-      var done = ready.get();
-      if (done != null) {
-        done.join();
-        return;
-      }
-      var fresh = new CompletableFuture<Void>();
-      if (ready.compareAndSet(null, fresh)) {
-        try {
-          rebuild();
-          fresh.complete(null);
-        } catch (RuntimeException e) {
-          ready.compareAndSet(fresh, null);
-          fresh.completeExceptionally(e);
-          throw e;
+    Map<String, Set<String>> namesByMethod = new LinkedHashMap<>();
+    for (var name : names) {
+      for (var candidate : beansByName.getOrDefault(name, Set.of())) {
+        if (uri.equals(candidate.sourceUri()) && !candidate.isConstructor()) {
+          namesByMethod.computeIfAbsent(candidate.producerMethodName(), key -> new LinkedHashSet<>()).add(name);
         }
-        return;
       }
-      // Другой поток уже строит — повторим и присоединимся к его future.
     }
+    return namesByMethod.entrySet().stream()
+      .map(entry -> new FactoryMethodBean(entry.getKey(), Set.copyOf(entry.getValue())))
+      .toList();
   }
 
-  private void rebuild() {
+  /**
+   * Фабричный желудь файла для обратной линзы: метод {@code &Завязь} и имена производимого желудя.
+   *
+   * @param factoryMethodName Имя фабричного метода {@code &Завязь}.
+   * @param beanNames         Имена/прозвища производимого желудя (ключи поиска точек внедрения).
+   */
+  public record FactoryMethodBean(String factoryMethodName, Set<String> beanNames) {
+  }
+
+  /**
+   * Имена/прозвища компонентного желудя ({@code &Желудь}/{@code &Дуб}), объявленного в указанном
+   * файле, — производитель которого его конструктор.
+   * <p>
+   * Для обратной линзы на конструкторе: фабричные желуди ({@code &Завязь}) сюда не входят — у них
+   * собственные линзы на методах (см. {@link #factoryMethodBeansForUri(URI)}).
+   *
+   * @param uri URI .os-файла.
+   * @return имена компонентного желудя файла (lowercase); пусто, если компонентного желудя нет.
+   */
+  public Set<String> componentBeanNamesForUri(URI uri) {
+    ensureBuilt();
+    var names = namesByUri.get(uri);
+    if (names == null) {
+      return Set.of();
+    }
+    var result = new LinkedHashSet<String>();
+    for (var name : names) {
+      for (var candidate : beansByName.getOrDefault(name, Set.of())) {
+        if (uri.equals(candidate.sourceUri()) && candidate.isConstructor()) {
+          result.add(name);
+        }
+      }
+    }
+    return Set.copyOf(result);
+  }
+
+  /** Все объявления, зарегистрированные под именем/прозвищем (lowercase), либо пустой список. */
+  private List<BeanDefinition> candidatesFor(String name) {
+    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
+    return candidates == null || candidates.isEmpty() ? List.of() : List.copyOf(candidates);
+  }
+
+  /**
+   * Выбрать объявления по имени с учётом приоритета {@code &Верховный}: при наличии хотя бы
+   * одного приоритетного возвращаются только приоритетные, иначе — все объявления имени.
+   */
+  private List<BeanDefinition> selectCandidates(String name) {
+    var candidates = candidatesFor(name);
+    var primaryCandidates = candidates.stream()
+      .filter(BeanDefinition::primary)
+      .toList();
+    return primaryCandidates.isEmpty() ? candidates : primaryCandidates;
+  }
+
+  @Override
+  protected void clearIndex() {
     beansByName.clear();
     namesByUri.clear();
-    libraryIndex.findEntries(EntryKind.CLASS).stream()
-      .map(LibraryEntry::uri)
-      .distinct()
-      .forEach(this::indexDocument);
   }
 
   /** Удалить из индекса все кандидаты, зарегистрированные из указанного .os-файла. */
-  private void removeByUri(URI uri) {
+  @Override
+  protected void removeByUri(URI uri) {
     var names = namesByUri.remove(uri);
     if (names == null) {
       return;
@@ -226,40 +273,15 @@ public class AutumnBeanIndex {
     }
   }
 
-  /** Несёт ли конструктор класса маркер {@code &Аннотация} (класс-определение пользовательской аннотации). */
-  private static boolean isAnnotationDefinition(DocumentContext document) {
-    return document.getSymbolTree().getConstructor()
-      .map(constructor ->
-        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
-      .orElse(false);
-  }
-
-  /** Проиндексировать желуди и фабрики, объявленные в .os-классе по указанному URI. */
-  private void indexDocument(URI uri) {
-    var classEntries = libraryIndex.findEntriesByUri(uri).stream()
-      .filter(entry -> entry.kind() == EntryKind.CLASS)
-      .toList();
-    if (classEntries.isEmpty()) {
-      return;
-    }
-    serverContextProvider.getServerContext(uri)
-      .map(serverContext -> serverContext.getDocument(uri))
-      .ifPresent(document -> indexClass(document, classEntries, uri));
-  }
-
-  private void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
+  @Override
+  protected void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
     var symbolTree = document.getSymbolTree();
     // Аннотации компонента (&Желудь/&Дуб) размещаются исключительно над конструктором.
     symbolTree.getConstructor().ifPresent(constructor -> {
       var constructorAnnotations = constructor.getAnnotations();
-      // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не желудь:
-      // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
-      if (AutumnAnnotations.find(constructorAnnotations, AutumnAnnotations.ANNOTATION_MARKER).isPresent()) {
-        return;
-      }
       for (var entry : classEntries) {
         typeRegistry.resolve(entry.qualifiedName()).ifPresent(ownerType ->
-          registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri));
+          registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri, constructor.getName()));
       }
       // &Завязь размещается над методом и допустима только в классе-дубе.
       if (metaAnnotationResolver.hasRole(constructorAnnotations, AutumnAnnotations.OAK)) {
@@ -270,7 +292,8 @@ public class AutumnBeanIndex {
     });
   }
 
-  private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri) {
+  private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri,
+                                 String constructorName) {
     // &Желудь либо &Дуб: класс является желудём (дуб сам по себе тоже желудь).
     COMPONENT_ROLES.stream()
       .flatMap(role -> metaAnnotationResolver.findByRole(annotations, role).stream()
@@ -283,7 +306,7 @@ public class AutumnBeanIndex {
         var name = metaAnnotationResolver.roleValues(match.getValue(), match.getKey()).stream()
           .findFirst()
           .orElse(defaultName);
-        register(annotations, name, ownerType, uri);
+        register(annotations, name, ownerType, uri, constructorName, true);
       });
   }
 
@@ -302,13 +325,15 @@ public class AutumnBeanIndex {
         .findFirst()
         .orElse(method.getName());
       typeRegistry.resolve(typeName)
-        .ifPresent(beanType -> register(annotations, name, beanType, uri));
+        .ifPresent(beanType ->
+          register(annotations, name, beanType, uri, method.getName(), false));
     });
   }
 
-  private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri) {
+  private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri,
+                        String producerMethodName, boolean isConstructor) {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
-    var candidate = new BeanCandidate(type, primary, uri);
+    var candidate = new BeanDefinition(type, primary, uri, producerMethodName, isConstructor);
 
     addCandidate(uri, primaryName, candidate);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {
@@ -316,7 +341,7 @@ public class AutumnBeanIndex {
     }
   }
 
-  private void addCandidate(URI uri, String name, BeanCandidate candidate) {
+  private void addCandidate(URI uri, String name, BeanDefinition candidate) {
     var key = name.toLowerCase(Locale.ROOT);
     beansByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(candidate);
     namesByUri.computeIfAbsent(uri, u -> ConcurrentHashMap.newKeySet()).add(key);

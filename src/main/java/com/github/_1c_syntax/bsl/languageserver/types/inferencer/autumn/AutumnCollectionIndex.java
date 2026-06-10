@@ -22,22 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndexedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -47,9 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс прилепляемых коллекций фреймворка «ОСень» (autumn-collections):
@@ -65,38 +57,33 @@ import java.util.concurrent.atomic.AtomicReference;
  * {@link TypeSet#EMPTY} — вызывающая сторона должна сделать фоллбэк (например,
  * прямой резолв имени коллекции через {@link TypeRegistry}).
  * <p>
- * Lifecycle и стратегия инвалидации скопированы с {@link AutumnBeanIndex}:
- * lock-free снимок на {@link ConcurrentHashMap}, ленивая первичная сборка,
- * точечное обновление при правке отдельного .os-документа и полный сброс на
- * переиндексацию библиотек или изменение класса-определения пользовательской
- * аннотации.
+ * Lifecycle ленивой сборки и инвалидации — в {@link AbstractAutumnLibraryIndex}.
  */
 @Component
 @WorkspaceScope
-@RequiredArgsConstructor
-public class AutumnCollectionIndex {
+public class AutumnCollectionIndex extends AbstractAutumnLibraryIndex {
 
-  private final OScriptLibraryIndex libraryIndex;
-  private final ServerContextProvider serverContextProvider;
   private final TypeRegistry typeRegistry;
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   /** Имя коллекции (lowercase) → типы её {@code Получить()}. */
   private final Map<String, TypeSet> typesByName = new ConcurrentHashMap<>();
-  /** URI .os-файла → имена коллекций, зарегистрированные из него (для точечного удаления). */
+  /** URI .os-файла → имя коллекции, зарегистрированное из него (для точечного удаления). */
   private final Map<URI, String> nameByUri = new ConcurrentHashMap<>();
-  /**
-   * Барьер первичной сборки: завершённый future — индекс построен; {@code null} —
-   * не построен (соберётся лениво). Аналогично {@link AutumnBeanIndex}, сборка
-   * ленива и зависит от полностью индексированного {@code AnnotationRepository},
-   * поэтому порядок индексации классов коллекций и класса-определения аннотации
-   * не важен.
-   */
-  private final AtomicReference<CompletableFuture<Void>> ready = new AtomicReference<>();
+
+  public AutumnCollectionIndex(OScriptLibraryIndex libraryIndex,
+                               ServerContextProvider serverContextProvider,
+                               TypeRegistry typeRegistry,
+                               AutumnMetaAnnotationResolver metaAnnotationResolver) {
+    super(libraryIndex, serverContextProvider);
+    this.typeRegistry = typeRegistry;
+    this.metaAnnotationResolver = metaAnnotationResolver;
+  }
 
   /**
    * Разрешить тип прилепляемой коллекции по её имени.
    *
+   * @param collectionName Имя прилепляемой коллекции.
    * @return типы возвращаемого значения метода {@code Получить()}, описанные в
    *         bsldoc; пусто — если коллекции с таким именем нет либо её
    *         {@code Получить()} не описывает возвращаемый тип.
@@ -109,116 +96,17 @@ public class AutumnCollectionIndex {
     return typesByName.getOrDefault(collectionName.toLowerCase(Locale.ROOT), TypeSet.EMPTY);
   }
 
-  /**
-   * Полный сброс индекса — будет перестроен лениво при следующем обращении.
-   * Реакция на переиндексацию библиотек (мог измениться состав классов).
-   */
-  @EventListener(OScriptLibraryIndexedEvent.class)
-  public void invalidate() {
-    ready.set(null);
-  }
-
-  /**
-   * Обновить индекс при правке .os-документа. Обычный класс обновляется точечно
-   * (удаление его прежнего вклада + переиндексация только его). Класс-определение
-   * пользовательской аннотации ({@code &Аннотация}) затрагивает резолв ролей в
-   * чужих классах — такой случай сбрасывает индекс на полную ленивую пересборку.
-   * До первой сборки или для .bsl — ничего не делаем.
-   */
-  @EventListener
-  public void handleDocumentChange(DocumentContextContentChangedEvent event) {
-    var document = event.getSource();
-    if (document.getFileType() != FileType.OS || ready.get() == null) {
-      return;
-    }
-    if (isAnnotationDefinition(document)) {
-      ready.set(null);
-      return;
-    }
-    var uri = document.getUri();
-    removeByUri(uri);
-    indexDocument(uri);
-  }
-
-  /** Удалить вклад удалённого .os-документа. */
-  @EventListener
-  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    if (ready.get() == null) {
-      return;
-    }
-    removeByUri(event.getUri());
-  }
-
-  /** Гарантировать, что индекс собран; сборка выполняется ровно один раз. */
-  private void ensureBuilt() {
-    while (true) {
-      var done = ready.get();
-      if (done != null) {
-        done.join();
-        return;
-      }
-      var fresh = new CompletableFuture<Void>();
-      if (ready.compareAndSet(null, fresh)) {
-        try {
-          rebuild();
-          fresh.complete(null);
-        } catch (RuntimeException e) {
-          ready.compareAndSet(fresh, null);
-          fresh.completeExceptionally(e);
-          throw e;
-        }
-        return;
-      }
-      // Другой поток уже строит — повторим и присоединимся к его future.
-    }
-  }
-
-  private void rebuild() {
+  @Override
+  protected void clearIndex() {
     typesByName.clear();
     nameByUri.clear();
-    libraryIndex.findEntries(EntryKind.CLASS).stream()
-      .map(OScriptLibraryIndex.LibraryEntry::uri)
-      .distinct()
-      .forEach(this::indexDocument);
   }
 
-  /** Удалить из индекса вклад указанного .os-файла. */
-  private void removeByUri(URI uri) {
-    var name = nameByUri.remove(uri);
-    if (name != null) {
-      typesByName.remove(name);
-    }
-  }
-
-  /** Несёт ли конструктор класса маркер {@code &Аннотация} (класс-определение пользовательской аннотации). */
-  private static boolean isAnnotationDefinition(DocumentContext document) {
-    return document.getSymbolTree().getConstructor()
-      .map(constructor ->
-        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
-      .orElse(false);
-  }
-
-  /** Проиндексировать прилепляемую коллекцию, если .os-класс — её реализация. */
-  private void indexDocument(URI uri) {
-    var hasClassEntry = libraryIndex.findEntriesByUri(uri).stream()
-      .anyMatch(entry -> entry.kind() == EntryKind.CLASS);
-    if (!hasClassEntry) {
-      return;
-    }
-    serverContextProvider.getServerContext(uri)
-      .map(serverContext -> serverContext.getDocument(uri))
-      .ifPresent(document -> indexClass(document, uri));
-  }
-
-  private void indexClass(DocumentContext document, URI uri) {
+  @Override
+  protected void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
     var symbolTree = document.getSymbolTree();
     symbolTree.getConstructor().ifPresent(constructor -> {
       var annotations = constructor.getAnnotations();
-      // Класс-определение пользовательской аннотации ({@code &Аннотация("Имя")}) —
-      // не реализация коллекции, его аннотации нужны лишь для разворачивания мета.
-      if (AutumnAnnotations.find(annotations, AutumnAnnotations.ANNOTATION_MARKER).isPresent()) {
-        return;
-      }
       metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.ATTACHABLE_COLLECTION)
         .flatMap(annotation -> metaAnnotationResolver
           .roleValues(annotation, AutumnAnnotations.ATTACHABLE_COLLECTION).stream()
@@ -228,6 +116,14 @@ public class AutumnCollectionIndex {
           .map(types -> Map.entry(name, types)))
         .ifPresent(entry -> register(uri, entry.getKey(), entry.getValue()));
     });
+  }
+
+  @Override
+  protected void removeByUri(URI uri) {
+    var name = nameByUri.remove(uri);
+    if (name != null) {
+      typesByName.remove(name);
+    }
   }
 
   /**

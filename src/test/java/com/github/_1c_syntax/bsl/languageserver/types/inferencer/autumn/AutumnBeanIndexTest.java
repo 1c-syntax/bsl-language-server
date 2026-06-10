@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -234,6 +235,63 @@ class AutumnBeanIndexTest {
   }
 
   @Test
+  void factoryMethodBeansForUriReturnsMethodsOfFile() {
+    // given: метод &Завязь "СоздатьСписок" объявляет желудь "СписокЖелудей"
+    when(typeRegistry.resolve("Массив")).thenReturn(Optional.of(new TypeRef(TypeKind.PLATFORM, "Массив")));
+    registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
+      method(oak()), namedMethod("СоздатьСписок", factory("СписокЖелудей", "Массив")));
+    init();
+
+    // when
+    var factoryBeans = beanIndex.factoryMethodBeansForUri(Absolute.uri("file:///beans/Фабрика.os"));
+
+    // then: метод &Завязь и имя (lowercase) производимого им желудя
+    assertThat(factoryBeans).singleElement().satisfies(factoryMethod -> {
+      assertThat(factoryMethod.factoryMethodName()).isEqualTo("СоздатьСписок");
+      assertThat(factoryMethod.beanNames()).containsExactly("списокжелудей");
+    });
+  }
+
+  @Test
+  void factoryMethodBeansForUriEmptyForComponentOnlyFile() {
+    // given: класс-компонент без фабричных методов &Завязь
+    registerClass("Логгер", new TypeRef(TypeKind.USER, "Логгер"), method(component(null)));
+    init();
+
+    // when / then
+    assertThat(beanIndex.factoryMethodBeansForUri(Absolute.uri("file:///beans/Логгер.os"))).isEmpty();
+  }
+
+  @Test
+  void componentBeanNamesForUriReturnsComponentNamesWithQualifier() {
+    // given: компонент с прозвищем — оба имени принадлежат конструктору-производителю
+    registerClass("Логгер", new TypeRef(TypeKind.USER, "Логгер"),
+      method(component("Лог"), qualifier("ОсновнойЛог")));
+    init();
+
+    // when
+    var names = beanIndex.componentBeanNamesForUri(Absolute.uri("file:///beans/Логгер.os"));
+
+    // then
+    assertThat(names).containsExactlyInAnyOrder("лог", "основнойлог");
+  }
+
+  @Test
+  void componentBeanNamesForUriExcludesFactoryBeans() {
+    // given: дуб с фабричным методом — имя фабричного желудя не входит в компонентные имена
+    when(typeRegistry.resolve("Массив")).thenReturn(Optional.of(new TypeRef(TypeKind.PLATFORM, "Массив")));
+    registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
+      method(oak()), namedMethod("СоздатьСписок", factory("СписокЖелудей", "Массив")));
+    init();
+
+    // when
+    var names = beanIndex.componentBeanNamesForUri(Absolute.uri("file:///beans/Фабрика.os"));
+
+    // then: компонентный желудь — сам дуб (по имени класса), фабричный "списокжелудей" исключён
+    assertThat(names).containsExactly("фабрика");
+  }
+
+  @Test
   void skipsFactoryWhenTypeIsExplicitlyBlank() {
     // given: явный Тип="" — в autumn Тип("") это ошибка, валидного типа нет. Резолв имени
     // метода застаблен в тип: если бы код ошибочно фолбэчил пустой Тип на имя метода,
@@ -262,7 +320,7 @@ class AutumnBeanIndexTest {
   @Test
   void rebuildsContributionOfChangedDocument() {
     // given: фабрика регистрирует желудь "Старый"
-    var uri = URI.create("file:///beans/Фабрика.os");
+    var uri = Absolute.uri("file:///beans/Фабрика.os");
     var entry = new LibraryEntry(uri, "Фабрика", EntryKind.CLASS, "lib", false);
     entries.add(entry);
     when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
@@ -351,7 +409,7 @@ class AutumnBeanIndexTest {
     assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
 
     // when: изменён .os-документ, который зарегистрирован только как МОДУЛЬ (не класс)
-    var moduleUri = URI.create("file:///beans/Модуль.os");
+    var moduleUri = Absolute.uri("file:///beans/Модуль.os");
     when(libraryIndex.findEntriesByUri(moduleUri))
       .thenReturn(List.of(new LibraryEntry(moduleUri, "Модуль", EntryKind.MODULE, "lib", false)));
     var document = mock(DocumentContext.class);
@@ -368,10 +426,107 @@ class AutumnBeanIndexTest {
     assertThat(beanIndex.resolve("Логгер").refs()).containsExactly(type);
   }
 
+  @Test
+  void resolveDefinitionsReturnsComponentProducer() {
+    // given
+    var type = new TypeRef(TypeKind.USER, "Логгер");
+    registerClass("Логгер", type, method(component(null)));
+    init();
+
+    // when
+    var declarations = beanIndex.resolveDefinitions("Логгер");
+
+    // then
+    assertThat(declarations).singleElement().satisfies(declaration -> {
+      assertThat(declaration.type()).isEqualTo(type);
+      assertThat(declaration.isConstructor()).isTrue();
+      assertThat(declaration.producerMethodName()).isEqualTo("ПриСозданииОбъекта");
+      assertThat(declaration.primary()).isFalse();
+      assertThat(declaration.sourceUri()).isEqualTo(Absolute.uri("file:///beans/Логгер.os"));
+    });
+  }
+
+  @Test
+  void resolveDefinitionsReturnsFactoryProducerWithMethodName() {
+    // given
+    var type = new TypeRef(TypeKind.USER, "СоединениеСБазой");
+    when(typeRegistry.resolve("СоединениеСБазой")).thenReturn(Optional.of(type));
+    registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
+      method(oak()), namedMethod("СоединениеСБазой", factory(null, null)));
+    init();
+
+    // when
+    var declarations = beanIndex.resolveDefinitions("СоединениеСБазой");
+
+    // then
+    assertThat(declarations).singleElement().satisfies(declaration -> {
+      assertThat(declaration.type()).isEqualTo(type);
+      assertThat(declaration.isConstructor()).isFalse();
+      assertThat(declaration.producerMethodName()).isEqualTo("СоединениеСБазой");
+      assertThat(declaration.sourceUri()).isEqualTo(Absolute.uri("file:///beans/Фабрика.os"));
+    });
+  }
+
+  @Test
+  void resolveDefinitionsPrefersPrimaryOnConflict() {
+    // given
+    var sid = new TypeRef(TypeKind.USER, "СидВишес");
+    var johnny = new TypeRef(TypeKind.USER, "ДжонниРоттен");
+    registerClass("ДжонниРоттен", johnny, method(component(null), qualifier("Панк")));
+    registerClass("СидВишес", sid, method(component(null), primary(), qualifier("Панк")));
+    init();
+
+    // when
+    var declarations = beanIndex.resolveDefinitions("Панк");
+
+    // then
+    assertThat(declarations).singleElement().satisfies(declaration -> {
+      assertThat(declaration.type()).isEqualTo(sid);
+      assertThat(declaration.primary()).isTrue();
+    });
+  }
+
+  @Test
+  void resolveAllDefinitionsReturnsAllCandidatesWithoutPrimaryFilter() {
+    // given: два желудя под общим прозвищем «Панк», один помечен &Верховный
+    var sid = new TypeRef(TypeKind.USER, "СидВишес");
+    var johnny = new TypeRef(TypeKind.USER, "ДжонниРоттен");
+    registerClass("ДжонниРоттен", johnny, method(component(null), qualifier("Панк")));
+    registerClass("СидВишес", sid, method(component(null), primary(), qualifier("Панк")));
+    init();
+
+    // when: для членов коллекции нужны ВСЕ кандидаты, а не только приоритетный
+    var declarations = beanIndex.resolveAllDefinitions("Панк");
+
+    // then
+    assertThat(declarations).extracting(AutumnBeanIndex.BeanDefinition::type)
+      .containsExactlyInAnyOrder(sid, johnny);
+  }
+
+  @Test
+  void resolveAllDefinitionsReturnsEmptyForUnknownOrBlankName() {
+    // given
+    init();
+
+    // when / then
+    assertThat(beanIndex.resolveAllDefinitions("НетТакого")).isEmpty();
+    assertThat(beanIndex.resolveAllDefinitions("")).isEmpty();
+  }
+
+  @Test
+  void resolveDefinitionsReturnsEmptyForUnknownOrBlankName() {
+    // given
+    init();
+
+    // when / then
+    assertThat(beanIndex.resolveDefinitions("НетТакого")).isEmpty();
+    assertThat(beanIndex.resolveDefinitions("")).isEmpty();
+  }
+
   // --- helpers ---------------------------------------------------------------
 
   private URI registerEntry(String qualifiedName) {
-    var uri = URI.create("file:///beans/" + qualifiedName + ".os");
+    var uri = Absolute.uri("file:///beans/" + qualifiedName + ".os");
     var entry = new LibraryEntry(uri, qualifiedName, EntryKind.CLASS, "lib", false);
     entries.add(entry);
     when(libraryIndex.findEntriesByUri(uri)).thenReturn(List.of(entry));
@@ -405,6 +560,7 @@ class AutumnBeanIndexTest {
   private static ConstructorSymbol method(Annotation... annotations) {
     var constructor = mock(ConstructorSymbol.class);
     lenient().when(constructor.getAnnotations()).thenReturn(List.of(annotations));
+    lenient().when(constructor.getName()).thenReturn("ПриСозданииОбъекта");
     return constructor;
   }
 

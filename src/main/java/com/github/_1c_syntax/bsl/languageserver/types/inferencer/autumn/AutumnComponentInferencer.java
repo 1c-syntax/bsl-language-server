@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Вывод типа внедряемой зависимости фреймворка «ОСень» (Autumn).
@@ -80,6 +81,44 @@ public class AutumnComponentInferencer {
     return metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION)
       .map(injection -> injectedType(injection, fallbackName, fileType))
       .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Внедряемый желудь точки с аннотацией {@code &Пластилин} — для навигации к производителю.
+   * Имя желудя берётся из {@code Значение} (или первого позиционного), иначе — из имени
+   * переменной/параметра; параметр {@code Тип} с именем коллекции помечает внедрение
+   * прилепляемой коллекции (тогда целей навигации несколько — все подходящие желуди).
+   *
+   * @param annotations  аннотации поля/параметра
+   * @param fallbackName имя переменной/параметра — используется как имя желудя, если оно не
+   *                     задано в аннотации
+   * @return внедряемый желудь либо пусто, если это не точка внедрения, имя желудя пустое или
+   *         задан явно пустой {@code Тип=""} (в autumn — ошибка, точка не разрешается)
+   */
+  public Optional<InjectedBean> injectedBean(List<Annotation> annotations, String fallbackName) {
+    return metaAnnotationResolver.findByRole(annotations, AutumnAnnotations.INJECTION)
+      .flatMap(injection -> {
+        var name = beanName(injection, fallbackName);
+        var collectionName = collectionType(injection);
+        // Пустое имя желудя или явный Тип="" (не «Желудь» и не коллекция) — точка внедрения не
+        // разрешается, как и в inferInjectedType; иначе линза вела бы к ложным целям.
+        if (name.isBlank() || collectionName.isBlank()) {
+          return Optional.empty();
+        }
+        return Optional.of(new InjectedBean(
+          name,
+          !AutumnAnnotations.BEAN_TYPE.equalsIgnoreCase(collectionName)));
+      });
+  }
+
+  /**
+   * Внедряемый желудь: имя для резолва производителя и признак внедрения прилепляемой коллекции.
+   *
+   * @param name       Имя желудя (ключ резолва производителя/членов).
+   * @param collection {@code true}, если внедряется прилепляемая коллекция (нужны все подходящие
+   *                   желуди), иначе одиночный желудь.
+   */
+  public record InjectedBean(String name, boolean collection) {
   }
 
   private TypeSet injectedType(Annotation injection, String fallbackName, FileType fileType) {

@@ -248,6 +248,55 @@ class AutumnComponentInferencerTest {
     verifyNoInteractions(typeRegistry);
   }
 
+  @Test
+  void injectedBeanReturnsNameForPlainInjection() {
+    // given
+    var annotations = List.of(plasticine(positional("ИмяЖелудя")));
+
+    // when
+    var injectedBean = inferencer.injectedBean(annotations, "Поле");
+
+    // then
+    assertThat(injectedBean).hasValueSatisfying(bean -> {
+      assertThat(bean.name()).isEqualTo("ИмяЖелудя");
+      assertThat(bean.collection()).isFalse();
+    });
+  }
+
+  @Test
+  void injectedBeanFallsBackToMemberNameAndFlagsCollection() {
+    // given: имя желудя не задано -> имя члена; Тип=коллекция -> флаг коллекции
+    var annotations = List.of(plasticine(named("Тип", "Массив")));
+
+    // when
+    var injectedBean = inferencer.injectedBean(annotations, "Обработчики");
+
+    // then
+    assertThat(injectedBean).hasValueSatisfying(bean -> {
+      assertThat(bean.name()).isEqualTo("Обработчики");
+      assertThat(bean.collection()).isTrue();
+    });
+  }
+
+  @Test
+  void injectedBeanEmptyWhenTypeIsExplicitlyBlank() {
+    // given: явный Тип="" — ошибка (не «Желудь» и не коллекция); как и inferInjectedType,
+    // injectedBean не разрешает такую точку, иначе линза вела бы к ложным целям
+    var annotations = List.of(plasticine(named("Тип", "")));
+
+    // when / then
+    assertThat(inferencer.injectedBean(annotations, "Поле")).isEmpty();
+  }
+
+  @Test
+  void injectedBeanEmptyWhenNoInjectionAnnotation() {
+    // given
+    var annotations = List.of(annotation("Желудь"));
+
+    // when / then
+    assertThat(inferencer.injectedBean(annotations, "Поле")).isEmpty();
+  }
+
   private static Annotation plasticine(AnnotationParameterDefinition... parameters) {
     return Annotation.builder()
       .name("Пластилин")

@@ -121,6 +121,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
+    clientCapabilitiesHolder.setClientInfo(params.getClientInfo());
 
     setConfigurationRoot(params);
 
