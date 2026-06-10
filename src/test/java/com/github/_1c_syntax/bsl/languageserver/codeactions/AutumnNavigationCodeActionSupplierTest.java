@@ -233,11 +233,11 @@ class AutumnNavigationCodeActionSupplierTest {
     return params;
   }
 
-  private static VariableSymbol moduleVariable(String name, Range memberRange) {
+  private static VariableSymbol moduleVariable(String name, Range nameRange) {
     var variable = mock(VariableSymbol.class);
     when(variable.getName()).thenReturn(name);
     when(variable.getAnnotations()).thenReturn(List.of());
-    when(variable.getRange()).thenReturn(memberRange);
+    when(variable.getVariableNameRange()).thenReturn(nameRange);
     when(variable.getKind()).thenReturn(VariableKind.MODULE);
     return variable;
   }

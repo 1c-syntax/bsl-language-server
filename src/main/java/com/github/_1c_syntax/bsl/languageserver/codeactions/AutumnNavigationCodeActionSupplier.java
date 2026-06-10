@@ -93,12 +93,14 @@ public class AutumnNavigationCodeActionSupplier implements CodeActionSupplier {
   }
 
   /**
-   * Внедряемый желудь точки внедрения под курсором: параметр конструктора либо поле модуля
-   * с {@code &Пластилин} (переменные-дубликаты параметров с kind=PARAMETER не учитываются).
+   * Внедряемый желудь точки внедрения под курсором — курсор должен стоять на ИМЕНИ параметра
+   * конструктора либо ИМЕНИ поля модуля с {@code &Пластилин} (переменные-дубликаты параметров
+   * с kind=PARAMETER не учитываются).
    */
   private Optional<InjectedBean> injectedBeanAt(SymbolTree symbolTree, Position position) {
     var fromParameter = symbolTree.getConstructor().stream()
       .flatMap(constructor -> constructor.getParameters().stream())
+      // ParameterDefinition.getRange() — это диапазон имени параметра (IDENTIFIER)
       .filter(parameter -> Ranges.containsPosition(parameter.getRange(), position))
       .findFirst()
       .flatMap(parameter -> componentInferencer.injectedBean(parameter.getAnnotations(), parameter.getName()));
@@ -107,7 +109,7 @@ public class AutumnNavigationCodeActionSupplier implements CodeActionSupplier {
     }
     return symbolTree.getVariables().stream()
       .filter(variable -> variable.getKind() == VariableKind.MODULE)
-      .filter(variable -> Ranges.containsPosition(variable.getRange(), position))
+      .filter(variable -> Ranges.containsPosition(variable.getVariableNameRange(), position))
       .findFirst()
       .flatMap(variable -> componentInferencer.injectedBean(variable.getAnnotations(), variable.getName()));
   }
