@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781001838985,
+  "lastUpdate": 1781073772036,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36735,6 +36735,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.370506483576625",
             "extra": "mean: 278.99259837468463 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "60a3ab4ecf6cbd7deb0ffb492be11b111a348ee0",
+          "message": "Merge pull request #4016 from johnnyshut/feature/696-compare-with-boolean\n\nfeat(diagnostics): добавлена диагностика \"Сравнение с булевой константой\" (CompareWithBoolean)",
+          "timestamp": "2026-06-10T08:04:10+02:00",
+          "tree_id": "f5ccd79a29fd36fcb3359b7cf99283649fc73150",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/60a3ab4ecf6cbd7deb0ffb492be11b111a348ee0"
+        },
+        "date": 1781073761955,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 286.14062213897705,
+            "unit": "sec",
+            "range": "stddev: 11.209668358824697",
+            "extra": "mean: 286.14062213897705 sec\nrounds: 3"
           }
         ]
       }
