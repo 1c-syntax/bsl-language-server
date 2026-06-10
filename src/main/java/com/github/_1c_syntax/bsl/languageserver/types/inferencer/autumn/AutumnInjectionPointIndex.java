@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import org.eclipse.lsp4j.Range;
@@ -122,7 +122,7 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
    * Точки внедрения желудя, разрешающиеся в конкретного производителя.
    * <p>
    * Для каждой точки переигрывается выбор производителя: одиночное внедрение включается, только
-   * если правила DI ({@link AutumnBeanIndex#resolveDeclarations}, с приоритетом {@code &Верховный})
+   * если правила DI ({@link AutumnBeanIndex#resolveDefinitions}, с приоритетом {@code &Верховный})
    * выбирают производителя, удовлетворяющего {@code selectsProducer}; внедрение коллекции
    * включается всегда (коллекция внедряет всех производителей подходящего имени).
    *
@@ -130,7 +130,7 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
    * @param selectsProducer Предикат: выбран ли DI этот производитель среди объявлений имени.
    * @return точки внедрения, разрешающиеся в производителя; пусто, если их нет.
    */
-  private List<InjectionPoint> usages(Set<String> beanNames, Predicate<BeanDeclaration> selectsProducer) {
+  private List<InjectionPoint> usages(Set<String> beanNames, Predicate<BeanDefinition> selectsProducer) {
     ensureBuilt();
     var result = new LinkedHashSet<InjectionPoint>();
     for (var beanName : beanNames) {
@@ -138,7 +138,7 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
       if (points == null || points.isEmpty()) {
         continue;
       }
-      var singletonResolvesToProducer = beanIndex.resolveDeclarations(beanName).stream().anyMatch(selectsProducer);
+      var singletonResolvesToProducer = beanIndex.resolveDefinitions(beanName).stream().anyMatch(selectsProducer);
       for (var point : points) {
         if (point.collection() || singletonResolvesToProducer) {
           result.add(point);

@@ -427,14 +427,14 @@ class AutumnBeanIndexTest {
   }
 
   @Test
-  void resolveDeclarationsReturnsComponentProducer() {
+  void resolveDefinitionsReturnsComponentProducer() {
     // given
     var type = new TypeRef(TypeKind.USER, "Логгер");
     registerClass("Логгер", type, method(component(null)));
     init();
 
     // when
-    var declarations = beanIndex.resolveDeclarations("Логгер");
+    var declarations = beanIndex.resolveDefinitions("Логгер");
 
     // then
     assertThat(declarations).singleElement().satisfies(declaration -> {
@@ -447,7 +447,7 @@ class AutumnBeanIndexTest {
   }
 
   @Test
-  void resolveDeclarationsReturnsFactoryProducerWithMethodName() {
+  void resolveDefinitionsReturnsFactoryProducerWithMethodName() {
     // given
     var type = new TypeRef(TypeKind.USER, "СоединениеСБазой");
     when(typeRegistry.resolve("СоединениеСБазой")).thenReturn(Optional.of(type));
@@ -456,7 +456,7 @@ class AutumnBeanIndexTest {
     init();
 
     // when
-    var declarations = beanIndex.resolveDeclarations("СоединениеСБазой");
+    var declarations = beanIndex.resolveDefinitions("СоединениеСБазой");
 
     // then
     assertThat(declarations).singleElement().satisfies(declaration -> {
@@ -468,7 +468,7 @@ class AutumnBeanIndexTest {
   }
 
   @Test
-  void resolveDeclarationsPrefersPrimaryOnConflict() {
+  void resolveDefinitionsPrefersPrimaryOnConflict() {
     // given
     var sid = new TypeRef(TypeKind.USER, "СидВишес");
     var johnny = new TypeRef(TypeKind.USER, "ДжонниРоттен");
@@ -477,7 +477,7 @@ class AutumnBeanIndexTest {
     init();
 
     // when
-    var declarations = beanIndex.resolveDeclarations("Панк");
+    var declarations = beanIndex.resolveDefinitions("Панк");
 
     // then
     assertThat(declarations).singleElement().satisfies(declaration -> {
@@ -487,7 +487,7 @@ class AutumnBeanIndexTest {
   }
 
   @Test
-  void resolveAllDeclarationsReturnsAllCandidatesWithoutPrimaryFilter() {
+  void resolveAllDefinitionsReturnsAllCandidatesWithoutPrimaryFilter() {
     // given: два желудя под общим прозвищем «Панк», один помечен &Верховный
     var sid = new TypeRef(TypeKind.USER, "СидВишес");
     var johnny = new TypeRef(TypeKind.USER, "ДжонниРоттен");
@@ -496,31 +496,31 @@ class AutumnBeanIndexTest {
     init();
 
     // when: для членов коллекции нужны ВСЕ кандидаты, а не только приоритетный
-    var declarations = beanIndex.resolveAllDeclarations("Панк");
+    var declarations = beanIndex.resolveAllDefinitions("Панк");
 
     // then
-    assertThat(declarations).extracting(AutumnBeanIndex.BeanDeclaration::type)
+    assertThat(declarations).extracting(AutumnBeanIndex.BeanDefinition::type)
       .containsExactlyInAnyOrder(sid, johnny);
   }
 
   @Test
-  void resolveAllDeclarationsReturnsEmptyForUnknownOrBlankName() {
+  void resolveAllDefinitionsReturnsEmptyForUnknownOrBlankName() {
     // given
     init();
 
     // when / then
-    assertThat(beanIndex.resolveAllDeclarations("НетТакого")).isEmpty();
-    assertThat(beanIndex.resolveAllDeclarations("")).isEmpty();
+    assertThat(beanIndex.resolveAllDefinitions("НетТакого")).isEmpty();
+    assertThat(beanIndex.resolveAllDefinitions("")).isEmpty();
   }
 
   @Test
-  void resolveDeclarationsReturnsEmptyForUnknownOrBlankName() {
+  void resolveDefinitionsReturnsEmptyForUnknownOrBlankName() {
     // given
     init();
 
     // when / then
-    assertThat(beanIndex.resolveDeclarations("НетТакого")).isEmpty();
-    assertThat(beanIndex.resolveDeclarations("")).isEmpty();
+    assertThat(beanIndex.resolveDefinitions("НетТакого")).isEmpty();
+    assertThat(beanIndex.resolveDefinitions("")).isEmpty();
   }
 
   // --- helpers ---------------------------------------------------------------

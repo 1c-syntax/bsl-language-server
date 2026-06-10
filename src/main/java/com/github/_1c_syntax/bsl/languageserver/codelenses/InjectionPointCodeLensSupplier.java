@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
@@ -143,17 +143,17 @@ public class InjectionPointCodeLensSupplier
    * Объявления производителей под именем желудя: для коллекции — все подходящие желуди
    * (без приоритета {@code &Верховный}), для одиночного внедрения — с приоритетом.
    */
-  private List<BeanDeclaration> declarationsFor(String beanName, boolean collection) {
+  private List<BeanDefinition> declarationsFor(String beanName, boolean collection) {
     return collection
-      ? beanIndex.resolveAllDeclarations(beanName)
-      : beanIndex.resolveDeclarations(beanName);
+      ? beanIndex.resolveAllDefinitions(beanName)
+      : beanIndex.resolveDefinitions(beanName);
   }
 
   /**
    * Местоположение производителя желудя: диапазон конструктора класса-компонента либо
    * фабричного метода {@code &Завязь} в его .os-файле.
    */
-  private Optional<LocatedProducer> locateProducer(BeanDeclaration declaration) {
+  private Optional<LocatedProducer> locateProducer(BeanDefinition declaration) {
     return serverContextProvider.getServerContext(declaration.sourceUri())
       .map(serverContext -> serverContext.getDocument(declaration.sourceUri()))
       .map(DocumentContext::getSymbolTree)
@@ -161,7 +161,7 @@ public class InjectionPointCodeLensSupplier
       .map(range -> new LocatedProducer(declaration, new Location(declaration.sourceUri().toString(), range)));
   }
 
-  private static Optional<Range> producerRange(SymbolTree symbolTree, BeanDeclaration declaration) {
+  private static Optional<Range> producerRange(SymbolTree symbolTree, BeanDefinition declaration) {
     // Производитель — это метод (конструктор ПриСозданииОбъекта тоже MethodSymbol), поэтому ищем
     // единообразно по имени метода-производителя; ветвление по виду производителя не нужно.
     return symbolTree.getMethodSymbol(declaration.producerMethodName())
@@ -177,7 +177,7 @@ public class InjectionPointCodeLensSupplier
   }
 
   /** Производитель желудя с уже вычисленным местоположением для навигации. */
-  private record LocatedProducer(BeanDeclaration declaration, Location location) {
+  private record LocatedProducer(BeanDefinition declaration, Location location) {
   }
 
   /**

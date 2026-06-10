@@ -79,7 +79,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   /** Имя/прозвище желудя (lowercase) → кандидаты. Значения — конкурентные множества (как в Repository). */
-  private final Map<String, Set<BeanDeclaration>> beansByName = new ConcurrentHashMap<>();
+  private final Map<String, Set<BeanDefinition>> beansByName = new ConcurrentHashMap<>();
   /** URI .os-файла → имена, под которыми он зарегистрировал кандидатов (для точечного удаления). */
   private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
   public AutumnBeanIndex(OScriptLibraryIndex libraryIndex,
@@ -103,7 +103,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    * @param isConstructor      {@code true}, если производитель — конструктор класса (компонентный
    *                           желудь {@code &Желудь}/{@code &Дуб}); {@code false} — метод {@code &Завязь}.
    */
-  public record BeanDeclaration(
+  public record BeanDefinition(
     TypeRef type,
     boolean primary,
     URI sourceUri,
@@ -143,7 +143,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    * @return Объявления производителей; при конфликте имён предпочитаются помеченные
    *         {@code &Верховный}, иначе возвращаются все кандидаты. Пусто, если желудь не найден.
    */
-  public List<BeanDeclaration> resolveDeclarations(String name) {
+  public List<BeanDefinition> resolveDefinitions(String name) {
     if (name.isBlank()) {
       return List.of();
     }
@@ -159,7 +159,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    * @param name Имя или прозвище (квалификатор) желудя.
    * @return Объявления всех производителей под этим именем; пусто, если их нет.
    */
-  public List<BeanDeclaration> resolveAllDeclarations(String name) {
+  public List<BeanDefinition> resolveAllDefinitions(String name) {
     if (name.isBlank()) {
       return List.of();
     }
@@ -248,7 +248,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   }
 
   /** Все объявления, зарегистрированные под именем/прозвищем (lowercase), либо пустой список. */
-  private List<BeanDeclaration> candidatesFor(String name) {
+  private List<BeanDefinition> candidatesFor(String name) {
     var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
     return candidates == null || candidates.isEmpty() ? List.of() : List.copyOf(candidates);
   }
@@ -257,10 +257,10 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    * Выбрать объявления по имени с учётом приоритета {@code &Верховный}: при наличии хотя бы
    * одного приоритетного возвращаются только приоритетные, иначе — все объявления имени.
    */
-  private List<BeanDeclaration> selectCandidates(String name) {
+  private List<BeanDefinition> selectCandidates(String name) {
     var candidates = candidatesFor(name);
     var primaryCandidates = candidates.stream()
-      .filter(BeanDeclaration::primary)
+      .filter(BeanDefinition::primary)
       .toList();
     return primaryCandidates.isEmpty() ? candidates : primaryCandidates;
   }
@@ -351,7 +351,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri,
                         String producerMethodName, boolean isConstructor) {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
-    var candidate = new BeanDeclaration(type, primary, uri, producerMethodName, isConstructor);
+    var candidate = new BeanDefinition(type, primary, uri, producerMethodName, isConstructor);
 
     addCandidate(uri, primaryName, candidate);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {
@@ -359,7 +359,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     }
   }
 
-  private void addCandidate(URI uri, String name, BeanDeclaration candidate) {
+  private void addCandidate(URI uri, String name, BeanDefinition candidate) {
     var key = name.toLowerCase(Locale.ROOT);
     beansByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(candidate);
     namesByUri.computeIfAbsent(uri, u -> ConcurrentHashMap.newKeySet()).add(key);

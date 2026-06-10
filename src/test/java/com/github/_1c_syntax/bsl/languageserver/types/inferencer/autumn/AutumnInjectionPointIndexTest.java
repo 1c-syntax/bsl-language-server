@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -155,7 +155,7 @@ class AutumnInjectionPointIndexTest {
   @Test
   void collectionInjectionIncludedForAnyProducerOfName() {
     // given: внедрение коллекции "Обработчик" — внедряет всех производителей имени, поэтому
-    // показывается на любом из них, даже если resolveDeclarations выбрал бы другого
+    // показывается на любом из них, даже если resolveDefinitions выбрал бы другого
     registerClass("Потребитель", field("Обработчик", range(4)), List.of());
     when(componentInferencer.injectedBean(anyList(), eq("Обработчик")))
       .thenReturn(Optional.of(new InjectedBean("Обработчик", true)));
@@ -191,10 +191,10 @@ class AutumnInjectionPointIndexTest {
 
   // --- helpers ---------------------------------------------------------------
 
-  /** Замокать одиночного производителя желудя: resolveDeclarations(имя) -> компонент в producerUri. */
+  /** Замокать одиночного производителя желудя: resolveDefinitions(имя) -> компонент в producerUri. */
   private void componentProducer(String beanName, URI producerUri) {
-    when(beanIndex.resolveDeclarations(beanName)).thenReturn(List.of(
-      new BeanDeclaration(new TypeRef(TypeKind.USER, beanName), false, producerUri, "ПриСозданииОбъекта", true)));
+    when(beanIndex.resolveDefinitions(beanName)).thenReturn(List.of(
+      new BeanDefinition(new TypeRef(TypeKind.USER, beanName), false, producerUri, "ПриСозданииОбъекта", true)));
   }
 
   private URI registerClass(String qualifiedName, VariableSymbol variable,

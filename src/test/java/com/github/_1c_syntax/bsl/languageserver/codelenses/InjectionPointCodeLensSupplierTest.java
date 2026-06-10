@@ -32,7 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -103,7 +103,7 @@ class InjectionPointCodeLensSupplierTest {
     var field = injectionField("Лог", MEMBER_RANGE);
     when(symbolTree.getVariables()).thenReturn(List.of(field));
     when(componentInferencer.injectedBean(anyList(), eq("Лог"))).thenReturn(injection("Лог"));
-    when(beanIndex.resolveDeclarations("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
 
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);
@@ -131,7 +131,7 @@ class InjectionPointCodeLensSupplierTest {
     when(constructor.getParameters()).thenReturn(List.of(parameter));
     when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
     when(componentInferencer.injectedBean(anyList(), eq("лог"))).thenReturn(injection("Лог"));
-    when(beanIndex.resolveDeclarations("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
 
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);
@@ -148,7 +148,7 @@ class InjectionPointCodeLensSupplierTest {
     var field = injectionField("Обработчик", MEMBER_RANGE);
     when(symbolTree.getVariables()).thenReturn(List.of(field));
     when(componentInferencer.injectedBean(anyList(), eq("Обработчик"))).thenReturn(collectionInjection("Обработчик"));
-    when(beanIndex.resolveAllDeclarations("Обработчик"))
+    when(beanIndex.resolveAllDefinitions("Обработчик"))
       .thenReturn(List.of(componentDeclaration(PRODUCER_URI), componentDeclaration(PRODUCER_URI)));
 
     // when
@@ -169,7 +169,7 @@ class InjectionPointCodeLensSupplierTest {
     var field = injectionField("НетТакого", MEMBER_RANGE);
     when(symbolTree.getVariables()).thenReturn(List.of(field));
     when(componentInferencer.injectedBean(anyList(), eq("НетТакого"))).thenReturn(injection("НетТакого"));
-    when(beanIndex.resolveDeclarations("НетТакого")).thenReturn(List.of());
+    when(beanIndex.resolveDefinitions("НетТакого")).thenReturn(List.of());
 
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);
@@ -198,7 +198,7 @@ class InjectionPointCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.resolveDeclarations("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
     stubProducerConstructor();
     var expectedLocation = new Location(PRODUCER_URI.toString(), PRODUCER_RANGE);
     var command = new Command("title", "command", List.of());
@@ -219,7 +219,7 @@ class InjectionPointCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.resolveAllDeclarations("Обработчик")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(beanIndex.resolveAllDefinitions("Обработчик")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
     stubProducerConstructor();
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
@@ -237,7 +237,7 @@ class InjectionPointCodeLensSupplierTest {
   void resolveLeavesLensWithoutCommandWhenProducerNotLocatable() {
     // given
     var supplier = supplier();
-    when(beanIndex.resolveDeclarations("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
     when(serverContextProvider.getServerContext(PRODUCER_URI)).thenReturn(Optional.empty());
     var unresolved = unresolvedLens("Лог", false);
 
@@ -277,8 +277,8 @@ class InjectionPointCodeLensSupplierTest {
     return field;
   }
 
-  private static BeanDeclaration componentDeclaration(URI sourceUri) {
-    return new BeanDeclaration(
+  private static BeanDefinition componentDeclaration(URI sourceUri) {
+    return new BeanDefinition(
       new TypeRef(TypeKind.USER, "Лог"), false, sourceUri, "ПриСозданииОбъекта", true);
   }
 
