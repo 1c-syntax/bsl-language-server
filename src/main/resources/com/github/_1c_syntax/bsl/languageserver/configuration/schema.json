@@ -32,6 +32,9 @@
                 "AssignToReadOnlyProperty": {
                     "$ref": "parameters-schema.json#/definitions/AssignToReadOnlyProperty"
                 },
+                "BadExceptionCategory": {
+                    "$ref": "parameters-schema.json#/definitions/BadExceptionCategory"
+                },
                 "BadWords": {
                     "$ref": "parameters-schema.json#/definitions/BadWords"
                 },
