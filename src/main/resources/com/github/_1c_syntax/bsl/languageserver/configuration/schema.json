@@ -101,6 +101,9 @@
                 "CommonModuleVariables": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleVariables"
                 },
+                "CompareWithBoolean": {
+                    "$ref": "parameters-schema.json#/definitions/CompareWithBoolean"
+                },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
                 },
