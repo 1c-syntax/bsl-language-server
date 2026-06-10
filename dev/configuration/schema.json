@@ -616,6 +616,24 @@
                         }
                     },
                     "$id": "#/definitions/codeLensParameters/cyclomaticComplexity"
+                },
+                "injectionPoint": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show navigation to the injected Autumn bean producer above injection points (OneScript).",
+                    "$id": "#/definitions/codeLensParameters/injectionPoint"
+                },
+                "beanUsages": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show injection points count and navigation above Autumn bean producers (OneScript).",
+                    "$id": "#/definitions/codeLensParameters/beanUsages"
                 }
             }
         },
