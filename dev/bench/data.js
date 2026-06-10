@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781073772036,
+  "lastUpdate": 1781128664352,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36766,6 +36766,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 11.209668358824697",
             "extra": "mean: 286.14062213897705 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1fc87d08e3e921a6030a0d7dfa976bf729527549",
+          "message": "Merge pull request #4036 from 1c-syntax/claude/issue-4017\n\nfeat(codelens): двунаправленные линзы навигации по бинам «ОСени»",
+          "timestamp": "2026-06-10T23:31:21+02:00",
+          "tree_id": "176fe23c459f1390d09788622c347f4dde448c85",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1fc87d08e3e921a6030a0d7dfa976bf729527549"
+        },
+        "date": 1781128653960,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 271.8254993756612,
+            "unit": "sec",
+            "range": "stddev: 14.539384344763963",
+            "extra": "mean: 271.8254993756612 sec\nrounds: 3"
           }
         ]
       }
