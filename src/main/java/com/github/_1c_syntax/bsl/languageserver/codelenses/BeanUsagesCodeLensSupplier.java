@@ -33,7 +33,6 @@ import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Location;
-import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -52,8 +51,9 @@ import java.util.List;
  *   <li>на каждом фабричном методе {@code &Завязь} — для производимого им желудя.</li>
  * </ul>
  * Производители берутся из {@link AutumnBeanIndex}, точки внедрения — из
- * {@link AutumnInjectionPointIndex#usagesOfComponent}, который переигрывает выбор производителя на каждую
- * точку (одиночное внедрение — только у выбранного DI производителя, коллекция — у всех).
+ * {@link AutumnInjectionPointIndex#usagesOfComponent} / {@link AutumnInjectionPointIndex#usagesOfFactoryMethod},
+ * которые переигрывают выбор производителя на каждую точку (одиночное внедрение — только у
+ * выбранного DI производителя, коллекция — у всех).
  */
 @Component
 @Order(7)
@@ -84,7 +84,7 @@ public class BeanUsagesCodeLensSupplier
     if (!beanIndex.componentBeanNamesForUri(uri).isEmpty()) {
       symbolTree.getConstructor().ifPresent(constructor -> {
         var codeLens = new CodeLens(constructor.getSelectionRange());
-        codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), null));
+        codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), constructor.getName(), true));
         codeLenses.add(codeLens);
       });
     }
@@ -94,7 +94,7 @@ public class BeanUsagesCodeLensSupplier
       var methodName = factoryMethod.factoryMethodName();
       symbolTree.getMethodSymbol(methodName).ifPresent(method -> {
         var codeLens = new CodeLens(method.getSelectionRange());
-        codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), methodName));
+        codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), methodName, false));
         codeLenses.add(codeLens);
       });
     }
@@ -107,9 +107,9 @@ public class BeanUsagesCodeLensSupplier
     var uri = documentContext.getUri();
     // Линза показывается всегда (даже при нуле точек внедрения), поэтому команду ставим
     // безусловно: заголовок отражает число точек, поповер показывает их список (пустой при нуле).
-    var locations = data.getFactoryMethodName() == null
+    var locations = data.isConstructor()
       ? componentLocations(uri)
-      : factoryMethodLocations(uri, data.getFactoryMethodName());
+      : factoryMethodLocations(uri, data.getProducerMethodName());
 
     var title = resources.getResourceString(getClass(), TITLE_KEY, locations.size());
     var position = unresolved.getRange().getStart();
@@ -145,8 +145,9 @@ public class BeanUsagesCodeLensSupplier
   }
 
   /**
-   * DTO обратной линзы: для линзы на методе {@code &Завязь} хранит имя метода; для агрегатной
-   * линзы на конструкторе — {@code null} (тогда резолв собирает все желуди файла).
+   * DTO обратной линзы — зеркало {@code BeanDefinition}: имя метода-производителя и признак
+   * конструктора различают линзу компонентного желудя (на конструкторе) и линзу фабричного
+   * метода {@code &Завязь}.
    */
   @Value
   @EqualsAndHashCode(callSuper = true)
@@ -154,22 +155,29 @@ public class BeanUsagesCodeLensSupplier
   public static class BeanUsagesCodeLensData extends DefaultCodeLensData {
 
     /**
-     * Имя фабричного метода {@code &Завязь} для пер-методной линзы; {@code null} для агрегатной.
+     * Имя метода-производителя: конструктора для линзы компонентного желудя либо метода
+     * {@code &Завязь} для пер-методной линзы.
      */
-    @Nullable
-    String factoryMethodName;
+    String producerMethodName;
+
+    /**
+     * Признак, что производитель — конструктор класса (линза компонентного желудя).
+     */
+    boolean constructor;
 
     /**
      * Конструктор данных обратной линзы.
      *
-     * @param uri               URI документа.
-     * @param id                Идентификатор поставщика линз.
-     * @param factoryMethodName Имя метода {@code &Завязь} либо {@code null} для агрегатной линзы.
+     * @param uri                URI документа.
+     * @param id                 Идентификатор поставщика линз.
+     * @param producerMethodName Имя метода-производителя (конструктор или метод {@code &Завязь}).
+     * @param constructor        {@code true} для линзы компонентного желудя на конструкторе.
      */
-    @ConstructorProperties({"uri", "id", "factoryMethodName"})
-    public BeanUsagesCodeLensData(URI uri, String id, @Nullable String factoryMethodName) {
+    @ConstructorProperties({"uri", "id", "producerMethodName", "constructor"})
+    public BeanUsagesCodeLensData(URI uri, String id, String producerMethodName, boolean constructor) {
       super(uri, id);
-      this.factoryMethodName = factoryMethodName;
+      this.producerMethodName = producerMethodName;
+      this.constructor = constructor;
     }
   }
 }

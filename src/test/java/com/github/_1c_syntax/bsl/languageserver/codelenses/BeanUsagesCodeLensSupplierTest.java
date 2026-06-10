@@ -146,7 +146,7 @@ class BeanUsagesCodeLensSupplierTest {
       anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(expectedLocations)))
       .thenReturn(command);
     var unresolved = new CodeLens(CONSTRUCTOR_RANGE);
-    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), null);
+    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "ПриСозданииОбъекта", true);
 
     // when
     var resolved = supplier.resolve(documentContext, unresolved, data);
@@ -158,7 +158,7 @@ class BeanUsagesCodeLensSupplierTest {
   @Test
   void buildsLensOnFactoryMethodForItsBean() {
     // given: фабричный метод &Завязь объявляет желудь, у которого есть точки внедрения;
-    // агрегатных желудей на конструкторе нет (namesForUri пуст) — проверяем именно линзу на методе
+    // компонентного желудя в файле нет — проверяем именно линзу на методе &Завязь
     var supplier = supplier();
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of());
     when(beanIndex.factoryMethodBeansForUri(PRODUCER_URI))
@@ -176,7 +176,8 @@ class BeanUsagesCodeLensSupplierTest {
     assertThat(codeLenses).singleElement().satisfies(codeLens -> {
       assertThat(codeLens.getRange()).isEqualTo(FACTORY_METHOD_RANGE);
       var data = (BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData) codeLens.getData();
-      assertThat(data.getFactoryMethodName()).isEqualTo("СоздатьЛог");
+      assertThat(data.getProducerMethodName()).isEqualTo("СоздатьЛог");
+      assertThat(data.isConstructor()).isFalse();
     });
   }
 
@@ -195,7 +196,7 @@ class BeanUsagesCodeLensSupplierTest {
       anyString(), eq(PRODUCER_URI), eq(FACTORY_METHOD_RANGE.getStart()), eq(expectedLocations)))
       .thenReturn(command);
     var unresolved = new CodeLens(FACTORY_METHOD_RANGE);
-    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "СоздатьЛог");
+    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "СоздатьЛог", false);
 
     // when
     var resolved = supplier.resolve(documentContext, unresolved, data);
@@ -216,7 +217,7 @@ class BeanUsagesCodeLensSupplierTest {
       anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(List.of())))
       .thenReturn(command);
     var unresolved = new CodeLens(CONSTRUCTOR_RANGE);
-    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), null);
+    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "ПриСозданииОбъекта", true);
 
     // when
     var resolved = supplier.resolve(documentContext, unresolved, data);
