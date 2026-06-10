@@ -100,7 +100,7 @@ public class AutumnNavigationCodeActionSupplier implements CodeActionSupplier {
   private Optional<InjectedBean> injectedBeanAt(SymbolTree symbolTree, Position position) {
     var fromParameter = symbolTree.getConstructor().stream()
       .flatMap(constructor -> constructor.getParameters().stream())
-      // ParameterDefinition.getRange() — это диапазон имени параметра (IDENTIFIER)
+      // ParameterDefinition.getRange() — диапазон имени параметра, не всей декларации
       .filter(parameter -> Ranges.containsPosition(parameter.getRange(), position))
       .findFirst()
       .flatMap(parameter -> componentInferencer.injectedBean(parameter.getAnnotations(), parameter.getName()));
