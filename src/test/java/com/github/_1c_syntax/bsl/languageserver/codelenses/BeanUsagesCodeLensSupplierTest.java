@@ -29,8 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.FactoryMethodBean;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex.InjectionPoint;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnNavigation;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.CodeLens;
@@ -71,7 +70,7 @@ class BeanUsagesCodeLensSupplierTest {
   @Mock
   private AutumnBeanIndex beanIndex;
   @Mock
-  private AutumnInjectionPointIndex injectionPointIndex;
+  private AutumnNavigation autumnNavigation;
   @Mock
   private NavigationCommandBuilder navigationCommandBuilder;
 
@@ -84,7 +83,7 @@ class BeanUsagesCodeLensSupplierTest {
     when(documentContext.getUri()).thenReturn(PRODUCER_URI);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
     return new BeanUsagesCodeLensSupplier(
-      new Resources(configuration), beanIndex, injectionPointIndex, navigationCommandBuilder);
+      new Resources(configuration), beanIndex, autumnNavigation, navigationCommandBuilder);
   }
 
   @Test
@@ -92,8 +91,6 @@ class BeanUsagesCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.usagesOfComponent(PRODUCER_URI, Set.of("мойлог")))
-      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var constructor = mock(ConstructorSymbol.class);
     when(constructor.getSelectionRange()).thenReturn(CONSTRUCTOR_RANGE);
     when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
@@ -137,10 +134,8 @@ class BeanUsagesCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.usagesOfComponent(PRODUCER_URI, Set.of("мойлог")))
-      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
+    when(autumnNavigation.componentUsageLocations(PRODUCER_URI)).thenReturn(expectedLocations);
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
       anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(expectedLocations)))
@@ -163,8 +158,6 @@ class BeanUsagesCodeLensSupplierTest {
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of());
     when(beanIndex.factoryMethodBeansForUri(PRODUCER_URI))
       .thenReturn(List.of(new FactoryMethodBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.usagesOfFactoryMethod(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
-      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var method = mock(MethodSymbol.class);
     when(method.getSelectionRange()).thenReturn(FACTORY_METHOD_RANGE);
     when(symbolTree.getMethodSymbol("СоздатьЛог")).thenReturn(Optional.of(method));
@@ -186,11 +179,8 @@ class BeanUsagesCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.factoryMethodBeansForUri(PRODUCER_URI))
-      .thenReturn(List.of(new FactoryMethodBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.usagesOfFactoryMethod(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
-      .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
+    when(autumnNavigation.factoryMethodUsageLocations(PRODUCER_URI, "СоздатьЛог")).thenReturn(expectedLocations);
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
       anyString(), eq(PRODUCER_URI), eq(FACTORY_METHOD_RANGE.getStart()), eq(expectedLocations)))
@@ -210,8 +200,7 @@ class BeanUsagesCodeLensSupplierTest {
     // given: у желудя нет точек внедрения — команда (поповер) всё равно ставится, заголовок «0»
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.usagesOfComponent(PRODUCER_URI, Set.of("мойлог"))).thenReturn(List.of());
+    when(autumnNavigation.componentUsageLocations(PRODUCER_URI)).thenReturn(List.of());
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.referencesCommand(
       anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(List.of())))

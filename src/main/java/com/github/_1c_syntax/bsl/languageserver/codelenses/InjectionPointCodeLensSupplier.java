@@ -23,21 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnNavigation;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -72,8 +68,7 @@ public class InjectionPointCodeLensSupplier
 
   private final Resources resources;
   private final AutumnComponentInferencer componentInferencer;
-  private final AutumnBeanIndex beanIndex;
-  private final ServerContextProvider serverContextProvider;
+  private final AutumnNavigation autumnNavigation;
   private final NavigationCommandBuilder navigationCommandBuilder;
 
   @Override
@@ -107,10 +102,7 @@ public class InjectionPointCodeLensSupplier
 
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, InjectionPointCodeLensData data) {
-    var locations = definitionsFor(data.getBeanName(), data.isCollection()).stream()
-      .map(this::locateProducer)
-      .flatMap(Optional::stream)
-      .toList();
+    var locations = autumnNavigation.producerLocations(data.getBeanName(), data.isCollection());
     if (locations.isEmpty()) {
       return unresolved;
     }
@@ -138,7 +130,7 @@ public class InjectionPointCodeLensSupplier
     boolean parameter
   ) {
     return componentInferencer.injectedBean(annotations, memberName)
-      .filter(bean -> !definitionsFor(bean.name(), bean.collection()).isEmpty())
+      .filter(bean -> !autumnNavigation.producerDefinitions(bean.name(), bean.collection()).isEmpty())
       .map(bean -> {
         var data = new InjectionPointCodeLensData(
           documentContext.getUri(), getId(), bean.name(), bean.collection(), parameter);
@@ -146,35 +138,6 @@ public class InjectionPointCodeLensSupplier
         codeLens.setData(data);
         return codeLens;
       });
-  }
-
-  /**
-   * Определения производителей под именем желудя: для коллекции — все подходящие желуди
-   * (без приоритета {@code &Верховный}), для одиночного внедрения — с приоритетом.
-   */
-  private List<BeanDefinition> definitionsFor(String beanName, boolean collection) {
-    return collection
-      ? beanIndex.resolveAllDefinitions(beanName)
-      : beanIndex.resolveDefinitions(beanName);
-  }
-
-  /**
-   * Местоположение производителя желудя: диапазон метода-производителя (конструктора
-   * класса-компонента либо фабричного метода {@code &Завязь}) в его .os-файле.
-   */
-  private Optional<Location> locateProducer(BeanDefinition definition) {
-    return serverContextProvider.getServerContext(definition.sourceUri())
-      .map(serverContext -> serverContext.getDocument(definition.sourceUri()))
-      .map(DocumentContext::getSymbolTree)
-      .flatMap(symbolTree -> producerRange(symbolTree, definition))
-      .map(range -> new Location(definition.sourceUri().toString(), range));
-  }
-
-  private static Optional<Range> producerRange(SymbolTree symbolTree, BeanDefinition definition) {
-    // Производитель — это метод (конструктор ПриСозданииОбъекта тоже MethodSymbol), поэтому ищем
-    // единообразно по имени метода-производителя; ветвление по виду производителя не нужно.
-    return symbolTree.getMethodSymbol(definition.producerMethodName())
-      .map(SourceDefinedSymbol::getSelectionRange);
   }
 
   private String title(InjectionPointCodeLensData data, int producerCount) {

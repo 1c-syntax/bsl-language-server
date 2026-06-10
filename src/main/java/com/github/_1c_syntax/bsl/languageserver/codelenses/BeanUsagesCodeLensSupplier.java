@@ -25,14 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex.InjectionPoint;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnNavigation;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Location;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -65,7 +64,7 @@ public class BeanUsagesCodeLensSupplier
 
   private final Resources resources;
   private final AutumnBeanIndex beanIndex;
-  private final AutumnInjectionPointIndex injectionPointIndex;
+  private final AutumnNavigation autumnNavigation;
   private final NavigationCommandBuilder navigationCommandBuilder;
 
   @Override
@@ -108,8 +107,8 @@ public class BeanUsagesCodeLensSupplier
     // Линза показывается всегда (даже при нуле точек внедрения), поэтому команду ставим
     // безусловно: заголовок отражает число точек, поповер показывает их список (пустой при нуле).
     var locations = data.isConstructor()
-      ? componentLocations(uri)
-      : factoryMethodLocations(uri, data.getProducerMethodName());
+      ? autumnNavigation.componentUsageLocations(uri)
+      : autumnNavigation.factoryMethodUsageLocations(uri, data.getProducerMethodName());
 
     var title = resources.getResourceString(getClass(), TITLE_KEY, locations.size());
     var position = unresolved.getRange().getStart();
@@ -121,27 +120,6 @@ public class BeanUsagesCodeLensSupplier
   @Override
   public Class<BeanUsagesCodeLensData> getCodeLensDataClass() {
     return BeanUsagesCodeLensData.class;
-  }
-
-  /** Точки внедрения компонентного желудя файла, разрешающиеся именно в него (линза на конструкторе). */
-  private List<Location> componentLocations(URI uri) {
-    return toLocations(injectionPointIndex.usagesOfComponent(uri, beanIndex.componentBeanNamesForUri(uri)));
-  }
-
-  /** Точки внедрения желудя конкретного фабричного метода {@code &Завязь}. */
-  private List<Location> factoryMethodLocations(URI uri, String factoryMethodName) {
-    return beanIndex.factoryMethodBeansForUri(uri).stream()
-      .filter(factoryMethod -> factoryMethod.factoryMethodName().equals(factoryMethodName))
-      .findFirst()
-      .map(factoryMethod ->
-        toLocations(injectionPointIndex.usagesOfFactoryMethod(uri, factoryMethodName, factoryMethod.beanNames())))
-      .orElseGet(List::of);
-  }
-
-  private static List<Location> toLocations(List<InjectionPoint> points) {
-    return points.stream()
-      .map(point -> new Location(point.uri().toString(), point.range()))
-      .toList();
   }
 
   /**

@@ -24,17 +24,14 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnNavigation;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -79,9 +76,7 @@ class InjectionPointCodeLensSupplierTest {
   @Mock
   private AutumnComponentInferencer componentInferencer;
   @Mock
-  private AutumnBeanIndex beanIndex;
-  @Mock
-  private ServerContextProvider serverContextProvider;
+  private AutumnNavigation autumnNavigation;
   @Mock
   private NavigationCommandBuilder navigationCommandBuilder;
 
@@ -96,7 +91,7 @@ class InjectionPointCodeLensSupplierTest {
     when(symbolTree.getConstructor()).thenReturn(Optional.empty());
     when(symbolTree.getVariables()).thenReturn(List.of());
     return new InjectionPointCodeLensSupplier(
-      new Resources(configuration), componentInferencer, beanIndex, serverContextProvider, navigationCommandBuilder);
+      new Resources(configuration), componentInferencer, autumnNavigation, navigationCommandBuilder);
   }
 
   @Test
@@ -106,7 +101,7 @@ class InjectionPointCodeLensSupplierTest {
     var field = injectionField("Лог", MEMBER_RANGE);
     when(symbolTree.getVariables()).thenReturn(List.of(field));
     when(componentInferencer.injectedBean(anyList(), eq("Лог"))).thenReturn(injection("Лог"));
-    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(autumnNavigation.producerDefinitions("Лог", false)).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
 
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);
@@ -135,7 +130,7 @@ class InjectionPointCodeLensSupplierTest {
     when(constructor.getParameters()).thenReturn(List.of(parameter));
     when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
     when(componentInferencer.injectedBean(anyList(), eq("лог"))).thenReturn(injection("Лог"));
-    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(autumnNavigation.producerDefinitions("Лог", false)).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
 
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);
@@ -155,7 +150,7 @@ class InjectionPointCodeLensSupplierTest {
     var field = injectionField("Обработчик", MEMBER_RANGE);
     when(symbolTree.getVariables()).thenReturn(List.of(field));
     when(componentInferencer.injectedBean(anyList(), eq("Обработчик"))).thenReturn(collectionInjection("Обработчик"));
-    when(beanIndex.resolveAllDefinitions("Обработчик"))
+    when(autumnNavigation.producerDefinitions("Обработчик", true))
       .thenReturn(List.of(componentDeclaration(PRODUCER_URI), componentDeclaration(PRODUCER_URI)));
 
     // when
@@ -176,7 +171,7 @@ class InjectionPointCodeLensSupplierTest {
     var field = injectionField("НетТакого", MEMBER_RANGE);
     when(symbolTree.getVariables()).thenReturn(List.of(field));
     when(componentInferencer.injectedBean(anyList(), eq("НетТакого"))).thenReturn(injection("НетТакого"));
-    when(beanIndex.resolveDefinitions("НетТакого")).thenReturn(List.of());
+    when(autumnNavigation.producerDefinitions("НетТакого", false)).thenReturn(List.of());
 
     // when
     var codeLenses = supplier.getCodeLenses(documentContext);
@@ -205,9 +200,8 @@ class InjectionPointCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
-    stubProducerConstructor();
     var expectedLocation = new Location(PRODUCER_URI.toString(), PRODUCER_RANGE);
+    when(autumnNavigation.producerLocations("Лог", false)).thenReturn(List.of(expectedLocation));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.gotoCommand(
       anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), eq(List.of(expectedLocation))))
@@ -226,8 +220,8 @@ class InjectionPointCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.resolveAllDefinitions("Обработчик")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
-    stubProducerConstructor();
+    when(autumnNavigation.producerLocations("Обработчик", true))
+      .thenReturn(List.of(new Location(PRODUCER_URI.toString(), PRODUCER_RANGE)));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
       .thenReturn(command);
@@ -244,8 +238,7 @@ class InjectionPointCodeLensSupplierTest {
   void resolveLeavesLensWithoutCommandWhenProducerNotLocatable() {
     // given
     var supplier = supplier();
-    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
-    when(serverContextProvider.getServerContext(PRODUCER_URI)).thenReturn(Optional.empty());
+    when(autumnNavigation.producerLocations("Лог", false)).thenReturn(List.of());
     var unresolved = unresolvedLens("Лог", false);
 
     // when
@@ -253,19 +246,6 @@ class InjectionPointCodeLensSupplierTest {
 
     // then
     assertThat(resolved.getCommand()).isNull();
-  }
-
-  private void stubProducerConstructor() {
-    var serverContext = mock(ServerContext.class);
-    var producerDocument = mock(DocumentContext.class);
-    var producerTree = mock(SymbolTree.class);
-    var producerMethod = mock(MethodSymbol.class);
-    when(serverContextProvider.getServerContext(PRODUCER_URI)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(PRODUCER_URI)).thenReturn(producerDocument);
-    when(producerDocument.getSymbolTree()).thenReturn(producerTree);
-    // производитель ищется единообразно по имени метода-производителя (конструктор — тоже MethodSymbol)
-    when(producerTree.getMethodSymbol("ПриСозданииОбъекта")).thenReturn(Optional.of(producerMethod));
-    when(producerMethod.getSelectionRange()).thenReturn(PRODUCER_RANGE);
   }
 
   private static Optional<InjectedBean> injection(String name) {
@@ -307,7 +287,7 @@ class InjectionPointCodeLensSupplierTest {
     when(parameterVariable.getKind()).thenReturn(VariableKind.PARAMETER);
     when(symbolTree.getVariables()).thenReturn(List.of(parameterVariable));
     when(componentInferencer.injectedBean(anyList(), eq("лог"))).thenReturn(injection("Лог"));
-    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
+    when(autumnNavigation.producerDefinitions("Лог", false)).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
 
     // when / then: одна линза — по параметру конструктора
     assertThat(supplier.getCodeLenses(documentContext)).hasSize(1);
@@ -318,8 +298,8 @@ class InjectionPointCodeLensSupplierTest {
     // given: линзы параметров рендерятся стопкой над конструктором — в заголовке нужно имя желудя
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.resolveDefinitions("Лог")).thenReturn(List.of(componentDeclaration(PRODUCER_URI)));
-    stubProducerConstructor();
+    when(autumnNavigation.producerLocations("Лог", false))
+      .thenReturn(List.of(new Location(PRODUCER_URI.toString(), PRODUCER_RANGE)));
     var command = new Command("title", "command", List.of());
     when(navigationCommandBuilder.gotoCommand(anyString(), eq(CONSUMER_URI), eq(MEMBER_RANGE.getStart()), anyList()))
       .thenReturn(command);
