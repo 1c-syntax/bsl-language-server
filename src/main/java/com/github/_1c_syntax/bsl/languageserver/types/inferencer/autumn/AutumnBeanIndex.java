@@ -218,7 +218,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    * @param uri URI .os-файла.
    * @return группы «фабричный метод → имена желудя»; пусто, если фабричных желудей в файле нет.
    */
-  public List<FactoryBean> factoryBeansForUri(URI uri) {
+  public List<FactoryMethodBean> factoryMethodBeansForUri(URI uri) {
     ensureBuilt();
     var names = namesByUri.get(uri);
     if (names == null) {
@@ -235,7 +235,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
       }
     }
     return namesByMethod.entrySet().stream()
-      .map(entry -> new FactoryBean(entry.getKey(), Set.copyOf(entry.getValue())))
+      .map(entry -> new FactoryMethodBean(entry.getKey(), Set.copyOf(entry.getValue())))
       .toList();
   }
 
@@ -245,7 +245,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    * @param factoryMethodName Имя фабричного метода {@code &Завязь}.
    * @param beanNames         Имена/прозвища производимого желудя (ключи поиска точек внедрения).
    */
-  public record FactoryBean(String factoryMethodName, Set<String> beanNames) {
+  public record FactoryMethodBean(String factoryMethodName, Set<String> beanNames) {
   }
 
   /**
@@ -253,7 +253,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    * файле, — производитель которого его конструктор.
    * <p>
    * Для обратной линзы на конструкторе: фабричные желуди ({@code &Завязь}) сюда не входят — у них
-   * собственные линзы на методах (см. {@link #factoryBeansForUri(URI)}).
+   * собственные линзы на методах (см. {@link #factoryMethodBeansForUri(URI)}).
    *
    * @param uri URI .os-файла.
    * @return имена компонентного желудя файла (lowercase); пусто, если компонентного желудя нет.

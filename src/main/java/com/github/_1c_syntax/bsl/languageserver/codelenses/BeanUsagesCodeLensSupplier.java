@@ -52,7 +52,7 @@ import java.util.List;
  *   <li>на каждом фабричном методе {@code &Завязь} — для производимого им желудя.</li>
  * </ul>
  * Производители берутся из {@link AutumnBeanIndex}, точки внедрения — из
- * {@link AutumnInjectionPointIndex#usagesOf}, который переигрывает выбор производителя на каждую
+ * {@link AutumnInjectionPointIndex#usagesOfComponent}, который переигрывает выбор производителя на каждую
  * точку (одиночное внедрение — только у выбранного DI производителя, коллекция — у всех).
  */
 @Component
@@ -90,8 +90,8 @@ public class BeanUsagesCodeLensSupplier
     }
 
     // Линза на каждом методе &Завязь — для производимого им желудя (тоже всегда).
-    for (var factoryBean : beanIndex.factoryBeansForUri(uri)) {
-      var methodName = factoryBean.factoryMethodName();
+    for (var factoryMethod : beanIndex.factoryMethodBeansForUri(uri)) {
+      var methodName = factoryMethod.factoryMethodName();
       symbolTree.getMethodSymbol(methodName).ifPresent(method -> {
         var codeLens = new CodeLens(method.getSelectionRange());
         codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), methodName));
@@ -109,7 +109,7 @@ public class BeanUsagesCodeLensSupplier
     // безусловно: заголовок отражает число точек, поповер показывает их список (пустой при нуле).
     var locations = data.getFactoryMethodName() == null
       ? componentLocations(uri)
-      : factoryLocations(uri, data.getFactoryMethodName());
+      : factoryMethodLocations(uri, data.getFactoryMethodName());
 
     var title = resources.getResourceString(getClass(), TITLE_KEY, locations.size());
     var position = unresolved.getRange().getStart();
@@ -129,12 +129,12 @@ public class BeanUsagesCodeLensSupplier
   }
 
   /** Точки внедрения желудя конкретного фабричного метода {@code &Завязь}. */
-  private List<Location> factoryLocations(URI uri, String factoryMethodName) {
-    return beanIndex.factoryBeansForUri(uri).stream()
-      .filter(factoryBean -> factoryBean.factoryMethodName().equals(factoryMethodName))
+  private List<Location> factoryMethodLocations(URI uri, String factoryMethodName) {
+    return beanIndex.factoryMethodBeansForUri(uri).stream()
+      .filter(factoryMethod -> factoryMethod.factoryMethodName().equals(factoryMethodName))
       .findFirst()
-      .map(factoryBean ->
-        toLocations(injectionPointIndex.usagesOfFactory(uri, factoryMethodName, factoryBean.beanNames())))
+      .map(factoryMethod ->
+        toLocations(injectionPointIndex.usagesOfFactoryMethod(uri, factoryMethodName, factoryMethod.beanNames())))
       .orElseGet(List::of);
   }
 

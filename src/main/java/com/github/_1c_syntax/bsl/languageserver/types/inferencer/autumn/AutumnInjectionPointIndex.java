@@ -53,7 +53,7 @@ import java.util.function.Predicate;
  * Для обратной линзы важна точность по <i>производителю</i>, а не только по имени: при конфликте
  * имён одиночное внедрение {@code &Пластилин("Имя")} ведёт лишь к выбранному правилами DI
  * производителю (приоритет {@code &Верховный}), а коллекция — ко всем. Поэтому
- * {@link #usagesOf} «переигрывает» выбор производителя на каждую точку через живой
+ * {@link #usages} «переигрывает» выбор производителя на каждую точку через живой
  * {@link AutumnBeanIndex} (всегда актуальный — без рассинхрона с инкрементальными апдейтами).
  * Общая обвязка ленивой сборки — в {@link AbstractAutumnLibraryIndex}.
  */
@@ -112,7 +112,7 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
    * @param beanNames         Имена/прозвища производимого им желудя.
    * @return точки внедрения, разрешающиеся в этот фабричный желудь; пусто, если их нет.
    */
-  public List<InjectionPoint> usagesOfFactory(URI producerUri, String factoryMethodName, Set<String> beanNames) {
+  public List<InjectionPoint> usagesOfFactoryMethod(URI producerUri, String factoryMethodName, Set<String> beanNames) {
     return usages(beanNames, declaration ->
       producerUri.equals(declaration.sourceUri())
         && declaration.kind() == ProducerKind.FACTORY

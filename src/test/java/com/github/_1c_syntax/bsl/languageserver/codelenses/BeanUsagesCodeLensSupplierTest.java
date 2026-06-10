@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.FactoryBean;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.FactoryMethodBean;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex.InjectionPoint;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
@@ -161,9 +161,9 @@ class BeanUsagesCodeLensSupplierTest {
     // агрегатных желудей на конструкторе нет (namesForUri пуст) — проверяем именно линзу на методе
     var supplier = supplier();
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of());
-    when(beanIndex.factoryBeansForUri(PRODUCER_URI))
-      .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.usagesOfFactory(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
+    when(beanIndex.factoryMethodBeansForUri(PRODUCER_URI))
+      .thenReturn(List.of(new FactoryMethodBean("СоздатьЛог", Set.of("лог"))));
+    when(injectionPointIndex.usagesOfFactoryMethod(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
       .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var method = mock(MethodSymbol.class);
     when(method.getSelectionRange()).thenReturn(FACTORY_METHOD_RANGE);
@@ -185,9 +185,9 @@ class BeanUsagesCodeLensSupplierTest {
     // given
     var supplier = supplier();
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    when(beanIndex.factoryBeansForUri(PRODUCER_URI))
-      .thenReturn(List.of(new FactoryBean("СоздатьЛог", Set.of("лог"))));
-    when(injectionPointIndex.usagesOfFactory(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
+    when(beanIndex.factoryMethodBeansForUri(PRODUCER_URI))
+      .thenReturn(List.of(new FactoryMethodBean("СоздатьЛог", Set.of("лог"))));
+    when(injectionPointIndex.usagesOfFactoryMethod(PRODUCER_URI, "СоздатьЛог", Set.of("лог")))
       .thenReturn(List.of(new InjectionPoint(CONSUMER_URI, INJECTION_RANGE, false)));
     var expectedLocations = List.of(new Location(CONSUMER_URI.toString(), INJECTION_RANGE));
     var command = new Command("title", "command", List.of());

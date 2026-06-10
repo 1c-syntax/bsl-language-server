@@ -235,7 +235,7 @@ class AutumnBeanIndexTest {
   }
 
   @Test
-  void factoryBeansForUriReturnsFactoryMethodsOfFile() {
+  void factoryMethodBeansForUriReturnsMethodsOfFile() {
     // given: метод &Завязь "СоздатьСписок" объявляет желудь "СписокЖелудей"
     when(typeRegistry.resolve("Массив")).thenReturn(Optional.of(new TypeRef(TypeKind.PLATFORM, "Массив")));
     registerClass("Фабрика", new TypeRef(TypeKind.USER, "Фабрика"),
@@ -243,23 +243,23 @@ class AutumnBeanIndexTest {
     init();
 
     // when
-    var factoryBeans = beanIndex.factoryBeansForUri(Absolute.uri("file:///beans/Фабрика.os"));
+    var factoryBeans = beanIndex.factoryMethodBeansForUri(Absolute.uri("file:///beans/Фабрика.os"));
 
     // then: метод &Завязь и имя (lowercase) производимого им желудя
-    assertThat(factoryBeans).singleElement().satisfies(factoryBean -> {
-      assertThat(factoryBean.factoryMethodName()).isEqualTo("СоздатьСписок");
-      assertThat(factoryBean.beanNames()).containsExactly("списокжелудей");
+    assertThat(factoryBeans).singleElement().satisfies(factoryMethod -> {
+      assertThat(factoryMethod.factoryMethodName()).isEqualTo("СоздатьСписок");
+      assertThat(factoryMethod.beanNames()).containsExactly("списокжелудей");
     });
   }
 
   @Test
-  void factoryBeansForUriEmptyForComponentOnlyFile() {
+  void factoryMethodBeansForUriEmptyForComponentOnlyFile() {
     // given: класс-компонент без фабричных методов &Завязь
     registerClass("Логгер", new TypeRef(TypeKind.USER, "Логгер"), method(component(null)));
     init();
 
     // when / then
-    assertThat(beanIndex.factoryBeansForUri(Absolute.uri("file:///beans/Логгер.os"))).isEmpty();
+    assertThat(beanIndex.factoryMethodBeansForUri(Absolute.uri("file:///beans/Логгер.os"))).isEmpty();
   }
 
   @Test
