@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.ProducerKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -195,7 +194,7 @@ class AutumnInjectionPointIndexTest {
   /** Замокать одиночного производителя желудя: resolveDeclarations(имя) -> компонент в producerUri. */
   private void componentProducer(String beanName, URI producerUri) {
     when(beanIndex.resolveDeclarations(beanName)).thenReturn(List.of(
-      new BeanDeclaration(new TypeRef(TypeKind.USER, beanName), false, producerUri, ProducerKind.COMPONENT, null)));
+      new BeanDeclaration(new TypeRef(TypeKind.USER, beanName), false, producerUri, "ПриСозданииОбъекта", true)));
   }
 
   private URI registerClass(String qualifiedName, VariableSymbol variable,

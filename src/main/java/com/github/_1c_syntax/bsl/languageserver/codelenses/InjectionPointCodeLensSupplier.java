@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.ProducerKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
@@ -163,11 +162,10 @@ public class InjectionPointCodeLensSupplier
   }
 
   private static Optional<Range> producerRange(SymbolTree symbolTree, BeanDeclaration declaration) {
-    if (declaration.kind() == ProducerKind.FACTORY && declaration.factoryMethodName() != null) {
-      return symbolTree.getMethodSymbol(declaration.factoryMethodName())
-        .map(SourceDefinedSymbol::getSelectionRange);
-    }
-    return symbolTree.getConstructor().map(SourceDefinedSymbol::getSelectionRange);
+    // Производитель — это метод (конструктор ПриСозданииОбъекта тоже MethodSymbol), поэтому ищем
+    // единообразно по имени метода-производителя; ветвление по виду производителя не нужно.
+    return symbolTree.getMethodSymbol(declaration.producerMethodName())
+      .map(SourceDefinedSymbol::getSelectionRange);
   }
 
   private String title(String beanName, List<LocatedProducer> producers) {

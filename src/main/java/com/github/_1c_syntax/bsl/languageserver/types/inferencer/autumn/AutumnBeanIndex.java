@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -93,44 +92,36 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   }
 
   /**
-   * Вид производителя желудя: класс-компонент ({@code &Желудь}/{@code &Дуб}, производитель —
-   * его конструктор) либо фабричный метод ({@code &Завязь}, производитель — сам метод).
-   */
-  public enum ProducerKind {
-    COMPONENT,
-    FACTORY
-  }
-
-  /**
-   * Объявление производителя желудя для навигации.
+   * Объявление производителя желудя для навигации — зеркало autumn-{@code Завязь}: у каждого
+   * желудя есть метод-производитель (конструктор или {@code &Завязь}), различаемые флагом.
    *
-   * @param type              Тип производимого желудя.
-   * @param primary           Признак приоритетного желудя ({@code &Верховный}).
-   * @param sourceUri         URI .os-файла с объявлением производителя.
-   * @param kind              Вид производителя.
-   * @param factoryMethodName Имя фабричного метода для {@link ProducerKind#FACTORY};
-   *                          {@code null} для {@link ProducerKind#COMPONENT}.
+   * @param type               Тип производимого желудя.
+   * @param primary            Признак приоритетного желудя ({@code &Верховный}).
+   * @param sourceUri          URI .os-файла с объявлением производителя.
+   * @param producerMethodName Имя метода-производителя: конструктора ({@code ПриСозданииОбъекта})
+   *                           для компонентного желудя либо метода {@code &Завязь} для фабричного.
+   * @param isConstructor      {@code true}, если производитель — конструктор класса (компонентный
+   *                           желудь {@code &Желудь}/{@code &Дуб}); {@code false} — метод {@code &Завязь}.
    */
   public record BeanDeclaration(
     TypeRef type,
     boolean primary,
     URI sourceUri,
-    ProducerKind kind,
-    @Nullable String factoryMethodName
+    String producerMethodName,
+    boolean isConstructor
   ) {
   }
 
   /**
-   * Кандидат-желудь: тип компонента, признак приоритетного ({@code &Верховный}),
-   * URI .os-файла, из которого он зарегистрирован, вид производителя и имя
-   * фабричного метода (для {@code &Завязь}).
+   * Кандидат-желудь: тип, признак приоритетного ({@code &Верховный}), URI .os-файла, имя
+   * метода-производителя и признак конструктора (как autumn-{@code Завязь}).
    */
   private record BeanCandidate(
     TypeRef type,
     boolean primary,
     URI sourceUri,
-    ProducerKind kind,
-    @Nullable String factoryMethodName
+    String producerMethodName,
+    boolean isConstructor
   ) {
   }
 
@@ -227,10 +218,8 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     Map<String, Set<String>> namesByMethod = new LinkedHashMap<>();
     for (var name : names) {
       for (var candidate : beansByName.getOrDefault(name, Set.of())) {
-        if (uri.equals(candidate.sourceUri())
-          && candidate.kind() == ProducerKind.FACTORY
-          && candidate.factoryMethodName() != null) {
-          namesByMethod.computeIfAbsent(candidate.factoryMethodName(), key -> new LinkedHashSet<>()).add(name);
+        if (uri.equals(candidate.sourceUri()) && !candidate.isConstructor()) {
+          namesByMethod.computeIfAbsent(candidate.producerMethodName(), key -> new LinkedHashSet<>()).add(name);
         }
       }
     }
@@ -267,7 +256,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     var result = new LinkedHashSet<String>();
     for (var name : names) {
       for (var candidate : beansByName.getOrDefault(name, Set.of())) {
-        if (uri.equals(candidate.sourceUri()) && candidate.kind() == ProducerKind.COMPONENT) {
+        if (uri.equals(candidate.sourceUri()) && candidate.isConstructor()) {
           result.add(name);
         }
       }
@@ -280,8 +269,8 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
       candidate.type(),
       candidate.primary(),
       candidate.sourceUri(),
-      candidate.kind(),
-      candidate.factoryMethodName());
+      candidate.producerMethodName(),
+      candidate.isConstructor());
   }
 
   /** Все кандидаты, зарегистрированные под именем/прозвищем (lowercase), либо пустой список. */
@@ -336,7 +325,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
       }
       for (var entry : classEntries) {
         typeRegistry.resolve(entry.qualifiedName()).ifPresent(ownerType ->
-          registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri));
+          registerComponent(constructorAnnotations, entry.qualifiedName(), ownerType, uri, constructor.getName()));
       }
       // &Завязь размещается над методом и допустима только в классе-дубе.
       if (metaAnnotationResolver.hasRole(constructorAnnotations, AutumnAnnotations.OAK)) {
@@ -347,7 +336,8 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     });
   }
 
-  private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri) {
+  private void registerComponent(List<Annotation> annotations, String defaultName, TypeRef ownerType, URI uri,
+                                 String constructorName) {
     // &Желудь либо &Дуб: класс является желудём (дуб сам по себе тоже желудь).
     COMPONENT_ROLES.stream()
       .flatMap(role -> metaAnnotationResolver.findByRole(annotations, role).stream()
@@ -360,7 +350,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
         var name = metaAnnotationResolver.roleValues(match.getValue(), match.getKey()).stream()
           .findFirst()
           .orElse(defaultName);
-        register(annotations, name, ownerType, uri, ProducerKind.COMPONENT, null);
+        register(annotations, name, ownerType, uri, constructorName, true);
       });
   }
 
@@ -380,14 +370,14 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
         .orElse(method.getName());
       typeRegistry.resolve(typeName)
         .ifPresent(beanType ->
-          register(annotations, name, beanType, uri, ProducerKind.FACTORY, method.getName()));
+          register(annotations, name, beanType, uri, method.getName(), false));
     });
   }
 
   private void register(List<Annotation> annotations, String primaryName, TypeRef type, URI uri,
-                        ProducerKind kind, @Nullable String factoryMethodName) {
+                        String producerMethodName, boolean isConstructor) {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
-    var candidate = new BeanCandidate(type, primary, uri, kind, factoryMethodName);
+    var candidate = new BeanCandidate(type, primary, uri, producerMethodName, isConstructor);
 
     addCandidate(uri, primaryName, candidate);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {

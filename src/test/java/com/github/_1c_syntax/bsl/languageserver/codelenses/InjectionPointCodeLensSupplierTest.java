@@ -27,12 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.ProducerKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -252,12 +252,13 @@ class InjectionPointCodeLensSupplierTest {
     var serverContext = mock(ServerContext.class);
     var producerDocument = mock(DocumentContext.class);
     var producerTree = mock(SymbolTree.class);
-    var constructor = mock(ConstructorSymbol.class);
+    var producerMethod = mock(MethodSymbol.class);
     when(serverContextProvider.getServerContext(PRODUCER_URI)).thenReturn(Optional.of(serverContext));
     when(serverContext.getDocument(PRODUCER_URI)).thenReturn(producerDocument);
     when(producerDocument.getSymbolTree()).thenReturn(producerTree);
-    when(producerTree.getConstructor()).thenReturn(Optional.of(constructor));
-    when(constructor.getSelectionRange()).thenReturn(PRODUCER_RANGE);
+    // производитель ищется единообразно по имени метода-производителя (конструктор — тоже MethodSymbol)
+    when(producerTree.getMethodSymbol("ПриСозданииОбъекта")).thenReturn(Optional.of(producerMethod));
+    when(producerMethod.getSelectionRange()).thenReturn(PRODUCER_RANGE);
   }
 
   private static Optional<InjectedBean> injection(String name) {
@@ -278,7 +279,7 @@ class InjectionPointCodeLensSupplierTest {
 
   private static BeanDeclaration componentDeclaration(URI sourceUri) {
     return new BeanDeclaration(
-      new TypeRef(TypeKind.USER, "Лог"), false, sourceUri, ProducerKind.COMPONENT, null);
+      new TypeRef(TypeKind.USER, "Лог"), false, sourceUri, "ПриСозданииОбъекта", true);
   }
 
   private CodeLens unresolvedLens(String beanName, boolean collection) {

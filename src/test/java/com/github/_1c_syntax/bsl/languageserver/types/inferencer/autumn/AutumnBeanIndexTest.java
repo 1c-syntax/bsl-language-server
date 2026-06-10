@@ -439,8 +439,8 @@ class AutumnBeanIndexTest {
     // then
     assertThat(declarations).singleElement().satisfies(declaration -> {
       assertThat(declaration.type()).isEqualTo(type);
-      assertThat(declaration.kind()).isEqualTo(AutumnBeanIndex.ProducerKind.COMPONENT);
-      assertThat(declaration.factoryMethodName()).isNull();
+      assertThat(declaration.isConstructor()).isTrue();
+      assertThat(declaration.producerMethodName()).isEqualTo("ПриСозданииОбъекта");
       assertThat(declaration.primary()).isFalse();
       assertThat(declaration.sourceUri()).isEqualTo(Absolute.uri("file:///beans/Логгер.os"));
     });
@@ -461,8 +461,8 @@ class AutumnBeanIndexTest {
     // then
     assertThat(declarations).singleElement().satisfies(declaration -> {
       assertThat(declaration.type()).isEqualTo(type);
-      assertThat(declaration.kind()).isEqualTo(AutumnBeanIndex.ProducerKind.FACTORY);
-      assertThat(declaration.factoryMethodName()).isEqualTo("СоединениеСБазой");
+      assertThat(declaration.isConstructor()).isFalse();
+      assertThat(declaration.producerMethodName()).isEqualTo("СоединениеСБазой");
       assertThat(declaration.sourceUri()).isEqualTo(Absolute.uri("file:///beans/Фабрика.os"));
     });
   }
@@ -560,6 +560,7 @@ class AutumnBeanIndexTest {
   private static ConstructorSymbol method(Annotation... annotations) {
     var constructor = mock(ConstructorSymbol.class);
     lenient().when(constructor.getAnnotations()).thenReturn(List.of(annotations));
+    lenient().when(constructor.getName()).thenReturn("ПриСозданииОбъекта");
     return constructor;
   }
 

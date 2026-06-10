@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDeclaration;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.ProducerKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import org.eclipse.lsp4j.Range;
@@ -100,7 +99,7 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
    */
   public List<InjectionPoint> usagesOfComponent(URI producerUri, Set<String> beanNames) {
     return usages(beanNames, declaration ->
-      producerUri.equals(declaration.sourceUri()) && declaration.kind() == ProducerKind.COMPONENT);
+      producerUri.equals(declaration.sourceUri()) && declaration.isConstructor());
   }
 
   /**
@@ -115,8 +114,8 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
   public List<InjectionPoint> usagesOfFactoryMethod(URI producerUri, String factoryMethodName, Set<String> beanNames) {
     return usages(beanNames, declaration ->
       producerUri.equals(declaration.sourceUri())
-        && declaration.kind() == ProducerKind.FACTORY
-        && factoryMethodName.equals(declaration.factoryMethodName()));
+        && !declaration.isConstructor()
+        && factoryMethodName.equals(declaration.producerMethodName()));
   }
 
   /**
