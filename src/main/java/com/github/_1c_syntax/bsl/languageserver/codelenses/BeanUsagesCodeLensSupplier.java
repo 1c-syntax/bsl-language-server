@@ -46,12 +46,14 @@ import java.util.List;
  * Обратная линза навигации по внедрению зависимостей «ОСени»: показывает, в скольких точках
  * внедряется объявленный желудь, и ведёт к этим точкам ({@code &Пластилин}).
  * <p>
- * Имена желудей документа берутся из {@link AutumnBeanIndex} (что объявляет этот файл-производитель),
- * точки внедрения — из {@link AutumnInjectionPointIndex}. Линзы ставятся:
+ * Линза ставится по <i>производителю</i> и показывается всегда, даже при нуле точек внедрения:
  * <ul>
- *   <li>на конструкторе — агрегатная, по всем желудям файла (включая желудь {@code &Дуба});</li>
- *   <li>на каждом фабричном методе {@code &Завязь} — по точкам внедрения именно его желудя.</li>
+ *   <li>на конструкторе — для компонентного желудя ({@code &Желудь}/{@code &Дуб});</li>
+ *   <li>на каждом фабричном методе {@code &Завязь} — для производимого им желудя.</li>
  * </ul>
+ * Производители берутся из {@link AutumnBeanIndex}, точки внедрения — из
+ * {@link AutumnInjectionPointIndex#usagesOf}, который переигрывает выбор производителя на каждую
+ * точку (одиночное внедрение — только у выбранного DI производителя, коллекция — у всех).
  */
 @Component
 @Order(7)
@@ -77,9 +79,9 @@ public class BeanUsagesCodeLensSupplier
     var uri = documentContext.getUri();
     var codeLenses = new ArrayList<CodeLens>();
 
-    // Линза на конструкторе — для компонентного желудя (&Желудь/&Дуб): точки внедрения,
-    // которые разрешаются именно в него.
-    if (!componentLocations(uri).isEmpty()) {
+    // Линза на конструкторе — если файл объявляет компонентный желудь (&Желудь/&Дуб).
+    // Показывается всегда, даже при нуле точек внедрения (производитель — сам по себе повод).
+    if (!beanIndex.componentBeanNamesForUri(uri).isEmpty()) {
       symbolTree.getConstructor().ifPresent(constructor -> {
         var codeLens = new CodeLens(constructor.getSelectionRange());
         codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), null));
@@ -87,12 +89,9 @@ public class BeanUsagesCodeLensSupplier
       });
     }
 
-    // Линза на каждом методе &Завязь — для производимого им желудя.
+    // Линза на каждом методе &Завязь — для производимого им желудя (тоже всегда).
     for (var factoryBean : beanIndex.factoryBeansForUri(uri)) {
       var methodName = factoryBean.factoryMethodName();
-      if (injectionPointIndex.usagesOf(uri, methodName, factoryBean.beanNames()).isEmpty()) {
-        continue;
-      }
       symbolTree.getMethodSymbol(methodName).ifPresent(method -> {
         var codeLens = new CodeLens(method.getSelectionRange());
         codeLens.setData(new BeanUsagesCodeLensData(uri, getId(), methodName));
@@ -106,12 +105,11 @@ public class BeanUsagesCodeLensSupplier
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, BeanUsagesCodeLensData data) {
     var uri = documentContext.getUri();
+    // Линза показывается всегда (даже при нуле точек внедрения), поэтому команду ставим
+    // безусловно: заголовок отражает число точек, поповер показывает их список (пустой при нуле).
     var locations = data.getFactoryMethodName() == null
       ? componentLocations(uri)
       : factoryLocations(uri, data.getFactoryMethodName());
-    if (locations.isEmpty()) {
-      return unresolved;
-    }
 
     var title = resources.getResourceString(getClass(), TITLE_KEY, locations.size());
     var position = unresolved.getRange().getStart();

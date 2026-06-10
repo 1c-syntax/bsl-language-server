@@ -109,14 +109,17 @@ class BeanUsagesCodeLensSupplierTest {
   }
 
   @Test
-  void doesNotBuildLensWhenNoInjectionPoints() {
-    // given
+  void buildsConstructorLensEvenWithoutInjectionPoints() {
+    // given: компонентный желудь объявлен, но никем не внедряется — линза показывается всегда
     var supplier = supplier();
     when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
-    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог"))).thenReturn(List.of());
+    var constructor = mock(ConstructorSymbol.class);
+    when(constructor.getSelectionRange()).thenReturn(CONSTRUCTOR_RANGE);
+    when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
 
-    // when / then
-    assertThat(supplier.getCodeLenses(documentContext)).isEmpty();
+    // when / then: линза есть, даже без точек внедрения
+    assertThat(supplier.getCodeLenses(documentContext)).singleElement()
+      .satisfies(codeLens -> assertThat(codeLens.getRange()).isEqualTo(CONSTRUCTOR_RANGE));
   }
 
   @Test
@@ -193,6 +196,27 @@ class BeanUsagesCodeLensSupplierTest {
       .thenReturn(command);
     var unresolved = new CodeLens(FACTORY_METHOD_RANGE);
     var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), "СоздатьЛог");
+
+    // when
+    var resolved = supplier.resolve(documentContext, unresolved, data);
+
+    // then
+    assertThat(resolved.getCommand()).isSameAs(command);
+  }
+
+  @Test
+  void resolveSetsCommandEvenWithoutInjectionPoints() {
+    // given: у желудя нет точек внедрения — команда (поповер) всё равно ставится, заголовок «0»
+    var supplier = supplier();
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    when(beanIndex.componentBeanNamesForUri(PRODUCER_URI)).thenReturn(Set.of("мойлог"));
+    when(injectionPointIndex.usagesOf(PRODUCER_URI, null, Set.of("мойлог"))).thenReturn(List.of());
+    var command = new Command("title", "command", List.of());
+    when(navigationCommandBuilder.referencesCommand(
+      anyString(), eq(PRODUCER_URI), eq(CONSTRUCTOR_RANGE.getStart()), eq(List.of())))
+      .thenReturn(command);
+    var unresolved = new CodeLens(CONSTRUCTOR_RANGE);
+    var data = new BeanUsagesCodeLensSupplier.BeanUsagesCodeLensData(PRODUCER_URI, supplier.getId(), null);
 
     // when
     var resolved = supplier.resolve(documentContext, unresolved, data);
