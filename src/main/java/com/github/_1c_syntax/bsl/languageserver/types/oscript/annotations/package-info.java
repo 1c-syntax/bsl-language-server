@@ -20,12 +20,11 @@
  * License along with BSL Language Server.
  */
 /**
- * Вывод типов для фреймворка внедрения зависимостей «ОСень» (Autumn).
- * <p>
- * Содержит резолвер мета-аннотаций, индекс желудей и вычислитель типов
- * внедряемых зависимостей, а также общий разбор имён/параметров аннотаций ОСени.
+ * Поддержка движка пользовательских аннотаций OneScript
+ * (<a href="https://github.com/autumn-library/annotations">annotations</a>):
+ * разрешение мета-аннотаций и помощники чтения параметров.
  */
 @NullMarked
-package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
+package com.github._1c_syntax.bsl.languageserver.types.oscript.annotations;
 
 import org.jspecify.annotations.NullMarked;

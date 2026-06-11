@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
+package com.github._1c_syntax.bsl.languageserver.types.oscript.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -32,8 +32,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex.BeanDefinition;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer.InjectedBean;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
@@ -41,8 +41,8 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptAnnotations;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptMetaAnnotationResolver;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;

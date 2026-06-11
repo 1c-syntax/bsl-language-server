@@ -23,9 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnNavigation;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnInjectionPointIndex;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnNavigation;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;

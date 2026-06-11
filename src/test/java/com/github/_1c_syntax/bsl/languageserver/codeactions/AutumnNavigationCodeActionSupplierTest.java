@@ -32,11 +32,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.FactoryMethodBean;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnComponentInferencer.InjectedBean;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnNavigation;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex.FactoryMethodBean;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer.InjectedBean;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnNavigation;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.CodeActionContext;

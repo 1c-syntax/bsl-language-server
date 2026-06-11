@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations;
+package com.github._1c_syntax.bsl.languageserver.types.oscript.annotations;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -35,8 +35,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptAnnotations;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnAnnotations;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 

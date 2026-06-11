@@ -19,16 +19,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
+package com.github._1c_syntax.bsl.languageserver.types.oscript.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.FactoryMethodBean;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnInjectionPointIndex.InjectionPoint;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex.BeanDefinition;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex.FactoryMethodBean;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnInjectionPointIndex.InjectionPoint;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.utils.Absolute;
