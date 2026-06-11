@@ -22,64 +22,52 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.DiagnosticDto;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpToolArguments;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.mcp.annotation.McpTool;
+import org.springframework.ai.mcp.annotation.McpToolParam;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * MCP-инструмент: вычислить диагностики для одного файла.
  * <p>
- * Переиспользует {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
- * через {@code DocumentContext.getDiagnostics()} — тот же путь, что и LSP-режим.
+ * Переиспользует {@code DocumentContext.getDiagnostics()} — тот же путь, что и LSP-режим.
  */
 @Component
+@Profile("mcp")
 @RequiredArgsConstructor
-public class AnalyzeFileTool implements McpTool {
+public class AnalyzeFileTool {
 
   private final McpWorkspace workspace;
 
-  @Override
-  public String name() {
-    return "analyze_file";
+  /**
+   * Результат анализа файла.
+   *
+   * @param file Путь к проанализированному файлу.
+   * @param diagnosticsCount Количество найденных замечаний.
+   * @param diagnostics Список замечаний.
+   */
+  public record Result(String file, int diagnosticsCount, List<DiagnosticDto> diagnostics) {
   }
 
-  @Override
-  public String description() {
-    return "Run BSL diagnostics for a single 1C/OneScript file and return the list of issues.";
-  }
-
-  @Override
-  public Map<String, Object> inputSchema() {
-    return Map.of(
-      "type", "object",
-      "properties", Map.of(
-        "file", Map.of(
-          "type", "string",
-          "description", "Path to the .bsl/.os file (absolute or relative to the working directory)."
-        )
-      ),
-      "required", List.of("file")
-    );
-  }
-
-  @Override
-  public Object call(Map<String, Object> arguments) {
-    var file = McpToolArguments.requireString(arguments, "file");
-
-    var documentContext = workspace.resolveDocument(file);
-    var diagnostics = documentContext.getDiagnostics().stream()
-      .map(DiagnosticDto::from)
-      .toList();
-
-    return Map.of(
-      "file", file,
-      "diagnosticsCount", diagnostics.size(),
-      "diagnostics", diagnostics
-    );
+  @McpTool(
+    name = "analyze_file",
+    description = "Run BSL diagnostics for a single 1C/OneScript file and return the list of issues.",
+    generateOutputSchema = false)
+  public Result analyzeFile(
+    @McpToolParam(required = true,
+      description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
+    String file
+  ) {
+    return workspace.inWorkspace(() -> {
+      var documentContext = workspace.resolveDocument(file);
+      var diagnostics = documentContext.getDiagnostics().stream()
+        .map(DiagnosticDto::from)
+        .toList();
+      return new Result(file, diagnostics.size(), diagnostics);
+    });
   }
 }

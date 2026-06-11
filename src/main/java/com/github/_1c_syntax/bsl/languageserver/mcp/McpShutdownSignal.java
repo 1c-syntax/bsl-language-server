@@ -19,15 +19,35 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-/**
- * Прототип режима Model Context Protocol (MCP).
- * <p>
- * MCP-сервер поверх stdio поднимает автоконфигурация Spring AI (профиль {@code mcp});
- * инструменты объявлены аннотацией {@code @McpTool} и переиспользуют движок анализа и
- * провайдеры языкового сервера. Демонстрирует, что MCP — это ещё один транспорт над уже
- * отвязанным от LSP ядром (наряду с режимами {@code lsp}, {@code websocket}, {@code analyze}).
- */
-@NullMarked
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
-import org.jspecify.annotations.NullMarked;
+import java.util.concurrent.CountDownLatch;
+
+/**
+ * Сигнал завершения работы MCP-сервера.
+ * <p>
+ * Срабатывает при закрытии входного потока (EOF), т.е. при отключении клиента.
+ * Команда запуска блокируется на {@link #await()} и завершает процесс после сигнала.
+ */
+public class McpShutdownSignal {
+
+  private final CountDownLatch latch = new CountDownLatch(1);
+
+  /**
+   * Подать сигнал завершения.
+   */
+  public void signal() {
+    latch.countDown();
+  }
+
+  /**
+   * Дождаться сигнала завершения.
+   */
+  public void await() {
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+}

@@ -21,36 +21,27 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpServerRunner;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpShutdownSignal;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 import static picocli.CommandLine.Option;
 
 /**
- * Запуск сервера в режиме Model Context Protocol (MCP).
+ * Запуск сервера в режиме Model Context Protocol (MCP) поверх stdio.
  * <p>
- * Прототип. Поднимает MCP-сервер поверх stdio, переиспользуя движок анализа
- * (тот же {@link ServerContextProvider} и провайдеры, что и LSP-режим).
- * Перед стартом индексирует исходники, чтобы инструменты (диагностики, символы,
- * поиск ссылок) работали корректно, в том числе кросс-файлово.
+ * Сам сервер поднимает автоконфигурация Spring AI (профиль {@code mcp}),
+ * переиспользуя движок анализа: инструменты ({@code @McpTool}) работают над тем же
+ * {@link com.github._1c_syntax.bsl.languageserver.context.ServerContext}, что и LSP-режим.
+ * Команда индексирует исходники и блокируется до отключения клиента (EOF stdin).
  * <p>
  * Ключ команды:
  *  mcp
@@ -89,11 +80,8 @@ public class McpStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
-  private final GlobalLanguageServerConfiguration globalConfiguration;
-  private final LanguageServerConfiguration configuration;
-  private final ServerContextProvider serverContextProvider;
   private final McpWorkspace workspace;
-  private final McpServerRunner mcpServerRunner;
+  private final ObjectProvider<McpShutdownSignal> shutdownSignalProvider;
 
   @Override
   public Integer call() {
@@ -103,32 +91,17 @@ public class McpStartCommand implements Callable<Integer> {
       return 1;
     }
 
-    var configurationFile = new File(configurationOption);
-    globalConfiguration.update(configurationFile);
+    workspace.initialize(srcDir, new File(configurationOption));
 
-    var workspaceUri = srcDir.toUri();
-    var serverContext = serverContextProvider.addWorkspace(workspaceUri);
-
-    try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-      configuration.update(configurationFile);
-
-      var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-      serverContext.setConfigurationRoot(configurationPath);
-
-      LOGGER.info("Indexing source directory `{}`...", srcDir);
-      var files = new ArrayList<>(BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths()));
-      serverContext.populateContext(files);
-      LOGGER.info("Indexed {} files.", files.size());
+    // Сервер уже поднят автоконфигурацией; блокируемся до отключения клиента.
+    var shutdownSignal = shutdownSignalProvider.getIfAvailable();
+    if (shutdownSignal == null) {
+      LOGGER.error("MCP profile is not active: server is not running. "
+        + "Start the server via the `mcp` subcommand.");
+      return 1;
     }
 
-    workspace.bind(serverContext, workspaceUri);
-
-    // stdout — канал протокола MCP; перенаправляем посторонний вывод в stderr.
-    var protocolOut = System.out;
-    System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.err), true, StandardCharsets.UTF_8));
-
-    mcpServerRunner.run(System.in, protocolOut);
-
+    shutdownSignal.await();
     return 0;
   }
 }

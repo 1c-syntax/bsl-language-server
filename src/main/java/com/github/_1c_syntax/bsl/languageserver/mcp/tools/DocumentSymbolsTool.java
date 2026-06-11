@@ -22,15 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.SymbolDto;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpToolArguments;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.mcp.annotation.McpTool;
+import org.springframework.ai.mcp.annotation.McpToolParam;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * MCP-инструмент: получить дерево символов документа.
@@ -39,48 +39,37 @@ import java.util.Map;
  * отвечает на запрос {@code textDocument/documentSymbol} в LSP-режиме.
  */
 @Component
+@Profile("mcp")
 @RequiredArgsConstructor
-public class DocumentSymbolsTool implements McpTool {
+public class DocumentSymbolsTool {
 
   private final McpWorkspace workspace;
   private final DocumentSymbolProvider documentSymbolProvider;
 
-  @Override
-  public String name() {
-    return "document_symbols";
+  /**
+   * Результат разбора символов файла.
+   *
+   * @param file Путь к файлу.
+   * @param symbols Дерево символов.
+   */
+  public record Result(String file, List<SymbolDto> symbols) {
   }
 
-  @Override
-  public String description() {
-    return "Return the symbol tree (regions, methods, variables) of a 1C/OneScript file.";
-  }
-
-  @Override
-  public Map<String, Object> inputSchema() {
-    return Map.of(
-      "type", "object",
-      "properties", Map.of(
-        "file", Map.of(
-          "type", "string",
-          "description", "Path to the .bsl/.os file (absolute or relative to the working directory)."
-        )
-      ),
-      "required", List.of("file")
-    );
-  }
-
-  @Override
-  public Object call(Map<String, Object> arguments) {
-    var file = McpToolArguments.requireString(arguments, "file");
-
-    var documentContext = workspace.resolveDocument(file);
-    var symbols = documentSymbolProvider.getDocumentSymbols(documentContext).stream()
-      .map(SymbolDto::from)
-      .toList();
-
-    return Map.of(
-      "file", file,
-      "symbols", symbols
-    );
+  @McpTool(
+    name = "document_symbols",
+    description = "Return the symbol tree (regions, methods, variables) of a 1C/OneScript file.",
+    generateOutputSchema = false)
+  public Result documentSymbols(
+    @McpToolParam(required = true,
+      description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
+    String file
+  ) {
+    return workspace.inWorkspace(() -> {
+      var documentContext = workspace.resolveDocument(file);
+      var symbols = documentSymbolProvider.getDocumentSymbols(documentContext).stream()
+        .map(SymbolDto::from)
+        .toList();
+      return new Result(file, symbols);
+    });
   }
 }

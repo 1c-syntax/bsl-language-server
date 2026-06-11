@@ -112,6 +112,12 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   public static void main(String[] args) {
     var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
       .web(getWebApplicationType(args))
+      .profiles(getActiveProfiles(args))
+      // MCP server autoconfiguration is off by default; the `mcp` profile re-enables it
+      // (see application-mcp.properties). Declared as default properties so it also applies in tests.
+      .properties(
+        "spring.ai.mcp.server.enabled=false",
+        "spring.ai.mcp.server.annotation-scanner.enabled=false")
       .run(args);
 
     var launcher = applicationContext.getBean(BSLLSPLauncher.class);
@@ -181,5 +187,13 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
       webApplicationType = WebApplicationType.NONE;
     }
     return webApplicationType;
+  }
+
+  private static String[] getActiveProfiles(String[] args) {
+    var argsList = Arrays.asList(args);
+    if (argsList.contains("mcp") || argsList.contains("--mcp")) {
+      return new String[]{"mcp"};
+    }
+    return new String[0];
   }
 }

@@ -22,85 +22,67 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.LocationDto;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpToolArguments;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.springframework.ai.mcp.annotation.McpTool;
+import org.springframework.ai.mcp.annotation.McpToolParam;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * MCP-инструмент: найти все ссылки на символ в позиции курсора.
  * <p>
  * Переиспользует {@link ReferencesProvider} (обработчик {@code textDocument/references}).
- * Корректность кросс-файловых ссылок обеспечивается тем, что контекст сервера
- * проиндексирован на старте MCP-режима.
+ * Кросс-файловые ссылки корректны, так как контекст сервера проиндексирован на старте.
  */
 @Component
+@Profile("mcp")
 @RequiredArgsConstructor
-public class FindReferencesTool implements McpTool {
+public class FindReferencesTool {
 
   private final McpWorkspace workspace;
   private final ReferencesProvider referencesProvider;
 
-  @Override
-  public String name() {
-    return "find_references";
+  /**
+   * Результат поиска ссылок.
+   *
+   * @param file Путь к файлу.
+   * @param referencesCount Количество найденных ссылок.
+   * @param references Список местоположений ссылок.
+   */
+  public record Result(String file, int referencesCount, List<LocationDto> references) {
   }
 
-  @Override
-  public String description() {
-    return "Find all references to the symbol located at the given zero-based position in a file.";
-  }
+  @McpTool(
+    name = "find_references",
+    description = "Find all references to the symbol located at the given zero-based position in a file.",
+    generateOutputSchema = false)
+  public Result findReferences(
+    @McpToolParam(required = true,
+      description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
+    String file,
+    @McpToolParam(required = true, description = "Zero-based line number of the symbol.")
+    int line,
+    @McpToolParam(required = true, description = "Zero-based character offset within the line.")
+    int character
+  ) {
+    return workspace.inWorkspace(() -> {
+      var documentContext = workspace.resolveDocument(file);
 
-  @Override
-  public Map<String, Object> inputSchema() {
-    return Map.of(
-      "type", "object",
-      "properties", Map.of(
-        "file", Map.of(
-          "type", "string",
-          "description", "Path to the .bsl/.os file (absolute or relative to the working directory)."
-        ),
-        "line", Map.of(
-          "type", "integer",
-          "description", "Zero-based line number of the symbol."
-        ),
-        "character", Map.of(
-          "type", "integer",
-          "description", "Zero-based character offset within the line."
-        )
-      ),
-      "required", List.of("file", "line", "character")
-    );
-  }
+      var params = new ReferenceParams();
+      params.setPosition(new Position(line, character));
+      params.setContext(new ReferenceContext(true));
 
-  @Override
-  public Object call(Map<String, Object> arguments) {
-    var file = McpToolArguments.requireString(arguments, "file");
-    var line = McpToolArguments.requireInt(arguments, "line");
-    var character = McpToolArguments.requireInt(arguments, "character");
-
-    var documentContext = workspace.resolveDocument(file);
-
-    var params = new ReferenceParams();
-    params.setPosition(new Position(line, character));
-    params.setContext(new ReferenceContext(true));
-
-    var references = referencesProvider.getReferences(documentContext, params).stream()
-      .map(LocationDto::from)
-      .toList();
-
-    return Map.of(
-      "file", file,
-      "referencesCount", references.size(),
-      "references", references
-    );
+      var references = referencesProvider.getReferences(documentContext, params).stream()
+        .map(LocationDto::from)
+        .toList();
+      return new Result(file, references.size(), references);
+    });
   }
 }

@@ -21,57 +21,111 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Supplier;
 
 /**
- * Хранилище активного рабочего пространства MCP-сервера.
+ * Активное рабочее пространство MCP-сервера: общий {@link ServerContext},
+ * наполненный документами проекта.
  * <p>
- * Инициализируется командой запуска ({@code mcp}) единожды на старте и далее
- * используется инструментами для доступа к общему
- * {@link ServerContext}. Благодаря тому, что это singleton-бин Spring,
- * MCP-инструменты работают над тем же индексом, что и остальной движок.
+ * Индексация выполняется командой запуска ({@code mcp}) на старте. Поскольку
+ * MCP-сервер (его поднимает автоконфигурация Spring AI) может начать принимать
+ * запросы раньше, чем завершится индексация, вызовы инструментов синхронизируются
+ * через {@link #readyLatch}: ранний вызов дождётся готовности контекста.
  */
+@Slf4j
 @Component
-@Getter
+@RequiredArgsConstructor
 public class McpWorkspace {
 
+  private final GlobalLanguageServerConfiguration globalConfiguration;
+  private final LanguageServerConfiguration configuration;
+  private final ServerContextProvider serverContextProvider;
+
+  private final CountDownLatch readyLatch = new CountDownLatch(1);
+
+  @Getter
   private ServerContext serverContext;
+  @Getter
   private URI uri;
 
   /**
-   * Привязать рабочее пространство к серверу.
+   * Проиндексировать исходники и привязать рабочее пространство к серверу.
    *
-   * @param serverContext Контекст сервера, уже наполненный документами.
-   * @param uri URI корня рабочего пространства.
+   * @param srcDir Каталог исходных файлов.
+   * @param configurationFile Файл конфигурации BSL Language Server (может отсутствовать).
    */
-  public void bind(ServerContext serverContext, URI uri) {
-    this.serverContext = serverContext;
-    this.uri = uri;
+  public void initialize(Path srcDir, File configurationFile) {
+    globalConfiguration.update(configurationFile);
+
+    uri = srcDir.toUri();
+    serverContext = serverContextProvider.addWorkspace(uri);
+
+    try (var ignored = WorkspaceContextHolder.forUri(uri)) {
+      configuration.update(configurationFile);
+
+      var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+      serverContext.setConfigurationRoot(configurationPath);
+
+      LOGGER.info("Indexing source directory `{}`...", srcDir);
+      var files = new ArrayList<>(BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths()));
+      serverContext.populateContext(files);
+      LOGGER.info("Indexed {} files.", files.size());
+    } finally {
+      readyLatch.countDown();
+    }
+  }
+
+  /**
+   * Выполнить действие в контексте рабочего пространства, дождавшись окончания индексации.
+   *
+   * @param action Действие над контекстом.
+   * @param <T> Тип результата.
+   * @return Результат действия.
+   */
+  public <T> T inWorkspace(Supplier<T> action) {
+    awaitReady();
+    try (var ignored = WorkspaceContextHolder.forUri(uri)) {
+      return action.get();
+    }
   }
 
   /**
    * Получить контекст документа по пути к файлу, гарантированно пересобрав AST.
-   * <p>
-   * Если документ ещё не зарегистрирован в контексте — он будет добавлен.
    *
    * @param path Путь к файлу (абсолютный или относительный).
    * @return Готовый к запросам контекст документа.
    */
   public DocumentContext resolveDocument(String path) {
-    if (serverContext == null) {
-      throw new IllegalStateException("MCP workspace is not initialized");
-    }
-
     var fileUri = Absolute.uri(new File(path));
     var documentContext = serverContext.addDocument(fileUri);
     serverContext.rebuildDocument(documentContext);
     return documentContext;
+  }
+
+  private void awaitReady() {
+    try {
+      readyLatch.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while waiting for MCP workspace to be ready", e);
+    }
   }
 }

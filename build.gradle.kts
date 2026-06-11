@@ -33,6 +33,7 @@ repositories {
     mavenCentral()
     maven(url = "https://projectlombok.org/edge-releases")
     maven("https://central.sonatype.com/repository/maven-snapshots")
+    maven(url = "https://repo.spring.io/milestone")
 }
 
 
@@ -86,8 +87,10 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
-    // MCP (Model Context Protocol) server SDK (bundles Jackson 3.x serialization)
-    api("io.modelcontextprotocol.sdk:mcp:1.0.0")
+    // Spring AI MCP (Model Context Protocol) server starter (STDIO).
+    // Spring AI 2.0 is the first line compatible with Spring Boot 4 (milestone at the time of writing).
+    api(platform("org.springframework.ai:spring-ai-bom:2.0.0-M6"))
+    api("org.springframework.ai:spring-ai-starter-mcp-server")
 
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.35.0")
