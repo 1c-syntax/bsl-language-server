@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781128664352,
+  "lastUpdate": 1781193688569,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36797,6 +36797,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 14.539384344763963",
             "extra": "mean: 271.8254993756612 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "960671e2b0c95e2886debf89a48dff5a80307fdc",
+          "message": "Merge pull request #4014 from 1c-syntax/claude/os-files-type-hierarchy-HzJ5n\n\nfeat(providers): иерархия типов для OneScript-классов библиотеки extends",
+          "timestamp": "2026-06-11T13:07:04+02:00",
+          "tree_id": "13bec64c5a8ec6bd807938a751e14ce08c61455e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/960671e2b0c95e2886debf89a48dff5a80307fdc"
+        },
+        "date": 1781193679929,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 278.6228353182475,
+            "unit": "sec",
+            "range": "stddev: 6.077067043670006",
+            "extra": "mean: 278.6228353182475 sec\nrounds: 3"
           }
         ]
       }
