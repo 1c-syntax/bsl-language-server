@@ -251,11 +251,7 @@ public class OScriptLibraryIndex {
     if (!libraryNames.isEmpty()) {
       return libraryNames;
     }
-    // .os-документы — всегда иерархические file:-URI с непустым путём; guard нужен
-    // на случай непрозрачного URI, чтобы не вернуть список с пустым именем класса.
-    var path = uri.getPath();
-    var basename = path == null ? "" : FilenameUtils.getBaseName(path);
-    return basename.isBlank() ? List.of(uri.toString()) : List.of(basename);
+    return List.of(FilenameUtils.getBaseName(uri.getPath()));
   }
 
   /**

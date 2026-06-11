@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
@@ -218,14 +219,14 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void classNamesFallsBackToBasenameForNonLibraryFile() {
+  void classNamesUsesBasenameForNonLibraryFile() {
     // given — обычный .os, не зарегистрированный в lib.config.
     initServerContext();
-    var plain = com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext(
-      com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+    var plain = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
       "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n", context);
 
-    // when / then — fallback на basename, library-классом не считается.
+    // when / then — имя класса = basename файла, library-классом не считается.
     assertThat(index.classNames(plain)).containsExactly("fake-uri");
     assertThat(index.isLibraryClass(plain)).isFalse();
   }

@@ -39,8 +39,7 @@ import java.util.List;
 
 /**
  * Провайдер иерархии типов для OneScript-классов, использующих библиотеку
- * наследования <a href="https://github.com/nixel2007/extends">extends</a>
- * (автор — nixel2007).
+ * наследования <a href="https://github.com/nixel2007/extends">extends</a>.
  * <p>
  * Обрабатывает запросы {@code textDocument/prepareTypeHierarchy},
  * {@code typeHierarchy/supertypes} и {@code typeHierarchy/subtypes}.
