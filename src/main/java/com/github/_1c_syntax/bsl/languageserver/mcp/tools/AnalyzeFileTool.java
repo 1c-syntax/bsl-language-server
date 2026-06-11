@@ -56,6 +56,10 @@ public class AnalyzeFileTool {
   @McpTool(
     name = "analyze_file",
     description = "Run BSL diagnostics for a single 1C/OneScript file and return the list of issues.",
+    // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
+    // fields (here — nullable severity/code/source). Known upstream bug, open as of 2.0.0-M6:
+    // https://github.com/spring-projects/spring-ai/issues/4825
+    // https://github.com/spring-projects/spring-ai/issues/4487
     generateOutputSchema = false)
   public Result analyzeFile(
     @McpToolParam(required = true,

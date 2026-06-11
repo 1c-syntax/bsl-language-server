@@ -62,6 +62,10 @@ public class FindReferencesTool {
   @McpTool(
     name = "find_references",
     description = "Find all references to the symbol located at the given zero-based position in a file.",
+    // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
+    // fields. Known upstream bug, open as of 2.0.0-M6:
+    // https://github.com/spring-projects/spring-ai/issues/4825
+    // https://github.com/spring-projects/spring-ai/issues/4487
     generateOutputSchema = false)
   public Result findReferences(
     @McpToolParam(required = true,
