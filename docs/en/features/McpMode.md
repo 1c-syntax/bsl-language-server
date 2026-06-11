@@ -13,7 +13,7 @@ MCP can be exposed in several ways.
 
 ### Standalone MCP server (the `mcp` command)
 
-The transport is selected with `--protocol`: `stdio` (default) or `sse`. LSP is not started.
+The transport is selected with `--protocol`: `stdio` (default), `sse` or `streamable`. LSP is not started.
 
 `stdio` — the standard way to connect local tools:
 
@@ -26,6 +26,12 @@ java -jar bsl-language-server.jar mcp
 
 ```sh
 java -jar bsl-language-server.jar mcp --protocol sse --server.port=8080
+```
+
+`streamable` — Streamable HTTP over HTTP on a built-in web server (endpoint `/mcp`):
+
+```sh
+java -jar bsl-language-server.jar mcp --protocol streamable --server.port=8080
 ```
 
 ### Next to LSP over stdio
@@ -67,10 +73,10 @@ Positions (`line`, `character`) are zero-based, as in LSP.
 | Option | Mode | Purpose |
 | --- | --- | --- |
 | `-c`, `--configuration` `<path>` | all | Path to the global configuration file (see [Configuration file](ConfigurationFile.md)) |
-| `--protocol` `<stdio\|sse>` | `mcp` | Transport of the standalone MCP server: `stdio` (default) or `sse` |
+| `--protocol` `<stdio\|sse\|streamable>` | `mcp` | Transport of the standalone MCP server: `stdio` (default), `sse` or `streamable` |
 | `--mcp` | `lsp` (default), `websocket` | Also expose MCP over Streamable HTTP |
 | `--mcp-path` `<path>` | `lsp --mcp`, `websocket --mcp` | MCP endpoint path (default `/mcp`) |
-| `--server.port=<port>` | `mcp --protocol sse`, `lsp --mcp`, `websocket --mcp` | Port of the built-in web server |
+| `--server.port=<port>` | `mcp --protocol sse\|streamable`, `lsp --mcp`, `websocket --mcp` | Port of the built-in web server |
 
 ## Client configuration examples
 

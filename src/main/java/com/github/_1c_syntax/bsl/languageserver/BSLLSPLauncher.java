@@ -43,6 +43,7 @@ import picocli.CommandLine.Unmatched;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -181,7 +182,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
 
   private static WebApplicationType getWebApplicationType(String[] args) {
     // A servlet container is needed for the LSP WebSocket endpoint or any MCP HTTP transport (Streamable / SSE).
-    if (isWebsocketMode(args) || isMcpHttp(args) || isMcpSse(args)) {
+    if (isWebsocketMode(args) || isMcpHttp(args) || isMcpSubcommandOverHttp(args)) {
       return WebApplicationType.SERVLET;
     }
     return WebApplicationType.NONE;
@@ -189,14 +190,19 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
 
   private static String[] getActiveProfiles(String[] args) {
     if (isMcpHttp(args)) {
-      // MCP over Streamable HTTP. Two distinct sub-profiles by the LSP transport it sits next to:
-      // `websocket-mcp` (stdout free) vs `lsp-mcp` (stdout is the LSP channel) — drives log routing.
+      // `--mcp` flag: MCP over Streamable HTTP alongside LSP. Two distinct sub-profiles by the LSP
+      // transport it sits next to: `websocket-mcp` (stdout free) vs `lsp-mcp` (stdout is the LSP channel).
       var lspTransportProfile = isWebsocketMode(args) ? "websocket-mcp" : "lsp-mcp";
       return new String[]{"mcp", lspTransportProfile};
     }
     if (isMcpSubcommand(args)) {
-      // standalone `mcp` subcommand: transport selected by --protocol (stdio | sse).
-      return isMcpSse(args) ? new String[]{"mcp", "mcp-sse"} : new String[]{"mcp", "mcp-stdio"};
+      // standalone `mcp` subcommand: transport selected by --protocol (stdio | sse | streamable).
+      var transportProfile = switch (mcpProtocol(args)) {
+        case "sse" -> "mcp-sse";
+        case "streamable" -> "mcp-streamable";
+        default -> "mcp-stdio";
+      };
+      return new String[]{"mcp", transportProfile};
     }
     return new String[0];
   }
@@ -229,14 +235,22 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   }
 
   /**
-   * Команда {@code mcp} с {@code --protocol sse} — MCP по SSE (HTTP), требует servlet-контейнера.
+   * Значение {@code --protocol} команды {@code mcp} (по умолчанию {@code stdio}).
    */
-  private static boolean isMcpSse(String[] args) {
+  private static String mcpProtocol(String[] args) {
+    var protocol = extractOptionValue(args, "--protocol");
+    return protocol == null ? "stdio" : protocol.toLowerCase(Locale.ROOT);
+  }
+
+  /**
+   * Команда {@code mcp} с HTTP-транспортом ({@code --protocol sse|streamable}) — требует servlet-контейнера.
+   */
+  private static boolean isMcpSubcommandOverHttp(String[] args) {
     if (!isMcpSubcommand(args)) {
       return false;
     }
-    var protocol = extractOptionValue(args, "--protocol");
-    return protocol != null && protocol.equalsIgnoreCase("sse");
+    var protocol = mcpProtocol(args);
+    return protocol.equals("sse") || protocol.equals("streamable");
   }
 
   /**

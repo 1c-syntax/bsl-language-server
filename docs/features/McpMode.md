@@ -13,7 +13,7 @@ MCP можно поднять несколькими способами.
 
 ### Отдельный MCP-сервер (команда `mcp`)
 
-Транспорт выбирается параметром `--protocol`: `stdio` (по умолчанию) или `sse`. LSP при этом не запускается.
+Транспорт выбирается параметром `--protocol`: `stdio` (по умолчанию), `sse` или `streamable`. LSP при этом не запускается.
 
 `stdio` — стандартный способ подключения локальных инструментов:
 
@@ -26,6 +26,12 @@ java -jar bsl-language-server.jar mcp
 
 ```sh
 java -jar bsl-language-server.jar mcp --protocol sse --server.port=8080
+```
+
+`streamable` — Streamable HTTP по HTTP на встроенном веб-сервере (эндпоинт `/mcp`):
+
+```sh
+java -jar bsl-language-server.jar mcp --protocol streamable --server.port=8080
 ```
 
 ### Рядом с LSP по stdio
@@ -67,10 +73,10 @@ java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 | Параметр | Режим | Назначение |
 | --- | --- | --- |
 | `-c`, `--configuration` `<path>` | все | Путь к глобальному конфигурационному файлу (см. [Конфигурационный файл](ConfigurationFile.md)) |
-| `--protocol` `<stdio\|sse>` | `mcp` | Транспорт отдельного MCP-сервера: `stdio` (по умолчанию) или `sse` |
+| `--protocol` `<stdio\|sse\|streamable>` | `mcp` | Транспорт отдельного MCP-сервера: `stdio` (по умолчанию), `sse` или `streamable` |
 | `--mcp` | `lsp` (по умолчанию), `websocket` | Дополнительно поднять MCP по Streamable HTTP |
 | `--mcp-path` `<path>` | `lsp --mcp`, `websocket --mcp` | Адрес MCP-эндпоинта (по умолчанию `/mcp`) |
-| `--server.port=<port>` | `mcp --protocol sse`, `lsp --mcp`, `websocket --mcp` | Порт встроенного веб-сервера |
+| `--server.port=<port>` | `mcp --protocol sse\|streamable`, `lsp --mcp`, `websocket --mcp` | Порт встроенного веб-сервера |
 
 ## Примеры конфигурации клиента
 

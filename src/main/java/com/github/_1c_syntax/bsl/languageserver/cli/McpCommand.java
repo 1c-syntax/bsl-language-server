@@ -38,25 +38,27 @@ import static picocli.CommandLine.Option;
 /**
  * Запуск сервера в режиме Model Context Protocol (MCP).
  * <p>
- * Транспорт выбирается параметром {@code --protocol}: {@code stdio} (по умолчанию) или {@code sse}
- * (Server-Sent Events по HTTP). Сервер поднимает автоконфигурация Spring AI (профили
- * {@code mcp,mcp-stdio} или {@code mcp,mcp-sse}); инструменты ({@code @McpTool}) работают через
- * общий {@code ServerContextProvider}. Рабочие пространства приходят от клиента через MCP roots
+ * Транспорт выбирается параметром {@code --protocol}: {@code stdio} (по умолчанию), {@code sse}
+ * (Server-Sent Events по HTTP) или {@code streamable} (Streamable HTTP). Сервер поднимает
+ * автоконфигурация Spring AI (профили {@code mcp,mcp-stdio} / {@code mcp,mcp-sse} /
+ * {@code mcp,mcp-streamable}); инструменты ({@code @McpTool}) работают через общий
+ * {@code ServerContextProvider}. Рабочие пространства приходят от клиента через MCP roots
  * (см. {@code McpRootsChangeConsumer}) — аналог workspace folders в LSP.
  * <p>
  * Для {@code stdio} команда применяет глобальную конфигурацию и блокируется до отключения клиента
- * (EOF stdin). Для {@code sse} процесс жив за счёт встроенного веб-сервера.
+ * (EOF stdin). Для HTTP-транспортов ({@code sse}, {@code streamable}) процесс жив за счёт
+ * встроенного веб-сервера.
  * <p>
  * Ключ команды:
  *  mcp
  * Параметры:
  *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server.
- *  (--protocol) &lt;arg&gt;          - Транспорт MCP: stdio (по умолчанию) или sse.
+ *  (--protocol) &lt;arg&gt;          - Транспорт MCP: stdio (по умолчанию), sse или streamable.
  */
 @Slf4j
 @Command(
   name = "mcp",
-  description = "MCP (Model Context Protocol) server mode (stdio or sse)",
+  description = "MCP (Model Context Protocol) server mode (stdio, sse or streamable)",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2026|@")
 @Component
@@ -65,6 +67,7 @@ public class McpCommand implements Callable<Integer> {
 
   static final String PROTOCOL_STDIO = "stdio";
   static final String PROTOCOL_SSE = "sse";
+  static final String PROTOCOL_STREAMABLE = "streamable";
 
   @Option(
     names = {"-h", "--help"},
@@ -81,7 +84,7 @@ public class McpCommand implements Callable<Integer> {
 
   @Option(
     names = {"--protocol"},
-    description = "MCP transport protocol: stdio (default) or sse",
+    description = "MCP transport protocol: stdio (default), sse or streamable",
     paramLabel = "<protocol>",
     defaultValue = PROTOCOL_STDIO)
   private String protocol;
@@ -93,18 +96,29 @@ public class McpCommand implements Callable<Integer> {
   public Integer call() {
     globalConfiguration.update(new File(configurationOption));
 
-    var transport = protocol.toLowerCase(Locale.ROOT);
-    if (PROTOCOL_SSE.equals(transport)) {
-      // HTTP-транспорт: процесс жив за счёт встроенного веб-сервера, блокироваться не нужно.
-      LOGGER.info("MCP server enabled over SSE");
-      return -1;
-    }
-    if (!PROTOCOL_STDIO.equals(transport)) {
-      LOGGER.error("Unknown MCP protocol `{}`. Use `stdio` or `sse`.", protocol);
-      return 1;
-    }
+    return switch (protocol.toLowerCase(Locale.ROOT)) {
+      case PROTOCOL_STDIO -> runStdio();
+      case PROTOCOL_SSE -> runHttp("SSE");
+      case PROTOCOL_STREAMABLE -> runHttp("Streamable HTTP");
+      default -> {
+        LOGGER.error("Unknown MCP protocol `{}`. Use `stdio`, `sse` or `streamable`.", protocol);
+        yield 1;
+      }
+    };
+  }
 
-    // stdio: сервер уже поднят автоконфигурацией; блокируемся до отключения клиента.
+  /**
+   * HTTP-транспорт (sse/streamable): процесс жив за счёт встроенного веб-сервера, блокироваться не нужно.
+   */
+  private int runHttp(String transportName) {
+    LOGGER.info("MCP server enabled over {}", transportName);
+    return -1;
+  }
+
+  /**
+   * stdio: сервер уже поднят автоконфигурацией; блокируемся до отключения клиента (EOF stdin).
+   */
+  private int runStdio() {
     var shutdownSignal = shutdownSignalProvider.getIfAvailable();
     if (shutdownSignal == null) {
       LOGGER.error("MCP profile is not active: server is not running.");
