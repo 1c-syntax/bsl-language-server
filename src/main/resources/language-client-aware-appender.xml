@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
     <appender name="LANGUAGE_CLIENT_AWARE" class="com.github._1c_syntax.bsl.languageserver.infrastructure.LanguageClientAwareAppender">
+        <!--
+            Когда LanguageClient не подключён, сообщения уходят в стандартный поток.
+            Используем System.err, чтобы не загрязнять stdout, который в stdio-режимах
+            (LSP, MCP) является каналом протокола.
+        -->
+        <target>System.err</target>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${CONSOLE_LOG_THRESHOLD}</level>
         </filter>
