@@ -61,9 +61,11 @@ com.github._1c_syntax.bsl.languageserver.semantictokens.strings
 com.github._1c_syntax.bsl.languageserver.types
 com.github._1c_syntax.bsl.languageserver.types.index
 com.github._1c_syntax.bsl.languageserver.types.inferencer
-com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn
 com.github._1c_syntax.bsl.languageserver.types.model
 com.github._1c_syntax.bsl.languageserver.types.oscript
+com.github._1c_syntax.bsl.languageserver.types.oscript.annotations
+com.github._1c_syntax.bsl.languageserver.types.oscript.autumn
+com.github._1c_syntax.bsl.languageserver.types.oscript.extends_
 com.github._1c_syntax.bsl.languageserver.types.registry
 com.github._1c_syntax.bsl.languageserver.types.scope
 com.github._1c_syntax.bsl.languageserver.types.symbol
