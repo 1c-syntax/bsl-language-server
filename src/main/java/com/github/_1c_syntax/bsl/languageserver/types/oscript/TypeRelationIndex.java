@@ -24,13 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import lombok.RequiredArgsConstructor;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -40,9 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Двунаправленный индекс прямых отношений библиотеки extends. Для запросов —
@@ -56,20 +51,16 @@ import java.util.concurrent.atomic.AtomicReference;
  * переиндексация библиотек ({@link OScriptLibraryIndex}) на содержимое карт
  * не влияет.
  * <p>
- * Сборка ленивая (барьер на {@link AtomicReference}, ровно один раз) по всем
- * {@code .os}-документам workspace; далее индекс обновляется инкрементально:
- * правка .os-документа заменяет его вклад, удаление — убирает. Правка
- * класса-определения аннотации ({@code &Аннотация}) меняет разворачивание
- * мета-аннотаций в чужих классах, поэтому сбрасывает индекс на полную ленивую
- * пересборку; туда же — переиндексация библиотек и перепопуляция контекста.
+ * Ленивая сборка, инвалидация и инкрементальные обновления — в
+ * {@link AbstractOScriptLazyIndex}; здесь — источник пересборки (все
+ * {@code .os}-документы workspace) и реакция на полную перепопуляцию контекста
+ * и добавление новых документов.
  */
 @Component
 @WorkspaceScope
-@RequiredArgsConstructor
-public class TypeRelationIndex {
+public class TypeRelationIndex extends AbstractOScriptLazyIndex {
 
   private final OScriptExtends oScriptExtends;
-  private final OScriptMetaAnnotationResolver metaAnnotationResolver;
 
   /** Имя родителя (lowercase) → URI документов, объявивших его в {@code &Расширяет}. */
   private final Map<String, Set<URI>> childUrisByParentName = new ConcurrentHashMap<>();
@@ -80,11 +71,11 @@ public class TypeRelationIndex {
   /** URI → имена интерфейсов, заявленные документом (для точечного удаления вклада). */
   private final Map<URI, Set<String>> interfaceNamesByUri = new ConcurrentHashMap<>();
 
-  /**
-   * Барьер первичной сборки: завершённый future — индекс построен; {@code null} —
-   * не построен (соберётся лениво при следующем обращении).
-   */
-  private final AtomicReference<CompletableFuture<Void>> ready = new AtomicReference<>();
+  public TypeRelationIndex(OScriptExtends oScriptExtends,
+                           OScriptMetaAnnotationResolver metaAnnotationResolver) {
+    super(metaAnnotationResolver);
+    this.oScriptExtends = oScriptExtends;
+  }
 
   /**
    * URI документов, объявивших прямое наследование от любого из имён
@@ -95,7 +86,7 @@ public class TypeRelationIndex {
    * @return URI прямых наследников; пусто, если таких нет
    */
   public Set<URI> directSubtypeUris(Collection<String> parentNames, ServerContext serverContext) {
-    ensureBuilt(serverContext);
+    ensureBuilt(() -> rebuild(serverContext));
     return collect(childUrisByParentName, parentNames);
   }
 
@@ -108,18 +99,18 @@ public class TypeRelationIndex {
    * @return URI прямых реализаторов; пусто, если таких нет
    */
   public Set<URI> directImplementorUris(Collection<String> interfaceNames, ServerContext serverContext) {
-    ensureBuilt(serverContext);
+    ensureBuilt(() -> rebuild(serverContext));
     return collect(implementorUrisByInterfaceName, interfaceNames);
   }
 
   /**
-   * Полный сброс индекса — перестроится лениво при следующем обращении.
-   * Реакция на переиндексацию библиотек (мог измениться состав классов-определений
-   * аннотаций) и на полную перепопуляцию контекста (состав документов заменён целиком).
+   * Полный сброс на перепопуляцию контекста: состав документов заменён целиком.
+   *
+   * @param event событие перепопуляции контекста
    */
-  @EventListener({OScriptLibraryIndexedEvent.class, ServerContextPopulatedEvent.class})
-  public void invalidate() {
-    ready.set(null);
+  @EventListener
+  public void handleContextPopulated(ServerContextPopulatedEvent event) {
+    invalidate();
   }
 
   /**
@@ -130,71 +121,13 @@ public class TypeRelationIndex {
    */
   @EventListener
   public void handleDocumentAdded(ServerContextDocumentAddedEvent event) {
-    if (ready.get() == null) {
+    if (!isBuilt()) {
       return;
     }
     var document = event.getSource().getDocument(event.getUri());
     if (document != null && document.getFileType() == FileType.OS) {
-      removeContribution(document.getUri());
+      removeByUri(document.getUri());
       indexDocument(document);
-    }
-  }
-
-  /**
-   * Обновить индекс при правке {@code .os}-документа: вклад документа заменяется
-   * точечно; правка класса-определения аннотации сбрасывает индекс целиком
-   * (мета-аннотации влияют на чужие классы). До первой сборки и для .bsl — no-op.
-   *
-   * @param event событие изменения содержимого документа
-   */
-  @EventListener
-  public void handleDocumentChange(DocumentContextContentChangedEvent event) {
-    var document = event.getSource();
-    if (document.getFileType() != FileType.OS || ready.get() == null) {
-      return;
-    }
-    if (metaAnnotationResolver.isAnnotationDefinition(document)) {
-      ready.set(null);
-      return;
-    }
-    removeContribution(document.getUri());
-    indexDocument(document);
-  }
-
-  /**
-   * Удалить вклад удалённого {@code .os}-документа.
-   *
-   * @param event событие удаления документа
-   */
-  @EventListener
-  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    if (ready.get() == null) {
-      return;
-    }
-    removeContribution(event.getUri());
-  }
-
-  /** Гарантировать, что индекс собран; сборка выполняется ровно один раз. */
-  private void ensureBuilt(ServerContext serverContext) {
-    while (true) {
-      var done = ready.get();
-      if (done != null) {
-        done.join();
-        return;
-      }
-      var fresh = new CompletableFuture<Void>();
-      if (ready.compareAndSet(null, fresh)) {
-        try {
-          rebuild(serverContext);
-          fresh.complete(null);
-        } catch (RuntimeException e) {
-          ready.compareAndSet(fresh, null);
-          fresh.completeExceptionally(e);
-          throw e;
-        }
-        return;
-      }
-      // Другой поток уже строит — повторим и присоединимся к его future.
     }
   }
 
@@ -210,7 +143,8 @@ public class TypeRelationIndex {
     }
   }
 
-  private void indexDocument(DocumentContext document) {
+  @Override
+  protected void indexDocument(DocumentContext document) {
     var uri = document.getUri();
     oScriptExtends.parentClassName(document).ifPresent((String parentName) -> {
       var key = parentName.toLowerCase(Locale.ROOT);
@@ -229,7 +163,8 @@ public class TypeRelationIndex {
     }
   }
 
-  private void removeContribution(URI uri) {
+  @Override
+  protected void removeByUri(URI uri) {
     var parentName = parentNameByUri.remove(uri);
     if (parentName != null) {
       removeUri(childUrisByParentName, parentName, uri);
