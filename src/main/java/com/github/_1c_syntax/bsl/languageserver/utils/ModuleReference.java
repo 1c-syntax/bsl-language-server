@@ -23,9 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -143,6 +145,97 @@ public class ModuleReference {
     return Optional.empty();
   }
 
+  /**
+   * Описание вызова метода у общего модуля, полученного через getter
+   * (например, {@code ОбщегоНазначения.ОбщийМодуль("Имя").Метод(...)} или
+   * {@code ОбщийМодуль("Имя").Метод(...)}).
+   *
+   * @param moduleName      имя общего модуля, который возвращает getter
+   * @param methodNameToken токен имени метода, вызванного у возвращённого модуля
+   */
+  public record CommonModuleMethodOnGetter(String moduleName, Token methodNameToken) {}
+
+  /**
+   * Если в цепочке вызовов метод вызывается непосредственно у результата getter-а
+   * общего модуля ({@code <Аксессор>.ОбщийМодуль("Имя").Метод(...)} или
+   * {@code ОбщийМодуль("Имя").Метод(...)}), возвращает имя общего модуля и токен метода.
+   * <p>
+   * Используется для регистрации в индексе ссылок вызова метода у общего модуля,
+   * полученного «на лету», без промежуточной переменной.
+   *
+   * @param baseIdentifier  базовый идентификатор-аксессор (например {@code ОбщегоНазначения}), может быть null
+   * @param baseGlobalCall  базовый локальный вызов getter-а (например {@code ОбщийМодуль("Имя")}), может быть null
+   * @param modifiers       модификаторы цепочки после базы (через точку / индекс)
+   * @param trailingCall    завершающий вызов через точку (для callStatement), может быть null
+   * @param parsedAccessors предварительно разобранные паттерны
+   * @return имя модуля и токен вызванного у него метода, если цепочка распознана
+   */
+  public static Optional<CommonModuleMethodOnGetter> extractMethodCallOnGetterModule(
+    @Nullable TerminalNode baseIdentifier,
+    BSLParser.@Nullable GlobalMethodCallContext baseGlobalCall,
+    List<? extends BSLParser.ModifierContext> modifiers,
+    BSLParser.@Nullable AccessCallContext trailingCall,
+    ParsedAccessors parsedAccessors
+  ) {
+    // Шаги цепочки: каждый модификатор как accessCall (null для свойства/индекса) + завершающий вызов.
+    var steps = new ArrayList<BSLParser.@Nullable AccessCallContext>();
+    modifiers.forEach(modifier -> steps.add(modifier.accessCall()));
+    if (trailingCall != null) {
+      steps.add(trailingCall);
+    }
+
+    if (steps.isEmpty()) {
+      return Optional.empty();
+    }
+
+    // Случай: ОбщийМодуль("Имя").Метод(...) — getter является локальным глобальным вызовом,
+    // а метод — первым шагом цепочки.
+    if (baseGlobalCall != null && baseGlobalCall.methodName() != null) {
+      var getterName = baseGlobalCall.methodName().IDENTIFIER();
+      if (getterName != null && isLocalMethodMatch(getterName.getText(), parsedAccessors)) {
+        return buildGetterMethodCall(
+          extractParameterFromDoCall(baseGlobalCall.doCall()), steps.get(0));
+      }
+      return Optional.empty();
+    }
+
+    // Случай: Аксессор.ОбщийМодуль("Имя").Метод(...) — getter является первым шагом цепочки,
+    // а метод — непосредственно следующим (соседним) шагом.
+    if (baseIdentifier != null && steps.size() >= 2) {
+      var getterCall = steps.get(0);
+      if (getterCall != null
+        && accessCallMethodName(getterCall)
+          .filter(name -> isModuleMethodMatch(name, baseIdentifier.getText(), parsedAccessors))
+          .isPresent()) {
+        return buildGetterMethodCall(extractParameterFromDoCall(getterCall), steps.get(1));
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  private static Optional<CommonModuleMethodOnGetter> buildGetterMethodCall(
+    Optional<String> moduleName,
+    BSLParser.@Nullable AccessCallContext methodStep
+  ) {
+    if (moduleName.isEmpty() || methodStep == null) {
+      return Optional.empty();
+    }
+    return accessCallMethodNameToken(methodStep)
+      .map(token -> new CommonModuleMethodOnGetter(moduleName.get(), token));
+  }
+
+  private static Optional<String> accessCallMethodName(BSLParser.AccessCallContext accessCall) {
+    return accessCallMethodNameToken(accessCall).map(Token::getText);
+  }
+
+  private static Optional<Token> accessCallMethodNameToken(BSLParser.AccessCallContext accessCall) {
+    return Optional.ofNullable(accessCall.methodCall())
+      .map(BSLParser.MethodCallContext::methodName)
+      .map(BSLParser.MethodNameContext::IDENTIFIER)
+      .map(TerminalNode::getSymbol);
+  }
+
   // ===== Private helper methods =====
 
   private static boolean isCommonModuleExpressionMember(
@@ -184,9 +277,13 @@ public class ModuleReference {
     String moduleName,
     ParsedAccessors parsedAccessors
   ) {
-    return complexId.modifier().stream()
-      .flatMap(modifier -> extractMethodNameFromModifier(modifier).stream())
-      .anyMatch(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors));
+    // Учитываем только последний модификатор: значением выражения является результат
+    // последнего вызова. Для ОбщегоНазначения.ОбщийМодуль("Имя").Метод(...) результатом
+    // является возврат Метод(...), а не сам общий модуль (см. #3974).
+    return lastModifier(complexId)
+      .flatMap(ModuleReference::extractMethodNameFromModifier)
+      .filter(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors))
+      .isPresent();
   }
 
   private static Optional<String> extractMethodNameFromModifier(BSLParser.ModifierContext modifier) {
@@ -231,15 +328,26 @@ public class ModuleReference {
     String moduleName,
     ParsedAccessors parsedAccessors
   ) {
-    return complexId.modifier().stream()
+    // Имя модуля извлекаем только если getter общего модуля является последним
+    // модификатором выражения (см. hasMatchingModifierMethodCall и #3974).
+    return lastModifier(complexId)
       .filter(modifier -> extractMethodNameFromModifier(modifier)
         .filter(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors))
         .isPresent())
-      .findFirst()
       .flatMap(modifier -> Optional.ofNullable(modifier.accessCall())
         .map(BSLParser.AccessCallContext::methodCall)
         .map(BSLParser.MethodCallContext::doCall)
         .flatMap(ModuleReference::extractParameterFromDoCall));
+  }
+
+  private static Optional<BSLParser.ModifierContext> lastModifier(
+    BSLParser.ComplexIdentifierContext complexId
+  ) {
+    var modifiers = complexId.modifier();
+    if (modifiers.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(modifiers.get(modifiers.size() - 1));
   }
 
   private static Optional<String> extractModuleNameFromGlobalMethodCall(
@@ -248,6 +356,12 @@ public class ModuleReference {
   ) {
     var globalMethodCall = complexId.globalMethodCall();
     if (globalMethodCall == null || globalMethodCall.methodName() == null) {
+      return Optional.empty();
+    }
+
+    // Если за вызовом getter-а следуют другие модификаторы (например ОбщийМодуль("Имя").Метод()),
+    // значением выражения является не сам общий модуль, а результат последнего вызова (см. #3974).
+    if (!complexId.modifier().isEmpty()) {
       return Optional.empty();
     }
 
