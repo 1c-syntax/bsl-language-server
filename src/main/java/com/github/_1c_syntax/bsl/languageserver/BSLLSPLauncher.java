@@ -118,7 +118,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
       .profiles(getActiveProfiles(args))
       // MCP server autoconfiguration is off by default; the `mcp` profile re-enables it
       // (see application-mcp.properties). Declared as default properties so it also applies in tests.
-      .properties(getDefaultProperties(args))
+      .properties(getDefaultProperties())
       .run(args);
 
     var launcher = applicationContext.getBean(BSLLSPLauncher.class);
@@ -202,20 +202,12 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     return new String[0];
   }
 
-  private static String[] getDefaultProperties(String[] args) {
-    var properties = new ArrayList<String>();
+  private static String[] getDefaultProperties() {
     // MCP server autoconfiguration is off unless an `mcp*` profile re-enables it.
-    properties.add("spring.ai.mcp.server.enabled=false");
-    properties.add("spring.ai.mcp.server.annotation-scanner.enabled=false");
-
-    if ((isStdioMcp(args) || isWebsocketMcp(args)) && hasSrcDir(args)) {
-      // An initial --srcDir is indexed by the command after the server has started accepting
-      // requests, so tool calls must wait for that indexing to finish (see McpReadiness).
-      // Without --srcDir the workspaces come from MCP roots and there is nothing to wait for.
-      properties.add("app.mcp.headless=true");
-    }
-
-    return properties.toArray(new String[0]);
+    return new String[]{
+      "spring.ai.mcp.server.enabled=false",
+      "spring.ai.mcp.server.annotation-scanner.enabled=false"
+    };
   }
 
   private static boolean isWebsocketServletMode(String[] args) {
@@ -230,14 +222,6 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private static boolean isStdioMcp(String[] args) {
     var argsList = Arrays.asList(args);
     return !isWebsocketServletMode(args) && (argsList.contains("mcp") || argsList.contains("--mcp"));
-  }
-
-  private static boolean hasSrcDir(String[] args) {
-    var srcDir = extractOptionValue(args, "--srcDir");
-    if (srcDir == null) {
-      srcDir = extractOptionValue(args, "-s");
-    }
-    return srcDir != null && !srcDir.isBlank();
   }
 
   /**

@@ -57,7 +57,6 @@ import java.util.function.Function;
 public class McpDocumentReader {
 
   private final ServerContextProvider serverContextProvider;
-  private final McpReadiness readiness;
 
   /**
    * Прочитать вычисленные данные документа (дерево символов, ссылки) без повторного разбора AST.
@@ -88,8 +87,6 @@ public class McpDocumentReader {
   }
 
   private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst) {
-    readiness.awaitReady();
-
     var uri = Absolute.uri(new File(path));
     var serverContext = serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalArgumentException(

@@ -32,7 +32,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -96,7 +95,7 @@ class McpHttpServerTest {
 
   @Test
   void analyzeFileToolReadsFromSharedServerContext() {
-    workspaceBootstrap.index(Absolute.path(SRC_DIR), new File(""));
+    workspaceBootstrap.index(Absolute.path(SRC_DIR));
 
     var result = analyzeFileTool.analyzeFile(SRC_DIR + "/test.bsl");
 

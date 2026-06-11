@@ -21,9 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpShutdownSignal;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
-import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -38,15 +37,15 @@ import static picocli.CommandLine.Option;
 /**
  * Запуск сервера в режиме Model Context Protocol (MCP) поверх stdio.
  * <p>
- * Сам сервер поднимает автоконфигурация Spring AI (профили {@code mcp,mcp-stdio}), а инструменты
- * ({@code @McpTool}) работают через общий {@code ServerContextProvider} — тот же, что наполняет
- * LSP-сессия и команды {@code analyze}/{@code format}. Эта команда — headless-вход: индексирует
- * исходники в общий контекст, после чего блокируется до отключения клиента (EOF stdin).
+ * Сервер поднимает автоконфигурация Spring AI (профили {@code mcp,mcp-stdio}); инструменты
+ * ({@code @McpTool}) работают через общий {@code ServerContextProvider}. Рабочие пространства
+ * приходят от клиента через MCP roots (см. {@code McpRootsChangeConsumer}) — аналог workspace
+ * folders в LSP. Команда применяет глобальную конфигурацию и блокируется до отключения клиента
+ * (EOF stdin).
  * <p>
  * Ключ команды:
  *  mcp
  * Параметры:
- *  -s, (--srcDir) &lt;arg&gt; - Путь к каталогу исходных файлов для индексации.
  *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server.
  */
 @Slf4j
@@ -67,40 +66,23 @@ public class McpStartCommand implements Callable<Integer> {
   private boolean usageHelpRequested;
 
   @Option(
-    names = {"-s", "--srcDir"},
-    description = "Source directory to index",
-    paramLabel = "<path>",
-    defaultValue = "")
-  private String srcDirOption;
-
-  @Option(
     names = {"-c", "--configuration"},
     description = "Path to language server configuration file",
     paramLabel = "<path>",
     defaultValue = "")
   private String configurationOption;
 
-  private final McpWorkspaceBootstrap workspaceBootstrap;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ObjectProvider<McpShutdownSignal> shutdownSignalProvider;
 
   @Override
   public Integer call() {
-    // Рабочие пространства обычно приходят от клиента через MCP roots (см. McpRootsChangeConsumer).
-    // --srcDir — необязательный fallback: индексирует начальный каталог на старте.
-    if (!srcDirOption.isBlank()) {
-      var srcDir = Absolute.path(srcDirOption);
-      if (!srcDir.toFile().exists()) {
-        LOGGER.error("Source dir `{}` does not exist", srcDir);
-        return 1;
-      }
-      workspaceBootstrap.index(srcDir, new File(configurationOption));
-    }
+    globalConfiguration.update(new File(configurationOption));
 
     // Сервер уже поднят автоконфигурацией; блокируемся до отключения клиента.
     var shutdownSignal = shutdownSignalProvider.getIfAvailable();
     if (shutdownSignal == null) {
-      LOGGER.error("MCP profile is not active: server is not running. "
-        + "Start the server via the `mcp` subcommand.");
+      LOGGER.error("MCP profile is not active: server is not running.");
       return 1;
     }
 

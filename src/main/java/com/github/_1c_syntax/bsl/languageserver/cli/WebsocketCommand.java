@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceBootstrap;
-import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -47,8 +45,9 @@ import static picocli.CommandLine.Option;
  *  --app.websocket.lsp-path          - Адрес, по которому открывается соединение. Если параметр опущен,
  *                                      то будет использован адрес по умолчанию, а именно /lsp.
  *  --mcp                             - Дополнительно поднять MCP-сервер по Streamable HTTP (эндпоинт /mcp)
- *                                      на том же servlet-контейнере, что и LSP-WebSocket.
- *  -s, (--srcDir) &lt;arg&gt;        - Каталог исходных файлов для индексации в общий контекст (нужен для --mcp).
+ *                                      на том же servlet-контейнере, что и LSP-WebSocket. Рабочие
+ *                                      пространства приходят от клиентов (LSP workspace folders и MCP roots).
+ *  --mcp-path &lt;path&gt;            - Адрес MCP-эндпоинта (по умолчанию /mcp).
  * Выводимая информация:
  *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket.
  *
@@ -102,31 +101,15 @@ public class WebsocketCommand implements Callable<Integer> {
     defaultValue = "/mcp")
   private String mcpPath;
 
-  @Option(
-    names = {"-s", "--srcDir"},
-    description = "Source directory to index into the shared context (required with --mcp)",
-    paramLabel = "<path>",
-    defaultValue = "")
-  private String srcDirOption;
-
   private final GlobalLanguageServerConfiguration globalConfiguration;
-  private final McpWorkspaceBootstrap workspaceBootstrap;
 
   public Integer call() {
-    var configurationFile = new File(configurationOption);
+    globalConfiguration.update(new File(configurationOption));
 
     if (mcpEnabled) {
-      var srcDir = Absolute.path(srcDirOption);
-      if (!srcDir.toFile().exists()) {
-        LOGGER.error("Source dir `{}` does not exist. `--srcDir` is required with `--mcp`.", srcDir);
-        return 1;
-      }
-      // Indexes into the shared ServerContextProvider; a connected LSP-WebSocket session
-      // adds its own workspace folders to the same provider on top of this.
-      workspaceBootstrap.index(srcDir, configurationFile);
+      // Workspaces are provided by clients: LSP workspace folders and MCP roots
+      // (see McpRootsChangeConsumer), both feeding the shared ServerContextProvider.
       LOGGER.info("MCP server enabled over Streamable HTTP at `{}`", mcpPath);
-    } else {
-      globalConfiguration.update(configurationFile);
     }
 
     return -1;

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -36,64 +35,40 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 /**
- * Headless-инициализация рабочего пространства для MCP: регистрирует каталог исходников
- * в общем {@link ServerContextProvider} и индексирует его — так же, как {@code analyze}.
+ * Регистрация и удаление рабочих пространств MCP в общем {@link ServerContextProvider}.
  * <p>
- * Используется обоими headless-входами ({@code mcp} по stdio и {@code websocket --mcp} по
- * Streamable HTTP). В режиме «поверх живой LSP-сессии» рабочие пространства наполняет сама
- * сессия (через workspace folders), и этот бутстрап не вызывается.
+ * Рабочие пространства приходят от клиента через MCP roots (см. {@link McpRootsChangeConsumer}) —
+ * аналог workspace folders в LSP. Индексация выполняется так же, как в {@code analyze}.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class McpWorkspaceBootstrap {
 
-  private final GlobalLanguageServerConfiguration globalConfiguration;
   private final LanguageServerConfiguration configuration;
   private final ServerContextProvider serverContextProvider;
-  private final McpReadiness readiness;
 
   /**
-   * Зарегистрировать и проиндексировать каталог исходников в общий контекст сервера.
-   *
-   * @param srcDir Каталог исходных файлов.
-   * @param configurationFile Файл конфигурации BSL Language Server (может отсутствовать).
-   * @return Количество проиндексированных файлов.
-   */
-  /**
-   * Зарегистрировать и проиндексировать каталог исходников с настройками по умолчанию.
+   * Зарегистрировать каталог исходников как рабочее пространство и проиндексировать его.
    *
    * @param srcDir Каталог исходных файлов.
    * @return Количество проиндексированных файлов.
    */
   public int index(Path srcDir) {
-    return index(srcDir, new File(""));
-  }
-
-  public int index(Path srcDir, File configurationFile) {
-    globalConfiguration.update(configurationFile);
-
     var workspaceUri = srcDir.toUri();
     var serverContext = serverContextProvider.addWorkspace(workspaceUri);
 
-    int fileCount;
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-      configuration.update(configurationFile);
+      configuration.update(new File(""));
 
       var configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
       serverContext.setConfigurationRoot(configurationPath);
 
-      LOGGER.info("Indexing source directory `{}`...", srcDir);
       var files = new ArrayList<>(BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths()));
       serverContext.populateContext(files);
-      fileCount = files.size();
-      LOGGER.info("Indexed {} files.", fileCount);
+      LOGGER.info("Indexed {} files in workspace `{}`", files.size(), srcDir);
+      return files.size();
     }
-
-    // Готовность открывается только при успешной индексации; при ошибке исключение
-    // пробрасывается, процесс завершится, и ожидающие готовности вызовы не зависнут.
-    readiness.markReady();
-    return fileCount;
   }
 
   /**

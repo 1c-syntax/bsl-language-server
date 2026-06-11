@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.io.File;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,7 +82,7 @@ class McpToolsTest {
 
   @BeforeEach
   void indexWorkspace() {
-    workspaceBootstrap.index(Absolute.path(SRC_DIR), new File(""));
+    workspaceBootstrap.index(Absolute.path(SRC_DIR));
   }
 
   @Test
