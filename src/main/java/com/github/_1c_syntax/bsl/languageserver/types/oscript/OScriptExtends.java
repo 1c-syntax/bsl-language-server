@@ -216,8 +216,6 @@ public class OScriptExtends {
   /**
    * Имя родителя из аннотаций одного метода: роль {@link #EXTENDS_ROLE} —
    * прямой {@code &Расширяет} и мета-аннотации «ОСени», разворачивающиеся в неё.
-   * Английского псевдонима у аннотации нет: библиотека extends определяет только
-   * русские классы-аннотации.
    */
   private Optional<String> parentFromAnnotations(List<Annotation> annotations) {
     return metaAnnotationResolver.valuesByRole(annotations, EXTENDS_ROLE).stream()
