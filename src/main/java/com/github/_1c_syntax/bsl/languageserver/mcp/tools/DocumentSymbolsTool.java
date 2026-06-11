@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
-import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.SymbolDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.SymbolDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;

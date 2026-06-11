@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
-import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.DiagnosticDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.DiagnosticDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.annotation.McpTool;

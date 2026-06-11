@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
-import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.LocationDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.LocationDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import lombok.RequiredArgsConstructor;

@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.DefinitionDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.DefinitionDto;
 import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.DefinitionParams;
