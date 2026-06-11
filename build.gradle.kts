@@ -86,6 +86,9 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
+    // MCP (Model Context Protocol) server SDK (bundles Jackson 3.x serialization)
+    api("io.modelcontextprotocol.sdk:mcp:1.0.0")
+
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.35.0")
     api("io.github.1c-syntax:utils:0.7.2")

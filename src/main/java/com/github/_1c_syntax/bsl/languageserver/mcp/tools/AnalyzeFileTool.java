@@ -23,10 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.DiagnosticDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpToolArguments;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 import java.util.Map;
@@ -68,11 +68,8 @@ public class AnalyzeFileTool implements McpTool {
   }
 
   @Override
-  public Object call(JsonNode arguments) {
-    var file = arguments.path("file").asString();
-    if (file.isBlank()) {
-      throw new IllegalArgumentException("Parameter 'file' is required");
-    }
+  public Object call(Map<String, Object> arguments) {
+    var file = McpToolArguments.requireString(arguments, "file");
 
     var documentContext = workspace.resolveDocument(file);
     var diagnostics = documentContext.getDiagnostics().stream()

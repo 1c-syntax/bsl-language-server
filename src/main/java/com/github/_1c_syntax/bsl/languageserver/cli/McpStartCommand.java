@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServ
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpServer;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpServerRunner;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.utils.Absolute;
@@ -93,7 +93,7 @@ public class McpStartCommand implements Callable<Integer> {
   private final LanguageServerConfiguration configuration;
   private final ServerContextProvider serverContextProvider;
   private final McpWorkspace workspace;
-  private final McpServer mcpServer;
+  private final McpServerRunner mcpServerRunner;
 
   @Override
   public Integer call() {
@@ -127,7 +127,7 @@ public class McpStartCommand implements Callable<Integer> {
     var protocolOut = System.out;
     System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.err), true, StandardCharsets.UTF_8));
 
-    mcpServer.serve(System.in, protocolOut);
+    mcpServerRunner.run(System.in, protocolOut);
 
     return 0;
   }

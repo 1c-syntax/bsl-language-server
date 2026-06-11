@@ -21,20 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
-import tools.jackson.databind.JsonNode;
-
 import java.util.Map;
 
 /**
  * Инструмент (tool) MCP-сервера.
  * <p>
- * Каждая реализация представляет собой отдельную операцию, доступную
- * AI-агенту по протоколу Model Context Protocol. Инструменты работают
- * поверх существующих провайдеров языкового сервера, переиспользуя
- * единый {@link com.github._1c_syntax.bsl.languageserver.context.ServerContext}.
- * <p>
- * Это прототип: реализован минимальный набор инструментов для проверки
- * концепции «MCP-режим поверх работающего движка анализа».
+ * Каждая реализация — тонкая обёртка над существующим провайдером языкового
+ * сервера. Транспорт и протокол обеспечивает официальный MCP Java SDK
+ * (см. {@link McpServerRunner}); инструменту достаточно описать себя и вернуть
+ * сериализуемый результат.
  */
 public interface McpTool {
 
@@ -49,15 +44,15 @@ public interface McpTool {
   String description();
 
   /**
-   * @return JSON Schema входных параметров инструмента.
+   * @return JSON Schema входных параметров (как объект, будет сериализован SDK).
    */
   Map<String, Object> inputSchema();
 
   /**
    * Выполнить инструмент.
    *
-   * @param arguments Аргументы вызова (объект {@code arguments} из {@code tools/call}).
+   * @param arguments Аргументы вызова (поле {@code arguments} запроса {@code tools/call}).
    * @return Результат, который будет сериализован в JSON и возвращён модели.
    */
-  Object call(JsonNode arguments);
+  Object call(Map<String, Object> arguments);
 }

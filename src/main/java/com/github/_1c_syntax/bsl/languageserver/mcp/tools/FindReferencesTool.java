@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.LocationDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpToolArguments;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 import java.util.Map;
@@ -82,13 +82,10 @@ public class FindReferencesTool implements McpTool {
   }
 
   @Override
-  public Object call(JsonNode arguments) {
-    var file = arguments.path("file").asString();
-    if (file.isBlank()) {
-      throw new IllegalArgumentException("Parameter 'file' is required");
-    }
-    var line = arguments.path("line").asInt();
-    var character = arguments.path("character").asInt();
+  public Object call(Map<String, Object> arguments) {
+    var file = McpToolArguments.requireString(arguments, "file");
+    var line = McpToolArguments.requireInt(arguments, "line");
+    var character = McpToolArguments.requireInt(arguments, "character");
 
     var documentContext = workspace.resolveDocument(file);
 
