@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781193688569,
+  "lastUpdate": 1781196061041,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36828,6 +36828,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 6.077067043670006",
             "extra": "mean: 278.6228353182475 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f8f648d081034813f3ff33d4b94a600c3168d272",
+          "message": "Merge pull request #4041 from 1c-syntax/claude/lucid-cerf-wmaztn\n\nИсправление ложного срабатывания MissingCommonModuleMethod на цепочках вызовов через общий модуль",
+          "timestamp": "2026-06-11T14:49:39+02:00",
+          "tree_id": "3b72a42f6421710cb8206170a3f817f13e782895",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f8f648d081034813f3ff33d4b94a600c3168d272"
+        },
+        "date": 1781196052056,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 285.3086904684703,
+            "unit": "sec",
+            "range": "stddev: 9.066857800022206",
+            "extra": "mean: 285.3086904684703 sec\nrounds: 3"
           }
         ]
       }
