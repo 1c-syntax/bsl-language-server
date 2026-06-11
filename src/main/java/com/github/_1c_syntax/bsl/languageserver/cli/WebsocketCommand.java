@@ -92,8 +92,15 @@ public class WebsocketCommand implements Callable<Integer> {
 
   @Option(
     names = {"--mcp"},
-    description = "Also expose an MCP server over Streamable HTTP (endpoint /mcp)")
+    description = "Also expose an MCP server over Streamable HTTP on the same port")
   private boolean mcpEnabled;
+
+  @Option(
+    names = {"--mcp-path"},
+    description = "Path of the MCP Streamable HTTP endpoint. Default is /mcp",
+    paramLabel = "<path>",
+    defaultValue = "/mcp")
+  private String mcpPath;
 
   @Option(
     names = {"-s", "--srcDir"},

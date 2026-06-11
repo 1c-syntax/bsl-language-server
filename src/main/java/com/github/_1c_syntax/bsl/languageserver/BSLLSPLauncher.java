@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.WebsocketCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
@@ -110,6 +111,8 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private int exitCode;
 
   public static void main(String[] args) {
+    applyMcpEndpointPath(args);
+
     var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
       .web(getWebApplicationType(args))
       .profiles(getActiveProfiles(args))
@@ -226,5 +229,36 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private static boolean isStdioMcp(String[] args) {
     var argsList = Arrays.asList(args);
     return !isWebsocketServletMode(args) && (argsList.contains("mcp") || argsList.contains("--mcp"));
+  }
+
+  /**
+   * Перенести значение {@code --mcp-path} в системное свойство до старта контекста:
+   * эндпоинт Streamable HTTP регистрируется автоконфигурацией на refresh, раньше выполнения команды.
+   */
+  private static void applyMcpEndpointPath(String[] args) {
+    if (!isWebsocketMcp(args)) {
+      return;
+    }
+    var mcpPath = extractOptionValue(args, "--mcp-path");
+    if (mcpPath != null && !mcpPath.isBlank()) {
+      System.setProperty("spring.ai.mcp.server.streamable-http.mcp-endpoint", mcpPath);
+    }
+  }
+
+  /**
+   * Извлечь значение опции, поддерживая обе формы: {@code --opt=value} и {@code --opt value}.
+   */
+  @Nullable
+  private static String extractOptionValue(String[] args, String option) {
+    var prefix = option + "=";
+    for (var i = 0; i < args.length; i++) {
+      if (args[i].startsWith(prefix)) {
+        return args[i].substring(prefix.length());
+      }
+      if (args[i].equals(option) && i + 1 < args.length) {
+        return args[i + 1];
+      }
+    }
+    return null;
   }
 }
