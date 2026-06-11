@@ -21,10 +21,11 @@ java -jar bsl-language-server.jar mcp
 
 ### Рядом с LSP по stdio
 
-LSP остаётся на `stdio`, а MCP дополнительно поднимается по [Streamable HTTP](https://modelcontextprotocol.io/) на встроенном веб-сервере. Включается флагом `--mcp` у команды `lsp`:
+LSP остаётся на `stdio`, а MCP дополнительно поднимается по [Streamable HTTP](https://modelcontextprotocol.io/) на встроенном веб-сервере. Включается флагом `--mcp`. Команда `lsp` — режим по умолчанию, поэтому её можно не указывать:
 
 ```sh
-java -jar bsl-language-server.jar lsp --mcp --server.port=8080
+java -jar bsl-language-server.jar --mcp --server.port=8080
+# эквивалентно: java -jar bsl-language-server.jar lsp --mcp --server.port=8080
 ```
 
 ### Рядом с LSP по websocket
@@ -57,13 +58,15 @@ java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 | Параметр | Режим | Назначение |
 | --- | --- | --- |
 | `-c`, `--configuration` `<path>` | все | Путь к глобальному конфигурационному файлу (см. [Конфигурационный файл](ConfigurationFile.md)) |
-| `--mcp` | `lsp`, `websocket` | Дополнительно поднять MCP по Streamable HTTP |
+| `--mcp` | `lsp` (по умолчанию), `websocket` | Дополнительно поднять MCP по Streamable HTTP |
 | `--mcp-path` `<path>` | `lsp --mcp`, `websocket --mcp` | Адрес MCP-эндпоинта (по умолчанию `/mcp`) |
 | `--server.port=<port>` | `lsp --mcp`, `websocket --mcp` | Порт встроенного веб-сервера |
 
-## Пример подключения
+## Примеры конфигурации клиента
 
-Для клиента с stdio-транспортом (формат `mcpServers`):
+### stdio
+
+Клиент сам запускает сервер и общается с ним по stdio (формат `mcpServers`):
 
 ```json
 {
@@ -76,4 +79,19 @@ java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 }
 ```
 
-Для режима по Streamable HTTP клиент подключается к адресу `http://<host>:<port>/mcp` (или к пути, заданному `--mcp-path`).
+### Streamable HTTP
+
+Сервер запущен отдельно (`--mcp` или `websocket --mcp`), клиент подключается к эндпоинту по URL:
+
+```json
+{
+  "mcpServers": {
+    "bsl-language-server": {
+      "type": "streamable-http",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+Адрес по умолчанию — `http://<host>:<port>/mcp`; путь меняется параметром `--mcp-path`, порт — `--server.port`.

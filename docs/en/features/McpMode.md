@@ -21,10 +21,11 @@ java -jar bsl-language-server.jar mcp
 
 ### Next to LSP over stdio
 
-LSP stays on `stdio`, while MCP is additionally exposed over [Streamable HTTP](https://modelcontextprotocol.io/) on a built-in web server. Enabled with the `--mcp` flag of the `lsp` command:
+LSP stays on `stdio`, while MCP is additionally exposed over [Streamable HTTP](https://modelcontextprotocol.io/) on a built-in web server. Enabled with the `--mcp` flag. The `lsp` command is the default mode, so it can be omitted:
 
 ```sh
-java -jar bsl-language-server.jar lsp --mcp --server.port=8080
+java -jar bsl-language-server.jar --mcp --server.port=8080
+# same as: java -jar bsl-language-server.jar lsp --mcp --server.port=8080
 ```
 
 ### Next to LSP over websocket
@@ -57,13 +58,15 @@ Positions (`line`, `character`) are zero-based, as in LSP.
 | Option | Mode | Purpose |
 | --- | --- | --- |
 | `-c`, `--configuration` `<path>` | all | Path to the global configuration file (see [Configuration file](ConfigurationFile.md)) |
-| `--mcp` | `lsp`, `websocket` | Also expose MCP over Streamable HTTP |
+| `--mcp` | `lsp` (default), `websocket` | Also expose MCP over Streamable HTTP |
 | `--mcp-path` `<path>` | `lsp --mcp`, `websocket --mcp` | MCP endpoint path (default `/mcp`) |
 | `--server.port=<port>` | `lsp --mcp`, `websocket --mcp` | Port of the built-in web server |
 
-## Connection example
+## Client configuration examples
 
-For a client with the stdio transport (`mcpServers` format):
+### stdio
+
+The client launches the server itself and talks to it over stdio (`mcpServers` format):
 
 ```json
 {
@@ -76,4 +79,19 @@ For a client with the stdio transport (`mcpServers` format):
 }
 ```
 
-For the Streamable HTTP mode the client connects to `http://<host>:<port>/mcp` (or the path set by `--mcp-path`).
+### Streamable HTTP
+
+The server is started separately (`--mcp` or `websocket --mcp`), and the client connects to the endpoint by URL:
+
+```json
+{
+  "mcpServers": {
+    "bsl-language-server": {
+      "type": "streamable-http",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+The default address is `http://<host>:<port>/mcp`; the path is changed with `--mcp-path`, the port with `--server.port`.
