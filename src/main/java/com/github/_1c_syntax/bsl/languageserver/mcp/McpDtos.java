@@ -22,6 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import lombok.experimental.UtilityClass;
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
@@ -117,6 +120,46 @@ public class McpDtos {
   public record LocationDto(String uri, RangeDto range) {
     public static LocationDto from(Location location) {
       return new LocationDto(location.getUri(), RangeDto.from(location.getRange()));
+    }
+  }
+
+  /**
+   * Элемент иерархии вызовов (метод/процедура).
+   */
+  public record CallHierarchyItemDto(
+    String name,
+    String kind,
+    @Nullable String detail,
+    String uri,
+    RangeDto range
+  ) {
+    public static CallHierarchyItemDto from(CallHierarchyItem item) {
+      return new CallHierarchyItemDto(
+        item.getName(),
+        item.getKind().name(),
+        item.getDetail(),
+        item.getUri(),
+        RangeDto.from(item.getSelectionRange())
+      );
+    }
+  }
+
+  /**
+   * Вызов в иерархии: связанный метод и диапазоны мест вызова.
+   */
+  public record CallDto(CallHierarchyItemDto item, List<RangeDto> ranges) {
+    public static CallDto incoming(CallHierarchyIncomingCall call) {
+      return new CallDto(
+        CallHierarchyItemDto.from(call.getFrom()),
+        call.getFromRanges().stream().map(RangeDto::from).toList()
+      );
+    }
+
+    public static CallDto outgoing(CallHierarchyOutgoingCall call) {
+      return new CallDto(
+        CallHierarchyItemDto.from(call.getTo()),
+        call.getFromRanges().stream().map(RangeDto::from).toList()
+      );
     }
   }
 }
