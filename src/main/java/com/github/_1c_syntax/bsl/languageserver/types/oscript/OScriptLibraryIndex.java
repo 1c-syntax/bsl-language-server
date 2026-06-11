@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -235,23 +234,17 @@ public class OScriptLibraryIndex {
   /**
    * Имена, под которыми {@code .os}-класс известен другим классам (как в
    * {@code Новый Имя} и аннотациях {@code &Расширяет}/{@code &Реализует}):
-   * {@code qualifiedName}'ы library-класса (их может быть несколько) либо
-   * basename файла для обычного {@code .os}.
+   * {@code qualifiedName}'ы library-класса (их может быть несколько).
    *
    * @param documentContext контекст {@code .os}-документа-класса
-   * @return непустой список имён класса
+   * @return имена класса; пусто, если документ не зарегистрирован как library-класс
    */
   public List<String> classNames(DocumentContext documentContext) {
-    var uri = documentContext.getUri();
-    var libraryNames = findEntriesByUri(uri).stream()
+    return findEntriesByUri(documentContext.getUri()).stream()
       .filter(entry -> entry.kind() == EntryKind.CLASS)
       .map(LibraryEntry::qualifiedName)
       .distinct()
       .toList();
-    if (!libraryNames.isEmpty()) {
-      return libraryNames;
-    }
-    return List.of(FilenameUtils.getBaseName(uri.getPath()));
   }
 
   /**

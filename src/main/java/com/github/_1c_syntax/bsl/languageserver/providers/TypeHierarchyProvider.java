@@ -100,6 +100,7 @@ public class TypeHierarchyProvider {
     TypeHierarchySupertypesParams params
   ) {
     return typeRelations.supertype(documentContext)
+      .filter(oScriptLibraryIndex::isLibraryClass)
       .map(this::toItem)
       .map(List::of)
       .orElseGet(Collections::emptyList);
@@ -118,6 +119,7 @@ public class TypeHierarchyProvider {
     TypeHierarchySubtypesParams params
   ) {
     var result = typeRelations.subtypes(documentContext).stream()
+      .filter(oScriptLibraryIndex::isLibraryClass)
       .map(this::toItem)
       .sorted(ITEM_COMPARATOR)
       .toList();
@@ -125,18 +127,19 @@ public class TypeHierarchyProvider {
   }
 
   /**
-   * Документ участвует в иерархии типов, если это library-класс, объявляет
-   * родителя через {@code &Расширяет} или сам является чьим-то родителем.
+   * Документ участвует в иерархии типов, только если он зарегистрирован как
+   * library-класс: имя элемента иерархии — {@code qualifiedName} из
+   * {@link OScriptLibraryIndex}, незарегистрированный {@code .os}-файл имени
+   * не имеет.
    */
   private boolean participatesInHierarchy(DocumentContext documentContext) {
-    return oScriptLibraryIndex.isLibraryClass(documentContext)
-      || typeRelations.supertypeName(documentContext).isPresent()
-      || !typeRelations.subtypes(documentContext).isEmpty();
+    return oScriptLibraryIndex.isLibraryClass(documentContext);
   }
 
   private TypeHierarchyItem toItem(DocumentContext documentContext) {
     var module = documentContext.getSymbolTree().getModule();
-    // classNames по контракту непустой: qualifiedName library-класса либо basename файла.
+    // Вызывающие отфильтровали незарегистрированные документы, поэтому
+    // classNames здесь непустой.
     var primaryName = oScriptLibraryIndex.classNames(documentContext).getFirst();
 
     var item = new TypeHierarchyItem(

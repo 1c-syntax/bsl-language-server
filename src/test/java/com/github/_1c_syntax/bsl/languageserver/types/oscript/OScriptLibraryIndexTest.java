@@ -219,15 +219,15 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void classNamesUsesBasenameForNonLibraryFile() {
+  void classNamesAreEmptyForNonLibraryFile() {
     // given — обычный .os, не зарегистрированный в lib.config.
     initServerContext();
     var plain = TestUtils.getDocumentContext(
       TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
       "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n", context);
 
-    // when / then — имя класса = basename файла, library-классом не считается.
-    assertThat(index.classNames(plain)).containsExactly("fake-uri");
+    // when / then — имён нет, library-классом не считается.
+    assertThat(index.classNames(plain)).isEmpty();
     assertThat(index.isLibraryClass(plain)).isFalse();
   }
 
