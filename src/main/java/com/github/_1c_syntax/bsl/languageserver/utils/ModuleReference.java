@@ -277,13 +277,31 @@ public class ModuleReference {
     String moduleName,
     ParsedAccessors parsedAccessors
   ) {
-    // Учитываем только последний модификатор: значением выражения является результат
-    // последнего вызова. Для ОбщегоНазначения.ОбщийМодуль("Имя").Метод(...) результатом
-    // является возврат Метод(...), а не сам общий модуль (см. #3974).
-    return lastModifier(complexId)
-      .flatMap(ModuleReference::extractMethodNameFromModifier)
+    return getMatchingTerminalModifier(complexId, moduleName, parsedAccessors).isPresent();
+  }
+
+  /**
+   * Возвращает модификатор с вызовом метода-аксессора (например, {@code .ОбщийМодуль("Имя")}),
+   * только если он является последним в цепочке.
+   * <p>
+   * Если после вызова аксессора есть другие обращения (например,
+   * {@code ОбщегоНазначения.ОбщийМодуль("Имя").Метод()}), то значением выражения является
+   * результат метода {@code Метод()}, а не сам общий модуль, поэтому такое выражение не
+   * считается ссылкой на общий модуль (см. #3974).
+   */
+  private static Optional<BSLParser.ModifierContext> getMatchingTerminalModifier(
+    BSLParser.ComplexIdentifierContext complexId,
+    String moduleName,
+    ParsedAccessors parsedAccessors
+  ) {
+    var modifiers = complexId.modifier();
+    if (modifiers.isEmpty()) {
+      return Optional.empty();
+    }
+    var lastModifier = modifiers.get(modifiers.size() - 1);
+    return extractMethodNameFromModifier(lastModifier)
       .filter(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors))
-      .isPresent();
+      .map(methodName -> lastModifier);
   }
 
   private static Optional<String> extractMethodNameFromModifier(BSLParser.ModifierContext modifier) {
@@ -329,25 +347,12 @@ public class ModuleReference {
     ParsedAccessors parsedAccessors
   ) {
     // Имя модуля извлекаем только если getter общего модуля является последним
-    // модификатором выражения (см. hasMatchingModifierMethodCall и #3974).
-    return lastModifier(complexId)
-      .filter(modifier -> extractMethodNameFromModifier(modifier)
-        .filter(methodName -> isModuleMethodMatch(methodName, moduleName, parsedAccessors))
-        .isPresent())
+    // модификатором выражения (см. getMatchingTerminalModifier и #3974).
+    return getMatchingTerminalModifier(complexId, moduleName, parsedAccessors)
       .flatMap(modifier -> Optional.ofNullable(modifier.accessCall())
         .map(BSLParser.AccessCallContext::methodCall)
         .map(BSLParser.MethodCallContext::doCall)
         .flatMap(ModuleReference::extractParameterFromDoCall));
-  }
-
-  private static Optional<BSLParser.ModifierContext> lastModifier(
-    BSLParser.ComplexIdentifierContext complexId
-  ) {
-    var modifiers = complexId.modifier();
-    if (modifiers.isEmpty()) {
-      return Optional.empty();
-    }
-    return Optional.of(modifiers.get(modifiers.size() - 1));
   }
 
   private static Optional<String> extractModuleNameFromGlobalMethodCall(
