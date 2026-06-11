@@ -32,9 +32,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Поддержка библиотеки наследования OneScript
@@ -69,40 +67,11 @@ import java.util.Set;
  *   Процедура ПриСозданииОбъекта()
  * </pre>
  * Разворачивание мета-аннотаций делегируется {@link OScriptMetaAnnotationResolver}
- * (роль {@link #EXTENDS_ROLE}), который внедряется через конструктор.
+ * (роль {@link ExtendsAnnotations#EXTENDS_ROLE}), который внедряется через конструктор.
  */
 @Component
 @RequiredArgsConstructor
 public class OScriptExtends {
-
-  /**
-   * Базовая роль аннотации наследования (имя русской аннотации extends).
-   * Через неё {@link OScriptMetaAnnotationResolver} распознаёт и прямое
-   * {@code &Расширяет("X")}, и мета-аннотации, разворачивающиеся в неё.
-   */
-  public static final String EXTENDS_ROLE = "Расширяет";
-
-  /**
-   * Имя поля, которое библиотека {@code extends} неявно создаёт в собранном
-   * объекте-наследнике для хранения экземпляра родителя. Доступно даже без
-   * явного объявления поля с {@code &Родитель}.
-   */
-  public static final String IMPLICIT_PARENT_FIELD = "_ОбъектРодитель";
-
-  /** Имена аннотации поля-держателя родителя (в нижнем регистре): {@code &Родитель}. */
-  private static final Set<String> PARENT_FIELD_ANNOTATIONS = Set.of("родитель");
-
-  /**
-   * Базовая роль аннотации реализации интерфейса {@code &Реализует("Интерфейс")}.
-   * Аннотация повторяемая — класс может реализовывать несколько интерфейсов.
-   */
-  public static final String IMPLEMENTS_ROLE = "Реализует";
-
-  /**
-   * Базовая роль аннотации-маркера интерфейса {@code &Интерфейс} (ставится на
-   * конструктор класса-интерфейса).
-   */
-  public static final String INTERFACE_ROLE = "Интерфейс";
 
   /** Резолвер мета-аннотаций «ОСени» (внедряется через конструктор). */
   private final OScriptMetaAnnotationResolver metaAnnotationResolver;
@@ -121,7 +90,7 @@ public class OScriptExtends {
       return List.of();
     }
     var result = new ArrayList<String>();
-    for (var value : metaAnnotationResolver.valuesByRole(constructorAnnotations(documentContext), IMPLEMENTS_ROLE)) {
+    for (var value : metaAnnotationResolver.valuesByRole(constructorAnnotations(documentContext), ExtendsAnnotations.IMPLEMENTS_ROLE)) {
       if (value != null && !value.isBlank()) {
         result.add(value);
       }
@@ -141,23 +110,23 @@ public class OScriptExtends {
     if (documentContext.getFileType() != FileType.OS) {
       return false;
     }
-    return metaAnnotationResolver.hasRole(constructorAnnotations(documentContext), INTERFACE_ROLE);
+    return metaAnnotationResolver.hasRole(constructorAnnotations(documentContext), ExtendsAnnotations.INTERFACE_ROLE);
   }
 
   /**
    * Является ли переменная держателем экземпляра родителя: либо помечена
    * {@code &Родитель} (явный держатель с произвольным именем), либо это неявное
-   * поле {@link #IMPLICIT_PARENT_FIELD}. Тип такого поля — родительский класс.
+   * поле {@link ExtendsAnnotations#IMPLICIT_PARENT_FIELD}. Тип такого поля — родительский класс.
    *
    * @param variable переменная (как правило, поле модуля {@code .os}-класса)
    * @return {@code true}, если переменная хранит экземпляр родителя
    */
   public boolean isParentHolder(VariableSymbol variable) {
-    if (IMPLICIT_PARENT_FIELD.equalsIgnoreCase(variable.getName())) {
+    if (ExtendsAnnotations.IMPLICIT_PARENT_FIELD.equalsIgnoreCase(variable.getName())) {
       return true;
     }
     for (Annotation annotation : variable.getAnnotations()) {
-      if (PARENT_FIELD_ANNOTATIONS.contains(annotation.getName().toLowerCase(Locale.ROOT))) {
+      if (ExtendsAnnotations.PARENT_FIELD.equalsIgnoreCase(annotation.getName())) {
         return true;
       }
     }
@@ -201,11 +170,11 @@ public class OScriptExtends {
   }
 
   /**
-   * Имя родителя из аннотаций одного метода: роль {@link #EXTENDS_ROLE} —
+   * Имя родителя из аннотаций одного метода: роль {@link ExtendsAnnotations#EXTENDS_ROLE} —
    * прямой {@code &Расширяет} и мета-аннотации «ОСени», разворачивающиеся в неё.
    */
   private Optional<String> parentFromAnnotations(List<Annotation> annotations) {
-    return metaAnnotationResolver.valuesByRole(annotations, EXTENDS_ROLE).stream()
+    return metaAnnotationResolver.valuesByRole(annotations, ExtendsAnnotations.EXTENDS_ROLE).stream()
       .filter(value -> value != null && !value.isBlank())
       .findFirst();
   }

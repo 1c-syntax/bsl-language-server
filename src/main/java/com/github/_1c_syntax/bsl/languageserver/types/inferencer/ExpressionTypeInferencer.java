@@ -43,6 +43,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.ExtendsAnnotations;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -239,7 +240,7 @@ public class ExpressionTypeInferencer {
     // Неявное поле родителя библиотеки extends: фреймворк создаёт _ОбъектРодитель
     // в собранном объекте, в исходниках наследника оно не объявлено — типизируем
     // его родительским классом, чтобы _ОбъектРодитель.МетодБазы() резолвился.
-    if (OScriptExtends.IMPLICIT_PARENT_FIELD.equalsIgnoreCase(text)
+    if (ExtendsAnnotations.IMPLICIT_PARENT_FIELD.equalsIgnoreCase(text)
       && ctx.documentContext.getFileType() == FileType.OS) {
       var parent = parentClassType(ctx.documentContext);
       if (!parent.isEmpty()) {
