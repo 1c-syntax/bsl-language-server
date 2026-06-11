@@ -3,8 +3,8 @@
     <appender name="LANGUAGE_CLIENT_AWARE" class="com.github._1c_syntax.bsl.languageserver.infrastructure.LanguageClientAwareAppender">
         <!--
             Когда LanguageClient не подключён, сообщения уходят в стандартный поток.
-            Цель задаётся переменной CONSOLE_TARGET (см. logback-spring.xml): в режиме
-            MCP это System.err, чтобы не загрязнять stdout — канал протокола; иначе System.out.
+            Цель задаётся профилем через CONSOLE_TARGET (см. logback-spring.xml): когда stdout
+            занят протоколом (mcp-stdio, lsp-mcp) — System.err; иначе System.out.
         -->
         <target>${CONSOLE_TARGET:-System.out}</target>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">

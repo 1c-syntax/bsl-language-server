@@ -96,7 +96,7 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     globalConfiguration.update(configurationFile);
 
     if (mcpEnabled) {
-      // The MCP Streamable HTTP server is started by Spring AI autoconfiguration (mcp,mcp-http
+      // The MCP Streamable HTTP server is started by Spring AI autoconfiguration (mcp,lsp-mcp
       // profiles, see BSLLSPLauncher). It shares the ServerContextProvider with the LSP session.
       LOGGER.info("MCP server enabled over Streamable HTTP at `{}`", mcpPath);
     }

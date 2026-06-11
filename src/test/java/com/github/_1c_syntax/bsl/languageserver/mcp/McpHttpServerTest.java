@@ -47,7 +47,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(
   webEnvironment = RANDOM_PORT,
   properties = "spring.main.web-application-type=servlet")
-@ActiveProfiles({"mcp", "mcp-http"})
+@ActiveProfiles({"mcp", "websocket-mcp"})
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class McpHttpServerTest {
 

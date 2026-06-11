@@ -111,7 +111,6 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private int exitCode;
 
   public static void main(String[] args) {
-    configureConsoleTarget(args);
     applyMcpEndpointPath(args);
 
     var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
@@ -187,8 +186,10 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
 
   private static String[] getActiveProfiles(String[] args) {
     if (isMcpHttp(args)) {
-      // MCP over Streamable HTTP alongside LSP (over WebSocket or over stdio).
-      return new String[]{"mcp", "mcp-http"};
+      // MCP over Streamable HTTP. Two distinct sub-profiles by the LSP transport it sits next to:
+      // `websocket-mcp` (stdout free) vs `lsp-mcp` (stdout is the LSP channel) — drives log routing.
+      var lspTransportProfile = isWebsocketMode(args) ? "websocket-mcp" : "lsp-mcp";
+      return new String[]{"mcp", lspTransportProfile};
     }
     if (isMcpStdio(args)) {
       // standalone `mcp` subcommand: MCP over stdio.
@@ -224,16 +225,6 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private static boolean isMcpStdio(String[] args) {
     var argsList = Arrays.asList(args);
     return !isWebsocketMode(args) && !isLspMode(args) && (argsList.contains("mcp") || hasMcpFlag(args));
-  }
-
-  /**
-   * Когда stdout занят протоколом (MCP по stdio или LSP по stdio с {@code --mcp}), направить
-   * fallback-логи в System.err — задаётся до старта контекста, чтобы logback подхватил при инициализации.
-   */
-  private static void configureConsoleTarget(String[] args) {
-    if (isMcpStdio(args) || (isLspMode(args) && hasMcpFlag(args))) {
-      System.setProperty("CONSOLE_TARGET", "System.err");
-    }
   }
 
   /**
