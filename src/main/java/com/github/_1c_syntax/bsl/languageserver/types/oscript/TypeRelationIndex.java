@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
@@ -68,6 +69,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TypeRelationIndex {
 
   private final OScriptExtends oScriptExtends;
+  private final OScriptMetaAnnotationResolver metaAnnotationResolver;
 
   /** Имя родителя (lowercase) → URI документов, объявивших его в {@code &Расширяет}. */
   private final Map<String, Set<URI>> childUrisByParentName = new ConcurrentHashMap<>();
@@ -151,7 +153,7 @@ public class TypeRelationIndex {
     if (document.getFileType() != FileType.OS || ready.get() == null) {
       return;
     }
-    if (oScriptExtends.isAnnotationDefinition(document)) {
+    if (metaAnnotationResolver.isAnnotationDefinition(document)) {
       ready.set(null);
       return;
     }

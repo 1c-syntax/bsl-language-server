@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,13 +53,15 @@ class TypeRelationIndexTest {
   @Mock
   private OScriptExtends oScriptExtends;
   @Mock
+  private OScriptMetaAnnotationResolver metaAnnotationResolver;
+  @Mock
   private ServerContext serverContext;
 
   private final Map<URI, DocumentContext> documents = new LinkedHashMap<>();
 
   private TypeRelationIndex index() {
     when(serverContext.getDocuments()).thenReturn(documents);
-    return new TypeRelationIndex(oScriptExtends);
+    return new TypeRelationIndex(oScriptExtends, metaAnnotationResolver);
   }
 
   @Test
@@ -126,7 +129,7 @@ class TypeRelationIndexTest {
     // в чужих классах — индекс сбрасывается на полную ленивую пересборку
     var child = osDocument("Наследник", "База", List.of());
     var annotationDefinition = osDocument("МояАннотация", null, List.of());
-    when(oScriptExtends.isAnnotationDefinition(annotationDefinition)).thenReturn(true);
+    when(metaAnnotationResolver.isAnnotationDefinition(annotationDefinition)).thenReturn(true);
     var index = index();
     assertThat(index.directSubtypeUris(List.of("База"), serverContext)).containsExactly(child.getUri());
 

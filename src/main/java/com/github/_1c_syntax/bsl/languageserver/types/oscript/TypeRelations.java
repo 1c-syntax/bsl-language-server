@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.UserType;
@@ -81,6 +82,7 @@ public class TypeRelations {
   private final ThreadLocal<Set<TypeRef>> inheritanceInProgress = ThreadLocal.withInitial(HashSet::new);
 
   private final OScriptExtends oScriptExtends;
+  private final OScriptMetaAnnotationResolver metaAnnotationResolver;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final TypeRegistry typeRegistry;
   private final TypeRelationIndex typeRelationIndex;
@@ -108,12 +110,12 @@ public class TypeRelations {
    */
   public Optional<String> supertypeName(DocumentContext documentContext) {
     var parentName = oScriptExtends.parentClassName(documentContext);
-    if (parentName.isEmpty() || !oScriptExtends.isAnnotationDefinition(documentContext)) {
+    if (parentName.isEmpty() || !metaAnnotationResolver.isAnnotationDefinition(documentContext)) {
       return parentName;
     }
     var serverContext = documentContext.getServerContext();
     return parentName.filter(name -> resolveDocument(name, serverContext)
-      .map(oScriptExtends::isAnnotationDefinition)
+      .map(metaAnnotationResolver::isAnnotationDefinition)
       .orElse(false));
   }
 
@@ -164,8 +166,8 @@ public class TypeRelations {
    * аннотация→обычный класс отбрасывается. Для обычных классов ограничения нет.
    */
   private boolean inheritableFromParent(DocumentContext child, DocumentContext parent) {
-    return !oScriptExtends.isAnnotationDefinition(child)
-      || oScriptExtends.isAnnotationDefinition(parent);
+    return !metaAnnotationResolver.isAnnotationDefinition(child)
+      || metaAnnotationResolver.isAnnotationDefinition(parent);
   }
 
   /**
@@ -299,7 +301,7 @@ public class TypeRelations {
     // мета-аннотации, а не собственное наследование, поэтому членов родителя не
     // получает. Редкий случай аннотация→аннотация по членам не разворачиваем —
     // для класса-маркера это несущественно (в отличие от иерархии типов).
-    if (oScriptExtends.isAnnotationDefinition(documentContext)) {
+    if (metaAnnotationResolver.isAnnotationDefinition(documentContext)) {
       return List.of();
     }
     var parentRef = oScriptExtends.parentClassName(documentContext)
