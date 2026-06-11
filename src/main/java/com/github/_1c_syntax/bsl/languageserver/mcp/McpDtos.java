@@ -28,6 +28,7 @@ import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 
@@ -140,6 +141,19 @@ public class McpDtos {
         item.getDetail(),
         item.getUri(),
         RangeDto.from(item.getSelectionRange())
+      );
+    }
+  }
+
+  /**
+   * Определение символа: где объявлен (полный диапазон и диапазон имени).
+   */
+  public record DefinitionDto(String uri, RangeDto range, RangeDto selectionRange) {
+    public static DefinitionDto from(LocationLink link) {
+      return new DefinitionDto(
+        link.getTargetUri(),
+        RangeDto.from(link.getTargetRange()),
+        RangeDto.from(link.getTargetSelectionRange())
       );
     }
   }

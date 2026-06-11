@@ -71,7 +71,8 @@ class McpHttpServerTest {
     var toolNames = mcpSyncServer.listTools().stream().map(McpSchema.Tool::name).toList();
 
     assertThat(toolNames)
-      .containsExactlyInAnyOrder("analyze_file", "document_symbols", "find_references", "call_hierarchy");
+      .containsExactlyInAnyOrder(
+        "analyze_file", "document_symbols", "find_references", "call_hierarchy", "hover", "definition");
   }
 
   @Test
