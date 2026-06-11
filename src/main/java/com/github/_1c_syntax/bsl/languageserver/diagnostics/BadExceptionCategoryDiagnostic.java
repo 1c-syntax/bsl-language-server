@@ -52,20 +52,31 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitRaiseStatement(RaiseStatementContext ctx) {
-    String rawText = ctx.getText();
 
-    if (rawText.contains(",")) {
-      String textWithoutStrings = rawText.replaceAll("(?s)\".*?\"", "");
-      String normalizedText = textWithoutStrings.toLowerCase().replaceAll("\\s+", "");
+    checkForbiddenCategory(ctx);
 
-      boolean hasForbiddenCategory = FORBIDDEN_CATEGORIES.stream()
-        .anyMatch(normalizedText::contains);
-
-      if (hasForbiddenCategory) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
-    }
     super.visitRaiseStatement(ctx);
     return ctx;
+  }
+
+  private void checkForbiddenCategory(RaiseStatementContext ctx) {
+    var doCall = ctx.doCall();
+    if (doCall == null) return;
+
+    var callParamList = doCall.callParamList();
+    if (callParamList == null) return;
+
+    var params = callParamList.callParam();
+    if (params.size() <= 1) return;
+
+    var categoryNode = params.get(1);
+    String categoryText = categoryNode.getText().toLowerCase().replaceAll("\\s+", "");
+
+    boolean hasForbiddenCategory = FORBIDDEN_CATEGORIES.stream()
+      .anyMatch(categoryText::contains);
+
+    if (hasForbiddenCategory) {
+      diagnosticStorage.addDiagnostic(categoryNode);
+    }
   }
 }
