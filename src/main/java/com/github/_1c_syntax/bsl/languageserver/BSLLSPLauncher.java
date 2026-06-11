@@ -103,6 +103,9 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     CaseInsensitivePattern.compile("--spring\\..*"),
     CaseInsensitivePattern.compile("--app\\..*"),
     CaseInsensitivePattern.compile("--logging\\..*"),
+    CaseInsensitivePattern.compile("--server\\..*"),
+    // Опции команды по умолчанию (lsp), допустимые без явного указания команды: `--mcp`, `--mcp-path`.
+    CaseInsensitivePattern.compile("--mcp(-path)?(=.*)?"),
     CaseInsensitivePattern.compile("--debug")
   );
 

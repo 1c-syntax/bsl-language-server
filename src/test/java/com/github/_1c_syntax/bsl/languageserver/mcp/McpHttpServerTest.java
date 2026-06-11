@@ -35,6 +35,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.time.Duration;
 import java.net.http.HttpResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,6 +82,7 @@ class McpHttpServerTest {
       "capabilities":{},"clientInfo":{"name":"test","version":"1"}}}""";
 
     var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/mcp"))
+      .timeout(Duration.ofSeconds(30))
       .header("Content-Type", "application/json")
       .header("Accept", "application/json, text/event-stream")
       .POST(HttpRequest.BodyPublishers.ofString(requestBody))

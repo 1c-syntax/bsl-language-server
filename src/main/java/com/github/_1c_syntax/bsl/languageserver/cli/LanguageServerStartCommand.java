@@ -57,7 +57,7 @@ import static picocli.CommandLine.Option;
   aliases = {"--lsp"},
   description = "LSP server mode (default)",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2025|@")
+  footer = "@|green Copyright(c) 2018-2026|@")
 @Component
 @RequiredArgsConstructor
 public class LanguageServerStartCommand implements Callable<Integer> {

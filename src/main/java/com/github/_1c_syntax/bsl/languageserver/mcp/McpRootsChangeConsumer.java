@@ -102,7 +102,7 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
     try {
       return Path.of(URI.create(root.uri()));
     } catch (RuntimeException e) {
-      LOGGER.warn("Skipping unsupported MCP root uri `{}`", root.uri());
+      LOGGER.warn("Skipping unsupported MCP root uri `{}`", root.uri(), e);
       return null;
     }
   }
