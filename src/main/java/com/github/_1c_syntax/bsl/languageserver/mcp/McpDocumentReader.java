@@ -39,11 +39,17 @@ import java.util.function.Function;
  * Никакого отдельного состояния: документ ищется в зарегистрированных рабочих
  * пространствах провайдера. Чтение выполняется в контексте рабочего пространства
  * ({@link WorkspaceContextHolder}) и под блокировкой документа — так же, как обработчики
- * LSP-запросов (см. {@code BSLTextDocumentService#withFreshDocumentContext}):
+ * LSP-запросов (см. {@code BSLTextDocumentService#withFreshDocumentContext}).
+ * <p>
+ * Доступ различается по тому, нужен ли инструменту свежий AST:
  * <ul>
- *   <li>открытый в редакторе документ читается «живым», под read-lock'ом;</li>
- *   <li>не открытый — достраивается из файла под write-lock'ом
- *       ({@link ServerContext#rebuildDocument} идемпотентен для уже собранных).</li>
+ *   <li>{@link #read} — для вычисленных данных (дерево символов, индекс ссылок), которые
+ *       переживают очистку AST: уже проиндексированный документ читается как есть,
+ *       без повторного разбора;</li>
+ *   <li>{@link #analyze} — для диагностик: AST пересобирается из файла, после чтения
+ *       освобождается ({@link ServerContext#tryClearDocument});</li>
+ *   <li>открытый в редакторе документ в обоих случаях читается «живым» под read-lock'ом
+ *       и никогда не очищается.</li>
  * </ul>
  */
 @Component
@@ -54,14 +60,31 @@ public class McpDocumentReader {
   private final McpReadiness readiness;
 
   /**
-   * Прочитать данные документа через общий контекст сервера.
+   * Прочитать вычисленные данные документа (дерево символов, ссылки) без повторного разбора AST.
    *
    * @param path Путь к файлу (абсолютный или относительный).
    * @param action Действие над контекстом документа.
    * @param <T> Тип результата.
    * @return Результат действия.
    */
-  public <T> T readDocument(String path, Function<DocumentContext, T> action) {
+  public <T> T read(String path, Function<DocumentContext, T> action) {
+    return access(path, action, false);
+  }
+
+  /**
+   * Прочитать данные, требующие свежего AST (диагностики): документ пересобирается из файла,
+   * после чтения AST освобождается.
+   *
+   * @param path Путь к файлу (абсолютный или относительный).
+   * @param action Действие над контекстом документа.
+   * @param <T> Тип результата.
+   * @return Результат действия.
+   */
+  public <T> T analyze(String path, Function<DocumentContext, T> action) {
+    return access(path, action, true);
+  }
+
+  private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst) {
     readiness.awaitReady();
 
     var uri = Absolute.uri(new File(path));
@@ -70,9 +93,12 @@ public class McpDocumentReader {
         "File is not part of any registered workspace: " + path));
 
     var lock = serverContext.getDocumentLock(uri);
-
     var existing = serverContext.getDocument(uri);
-    if (existing != null && serverContext.isDocumentOpened(existing)) {
+
+    // Открытый в редакторе документ — читаем живой буфер; уже проиндексированный документ для
+    // read-доступа тоже читаем как есть: дерево символов и индекс ссылок переживают очистку AST.
+    // Повторный разбор нужен только для свежих диагностик (requireFreshAst).
+    if (existing != null && (serverContext.isDocumentOpened(existing) || !requireFreshAst)) {
       lock.readLock().lock();
       try (var ignored = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
         return action.apply(existing);
@@ -81,6 +107,7 @@ public class McpDocumentReader {
       }
     }
 
+    // Нужна сборка: новый документ либо инструмент, которому требуется свежий AST.
     lock.writeLock().lock();
     try (var ignored = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
       var documentContext = serverContext.addDocument(uri);
@@ -88,10 +115,9 @@ public class McpDocumentReader {
       try {
         return action.apply(documentContext);
       } finally {
-        // Free the AST built for this query to avoid unbounded memory growth over a long-running
-        // session (same as AnalyzeCommand). tryClearDocument is a no-op for documents that became
-        // open in an editor meanwhile, so live LSP buffers are never touched. The global reference
-        // index survives the clear; the document is rebuilt on demand on the next access.
+        // Освобождаем AST, построенный под этот запрос, чтобы память не росла без границ
+        // (как в AnalyzeCommand). tryClearDocument пропускает документы, открытые в редакторе,
+        // поэтому live-буферы LSP не затрагиваются; глобальный индекс ссылок переживает очистку.
         serverContext.tryClearDocument(documentContext);
       }
     } finally {

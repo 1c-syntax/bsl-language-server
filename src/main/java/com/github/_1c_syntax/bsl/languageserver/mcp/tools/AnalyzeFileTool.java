@@ -66,7 +66,7 @@ public class AnalyzeFileTool {
       description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
     String file
   ) {
-    return documentReader.readDocument(file, documentContext -> {
+    return documentReader.analyze(file, documentContext -> {
       var diagnostics = documentContext.getDiagnostics().stream()
         .map(DiagnosticDto::from)
         .toList();

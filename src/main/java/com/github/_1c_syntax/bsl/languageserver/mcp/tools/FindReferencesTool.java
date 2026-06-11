@@ -76,7 +76,7 @@ public class FindReferencesTool {
     @McpToolParam(required = true, description = "Zero-based character offset within the line.")
     int character
   ) {
-    return documentReader.readDocument(file, documentContext -> {
+    return documentReader.read(file, documentContext -> {
       var params = new ReferenceParams();
       params.setPosition(new Position(line, character));
       params.setContext(new ReferenceContext(true));

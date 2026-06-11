@@ -68,7 +68,7 @@ public class DocumentSymbolsTool {
       description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
     String file
   ) {
-    return documentReader.readDocument(file, documentContext -> {
+    return documentReader.read(file, documentContext -> {
       var symbols = documentSymbolProvider.getDocumentSymbols(documentContext).stream()
         .map(SymbolDto::from)
         .toList();
