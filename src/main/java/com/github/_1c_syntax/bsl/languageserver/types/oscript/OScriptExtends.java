@@ -38,7 +38,7 @@ import java.util.Set;
 
 /**
  * Поддержка библиотеки наследования OneScript
- * <a href="https://github.com/oscript-library/extends">extends</a> (автор — nixel2007).
+ * <a href="https://github.com/nixel2007/extends">extends</a>
  * <p>
  * Наследование объявляется аннотацией {@code &Расширяет("ИмяРодителя")} над
  * конструктором класса {@code ПриСозданииОбъекта}:

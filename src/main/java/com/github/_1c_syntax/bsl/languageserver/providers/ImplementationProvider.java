@@ -39,7 +39,7 @@ import java.util.List;
 
 /**
  * Провайдер запроса {@code textDocument/implementation} для интерфейсов
- * OneScript библиотеки <a href="https://github.com/oscript-library/extends">extends</a>.
+ * OneScript библиотеки <a href="https://github.com/nixel2007/extends">extends</a>.
  * <p>
  * Интерфейс объявляется аннотацией-маркером {@code &Интерфейс} на конструкторе
  * класса-интерфейса; класс реализует его аннотацией {@code &Реализует("Интерфейс")}

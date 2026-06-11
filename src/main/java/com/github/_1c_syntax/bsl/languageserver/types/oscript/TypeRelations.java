@@ -50,7 +50,7 @@ import java.util.Set;
 
 /**
  * Единая точка истины об отношениях наследования между OneScript-классами
- * библиотеки <a href="https://github.com/oscript-library/extends">extends</a>:
+ * библиотеки <a href="https://github.com/nixel2007/extends">extends</a>:
  * {@code &Расширяет} (наследование) и {@code &Реализует} (реализация интерфейса).
  * <p>
  * Раньше транзитивный обход цепочки {@code &Расширяет} и защита от циклов были
