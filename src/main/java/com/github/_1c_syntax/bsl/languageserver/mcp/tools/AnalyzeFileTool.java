@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.DiagnosticDto;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
@@ -41,7 +41,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnalyzeFileTool {
 
-  private final McpWorkspace workspace;
+  private final McpDocumentReader documentReader;
 
   /**
    * Результат анализа файла.
@@ -66,8 +66,7 @@ public class AnalyzeFileTool {
       description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
     String file
   ) {
-    return workspace.inWorkspace(() -> {
-      var documentContext = workspace.resolveDocument(file);
+    return documentReader.readDocument(file, documentContext -> {
       var diagnostics = documentContext.getDiagnostics().stream()
         .map(DiagnosticDto::from)
         .toList();

@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.LocationDto;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
@@ -46,7 +46,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FindReferencesTool {
 
-  private final McpWorkspace workspace;
+  private final McpDocumentReader documentReader;
   private final ReferencesProvider referencesProvider;
 
   /**
@@ -76,9 +76,7 @@ public class FindReferencesTool {
     @McpToolParam(required = true, description = "Zero-based character offset within the line.")
     int character
   ) {
-    return workspace.inWorkspace(() -> {
-      var documentContext = workspace.resolveDocument(file);
-
+    return documentReader.readDocument(file, documentContext -> {
       var params = new ReferenceParams();
       params.setPosition(new Position(line, character));
       params.setContext(new ReferenceContext(true));

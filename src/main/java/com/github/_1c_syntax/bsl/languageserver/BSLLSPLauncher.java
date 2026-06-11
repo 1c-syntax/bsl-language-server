@@ -115,9 +115,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
       .profiles(getActiveProfiles(args))
       // MCP server autoconfiguration is off by default; the `mcp` profile re-enables it
       // (see application-mcp.properties). Declared as default properties so it also applies in tests.
-      .properties(
-        "spring.ai.mcp.server.enabled=false",
-        "spring.ai.mcp.server.annotation-scanner.enabled=false")
+      .properties(getDefaultProperties(args))
       .run(args);
 
     var launcher = applicationContext.getBean(BSLLSPLauncher.class);
@@ -195,5 +193,21 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
       return new String[]{"mcp"};
     }
     return new String[0];
+  }
+
+  private static String[] getDefaultProperties(String[] args) {
+    var properties = new ArrayList<String>();
+    // MCP server autoconfiguration is off unless the `mcp` profile re-enables it.
+    properties.add("spring.ai.mcp.server.enabled=false");
+    properties.add("spring.ai.mcp.server.annotation-scanner.enabled=false");
+
+    var argsList = Arrays.asList(args);
+    if (argsList.contains("mcp") || argsList.contains("--mcp")) {
+      // headless bootstrap: the `mcp` command indexes the workspace after the server has started,
+      // so tool calls must wait for readiness (see McpReadiness).
+      properties.add("app.mcp.headless=true");
+    }
+
+    return properties.toArray(new String[0]);
   }
 }

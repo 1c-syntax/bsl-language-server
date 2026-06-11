@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDtos.SymbolDto;
-import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspace;
+import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -43,7 +43,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DocumentSymbolsTool {
 
-  private final McpWorkspace workspace;
+  private final McpDocumentReader documentReader;
   private final DocumentSymbolProvider documentSymbolProvider;
 
   /**
@@ -68,8 +68,7 @@ public class DocumentSymbolsTool {
       description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
     String file
   ) {
-    return workspace.inWorkspace(() -> {
-      var documentContext = workspace.resolveDocument(file);
+    return documentReader.readDocument(file, documentContext -> {
       var symbols = documentSymbolProvider.getDocumentSymbols(documentContext).stream()
         .map(SymbolDto::from)
         .toList();
