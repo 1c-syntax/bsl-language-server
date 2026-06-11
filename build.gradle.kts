@@ -87,10 +87,13 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
-    // Spring AI MCP (Model Context Protocol) server starter (STDIO).
+    // Spring AI MCP (Model Context Protocol) server starters.
     // Spring AI 2.0 is the first line compatible with Spring Boot 4 (milestone at the time of writing).
+    // - core starter: STDIO transport (`mcp` subcommand);
+    // - webmvc starter: Streamable HTTP transport, served on the same servlet container as LSP-over-WS.
     api(platform("org.springframework.ai:spring-ai-bom:2.0.0-M6"))
     api("org.springframework.ai:spring-ai-starter-mcp-server")
+    api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 
     // 1c-syntax
     api("io.github.1c-syntax:bsl-parser:0.35.0")

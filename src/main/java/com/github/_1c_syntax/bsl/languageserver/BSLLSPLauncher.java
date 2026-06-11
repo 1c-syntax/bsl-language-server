@@ -188,26 +188,43 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   }
 
   private static String[] getActiveProfiles(String[] args) {
-    var argsList = Arrays.asList(args);
-    if (argsList.contains("mcp") || argsList.contains("--mcp")) {
-      return new String[]{"mcp"};
+    if (isWebsocketMcp(args)) {
+      // LSP over WebSocket + MCP over Streamable HTTP on the same servlet container.
+      return new String[]{"mcp", "mcp-http"};
+    }
+    if (isStdioMcp(args)) {
+      // standalone `mcp` subcommand: MCP over stdio.
+      return new String[]{"mcp", "mcp-stdio"};
     }
     return new String[0];
   }
 
   private static String[] getDefaultProperties(String[] args) {
     var properties = new ArrayList<String>();
-    // MCP server autoconfiguration is off unless the `mcp` profile re-enables it.
+    // MCP server autoconfiguration is off unless an `mcp*` profile re-enables it.
     properties.add("spring.ai.mcp.server.enabled=false");
     properties.add("spring.ai.mcp.server.annotation-scanner.enabled=false");
 
-    var argsList = Arrays.asList(args);
-    if (argsList.contains("mcp") || argsList.contains("--mcp")) {
-      // headless bootstrap: the `mcp` command indexes the workspace after the server has started,
+    if (isStdioMcp(args) || isWebsocketMcp(args)) {
+      // The workspace is indexed by the command after the server has started accepting requests,
       // so tool calls must wait for readiness (see McpReadiness).
       properties.add("app.mcp.headless=true");
     }
 
     return properties.toArray(new String[0]);
+  }
+
+  private static boolean isWebsocketServletMode(String[] args) {
+    var argsList = Arrays.asList(args);
+    return argsList.contains("-w") || argsList.contains("websocket");
+  }
+
+  private static boolean isWebsocketMcp(String[] args) {
+    return isWebsocketServletMode(args) && Arrays.asList(args).contains("--mcp");
+  }
+
+  private static boolean isStdioMcp(String[] args) {
+    var argsList = Arrays.asList(args);
+    return !isWebsocketServletMode(args) && (argsList.contains("mcp") || argsList.contains("--mcp"));
   }
 }

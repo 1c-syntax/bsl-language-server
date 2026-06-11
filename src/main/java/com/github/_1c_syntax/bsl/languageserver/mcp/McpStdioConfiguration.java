@@ -44,7 +44,7 @@ import java.io.InputStream;
  * </ul>
  */
 @Configuration
-@Profile("mcp")
+@Profile("mcp-stdio")
 public class McpStdioConfiguration {
 
   @Bean

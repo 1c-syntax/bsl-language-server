@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <!-- В режиме MCP stdout занят протоколом, поэтому fallback-логи уходят в System.err -->
-    <springProfile name="mcp">
+    <!-- В режиме MCP-over-stdio stdout занят протоколом, поэтому fallback-логи уходят в System.err.
+         Для MCP-over-HTTP (профиль mcp-http) stdout свободен — остаётся System.out. -->
+    <springProfile name="mcp-stdio">
         <property name="CONSOLE_TARGET" value="System.err"/>
     </springProfile>
-    <springProfile name="!mcp">
+    <springProfile name="!mcp-stdio">
         <property name="CONSOLE_TARGET" value="System.out"/>
     </springProfile>
     <include resource="language-client-aware-appender.xml" />
