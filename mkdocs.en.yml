@@ -31,7 +31,8 @@ nav:
     - About: features/index.md
     - features/ConfigurationFile.md
     - features/DiagnosticIgnorance.md
-theme: 
+    - features/McpMode.md
+theme:
   name: material
   language: en
   logo: 'assets/images/logo.png'

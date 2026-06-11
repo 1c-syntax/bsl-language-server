@@ -20,6 +20,7 @@
 * <a href="#websocket">Запуск в режиме websocket</a>
 * <a href="#analyze">Запуск в режиме анализатора</a>
 * <a href="#format">Запуск в режиме форматтера</a>
+* [Запуск в режиме MCP](features/McpMode.md)
 * <a href="#configuration">Конфигурационный файл</a>
 * <a href="reporters">Репортеры</a>
 * <a href="diagnostics">Диагностики</a>
