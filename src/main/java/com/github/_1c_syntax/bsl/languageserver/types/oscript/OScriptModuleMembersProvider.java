@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

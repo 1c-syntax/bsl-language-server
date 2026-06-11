@@ -48,6 +48,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)

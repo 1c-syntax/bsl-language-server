@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.TypeRelations;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TypeHierarchyItem;
