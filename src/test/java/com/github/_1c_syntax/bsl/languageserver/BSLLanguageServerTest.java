@@ -79,6 +79,8 @@ class BSLLanguageServerTest {
     // then
     assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
       .isEqualTo(TextDocumentSyncKind.Incremental);
+    assertThat(initialize.getCapabilities().getTypeHierarchyProvider()).isNotNull();
+    assertThat(initialize.getCapabilities().getImplementationProvider()).isNotNull();
   }
 
   @Test

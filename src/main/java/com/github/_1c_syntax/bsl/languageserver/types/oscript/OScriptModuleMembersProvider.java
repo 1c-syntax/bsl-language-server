@@ -48,6 +48,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.OScriptExtends;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -76,10 +79,12 @@ public class OScriptModuleMembersProvider {
   private final TypeRegistry typeRegistry;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
+  private final OScriptExtends oScriptExtends;
+  private final TypeRelations typeRelations;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
-  private final Map<URI, java.util.Set<String>> registeredByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Set<String>> registeredByUri = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -128,6 +133,7 @@ public class OScriptModuleMembersProvider {
       if (libraryEntry != null) {
         if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.CLASS) {
           typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+          registerInheritedMembers(documentContext, ref);
           globalScopeProvider.registerLibraryClass(qualifiedName, ref);
         } else if (libraryEntry.kind() == OScriptLibraryIndex.EntryKind.MODULE) {
           // Обратный индекс URI→тип для вывода типа ресивера-модуля по ModuleSymbol
@@ -139,6 +145,7 @@ public class OScriptModuleMembersProvider {
         }
       } else if (documentContext.getModuleType() == ModuleType.OScriptClass) {
         typeRegistry.registerConstructorSource(ref, () -> collectConstructors(documentContext, ref), LanguageScope.OS);
+        registerInheritedMembers(documentContext, ref);
       }
       LOGGER.debug("Registered .os module-as-type: {} -> {} kind={}", uri, qualifiedName,
         libraryEntry != null ? libraryEntry.kind() : documentContext.getModuleType());
@@ -161,6 +168,24 @@ public class OScriptModuleMembersProvider {
       globalScopeProvider.unregisterLibraryModule(name);
       globalScopeProvider.unregisterLibraryClass(name);
     }
+  }
+
+  /**
+   * Зарегистрировать ленивый источник членов, наследуемых от родительского
+   * класса библиотеки {@code extends} (аннотация {@code &Расширяет} над
+   * {@code ПриСозданииОбъекта}). Обход цепочки наследования и защита от циклов —
+   * в {@link TypeRelations}; здесь лишь регистрируется делегирующий источник. Источник добавляется ПОСЛЕ собственного источника
+   * членов класса, поэтому при дедупликации в {@link TypeRegistry#getMembers}
+   * собственные/переопределённые члены выигрывают у унаследованных. Резолв
+   * родителя ленивый — он может быть проиндексирован позже наследника, а смена
+   * {@code &Расширяет} подхватывается без ре-регистрации (hot-reload).
+   */
+  private void registerInheritedMembers(DocumentContext documentContext, TypeRef classRef) {
+    typeRegistry.registerMemberSource(
+      classRef,
+      () -> typeRelations.inheritedMembers(documentContext, classRef),
+      LanguageScope.OS
+    );
   }
 
   private Collection<MemberDescriptor> collectMembers(DocumentContext documentContext) {
