@@ -25,10 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-
+import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RaiseStatementContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.List;
 import java.util.Set;
 
 @DiagnosticMetadata(
@@ -38,7 +39,6 @@ import java.util.Set;
   tags = {
     DiagnosticTag.BADPRACTICE
   }
-
 )
 public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -52,7 +52,6 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitRaiseStatement(RaiseStatementContext ctx) {
-
     checkForbiddenCategory(ctx);
 
     super.visitRaiseStatement(ctx);
@@ -60,23 +59,42 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void checkForbiddenCategory(RaiseStatementContext ctx) {
-    var doCall = ctx.doCall();
-    if (doCall == null) return;
-
-    var callParamList = doCall.callParamList();
-    if (callParamList == null) return;
-
-    var params = callParamList.callParam();
+    var params = getValidatedCallParams(ctx);
     if (params.size() <= 1) return;
 
-    var categoryNode = params.get(1);
-    String categoryText = categoryNode.getText().toLowerCase().replaceAll("\\s+", "");
+    var categoryParam = params.get(1);
+    var expression = categoryParam.expression();
+    if (expression == null || expression.member().isEmpty()) return;
 
-    boolean hasForbiddenCategory = FORBIDDEN_CATEGORIES.stream()
-      .anyMatch(categoryText::contains);
+    var member = expression.member(0);
+    if (member == null) return;
 
-    if (hasForbiddenCategory) {
-      diagnosticStorage.addDiagnostic(categoryNode);
+    var complexIdentifier = member.complexIdentifier();
+    if (complexIdentifier == null || complexIdentifier.modifier().isEmpty()) return;
+
+    var modifiers = complexIdentifier.modifier();
+    var lastModifier = modifiers.getLast();
+
+    var accessProperty = lastModifier.accessProperty();
+    if (accessProperty == null) return;
+
+    var identifierNode = accessProperty.IDENTIFIER();
+    if (identifierNode == null) return;
+
+    String propertyName = identifierNode.getText().toLowerCase();
+
+    if (FORBIDDEN_CATEGORIES.contains(propertyName)) {
+      diagnosticStorage.addDiagnostic(categoryParam);
     }
+  }
+
+  private List<? extends CallParamContext> getValidatedCallParams(RaiseStatementContext ctx) {
+    var doCall = ctx.doCall();
+    if (doCall == null) return List.of();
+
+    var callParamList = doCall.callParamList();
+    if (callParamList == null) return List.of();
+
+    return callParamList.callParam();
   }
 }
