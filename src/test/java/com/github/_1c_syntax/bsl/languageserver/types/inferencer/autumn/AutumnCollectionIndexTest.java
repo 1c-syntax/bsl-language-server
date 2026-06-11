@@ -41,6 +41,8 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -81,7 +83,7 @@ class AutumnCollectionIndexTest {
     // Реальный резолвер мета-аннотаций поверх пустого репозитория: для базового
     // имени &ПрилепляемаяКоллекция он короткозамыкается. Пользовательских
     // алиасов в этих тестах нет.
-    var metaResolver = new AutumnMetaAnnotationResolver(new AnnotationRepository());
+    var metaResolver = new OScriptMetaAnnotationResolver(new AnnotationRepository());
     collectionIndex = new AutumnCollectionIndex(libraryIndex, serverContextProvider, typeRegistry, metaResolver);
   }
 
@@ -201,7 +203,7 @@ class AutumnCollectionIndexTest {
     // given: класс-определение пользовательской аннотации (&Аннотация(...)) —
     // не реализация коллекции, индексировать его не нужно.
     registerClass("АннотацияПрилепляемаяКоллекция",
-      constructor(annotation(AutumnAnnotations.ANNOTATION_MARKER, "ПрилепляемаяКоллекция"),
+      constructor(annotation(OScriptAnnotations.ANNOTATION_MARKER, "ПрилепляемаяКоллекция"),
         collectionAnnotation("ПрилепляемаяКоллекция")),
       getter(typeDescription("Произвольный")));
     init();
@@ -368,7 +370,7 @@ class AutumnCollectionIndexTest {
 
   private static Annotation collectionAnnotation(String name) {
     var parameters = new ArrayList<AnnotationParameterDefinition>();
-    parameters.add(new AnnotationParameterDefinition(AutumnAnnotations.VALUE_PARAMETER,
+    parameters.add(new AnnotationParameterDefinition(OScriptAnnotations.VALUE_PARAMETER,
       Either.forLeft(name), true));
     return Annotation.builder()
       .name(AutumnAnnotations.ATTACHABLE_COLLECTION)

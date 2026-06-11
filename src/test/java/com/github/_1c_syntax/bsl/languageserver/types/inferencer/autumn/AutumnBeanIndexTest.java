@@ -40,6 +40,8 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,7 +79,7 @@ class AutumnBeanIndexTest {
 
   private void init() {
     when(libraryIndex.findEntries(EntryKind.CLASS)).thenReturn(entries);
-    var metaResolver = new AutumnMetaAnnotationResolver(new AnnotationRepository());
+    var metaResolver = new OScriptMetaAnnotationResolver(new AnnotationRepository());
     beanIndex = new AutumnBeanIndex(libraryIndex, serverContextProvider, typeRegistry, metaResolver);
   }
 
@@ -580,7 +582,7 @@ class AutumnBeanIndexTest {
   }
 
   private static Annotation marker(String customName) {
-    return annotation(AutumnAnnotations.ANNOTATION_MARKER, customName);
+    return annotation(OScriptAnnotations.ANNOTATION_MARKER, customName);
   }
 
   private static Annotation qualifier(String alias) {

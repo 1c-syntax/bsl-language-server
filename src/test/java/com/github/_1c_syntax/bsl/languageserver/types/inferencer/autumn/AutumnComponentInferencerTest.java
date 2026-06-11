@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,7 +67,7 @@ class AutumnComponentInferencerTest {
   void setup() {
     // Реальный резолвер мета-аннотаций поверх пустого репозитория: для базовых
     // имён (Пластилин) он короткозамыкается, пользовательских аннотаций здесь нет.
-    var metaResolver = new AutumnMetaAnnotationResolver(new AnnotationRepository());
+    var metaResolver = new OScriptMetaAnnotationResolver(new AnnotationRepository());
     inferencer = new AutumnComponentInferencer(typeRegistry, beanIndex, collectionIndex, metaResolver);
     // Дефолт: коллекция не известна индексу — возвращается пустой TypeSet, а не
     // null. Конкретные тесты переопределяют ответ при необходимости.

@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnMetaAnnotationResolver;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -68,7 +68,7 @@ import java.util.Set;
  *   &amp;ХранилищеСущностей("Справочник")
  *   Процедура ПриСозданииОбъекта()
  * </pre>
- * Разворачивание мета-аннотаций делегируется {@link AutumnMetaAnnotationResolver}
+ * Разворачивание мета-аннотаций делегируется {@link OScriptMetaAnnotationResolver}
  * (роль {@link #EXTENDS_ROLE}), который внедряется через конструктор.
  */
 @Component
@@ -77,7 +77,7 @@ public class OScriptExtends {
 
   /**
    * Базовая роль аннотации наследования (имя русской аннотации extends).
-   * Через неё {@link AutumnMetaAnnotationResolver} распознаёт и прямое
+   * Через неё {@link OScriptMetaAnnotationResolver} распознаёт и прямое
    * {@code &Расширяет("X")}, и мета-аннотации, разворачивающиеся в неё.
    */
   public static final String EXTENDS_ROLE = "Расширяет";
@@ -105,7 +105,7 @@ public class OScriptExtends {
   public static final String INTERFACE_ROLE = "Интерфейс";
 
   /** Резолвер мета-аннотаций «ОСени» (внедряется через конструктор). */
-  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
+  private final OScriptMetaAnnotationResolver metaAnnotationResolver;
 
   /**
    * Имена интерфейсов, которые класс объявляет реализуемыми через

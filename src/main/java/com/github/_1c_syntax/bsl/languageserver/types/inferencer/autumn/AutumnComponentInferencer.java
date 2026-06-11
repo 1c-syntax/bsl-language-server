@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +66,7 @@ public class AutumnComponentInferencer {
   private final TypeRegistry typeRegistry;
   private final AutumnBeanIndex beanIndex;
   private final AutumnCollectionIndex collectionIndex;
-  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
+  private final OScriptMetaAnnotationResolver metaAnnotationResolver;
 
   /**
    * Вывести тип внедряемой зависимости по аннотациям объявления.

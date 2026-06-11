@@ -40,6 +40,9 @@ import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryInde
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
 import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -85,7 +88,8 @@ class AutumnInjectionPointIndexTest {
 
   private void init() {
     when(libraryIndex.findEntries(EntryKind.CLASS)).thenReturn(entries);
-    index = new AutumnInjectionPointIndex(libraryIndex, serverContextProvider, componentInferencer, beanIndex);
+    index = new AutumnInjectionPointIndex(libraryIndex, serverContextProvider,
+      new OScriptMetaAnnotationResolver(new AnnotationRepository()), componentInferencer, beanIndex);
   }
 
   @Test
@@ -251,7 +255,7 @@ class AutumnInjectionPointIndexTest {
 
   private static Annotation marker(String customName) {
     return Annotation.builder()
-      .name(AutumnAnnotations.ANNOTATION_MARKER)
+      .name(OScriptAnnotations.ANNOTATION_MARKER)
       .kind(AnnotationKind.CUSTOM)
       .parameters(List.of(new AnnotationParameterDefinition("", Either.forLeft(customName), true)))
       .build();

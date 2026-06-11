@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
@@ -58,6 +59,7 @@ abstract class AbstractAutumnLibraryIndex {
 
   protected final OScriptLibraryIndex libraryIndex;
   protected final ServerContextProvider serverContextProvider;
+  protected final OScriptMetaAnnotationResolver metaAnnotationResolver;
 
   /**
    * Барьер первичной сборки: завершённый future — индекс построен; {@code null} — не построен
@@ -66,9 +68,11 @@ abstract class AbstractAutumnLibraryIndex {
   private final AtomicReference<CompletableFuture<Void>> ready = new AtomicReference<>();
 
   protected AbstractAutumnLibraryIndex(OScriptLibraryIndex libraryIndex,
-                                       ServerContextProvider serverContextProvider) {
+                                       ServerContextProvider serverContextProvider,
+                                       OScriptMetaAnnotationResolver metaAnnotationResolver) {
     this.libraryIndex = libraryIndex;
     this.serverContextProvider = serverContextProvider;
+    this.metaAnnotationResolver = metaAnnotationResolver;
   }
 
   /**
@@ -93,7 +97,7 @@ abstract class AbstractAutumnLibraryIndex {
     if (document.getFileType() != FileType.OS || ready.get() == null) {
       return;
     }
-    if (isAnnotationDefinition(document)) {
+    if (metaAnnotationResolver.isAnnotationDefinition(document)) {
       ready.set(null);
       return;
     }
@@ -139,20 +143,6 @@ abstract class AbstractAutumnLibraryIndex {
     }
   }
 
-  /**
-   * Несёт ли конструктор класса маркер {@code &Аннотация} (класс-определение пользовательской
-   * аннотации, а не предметный класс-желудь/коллекция).
-   *
-   * @param document Контекст документа .os-класса.
-   * @return {@code true}, если класс — определение пользовательской аннотации.
-   */
-  private static boolean isAnnotationDefinition(DocumentContext document) {
-    return document.getSymbolTree().getConstructor()
-      .map(constructor ->
-        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
-      .orElse(false);
-  }
-
   private void rebuild() {
     clearIndex();
     libraryIndex.findEntries(EntryKind.CLASS).stream()
@@ -172,7 +162,7 @@ abstract class AbstractAutumnLibraryIndex {
       .map(serverContext -> serverContext.getDocument(uri))
       // Класс-определение пользовательской аннотации (&Аннотация("Имя")) — не предметный класс:
       // его конструкторные аннотации нужны лишь для разворачивания мета-аннотаций.
-      .filter(document -> !isAnnotationDefinition(document))
+      .filter(document -> !metaAnnotationResolver.isAnnotationDefinition(document))
       .ifPresent(document -> indexClass(document, classEntries, uri));
   }
 

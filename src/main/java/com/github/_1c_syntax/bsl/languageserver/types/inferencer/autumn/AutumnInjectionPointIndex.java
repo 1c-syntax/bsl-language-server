@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
@@ -71,9 +72,10 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
 
   public AutumnInjectionPointIndex(OScriptLibraryIndex libraryIndex,
                                    ServerContextProvider serverContextProvider,
+                                   OScriptMetaAnnotationResolver metaAnnotationResolver,
                                    AutumnComponentInferencer componentInferencer,
                                    AutumnBeanIndex beanIndex) {
-    super(libraryIndex, serverContextProvider);
+    super(libraryIndex, serverContextProvider, metaAnnotationResolver);
     this.componentInferencer = componentInferencer;
     this.beanIndex = beanIndex;
   }

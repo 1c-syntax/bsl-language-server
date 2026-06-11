@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
+package com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -35,6 +35,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptAnnotations;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn.AutumnAnnotations;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
@@ -53,10 +55,10 @@ import static org.mockito.Mockito.when;
  * пользовательских аннотаций) — здесь используется его реальная реализация, что
  * заодно проверяет регистронезависимость лукапа.
  */
-class AutumnMetaAnnotationResolverTest {
+class OScriptMetaAnnotationResolverTest {
 
   private final AnnotationRepository repository = new AnnotationRepository();
-  private final AutumnMetaAnnotationResolver resolver = new AutumnMetaAnnotationResolver(repository);
+  private final OScriptMetaAnnotationResolver resolver = new OScriptMetaAnnotationResolver(repository);
 
   @Test
   void baseAnnotationMatchesItsRole() {
@@ -355,7 +357,7 @@ class AutumnMetaAnnotationResolverTest {
         new AnnotationParameterDefinition("ПереноситьЗначениеПоУмолчанию", Either.forLeft("Истина"), true));
     }
     var aliasAnnotation = Annotation.builder()
-      .name(AutumnAnnotations.ALIAS_FOR)
+      .name(OScriptAnnotations.ALIAS_FOR)
       .kind(AnnotationKind.CUSTOM)
       .parameters(aliasParams)
       .build();

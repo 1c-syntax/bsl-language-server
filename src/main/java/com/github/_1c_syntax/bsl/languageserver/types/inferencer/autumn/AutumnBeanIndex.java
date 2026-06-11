@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
@@ -76,7 +77,6 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   private static final List<String> COMPONENT_ROLES = List.of(AutumnAnnotations.COMPONENT, AutumnAnnotations.OAK);
 
   private final TypeRegistry typeRegistry;
-  private final AutumnMetaAnnotationResolver metaAnnotationResolver;
 
   /** Имя/прозвище желудя (lowercase) → кандидаты. Значения — конкурентные множества (как в Repository). */
   private final Map<String, Set<BeanDefinition>> beansByName = new ConcurrentHashMap<>();
@@ -86,10 +86,9 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   public AutumnBeanIndex(OScriptLibraryIndex libraryIndex,
                          ServerContextProvider serverContextProvider,
                          TypeRegistry typeRegistry,
-                         AutumnMetaAnnotationResolver metaAnnotationResolver) {
-    super(libraryIndex, serverContextProvider);
+                         OScriptMetaAnnotationResolver metaAnnotationResolver) {
+    super(libraryIndex, serverContextProvider, metaAnnotationResolver);
     this.typeRegistry = typeRegistry;
-    this.metaAnnotationResolver = metaAnnotationResolver;
   }
 
   /**

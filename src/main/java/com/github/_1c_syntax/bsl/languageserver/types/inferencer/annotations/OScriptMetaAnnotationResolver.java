@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types.inferencer.autumn;
+package com.github._1c_syntax.bsl.languageserver.types.inferencer.annotations;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -47,7 +47,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Разрешение пользовательских аннотаций фреймворка «ОСень» через мета-аннотации.
+ * Разрешение пользовательских аннотаций OneScript через мета-аннотации
+ * (движок <a href="https://github.com/autumn-library/annotations">annotations</a>).
  * <p>
  * Пользовательская аннотация определяется классом, конструктор которого помечен
  * {@code &Аннотация("Имя")} и базовой мета-аннотацией. Например, killjoy-алиас
@@ -70,7 +71,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @WorkspaceScope
 @RequiredArgsConstructor
-public class AutumnMetaAnnotationResolver {
+public class OScriptMetaAnnotationResolver {
 
   private final AnnotationRepository annotationRepository;
 
@@ -82,11 +83,63 @@ public class AutumnMetaAnnotationResolver {
   private final Map<String, Set<String>> roleClosureCache = new ConcurrentHashMap<>();
 
   /**
+   * Найти аннотацию по имени (без разворачивания мета-аннотаций).
+   *
+   * @param annotations аннотации для поиска
+   * @param name        искомое имя (регистронезависимо)
+   * @return первая аннотация с указанным именем
+   */
+  public Optional<Annotation> find(Iterable<Annotation> annotations, String name) {
+    for (var annotation : annotations) {
+      if (name.equalsIgnoreCase(annotation.getName())) {
+        return Optional.of(annotation);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Значение строкового параметра аннотации по имени.
+   * <p>
+   * Безымянный (позиционный) параметр трактуется как параметр {@code Значение} —
+   * именно так его разрешает движок аннотаций ({@code ОпределениеАннотации.ПривестиИменаПараметров}).
+   * Поэтому позиционно можно задать только {@code Значение}; остальные — лишь по имени.
+   *
+   * @param annotation    аннотация, чей параметр читается
+   * @param parameterName имя параметра (регистронезависимо)
+   * @return значение первого подходящего параметра, если это строковый литерал
+   */
+  public Optional<String> stringParameter(Annotation annotation, String parameterName) {
+    for (var parameter : annotation.getParameters()) {
+      var effectiveName = parameter.name().isEmpty() ? OScriptAnnotations.VALUE_PARAMETER : parameter.name();
+      if (parameterName.equalsIgnoreCase(effectiveName) && parameter.value().isLeft()) {
+        return Optional.of(parameter.value().getLeft());
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Является ли {@code .os}-документ классом-определением пользовательской
+   * аннотации: помечен ли его конструктор {@code ПриСозданииОбъекта}
+   * маркером {@code &Аннотация}.
+   *
+   * @param document проверяемый документ
+   * @return {@code true}, если документ определяет пользовательскую аннотацию
+   */
+  public boolean isAnnotationDefinition(DocumentContext document) {
+    return document.getSymbolTree().getConstructor()
+      .map(constructor ->
+        find(constructor.getAnnotations(), OScriptAnnotations.ANNOTATION_MARKER).isPresent())
+      .orElse(false);
+  }
+
+  /**
    * Является ли аннотация {@code annotationName} базовой ролью {@code baseRole}
    * напрямую или через цепочку мета-аннотаций.
    *
    * @param annotationName имя проверяемой аннотации (как в коде)
-   * @param baseRole       базовое имя роли (например, {@link AutumnAnnotations#INJECTION})
+   * @param baseRole       базовое имя роли (например, «Пластилин» ОСени)
    */
   public boolean isRole(String annotationName, String baseRole) {
     return roleClosure(annotationName).contains(baseRole.toLowerCase(Locale.ROOT));
@@ -112,7 +165,7 @@ public class AutumnMetaAnnotationResolver {
   }
 
   /**
-   * Значения параметра {@link AutumnAnnotations#VALUE_PARAMETER} всех аннотаций,
+   * Значения параметра {@link OScriptAnnotations#VALUE_PARAMETER} всех аннотаций,
    * разворачивающихся в указанную роль (например, все прозвища желудя).
    */
   public List<String> valuesByRole(Iterable<Annotation> annotations, String baseRole) {
@@ -126,12 +179,12 @@ public class AutumnMetaAnnotationResolver {
   }
 
   /**
-   * Эффективные значения параметра {@link AutumnAnnotations#VALUE_PARAMETER} роли
+   * Эффективные значения параметра {@link OScriptAnnotations#VALUE_PARAMETER} роли
    * {@code baseRole} с учётом разворачивания мета-аннотаций. Удобная обёртка над
    * {@link #roleParameterValues(Annotation, String, String)}.
    */
   public List<String> roleValues(Annotation usage, String baseRole) {
-    return roleParameterValues(usage, baseRole, AutumnAnnotations.VALUE_PARAMETER);
+    return roleParameterValues(usage, baseRole, OScriptAnnotations.VALUE_PARAMETER);
   }
 
   /**
@@ -166,7 +219,7 @@ public class AutumnMetaAnnotationResolver {
       // Дословно, как движок annotations (ПолучитьЗначениеПараметраАннотации): переданный
       // параметр переносится как есть, в т.ч. пустым. Различие «передан/не передан»
       // (а не «пуст/не пуст») потребитель отражает через findFirst().orElse(fallback).
-      AutumnAnnotations.stringParameter(usage, parameterName).ifPresent(values::add);
+      stringParameter(usage, parameterName).ifPresent(values::add);
     }
     collectAliasedParameterValues(usage, baseRole, parameterName, values);
     return values;
@@ -177,7 +230,7 @@ public class AutumnMetaAnnotationResolver {
                                              List<String> out) {
     definitionConstructor(usage.getName()).ifPresent(definition -> {
       for (var parameter : definition.getParameters()) {
-        AutumnAnnotations.find(parameter.getAnnotations(), AutumnAnnotations.ALIAS_FOR)
+        find(parameter.getAnnotations(), OScriptAnnotations.ALIAS_FOR)
           .filter(alias -> aliasTargets(alias, baseRole, parameterName))
           .flatMap(alias -> aliasedValue(usage, parameter, alias))
           .ifPresent(out::add);
@@ -187,18 +240,18 @@ public class AutumnMetaAnnotationResolver {
 
   /** Нацелен ли {@code &ПсевдонимДля} на параметр {@code parameterName} аннотации, разворачивающейся в роль. */
   private boolean aliasTargets(Annotation alias, String baseRole, String parameterName) {
-    var targetParameter = AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TARGET_PARAMETER);
+    var targetParameter = stringParameter(alias, OScriptAnnotations.ALIAS_TARGET_PARAMETER);
     if (!targetParameter.filter(parameterName::equalsIgnoreCase).isPresent()) {
       return false;
     }
-    return AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TARGET_ANNOTATION)
+    return stringParameter(alias, OScriptAnnotations.ALIAS_TARGET_ANNOTATION)
       .filter(target -> isRole(target, baseRole))
       .isPresent();
   }
 
   /** Переносимое значение параметра-псевдонима: переданное явно либо значение по умолчанию (при опт-ин). */
-  private static Optional<String> aliasedValue(Annotation usage, ParameterDefinition parameter, Annotation alias) {
-    var passed = AutumnAnnotations.stringParameter(usage, parameter.getName());
+  private Optional<String> aliasedValue(Annotation usage, ParameterDefinition parameter, Annotation alias) {
+    var passed = stringParameter(usage, parameter.getName());
     if (passed.isPresent()) {
       // Параметр передан явно — движок переносит его значение дословно, даже пустым;
       // значение по умолчанию при этом НЕ берётся.
@@ -211,9 +264,9 @@ public class AutumnMetaAnnotationResolver {
     return Optional.empty();
   }
 
-  private static boolean transfersDefault(Annotation alias) {
-    return AutumnAnnotations.stringParameter(alias, AutumnAnnotations.ALIAS_TRANSFER_DEFAULT)
-      .filter(AutumnAnnotations.TRUE_LITERAL::equalsIgnoreCase)
+  private boolean transfersDefault(Annotation alias) {
+    return stringParameter(alias, OScriptAnnotations.ALIAS_TRANSFER_DEFAULT)
+      .filter(OScriptAnnotations.TRUE_LITERAL::equalsIgnoreCase)
       .isPresent();
   }
 
@@ -238,11 +291,11 @@ public class AutumnMetaAnnotationResolver {
     }
     definitionConstructor(annotationName).ifPresent(definition -> {
       for (var meta : definition.getAnnotations()) {
-        if (AutumnAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
+        if (OScriptAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
           continue;
         }
         if (baseRole.equalsIgnoreCase(meta.getName())) {
-          AutumnAnnotations.stringParameter(meta, parameterName).ifPresent(out::add);
+          stringParameter(meta, parameterName).ifPresent(out::add);
         }
         collectFixedParameterValues(meta.getName(), baseRole, parameterName, visited, out);
       }
@@ -289,21 +342,6 @@ public class AutumnMetaAnnotationResolver {
     }
   }
 
-  /**
-   * Является ли {@code .os}-документ классом-определением пользовательской
-   * аннотации «ОСени»: помечен ли его конструктор {@code ПриСозданииОбъекта}
-   * маркером {@code &Аннотация}.
-   *
-   * @param document проверяемый документ
-   * @return {@code true}, если документ определяет пользовательскую аннотацию
-   */
-  public boolean isAnnotationDefinition(DocumentContext document) {
-    return document.getSymbolTree().getConstructor()
-      .map(constructor ->
-        AutumnAnnotations.find(constructor.getAnnotations(), AutumnAnnotations.ANNOTATION_MARKER).isPresent())
-      .orElse(false);
-  }
-
   private static boolean isOScriptFile(URI uri) {
     return uri.toString().toLowerCase(Locale.ROOT).endsWith(".os");
   }
@@ -326,7 +364,7 @@ public class AutumnMetaAnnotationResolver {
       .map(MethodSymbol.class::cast)
       .ifPresent((MethodSymbol constructor) -> {
         for (var meta : constructor.getAnnotations()) {
-          if (!AutumnAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
+          if (!OScriptAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
             collectRoles(meta.getName(), accumulator);
           }
         }
