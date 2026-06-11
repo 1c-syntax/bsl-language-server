@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
@@ -43,9 +44,14 @@ import static picocli.CommandLine.Option;
  * -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
  *                                     Возможно указывать как в абсолютном, так и относительном виде.
  *                                     Если параметр опущен, то будут использованы настройки по умолчанию.
+ *  --mcp                            - Дополнительно поднять MCP-сервер по Streamable HTTP (эндпоинт /mcp)
+ *                                     рядом с LSP по stdio. Рабочие пространства приходят от клиентов
+ *                                     (LSP workspace folders и MCP roots) в общий контекст.
+ *  --mcp-path &lt;path&gt;           - Адрес MCP-эндпоинта (по умолчанию /mcp).
  * Выводимая информация:
  *  Данный режим используется для взаимодействия с клиентом по протоколу LSP.
  */
+@Slf4j
 @Command(
   name = "lsp",
   aliases = {"--lsp"},
@@ -68,6 +74,18 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  @Option(
+    names = {"--mcp"},
+    description = "Also expose an MCP server over Streamable HTTP next to the LSP stdio session")
+  private boolean mcpEnabled;
+
+  @Option(
+    names = {"--mcp-path"},
+    description = "Path of the MCP Streamable HTTP endpoint. Default is /mcp",
+    paramLabel = "<path>",
+    defaultValue = "/mcp")
+  private String mcpPath;
+
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final Launcher<LanguageClient> launcher;
   private final List<LanguageClientAware> languageClientAwares;
@@ -76,6 +94,12 @@ public class LanguageServerStartCommand implements Callable<Integer> {
 
     var configurationFile = new File(configurationOption);
     globalConfiguration.update(configurationFile);
+
+    if (mcpEnabled) {
+      // The MCP Streamable HTTP server is started by Spring AI autoconfiguration (mcp,mcp-http
+      // profiles, see BSLLSPLauncher). It shares the ServerContextProvider with the LSP session.
+      LOGGER.info("MCP server enabled over Streamable HTTP at `{}`", mcpPath);
+    }
 
     var languageClient = launcher.getRemoteProxy();
 

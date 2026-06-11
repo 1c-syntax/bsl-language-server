@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <!-- В режиме MCP-over-stdio stdout занят протоколом, поэтому fallback-логи уходят в System.err.
-         Для MCP-over-HTTP (профиль mcp-http) stdout свободен — остаётся System.out. -->
-    <springProfile name="mcp-stdio">
-        <property name="CONSOLE_TARGET" value="System.err"/>
-    </springProfile>
-    <springProfile name="!mcp-stdio">
-        <property name="CONSOLE_TARGET" value="System.out"/>
-    </springProfile>
+    <!-- Цель fallback-логов: по умолчанию System.out; когда stdout занят протоколом
+         (stdio-режимы MCP или LSP с MCP), лаунчер выставляет системное свойство
+         CONSOLE_TARGET=System.err (см. BSLLSPLauncher#configureConsoleTarget). -->
     <include resource="language-client-aware-appender.xml" />
     <root level="INFO">
         <appender-ref ref="LANGUAGE_CLIENT_AWARE" />
