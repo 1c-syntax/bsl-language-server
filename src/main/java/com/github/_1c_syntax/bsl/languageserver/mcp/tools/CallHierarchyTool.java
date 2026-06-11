@@ -38,14 +38,14 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * MCP-инструмент: иерархия вызовов метода/процедуры под курсором.
  * <p>
- * Сворачивает трёхшаговый LSP-протокол ({@code prepareCallHierarchy} +
- * {@code incomingCalls}/{@code outgoingCalls}) в один вызов. Переиспользует
- * {@link CallHierarchyProvider}; работает по индексу ссылок, без разбора AST.
+ * За один вызов возвращает один уровень иерархии — прямые входящие и исходящие вызовы,
+ * как один раунд LSP-протокола ({@code prepareCallHierarchy} + {@code incomingCalls} +
+ * {@code outgoingCalls}). Дерево рекурсивно не разворачивается, поэтому саморекурсивные
+ * методы безопасны. Вся работа делегируется {@link CallHierarchyProvider}.
  */
 @Component
 @Profile("mcp")
@@ -71,8 +71,8 @@ public class CallHierarchyTool {
 
   @McpTool(
     name = "call_hierarchy",
-    description = "Resolve the method/procedure at a zero-based position and return its incoming "
-      + "and/or outgoing calls.",
+    description = "Resolve the method/procedure at a zero-based position and return its direct "
+      + "incoming and outgoing calls (one level).",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
     // fields (here — null target / nullable detail). Known upstream bug, open as of 2.0.0-M6:
     // https://github.com/spring-projects/spring-ai/issues/4825
@@ -85,17 +85,8 @@ public class CallHierarchyTool {
     @McpToolParam(required = true, description = "Zero-based line number of the symbol.")
     int line,
     @McpToolParam(required = true, description = "Zero-based character offset within the line.")
-    int character,
-    @McpToolParam(required = false,
-      description = "Which calls to return: \"incoming\", \"outgoing\" or \"both\" (default).")
-    String direction
+    int character
   ) {
-    var normalizedDirection = direction == null || direction.isBlank()
-      ? "both"
-      : direction.toLowerCase(Locale.ROOT);
-    var wantIncoming = normalizedDirection.equals("incoming") || normalizedDirection.equals("both");
-    var wantOutgoing = normalizedDirection.equals("outgoing") || normalizedDirection.equals("both");
-
     return documentReader.read(file, documentContext -> {
       var prepareParams = new CallHierarchyPrepareParams();
       prepareParams.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
@@ -108,15 +99,13 @@ public class CallHierarchyTool {
 
       var item = items.get(0);
 
-      var incoming = wantIncoming
-        ? callHierarchyProvider.incomingCalls(documentContext, new CallHierarchyIncomingCallsParams(item))
-          .stream().map(CallDto::incoming).toList()
-        : List.<CallDto>of();
+      var incoming = callHierarchyProvider
+        .incomingCalls(documentContext, new CallHierarchyIncomingCallsParams(item))
+        .stream().map(CallDto::incoming).toList();
 
-      var outgoing = wantOutgoing
-        ? callHierarchyProvider.outgoingCalls(documentContext, new CallHierarchyOutgoingCallsParams(item))
-          .stream().map(CallDto::outgoing).toList()
-        : List.<CallDto>of();
+      var outgoing = callHierarchyProvider
+        .outgoingCalls(documentContext, new CallHierarchyOutgoingCallsParams(item))
+        .stream().map(CallDto::outgoing).toList();
 
       return new Result(CallHierarchyItemDto.from(item), incoming, outgoing);
     });
