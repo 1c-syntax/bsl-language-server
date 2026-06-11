@@ -65,6 +65,8 @@ Source directories are provided by the client through MCP roots — just like an
 | `call_hierarchy` | Incoming and outgoing calls of the method/procedure at a position |
 | `hover` | Hover info for a symbol (signature, type, documentation) |
 | `definition` | Go to the symbol declaration |
+| `type_info` | Properties and methods of a type looked up by name (e.g. `Массив`/`Array`) |
+| `type_at_position` | Inferred type of the expression under the cursor and its available methods and properties |
 
 Positions (`line`, `character`) are zero-based, as in LSP.
 

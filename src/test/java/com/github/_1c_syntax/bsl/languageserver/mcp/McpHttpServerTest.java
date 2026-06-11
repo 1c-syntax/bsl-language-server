@@ -72,7 +72,8 @@ class McpHttpServerTest {
 
     assertThat(toolNames)
       .containsExactlyInAnyOrder(
-        "analyze_file", "document_symbols", "find_references", "call_hierarchy", "hover", "definition");
+        "analyze_file", "document_symbols", "find_references", "call_hierarchy", "hover", "definition",
+        "type_info", "type_at_position");
   }
 
   @Test

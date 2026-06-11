@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DocumentSymbolsTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.FindReferencesTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import io.modelcontextprotocol.spec.McpSchema.Root;
@@ -77,6 +80,10 @@ class McpToolsTest {
   private HoverTool hoverTool;
   @Autowired
   private DefinitionTool definitionTool;
+  @Autowired
+  private TypeInfoTool typeInfoTool;
+  @Autowired
+  private TypeAtPositionTool typeAtPositionTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
 
@@ -134,6 +141,32 @@ class McpToolsTest {
 
     assertThat(result.definitions()).isNotEmpty();
     assertThat(result.definitions().get(0).selectionRange().startLine()).isEqualTo(DECLARATION_LINE);
+  }
+
+  @Test
+  void typeInfoReturnsMethodsAndPropertiesOfPlatformType() {
+    var result = typeInfoTool.typeInfo("Массив");
+
+    assertThat(result.name()).isEqualTo("Массив");
+    assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
+  }
+
+  @Test
+  void typeInfoThrowsForUnknownType() {
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа"))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void typeAtPositionInfersNewExpressionType() {
+    var typesFile = "src/test/resources/mcp/types.bsl";
+    workspaceBootstrap.index(Absolute.path("src/test/resources/mcp"));
+
+    // Позиция на `Новый Массив` (строка 1, символ 19 — начало слова «Массив»).
+    var result = typeAtPositionTool.typeAtPosition(typesFile, 1, 20);
+
+    assertThat(result.types()).contains("Массив");
+    assertThat(result.members()).extracting(TypeMemberDto::name).contains("Добавить");
   }
 
   @Test
