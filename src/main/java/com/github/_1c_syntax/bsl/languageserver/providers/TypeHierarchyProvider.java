@@ -57,12 +57,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TypeHierarchyProvider {
 
-  private final OScriptLibraryIndex oScriptLibraryIndex;
-  private final TypeRelations typeRelations;
-
   private static final Comparator<TypeHierarchyItem> ITEM_COMPARATOR = Comparator
     .comparing(TypeHierarchyItem::getName, String.CASE_INSENSITIVE_ORDER)
     .thenComparing(TypeHierarchyItem::getUri);
+
+  private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final TypeRelations typeRelations;
 
   /**
    * Подготовить корневой элемент иерархии типов для документа.

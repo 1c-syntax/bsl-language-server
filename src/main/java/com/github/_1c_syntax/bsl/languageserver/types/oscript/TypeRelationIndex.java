@@ -130,7 +130,7 @@ public class TypeRelationIndex {
     if (ready.get() == null) {
       return;
     }
-    var document = ((ServerContext) event.getSource()).getDocument(event.getUri());
+    var document = event.getSource().getDocument(event.getUri());
     if (document != null && document.getFileType() == FileType.OS) {
       removeContribution(document.getUri());
       indexDocument(document);
@@ -209,7 +209,7 @@ public class TypeRelationIndex {
 
   private void indexDocument(DocumentContext document) {
     var uri = document.getUri();
-    oScriptExtends.parentClassName(document).ifPresent(parentName -> {
+    oScriptExtends.parentClassName(document).ifPresent((String parentName) -> {
       var key = parentName.toLowerCase(Locale.ROOT);
       parentNameByUri.put(uri, key);
       childUrisByParentName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(uri);
@@ -240,7 +240,7 @@ public class TypeRelationIndex {
   }
 
   private static void removeUri(Map<String, Set<URI>> urisByName, String name, URI uri) {
-    urisByName.computeIfPresent(name, (key, uris) -> {
+    urisByName.computeIfPresent(name, (String key, Set<URI> uris) -> {
       uris.remove(uri);
       return uris.isEmpty() ? null : uris;
     });

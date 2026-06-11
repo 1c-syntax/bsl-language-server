@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.Absolute;
@@ -231,8 +230,8 @@ class TypeRelationsTest extends AbstractServerContextAwareTest {
 
   @Test
   void implementorsTerminateOnInterfaceHierarchyCycle() {
-    // given: ИнтерфейсЦиклА и ИнтерфейсЦиклБ расширяют друг друга (цикл);
-    // РеализаторЦикла реализует ИнтерфейсЦиклА
+    // given: интерфейсы из фикстуры расширяют друг друга, образуя цикл, а класс-реализатор
+    // объявляет реализацию одного из них
     initLibrary(CYCLE_LIB);
     var cycledInterface = libDoc(CYCLE_LIB, "ИнтерфейсЦиклБ.os");
 

@@ -204,7 +204,7 @@ public class OScriptExtends {
    * @param documentContext контекст {@code .os}-документа
    * @return аннотации конструктора либо пустой список, если конструктора нет
    */
-  private List<Annotation> constructorAnnotations(DocumentContext documentContext) {
+  private static List<Annotation> constructorAnnotations(DocumentContext documentContext) {
     for (var method : documentContext.getSymbolTree().getMethods()) {
       if (Methods.isOscriptClassConstructorName(method.getName())) {
         return method.getAnnotations();

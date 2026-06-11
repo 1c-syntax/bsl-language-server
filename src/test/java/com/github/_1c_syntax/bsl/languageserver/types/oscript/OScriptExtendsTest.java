@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,29 +51,28 @@ class OScriptExtendsTest extends AbstractServerContextAwareTest {
     assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
   }
 
-  @Test
-  void parentClassNameDirectRussianAnnotation() {
-    var dc = os("&Расширяет(\"Родитель\")\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(oScriptExtends.parentClassName(dc)).contains("Родитель");
-  }
+  @ParameterizedTest(name = "[{index}] {0}")
+  @CsvSource(delimiter = '|', nullValues = "<нет>", textBlock = """
+    &Расширяет("Родитель") | Родитель
+    &Extends("Родитель")   | <нет>
+    &Расширяет             | <нет>
+    <нет>                  | <нет>
+    """)
+  void parentClassNameParsedFromConstructorAnnotation(String annotationLine, String expectedParent) {
+    // given: &Расширяет с именем распознаётся; неизвестный &Extends (английского
+    // псевдонима у extends нет), аннотация без аргумента и её отсутствие — нет родителя
+    var header = annotationLine == null ? "" : annotationLine + "\n";
+    var dc = os(header + "Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
 
-  @Test
-  void parentClassNameIgnoresUnknownEnglishAnnotation() {
-    // given/when/then: английского псевдонима у extends нет — &Extends не распознаётся
-    var dc = os("&Extends(\"Родитель\")\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
-  }
+    // when
+    var parentClassName = oScriptExtends.parentClassName(dc);
 
-  @Test
-  void parentClassNameEmptyForAnnotationWithoutStringArgument() {
-    var dc = os("&Расширяет\nПроцедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
-  }
-
-  @Test
-  void parentClassNameAbsentWithoutAnnotation() {
-    var dc = os("Процедура ПриСозданииОбъекта()\nКонецПроцедуры\n");
-    assertThat(oScriptExtends.parentClassName(dc)).isEmpty();
+    // then
+    if (expectedParent == null) {
+      assertThat(parentClassName).isEmpty();
+    } else {
+      assertThat(parentClassName).contains(expectedParent);
+    }
   }
 
   @Test

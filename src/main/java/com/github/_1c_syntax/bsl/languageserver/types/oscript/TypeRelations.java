@@ -195,40 +195,63 @@ public class TypeRelations {
    */
   public List<DocumentContext> implementors(DocumentContext interfaceDocument) {
     var serverContext = interfaceDocument.getServerContext();
-
-    // Замыкание интерфейсов: сам интерфейс + производные интерфейсы по &Расширяет.
-    var interfaceNames = new LinkedHashSet<String>();
     var interfaceUris = new HashSet<URI>();
-    var interfaceQueue = new ArrayDeque<DocumentContext>();
-    interfaceQueue.add(interfaceDocument);
-    while (!interfaceQueue.isEmpty()) {
-      var current = interfaceQueue.poll();
+    var interfaceNames = interfaceClosureNames(interfaceDocument, interfaceUris, serverContext);
+    return expandImplementors(interfaceNames, interfaceUris, serverContext);
+  }
+
+  /**
+   * Замыкание интерфейсов «вниз»: имена (lowercase) самого интерфейса и всех
+   * производных интерфейсов, расширяющих его через {@code &Расширяет}.
+   * Посещённые URI интерфейсов складываются в {@code interfaceUris} — и как
+   * cycle-guard, и для исключения интерфейсов из списка реализаторов.
+   */
+  private Set<String> interfaceClosureNames(
+    DocumentContext interfaceDocument,
+    Set<URI> interfaceUris,
+    ServerContext serverContext
+  ) {
+    var names = new LinkedHashSet<String>();
+    var queue = new ArrayDeque<DocumentContext>();
+    queue.add(interfaceDocument);
+    while (!queue.isEmpty()) {
+      var current = queue.poll();
       if (!interfaceUris.add(current.getUri())) {
         continue;
       }
-      var names = oScriptLibraryIndex.classNames(current);
-      for (var name : names) {
-        interfaceNames.add(name.toLowerCase(Locale.ROOT));
+      var currentNames = oScriptLibraryIndex.classNames(current);
+      for (var name : currentNames) {
+        names.add(name.toLowerCase(Locale.ROOT));
       }
-      for (var uri : typeRelationIndex.directSubtypeUris(names, serverContext)) {
+      for (var uri : typeRelationIndex.directSubtypeUris(currentNames, serverContext)) {
         var derived = serverContext.getDocument(uri);
         if (derived != null && oScriptExtends.isInterface(derived)) {
-          interfaceQueue.add(derived);
+          queue.add(derived);
         }
       }
     }
+    return names;
+  }
 
-    // Прямые реализаторы замыкания + поддеревья их наследников.
+  /**
+   * Прямые реализаторы интерфейсов замыкания плюс поддеревья их наследников
+   * (наследник реализатора — тоже реализатор); сами интерфейсы исключаются.
+   */
+  private List<DocumentContext> expandImplementors(
+    Set<String> interfaceNames,
+    Set<URI> interfaceUris,
+    ServerContext serverContext
+  ) {
     var result = new LinkedHashMap<URI, DocumentContext>();
-    var classQueue = new ArrayDeque<DocumentContext>();
+    var queue = new ArrayDeque<DocumentContext>();
     for (var uri : typeRelationIndex.directImplementorUris(interfaceNames, serverContext)) {
       var implementor = serverContext.getDocument(uri);
       if (implementor != null) {
-        classQueue.add(implementor);
+        queue.add(implementor);
       }
     }
-    while (!classQueue.isEmpty()) {
-      var current = classQueue.poll();
+    while (!queue.isEmpty()) {
+      var current = queue.poll();
       if (interfaceUris.contains(current.getUri())
         || result.putIfAbsent(current.getUri(), current) != null) {
         continue;
@@ -237,7 +260,7 @@ public class TypeRelations {
       for (var uri : typeRelationIndex.directSubtypeUris(names, serverContext)) {
         var child = serverContext.getDocument(uri);
         if (child != null && inheritableFromParent(child, current)) {
-          classQueue.add(child);
+          queue.add(child);
         }
       }
     }
