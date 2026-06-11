@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.McpStartCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.McpCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.WebsocketCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -65,7 +65,7 @@ import static picocli.CommandLine.Command;
     VersionCommand.class,
     LanguageServerStartCommand.class,
     WebsocketCommand.class,
-    McpStartCommand.class
+    McpCommand.class
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
@@ -203,28 +203,26 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     return argsList.contains("-w") || argsList.contains("websocket");
   }
 
-  private static boolean isLspMode(String[] args) {
-    var argsList = Arrays.asList(args);
-    return argsList.contains("lsp") || argsList.contains("--lsp");
-  }
-
+  /**
+   * Флаг {@code --mcp} — поднять MCP по Streamable HTTP рядом с LSP. Команда {@code lsp}
+   * необязательна (это режим по умолчанию), поэтому флаг работает и без неё, и с {@code websocket}.
+   */
   private static boolean hasMcpFlag(String[] args) {
     return Arrays.asList(args).contains("--mcp");
   }
 
   /**
-   * MCP по Streamable HTTP рядом с LSP — флаг {@code --mcp} на команде {@code lsp} или {@code websocket}.
+   * MCP по Streamable HTTP рядом с LSP (по stdio или websocket) — флаг {@code --mcp}.
    */
   private static boolean isMcpHttp(String[] args) {
-    return (isWebsocketMode(args) || isLspMode(args)) && hasMcpFlag(args);
+    return hasMcpFlag(args);
   }
 
   /**
-   * Самостоятельный режим {@code mcp} по stdio (без {@code lsp}/{@code websocket}).
+   * Самостоятельный режим {@code mcp} по stdio.
    */
   private static boolean isMcpStdio(String[] args) {
-    var argsList = Arrays.asList(args);
-    return !isWebsocketMode(args) && !isLspMode(args) && (argsList.contains("mcp") || hasMcpFlag(args));
+    return Arrays.asList(args).contains("mcp");
   }
 
   /**

@@ -51,13 +51,12 @@ import static picocli.CommandLine.Option;
 @Slf4j
 @Command(
   name = "mcp",
-  aliases = {"--mcp"},
   description = "MCP (Model Context Protocol) server mode over stdio",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2026|@")
 @Component
 @RequiredArgsConstructor
-public class McpStartCommand implements Callable<Integer> {
+public class McpCommand implements Callable<Integer> {
 
   @Option(
     names = {"-h", "--help"},

@@ -87,9 +87,15 @@ public class McpRootsChangeConsumer implements BiConsumer<McpSyncServerExchange,
   }
 
   private void removeWorkspace(Path path) {
-    workspaceBootstrap.remove(path);
-    registeredRoots.remove(path);
-    LOGGER.info("Workspace `{}` removed (MCP root gone)", path);
+    try {
+      workspaceBootstrap.remove(path);
+      LOGGER.info("Workspace `{}` removed (MCP root gone)", path);
+    } catch (RuntimeException e) {
+      LOGGER.warn("Failed to remove workspace from MCP root `{}`", path, e);
+    } finally {
+      // Снимаем отметку в любом случае, иначе состояние разойдётся с фактическим набором roots.
+      registeredRoots.remove(path);
+    }
   }
 
   private static @Nullable Path toPath(Root root) {
