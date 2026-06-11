@@ -79,12 +79,11 @@ public class CallHierarchyTool {
     // https://github.com/spring-projects/spring-ai/issues/4487
     generateOutputSchema = false)
   public Result callHierarchy(
-    @McpToolParam(required = true,
-      description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
+    @McpToolParam(required = true, description = McpToolParams.FILE)
     String file,
-    @McpToolParam(required = true, description = "Zero-based line number of the symbol.")
+    @McpToolParam(required = true, description = McpToolParams.LINE)
     int line,
-    @McpToolParam(required = true, description = "Zero-based character offset within the line.")
+    @McpToolParam(required = true, description = McpToolParams.CHARACTER)
     int character
   ) {
     return documentReader.read(file, documentContext -> {

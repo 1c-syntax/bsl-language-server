@@ -118,12 +118,13 @@ public class WebsocketCommand implements Callable<Integer> {
     if (mcpEnabled) {
       var srcDir = Absolute.path(srcDirOption);
       if (!srcDir.toFile().exists()) {
-        LOGGER.error("Source dir `{}` is not exists. `--srcDir` is required with `--mcp`.", srcDir);
+        LOGGER.error("Source dir `{}` does not exist. `--srcDir` is required with `--mcp`.", srcDir);
         return 1;
       }
       // Indexes into the shared ServerContextProvider; a connected LSP-WebSocket session
       // adds its own workspace folders to the same provider on top of this.
       workspaceBootstrap.index(srcDir, configurationFile);
+      LOGGER.info("MCP server enabled over Streamable HTTP at `{}`", mcpPath);
     } else {
       globalConfiguration.update(configurationFile);
     }

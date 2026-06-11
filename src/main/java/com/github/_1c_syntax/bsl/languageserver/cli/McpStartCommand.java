@@ -87,7 +87,7 @@ public class McpStartCommand implements Callable<Integer> {
   public Integer call() {
     var srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` is not exists", srcDir);
+      LOGGER.error("Source dir `{}` does not exist", srcDir);
       return 1;
     }
 

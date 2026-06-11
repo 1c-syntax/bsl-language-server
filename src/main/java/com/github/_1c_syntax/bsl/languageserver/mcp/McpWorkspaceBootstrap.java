@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.WorkspaceFolder;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -57,13 +58,15 @@ public class McpWorkspaceBootstrap {
    *
    * @param srcDir Каталог исходных файлов.
    * @param configurationFile Файл конфигурации BSL Language Server (может отсутствовать).
+   * @return Количество проиндексированных файлов.
    */
-  public void index(Path srcDir, File configurationFile) {
+  public int index(Path srcDir, File configurationFile) {
     globalConfiguration.update(configurationFile);
 
     var workspaceUri = srcDir.toUri();
     var serverContext = serverContextProvider.addWorkspace(workspaceUri);
 
+    int fileCount;
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       configuration.update(configurationFile);
 
@@ -73,9 +76,23 @@ public class McpWorkspaceBootstrap {
       LOGGER.info("Indexing source directory `{}`...", srcDir);
       var files = new ArrayList<>(BSLFiles.listBslFiles(srcDir, configuration.getExcludePaths()));
       serverContext.populateContext(files);
-      LOGGER.info("Indexed {} files.", files.size());
-    } finally {
-      readiness.markReady();
+      fileCount = files.size();
+      LOGGER.info("Indexed {} files.", fileCount);
     }
+
+    // Готовность открывается только при успешной индексации; при ошибке исключение
+    // пробрасывается, процесс завершится, и ожидающие готовности вызовы не зависнут.
+    readiness.markReady();
+    return fileCount;
+  }
+
+  /**
+   * Удалить рабочее пространство из общего контекста сервера.
+   *
+   * @param srcDir Каталог исходных файлов ранее добавленного рабочего пространства.
+   */
+  public void remove(Path srcDir) {
+    var uri = srcDir.toUri().toString();
+    serverContextProvider.removeWorkspace(new WorkspaceFolder(uri, uri));
   }
 }

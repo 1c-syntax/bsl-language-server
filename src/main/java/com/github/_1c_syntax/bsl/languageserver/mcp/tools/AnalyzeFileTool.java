@@ -62,8 +62,7 @@ public class AnalyzeFileTool {
     // https://github.com/spring-projects/spring-ai/issues/4487
     generateOutputSchema = false)
   public Result analyzeFile(
-    @McpToolParam(required = true,
-      description = "Path to the .bsl/.os file (absolute or relative to the working directory).")
+    @McpToolParam(required = true, description = McpToolParams.FILE)
     String file
   ) {
     return documentReader.analyze(file, documentContext -> {
