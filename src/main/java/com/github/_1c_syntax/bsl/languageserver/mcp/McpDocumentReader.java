@@ -85,7 +85,15 @@ public class McpDocumentReader {
     try (var ignored = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
       var documentContext = serverContext.addDocument(uri);
       serverContext.rebuildDocument(documentContext);
-      return action.apply(documentContext);
+      try {
+        return action.apply(documentContext);
+      } finally {
+        // Free the AST built for this query to avoid unbounded memory growth over a long-running
+        // session (same as AnalyzeCommand). tryClearDocument is a no-op for documents that became
+        // open in an editor meanwhile, so live LSP buffers are never touched. The global reference
+        // index survives the clear; the document is rebuilt on demand on the next access.
+        serverContext.tryClearDocument(documentContext);
+      }
     } finally {
       lock.writeLock().unlock();
     }
