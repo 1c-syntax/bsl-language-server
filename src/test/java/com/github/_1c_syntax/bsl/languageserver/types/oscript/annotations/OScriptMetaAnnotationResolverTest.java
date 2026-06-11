@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptAnnotations;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnAnnotations;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
@@ -287,8 +286,8 @@ class OScriptMetaAnnotationResolverTest {
     // when: &КомпозитПоУмолчанию("") — параметр передан (пустым)
     var values = resolver.roleValues(withValue("КомпозитПоУмолчанию", ""), AutumnAnnotations.INJECTION);
 
-    // then: дословно переносится пустое значение (как движок), значение по умолчанию подавлено;
-    // «пусто → по имени члена» применит уже потребитель (beanName)
+    // then: дословно переносится пустое значение, как в движке; значение по умолчанию
+    // подавлено. Подстановку имени члена вместо пустого значения выполняет уже потребитель.
     assertThat(values).containsExactly("");
   }
 

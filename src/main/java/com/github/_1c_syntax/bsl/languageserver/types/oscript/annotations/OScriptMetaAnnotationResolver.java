@@ -82,6 +82,9 @@ public class OScriptMetaAnnotationResolver {
    */
   private final Map<String, Set<String>> roleClosureCache = new ConcurrentHashMap<>();
 
+  /** Минимальная длина строкового литерала в кавычках: две обрамляющие кавычки. */
+  private static final int QUOTED_LITERAL_MIN_LENGTH = 2;
+
   /**
    * Найти аннотацию по имени (без разворачивания мета-аннотаций).
    *
@@ -228,7 +231,7 @@ public class OScriptMetaAnnotationResolver {
   /** Значения, проброшенные в параметр роли декларативно через {@code &ПсевдонимДля}. */
   private void collectAliasedParameterValues(Annotation usage, String baseRole, String parameterName,
                                              List<String> out) {
-    definitionConstructor(usage.getName()).ifPresent(definition -> {
+    definitionConstructor(usage.getName()).ifPresent((MethodSymbol definition) -> {
       for (var parameter : definition.getParameters()) {
         find(parameter.getAnnotations(), OScriptAnnotations.ALIAS_FOR)
           .filter(alias -> aliasTargets(alias, baseRole, parameterName))
@@ -253,8 +256,8 @@ public class OScriptMetaAnnotationResolver {
   private Optional<String> aliasedValue(Annotation usage, ParameterDefinition parameter, Annotation alias) {
     var passed = stringParameter(usage, parameter.getName());
     if (passed.isPresent()) {
-      // Параметр передан явно — движок переносит его значение дословно, даже пустым;
-      // значение по умолчанию при этом НЕ берётся.
+      // Параметр передан явно — движок переносит его значение дословно
+      // (даже пустое), а значение по умолчанию не берётся.
       return passed;
     }
     // Параметр не передан — значение по умолчанию переносится только при опт-ине.
@@ -277,7 +280,7 @@ public class OScriptMetaAnnotationResolver {
       return Optional.empty();
     }
     var text = defaultValue.value();
-    if (text.length() >= 2 && text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') {
+    if (text.length() >= QUOTED_LITERAL_MIN_LENGTH && text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"') {
       text = text.substring(1, text.length() - 1).replace("\"\"", "\"");
     }
     return Optional.of(text);
@@ -289,7 +292,7 @@ public class OScriptMetaAnnotationResolver {
     if (!visited.add(annotationName.toLowerCase(Locale.ROOT))) {
       return;
     }
-    definitionConstructor(annotationName).ifPresent(definition -> {
+    definitionConstructor(annotationName).ifPresent((MethodSymbol definition) -> {
       for (var meta : definition.getAnnotations()) {
         if (OScriptAnnotations.ANNOTATION_MARKER.equalsIgnoreCase(meta.getName())) {
           continue;
