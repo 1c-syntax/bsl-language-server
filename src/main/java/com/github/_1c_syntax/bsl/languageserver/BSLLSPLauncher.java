@@ -180,7 +180,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     return 0;
   }
 
-  private static WebApplicationType getWebApplicationType(String[] args) {
+  static WebApplicationType getWebApplicationType(String[] args) {
     // A servlet container is needed for the LSP WebSocket endpoint or any MCP HTTP transport (Streamable / SSE).
     if (isWebsocketMode(args) || isMcpHttp(args) || isMcpSubcommandOverHttp(args)) {
       return WebApplicationType.SERVLET;
@@ -188,7 +188,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     return WebApplicationType.NONE;
   }
 
-  private static String[] getActiveProfiles(String[] args) {
+  static String[] getActiveProfiles(String[] args) {
     if (isMcpHttp(args)) {
       // `--mcp` flag: MCP over Streamable HTTP alongside LSP. Two distinct sub-profiles by the LSP
       // transport it sits next to: `websocket-mcp` (stdout free) vs `lsp-mcp` (stdout is the LSP channel).
@@ -257,7 +257,7 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
    * Перенести значение {@code --mcp-path} в системное свойство до старта контекста:
    * эндпоинт Streamable HTTP регистрируется автоконфигурацией на refresh, раньше выполнения команды.
    */
-  private static void applyMcpEndpointPath(String[] args) {
+  static void applyMcpEndpointPath(String[] args) {
     if (!isMcpHttp(args)) {
       return;
     }

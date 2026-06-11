@@ -136,6 +136,15 @@ class McpToolsTest {
   }
 
   @Test
+  void hoverReturnsEmptyWhenNoSymbolAtPosition() {
+    // Строка 5 (0-based) — пустая строка между процедурами: подсказки нет.
+    var result = hoverTool.hover(FILE, 5, 0);
+
+    assertThat(result.contents()).isNull();
+    assertThat(result.range()).isNull();
+  }
+
+  @Test
   void definitionResolvesToDeclaration() {
     var result = definitionTool.definition(FILE, CALL_LINE, CALL_CHARACTER);
 

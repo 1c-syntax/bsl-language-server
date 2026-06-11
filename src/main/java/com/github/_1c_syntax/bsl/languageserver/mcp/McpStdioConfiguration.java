@@ -62,11 +62,11 @@ public class McpStdioConfiguration {
   /**
    * Обёртка над входным потоком, подающая сигнал завершения при достижении EOF.
    */
-  private static final class EofSignalingInputStream extends FilterInputStream {
+  static final class EofSignalingInputStream extends FilterInputStream {
 
     private final McpShutdownSignal shutdownSignal;
 
-    private EofSignalingInputStream(InputStream in, McpShutdownSignal shutdownSignal) {
+    EofSignalingInputStream(InputStream in, McpShutdownSignal shutdownSignal) {
       super(in);
       this.shutdownSignal = shutdownSignal;
     }
