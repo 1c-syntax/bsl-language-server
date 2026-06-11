@@ -85,13 +85,16 @@ public class McpStartCommand implements Callable<Integer> {
 
   @Override
   public Integer call() {
-    var srcDir = Absolute.path(srcDirOption);
-    if (!srcDir.toFile().exists()) {
-      LOGGER.error("Source dir `{}` does not exist", srcDir);
-      return 1;
+    // Рабочие пространства обычно приходят от клиента через MCP roots (см. McpRootsChangeConsumer).
+    // --srcDir — необязательный fallback: индексирует начальный каталог на старте.
+    if (!srcDirOption.isBlank()) {
+      var srcDir = Absolute.path(srcDirOption);
+      if (!srcDir.toFile().exists()) {
+        LOGGER.error("Source dir `{}` does not exist", srcDir);
+        return 1;
+      }
+      workspaceBootstrap.index(srcDir, new File(configurationOption));
     }
-
-    workspaceBootstrap.index(srcDir, new File(configurationOption));
 
     // Сервер уже поднят автоконфигурацией; блокируемся до отключения клиента.
     var shutdownSignal = shutdownSignalProvider.getIfAvailable();

@@ -208,9 +208,10 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
     properties.add("spring.ai.mcp.server.enabled=false");
     properties.add("spring.ai.mcp.server.annotation-scanner.enabled=false");
 
-    if (isStdioMcp(args) || isWebsocketMcp(args)) {
-      // The workspace is indexed by the command after the server has started accepting requests,
-      // so tool calls must wait for readiness (see McpReadiness).
+    if ((isStdioMcp(args) || isWebsocketMcp(args)) && hasSrcDir(args)) {
+      // An initial --srcDir is indexed by the command after the server has started accepting
+      // requests, so tool calls must wait for that indexing to finish (see McpReadiness).
+      // Without --srcDir the workspaces come from MCP roots and there is nothing to wait for.
       properties.add("app.mcp.headless=true");
     }
 
@@ -229,6 +230,14 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private static boolean isStdioMcp(String[] args) {
     var argsList = Arrays.asList(args);
     return !isWebsocketServletMode(args) && (argsList.contains("mcp") || argsList.contains("--mcp"));
+  }
+
+  private static boolean hasSrcDir(String[] args) {
+    var srcDir = extractOptionValue(args, "--srcDir");
+    if (srcDir == null) {
+      srcDir = extractOptionValue(args, "-s");
+    }
+    return srcDir != null && !srcDir.isBlank();
   }
 
   /**

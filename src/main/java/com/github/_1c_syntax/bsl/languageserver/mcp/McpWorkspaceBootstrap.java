@@ -60,6 +60,16 @@ public class McpWorkspaceBootstrap {
    * @param configurationFile Файл конфигурации BSL Language Server (может отсутствовать).
    * @return Количество проиндексированных файлов.
    */
+  /**
+   * Зарегистрировать и проиндексировать каталог исходников с настройками по умолчанию.
+   *
+   * @param srcDir Каталог исходных файлов.
+   * @return Количество проиндексированных файлов.
+   */
+  public int index(Path srcDir) {
+    return index(srcDir, new File(""));
+  }
+
   public int index(Path srcDir, File configurationFile) {
     globalConfiguration.update(configurationFile);
 

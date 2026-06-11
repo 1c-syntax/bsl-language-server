@@ -27,9 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DocumentSymbolsTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.FindReferencesTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.tools.WorkspaceTool;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
+import io.modelcontextprotocol.spec.McpSchema.Root;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +37,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.File;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Проверяет MCP-инструменты поверх общего {@code ServerContextProvider}.
@@ -77,7 +79,7 @@ class McpToolsTest {
   @Autowired
   private DefinitionTool definitionTool;
   @Autowired
-  private WorkspaceTool workspaceTool;
+  private McpRootsChangeConsumer rootsChangeConsumer;
 
   @BeforeEach
   void indexWorkspace() {
@@ -136,18 +138,20 @@ class McpToolsTest {
   }
 
   @Test
-  void addAndRemoveWorkspaceManagesSharedContext() {
-    var otherWorkspace = "src/test/resources/cli";
+  void mcpRootsRegisterAndRemoveWorkspaces() {
+    var cliDir = Absolute.path("src/test/resources/cli");
+    var root = new Root(cliDir.toUri().toString(), "cli");
 
-    var added = workspaceTool.addWorkspace(otherWorkspace);
-    assertThat(added.workspace()).isEqualTo(otherWorkspace);
-    assertThat(added.indexedFiles()).isPositive();
+    // Client declares a root -> the directory is indexed as a workspace.
+    rootsChangeConsumer.accept(null, List.of(root));
 
-    // A file from the newly added workspace becomes analyzable through the shared context.
-    var analysis = analyzeFileTool.analyzeFile(otherWorkspace + "/test.bsl");
+    var analysis = analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl");
     assertThat(analysis.diagnostics()).isNotEmpty();
 
-    var removed = workspaceTool.removeWorkspace(otherWorkspace);
-    assertThat(removed.workspace()).isEqualTo(otherWorkspace);
+    // Root removed -> workspace is gone, the file is no longer part of a registered workspace.
+    rootsChangeConsumer.accept(null, List.of());
+
+    assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
+      .isInstanceOf(IllegalArgumentException.class);
   }
 }
