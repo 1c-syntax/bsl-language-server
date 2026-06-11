@@ -30,33 +30,41 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 
 import static picocli.CommandLine.Option;
 
 /**
- * Запуск сервера в режиме Model Context Protocol (MCP) поверх stdio.
+ * Запуск сервера в режиме Model Context Protocol (MCP).
  * <p>
- * Сервер поднимает автоконфигурация Spring AI (профили {@code mcp,mcp-stdio}); инструменты
- * ({@code @McpTool}) работают через общий {@code ServerContextProvider}. Рабочие пространства
- * приходят от клиента через MCP roots (см. {@code McpRootsChangeConsumer}) — аналог workspace
- * folders в LSP. Команда применяет глобальную конфигурацию и блокируется до отключения клиента
- * (EOF stdin).
+ * Транспорт выбирается параметром {@code --protocol}: {@code stdio} (по умолчанию) или {@code sse}
+ * (Server-Sent Events по HTTP). Сервер поднимает автоконфигурация Spring AI (профили
+ * {@code mcp,mcp-stdio} или {@code mcp,mcp-sse}); инструменты ({@code @McpTool}) работают через
+ * общий {@code ServerContextProvider}. Рабочие пространства приходят от клиента через MCP roots
+ * (см. {@code McpRootsChangeConsumer}) — аналог workspace folders в LSP.
+ * <p>
+ * Для {@code stdio} команда применяет глобальную конфигурацию и блокируется до отключения клиента
+ * (EOF stdin). Для {@code sse} процесс жив за счёт встроенного веб-сервера.
  * <p>
  * Ключ команды:
  *  mcp
  * Параметры:
  *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server.
+ *  (--protocol) &lt;arg&gt;          - Транспорт MCP: stdio (по умолчанию) или sse.
  */
 @Slf4j
 @Command(
   name = "mcp",
-  description = "MCP (Model Context Protocol) server mode over stdio",
+  description = "MCP (Model Context Protocol) server mode (stdio or sse)",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2026|@")
 @Component
 @RequiredArgsConstructor
 public class McpCommand implements Callable<Integer> {
+
+  static final String PROTOCOL_STDIO = "stdio";
+  static final String PROTOCOL_SSE = "sse";
 
   @Option(
     names = {"-h", "--help"},
@@ -71,6 +79,13 @@ public class McpCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  @Option(
+    names = {"--protocol"},
+    description = "MCP transport protocol: stdio (default) or sse",
+    paramLabel = "<protocol>",
+    defaultValue = PROTOCOL_STDIO)
+  private String protocol;
+
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ObjectProvider<McpShutdownSignal> shutdownSignalProvider;
 
@@ -78,7 +93,18 @@ public class McpCommand implements Callable<Integer> {
   public Integer call() {
     globalConfiguration.update(new File(configurationOption));
 
-    // Сервер уже поднят автоконфигурацией; блокируемся до отключения клиента.
+    var transport = protocol.toLowerCase(Locale.ROOT);
+    if (PROTOCOL_SSE.equals(transport)) {
+      // HTTP-транспорт: процесс жив за счёт встроенного веб-сервера, блокироваться не нужно.
+      LOGGER.info("MCP server enabled over SSE");
+      return -1;
+    }
+    if (!PROTOCOL_STDIO.equals(transport)) {
+      LOGGER.error("Unknown MCP protocol `{}`. Use `stdio` or `sse`.", protocol);
+      return 1;
+    }
+
+    // stdio: сервер уже поднят автоконфигурацией; блокируемся до отключения клиента.
     var shutdownSignal = shutdownSignalProvider.getIfAvailable();
     if (shutdownSignal == null) {
       LOGGER.error("MCP profile is not active: server is not running.");

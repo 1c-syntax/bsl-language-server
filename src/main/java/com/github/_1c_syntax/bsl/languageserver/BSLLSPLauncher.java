@@ -180,8 +180,8 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   }
 
   private static WebApplicationType getWebApplicationType(String[] args) {
-    // A servlet container is needed for the LSP WebSocket endpoint and/or the MCP Streamable HTTP endpoint.
-    if (isWebsocketMode(args) || isMcpHttp(args)) {
+    // A servlet container is needed for the LSP WebSocket endpoint or any MCP HTTP transport (Streamable / SSE).
+    if (isWebsocketMode(args) || isMcpHttp(args) || isMcpSse(args)) {
       return WebApplicationType.SERVLET;
     }
     return WebApplicationType.NONE;
@@ -194,9 +194,9 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
       var lspTransportProfile = isWebsocketMode(args) ? "websocket-mcp" : "lsp-mcp";
       return new String[]{"mcp", lspTransportProfile};
     }
-    if (isMcpStdio(args)) {
-      // standalone `mcp` subcommand: MCP over stdio.
-      return new String[]{"mcp", "mcp-stdio"};
+    if (isMcpSubcommand(args)) {
+      // standalone `mcp` subcommand: transport selected by --protocol (stdio | sse).
+      return isMcpSse(args) ? new String[]{"mcp", "mcp-sse"} : new String[]{"mcp", "mcp-stdio"};
     }
     return new String[0];
   }
@@ -222,10 +222,21 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   }
 
   /**
-   * Самостоятельный режим {@code mcp} по stdio.
+   * Самостоятельная команда {@code mcp} (транспорт выбирается параметром {@code --protocol}).
    */
-  private static boolean isMcpStdio(String[] args) {
+  private static boolean isMcpSubcommand(String[] args) {
     return Arrays.asList(args).contains("mcp");
+  }
+
+  /**
+   * Команда {@code mcp} с {@code --protocol sse} — MCP по SSE (HTTP), требует servlet-контейнера.
+   */
+  private static boolean isMcpSse(String[] args) {
+    if (!isMcpSubcommand(args)) {
+      return false;
+    }
+    var protocol = extractOptionValue(args, "--protocol");
+    return protocol != null && protocol.equalsIgnoreCase("sse");
   }
 
   /**

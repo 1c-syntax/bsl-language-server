@@ -9,14 +9,23 @@ BSL Language Server умеет работать как сервер [Model Conte
 
 ## Режимы запуска
 
-MCP можно поднять тремя способами.
+MCP можно поднять несколькими способами.
 
-### Отдельный MCP-сервер по stdio
+### Отдельный MCP-сервер (команда `mcp`)
 
-Транспорт MCP — `stdio` (стандартный способ подключения локальных инструментов). LSP при этом не запускается.
+Транспорт выбирается параметром `--protocol`: `stdio` (по умолчанию) или `sse`. LSP при этом не запускается.
+
+`stdio` — стандартный способ подключения локальных инструментов:
 
 ```sh
 java -jar bsl-language-server.jar mcp
+# эквивалентно: java -jar bsl-language-server.jar mcp --protocol stdio
+```
+
+`sse` — Server-Sent Events по HTTP на встроенном веб-сервере (эндпоинт `/sse`, сообщения на `/mcp/message`):
+
+```sh
+java -jar bsl-language-server.jar mcp --protocol sse --server.port=8080
 ```
 
 ### Рядом с LSP по stdio
@@ -58,9 +67,10 @@ java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 | Параметр | Режим | Назначение |
 | --- | --- | --- |
 | `-c`, `--configuration` `<path>` | все | Путь к глобальному конфигурационному файлу (см. [Конфигурационный файл](ConfigurationFile.md)) |
+| `--protocol` `<stdio\|sse>` | `mcp` | Транспорт отдельного MCP-сервера: `stdio` (по умолчанию) или `sse` |
 | `--mcp` | `lsp` (по умолчанию), `websocket` | Дополнительно поднять MCP по Streamable HTTP |
 | `--mcp-path` `<path>` | `lsp --mcp`, `websocket --mcp` | Адрес MCP-эндпоинта (по умолчанию `/mcp`) |
-| `--server.port=<port>` | `lsp --mcp`, `websocket --mcp` | Порт встроенного веб-сервера |
+| `--server.port=<port>` | `mcp --protocol sse`, `lsp --mcp`, `websocket --mcp` | Порт встроенного веб-сервера |
 
 ## Примеры конфигурации клиента
 
