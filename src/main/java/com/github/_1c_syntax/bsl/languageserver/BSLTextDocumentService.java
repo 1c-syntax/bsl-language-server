@@ -74,6 +74,7 @@ import org.eclipse.lsp4j.ColorInformation;
 import org.eclipse.lsp4j.ColorPresentation;
 import org.eclipse.lsp4j.ColorPresentationParams;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.DefinitionCapabilities;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
@@ -273,7 +274,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return withFreshDocumentContext(
       documentContext,
-      () -> Either.forRight(definitionProvider.getDefinition(documentContext, params))
+      () -> toLocationResult(
+        definitionProvider.getDefinition(documentContext, params),
+        clientSupportsDefinitionLinkSupport()
+      )
     );
   }
 
@@ -291,6 +295,48 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       documentContext,
       () -> Either.forLeft(implementationProvider.getImplementations(documentContext, params))
     );
+  }
+
+  /**
+   * Сформировать результат запроса навигации с учётом клиентской возможности
+   * {@code linkSupport}.
+   * <p>
+   * По спецификации LSP 3.14+ ответ типа {@link LocationLink} допустим только если клиент
+   * заявил поддержку связей. Если поддержки нет, результат понижается до списка
+   * {@link Location} с {@code targetUri} и {@code targetSelectionRange} каждой связи.
+   *
+   * @param links       Список связей, подготовленный провайдером.
+   * @param linkSupport {@code true}, если клиент поддерживает {@link LocationLink}.
+   * @return {@link Either} с правой стороной ({@link LocationLink}) при поддержке связей
+   *         либо с левой стороной ({@link Location}) при её отсутствии.
+   */
+  private static Either<List<? extends Location>, List<? extends LocationLink>> toLocationResult(
+    List<LocationLink> links,
+    boolean linkSupport
+  ) {
+    if (linkSupport) {
+      return Either.forRight(links);
+    }
+
+    List<Location> locations = links.stream()
+      .map(link -> new Location(link.getTargetUri(), link.getTargetSelectionRange()))
+      .toList();
+    return Either.forLeft(locations);
+  }
+
+  /**
+   * Проверить, заявил ли клиент поддержку возможности
+   * {@code textDocument.definition.linkSupport}.
+   *
+   * @return {@code true}, если клиент поддерживает ответ {@link LocationLink} для запроса
+   *         {@code textDocument/definition}.
+   */
+  private boolean clientSupportsDefinitionLinkSupport() {
+    return clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getDefinition)
+      .map(DefinitionCapabilities::getLinkSupport)
+      .orElse(false);
   }
 
   @Override
