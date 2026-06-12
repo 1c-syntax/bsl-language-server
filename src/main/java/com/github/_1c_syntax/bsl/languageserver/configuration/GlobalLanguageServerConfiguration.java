@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.TextDocumentSyncCapabilityOptions;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -75,6 +77,13 @@ public class GlobalLanguageServerConfiguration {
    */
   @Nullable
   private File traceLog;
+
+  /**
+   * Настройки возможностей сервера LSP, передаваемые клиенту при инициализации
+   * (например, стратегия синхронизации текстовых документов).
+   */
+  @Setter(AccessLevel.NONE)
+  private CapabilitiesOptions capabilities = new CapabilitiesOptions();
 
   /**
    * Файл, из которого была загружена текущая конфигурация.
@@ -137,6 +146,7 @@ public class GlobalLanguageServerConfiguration {
     this.language = Language.RU;
     this.sendErrors = SendErrorsMode.DEFAULT;
     this.traceLog = null;
+    this.capabilities.getTextDocumentSync().setChange(TextDocumentSyncCapabilityOptions.DEFAULT_CHANGE);
     this.configurationFile = null;
     // Событие публикуется через EventPublisherAspect
   }
@@ -151,6 +161,7 @@ public class GlobalLanguageServerConfiguration {
       this.language = loaded.language;
       this.sendErrors = loaded.sendErrors;
       this.traceLog = loaded.traceLog;
+      this.capabilities.getTextDocumentSync().setChange(loaded.capabilities.getTextDocumentSync().getChange());
     } catch (IOException e) {
       LOGGER.error("Can't deserialize global configuration file", e);
     }

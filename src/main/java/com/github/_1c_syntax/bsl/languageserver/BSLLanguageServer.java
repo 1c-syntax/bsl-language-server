@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -105,13 +105,12 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
-  private static final CapabilitiesOptions DEFAULT_CAPABILITIES = new CapabilitiesOptions();
-
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContextProvider serverContextProvider;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
   @Qualifier("populateContextExecutor")
@@ -255,7 +254,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   /**
-   * Формирует настройки синхронизации текстовых документов на основе конфигурации сервера.
+   * Формирует настройки синхронизации текстовых документов на основе глобальной конфигурации сервера.
+   *
+   * @return настройки синхронизации текстовых документов
    */
   private TextDocumentSyncOptions getTextDocumentSyncOptions() {
     var textDocumentSync = new TextDocumentSyncOptions();
@@ -274,10 +275,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   /**
-   * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
+   * Возвращает тип синхронизации документов, заданный в глобальной конфигурации сервера
+   * (по умолчанию Incremental).
+   *
+   * @return тип синхронизации текстовых документов
    */
-  private static TextDocumentSyncKind getConfiguredSyncKind() {
-    return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
+  private TextDocumentSyncKind getConfiguredSyncKind() {
+    return globalConfiguration.getCapabilities()
+      .getTextDocumentSync()
+      .getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {
