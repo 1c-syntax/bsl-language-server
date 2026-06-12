@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
+import org.eclipse.lsp4j.CompletionItemResolveSupportCapabilities;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.MarkupKind;
@@ -1766,5 +1767,77 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
 
     // then — supplier не падает.
     assertThat(result).isNotNull();
+  }
+
+  private void enableDocumentationResolveSupport(boolean markdown) {
+    var itemCaps = new CompletionItemCapabilities();
+    itemCaps.setDocumentationFormat(markdown ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
+    itemCaps.setResolveSupport(new CompletionItemResolveSupportCapabilities(List.of("documentation")));
+    var completionCaps = new CompletionCapabilities();
+    completionCaps.setCompletionItem(itemCaps);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setCompletion(completionCaps);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    completionProvider.handleInitializeEvent();
+  }
+
+  @Test
+  void dotCompletionItemArrivesWithoutDocumentationButWithDataWhenResolveSupported() {
+    // given — клиент умеет лениво разрешать documentation
+    enableDocumentationResolveSupport(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then — documentation отложена, но data приложена для resolve
+    assertThat(add.getDocumentation())
+      .as("при поддержке resolveSupport documentation отдаётся лениво")
+      .isNull();
+    assertThat(add.getData())
+      .as("для отложенного resolve в item кладётся data-ключ члена")
+      .isNotNull();
+    // detail остаётся жадным (фильтрация/вставка не требуют resolve)
+    assertThat(add.getDetail()).isEqualTo("(Значение?)");
+  }
+
+  @Test
+  void resolveCompletionItemRestoresSameDocumentationAsEagerWhenResolveSupported() {
+    // given — ленивый item из dot-completion
+    enableDocumentationResolveSupport(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+    var lazy = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // when — клиент запрашивает resolve этого item
+    var resolved = completionProvider.resolveCompletionItem(lazy);
+
+    // then — documentation восстановлена тем же контентом, что был бы жадным
+    assertThat(resolved.getDocumentation())
+      .as("resolve восстанавливает documentation")
+      .isNotNull();
+    assertThat(resolved.getDocumentation().getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(resolved.getDocumentation().getRight().getValue()).contains("Добавляет значение");
+    assertThat(resolved.getData())
+      .as("после resolve data очищается для экономии трафика")
+      .isNull();
+  }
+
+  @Test
+  void dotCompletionKeepsEagerDocumentationWhenClientLacksResolveSupport() {
+    // given — клиент без resolveSupport (только markdown documentation)
+    enableMarkdownDocumentation(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then — прежнее поведение: documentation приходит сразу, data не нужна
+    assertThat(add.getDocumentation())
+      .as("без resolveSupport documentation остаётся жадной")
+      .isNotNull();
+    assertThat(add.getDocumentation().getRight().getValue()).contains("Добавляет значение");
+    assertThat(add.getData()).isNull();
   }
 }

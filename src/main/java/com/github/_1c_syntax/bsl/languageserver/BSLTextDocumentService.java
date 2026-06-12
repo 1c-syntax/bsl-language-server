@@ -229,6 +229,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
+  public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
+    return CompletableFuture.completedFuture(completionProvider.resolveCompletionItem(unresolved));
+  }
+
+  @Override
   public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
     var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
     if (maybeDocument.isEmpty()) {
