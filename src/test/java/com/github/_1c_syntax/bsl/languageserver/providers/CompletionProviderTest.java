@@ -1205,7 +1205,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void deprecatedMarkupKeptAsMarkdownForMarkdownClient() {
+  void deprecatedItemDocumentationKeepsReasonWithoutTextualMarker() {
     // given
     initServerContext(PATH_TO_METADATA);
     enableMarkdownDocumentation(true);
@@ -1215,16 +1215,20 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var deprecated = dotCompletionItem(documentContext, new Position(0, 18), "УстаревшаяПроцедура");
 
     // then
-    var doc = deprecated.getDocumentation();
-    assertThat(doc.isRight())
-      .as("при поддержке markdown пометка об устаревании сохраняет markdown-разметку")
+    assertThat(deprecated.getDeprecated())
+      .as("факт устаревания передаётся родным механизмом LSP, а не текстом в documentation")
       .isTrue();
+    var doc = deprecated.getDocumentation();
+    assertThat(doc.isRight()).isTrue();
     assertThat(doc.getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
-    assertThat(doc.getRight().getValue()).contains("**Устарело.**");
+    assertThat(doc.getRight().getValue())
+      .as("в documentation остаётся только причина устаревания, без дублирующей пометки")
+      .contains("См. НеУстаревшаяПроцедура.")
+      .doesNotContain("Устарела", "Устарело", "Deprecated");
   }
 
   @Test
-  void deprecatedMarkupStrippedForPlaintextClient() {
+  void deprecatedItemReasonShownForPlaintextClient() {
     // given
     initServerContext(PATH_TO_METADATA);
     enableMarkdownDocumentation(false);
@@ -1239,8 +1243,7 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
       .as("без поддержки markdown документация отдаётся голой строкой")
       .isTrue();
     assertThat(doc.getLeft())
-      .as("звёздочки markdown должны быть убраны для plaintext-клиента")
-      .contains("Устарело.")
+      .contains("См. НеУстаревшаяПроцедура.")
       .doesNotContain("**");
   }
 
