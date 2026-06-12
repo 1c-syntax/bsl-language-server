@@ -40,7 +40,7 @@ import lombok.NoArgsConstructor;
  * собирает {@code documentation} только для выбранного клиентом item.
  * <p>
  * Сериализуется клиентом в JSON и приходит обратно как {@code JsonObject}/Map —
- * поля сделаны bean-style (Lombok {@link Data}) для round-trip через Jackson.
+ * поля сделаны bean-style (Lombok {@code @Data}) для round-trip через Jackson.
  */
 @Data
 @NoArgsConstructor
