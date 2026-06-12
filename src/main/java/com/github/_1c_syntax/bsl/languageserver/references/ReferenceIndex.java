@@ -24,9 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ModuleSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.model.Location;
@@ -75,11 +77,7 @@ public class ReferenceIndex {
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = symbol.getOwner().getMdoRef();
     var moduleType = symbol.getOwner().getModuleType();
-    // Ссылки на модуль сохраняются с пустым symbolName (см. addModuleReference),
-    // поэтому ключ поиска должен строиться симметрично.
-    var symbolName = symbol.getSymbolKind() == SymbolKind.Module
-      ? ""
-      : symbol.getName().toLowerCase(Locale.ENGLISH);
+    var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
     var scopeName = "";
 
     if (symbol.getSymbolKind() == SymbolKind.Variable) {
@@ -208,6 +206,10 @@ public class ReferenceIndex {
 
   /**
    * Добавить ссылку на модуль в индекс.
+   * <p>
+   * Имя символа вычисляется детерминированно из {@code mdoRef} и {@code moduleType}
+   * ({@link ModuleSymbolComputer#name}) и совпадает с {@link ModuleSymbol#getName()}, поэтому
+   * запись и поиск ({@link #getReferencesTo}) симметричны без какой-либо спецобработки.
    *
    * @param uri        URI документа, откуда произошло обращение к модулю.
    * @param mdoRef     Ссылка на объект-метаданных модуля (например, CommonModule.ОбщийМодуль1).
@@ -215,12 +217,16 @@ public class ReferenceIndex {
    * @param range      Диапазон, в котором происходит обращение к модулю.
    */
   public void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+    var symbolName = stringInterner.intern(
+      ModuleSymbolComputer.name(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
+    );
+
     var symbol = Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Module)
-      .symbolName("")
+      .symbolName(symbolName)
       .build()
       .intern();
 
