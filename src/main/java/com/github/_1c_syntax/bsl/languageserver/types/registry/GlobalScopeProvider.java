@@ -98,6 +98,8 @@ public class GlobalScopeProvider {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-keywords.json";
 
   private final Map<String, MemberDescriptor> functions;
+  /** OS-specific descriptors for functions that exist in both BSL and OS with different descriptions. */
+  private final Map<String, MemberDescriptor> osFunctionOverrides;
   private final List<String> classes;
   private final List<String> keywords;
   private final List<PlatformVariable> platformVariables;
@@ -164,6 +166,7 @@ public class GlobalScopeProvider {
   public GlobalScopeProvider(BslContextHolder bslContextHolder, GlobalSymbolScope globalSymbolScope) {
     var loaded = load(bslContextHolder);
     this.functions = loaded.functions;
+    this.osFunctionOverrides = loaded.osFunctionOverrides;
     this.classes = loaded.classes;
     this.keywords = loaded.keywords;
     this.platformVariables = loaded.platformVariables;
@@ -519,7 +522,12 @@ public class GlobalScopeProvider {
     for (var entry : functions.entrySet()) {
       var s = functionScopes.get(entry.getKey());
       if (s == null || s.matches(fileType)) {
-        result.add(entry.getValue());
+        if (fileType == FileType.OS) {
+          var osOverride = osFunctionOverrides.get(entry.getKey());
+          result.add(osOverride != null ? osOverride : entry.getValue());
+        } else {
+          result.add(entry.getValue());
+        }
       }
     }
     return result;
@@ -544,6 +552,12 @@ public class GlobalScopeProvider {
       var s = functionScopes.get(lc);
       if (s != null && !s.matches(fileType)) {
         return Optional.empty();
+      }
+      if (fileType == FileType.OS) {
+        var osOverride = osFunctionOverrides.get(lc);
+        if (osOverride != null) {
+          return Optional.of(osOverride);
+        }
       }
     }
     return Optional.ofNullable(functions.get(lc));
@@ -1009,6 +1023,7 @@ public class GlobalScopeProvider {
 
     return new Loaded(
       Collections.unmodifiableMap(functions),
+      Map.of(),
       List.copyOf(classes),
       List.copyOf(keywords),
       List.copyOf(variables),
@@ -1104,8 +1119,14 @@ public class GlobalScopeProvider {
   private static Loaded merge(Loaded a, Loaded b) {
     var functions = new LinkedHashMap<String, MemberDescriptor>(a.functions);
     var functionScopes = new HashMap<String, LanguageScope>(a.functionScopes);
+    var osFunctionOverrides = new LinkedHashMap<String, MemberDescriptor>();
     for (var e : b.functions.entrySet()) {
-      functions.putIfAbsent(e.getKey(), e.getValue());
+      if (functions.containsKey(e.getKey())) {
+        // BSL already has a function with this name — store the OS descriptor separately.
+        osFunctionOverrides.put(e.getKey(), e.getValue());
+      } else {
+        functions.put(e.getKey(), e.getValue());
+      }
     }
     for (var e : b.functionScopes.entrySet()) {
       functionScopes.merge(e.getKey(), e.getValue(), LanguageScope::merge);
@@ -1162,6 +1183,7 @@ public class GlobalScopeProvider {
     b.keywordDescriptions.forEach(descriptions::putIfAbsent);
     return new Loaded(
       Collections.unmodifiableMap(functions),
+      Collections.unmodifiableMap(osFunctionOverrides),
       List.copyOf(classes),
       List.copyOf(keywords),
       List.copyOf(vars),
@@ -1210,13 +1232,13 @@ public class GlobalScopeProvider {
         }
       }
       kwScopes.putAll(keywordMeta.scopes());
-      return new Loaded(functions, List.copyOf(classes), List.copyOf(keywords), variables,
+      return new Loaded(functions, Map.of(), List.copyOf(classes), List.copyOf(keywords), variables,
         List.of(),
         fnScopes, clsScopes, kwScopes, varScopes,
         Map.copyOf(keywordMeta.snippets()), Map.copyOf(keywordMeta.descriptions()));
     } catch (IOException e) {
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
-      return new Loaded(Collections.emptyMap(), List.of(), List.of(), List.of(),
+      return new Loaded(Collections.emptyMap(), Map.of(), List.of(), List.of(), List.of(),
         List.of(),
         Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), Map.of());
     }
@@ -1373,6 +1395,7 @@ public class GlobalScopeProvider {
 
   private record Loaded(
     Map<String, MemberDescriptor> functions,
+    Map<String, MemberDescriptor> osFunctionOverrides,
     List<String> classes,
     List<String> keywords,
     List<PlatformVariable> platformVariables,

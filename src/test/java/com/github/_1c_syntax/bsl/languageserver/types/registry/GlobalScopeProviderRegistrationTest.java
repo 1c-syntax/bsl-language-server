@@ -435,6 +435,20 @@ class GlobalScopeProviderRegistrationTest {
   }
 
   @Test
+  void findFunctionReturnsOsDescriptorForOsFile() {
+    // Функция "Сообщить" существует и в BSL (builtin-globals.json), и в OS
+    // (builtin-oscript-globals.json) с разными описаниями.
+    // В OS-файле должен возвращаться OS-дескриптор, а не BSL.
+    var bslFn = scope.findFunction("Сообщить", FileType.BSL);
+    var osFn = scope.findFunction("Сообщить", FileType.OS);
+
+    assertThat(bslFn).isPresent();
+    assertThat(osFn).isPresent();
+    // Описания для BSL и OS должны отличаться (не быть одинаковыми BSL-описаниями).
+    assertThat(osFn.get().description()).isNotEqualTo(bslFn.get().description());
+  }
+
+  @Test
   void findFunctionWithoutFileTypeOverloadAndBlankName() {
     // when / then — no-arg overload (без fileType).
     assertThat(scope.findFunction(null)).isEmpty();
