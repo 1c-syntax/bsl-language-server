@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -40,8 +41,12 @@ import java.util.StringJoiner;
 @Component
 @RequiredArgsConstructor
 public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
+
+  private static final String EVENT_HANDLER_HEADER_KEY = "eventHandlerHeader";
+
   private final DescriptionFormatter descriptionFormatter;
   private final EventContractsIndex eventContractsIndex;
+  private final Resources resources;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -67,7 +72,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, methodLocation);
 
     // признак "обработчик события платформы" + платформенное описание события
-    var eventSection = buildEventHandlerSection(eventContract);
+    var eventSection = buildEventHandlerSection(eventContract,
+      resources.getResourceString(getClass(), EVENT_HANDLER_HEADER_KEY));
     descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventSection);
 
     // описание метода
@@ -106,16 +112,16 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
 
   /**
    * Если метод является обработчиком платформенного события owner-типа
-   * модуля, формирует секцию-шапку «Обработчик события платформы: <имя>»
-   * + описание события из bsl-context.
+   * модуля, формирует секцию-шапку «&lt;header&gt;: &lt;имя&gt;» + описание
+   * события из bsl-context. Заголовок локализован через ресурсы класса.
    */
-  private static String buildEventHandlerSection(Optional<MemberDescriptor> contract) {
+  private static String buildEventHandlerSection(Optional<MemberDescriptor> contract, String header) {
     if (contract.isEmpty()) {
       return "";
     }
     var event = contract.get();
     var sj = new StringJoiner("\n");
-    sj.add("**" + "Обработчик события платформы" + ":** `" + event.name() + "`");
+    sj.add("**" + header + ":** `" + event.name() + "`");
     var description = event.description();
     if (description != null && !description.isBlank()) {
       sj.add("");

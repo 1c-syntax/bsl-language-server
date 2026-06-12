@@ -139,9 +139,10 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
       return List.of();
     }
 
+    var contentList = documentContext.getContentList();
     var textEdits = new ArrayList<TextEdit>();
     for (var method : methods) {
-      textEdits.add(new TextEdit(methodDeleteRange(method), ""));
+      textEdits.add(new TextEdit(methodDeleteRange(method, contentList), ""));
     }
 
     var methodTexts = methods.stream()
@@ -151,8 +152,6 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     if (methodTexts.isEmpty()) {
       return List.of();
     }
-
-    var contentList = documentContext.getContentList();
     var existingRegion = findRegionByName(documentContext, targetRegion);
     if (existingRegion.isPresent()) {
       var insertPos = positionBeforeEndRegion(existingRegion.get());
@@ -195,15 +194,8 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     if (content.length == 0) {
       return "";
     }
-    int startLine = method.getRange().getStart().getLine();
+    int startLine = methodHeaderStartLine(method, content);
     int endLine = method.getRange().getEnd().getLine();
-    while (startLine > 0) {
-      var prev = content[startLine - 1].stripTrailing();
-      if (!prev.startsWith("//")) {
-        break;
-      }
-      startLine--;
-    }
     var sb = new StringBuilder();
     for (int i = startLine; i <= endLine && i < content.length; i++) {
       if (i > startLine) {
@@ -216,13 +208,30 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
 
   /**
    * Диапазон удаления метода — целые строки, включая шапку doc-комментария
-   * и одну хвостовую пустую строку, если она есть, чтобы не оставлять
-   * лишний разрыв.
+   * (та же логика что в {@link #extractMethodText}, иначе после переноса
+   * шапка осталась бы «висячей»), и одну хвостовую пустую строку.
    */
-  private static Range methodDeleteRange(MethodSymbol method) {
-    int startLine = method.getRange().getStart().getLine();
+  private static Range methodDeleteRange(MethodSymbol method, String[] contentList) {
+    int startLine = methodHeaderStartLine(method, contentList);
     int endLine = method.getRange().getEnd().getLine();
     return new Range(new Position(startLine, 0), new Position(endLine + 1, 0));
+  }
+
+  /**
+   * Идём вверх от {@code Процедура}/{@code Функция} пока встречаем строки
+   * с {@code //}-комментарием — это прижатая шапка метода. Возвращаем
+   * первую строку этой шапки (или строку метода, если шапки нет).
+   */
+  private static int methodHeaderStartLine(MethodSymbol method, String[] contentList) {
+    int startLine = method.getRange().getStart().getLine();
+    while (startLine > 0) {
+      var prev = contentList[startLine - 1].stripTrailing();
+      if (!prev.startsWith("//")) {
+        break;
+      }
+      startLine--;
+    }
+    return startLine;
   }
 
   /**
