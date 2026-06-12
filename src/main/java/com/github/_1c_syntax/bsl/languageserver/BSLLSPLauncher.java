@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.LsifCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.WebsocketCommand;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -60,6 +61,7 @@ import static picocli.CommandLine.Command;
   subcommands = {
     AnalyzeCommand.class,
     FormatCommand.class,
+    LsifCommand.class,
     VersionCommand.class,
     LanguageServerStartCommand.class,
     WebsocketCommand.class
