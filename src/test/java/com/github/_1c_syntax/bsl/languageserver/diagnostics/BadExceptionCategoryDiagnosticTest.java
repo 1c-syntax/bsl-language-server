@@ -40,13 +40,13 @@ class BadExceptionCategoryDiagnosticTest extends AbstractDiagnosticTest<BadExcep
 
     assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
-      .hasRange(14, 31, 14, 56)
-      .hasRange(15, 31, 15, 59)
-      .hasRange(16, 31, 16, 81)
-      .hasRange(17, 31, 17, 86)
-      .hasRange(18, 31, 18, 84)
-      .hasRange(21, 18, 21, 41)
-      .hasRange(22, 18, 22, 54);
+      .hasRange(16, 31, 16, 56)
+      .hasRange(17, 31, 17, 59)
+      .hasRange(18, 31, 18, 81)
+      .hasRange(19, 31, 19, 86)
+      .hasRange(20, 31, 20, 84)
+      .hasRange(23, 18, 23, 41)
+      .hasRange(24, 18, 24, 54);
 
   }
 }

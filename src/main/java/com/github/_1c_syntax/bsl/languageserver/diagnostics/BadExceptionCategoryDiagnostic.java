@@ -25,11 +25,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallParamContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.RaiseStatementContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @DiagnosticMetadata(
@@ -59,42 +60,27 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void checkForbiddenCategory(RaiseStatementContext ctx) {
-    var params = getValidatedCallParams(ctx);
-    if (params.size() <= 1) return;
-
-    var categoryParam = params.get(1);
-    var expression = categoryParam.expression();
-    if (expression == null || expression.member().isEmpty()) return;
-
-    var member = expression.member(0);
-    if (member == null) return;
-
-    var complexIdentifier = member.complexIdentifier();
-    if (complexIdentifier == null || complexIdentifier.modifier().isEmpty()) return;
-
-    var modifiers = complexIdentifier.modifier();
-    var lastModifier = modifiers.getLast();
-
-    var accessProperty = lastModifier.accessProperty();
-    if (accessProperty == null) return;
-
-    var identifierNode = accessProperty.IDENTIFIER();
-    if (identifierNode == null) return;
-
-    String propertyName = identifierNode.getText().toLowerCase();
-
-    if (FORBIDDEN_CATEGORIES.contains(propertyName)) {
-      diagnosticStorage.addDiagnostic(categoryParam);
-    }
+    Optional.ofNullable(ctx.doCall())
+      .map(BSLParser.DoCallContext::callParamList)
+      .map(BSLParser.CallParamListContext::callParam)
+      .filter(params -> params.size() > 1)
+      .map(params -> params.get(1))
+      .filter(this::isForbiddenCategoryParam)
+      .ifPresent(diagnosticStorage::addDiagnostic);
   }
 
-  private List<? extends CallParamContext> getValidatedCallParams(RaiseStatementContext ctx) {
-    var doCall = ctx.doCall();
-    if (doCall == null) return List.of();
-
-    var callParamList = doCall.callParamList();
-    if (callParamList == null) return List.of();
-
-    return callParamList.callParam();
+  private boolean isForbiddenCategoryParam(CallParamContext categoryParam) {
+    return Optional.of(categoryParam)
+      .map(CallParamContext::expression)
+      .filter(expr -> !expr.member().isEmpty())
+      .map(expr -> expr.member(0))
+      .map(BSLParser.MemberContext::complexIdentifier)
+      .filter(ci -> !ci.modifier().isEmpty())
+      .map(ci -> ci.modifier().getLast())
+      .map(BSLParser.ModifierContext::accessProperty)
+      .map(BSLParser.AccessPropertyContext::IDENTIFIER)
+      .map(identifierNode -> identifierNode.getText().toLowerCase())
+      .filter(FORBIDDEN_CATEGORIES::contains)
+      .isPresent();
   }
 }
