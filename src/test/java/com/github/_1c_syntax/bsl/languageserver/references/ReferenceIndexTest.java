@@ -307,6 +307,29 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void getReferencesToCommonModule() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
+
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleSymbol = commonModuleContext.getSymbolTree().getModule();
+
+    var uri = documentContext.getUri().toString();
+    var firstModuleNameLocation = new Location(uri, Ranges.create(2, 4, 21)); // ПервыйОбщийМодуль on line 3
+    var secondModuleNameLocation = new Location(uri, Ranges.create(4, 4, 21)); // ПервыйОбщийМодуль on line 5
+
+    // when
+    var references = referenceIndex.getReferencesTo(commonModuleSymbol);
+
+    // then
+    assertThat(references)
+      .contains(Reference.of(methodSymbol, commonModuleSymbol, firstModuleNameLocation))
+      .contains(Reference.of(methodSymbol, commonModuleSymbol, secondModuleNameLocation))
+    ;
+  }
+
+  @Test
   void testGetReferencesFromCommonModule() {
     // given
     var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
