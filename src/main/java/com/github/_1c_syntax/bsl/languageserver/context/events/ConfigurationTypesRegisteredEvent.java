@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.events;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.context.annotation.Scope;
 
 import java.io.Serial;
 
@@ -41,6 +42,7 @@ import java.io.Serial;
  * Отличается от {@code ServerContextPopulatedEvent}, который публикуется по
  * завершении полного обхода файлов workspace (cross-document готовность).
  */
+@Scope("singleton")
 public class ConfigurationTypesRegisteredEvent extends ApplicationEvent {
 
   @Serial

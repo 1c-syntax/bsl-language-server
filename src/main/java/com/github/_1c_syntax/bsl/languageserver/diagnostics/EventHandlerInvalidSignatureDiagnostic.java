@@ -239,16 +239,13 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
   private static int matchingRparenIndex(List<Token> tokens, int lparenIndex) {
     var depth = 0;
     for (var i = lparenIndex; i < tokens.size(); i++) {
-      var type = tokens.get(i).getType();
-      if (type == BSLLexer.LPAREN) {
-        depth++;
-      } else if (type == BSLLexer.RPAREN) {
-        depth--;
-        if (depth == 0) {
-          return i;
-        }
-      } else {
-        // ничего: ни LPAREN, ни RPAREN — другие токены параметров не влияют на баланс скобок
+      depth += switch (tokens.get(i).getType()) {
+        case BSLLexer.LPAREN -> 1;
+        case BSLLexer.RPAREN -> -1;
+        default -> 0;
+      };
+      if (depth == 0 && tokens.get(i).getType() == BSLLexer.RPAREN) {
+        return i;
       }
     }
     return -1;

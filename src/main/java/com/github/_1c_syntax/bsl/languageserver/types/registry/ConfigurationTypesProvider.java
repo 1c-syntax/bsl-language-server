@@ -137,6 +137,7 @@ public class ConfigurationTypesProvider {
   private final LanguageServerConfiguration configuration;
   private final MetadataCollectionSpecializer metadataCollectionSpecializer;
   private final ConfigurationGenericExpander genericExpander;
+  private final ServiceModuleEventRegistrar serviceModuleEventRegistrar;
   private final ApplicationEventPublisher eventPublisher;
 
   private final AtomicBoolean registered = new AtomicBoolean(false);
@@ -175,140 +176,8 @@ public class ConfigurationTypesProvider {
     var children = configuration.getChildrenByMdoRef().values();
     LOGGER.debug("ConfigurationTypesProvider[{}]: registering {} MD objects", workspaceUri, children.size());
     register(children);
-    registerServiceModuleEventSpecializations(children);
+    serviceModuleEventRegistrar.register(children);
     eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(serverContext));
-  }
-
-  /**
-   * Развёртывает generic-события платформенных типов модулей сервисов в
-   * конкретные имена обработчиков, объявленных в конфигурации:
-   * <ul>
-   *   <li>{@code Модуль HTTP-сервиса.<Имя обработчика>} ← {@code HTTPService.urlTemplates.methods.handler}
-   *       с сигнатурой {@code (Запрос: HTTPСервисЗапрос)};</li>
-   *   <li>{@code Модуль Web-сервиса.<Имя обработчика>} ← {@code WebService.operations.procedureName}
-   *       с параметрами {@code WebServiceOperation.parameters};</li>
-   *   <li>{@code Модуль сервиса интеграции.<Имя обработчика полученного сообщения>}
-   *       ← {@code IntegrationService.integrationServiceChannels.receiveMessageProcessing}.</li>
-   * </ul>
-   * Generic-события прилетают из HBK с placeholder'ом в имени; здесь они
-   * материализуются именами из mdclasses + кастомные сигнатуры подменяются на
-   * реальные параметры из XML.
-   */
-  private void registerServiceModuleEventSpecializations(Iterable<MD> children) {
-    var httpEvents = new ArrayList<HandlerSpec>();
-    var webEvents = new ArrayList<HandlerSpec>();
-    var integrationEvents = new ArrayList<HandlerSpec>();
-    for (var md : children) {
-      collectHttpHandlers(md, httpEvents);
-      collectWebProcedures(md, webEvents);
-      collectIntegrationHandlers(md, integrationEvents);
-    }
-    registerServiceHandlerEvents("Модуль HTTP-сервиса", "Имя обработчика", httpEvents);
-    registerServiceHandlerEvents("Модуль Web-сервиса", "Имя обработчика", webEvents);
-    registerServiceHandlerEvents("Модуль сервиса интеграции",
-      "Имя обработчика полученного сообщения", integrationEvents);
-  }
-
-  private void collectHttpHandlers(MD md, List<HandlerSpec> sink) {
-    if (!(md instanceof HTTPService http)) {
-      return;
-    }
-    http.getUrlTemplates().forEach(tpl -> tpl.getMethods().forEach((HTTPServiceMethod m) -> {
-      if (!m.getHandler().isBlank()) {
-        sink.add(new HandlerSpec(m.getHandler(), httpServiceMethodSignature()));
-      }
-    }));
-  }
-
-  private static void collectWebProcedures(MD md, List<HandlerSpec> sink) {
-    if (!(md instanceof WebService web)) {
-      return;
-    }
-    web.getOperations().forEach((WebServiceOperation op) -> {
-      if (!op.getProcedureName().isBlank()) {
-        sink.add(new HandlerSpec(op.getProcedureName(), webOperationSignature(op)));
-      }
-    });
-  }
-
-  private static void collectIntegrationHandlers(MD md, List<HandlerSpec> sink) {
-    if (!(md instanceof IntegrationService isvc)) {
-      return;
-    }
-    isvc.getIntegrationServiceChannels().forEach((IntegrationServiceChannel ch) -> {
-      if (!ch.getReceiveMessageProcessing().isBlank()) {
-        sink.add(new HandlerSpec(ch.getReceiveMessageProcessing(),
-          integrationChannelSignature()));
-      }
-    });
-  }
-
-  /**
-   * Материализует generic-event типа по placeholder'у и подменяет signatures
-   * на сигнатуру с реальными параметрами обработчика из mdclasses.
-   * <p>
-   * Описание/двуязычие/sinceVersion event'а наследуются от HBK-шаблона: общий
-   * для всего семейства источник правды.
-   */
-  private void registerServiceHandlerEvents(String typeQualifiedName, String placeholder,
-                                            List<HandlerSpec> specs) {
-    if (specs.isEmpty()) {
-      return;
-    }
-    var typeRef = typeRegistry.resolve(typeQualifiedName).orElse(null);
-    if (typeRef == null) {
-      return;
-    }
-    var names = specs.stream().map(HandlerSpec::name).distinct().toList();
-    var templates = typeRegistry.expandedMembers(typeRef, Map.of(),
-      Map.of(placeholder, names), FileType.BSL);
-    if (templates.isEmpty()) {
-      return;
-    }
-    var sigByName = specs.stream()
-      .collect(Collectors.toMap(HandlerSpec::name, HandlerSpec::signature, (a, b) -> a));
-    var withSignatures = templates.stream()
-      .map((MemberDescriptor m) -> {
-        var sig = sigByName.get(m.name());
-        return sig == null ? m : m.withSignatures(List.of(sig));
-      })
-      .toList();
-    typeRegistry.registerMemberSource(typeRef, () -> withSignatures, FileType.BSL);
-  }
-
-  /** Сигнатура HTTP-обработчика: один параметр {@code Запрос} типа {@code HTTPСервисЗапрос}. */
-  private SignatureDescriptor httpServiceMethodSignature() {
-    var requestRef = typeRegistry.resolve("HTTPСервисЗапрос").orElse(TypeRef.UNKNOWN);
-    var param = new ParameterDescriptor(
-      BilingualString.of("Запрос", "Request"),
-      TypeSet.of(requestRef), false, BilingualString.EMPTY, "");
-    return new SignatureDescriptor(List.of(param), TypeSet.EMPTY, "");
-  }
-
-  /**
-   * Сигнатура обработчика операции Web-сервиса: имена параметров из XML.
-   * Типы пока не сопоставляем — XSD-тип параметра ({@code {ns}type}) требует
-   * отдельной мапы в BSL-типы; до её появления оставляем пусто.
-   */
-  private static SignatureDescriptor webOperationSignature(WebServiceOperation op) {
-    var params = op.getParameters().stream()
-      .map(p -> new ParameterDescriptor(
-        BilingualString.of(p.getName(), p.getName()),
-        TypeSet.EMPTY, false, BilingualString.EMPTY, ""))
-      .toList();
-    return new SignatureDescriptor(params, TypeSet.EMPTY, "");
-  }
-
-  /** Сигнатура обработчика канала: один параметр {@code Сообщение}. */
-  private static SignatureDescriptor integrationChannelSignature() {
-    var param = new ParameterDescriptor(
-      BilingualString.of("Сообщение", "Message"),
-      TypeSet.EMPTY, false, BilingualString.EMPTY, "");
-    return new SignatureDescriptor(List.of(param), TypeSet.EMPTY, "");
-  }
-
-  /** Пара «имя обработчика → его сигнатура» для регистрации event'ов на типе модуля. */
-  private record HandlerSpec(String name, SignatureDescriptor signature) {
   }
 
   private void register(Iterable<MD> children) {
