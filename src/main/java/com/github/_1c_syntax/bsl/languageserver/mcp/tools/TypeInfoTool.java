@@ -41,6 +41,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * MCP-инструмент {@code type_info}: по имени типа 1С/BSL (например, {@code Массив}) возвращает его
@@ -87,13 +88,16 @@ public class TypeInfoTool {
     generateOutputSchema = false)
   public Result typeInfo(
     @McpToolParam(required = true, description = McpToolParams.TYPE_NAME)
-    String typeName
+    String typeName,
+    @McpToolParam(required = false, description = McpToolParams.FILE_TYPE)
+    @Nullable String fileType
   ) {
+    var resolvedFileType = parseFileType(fileType);
     try (var ignored = WorkspaceContextHolder.forUri(anyWorkspaceUri())) {
-      var typeRef = typeService.resolve(typeName, FileType.BSL)
+      var typeRef = typeService.resolve(typeName, resolvedFileType)
         .orElseThrow(() -> new IllegalArgumentException("Type is not found: " + typeName));
 
-      var members = typeService.getMembers(typeRef, FileType.BSL);
+      var members = typeService.getMembers(typeRef, resolvedFileType);
       var properties = membersOfKind(members, MemberKind.PROPERTY);
       var methods = membersOfKind(members, MemberKind.METHOD);
 
@@ -105,6 +109,17 @@ public class TypeInfoTool {
         properties,
         methods
       );
+    }
+  }
+
+  private static FileType parseFileType(@Nullable String fileType) {
+    if (fileType == null || fileType.isBlank()) {
+      return FileType.BSL;
+    }
+    try {
+      return FileType.valueOf(fileType.toUpperCase(Locale.ENGLISH));
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Unknown file type: " + fileType + ". Use 'bsl' or 'os'.");
     }
   }
 

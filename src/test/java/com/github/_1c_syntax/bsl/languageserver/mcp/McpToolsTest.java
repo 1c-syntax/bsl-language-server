@@ -154,7 +154,23 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesOfPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив");
+    var result = typeInfoTool.typeInfo("Массив", null);
+
+    assertThat(result.name()).isEqualTo("Массив");
+    assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
+  }
+
+  @Test
+  void typeInfoReturnsMethodsAndPropertiesWithExplicitBslFileType() {
+    var result = typeInfoTool.typeInfo("Массив", "bsl");
+
+    assertThat(result.name()).isEqualTo("Массив");
+    assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
+  }
+
+  @Test
+  void typeInfoReturnsMethodsAndPropertiesWithOsFileType() {
+    var result = typeInfoTool.typeInfo("Массив", "os");
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -162,8 +178,15 @@ class McpToolsTest {
 
   @Test
   void typeInfoThrowsForUnknownType() {
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа"))
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", null))
       .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void typeInfoThrowsForInvalidFileType() {
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", "invalid"))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Unknown file type");
   }
 
   @Test
