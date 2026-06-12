@@ -30,7 +30,7 @@ package com.github._1c_syntax.bsl.languageserver.types.model;
  * <p>
  * Сами инстансы держат только {@link TypeRef} (плюс опциональные метаданные
  * вроде ссылки на исходный символ). Состав членов типа собирается через
- * {@link com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry#getMembers(TypeRef)}
+ * {@link com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry#getMembers(TypeRef, com.github._1c_syntax.bsl.types.FileType)}
  * — это позволяет нескольким источникам (платформенный синтакс-помощник,
  * пользовательский {@code ObjectModule.bsl} и т.д.) совместно расширять
  * один и тот же тип.
