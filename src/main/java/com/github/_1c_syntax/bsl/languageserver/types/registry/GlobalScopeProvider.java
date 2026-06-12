@@ -97,49 +97,20 @@ public class GlobalScopeProvider {
   private static final String OSCRIPT_KEYWORDS_RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-keywords.json";
 
-  private final Map<String, MemberDescriptor> functions;
   /**
-   * Наборы каждого языка по отдельности: {@link FileType#BSL} ← bsl-context либо
-   * JSON-fallback, {@link FileType#OS} ← oscript-JSON. Для имён, существующих в
-   * обоих языках (например, {@code ПодробноеПредставлениеОшибки}), merged-поля
-   * хранят вариант первого источника (BSL) — все fileType-зависимые lookup'ы
-   * (функции, платформенные переменные/перечисления, ключевые слова и их
-   * описания) берут вариант своего языка отсюда.
+   * Наборы каждого языка по отдельности — единственное хранилище загруженных
+   * глобалов: {@link FileType#BSL} ← bsl-context либо JSON-fallback,
+   * {@link FileType#OS} ← oscript-JSON. Все lookup'ы (функции, классы,
+   * ключевые слова и их описания/сниппеты, платформенные переменные и
+   * перечисления) читают набор языка файла-потребителя.
    */
   private final Map<FileType, Loaded> byFileType;
-  private final List<String> classes;
-  private final List<String> keywords;
-  private final List<PlatformVariable> platformVariables;
-  /**
-   * Системные перечисления платформы — отдельный список от {@link #platformVariables}
-   * (источник — {@code ContextEnum}). Публикуется в global scope как
-   * {@link SyntheticKind#PLATFORM_GLOBAL_ENUM}.
-   */
-  private final List<PlatformVariable> platformEnums;
   /**
    * lowercased имена платформенных переменных и системных перечислений
    * (canonical + алиасы) по языкам — индекс для проверки видимости имени
    * в {@link #findGlobal(String, FileType)}.
    */
   private final Map<FileType, Set<String>> platformVariableNames;
-  /**
-   * lowercased имя BSL-keyword'а (canonical или alias) → двуязычный сниппет
-   * автодополнения с плейсхолдерами {@code <?>}. Заполняется при загрузке
-   * из bsl-context. Для keyword'ов из JSON-fallback — пустая мапа.
-   */
-  private final Map<String, LanguageKeywordSnippet> keywordSnippets;
-  /**
-   * lowercased имя BSL-keyword'а (canonical или alias) → описание из
-   * синтакс-помощника. Заполняется при загрузке из bsl-context;
-   * для JSON-fallback — пустая мапа.
-   * <p>
-   * Запись хранит {@link KeywordDescription#primary()} — generic-описание
-   * (когда контекст использования неизвестен) — и {@link KeywordDescription#byParent()} —
-   * описания, контекстно-зависимые по родительской конструкции (например,
-   * {@code Async}, {@code Знач}, {@code Возврат} имеют различное описание
-   * в контексте {@code Функция} vs {@code Процедура}).
-   */
-  private final Map<String, KeywordDescription> keywordDescriptions;
   /** lowercased имя глобального свойства (через registerGlobalProperty) → языки файлов, в которых оно видимо. */
   private final Map<String, Set<FileType>> globalContextScopes = new ConcurrentHashMap<>();
   /**
@@ -184,19 +155,11 @@ public class GlobalScopeProvider {
   public GlobalScopeProvider(BslContextHolder bslContextHolder, GlobalSymbolScope globalSymbolScope) {
     var os = loadFromResource(OSCRIPT_RESOURCE_PATH);
     var bsl = loadBsl(bslContextHolder);
-    var loaded = merge(bsl, os);
     this.byFileType = Map.of(FileType.BSL, bsl, FileType.OS, os);
-    this.functions = loaded.functions;
-    this.classes = loaded.classes;
-    this.keywords = loaded.keywords;
-    this.platformVariables = loaded.platformVariables;
-    this.platformEnums = loaded.platformEnums;
     this.platformVariableNames = Map.of(
       FileType.BSL, variableNames(bsl),
       FileType.OS, variableNames(os)
     );
-    this.keywordSnippets = loaded.keywordSnippets;
-    this.keywordDescriptions = loaded.keywordDescriptions;
     this.globalSymbolScope = globalSymbolScope;
   }
 
@@ -215,82 +178,49 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Двуязычный сниппет автодополнения для BSL-keyword'а (например,
-   * {@code Если <?> Тогда\nИначеЕсли\nКонецЕсли;}). Источник —
-   * парные {@code .st}-файлы из {@code shlang_*.hbk}; если bsl-context
-   * недоступен или у keyword'а сниппета нет — {@link Optional#empty()}.
+   * Двуязычный сниппет автодополнения для keyword'а (например,
+   * {@code Если <?> Тогда\nИначеЕсли\nКонецЕсли;}) из набора указанного языка.
+   * Источник для BSL — парные {@code .st}-файлы из {@code shlang_*.hbk};
+   * если bsl-context недоступен или у keyword'а сниппета нет — {@link Optional#empty()}.
    * Поиск по lowercased имени, как ru, так и en.
+   *
+   * @param name     имя ключевого слова (регистронезависимо, ru/en)
+   * @param fileType язык файла-потребителя
+   * @return сниппет или {@link Optional#empty()}
    */
-  public Optional<LanguageKeywordSnippet> findKeywordSnippet(String name) {
+  public Optional<LanguageKeywordSnippet> findKeywordSnippet(String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    return Optional.ofNullable(keywordSnippets.get(name.toLowerCase(Locale.ROOT)));
+    return Optional.ofNullable(byFileType.get(fileType).keywordSnippets.get(name.toLowerCase(Locale.ROOT)));
   }
 
   /**
-   * Описание BSL-keyword'а из синтакс-помощника (например, для {@code Истина} —
-   * «Литерал для указания значения типа Булево.»). Поиск регистронезависимый,
-   * по обоим написаниям (ru/en). Если описания нет — {@link Optional#empty()}.
-   * Возвращает пустой Optional также если bsl-context недоступен.
-   */
-  public Optional<String> findKeywordDescription(String name) {
-    return findKeywordDescription(name,
-      Language.DEFAULT_LANGUAGE);
-  }
-
-  /**
-   * То же, что {@link #findKeywordDescription(String)}, но возвращает описание
-   * в указанной локали LS (с fallback на другую локаль, если запрошенная пуста).
-   */
-  public Optional<String> findKeywordDescription(String name,
-      Language language) {
-    return findKeywordDescription(name, language, null);
-  }
-
-  /**
-   * Контекстно-зависимый lookup: если у keyword'а есть описание для
-   * указанной родительской конструкции (например, {@code "Функция"} или
-   * {@code "Процедура"} для {@code Async}/{@code Знач}/{@code Возврат}) —
-   * возвращается оно; иначе используется generic-описание.
-   * <p>
-   * {@code parentContext} — ru-имя родительской конструкции
-   * (из {@link com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword#descriptionByParent}).
-   * Может быть {@code null}, тогда поведение эквивалентно
-   * {@link #findKeywordDescription(String, Language)}.
-   */
-  public Optional<String> findKeywordDescription(String name,
-      Language language,
-      String parentContext) {
-    return findKeywordDescriptionIn(keywordDescriptions, name, language, parentContext);
-  }
-
-  /**
-   * То же, что {@link #findKeywordDescription(String, Language, String)}, но
-   * описание берётся из набора соответствующего языка (BSL/OS): для имён,
-   * существующих в обоих языках, в OS-файле возвращается OneScript-описание,
-   * в BSL-файле — описание платформы 1С. Если в наборе данного языка описания
-   * нет — {@link Optional#empty()} (описание другого языка не подставляется).
+   * Описание keyword'а из набора указанного языка (например, для {@code Истина} —
+   * «Литерал для указания значения типа Булево.») в указанной локали LS
+   * (с fallback на другую локаль, если запрошенная пуста). Контекстно-зависимый
+   * lookup: если у keyword'а есть описание для указанной родительской
+   * конструкции (например, {@code "Функция"} или {@code "Процедура"} для
+   * {@code Async}/{@code Знач}/{@code Возврат}) — возвращается оно; иначе
+   * generic-описание. Для имён, существующих в обоих языках, описание другого
+   * языка не подставляется.
    *
    * @param name          имя ключевого слова (регистронезависимо, ru/en)
    * @param language      локаль интерфейса LS
-   * @param parentContext ru-имя родительской конструкции либо {@code null}
-   * @param fileType      тип файла-потребителя
+   * @param parentContext ru-имя родительской конструкции
+   *                      (из {@link com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword#descriptionByParent});
+   *                      {@code null} — generic-описание
+   * @param fileType      язык файла-потребителя
    * @return локализованное описание ключевого слова или {@link Optional#empty()}
    */
   public Optional<String> findKeywordDescription(String name,
       Language language,
       String parentContext,
       FileType fileType) {
-    return findKeywordDescriptionIn(byFileType.get(fileType).keywordDescriptions, name, language, parentContext);
-  }
-
-  private static Optional<String> findKeywordDescriptionIn(Map<String, KeywordDescription> source,
-      String name, Language language, String parentContext) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    var entry = source.get(name.toLowerCase(Locale.ROOT));
+    var entry = byFileType.get(fileType).keywordDescriptions.get(name.toLowerCase(Locale.ROOT));
     if (entry == null) {
       return Optional.empty();
     }
@@ -369,22 +299,11 @@ public class GlobalScopeProvider {
   private final AtomicBoolean globalsPublished = new AtomicBoolean(false);
 
   /**
-   * Поиск symbol'а в глобальной области (globals + library entries).
-   */
-  public Optional<Symbol> findGlobal(String name) {
-    ensureGlobalsPublished();
-    return globalSymbolScope.findSymbol(name);
-  }
-
-  /**
-   * То же, что {@link #findGlobal(String)}, но с фильтрацией по типу файла:
-   * library-entries скрываются в BSL-файлах; функции и глобальные свойства
-   * фильтруются по соответствующим скоупам.
+   * Поиск symbol'а в глобальной области (globals + library entries) с фильтрацией
+   * по типу файла: library-entries скрываются в BSL-файлах; функции и глобальные
+   * свойства фильтруются по языку своего источника.
    */
   public Optional<Symbol> findGlobal(String name, FileType fileType) {
-    if (fileType == null) {
-      return findGlobal(name);
-    }
     ensureGlobalsPublished();
     // Выбор языкового варианта записи (BSL/OS) — в GlobalSymbolScope;
     // ниже остаётся только проверка видимости имени в данном типе файла.
@@ -404,7 +323,8 @@ public class GlobalScopeProvider {
     // Имя видимо в данном fileType, если ХОТЯ БЫ ОДНА категория его так разрешает.
     // Если ни одной категории не зарегистрировано (классы, ключевые слова и т.п.) —
     // считаем символ доступным.
-    var fnRegistered = functions.containsKey(lc);
+    var fnRegistered = byFileType.get(FileType.BSL).functions.containsKey(lc)
+      || byFileType.get(FileType.OS).functions.containsKey(lc);
     var propFileTypes = globalContextScopes.get(lc);
     var varRegistered = platformVariableNames.get(FileType.BSL).contains(lc)
       || platformVariableNames.get(FileType.OS).contains(lc);
@@ -427,9 +347,6 @@ public class GlobalScopeProvider {
   public Optional<GlobalSymbolScope.Entry> findGlobalEntry(String name, FileType fileType) {
     if (findGlobal(name, fileType).isEmpty()) {
       return Optional.empty();
-    }
-    if (fileType == null) {
-      return globalSymbolScope.findEntry(name);
     }
     return globalSymbolScope.findEntry(name, fileType);
   }
@@ -490,61 +407,49 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Найти тип глобального свойства по имени (canonical или alias).
-   * Покрывает только bsl-context-источники с {@link SyntheticKind#PLATFORM_GLOBAL_PROPERTY}
-   * (через build-time список {@link #platformVariables}). LIBRARY_MODULE и
+   * Найти тип глобального свойства по имени (canonical или alias) в наборе
+   * указанного языка. Покрывает только build-time источники с
+   * {@link SyntheticKind#PLATFORM_GLOBAL_PROPERTY}. LIBRARY_MODULE и
    * configuration-registered записи сюда не попадают — для них используйте
-   * umbrella-метод {@link #findGlobalContext(String)}.
-   */
-  public Optional<TypeRef> findGlobalProperty(String name) {
-    return findInList(platformVariables, name);
-  }
-
-  /**
-   * То же, что {@link #findGlobalProperty(String)}, но с фильтрацией по типу файла.
+   * umbrella-метод {@link #findGlobalContext(String, FileType)}.
+   *
+   * @param name     имя свойства (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return тип значения свойства или {@link Optional#empty()}.
    */
   public Optional<TypeRef> findGlobalProperty(String name, FileType fileType) {
     return findInList(byFileType.get(fileType).platformVariables, name);
   }
 
   /**
-   * @return имена платформенных глобальных свойств (canonical, без алиасов).
-   */
-  public List<String> getGlobalPropertyNames() {
-    return platformVariables.stream().map(PlatformVariable::name).toList();
-  }
-
-  /**
-   * То же, что {@link #getGlobalPropertyNames()}, но с фильтрацией по типу файла.
+   * Имена платформенных глобальных свойств набора указанного языка
+   * (canonical, без алиасов).
+   *
+   * @param fileType язык файла-потребителя.
+   * @return имена свойств.
    */
   public List<String> getGlobalPropertyNames(FileType fileType) {
     return namesFromList(byFileType.get(fileType).platformVariables);
   }
 
   /**
-   * Найти тип системного перечисления по имени (canonical или alias).
-   * Покрывает только bsl-context-источники с {@link SyntheticKind#PLATFORM_GLOBAL_ENUM}.
-   */
-  public Optional<TypeRef> findGlobalEnum(String name) {
-    return findInList(platformEnums, name);
-  }
-
-  /**
-   * То же, что {@link #findGlobalEnum(String)}, но с фильтрацией по типу файла.
+   * Найти тип системного перечисления по имени (canonical или alias) в наборе
+   * указанного языка. Покрывает только bsl-context-источники с
+   * {@link SyntheticKind#PLATFORM_GLOBAL_ENUM}.
+   *
+   * @param name     имя перечисления (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return тип перечисления или {@link Optional#empty()}.
    */
   public Optional<TypeRef> findGlobalEnum(String name, FileType fileType) {
     return findInList(byFileType.get(fileType).platformEnums, name);
   }
 
   /**
-   * @return имена системных перечислений (canonical, без алиасов).
-   */
-  public List<String> getGlobalEnumNames() {
-    return platformEnums.stream().map(PlatformVariable::name).toList();
-  }
-
-  /**
-   * То же, что {@link #getGlobalEnumNames()}, но с фильтрацией по типу файла.
+   * Имена системных перечислений набора указанного языка (canonical, без алиасов).
+   *
+   * @param fileType язык файла-потребителя.
+   * @return имена перечислений.
    */
   public List<String> getGlobalEnumNames(FileType fileType) {
     return namesFromList(byFileType.get(fileType).platformEnums);
@@ -569,42 +474,30 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * @return неизменяемая коллекция глобальных функций
-   */
-  public Collection<MemberDescriptor> getFunctions() {
-    return functions.values();
-  }
-
-  /**
-   * То же, что {@link #getFunctions()}, но с фильтрацией по типу файла.
-   * Для OS-файлов имена, существующие в обоих языках, отдаются
-   * OneScript-дескриптором (см. {@link #osFunctions}).
+   * Глобальные функции набора указанного языка (уникальные дескрипторы,
+   * без дубликатов по ru/en алиасам).
+   *
+   * @param fileType язык файла-потребителя.
+   * @return дескрипторы глобальных функций.
    */
   public Collection<MemberDescriptor> getFunctions(FileType fileType) {
     return new LinkedHashSet<>(byFileType.get(fileType).functions.values());
   }
 
   /**
-   * Поиск глобальной функции по имени (регистронезависимо, с учётом ru/en алиасов).
-   */
-  public Optional<MemberDescriptor> findFunction(String name) {
-    return findFunction(name, null);
-  }
-
-  /**
-   * То же, что {@link #findFunction(String)}, но с фильтрацией по типу файла.
-   * Для OS-файлов имена, существующие в обоих языках, резолвятся в
-   * OneScript-дескриптор (см. {@link #osFunctions}).
+   * Поиск глобальной функции по имени в наборе указанного языка
+   * (регистронезависимо, с учётом ru/en алиасов). Для имён, существующих
+   * в обоих языках, возвращается дескриптор языка файла-потребителя.
+   *
+   * @param name     имя функции (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return дескриптор функции или {@link Optional#empty()}.
    */
   public Optional<MemberDescriptor> findFunction(String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
-    var lc = name.toLowerCase(Locale.ROOT);
-    if (fileType == null) {
-      return Optional.ofNullable(functions.get(lc));
-    }
-    return Optional.ofNullable(byFileType.get(fileType).functions.get(lc));
+    return Optional.ofNullable(byFileType.get(fileType).functions.get(name.toLowerCase(Locale.ROOT)));
   }
 
   /**
@@ -734,16 +627,13 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * Найти тип имени в global scope (любое VALUE-имя: property, enum, library-module).
-   * Унифицированная точка входа — для consumer'ов, которым не важно
-   * различение property/enum.
-   */
-  public Optional<TypeRef> findGlobalContext(String name) {
-    return findGlobalContext(name, null);
-  }
-
-  /**
-   * То же, что {@link #findGlobalContext(String)}, но с фильтрацией по типу файла.
+   * Найти тип имени в global scope (любое VALUE-имя: property, enum, library-module)
+   * с фильтрацией по типу файла. Унифицированная точка входа — для consumer'ов,
+   * которым не важно различение property/enum.
+   *
+   * @param name     имя (регистронезависимо, ru/en).
+   * @param fileType язык файла-потребителя.
+   * @return тип-значение имени или {@link Optional#empty()}.
    */
   public Optional<TypeRef> findGlobalContext(String name, FileType fileType) {
     if (!matchesGlobalScope(name, fileType)) {
@@ -758,7 +648,7 @@ public class GlobalScopeProvider {
   }
 
   private boolean matchesGlobalScope(String name, FileType fileType) {
-    if (fileType == null || name == null) {
+    if (name == null) {
       return true;
     }
     var fileTypes = globalContextScopes.get(name.toLowerCase(Locale.ROOT));
@@ -766,28 +656,21 @@ public class GlobalScopeProvider {
   }
 
   /**
-   * @return имена платформенных классов, доступных в выражении {@code Новый}.
-   */
-  public List<String> getClasses() {
-    return classes;
-  }
-
-  /**
-   * То же, что {@link #getClasses()}, но с фильтрацией по типу файла.
+   * Имена платформенных классов, доступных в выражении {@code Новый}
+   * в файлах указанного языка.
+   *
+   * @param fileType язык файла-потребителя.
+   * @return имена классов.
    */
   public List<String> getClasses(FileType fileType) {
     return byFileType.get(fileType).classes;
   }
 
   /**
-   * @return ключевые слова языка для completion в no-dot контексте.
-   */
-  public List<String> getKeywords() {
-    return keywords;
-  }
-
-  /**
-   * То же, что {@link #getKeywords()}, но с фильтрацией по типу файла.
+   * Ключевые слова указанного языка для completion в no-dot контексте.
+   *
+   * @param fileType язык файла-потребителя.
+   * @return ключевые слова.
    */
   public List<String> getKeywords(FileType fileType) {
     return byFileType.get(fileType).keywords;
@@ -1090,58 +973,6 @@ public class GlobalScopeProvider {
       return;
     }
     functions.putIfAbsent(name.toLowerCase(Locale.ROOT), descriptor);
-  }
-
-  private static Loaded merge(Loaded a, Loaded b) {
-    var functions = new LinkedHashMap<String, MemberDescriptor>(a.functions);
-    for (var e : b.functions.entrySet()) {
-      functions.putIfAbsent(e.getKey(), e.getValue());
-    }
-    var classes = mergeNames(a.classes, b.classes);
-    var keywords = mergeNames(a.keywords, b.keywords);
-    var vars = mergeVariables(a.platformVariables, b.platformVariables);
-    var enums = mergeVariables(a.platformEnums, b.platformEnums);
-    var snippets = new HashMap<String, LanguageKeywordSnippet>(a.keywordSnippets);
-    b.keywordSnippets.forEach(snippets::putIfAbsent);
-    var descriptions = new HashMap<String, KeywordDescription>(a.keywordDescriptions);
-    b.keywordDescriptions.forEach(descriptions::putIfAbsent);
-    return new Loaded(
-      Collections.unmodifiableMap(functions),
-      classes,
-      keywords,
-      vars,
-      enums,
-      Map.copyOf(snippets),
-      Map.copyOf(descriptions)
-    );
-  }
-
-  /** Объединение списков имён с дедупликацией по lowercase (первое написание выигрывает). */
-  private static List<String> mergeNames(List<String> a, List<String> b) {
-    var result = new ArrayList<String>(a.size() + b.size());
-    var seen = new HashSet<String>();
-    for (var list : List.of(a, b)) {
-      for (var name : list) {
-        if (seen.add(name.toLowerCase(Locale.ROOT))) {
-          result.add(name);
-        }
-      }
-    }
-    return List.copyOf(result);
-  }
-
-  /** Объединение списков платформенных переменных с дедупликацией по имени. */
-  private static List<PlatformVariable> mergeVariables(List<PlatformVariable> a, List<PlatformVariable> b) {
-    var result = new ArrayList<PlatformVariable>(a.size() + b.size());
-    var seen = new HashSet<String>();
-    for (var list : List.of(a, b)) {
-      for (var v : list) {
-        if (seen.add(v.name().toLowerCase(Locale.ROOT))) {
-          result.add(v);
-        }
-      }
-    }
-    return List.copyOf(result);
   }
 
   private static Loaded loadFromResource(String resourcePath) {

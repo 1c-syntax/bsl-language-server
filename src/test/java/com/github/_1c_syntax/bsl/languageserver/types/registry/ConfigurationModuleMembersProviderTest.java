@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -75,7 +76,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
       + "ПервыйОбщийМодуль/Ext/Module.bsl");
 
     typeRegistry.resolve("");
-    var ns = globalScopeProvider.findGlobalContext("ПервыйОбщийМодуль");
+    var ns = globalScopeProvider.findGlobalContext("ПервыйОбщийМодуль", FileType.BSL);
     assertThat(ns).isPresent();
 
     var members = typeRegistry.getMembers(ns.get());
@@ -98,7 +99,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
       "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
 
     typeRegistry.resolve("");
-    var ns = globalScopeProvider.findGlobalContext("ОбщегоНазначения").orElseThrow();
+    var ns = globalScopeProvider.findGlobalContext("ОбщегоНазначения", FileType.BSL).orElseThrow();
     var members = typeRegistry.getMembers(ns);
 
     var method = members.stream()

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -73,10 +74,10 @@ class GlobalScopeProviderRegistrationTest {
 
     // then — registerGlobalProperty публикует в GlobalSymbolScope как
     // SyntheticSymbol с типом-значением ref.
-    assertThat(scope.findGlobal("Справочники"))
+    assertThat(scope.findGlobal("Справочники", FileType.BSL))
       .containsInstanceOf(SyntheticSymbol.class);
-    assertThat(scope.findGlobal("catalogs")).isPresent();  // case-insensitive
-    var sym = scope.findGlobal("Справочники").orElseThrow();
+    assertThat(scope.findGlobal("catalogs", FileType.BSL)).isPresent();  // case-insensitive
+    var sym = scope.findGlobal("Справочники", FileType.BSL).orElseThrow();
     assertThat(((SyntheticSymbol) sym).getValueType().qualifiedName())
       .isEqualTo("СправочникиМенеджер");
   }
@@ -90,8 +91,8 @@ class GlobalScopeProviderRegistrationTest {
       java.util.Arrays.asList("", "  ", null, "Real"), FileType.BSL);
 
     // then — null ref и пустой names → no-op; blank/null имена пропускаются
-    assertThat(scope.findGlobal("Real")).isPresent();
-    assertThat(scope.findGlobal("X")).isEmpty();
+    assertThat(scope.findGlobal("Real", FileType.BSL)).isPresent();
+    assertThat(scope.findGlobal("X", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -118,7 +119,7 @@ class GlobalScopeProviderRegistrationTest {
       FileType.BSL, "desc", SyntheticKind.PLATFORM_GLOBAL_ENUM);
 
     // then — символ виден, kind — enum
-    var sym = scope.findGlobal("КодировкаТекста").orElseThrow();
+    var sym = scope.findGlobal("КодировкаТекста", FileType.BSL).orElseThrow();
     assertThat(sym).isInstanceOf(SyntheticSymbol.class);
     assertThat(((SyntheticSymbol) sym).getSyntheticKind())
       .isEqualTo(SyntheticKind.PLATFORM_GLOBAL_ENUM);
@@ -133,7 +134,7 @@ class GlobalScopeProviderRegistrationTest {
     scope.registerPlatformClass(ref, List.of("Структура", "Structure"), FileType.BSL, "");
 
     // then — присутствует в classes, кодируется как TYPE_NAME
-    assertThat(scope.getClasses()).contains("Структура", "Structure");
+    assertThat(scope.getClasses(FileType.BSL)).contains("Структура", "Structure");
     var entry = scope.findGlobalEntry("Структура", FileType.BSL);
     assertThat(entry).map(GlobalSymbolScope.Entry::role)
       .contains(GlobalSymbolScope.Role.TYPE_NAME);
@@ -148,14 +149,14 @@ class GlobalScopeProviderRegistrationTest {
     scope.registerLibraryModule("ФС", ref);
 
     // then
-    assertThat(scope.findGlobal("ФС")).isPresent();
-    assertThat(scope.findGlobal("фс")).isPresent();  // case-insensitive
+    assertThat(scope.findGlobal("ФС", FileType.BSL)).isPresent();
+    assertThat(scope.findGlobal("фс", FileType.BSL)).isPresent();  // case-insensitive
 
     // when — снятие
     scope.unregisterLibraryModule("ФС");
 
     // then
-    assertThat(scope.findGlobal("ФС")).isEmpty();
+    assertThat(scope.findGlobal("ФС", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -169,7 +170,7 @@ class GlobalScopeProviderRegistrationTest {
     scope.registerLibraryModule("X", null);
 
     // then
-    assertThat(scope.findGlobal("X")).isEmpty();
+    assertThat(scope.findGlobal("X", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -189,7 +190,7 @@ class GlobalScopeProviderRegistrationTest {
     scope.unregisterLibraryClass("МойКласс");
 
     // then
-    assertThat(scope.findGlobal("МойКласс")).isEmpty();
+    assertThat(scope.findGlobal("МойКласс", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -277,16 +278,16 @@ class GlobalScopeProviderRegistrationTest {
   @Test
   void findKeywordSnippetReturnsEmptyForBlankName() {
     // when / then
-    assertThat(scope.findKeywordSnippet(null)).isEmpty();
-    assertThat(scope.findKeywordSnippet("")).isEmpty();
-    assertThat(scope.findKeywordSnippet("   ")).isEmpty();
+    assertThat(scope.findKeywordSnippet(null, FileType.BSL)).isEmpty();
+    assertThat(scope.findKeywordSnippet("", FileType.BSL)).isEmpty();
+    assertThat(scope.findKeywordSnippet("   ", FileType.BSL)).isEmpty();
   }
 
   @Test
   void findKeywordDescriptionReturnsEmptyForBlankName() {
     // when / then
-    assertThat(scope.findKeywordDescription(null)).isEmpty();
-    assertThat(scope.findKeywordDescription("")).isEmpty();
+    assertThat(scope.findKeywordDescription(null, Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isEmpty();
+    assertThat(scope.findKeywordDescription("", Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -295,8 +296,8 @@ class GlobalScopeProviderRegistrationTest {
     // конструкций; для произвольного имени — пусто.
 
     // when / then
-    assertThat(scope.findKeywordSnippet("НеизвестноеКлючевоеСлово")).isEmpty();
-    assertThat(scope.findKeywordSnippet("")).isEmpty();
+    assertThat(scope.findKeywordSnippet("НеизвестноеКлючевоеСлово", FileType.BSL)).isEmpty();
+    assertThat(scope.findKeywordSnippet("", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -304,8 +305,8 @@ class GlobalScopeProviderRegistrationTest {
     // given — bsl-context недоступен в этом тесте, источник — builtin-keywords.json.
 
     // when / then — сниппеты доступны по обоим написаниям (ru + en).
-    assertThat(scope.findKeywordSnippet("Если")).isPresent();
-    assertThat(scope.findKeywordSnippet("If")).isPresent();
+    assertThat(scope.findKeywordSnippet("Если", FileType.BSL)).isPresent();
+    assertThat(scope.findKeywordSnippet("If", FileType.BSL)).isPresent();
   }
 
   @Test
@@ -314,11 +315,9 @@ class GlobalScopeProviderRegistrationTest {
     // (HBK-дамп с двуязычными описаниями).
 
     // when / then — описание доступно по ru- и en-имени, в обеих локалях.
-    assertThat(scope.findKeywordDescription("Истина",
-      com.github._1c_syntax.bsl.languageserver.configuration.Language.RU))
+    assertThat(scope.findKeywordDescription("Истина", Language.RU, null, FileType.BSL))
       .isPresent();
-    assertThat(scope.findKeywordDescription("True",
-      com.github._1c_syntax.bsl.languageserver.configuration.Language.EN))
+    assertThat(scope.findKeywordDescription("True", Language.EN, null, FileType.BSL))
       .isPresent();
   }
 
@@ -329,19 +328,19 @@ class GlobalScopeProviderRegistrationTest {
     // но описания/сниппеты для них индексируются и видны hover'у.
 
     // when / then
-    assertThat(scope.findKeywordDescription("НаКлиенте")).isPresent();
-    assertThat(scope.findKeywordDescription("AtServer")).isPresent();
+    assertThat(scope.findKeywordDescription("НаКлиенте", Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isPresent();
+    assertThat(scope.findKeywordDescription("AtServer", Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isPresent();
   }
 
   @Test
   void findKeywordDescriptionContextAware() {
     // given — descriptionByParent у Возврат/Знач/Async/etc. отдаёт описание,
     // привязанное к Процедура vs Функция (СП имеет разные тексты).
-    var ru = com.github._1c_syntax.bsl.languageserver.configuration.Language.RU;
+    var ru = Language.RU;
 
     // when
-    var inProcedure = scope.findKeywordDescription("Возврат", ru, "Процедура");
-    var inFunction = scope.findKeywordDescription("Возврат", ru, "Функция");
+    var inProcedure = scope.findKeywordDescription("Возврат", ru, "Процедура", FileType.BSL);
+    var inFunction = scope.findKeywordDescription("Возврат", ru, "Функция", FileType.BSL);
 
     // then — оба контекста дают непустые описания, причём разные.
     assertThat(inProcedure).isPresent();
@@ -356,8 +355,8 @@ class GlobalScopeProviderRegistrationTest {
       List.of("МойГлобалC"), FileType.BSL);
 
     // when / then — поиск независим от регистра.
-    assertThat(scope.findGlobal("мойглобалc")).isPresent();
-    assertThat(scope.findGlobal("МОЙГЛОБАЛC")).isPresent();
+    assertThat(scope.findGlobal("мойглобалc", FileType.BSL)).isPresent();
+    assertThat(scope.findGlobal("МОЙГЛОБАЛC", FileType.BSL)).isPresent();
   }
 
   @Test
@@ -377,16 +376,16 @@ class GlobalScopeProviderRegistrationTest {
   @Test
   void findGlobalPropertyBlankNameReturnsEmpty() {
     // when / then — findInList с blank name возвращает empty.
-    assertThat(scope.findGlobalProperty(null)).isEmpty();
-    assertThat(scope.findGlobalProperty("")).isEmpty();
-    assertThat(scope.findGlobalProperty("   ")).isEmpty();
+    assertThat(scope.findGlobalProperty(null, FileType.BSL)).isEmpty();
+    assertThat(scope.findGlobalProperty("", FileType.BSL)).isEmpty();
+    assertThat(scope.findGlobalProperty("   ", FileType.BSL)).isEmpty();
   }
 
   @Test
   void findGlobalEnumBlankNameReturnsEmpty() {
     // when / then
-    assertThat(scope.findGlobalEnum(null)).isEmpty();
-    assertThat(scope.findGlobalEnum("")).isEmpty();
+    assertThat(scope.findGlobalEnum(null, FileType.BSL)).isEmpty();
+    assertThat(scope.findGlobalEnum("", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -416,13 +415,13 @@ class GlobalScopeProviderRegistrationTest {
   @Test
   void findGlobalEnumWithoutFileTypeOverload() {
     // when / then — no-arg overload.
-    assertThat(scope.findGlobalEnum("НетТакогоПеречисления")).isEmpty();
+    assertThat(scope.findGlobalEnum("НетТакогоПеречисления", FileType.BSL)).isEmpty();
   }
 
   @Test
   void findGlobalPropertyWithoutFileTypeOverload() {
     // when / then — no-arg overload.
-    assertThat(scope.findGlobalProperty("НетТакогоСвойства")).isEmpty();
+    assertThat(scope.findGlobalProperty("НетТакогоСвойства", FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -436,22 +435,22 @@ class GlobalScopeProviderRegistrationTest {
   @Test
   void findFunctionWithoutFileTypeOverloadAndBlankName() {
     // when / then — no-arg overload (без fileType).
-    assertThat(scope.findFunction(null)).isEmpty();
-    assertThat(scope.findFunction("")).isEmpty();
+    assertThat(scope.findFunction(null, FileType.BSL)).isEmpty();
+    assertThat(scope.findFunction("", FileType.BSL)).isEmpty();
   }
 
   @Test
   void findKeywordDescriptionBlankOrNullName() {
     // when / then
-    assertThat(scope.findKeywordDescription(null)).isEmpty();
-    assertThat(scope.findKeywordDescription("")).isEmpty();
-    assertThat(scope.findKeywordDescription("   ")).isEmpty();
+    assertThat(scope.findKeywordDescription(null, Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isEmpty();
+    assertThat(scope.findKeywordDescription("", Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isEmpty();
+    assertThat(scope.findKeywordDescription("   ", Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isEmpty();
   }
 
   @Test
   void findKeywordDescriptionNoArgOverload() {
     // when / then — no-arg overload использует DEFAULT_LANGUAGE.
-    assertThat(scope.findKeywordDescription("НетТакогоКлючевогоСлова")).isEmpty();
+    assertThat(scope.findKeywordDescription("НетТакогоКлючевогоСлова", Language.DEFAULT_LANGUAGE, null, FileType.BSL)).isEmpty();
   }
 
   @Test
@@ -465,8 +464,8 @@ class GlobalScopeProviderRegistrationTest {
       FileType.BSL, "", SyntheticKind.PLATFORM_GLOBAL_ENUM);
 
     // when / then — оба видны через findGlobal.
-    assertThat(scope.findGlobal("ПрG")).isPresent();
-    assertThat(scope.findGlobal("ПрE")).isPresent();
+    assertThat(scope.findGlobal("ПрG", FileType.BSL)).isPresent();
+    assertThat(scope.findGlobal("ПрE", FileType.BSL)).isPresent();
   }
 
   @Test

@@ -87,7 +87,7 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_A, "mw-a");
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isEmpty();
-    var nsRefA = globalScopeProvider.findGlobalContext("Справочники").orElseThrow();
+    var nsRefA = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefA))
       .extracting(MemberDescriptor::name)
       .containsExactly("Контрагенты");
@@ -96,7 +96,7 @@ class MultiWorkspaceTypeRegistryTest {
     WorkspaceContextHolder.set(WS_B, "mw-b");
     assertThat(typeRegistry.resolve("Справочники.Номенклатура")).isPresent();
     assertThat(typeRegistry.resolve("Справочники.Контрагенты")).isEmpty();
-    var nsRefB = globalScopeProvider.findGlobalContext("Справочники").orElseThrow();
+    var nsRefB = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL).orElseThrow();
     assertThat(typeRegistry.getMembers(nsRefB))
       .extracting(MemberDescriptor::name)
       .containsExactly("Номенклатура");
@@ -113,11 +113,11 @@ class MultiWorkspaceTypeRegistryTest {
     typeRegistry.registerAsGlobalProperty(typeRegistry.resolve("ОбщийМодульB").orElseThrow(), FileType.BSL);
 
     WorkspaceContextHolder.set(WS_A, "mw-a");
-    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульA")).isPresent();
-    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульB")).isEmpty();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульA", FileType.BSL)).isPresent();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульB", FileType.BSL)).isEmpty();
 
     WorkspaceContextHolder.set(WS_B, "mw-b");
-    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульB")).isPresent();
-    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульA")).isEmpty();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульB", FileType.BSL)).isPresent();
+    assertThat(globalScopeProvider.findGlobalContext("ОбщийМодульA", FileType.BSL)).isEmpty();
   }
 }

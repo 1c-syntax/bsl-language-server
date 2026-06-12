@@ -117,12 +117,4 @@ class GlobalScopeProviderLanguageVariantTest {
     assertThat(descriptor.metadata().deprecatedSinceVersion()).isEqualTo("8.3.17");
   }
 
-  @Test
-  void findFunctionWithoutFileTypeKeepsMergedBehaviour() {
-    // when — без типа файла отдаём merged-набор (BSL-приоритет)
-    var descriptor = scope.findFunction(FUNCTION_NAME).orElseThrow();
-
-    // then
-    assertThat(descriptor.metadata().deprecatedSinceVersion()).isEqualTo("8.3.17");
-  }
 }

@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextMethodSignature;
 import com.github._1c_syntax.bsl.context.api.ContextName;
@@ -83,9 +85,9 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)), new GlobalSymbolScope());
 
-    assertThat(scope.findFunction("Сообщить")).isPresent();
-    assertThat(scope.findFunction("Message")).isPresent();
-    assertThat(scope.findFunction("СтрДлина").orElseThrow().description())
+    assertThat(scope.findFunction("Сообщить", FileType.BSL)).isPresent();
+    assertThat(scope.findFunction("Message", FileType.BSL)).isPresent();
+    assertThat(scope.findFunction("СтрДлина", FileType.BSL).orElseThrow().description())
       .isEqualTo("Длина строки.");
   }
 
@@ -96,7 +98,7 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(array, table)), new GlobalSymbolScope());
 
-    assertThat(scope.getClasses()).contains("Массив", "Array", "ТаблицаЗначений", "ValueTable");
+    assertThat(scope.getClasses(FileType.BSL)).contains("Массив", "Array", "ТаблицаЗначений", "ValueTable");
   }
 
   @Test
@@ -108,8 +110,8 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(generic, plain)), new GlobalSymbolScope());
 
-    assertThat(scope.getClasses()).contains("Массив", "Array");
-    assertThat(scope.getClasses()).doesNotContain("СправочникСсылка.<Имя справочника>");
+    assertThat(scope.getClasses(FileType.BSL)).contains("Массив", "Array");
+    assertThat(scope.getClasses(FileType.BSL)).doesNotContain("СправочникСсылка.<Имя справочника>");
   }
 
   @Test
@@ -128,8 +130,8 @@ class GlobalScopeProviderBslContextTest {
     var scope = new GlobalScopeProvider(holderOf(providerOf(
       ifKw, trueKw, procKw, pragma, annotation, pre)), new GlobalSymbolScope());
 
-    assertThat(scope.getKeywords()).contains("Если", "If", "Истина", "True", "Процедура", "Procedure");
-    assertThat(scope.getKeywords()).doesNotContain("НаКлиенте", "Перед", "Область");
+    assertThat(scope.getKeywords(FileType.BSL)).contains("Если", "If", "Истина", "True", "Процедура", "Procedure");
+    assertThat(scope.getKeywords(FileType.BSL)).doesNotContain("НаКлиенте", "Перед", "Область");
   }
 
   @Test
@@ -145,11 +147,11 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)), new GlobalSymbolScope());
 
-    assertThat(scope.findKeywordDescription("Если"))
+    assertThat(scope.findKeywordDescription("Если", Language.DEFAULT_LANGUAGE, null, FileType.BSL))
       .as("description у keyword'а должно проброситься из bsl-context'а")
       .contains("Используется для разветвления алгоритма.");
     // По en-алиасу — то же описание.
-    assertThat(scope.findKeywordDescription("If"))
+    assertThat(scope.findKeywordDescription("If", Language.DEFAULT_LANGUAGE, null, FileType.BSL))
       .contains("Используется для разветвления алгоритма.");
   }
 
@@ -159,12 +161,12 @@ class GlobalScopeProviderBslContextTest {
       "Если <?> Тогда\nКонецЕсли;", "If <?> Then\nEndIf;");
     var scope = new GlobalScopeProvider(holderOf(providerOf(ifKw)), new GlobalSymbolScope());
 
-    var byRu = scope.findKeywordSnippet("Если").orElseThrow();
+    var byRu = scope.findKeywordSnippet("Если", FileType.BSL).orElseThrow();
     assertThat(byRu.ru()).isEqualTo("Если <?> Тогда\nКонецЕсли;");
     assertThat(byRu.en()).isEqualTo("If <?> Then\nEndIf;");
 
     // Тот же сниппет доступен по en-алиасу.
-    var byEn = scope.findKeywordSnippet("If").orElseThrow();
+    var byEn = scope.findKeywordSnippet("If", FileType.BSL).orElseThrow();
     assertThat(byEn).isEqualTo(byRu);
   }
 
@@ -180,12 +182,12 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(encoding)), new GlobalSymbolScope());
 
-    assertThat(scope.getGlobalEnumNames()).contains("КодировкаТекста");
-    assertThat(scope.getGlobalPropertyNames()).doesNotContain("КодировкаТекста");
-    var type = scope.findGlobalEnum("КодировкаТекста").orElseThrow();
+    assertThat(scope.getGlobalEnumNames(FileType.BSL)).contains("КодировкаТекста");
+    assertThat(scope.getGlobalPropertyNames(FileType.BSL)).doesNotContain("КодировкаТекста");
+    var type = scope.findGlobalEnum("КодировкаТекста", FileType.BSL).orElseThrow();
     assertThat(type.qualifiedName()).isEqualTo("КодировкаТекста");
     // Поиск по en-алиасу тоже работает.
-    assertThat(scope.findGlobalEnum("TextEncoding")).isPresent();
+    assertThat(scope.findGlobalEnum("TextEncoding", FileType.BSL)).isPresent();
   }
 
   @Test
@@ -210,12 +212,12 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(catalogsManager, globalContext)), new GlobalSymbolScope());
 
-    assertThat(scope.getGlobalPropertyNames()).contains("Справочники");
+    assertThat(scope.getGlobalPropertyNames(FileType.BSL)).contains("Справочники");
     // Тип «Справочники» — это СправочникиМенеджер (для dot-completion'а).
-    assertThat(scope.findGlobalProperty("Справочники").orElseThrow().qualifiedName())
+    assertThat(scope.findGlobalProperty("Справочники", FileType.BSL).orElseThrow().qualifiedName())
       .isEqualTo("СправочникиМенеджер");
     // En-алиас тоже находит.
-    assertThat(scope.findGlobalProperty("Catalogs")).isPresent();
+    assertThat(scope.findGlobalProperty("Catalogs", FileType.BSL)).isPresent();
   }
 
   @Test
@@ -240,7 +242,7 @@ class GlobalScopeProviderBslContextTest {
 
     var scope = new GlobalScopeProvider(holderOf(providerOf(globalContext)), new GlobalSymbolScope());
     // Generic-placeholder отфильтрован; в scope остаются только настоящие глобалы из fallback-JSON.
-    assertThat(scope.getGlobalPropertyNames()).isNotEmpty().doesNotContain("<Имя справочника>");
+    assertThat(scope.getGlobalPropertyNames(FileType.BSL)).isNotEmpty().doesNotContain("<Имя справочника>");
   }
 
   // --- builders ---

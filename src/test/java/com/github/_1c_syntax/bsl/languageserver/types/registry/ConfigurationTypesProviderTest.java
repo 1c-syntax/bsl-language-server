@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
@@ -150,8 +151,8 @@ class ConfigurationTypesProviderTest extends AbstractServerContextAwareTest {
   @Test
   void registersCollectionNamespacesWithMetadataMembers() {
 
-    var nsRu = globalScopeProvider.findGlobalContext("Справочники");
-    var nsEn = globalScopeProvider.findGlobalContext("Catalogs");
+    var nsRu = globalScopeProvider.findGlobalContext("Справочники", FileType.BSL);
+    var nsEn = globalScopeProvider.findGlobalContext("Catalogs", FileType.BSL);
 
     assertThat(nsRu).isPresent();
     assertThat(nsEn).isPresent();
