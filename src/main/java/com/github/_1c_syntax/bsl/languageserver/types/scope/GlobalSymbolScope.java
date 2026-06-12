@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.IdentityHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -169,10 +169,10 @@ public class GlobalSymbolScope {
    * @return записи разреза
    */
   public Collection<Entry> getEntries(FileType fileType) {
-    var seen = Collections.newSetFromMap(new IdentityHashMap<Symbol, Boolean>());
+    var seen = new HashSet<String>();
     var result = new ArrayList<Entry>();
     for (var entry : entries.get(fileType).values()) {
-      if (seen.add(entry.symbol())) {
+      if (seen.add(symbolKey(entry.symbol()))) {
         result.add(entry);
       }
     }

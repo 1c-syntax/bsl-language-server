@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.junit.jupiter.api.Test;
 
 import java.util.function.Predicate;

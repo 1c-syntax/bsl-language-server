@@ -310,7 +310,7 @@ class TypeRegistryRegistrationTest {
     var ref = typeRegistry.registerUserType("МойТипC2", declaration, FileType.BSL);
 
     // when
-    typeRegistry.registerConstructorSource(null, () -> java.util.List.of(), FileType.BSL);
+    typeRegistry.registerConstructorSource(null, java.util.List::of, FileType.BSL);
     typeRegistry.registerConstructorSource(ref, null, FileType.BSL);
 
     // then — никаких источников не зарегистрировано.

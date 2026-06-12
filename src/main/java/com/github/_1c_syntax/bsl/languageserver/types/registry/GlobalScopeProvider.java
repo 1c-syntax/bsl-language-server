@@ -294,10 +294,11 @@ public class GlobalScopeProvider {
       var data = byFileType.get(fileType);
       // Кэш на ОДИН язык: склеивает ru-имя и en-алиас одного дескриптора в один
       // SyntheticSymbol (aliasesBySymbol/getEntries в GlobalSymbolScope работают
-      // по identity). Межъязыкового переиспользования символов нет намеренно.
-      var symbolsByDescriptor = new HashMap<MemberDescriptor, SyntheticSymbol>();
+      // по identity). Ключ — canonical-имя дескриптора: внутри языка оно уникально.
+      // Межъязыкового переиспользования символов нет намеренно.
+      var symbolsByName = new HashMap<String, SyntheticSymbol>();
       for (var entry : data.functions.entrySet()) {
-        registerFunctionSymbol(symbolsByDescriptor, entry.getKey(), entry.getValue(), fileType);
+        registerFunctionSymbol(symbolsByName, entry.getKey(), entry.getValue(), fileType);
       }
       // Платформенные глобальные переменные (БиблиотекаКартинок, ПараметрыСеанса, …)
       // и системные перечисления (КодировкаТекста, НаправлениеСортировки, …).
@@ -311,13 +312,13 @@ public class GlobalScopeProvider {
    * (canonical-имя или алиас), переиспользуя один {@link SyntheticSymbol}
    * на дескриптор через {@code cache}.
    */
-  private void registerFunctionSymbol(Map<MemberDescriptor, SyntheticSymbol> cache,
+  private void registerFunctionSymbol(Map<String, SyntheticSymbol> cache,
                                       String key, MemberDescriptor descriptor, FileType fileType) {
-    var symbol = cache.computeIfAbsent(descriptor, d -> new SyntheticSymbol(
-      d.name(),
+    var symbol = cache.computeIfAbsent(descriptor.name().toLowerCase(Locale.ROOT), k -> new SyntheticSymbol(
+      descriptor.name(),
       SyntheticKind.PLATFORM_GLOBAL_METHOD,
-      d.description(),
-      d.returnType()
+      descriptor.description(),
+      descriptor.returnType()
     ));
     var displayName = key.equalsIgnoreCase(descriptor.name()) ? descriptor.name() : key;
     globalSymbolScope.register(displayName, symbol, GlobalSymbolScope.Role.VALUE, fileType);
@@ -729,22 +730,10 @@ public class GlobalScopeProvider {
     var variableSeen = new HashSet<String>();
 
     // Глобальные свойства (Документы, Справочники, БиблиотекаКартинок и т.п.) —
-    // top-level имена, доступные без префикса. Тип берём первый из объявленных
-    // в СП (типа СправочникиМенеджер) — для dot-completion'а к коллекции.
+    // top-level имена, доступные без префикса.
     if (globalContext != null) {
       for (var property : globalContext.properties()) {
-        if (property.isGeneric()) {
-          continue; // generic-плейсхолдеры (<Имя справочника>) — не имена.
-        }
-        var name = property.name().getName();
-        var alias = property.name().getAlias();
-        var lc = name.toLowerCase(Locale.ROOT);
-        if (!variableSeen.add(lc)) {
-          continue;
-        }
-        var aliases = alias == null || alias.isBlank() ? List.<String>of() : List.of(alias);
-        var typeRef = firstTypeRef(property);
-        variables.add(new PlatformVariable(name, aliases, property.description(), typeRef));
+        addContextProperty(property, variableSeen, variables);
       }
     }
 
@@ -752,60 +741,9 @@ public class GlobalScopeProvider {
       if (ctx instanceof ContextType type && !type.isGeneric()) {
         addNameWithAlias(classes, classSeen, type.name().getName(), type.name().getAlias());
       } else if (ctx instanceof ContextEnum enumeration) {
-        // Системное перечисление платформы — публикуется в global scope с
-        // SyntheticKind.PLATFORM_GLOBAL_ENUM (через отдельный список enums).
-        var name = enumeration.name().getName();
-        var alias = enumeration.name().getAlias();
-        var lc = name.toLowerCase(Locale.ROOT);
-        if (variableSeen.add(lc)) {
-          var aliases = alias == null || alias.isBlank() ? List.<String>of() : List.of(alias);
-          var typeRef = new TypeRef(TypeKind.PLATFORM, name);
-          enums.add(new PlatformVariable(name, aliases, "", typeRef));
-        }
-      } else if (ctx instanceof ContextLanguageKeyword kw) {
-        if (KEYWORD_CATEGORIES.contains(kw.category())) {
-          var added = addNameWithAlias(keywords, keywordSeen,
-            kw.name().getName(), kw.name().getAlias());
-          if (added && !kw.snippet().isEmpty()) {
-            // Сниппет по обоим написаниям — пользователь может ввести любое.
-            keywordSnippets.put(kw.name().getName().toLowerCase(Locale.ROOT), kw.snippet());
-            if (kw.name().getAlias() != null && !kw.name().getAlias().isBlank()) {
-              keywordSnippets.put(kw.name().getAlias().toLowerCase(Locale.ROOT), kw.snippet());
-            }
-          }
-          if (added) {
-            // Описание ru + en (en хранится в PlatformLanguageKeyword.descriptionEn).
-            // Доступно по обоим написаниям имени.
-            var enDesc = kw instanceof PlatformLanguageKeyword pk
-              ? pk.descriptionEn() : "";
-            var primary = BilingualString.of(
-              kw.description() == null ? "" : kw.description(), enDesc);
-            // Контекстно-зависимые описания (Async/Знач/Возврат и т.п. имеют
-            // разное описание в Функция vs Процедура — см. shlang_*.hbk).
-            var byParent = new LinkedHashMap<String, BilingualString>();
-            if (kw instanceof PlatformLanguageKeyword pk) {
-              var ruByCtx = pk.descriptionByParent();
-              var enByCtx = pk.descriptionByParentEn();
-              var keys = new LinkedHashSet<String>();
-              keys.addAll(ruByCtx.keySet());
-              keys.addAll(enByCtx.keySet());
-              for (var k : keys) {
-                var bi = BilingualString.of(
-                  ruByCtx.getOrDefault(k, ""), enByCtx.getOrDefault(k, ""));
-                if (!bi.isEmpty()) {
-                  byParent.put(k, bi);
-                }
-              }
-            }
-            var entry = new KeywordDescription(primary, byParent);
-            if (!entry.isEmpty()) {
-              keywordDescriptions.put(kw.name().getName().toLowerCase(Locale.ROOT), entry);
-              if (kw.name().getAlias() != null && !kw.name().getAlias().isBlank()) {
-                keywordDescriptions.put(kw.name().getAlias().toLowerCase(Locale.ROOT), entry);
-              }
-            }
-          }
-        }
+        addContextEnum(enumeration, variableSeen, enums);
+      } else if (ctx instanceof ContextLanguageKeyword kw && KEYWORD_CATEGORIES.contains(kw.category())) {
+        addContextKeyword(kw, keywords, keywordSeen, keywordSnippets, keywordDescriptions);
       }
     }
 
@@ -818,6 +756,108 @@ public class GlobalScopeProvider {
       Map.copyOf(keywordSnippets),
       Map.copyOf(keywordDescriptions)
     );
+  }
+
+  /**
+   * Глобальное свойство из СП (Документы, Справочники, БиблиотекаКартинок…):
+   * тип берём первый из объявленных (типа СправочникиМенеджер) — для
+   * dot-completion'а к коллекции. Generic-плейсхолдеры ({@code <Имя справочника>})
+   * и дубли по lowercased имени пропускаются.
+   */
+  private static void addContextProperty(ContextProperty property,
+                                         Set<String> variableSeen,
+                                         List<PlatformVariable> variables) {
+    if (property.isGeneric()) {
+      return;
+    }
+    var name = property.name().getName();
+    if (!variableSeen.add(name.toLowerCase(Locale.ROOT))) {
+      return;
+    }
+    var alias = property.name().getAlias();
+    var aliases = alias == null || alias.isBlank() ? List.<String>of() : List.of(alias);
+    variables.add(new PlatformVariable(name, aliases, property.description(), firstTypeRef(property)));
+  }
+
+  /**
+   * Системное перечисление платформы — публикуется в global scope с
+   * {@link SyntheticKind#PLATFORM_GLOBAL_ENUM} (через отдельный список enums).
+   */
+  private static void addContextEnum(ContextEnum enumeration,
+                                     Set<String> variableSeen,
+                                     List<PlatformVariable> enums) {
+    var name = enumeration.name().getName();
+    if (!variableSeen.add(name.toLowerCase(Locale.ROOT))) {
+      return;
+    }
+    var alias = enumeration.name().getAlias();
+    var aliases = alias == null || alias.isBlank() ? List.<String>of() : List.of(alias);
+    enums.add(new PlatformVariable(name, aliases, "", new TypeRef(TypeKind.PLATFORM, name)));
+  }
+
+  /**
+   * Ключевое слово из СП: имя (ru + en) — в completion-список, сниппет и
+   * описание (включая контекстно-зависимые {@code descriptionByParent}) —
+   * в индексы по обоим написаниям.
+   */
+  private static void addContextKeyword(ContextLanguageKeyword kw,
+                                        List<String> keywords,
+                                        Set<String> keywordSeen,
+                                        Map<String, LanguageKeywordSnippet> keywordSnippets,
+                                        Map<String, KeywordDescription> keywordDescriptions) {
+    var added = addNameWithAlias(keywords, keywordSeen, kw.name().getName(), kw.name().getAlias());
+    if (!added) {
+      return;
+    }
+    if (!kw.snippet().isEmpty()) {
+      // Сниппет по обоим написаниям — пользователь может ввести любое.
+      putByNameAndAlias(keywordSnippets, kw, kw.snippet());
+    }
+    var entry = keywordDescriptionOf(kw);
+    if (!entry.isEmpty()) {
+      putByNameAndAlias(keywordDescriptions, kw, entry);
+    }
+  }
+
+  /** Кладёт значение в индекс по lowercased canonical-имени и en-алиасу keyword'а. */
+  private static <V> void putByNameAndAlias(Map<String, V> index, ContextLanguageKeyword kw, V value) {
+    index.put(kw.name().getName().toLowerCase(Locale.ROOT), value);
+    var alias = kw.name().getAlias();
+    if (alias != null && !alias.isBlank()) {
+      index.put(alias.toLowerCase(Locale.ROOT), value);
+    }
+  }
+
+  /**
+   * Описание keyword'а: основное ru + en (en — из
+   * {@link PlatformLanguageKeyword#descriptionEn()}) плюс контекстно-зависимые
+   * описания по родительской конструкции (Async/Знач/Возврат имеют разное
+   * описание в Функция vs Процедура — см. shlang_*.hbk).
+   */
+  private static KeywordDescription keywordDescriptionOf(ContextLanguageKeyword kw) {
+    var enDesc = kw instanceof PlatformLanguageKeyword pk ? pk.descriptionEn() : "";
+    var primary = BilingualString.of(kw.description() == null ? "" : kw.description(), enDesc);
+    var byParent = kw instanceof PlatformLanguageKeyword pk
+      ? byParentDescriptions(pk)
+      : Map.<String, BilingualString>of();
+    return new KeywordDescription(primary, byParent);
+  }
+
+  /** Двуязычные описания keyword'а по родительским конструкциям (ru-имя родителя → ru/en пара). */
+  private static Map<String, BilingualString> byParentDescriptions(PlatformLanguageKeyword pk) {
+    var ruByCtx = pk.descriptionByParent();
+    var enByCtx = pk.descriptionByParentEn();
+    var keys = new LinkedHashSet<String>();
+    keys.addAll(ruByCtx.keySet());
+    keys.addAll(enByCtx.keySet());
+    var byParent = new LinkedHashMap<String, BilingualString>();
+    for (var k : keys) {
+      var bi = BilingualString.of(ruByCtx.getOrDefault(k, ""), enByCtx.getOrDefault(k, ""));
+      if (!bi.isEmpty()) {
+        byParent.put(k, bi);
+      }
+    }
+    return byParent;
   }
 
   /**
@@ -865,11 +905,11 @@ public class GlobalScopeProvider {
                                           Set<String> seen,
                                           String name, String alias) {
     var added = false;
-    if (name != null && !name.isBlank() && seen.add(name.toLowerCase(Locale.ROOT))) {
+    if (!name.isBlank() && seen.add(name.toLowerCase(Locale.ROOT))) {
       sink.add(name);
       added = true;
     }
-    if (alias != null && !alias.isBlank() && seen.add(alias.toLowerCase(Locale.ROOT))) {
+    if (!alias.isBlank() && seen.add(alias.toLowerCase(Locale.ROOT))) {
       sink.add(alias);
       added = true;
     }

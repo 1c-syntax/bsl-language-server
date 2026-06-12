@@ -133,8 +133,8 @@ class GlobalScopeProviderRegistrationTest {
     // when
     scope.registerPlatformClass(ref, List.of("Структура", "Structure"), FileType.BSL, "");
 
-    // then — оба имени кодируются как TYPE_NAME в разрезе своего языка;
-    // статический список classes динамической регистрацией не расширяется.
+    // then — оба имени получают роль TYPE_NAME в разрезе своего языка,
+    // а статический список classes динамической регистрацией не расширяется
     assertThat(scope.findGlobalEntry("Структура", FileType.BSL))
       .map(GlobalSymbolScope.Entry::role)
       .contains(GlobalSymbolScope.Role.TYPE_NAME);

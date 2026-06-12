@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformType;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.PrimitiveType;
 import com.github._1c_syntax.bsl.languageserver.types.model.Type;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -53,7 +54,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -120,9 +120,8 @@ public class TypeRegistry {
 
   private record MembersKey(TypeRef ref, FileType fileType) implements Comparable<MembersKey> {
 
-    // ref допускает null защитно (см. computeMembers), поэтому порядок ключа — null-safe.
     private static final Comparator<MembersKey> NATURAL_ORDER = Comparator
-      .comparing(MembersKey::ref, Comparator.nullsFirst(Comparator.naturalOrder()))
+      .comparing(MembersKey::ref)
       .thenComparing(MembersKey::fileType);
 
     @Override
@@ -132,6 +131,11 @@ public class TypeRegistry {
   }
 
   private record CachedMembers(long epoch, List<MemberDescriptor> members) {
+  }
+
+  /** Пустой контейнер с разрезами по всем языкам. */
+  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
+    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
   }
   /**
    * Типы, видимые в файлах каждого языка. Тип, не зарегистрированный ни в одном
@@ -144,14 +148,10 @@ public class TypeRegistry {
   /** Описания типов в разрезе языка (первая регистрация выигрывает). */
   private final Map<FileType, Map<TypeRef, String>> descriptions = perFileType();
   /** Конструкторы типов в разрезе языка (повторные регистрации конкатенируются). */
-  private final Map<FileType, Map<TypeRef, List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>>> constructors = perFileType();
+  private final Map<FileType, Map<TypeRef, List<SignatureDescriptor>>> constructors = perFileType();
   /** Динамические источники конструкторов в разрезе языка (например, OScript-класс из SymbolTree). */
-  private final Map<FileType, Map<TypeRef, List<Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>>>>> constructorSources = perFileType();
+  private final Map<FileType, Map<TypeRef, List<Supplier<List<SignatureDescriptor>>>>> constructorSources = perFileType();
 
-  /** Пустой контейнер с разрезами по всем языкам. */
-  private static <V> Map<FileType, Map<TypeRef, V>> perFileType() {
-    return Map.of(FileType.BSL, new ConcurrentHashMap<>(), FileType.OS, new ConcurrentHashMap<>());
-  }
   /**
    * Тип ↔ типы элементов «по умолчанию» для коллекции. Заполняется из
    * {@link TypePackProvider.TypeDecl#defaultElementTypes()} при регистрации.
@@ -365,9 +365,6 @@ public class TypeRegistry {
   }
 
   private List<MemberDescriptor> computeMembers(TypeRef ref, FileType fileType) {
-    if (ref == null) {
-      return List.of();
-    }
     // Snapshot: список source'ов может модифицироваться параллельно через
     // registerMemberSource/registerMemberOverride (Phase B/C MetadataCollectionSpecializer
     // и др. workspace-scoped провайдеры). Список — CopyOnWriteArrayList,
@@ -858,10 +855,10 @@ public class TypeRegistry {
    * Возвращает пустой список, если конструкторов нет (например, для типов
    * без блока {@code constructors} в JSON или для system enums).
    */
-  public List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> getConstructors(
+  public List<SignatureDescriptor> getConstructors(
     TypeRef ref, FileType fileType
   ) {
-    var result = new ArrayList<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>();
+    var result = new ArrayList<SignatureDescriptor>();
     var fromPack = constructors.get(fileType).get(ref);
     if (fromPack != null) {
       result.addAll(fromPack);
@@ -888,7 +885,7 @@ public class TypeRegistry {
    */
   public void registerConstructors(
     TypeRef ref,
-    List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor> ctors,
+    List<SignatureDescriptor> ctors,
     FileType fileType
   ) {
     if (ref == null || ctors == null || ctors.isEmpty()) {
@@ -906,7 +903,7 @@ public class TypeRegistry {
    */
   public void registerConstructorSource(
     TypeRef ref,
-    java.util.function.Supplier<List<com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor>> source,
+    java.util.function.Supplier<List<SignatureDescriptor>> source,
     FileType fileType
   ) {
     if (ref == null || source == null) {
@@ -951,28 +948,52 @@ public class TypeRegistry {
   private void registerPack(TypePackProvider.TypeDecl decl, FileType fileType) {
     var ref = intern(decl.kind(), decl.qualifiedName());
     types.put(ref, hydrate(ref));
-    // BilingualString name покрывает ru+en — обе стороны должны находиться
-    // в aliasIndex, чтобы lookup по любому написанию резолвился в один TypeRef.
-    addAlias(decl.qualifiedName(), ref);
+    registerPackAliases(decl, ref);
+    registerPackDescriptions(decl, ref, fileType);
+    registerPackCallables(decl, ref, fileType);
+    registerPackCollectionTraits(decl, ref);
     if (!decl.name().isEmpty()) {
-      var bnRu = decl.name().ru();
-      var bnEn = decl.name().en();
-      if (!bnRu.isEmpty()) {
-        addAlias(bnRu, ref);
-      }
-      if (!bnEn.isEmpty()) {
-        addAlias(bnEn, ref);
-      }
+      displayNames.putIfAbsent(ref, decl.name());
     }
-    if (decl.description() != null && !decl.description().isEmpty()) {
-      // TypeRegistry хранит description как scoped-String (ConfigurationTypesProvider
-      // и пр. передают одноязычные). Bilingual TypeDecl.description раскрываем
-      // через primary для legacy-индекса; en-сторону отдаёт displayDescription(ref, lang).
-      registerDescription(ref, decl.description().primary(), fileType);
-      if (!decl.description().isEmpty()) {
-        typeDescriptionsBilingual.get(fileType).putIfAbsent(ref, decl.description());
-      }
+    registerFileType(ref, fileType);
+  }
+
+  /**
+   * Алиасы пака: BilingualString name покрывает ru+en — обе стороны должны
+   * находиться в aliasIndex, чтобы lookup по любому написанию резолвился
+   * в один TypeRef.
+   */
+  private void registerPackAliases(TypePackProvider.TypeDecl decl, TypeRef ref) {
+    addAlias(decl.qualifiedName(), ref);
+    if (decl.name().isEmpty()) {
+      return;
     }
+    var bnRu = decl.name().ru();
+    var bnEn = decl.name().en();
+    if (!bnRu.isEmpty()) {
+      addAlias(bnRu, ref);
+    }
+    if (!bnEn.isEmpty()) {
+      addAlias(bnEn, ref);
+    }
+  }
+
+  /**
+   * Описания пака: TypeRegistry хранит description как scoped-String
+   * (ConfigurationTypesProvider и пр. передают одноязычные). Bilingual
+   * TypeDecl.description раскрываем через primary для legacy-индекса;
+   * en-сторону отдаёт displayDescription(ref, lang).
+   */
+  private void registerPackDescriptions(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
+    if (decl.description() == null || decl.description().isEmpty()) {
+      return;
+    }
+    registerDescription(ref, decl.description().primary(), fileType);
+    typeDescriptionsBilingual.get(fileType).putIfAbsent(ref, decl.description());
+  }
+
+  /** Вызываемое пака: конструкторы, члены, exposedAsGlobal-публикация. */
+  private void registerPackCallables(TypePackProvider.TypeDecl decl, TypeRef ref, FileType fileType) {
     if (decl.constructors() != null && !decl.constructors().isEmpty()) {
       registerConstructors(ref, decl.constructors(), fileType);
       registerAsPlatformClass(ref, fileType);
@@ -987,6 +1008,10 @@ public class TypeRegistry {
         : SyntheticKind.PLATFORM_GLOBAL_PROPERTY;
       registerAsGlobalProperty(ref, fileType, syntheticKind);
     }
+  }
+
+  /** Коллекционные свойства пака: элементы по умолчанию, Для Каждого, индексатор, generic-параметры. */
+  private void registerPackCollectionTraits(TypePackProvider.TypeDecl decl, TypeRef ref) {
     if (decl.defaultElementTypes() != null && !decl.defaultElementTypes().isEmpty()) {
       defaultElementTypes.put(ref, List.copyOf(decl.defaultElementTypes()));
     }
@@ -1005,10 +1030,6 @@ public class TypeRegistry {
     if (!decl.typeParameters().isEmpty()) {
       typeParameters.put(ref, List.copyOf(decl.typeParameters()));
     }
-    if (!decl.name().isEmpty()) {
-      displayNames.putIfAbsent(ref, decl.name());
-    }
-    registerFileType(ref, fileType);
   }
 
   /**
