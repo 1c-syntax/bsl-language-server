@@ -75,12 +75,20 @@ public class BadExceptionCategoryDiagnostic extends AbstractVisitorDiagnostic {
       .filter(expr -> !expr.member().isEmpty())
       .map(expr -> expr.member(0))
       .map(BSLParser.MemberContext::complexIdentifier)
+      .filter(this::isErrorCategoryQualifier)
       .filter(ci -> !ci.modifier().isEmpty())
       .map(ci -> ci.modifier().getLast())
       .map(BSLParser.ModifierContext::accessProperty)
       .map(BSLParser.AccessPropertyContext::IDENTIFIER)
       .map(identifierNode -> identifierNode.getText().toLowerCase())
       .filter(FORBIDDEN_CATEGORIES::contains)
+      .isPresent();
+  }
+
+  private boolean isErrorCategoryQualifier(BSLParser.ComplexIdentifierContext ci) {
+    return Optional.ofNullable(ci.IDENTIFIER())
+      .map(id -> id.getText().toLowerCase())
+      .filter(root -> root.equals("категорияошибки") || root.equals("errorcategory"))
       .isPresent();
   }
 }
