@@ -53,6 +53,8 @@ import org.eclipse.lsp4j.CompletionItemTagSupportCapabilities;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
+import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
@@ -100,6 +102,11 @@ public final class CompletionProvider {
   // если нет, помечаем устаревший член legacy-флагом setDeprecated.
   private boolean deprecatedTagSupport;
 
+  // Кэшируется на initialize. Поддерживает ли клиент markdown в documentation completion item.
+  // Если да — documentation отдаётся как MarkupContent(MARKDOWN), иначе голой строкой
+  // (plaintext) с вырезанной markdown-разметкой, чтобы клиент не показывал звёздочки буквально.
+  private boolean markdownDocumentationSupport;
+
   @EventListener(LanguageServerInitializeRequestReceivedEvent.class)
   public void handleInitializeEvent() {
     var completionItem = clientCapabilitiesHolder.getCapabilities()
@@ -114,6 +121,10 @@ public final class CompletionProvider {
       .map(CompletionItemTagSupportCapabilities::getValueSet)
       .filter(valueSet -> valueSet.contains(CompletionItemTag.Deprecated))
       .isPresent();
+    markdownDocumentationSupport = completionItem
+      .map(CompletionItemCapabilities::getDocumentationFormat)
+      .map(formats -> formats.contains(MarkupKind.MARKDOWN))
+      .orElse(Boolean.FALSE);
   }
 
   /**
@@ -680,7 +691,7 @@ public final class CompletionProvider {
       }
       var desc = typeService.getDescription(ref, scriptVariant);
       if (!desc.isEmpty()) {
-        item.setDocumentation(desc);
+        setDocumentation(item, desc);
       }
     }
     applyCallableInsertText(item, className, ctorHasParameters);
@@ -788,7 +799,7 @@ public final class CompletionProvider {
     return count + " " + word + " синтаксиса";
   }
 
-  private static void applyDocumentation(CompletionItem item, MemberDescriptor member, Language scriptVariant) {
+  private void applyDocumentation(CompletionItem item, MemberDescriptor member, Language scriptVariant) {
     var symDesc = member.getSymbolDescription();
     // У source-defined членов (пользовательские методы/свойства) описание —
     // это doc-comment в коде пользователя, он на языке проекта as-is.
@@ -813,7 +824,37 @@ public final class CompletionProvider {
       sb.append(purpose);
     }
     if (sb.length() > 0) {
-      item.setDocumentation(sb.toString());
+      setDocumentation(item, sb.toString());
     }
+  }
+
+  /**
+   * Проставляет documentation completion item с учётом клиентских capabilities.
+   * Если клиент поддерживает markdown в documentation completion item — текст отдаётся
+   * как {@link MarkupContent} с {@link MarkupKind#MARKDOWN}. Иначе документация отдаётся
+   * голой строкой (plaintext) с вырезанной markdown-разметкой, иначе клиент покажет
+   * управляющие символы (например, {@code **}) буквально.
+   *
+   * @param item     completion item, которому проставляется документация.
+   * @param markdown текст документации в формате markdown (без экранирования).
+   */
+  private void setDocumentation(CompletionItem item, String markdown) {
+    if (markdownDocumentationSupport) {
+      item.setDocumentation(new MarkupContent(MarkupKind.MARKDOWN, markdown));
+    } else {
+      item.setDocumentation(stripMarkdownEmphasis(markdown));
+    }
+  }
+
+  /**
+   * Убирает markdown-разметку жирного начертания ({@code **...**}) из текста для
+   * plaintext-клиентов. В формируемой документации {@code **} используется только как
+   * обрамление жирного, поэтому достаточно удалить все вхождения {@code **}.
+   *
+   * @param value исходный текст с markdown-разметкой.
+   * @return текст без обрамляющих {@code **}.
+   */
+  private static String stripMarkdownEmphasis(String value) {
+    return value.replace("**", "");
   }
 }

@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.InsertTextFormat;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -66,6 +68,19 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
   private void enableSnippetSupport(boolean enabled) {
     var itemCaps = new CompletionItemCapabilities();
     itemCaps.setSnippetSupport(enabled);
+    var completionCaps = new CompletionCapabilities();
+    completionCaps.setCompletionItem(itemCaps);
+    var textDocumentCaps = new TextDocumentClientCapabilities();
+    textDocumentCaps.setCompletion(completionCaps);
+    var caps = new ClientCapabilities();
+    caps.setTextDocument(textDocumentCaps);
+    clientCapabilitiesHolder.setCapabilities(caps);
+    completionProvider.handleInitializeEvent();
+  }
+
+  private void enableMarkdownDocumentation(boolean enabled) {
+    var itemCaps = new CompletionItemCapabilities();
+    itemCaps.setDocumentationFormat(enabled ? List.of(MarkupKind.MARKDOWN) : List.of(MarkupKind.PLAINTEXT));
     var completionCaps = new CompletionCapabilities();
     completionCaps.setCompletionItem(itemCaps);
     var textDocumentCaps = new TextDocumentClientCapabilities();
@@ -1152,6 +1167,81 @@ class CompletionProviderTest extends AbstractServerContextAwareTest {
     var doc = item.getDocumentation();
     assertThat(doc).as("у члена должна быть проставлена документация").isNotNull();
     return doc.isLeft() ? doc.getLeft() : doc.getRight().getValue();
+  }
+
+  @Test
+  void documentationReturnedAsMarkdownMarkupWhenClientSupportsMarkdown() {
+    // given
+    enableMarkdownDocumentation(true);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then
+    var doc = add.getDocumentation();
+    assertThat(doc.isRight())
+      .as("при поддержке markdown документация отдаётся как MarkupContent, а не голой строкой")
+      .isTrue();
+    assertThat(doc.getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(doc.getRight().getValue()).contains("Добавляет значение");
+  }
+
+  @Test
+  void documentationReturnedAsPlainStringWhenClientLacksMarkdown() {
+    // given
+    enableMarkdownDocumentation(false);
+    var documentContext = TestUtils.getDocumentContext("М = Новый Массив;\nМ.");
+
+    // when
+    var add = dotCompletionItem(documentContext, new Position(1, 2), "Добавить");
+
+    // then
+    var doc = add.getDocumentation();
+    assertThat(doc.isLeft())
+      .as("без поддержки markdown документация отдаётся голой строкой (plaintext)")
+      .isTrue();
+    assertThat(doc.getLeft()).contains("Добавляет значение");
+  }
+
+  @Test
+  void deprecatedMarkupKeptAsMarkdownForMarkdownClient() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    enableMarkdownDocumentation(true);
+    var documentContext = TestUtils.getDocumentContext("ПервыйОбщийМодуль.");
+
+    // when
+    var deprecated = dotCompletionItem(documentContext, new Position(0, 18), "УстаревшаяПроцедура");
+
+    // then
+    var doc = deprecated.getDocumentation();
+    assertThat(doc.isRight())
+      .as("при поддержке markdown пометка об устаревании сохраняет markdown-разметку")
+      .isTrue();
+    assertThat(doc.getRight().getKind()).isEqualTo(MarkupKind.MARKDOWN);
+    assertThat(doc.getRight().getValue()).contains("**Устарело.**");
+  }
+
+  @Test
+  void deprecatedMarkupStrippedForPlaintextClient() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    enableMarkdownDocumentation(false);
+    var documentContext = TestUtils.getDocumentContext("ПервыйОбщийМодуль.");
+
+    // when
+    var deprecated = dotCompletionItem(documentContext, new Position(0, 18), "УстаревшаяПроцедура");
+
+    // then
+    var doc = deprecated.getDocumentation();
+    assertThat(doc.isLeft())
+      .as("без поддержки markdown документация отдаётся голой строкой")
+      .isTrue();
+    assertThat(doc.getLeft())
+      .as("звёздочки markdown должны быть убраны для plaintext-клиента")
+      .contains("Устарело.")
+      .doesNotContain("**");
   }
 
   @Test
