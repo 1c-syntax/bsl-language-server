@@ -9,6 +9,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
+    id("org.graalvm.buildtools.native") version "1.1.0"
     id("com.diffplug.spotless") version "7.0.4"
     id("me.qoomon.git-versioning") version "6.4.4"
     id("io.freefair.lombok") version "9.5.0"
@@ -102,20 +103,52 @@ dependencies {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
+        // io.grpc.netty-shaded ломает native-image: его static init захватывает
+        // ch.qos.logback.classic.Logger в image heap. LanguageTool сам netty-shaded
+        // не использует — только в составе grpc-stub-а для удалённых правил, который
+        // мы не задействуем; остальные grpc-api/grpc-protobuf остаются на classpath,
+        // чтобы LanguageTool мог разрешать `io.grpc.Channel` при загрузке правил.
+        exclude("io.grpc", "grpc-netty-shaded")
     }
     implementation("org.languagetool:language-en:$languageToolVersion") {
         exclude("commons-logging:commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
+        // io.grpc.netty-shaded ломает native-image: его static init захватывает
+        // ch.qos.logback.classic.Logger в image heap. LanguageTool сам netty-shaded
+        // не использует — только в составе grpc-stub-а для удалённых правил, который
+        // мы не задействуем; остальные grpc-api/grpc-protobuf остаются на classpath,
+        // чтобы LanguageTool мог разрешать `io.grpc.Channel` при загрузке правил.
+        exclude("io.grpc", "grpc-netty-shaded")
     }
     implementation("org.languagetool:language-ru:$languageToolVersion") {
         exclude("commons-logging", "commons-logging")
         exclude("com.sun.xml.bind", "jaxb-core")
         exclude("com.sun.xml.bind", "jaxb-impl")
+        // io.grpc.netty-shaded ломает native-image: его static init захватывает
+        // ch.qos.logback.classic.Logger в image heap. LanguageTool сам netty-shaded
+        // не использует — только в составе grpc-stub-а для удалённых правил, который
+        // мы не задействуем; остальные grpc-api/grpc-protobuf остаются на classpath,
+        // чтобы LanguageTool мог разрешать `io.grpc.Channel` при загрузке правил.
+        exclude("io.grpc", "grpc-netty-shaded")
     }
+
+    // Shadow-копия ExtendXStream из mdclasses нуждается в прямом доступе к XStream API
+    // (мы переопределяем protected методы XStream). XStream и так в рантайме через mdclasses,
+    // здесь — compileOnly, чтобы не дублировать в graph.
+    compileOnly("com.thoughtworks.xstream:xstream:1.4.21")
+    compileOnly("io.github.classgraph:classgraph:4.8.184")
+    // ImageInfo.inImageRuntimeCode() для разделения JVM/native веток в shadow ExtendXStream;
+    // в JVM возвращает false, в native — true. Артефакт лёгкий и без транзитивов.
+    implementation("org.graalvm.sdk:nativeimage:24.2.2")
 
     // AOP
     implementation("org.aspectj:aspectjrt:1.9.25.1")
+    // aspectjweaver нужен Spring AOP в рантайме для парсинга pointcut-выражений у @Aspect-бинов
+    // из транзитивных зависимостей (Sentry CheckIn / Spring caching advisor / etc.).
+    // Наши собственные аспекты по-прежнему вплетаются в байт-код через CTW
+    // (io.freefair.aspectj.post-compile-weaving), runtime-Spring AOP их не проксирует.
+    implementation("org.aspectj:aspectjweaver:1.9.25.1")
 
     // commons utils
     implementation("commons-io:commons-io:2.22.0")
@@ -200,6 +233,25 @@ tasks.bootJar {
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
     imageName.set("docker.io/1csyntax/bsl-language-server:${project.version}")
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            sharedLibrary.set(false)
+            mainClass.set("com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher")
+            buildArgs.addAll(
+                "--no-fallback",
+                "-H:+UnlockExperimentalVMOptions",
+                "-H:+ReportExceptionStackTraces",
+                // LanguageTool's Languages.<clinit> читает ресурсы языковых модулей.
+                // В native build-time `language-module.properties` ещё не виден — деферим инит.
+                "--initialize-at-run-time=org.languagetool.Languages",
+                "--initialize-at-run-time=org.languagetool.Language",
+                "--initialize-at-run-time=org.languagetool.JLanguageTool"
+            )
+        }
+    }
 }
 
 afterEvaluate {

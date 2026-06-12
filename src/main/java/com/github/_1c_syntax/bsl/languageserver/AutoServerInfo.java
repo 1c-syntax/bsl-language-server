@@ -59,6 +59,12 @@ public class AutoServerInfo extends org.eclipse.lsp4j.ServerInfo implements Seri
       .getContextClassLoader()
       .getResourceAsStream("META-INF/MANIFEST.MF");
 
+    if (mfStream == null) {
+      // В native-image MANIFEST.MF не упакован — обходимся пакетной версией.
+      var pkgVersion = AutoServerInfo.class.getPackage().getImplementationVersion();
+      return pkgVersion != null ? pkgVersion : "";
+    }
+
     Manifest manifest = new Manifest();
     try {
       manifest.read(mfStream);
@@ -67,7 +73,8 @@ public class AutoServerInfo extends org.eclipse.lsp4j.ServerInfo implements Seri
       return "";
     }
 
-    return manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+    var version = manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+    return version != null ? version : "";
   }
 
 }

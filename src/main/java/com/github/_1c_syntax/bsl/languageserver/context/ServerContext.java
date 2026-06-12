@@ -76,6 +76,12 @@ public class ServerContext {
     .build();
 
   private final ObjectProvider<DocumentContext> documentContextProvider;
+  // Сервисы для ручной инициализации DocumentContext (см. createDocumentContext).
+  private final com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer diagnosticComputer;
+  private final ObjectProvider<com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
+  private final ObjectProvider<com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
+  private final com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptModuleTypeResolver oScriptModuleTypeResolver;
+  private final com.github._1c_syntax.utils.StringInterner stringInterner;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
   @Qualifier("computeConfigurationExecutor")
@@ -433,6 +439,17 @@ public class ServerContext {
 
   private DocumentContext createDocumentContext(URI uri) {
     var documentContext = documentContextProvider.getObject(uri, this);
+    // Spring AOT в native-image не вызывает @Autowired-setter'ы для prototype-бина,
+    // созданного через ObjectProvider.getObject(args). Принудительно подкладываем
+    // нужные сервисы вручную; в обычной JVM это перезапишет уже выставленные значения
+    // теми же экземплярами (Spring-инъекция отрабатывает раньше).
+    documentContext.initializeDependencies(
+      diagnosticComputer,
+      cognitiveComplexityComputerProvider,
+      cyclomaticComplexityComputerProvider,
+      oScriptModuleTypeResolver,
+      stringInterner
+    );
 
     documents.put(uri, documentContext);
     addMdoRefByUri(uri, documentContext);

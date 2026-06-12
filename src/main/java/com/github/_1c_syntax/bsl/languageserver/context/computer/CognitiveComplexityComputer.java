@@ -71,7 +71,10 @@ public class CognitiveComplexityComputer
 
   private final DocumentContext documentContext;
 
-  @Setter(onMethod_ ={@Autowired}, value = AccessLevel.PACKAGE)
+  // Setter сделан public, чтобы DocumentContext мог проставить stringInterner
+  // вручную — в native-image Spring AOT не вызывает @Autowired-сеттеры для prototype-бинов,
+  // создаваемых через ObjectProvider.getObject(args).
+  @Setter(onMethod_ ={@Autowired})
   private StringInterner stringInterner;
 
   private int fileComplexity;

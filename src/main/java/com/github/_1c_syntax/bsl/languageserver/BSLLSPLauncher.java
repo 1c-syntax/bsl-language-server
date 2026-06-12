@@ -108,6 +108,25 @@ public class BSLLSPLauncher implements Callable<Integer>, ExitCodeGenerator {
   private int exitCode;
 
   public static void main(String[] args) {
+    if (System.getenv("BSL_LS_THREAD_DUMP") != null) {
+      var watchdog = new Thread(() -> {
+        try {
+          Thread.sleep(60_000);
+          System.err.println("\n=== WATCHDOG: dumping thread stacks ===");
+          Thread.getAllStackTraces().forEach((t, stack) -> {
+            System.err.println("Thread: " + t.getName() + " state=" + t.getState());
+            for (var frame : stack) {
+              System.err.println("    at " + frame);
+            }
+          });
+          System.err.println("=== WATCHDOG: end ===");
+        } catch (InterruptedException ignored) {
+        }
+      }, "watchdog");
+      watchdog.setDaemon(true);
+      watchdog.start();
+    }
+
     var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
       .web(getWebApplicationType(args))
       .run(args);

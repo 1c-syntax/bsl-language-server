@@ -105,20 +105,21 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private int version;
 
   private final ServerContext context;
+  // Spring AOT в native-image не применяет @Autowired-setter-инъекцию к prototype-бинам,
+  // созданным через ObjectProvider.getObject(args). Заполняем эти поля явно в
+  // initializeDependencies(), вызываемом из ServerContext.createDocumentContext.
   @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
   private DiagnosticComputer diagnosticComputer;
-
   @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
   @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
   private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
-
   @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
   private OScriptModuleTypeResolver oScriptModuleTypeResolver;
+  // StringInterner — singleton-бин, нужен computer'ам complexities, которые сами
+  // prototype'ы и страдают тем же AOT-багом (см. ниже initializeDependencies).
+  @SuppressWarnings("NullAway.Init")
+  private com.github._1c_syntax.utils.StringInterner stringInterner;
 
   @Nullable
   private BSLTokenizer tokenizer;
@@ -152,6 +153,31 @@ public class DocumentContext implements Comparable<DocumentContext> {
     this.uri = uri;
     this.context = context;
     this.fileType = computeFileType(uri);
+    // diagnosticComputer и computeProvider'ы инжектируются явно через initializeDependencies()
+    // из ServerContext.createDocumentContext. Spring AOT в native-image не применяет
+    // @Autowired-setter-инъекцию к prototype-бинам, созданным через ObjectProvider.getObject(args),
+    // поэтому setter-инъекция как раньше тут не подходит — упираемся в null при первом
+    // обращении к diagnosticComputer.
+  }
+
+  /**
+   * Установка зависимостей, которые в обычном Spring инжектились бы через
+   * {@code @Autowired}-сеттеры. Вызывается из {@link ServerContext#createDocumentContext}
+   * сразу после {@code documentContextProvider.getObject(...)} — гарантирует, что поля
+   * не остаются {@code null} в native-image.
+   */
+  void initializeDependencies(
+    DiagnosticComputer diagnosticComputer,
+    ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider,
+    ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider,
+    OScriptModuleTypeResolver oScriptModuleTypeResolver,
+    com.github._1c_syntax.utils.StringInterner stringInterner
+  ) {
+    this.diagnosticComputer = diagnosticComputer;
+    this.cognitiveComplexityComputerProvider = cognitiveComplexityComputerProvider;
+    this.cyclomaticComplexityComputerProvider = cyclomaticComplexityComputerProvider;
+    this.oScriptModuleTypeResolver = oScriptModuleTypeResolver;
+    this.stringInterner = stringInterner;
   }
 
   public ServerContext getServerContext() {
@@ -429,13 +455,17 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   private ComplexityData computeCognitiveComplexity() {
-    Computer<ComplexityData> cognitiveComplexityComputer = cognitiveComplexityComputerProvider.getObject(this);
-    return cognitiveComplexityComputer.compute();
+    var computer = cognitiveComplexityComputerProvider.getObject(this);
+    // см. комментарий к initializeDependencies — Spring AOT в native не вызовет
+    // @Setter @Autowired у prototype-бина, поэтому ставим stringInterner вручную.
+    computer.setStringInterner(stringInterner);
+    return computer.compute();
   }
 
   private ComplexityData computeCyclomaticComplexity() {
-    Computer<ComplexityData> cyclomaticComplexityComputer = cyclomaticComplexityComputerProvider.getObject(this);
-    return cyclomaticComplexityComputer.compute();
+    var computer = cyclomaticComplexityComputerProvider.getObject(this);
+    computer.setStringInterner(stringInterner);
+    return computer.compute();
   }
 
   private MetricStorage computeMetrics() {
