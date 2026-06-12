@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.capabilities.CapabilitiesOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -105,13 +105,12 @@ import java.util.concurrent.ExecutorService;
 @RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
-  private static final CapabilitiesOptions DEFAULT_CAPABILITIES = new CapabilitiesOptions();
-
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
   private final CommandProvider commandProvider;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContextProvider serverContextProvider;
+  private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
   @Qualifier("populateContextExecutor")
@@ -125,10 +124,10 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     clientCapabilitiesHolder.setClientInfo(params.getClientInfo());
 
-    var rootServerContext = setConfigurationRoot(params);
+    setConfigurationRoot(params);
 
     var capabilities = new ServerCapabilities();
-    capabilities.setTextDocumentSync(getTextDocumentSyncOptions(rootServerContext));
+    capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
     capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
     capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
     capabilities.setDocumentOnTypeFormattingProvider(getDocumentOnTypeFormattingProvider());
@@ -161,35 +160,19 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return CompletableFuture.completedFuture(result);
   }
 
-  /**
-   * Регистрирует workspace folders из параметров инициализации и создаёт для них контексты сервера.
-   *
-   * @param params параметры запроса {@code initialize}
-   * @return контекст сервера первого (корневого) workspace или {@code null},
-   *   если в параметрах не указано ни одной workspace folder
-   */
-  private @Nullable ServerContext setConfigurationRoot(InitializeParams params) {
+  private void setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
 
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
       var rootUri = resolveRootUri(params);
       if (rootUri == null) {
-        return null;
+        return;
       }
       workspaceFolders = List.of(new WorkspaceFolder(rootUri, "root"));
     }
 
-    // Добавляем все workspace folders; конфигурация первого (корневого) workspace
-    // используется при формировании server capabilities
-    ServerContext rootServerContext = null;
-    for (var workspaceFolder : workspaceFolders) {
-      var serverContext = serverContextProvider.addWorkspace(workspaceFolder);
-      if (rootServerContext == null) {
-        rootServerContext = serverContext;
-      }
-    }
-
-    return rootServerContext;
+    // Добавляем все workspace folders
+    workspaceFolders.forEach(serverContextProvider::addWorkspace);
   }
 
   private @Nullable String resolveRootUri(InitializeParams params) {
@@ -271,17 +254,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   /**
-   * Формирует настройки синхронизации текстовых документов на основе конфигурации сервера.
+   * Формирует настройки синхронизации текстовых документов на основе глобальной конфигурации сервера.
    *
-   * @param rootServerContext контекст сервера корневого workspace
-   *   или {@code null}, если workspace не зарегистрирован
    * @return настройки синхронизации текстовых документов
    */
-  private static TextDocumentSyncOptions getTextDocumentSyncOptions(@Nullable ServerContext rootServerContext) {
+  private TextDocumentSyncOptions getTextDocumentSyncOptions() {
     var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
-    textDocumentSync.setChange(getConfiguredSyncKind(rootServerContext));
+    textDocumentSync.setChange(getConfiguredSyncKind());
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
@@ -294,24 +275,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   /**
-   * Возвращает тип синхронизации документов, заданный в конфигурации корневого workspace
+   * Возвращает тип синхронизации документов, заданный в глобальной конфигурации сервера
    * (по умолчанию Incremental).
    *
-   * @param rootServerContext контекст сервера корневого workspace
-   *   или {@code null}, если workspace не зарегистрирован
    * @return тип синхронизации текстовых документов
    */
-  private static TextDocumentSyncKind getConfiguredSyncKind(@Nullable ServerContext rootServerContext) {
-    if (rootServerContext == null) {
-      return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
-    }
-
-    try (var ctx = WorkspaceContextHolder.forUri(rootServerContext.getWorkspaceUri())) {
-      return rootServerContext.getLanguageServerConfiguration()
-        .getCapabilities()
-        .getTextDocumentSync()
-        .getChange();
-    }
+  private TextDocumentSyncKind getConfiguredSyncKind() {
+    return globalConfiguration.getCapabilities()
+      .getTextDocumentSync()
+      .getChange();
   }
 
   private static CodeActionOptions getCodeActionProvider() {

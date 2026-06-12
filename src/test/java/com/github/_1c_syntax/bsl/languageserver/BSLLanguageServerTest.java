@@ -21,8 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import mockit.Mock;
@@ -63,7 +62,7 @@ class BSLLanguageServerTest {
   private BSLLanguageServer server;
 
   @Autowired
-  private ServerContextProvider serverContextProvider;
+  private GlobalLanguageServerConfiguration globalConfiguration;
 
   @BeforeEach
   void setUp() {
@@ -109,22 +108,22 @@ class BSLLanguageServerTest {
         }
       }
       """.formatted(syncKind));
+    globalConfiguration.update(configFile);
 
     var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
-    var serverContext = serverContextProvider.addWorkspace(workspaceFolder);
-    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () ->
-      serverContext.getLanguageServerConfiguration().update(configFile)
-    );
-
     var params = new InitializeParams();
     params.setWorkspaceFolders(List.of(workspaceFolder));
 
-    // when
-    InitializeResult initialize = server.initialize(params).get();
+    try {
+      // when
+      InitializeResult initialize = server.initialize(params).get();
 
-    // then
-    assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
-      .isEqualTo(syncKind);
+      // then
+      assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
+        .isEqualTo(syncKind);
+    } finally {
+      globalConfiguration.reset();
+    }
   }
 
   @Test
