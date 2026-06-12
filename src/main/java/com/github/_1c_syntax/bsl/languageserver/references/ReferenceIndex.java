@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.computer.ModuleSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
@@ -208,7 +207,7 @@ public class ReferenceIndex {
    * Добавить ссылку на модуль в индекс.
    * <p>
    * Имя символа вычисляется детерминированно из {@code mdoRef} и {@code moduleType}
-   * ({@link ModuleSymbolComputer#name}) и совпадает с {@link ModuleSymbol#getName()}, поэтому
+   * ({@link ModuleSymbol#nameOf}) и совпадает с {@link ModuleSymbol#getName()}, поэтому
    * запись и поиск ({@link #getReferencesTo}) симметричны без какой-либо спецобработки.
    *
    * @param uri        URI документа, откуда произошло обращение к модулю.
@@ -218,7 +217,7 @@ public class ReferenceIndex {
    */
   public void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
     var symbolName = stringInterner.intern(
-      ModuleSymbolComputer.name(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
+      ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
 
     var symbol = Symbol.builder()

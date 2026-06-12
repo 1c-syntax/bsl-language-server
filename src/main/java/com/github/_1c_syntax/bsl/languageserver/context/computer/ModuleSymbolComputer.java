@@ -25,21 +25,12 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.Token;
-
-import java.util.EnumSet;
-import java.util.Set;
 
 /**
  * Компьютер символа модуля документа.
  */
 public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
-
-  private static final Set<ModuleType> MODULE_TYPES_TO_APPEND_NAME = EnumSet.of(
-    ModuleType.ObjectModule,
-    ModuleType.ManagerModule
-  );
 
   private final DocumentContext documentContext;
 
@@ -66,26 +57,6 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
   }
 
   private static String getName(DocumentContext documentContext) {
-    return name(documentContext.getMdoRef(), documentContext.getModuleType());
-  }
-
-  /**
-   * Вычислить имя символа модуля по ссылке на объект-метаданные и типу модуля.
-   * <p>
-   * Имя является чистой производной от {@code mdoRef} и {@code moduleType}: к {@code mdoRef}
-   * для отдельных типов модулей дописывается квалификатор-тип, чтобы различать несколько модулей
-   * одного объекта метаданных. Метод детерминирован и не зависит от загрузки самого документа,
-   * поэтому одинаково применим как при построении символа, так и при индексации ссылок на модуль.
-   *
-   * @param mdoRef     Ссылка на объект-метаданные модуля (например, {@code CommonModule.ОбщийМодуль1}).
-   * @param moduleType Тип модуля (например, {@link ModuleType#CommonModule}).
-   * @return Имя символа модуля, совпадающее с {@link ModuleSymbol#getName()}.
-   */
-  public static String name(String mdoRef, ModuleType moduleType) {
-    var name = mdoRef;
-    if (MODULE_TYPES_TO_APPEND_NAME.contains(moduleType)) {
-      name += "." + moduleType.name();
-    }
-    return name;
+    return ModuleSymbol.nameOf(documentContext.getMdoRef(), documentContext.getModuleType());
   }
 }
