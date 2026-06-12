@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializeRequestReceivedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -121,6 +122,25 @@ public final class DiagnosticProvider {
    */
   @EventListener
   public void handleConfigurationChangedEvent(LanguageServerConfigurationChangedEvent event) {
+    requestRefreshIfSupported();
+  }
+
+  /**
+   * Обработчик события {@link ServerContextPopulatedEvent}.
+   * <p>
+   * После наполнения контекста сервера межфайловые диагностики уже открытых документов
+   * (неиспользуемые методы, обращения к общим модулям и т.п.) могли устареть, поэтому
+   * pull-клиенту отправляется запрос на их повторный расчёт через
+   * {@code workspace/diagnostic/refresh}.
+   *
+   * @param event Событие наполнения контекста сервера
+   */
+  @EventListener
+  public void handleServerContextPopulatedEvent(ServerContextPopulatedEvent event) {
+    requestRefreshIfSupported();
+  }
+
+  private void requestRefreshIfSupported() {
     if (clientSupportsRefresh) {
       clientHolder.execIfConnected((LanguageClient languageClient) -> {
         LOGGER.debug("Requesting diagnostic refresh from client");
