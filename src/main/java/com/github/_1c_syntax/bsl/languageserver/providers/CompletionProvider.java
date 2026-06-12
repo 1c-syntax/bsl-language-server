@@ -63,6 +63,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -314,7 +315,7 @@ public final class CompletionProvider {
     var members = new LinkedHashMap<String, MemberDescriptor>();
     // Имена декларированных полей — для приоритетной корзины sortText: пользовательские
     // ключи должны ранжироваться выше дефолтных членов того же типа.
-    var localFieldNames = new java.util.HashSet<String>();
+    var localFieldNames = new HashSet<String>();
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
         members.putIfAbsent(member.name(), member);
@@ -485,7 +486,7 @@ public final class CompletionProvider {
     // под ru- и en-ключом, поэтому в values() встречается дважды — дедуп по
     // primary-имени через seenFn.
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
-    var seenFn = new java.util.HashSet<String>();
+    var seenFn = new HashSet<String>();
     for (var fn : globalScopeProvider.getFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
         continue;
@@ -664,14 +665,6 @@ public final class CompletionProvider {
   }
 
   /**
-   * Помечает completion item устаревшим: при поддержке клиентом тегов —
-   * {@link CompletionItemTag#Deprecated}, иначе legacy-флагом
-   * {@link CompletionItem#setDeprecated}. Клиент рисует такой пункт
-   * зачёркнутым. Применяется ко всем устаревшим членам автодополнения —
-   * платформенным, глобальным функциям, членам конфигурации и
-   * пользовательским методам oscript-классов.
-   */
-  /**
    * Проставляет {@code sortText} пункту автодополнения по схеме «корзина + флаг
    * устаревания + label». Клиент сортирует пункты лексикографически по
    * {@code sortText}: меньший префикс корзины поднимает группу выше, а
@@ -687,6 +680,14 @@ public final class CompletionProvider {
     item.setSortText(bucket + (deprecated ? "1" : "0") + "_" + item.getLabel());
   }
 
+  /**
+   * Помечает completion item устаревшим: при поддержке клиентом тегов —
+   * {@link CompletionItemTag#Deprecated}, иначе legacy-флагом
+   * {@link CompletionItem#setDeprecated}. Клиент рисует такой пункт
+   * зачёркнутым. Применяется ко всем устаревшим членам автодополнения —
+   * платформенным, глобальным функциям, членам конфигурации и
+   * пользовательским методам oscript-классов.
+   */
   private void markDeprecatedItem(CompletionItem item) {
     if (deprecatedTagSupport) {
       item.setTags(List.of(CompletionItemTag.Deprecated));
