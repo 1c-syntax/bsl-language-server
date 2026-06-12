@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
 import mockit.Mock;
@@ -36,9 +38,15 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -53,6 +61,9 @@ class BSLLanguageServerTest {
 
   @Autowired
   private BSLLanguageServer server;
+
+  @Autowired
+  private ServerContextProvider serverContextProvider;
 
   @BeforeEach
   void setUp() {
@@ -81,6 +92,39 @@ class BSLLanguageServerTest {
       .isEqualTo(TextDocumentSyncKind.Incremental);
     assertThat(initialize.getCapabilities().getTypeHierarchyProvider()).isNotNull();
     assertThat(initialize.getCapabilities().getImplementationProvider()).isNotNull();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TextDocumentSyncKind.class, names = {"Full", "None"})
+  void initializeUsesTextDocumentSyncKindFromConfiguration(TextDocumentSyncKind syncKind, @TempDir Path tempDir)
+    throws ExecutionException, InterruptedException, IOException {
+    // given
+    var configFile = tempDir.resolve(".bsl-language-server.json").toFile();
+    Files.writeString(configFile.toPath(), """
+      {
+        "capabilities": {
+          "textDocumentSync": {
+            "change": "%s"
+          }
+        }
+      }
+      """.formatted(syncKind));
+
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    var serverContext = serverContextProvider.addWorkspace(workspaceFolder);
+    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () ->
+      serverContext.getLanguageServerConfiguration().update(configFile)
+    );
+
+    var params = new InitializeParams();
+    params.setWorkspaceFolders(List.of(workspaceFolder));
+
+    // when
+    InitializeResult initialize = server.initialize(params).get();
+
+    // then
+    assertThat(initialize.getCapabilities().getTextDocumentSync().getRight().getChange())
+      .isEqualTo(syncKind);
   }
 
   @Test

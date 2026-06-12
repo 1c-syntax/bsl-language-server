@@ -125,10 +125,10 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
     clientCapabilitiesHolder.setClientInfo(params.getClientInfo());
 
-    setConfigurationRoot(params);
+    var rootServerContext = setConfigurationRoot(params);
 
     var capabilities = new ServerCapabilities();
-    capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
+    capabilities.setTextDocumentSync(getTextDocumentSyncOptions(rootServerContext));
     capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
     capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
     capabilities.setDocumentOnTypeFormattingProvider(getDocumentOnTypeFormattingProvider());
@@ -161,19 +161,35 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return CompletableFuture.completedFuture(result);
   }
 
-  private void setConfigurationRoot(InitializeParams params) {
+  /**
+   * Регистрирует workspace folders из параметров инициализации и создаёт для них контексты сервера.
+   *
+   * @param params параметры запроса {@code initialize}
+   * @return контекст сервера первого (корневого) workspace или {@code null},
+   *   если в параметрах не указано ни одной workspace folder
+   */
+  private @Nullable ServerContext setConfigurationRoot(InitializeParams params) {
     var workspaceFolders = params.getWorkspaceFolders();
 
     if (workspaceFolders == null || workspaceFolders.isEmpty()) {
       var rootUri = resolveRootUri(params);
       if (rootUri == null) {
-        return;
+        return null;
       }
       workspaceFolders = List.of(new WorkspaceFolder(rootUri, "root"));
     }
 
-    // Добавляем все workspace folders
-    workspaceFolders.forEach(serverContextProvider::addWorkspace);
+    // Добавляем все workspace folders; конфигурация первого (корневого) workspace
+    // используется при формировании server capabilities
+    ServerContext rootServerContext = null;
+    for (var workspaceFolder : workspaceFolders) {
+      var serverContext = serverContextProvider.addWorkspace(workspaceFolder);
+      if (rootServerContext == null) {
+        rootServerContext = serverContext;
+      }
+    }
+
+    return rootServerContext;
   }
 
   private @Nullable String resolveRootUri(InitializeParams params) {
@@ -256,12 +272,16 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   /**
    * Формирует настройки синхронизации текстовых документов на основе конфигурации сервера.
+   *
+   * @param rootServerContext контекст сервера корневого workspace
+   *   или {@code null}, если workspace не зарегистрирован
+   * @return настройки синхронизации текстовых документов
    */
-  private TextDocumentSyncOptions getTextDocumentSyncOptions() {
+  private static TextDocumentSyncOptions getTextDocumentSyncOptions(@Nullable ServerContext rootServerContext) {
     var textDocumentSync = new TextDocumentSyncOptions();
 
     textDocumentSync.setOpenClose(Boolean.TRUE);
-    textDocumentSync.setChange(getConfiguredSyncKind());
+    textDocumentSync.setChange(getConfiguredSyncKind(rootServerContext));
     textDocumentSync.setWillSave(Boolean.FALSE);
     textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
 
@@ -274,10 +294,24 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   /**
-   * Возвращает тип синхронизации документов, заданный в конфигурации (по умолчанию Incremental).
+   * Возвращает тип синхронизации документов, заданный в конфигурации корневого workspace
+   * (по умолчанию Incremental).
+   *
+   * @param rootServerContext контекст сервера корневого workspace
+   *   или {@code null}, если workspace не зарегистрирован
+   * @return тип синхронизации текстовых документов
    */
-  private static TextDocumentSyncKind getConfiguredSyncKind() {
-    return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
+  private static TextDocumentSyncKind getConfiguredSyncKind(@Nullable ServerContext rootServerContext) {
+    if (rootServerContext == null) {
+      return DEFAULT_CAPABILITIES.getTextDocumentSync().getChange();
+    }
+
+    try (var ctx = WorkspaceContextHolder.forUri(rootServerContext.getWorkspaceUri())) {
+      return rootServerContext.getLanguageServerConfiguration()
+        .getCapabilities()
+        .getTextDocumentSync()
+        .getChange();
+    }
   }
 
   private static CodeActionOptions getCodeActionProvider() {
