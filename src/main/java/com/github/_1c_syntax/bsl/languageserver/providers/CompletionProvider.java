@@ -63,6 +63,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -87,6 +88,20 @@ import java.util.stream.Collectors;
 public final class CompletionProvider {
 
   private static final String TRIGGER_PARAMETER_HINTS_COMMAND = "editor.action.triggerParameterHints";
+
+  // sortText-«корзины» для no-dot completion. Клиент сортирует пункты по sortText
+  // лексикографически, поэтому меньший префикс = выше в списке. Без sortText всё
+  // сортируется по label, и локальные имена документа тонут среди сотен глобальных.
+  // Порядок: локальные имена документа → глобальные функции/контексты → классы и
+  // MD-имена → ключевые слова. Внутри корзины — стабильно по label.
+  private static final String BUCKET_LOCAL = "1";
+  private static final String BUCKET_GLOBAL = "2";
+  private static final String BUCKET_TYPE = "3";
+  private static final String BUCKET_KEYWORD = "4";
+  // Корзина членов типа в dot-completion: пользовательские/декларированные поля
+  // приоритетнее дефолтных членов того же типа.
+  private static final String BUCKET_MEMBER_FIELD = "1";
+  private static final String BUCKET_MEMBER_DEFAULT = "2";
 
   private final TypeService typeService;
   private final GlobalScopeProvider globalScopeProvider;
@@ -298,6 +313,9 @@ public final class CompletionProvider {
 
     var scriptVariant = documentContext.getScriptVariantLanguage();
     var members = new LinkedHashMap<String, MemberDescriptor>();
+    // Имена декларированных полей — для приоритетной корзины sortText: пользовательские
+    // ключи должны ранжироваться выше дефолтных членов того же типа.
+    var localFieldNames = new HashSet<String>();
     for (TypeRef ref : typeSet.refs()) {
       for (var member : typeService.getMembers(ref, fileType, scriptVariant)) {
         members.putIfAbsent(member.name(), member);
@@ -311,7 +329,9 @@ public final class CompletionProvider {
         var fieldName = entry.getKey();
         var fieldTypes = entry.getValue();
         var fieldRef = fieldTypes.refs().stream().findFirst().orElse(null);
-        members.putIfAbsent(fieldName, MemberDescriptor.property(fieldName, fieldRef, ""));
+        if (members.putIfAbsent(fieldName, MemberDescriptor.property(fieldName, fieldRef, "")) == null) {
+          localFieldNames.add(fieldName);
+        }
       }
     }
 
@@ -325,7 +345,13 @@ public final class CompletionProvider {
       // зачёркнутыми).
       .filter(m -> !PlatformMemberVersions.firesUnavailable(m.metadata().sinceVersion(), target))
       .toList();
-    return toCompletionItems(filtered, scriptVariant, target);
+    var items = toCompletionItems(filtered, scriptVariant, target);
+    for (int i = 0; i < filtered.size(); i++) {
+      var member = filtered.get(i);
+      var bucket = localFieldNames.contains(member.name()) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
+      applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
+    }
+    return items;
   }
 
   /**
@@ -398,7 +424,9 @@ public final class CompletionProvider {
           continue;
         }
         if (matches(className, prefix)) {
-          items.add(buildPlatformClassCompletionItem(className, fileType, scriptVariant));
+          var item = buildPlatformClassCompletionItem(className, fileType, scriptVariant);
+          applySortText(item, BUCKET_TYPE, false);
+          items.add(item);
         }
       }
       for (var classEntry : oScriptLibraryIndex.findEntries(OScriptLibraryIndex.EntryKind.CLASS)) {
@@ -411,6 +439,7 @@ public final class CompletionProvider {
           item.setKind(CompletionItemKind.Class);
           // Данных о конструкторе библиотечного класса здесь нет — сохраняем курсор между скобок.
           applyCallableInsertText(item, libClassName, true);
+          applySortText(item, BUCKET_TYPE, false);
           items.add(item);
         }
       }
@@ -426,6 +455,7 @@ public final class CompletionProvider {
         if (matches(qualified, prefix)) {
           var item = new CompletionItem(qualified);
           item.setKind(CompletionItemKind.Module);
+          applySortText(item, BUCKET_TYPE, false);
           items.add(item);
         }
       }
@@ -448,6 +478,7 @@ public final class CompletionProvider {
       }
       var item = new CompletionItem(name);
       item.setKind(completionKindForSynthetic(ctx.getSyntheticKind()));
+      applySortText(item, BUCKET_GLOBAL, false);
       items.add(item);
     }
 
@@ -455,14 +486,16 @@ public final class CompletionProvider {
     // под ru- и en-ключом, поэтому в values() встречается дважды — дедуп по
     // primary-имени через seenFn.
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
-    var seenFn = new java.util.HashSet<String>();
+    var seenFn = new HashSet<String>();
     for (var fn : globalScopeProvider.getFunctions(fileType)) {
       if (!seenFn.add(fn.name())) {
         continue;
       }
       var displayName = fn.displayName(scriptVariant);
       if (matches(displayName, prefix)) {
-        items.add(toCompletionItem(fn, scriptVariant, target));
+        var item = toCompletionItem(fn, scriptVariant, target);
+        applySortText(item, BUCKET_GLOBAL, isMemberDeprecated(fn, target));
+        items.add(item);
       }
     }
 
@@ -475,6 +508,7 @@ public final class CompletionProvider {
         if (method.isDeprecated()) {
           markDeprecatedItem(item);
         }
+        applySortText(item, BUCKET_LOCAL, method.isDeprecated());
         items.add(item);
       }
     }
@@ -484,6 +518,7 @@ public final class CompletionProvider {
       if (matches(variable.getName(), prefix)) {
         var item = new CompletionItem(variable.getName());
         item.setKind(CompletionItemKind.Variable);
+        applySortText(item, BUCKET_LOCAL, false);
         items.add(item);
       }
     }
@@ -493,6 +528,7 @@ public final class CompletionProvider {
       if (matches(keyword, prefix)) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
+        applySortText(item, BUCKET_KEYWORD, false);
         items.add(item);
       }
     }
@@ -626,6 +662,22 @@ public final class CompletionProvider {
     if (isMemberDeprecated(member, target)) {
       markDeprecatedItem(item);
     }
+  }
+
+  /**
+   * Проставляет {@code sortText} пункту автодополнения по схеме «корзина + флаг
+   * устаревания + label». Клиент сортирует пункты лексикографически по
+   * {@code sortText}: меньший префикс корзины поднимает группу выше, а
+   * устаревшие члены внутри корзины опускаются вниз (флаг {@code 1} против
+   * {@code 0}), даже если их имя лексикографически меньше неустаревшего соседа.
+   * Внутри корзины при равном статусе порядок стабилен по {@code label}.
+   *
+   * @param item       пункт автодополнения, которому проставляется {@code sortText}.
+   * @param bucket     префикс корзины ранжирования (см. {@code BUCKET_*}).
+   * @param deprecated {@code true}, если член устарел и должен опускаться вниз корзины.
+   */
+  private static void applySortText(CompletionItem item, String bucket, boolean deprecated) {
+    item.setSortText(bucket + (deprecated ? "1" : "0") + "_" + item.getLabel());
   }
 
   /**
