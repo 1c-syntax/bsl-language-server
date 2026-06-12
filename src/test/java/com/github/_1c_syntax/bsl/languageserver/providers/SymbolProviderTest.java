@@ -45,6 +45,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -201,6 +202,8 @@ class SymbolProviderTest {
     var documentContext = mock(DocumentContext.class);
     when(documentContext.getUri()).thenReturn(symbolUri);
     when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getMdObject()).thenReturn(Optional.empty());
+    when(symbol.getOwner()).thenReturn(documentContext);
 
     var serverContext = mock(ServerContext.class);
     when(serverContext.getDocuments()).thenReturn(Map.of(symbolUri, documentContext));
