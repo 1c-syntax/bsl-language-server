@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1781264173977,
+  "lastUpdate": 1781271713011,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -36921,6 +36921,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.02302634942199",
             "extra": "mean: 281.2499924500783 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b19e14e443b952dfce525e888640be03fda0d476",
+          "message": "Merge pull request #4042 from 1c-syntax/claude/confident-wozniak-5ls554\n\nfeat(mcp): прототип MCP-режима поверх движка анализа",
+          "timestamp": "2026-06-12T09:25:32+02:00",
+          "tree_id": "96d8fe0e041340fbd636204987b2589a663bba24",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b19e14e443b952dfce525e888640be03fda0d476"
+        },
+        "date": 1781271703140,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 277.44846359888714,
+            "unit": "sec",
+            "range": "stddev: 2.420521270532633",
+            "extra": "mean: 277.44846359888714 sec\nrounds: 3"
           }
         ]
       }
